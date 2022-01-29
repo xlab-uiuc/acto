@@ -15,10 +15,13 @@ def deploy_operator(operator_yaml_path: str):
     '''Deploy operator according to yaml
     @param operator_yaml_path - path pointing to the operator yaml file
     '''
-    with open(operator_yaml_path, 'r') as operator_yaml:
-        parsed_operator_yaml = yaml.load(operator_yaml, Loader=yaml.FullLoader)
-        parsed_operator_yaml['metadata']['labels'].append('testing/tag=testing')
-        os.system('kubectl apply -f %s' % operator_file)
+    with open(operator_yaml_path, 'r+') as operator_yaml:
+        parsed_operator_documents = yaml.load_all(operator_yaml, Loader=yaml.FullLoader)
+        for document in parsed_operator_documents:
+            if document['kind'] == 'Deployment':                
+                document['metadata']['labels'].append('testing/tag=testing')
+        yaml.dump_all(parsed_operator_documents, operator_yaml)
+        os.system('kubectl apply -f %s' % operator_yaml_path)
     
         kubernetes.config.load_kube_config()
         corev1 = kubernetes.client.CoreV1Api()
