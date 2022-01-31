@@ -1,0 +1,100 @@
+spec:
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        candidates:
+          - labelSelector:
+              matchExpressions:
+                - key: app.kubernetes.io/name
+                  operator: In
+                  values:
+                  - production-ready
+            topologyKey: kubernetes.io/hostname
+  image:
+    candidates:
+      - "rabbitmq:3.8.21-management"
+      - "rabbitmq:latest"
+      - "rabbitmq:3.9-management"
+  imagePullSecrets:
+    candidates:
+      - null
+  persistance:
+    candidates:
+      - storageClassName: ssd
+        storage: "50Gi"
+      - storage: "10Gi"
+      - storage: "20Gi"
+  rabbitmq:
+    additionalConfig:
+      candidates:
+        - |
+          cluster_partition_handling = pause_minority
+          vm_memory_high_watermark_paging_ratio = 0.99
+          disk_free_limit.relative = 1.0
+          collect_statistics_interval = 10000
+        - |
+          cluster_partition_handling = pause_minority
+          vm_memory_high_watermark_paging_ratio = 0.99
+          disk_free_limit.relative = 1.0
+  replicas:
+    candidates:
+      - 1
+      - 2
+      - 3
+  resources:
+    candidates:
+      - requests:
+          cpu: 4
+          memory: 10Gi
+        limits:
+          cpu: 4
+          memory: 10Gi
+      - requests:
+          cpu: 3
+          memory: 10Gi
+        limits:
+          cpu: 3
+          memory: 10Gi
+      - requests:
+          cpu: 4
+          memory: 5Gi
+        limits:
+          cpu: 4
+          memory: 5Gi
+  secretBackend:
+    candidates:
+      - null
+  service:
+    type:
+      candidates:
+        - null
+        - ClusterIP
+        - LoadBalancer
+        - NodePort
+    annotations:
+      candidates:
+        - key1: value1
+        - key2: value2
+    skipPostDeploySteps:
+      candidates:
+        - true
+        - false
+    terminationGracePeriodSeconds:
+      candidates:
+        - 1024
+        - 2048
+        - 4096
+    tls:
+      caSecretName:
+        candidates:
+          - null
+      disableNonTLSListeners:
+        candidates:
+          - true
+          - false
+      secretName:
+        candidates:
+          - null
+    tolerations:
+      candidates:
+        - null
