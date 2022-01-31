@@ -5,6 +5,7 @@ import kubernetes
 import yaml
 import time
 import typing
+import random
 
 
 def get_deployment_available_status(
@@ -83,13 +84,29 @@ def deploy_dependency(yaml_paths):
 
 
 def construct_candidate_helper(node, node_path, result: dict):
+    '''Recursive helper to flatten the candidate dict
+
+    Args:
+        node: current node
+        node_path: path to access this node from root
+        result: output dict
+    '''
     if 'candidates' in node:
         result[node_path] = node['candidates']
     else:
         for child_key, child_value in node.items():
             construct_candidate_helper(child_value, '%s.%s' % (node_path, child_key), result)
 
+
 def construct_candidate_from_yaml(yaml_path: str) -> dict:
+    '''Constructs candidate dict from a yaml file
+    
+    Args:
+        yaml_path: path of the input yaml file
+        
+    Returns:
+        dict[JSON-like path]: list of candidate values
+    '''
     with open(yaml_path, 'r') as input_yaml:
         doc = yaml.load(input_yaml, Loader=yaml.FullLoader)
         result = {}
@@ -97,8 +114,33 @@ def construct_candidate_from_yaml(yaml_path: str) -> dict:
         return result
 
 
+def elect_mutation_parameter(candidates_dict: dict):
+    '''method for electing the parameter to mutate and which value to pick
+    
+    Args:
+        candidates_dict: flat dictionary specifying list of valid values for each parameter
+
+    Returns:
+        (path, value)
+    '''
+    random_entry = random.choice(list(candidates_dict.items()))
+    return random_entry[0], random.choice(random_entry[1])
+
+
 def mutate_application_spec(current_spec: dict, candidates: dict):
-    return None
+    '''mutate one of the fields in current spec according to candidates dict
+    
+    Args:
+        current_spec: last spec that fed to operator
+        candidates: flat dictionary specifying list of valid values for each parameter
+    '''
+    path, v = elect_mutation_parameter(candidates)
+    current_node = current_spec
+    key_list = [x for x in path.split('.') if x]
+    for key in key_list[:-1]:
+        current_node = current_node[key]
+    current_node[key_list[-1]] = v
+    return current_spec
 
 
 if __name__ == '__main__':

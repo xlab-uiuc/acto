@@ -4,7 +4,7 @@ import os
 import kubernetes
 import yaml
 import time
-from hack import construct_candidate_helper
+import Test
 
 def test_modify_yaml():
     with open('namespace.yaml', 'r+') as operator_yaml:
@@ -34,9 +34,23 @@ def test_construct_candidate_helper():
     }
     print(input_dict)
     result={}
-    construct_candidate_helper(input_dict, '', result)
+    Test.construct_candidate_helper(input_dict, '', result)
     print(result)
+
+def test_mutate_application_spec():
+    current_dict = {
+        'a': 2,
+        'b': {
+            'c': 0,
+            'd': 0
+        }
+    }
+
+    candidates_dict = {'.a': [1, 2, 3], '.b.c': [1], '.b.d': [2]}
+    print(Test.mutate_application_spec(current_dict, candidates_dict))
+
 
 if __name__ == '__main__':
     test_modify_yaml()
     test_construct_candidate_helper()
+    test_mutate_application_spec()
