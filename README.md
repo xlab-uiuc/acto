@@ -1,5 +1,5 @@
 # k8s-operator-bugs
-Study on bugs in kubernetes operators
+e2e testing framework for k8s operators
 
 ## Google Drive Directory
 https://drive.google.com/drive/folders/12XY6WmReuhvX2Du6KqB4xiFC3YEzRqMM
