@@ -75,26 +75,26 @@ spec:
       candidates:
         - key1: value1
         - key2: value2
-    skipPostDeploySteps:
+  skipPostDeploySteps:
+    candidates:
+      - true
+      - false
+  terminationGracePeriodSeconds:
+    candidates:
+      - 1024
+      - 2048
+      - 4096
+  tls:
+    caSecretName:
+      candidates:
+        - null
+    disableNonTLSListeners:
       candidates:
         - true
         - false
-    terminationGracePeriodSeconds:
-      candidates:
-        - 1024
-        - 2048
-        - 4096
-    tls:
-      caSecretName:
-        candidates:
-          - null
-      disableNonTLSListeners:
-        candidates:
-          - true
-          - false
-      secretName:
-        candidates:
-          - null
-    tolerations:
+    secretName:
       candidates:
         - null
+  tolerations:
+    candidates:
+      - null

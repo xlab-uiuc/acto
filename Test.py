@@ -1,11 +1,21 @@
 import argparse
-from distutils.log import error
+from distutils import core
 import os
 import kubernetes
 import yaml
 import time
 import typing
 import random
+
+from common import p_debug, p_error
+import check_result
+
+
+corev1 = None
+appv1 = None
+metadata = {
+    'namespace': ''
+}
 
 
 def get_deployment_available_status(
@@ -33,6 +43,12 @@ def construct_kind_cluster():
     os.system('kind delete cluster')
     os.system('kind create cluster')
 
+    kubernetes.config.load_kube_config()
+    global corev1
+    global appv1
+    corev1 = kubernetes.client.CoreV1Api()
+    appv1 = kubernetes.client.AppsV1Api()
+
 
 def deploy_operator(operator_yaml_path: str):
     '''Deploy operator according to yaml
@@ -40,46 +56,46 @@ def deploy_operator(operator_yaml_path: str):
     Args:
         operator_yaml_path - path pointing to the operator yaml file
     '''
+    global metadata
     with open(operator_yaml_path,'r') as operator_yaml, \
             open('new_operator.yaml', 'w') as out_yaml:
-        namespace = str()
         parsed_operator_documents = yaml.load_all(operator_yaml,
                                                   Loader=yaml.FullLoader)
         new_operator_documents = []
         for document in parsed_operator_documents:
             if document['kind'] == 'Deployment':
-                document['metadata']['labels']['testing/tag'] = 'testing'
-                namespace = document['metadata']['namespace']
+                document['metadata']['labels']['testing/tag'] = 'operator-deployment'
+                document['spec']['template']['metadata']['labels']['testing/tag'] = 'operator-pod'
+                metadata['namespace'] = document['metadata']['namespace']
             new_operator_documents.append(document)
         yaml.dump_all(new_operator_documents, out_yaml)
         out_yaml.flush()
         os.system('kubectl apply -f %s' % 'new_operator.yaml')
         # os.system('cat <<EOF | kubectl apply -f -\n%s\nEOF' % yaml.dump_all(new_operator_documents))
 
-        kubernetes.config.load_kube_config()
-        corev1 = kubernetes.client.CoreV1Api()
-        appv1 = kubernetes.client.AppsV1Api()
-
-        print('Deploying the operator, waiting for it to be ready')
+        p_debug('Deploying the operator, waiting for it to be ready')
         pod_ready = False
         for _ in range(60):
             operator_deployments = appv1.list_namespaced_deployment(
-                namespace, watch=False,
-                label_selector='testing/tag=testing').items
+                metadata['namespace'], watch=False,
+                label_selector='testing/tag=operator-deployment').items
             if len(operator_deployments) >= 1 \
                     and get_deployment_available_status(operator_deployments[0]):
-                print('Operator ready')
+                p_debug('Operator ready')
                 pod_ready = True
                 break
             time.sleep(1)
         if not pod_ready:
-            error("operator deployment failed to be ready within timeout")
+            p_error("operator deployment failed to be ready within timeout")
+            quit()
 
 
 def deploy_dependency(yaml_paths):
+    p_debug('Deploying dependencies')
     for yaml_path in yaml_paths:
         os.system('kubectl apply -f %s' % yaml_path)
-    time.sleep(30) # TODO: how to wait smartly
+    if len(yaml_paths) > 0:
+        time.sleep(30) # TODO: how to wait smartly
     return
 
 
@@ -135,6 +151,8 @@ def mutate_application_spec(current_spec: dict, candidates: dict):
         candidates: flat dictionary specifying list of valid values for each parameter
     '''
     path, v = elect_mutation_parameter(candidates)
+    p_debug('Elected parameter [%s]' % path)
+    p_debug('Elected value: %s' % v)
     current_node = current_spec
     key_list = [x for x in path.split('.') if x]
     for key in key_list[:-1]:
@@ -150,9 +168,23 @@ if __name__ == '__main__':
     deploy_operator('cluster-operator.yml')
     deploy_dependency([])
     candidate_dict = construct_candidate_from_yaml('rabbitmq_candidates.yaml')
-    print(candidate_dict)
+    p_debug(candidate_dict)
 
-    # while True:
-    #     mutate_application_spec()
-    #     # TODO: submit to operator
-    #     # TODO: check result
+    application_cr: dict
+    try:
+        with open('rabbitmq_example_cr.yaml', 'r') as cr_file:
+            application_cr = yaml.load(cr_file, Loader=yaml.FullLoader)
+    except:
+        p_error('Failed to read cr yaml, aborting')
+        quit()
+    
+
+    for _ in range(10):
+        mutate_application_spec(application_cr, candidate_dict)
+        
+        with open('mutated.yaml', 'w') as mutated_cr:
+            yaml.dump(application_cr, mutated_cr)
+        os.system('kubectl apply -f %s' % 'mutated.yaml')
+
+        check_result.check_result(metadata)
+        time.sleep(150)

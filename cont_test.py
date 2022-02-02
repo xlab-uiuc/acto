@@ -3,8 +3,8 @@ from distutils.log import error
 import os
 import kubernetes
 import yaml
-import time
 import Test
+import common
 
 def test_modify_yaml():
     with open('namespace.yaml', 'r+') as operator_yaml:
@@ -50,7 +50,13 @@ def test_mutate_application_spec():
     print(Test.mutate_application_spec(current_dict, candidates_dict))
 
 
+def test_common():
+    common.p_error('hello')
+    common.p_debug('debug hello')
+
+
 if __name__ == '__main__':
+    test_common()
     test_modify_yaml()
     test_construct_candidate_helper()
     test_mutate_application_spec()
