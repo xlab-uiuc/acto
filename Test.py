@@ -6,6 +6,7 @@ import yaml
 import time
 import typing
 import random
+from datetime import datetime
 
 from common import p_debug, p_error
 import check_result
@@ -16,6 +17,7 @@ appv1 = None
 metadata = {
     'namespace': ''
 }
+workdir_name = 'testrun-%s' % datetime.now().strftime('%Y-%m-%d-%H-%M')
 
 
 def get_deployment_available_status(
@@ -178,13 +180,14 @@ if __name__ == '__main__':
         p_error('Failed to read cr yaml, aborting')
         quit()
     
+    os.makedirs(workdir_name, exist_ok=True)
 
-    for _ in range(10):
+    for generation in range(100):
         mutate_application_spec(application_cr, candidate_dict)
-        
-        with open('mutated.yaml', 'w') as mutated_cr:
+        mutated_filename = '%s/mutated-%d.yaml' % (workdir_name, generation)
+        with open(mutated_filename, 'w') as mutated_cr:
             yaml.dump(application_cr, mutated_cr)
-        os.system('kubectl apply -f %s' % 'mutated.yaml')
+        os.system('kubectl apply -f %s' % mutated_filename)
 
-        check_result.check_result(metadata)
+        check_result.check_result(metadata, generation=generation)
         time.sleep(150)

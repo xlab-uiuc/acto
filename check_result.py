@@ -1,8 +1,8 @@
 import kubernetes
 from common import p_print, p_debug, p_error
-from datetime import datetime
+from Test import workdir_name
 
-def check_result(metadata: dict):
+def check_result(metadata: dict, generation: int):
     kubernetes.config.load_kube_config()
     corev1 = kubernetes.client.CoreV1Api()
     operator_pod_list = corev1.list_namespaced_pod(
@@ -23,7 +23,7 @@ def check_result(metadata: dict):
     if log.find('error') != -1:
         p_print('Found error in operator log')
 
-    with open('operator-%s.log' % datetime.now().strftime('%Y-%m-%d%H:%M'), 'w') as fout:
+    with open('%s/operator-%d.log' % (workdir_name, generation), 'w') as fout:
         fout.write(log)
 
     return

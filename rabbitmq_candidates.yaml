@@ -10,6 +10,16 @@ spec:
                   values:
                   - production-ready
             topologyKey: kubernetes.io/hostname
+    podAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        candidates:
+          - labelSelector:
+              matchExpressions:
+                - key: app.kubernetes.io/name
+                  operator: In
+                  values:
+                  - production-ready
+            topologyKey: kubernetes.io/hostname
   image:
     candidates:
       - "rabbitmq:3.8.21-management"
@@ -20,8 +30,7 @@ spec:
       - null
   persistance:
     candidates:
-      - storageClassName: ssd
-        storage: "50Gi"
+      - storage: "50Gi"
       - storage: "10Gi"
       - storage: "20Gi"
   rabbitmq:
