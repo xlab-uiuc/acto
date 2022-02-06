@@ -3,32 +3,35 @@ spec:
     podAntiAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
         candidates:
-          - labelSelector:
+        - - labelSelector:
               matchExpressions:
                 - key: app.kubernetes.io/name
                   operator: In
                   values:
                   - production-ready
             topologyKey: kubernetes.io/hostname
+        - null
     podAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
         candidates:
-          - labelSelector:
+        - - labelSelector:
               matchExpressions:
                 - key: app.kubernetes.io/name
                   operator: In
                   values:
                   - production-ready
             topologyKey: kubernetes.io/hostname
+        - null
   image:
     candidates:
       - "rabbitmq:3.8.21-management"
       - "rabbitmq:latest"
       - "rabbitmq:3.9-management"
+      - null
   imagePullSecrets:
     candidates:
       - null
-  persistance:
+  persistence:
     candidates:
       - storage: "50Gi"
       - storage: "10Gi"

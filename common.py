@@ -1,4 +1,11 @@
 import sys, os, inspect
+import enum
+
+class RunResult(enum.Enum):
+    passing = 0
+    invalidInput = 1
+    error = 2
+    unchanged = 3
 
 
 def p_print(msg: str):

@@ -4,11 +4,11 @@ import os
 import kubernetes
 import yaml
 import time
-import typing
 import random
 from datetime import datetime
+from copy import deepcopy
 
-from common import p_debug, p_error
+from common import p_debug, p_error, RunResult
 import check_result
 
 
@@ -43,7 +43,23 @@ def construct_kind_cluster():
     '''Delete kind cluster then create a new one
     '''
     os.system('kind delete cluster')
-    os.system('kind create cluster')
+
+    kind_config_dir = 'kind_config'
+    os.makedirs(kind_config_dir, exist_ok=True)
+    kind_config_path = os.path.join(kind_config_dir, 'kind.yaml')
+
+    with open(kind_config_path, 'w') as kind_config_file:
+        kind_config_dict = {}
+        kind_config_dict['kind'] = 'Cluster'
+        kind_config_dict['apiVersion'] = 'kind.x-k8s.io/v1alpha4'
+        kind_config_dict['nodes'] = []
+        for _ in range(3):
+            kind_config_dict['nodes'].append({'role': 'worker'})
+        for _ in range(1):
+            kind_config_dict['nodes'].append({'role': 'control-plane'})
+        yaml.dump(kind_config_dict, kind_config_file)
+
+    os.system('kind create cluster --config %s' % kind_config_path)
 
     kubernetes.config.load_kube_config()
     global corev1
@@ -183,11 +199,24 @@ if __name__ == '__main__':
     os.makedirs(workdir_name, exist_ok=True)
 
     for generation in range(100):
+        parent_cr = deepcopy(application_cr)
         mutate_application_spec(application_cr, candidate_dict)
         mutated_filename = '%s/mutated-%d.yaml' % (workdir_name, generation)
         with open(mutated_filename, 'w') as mutated_cr:
             yaml.dump(application_cr, mutated_cr)
-        os.system('kubectl apply -f %s' % mutated_filename)
 
-        check_result.check_result(metadata, generation=generation)
-        time.sleep(150)
+        retval = check_result.run_and_check(['kubectl', 'apply', '-f', mutated_filename], metadata, generation=generation)
+
+        if retval == RunResult.invalidInput:
+            # Revert to parent CR
+            application_cr = parent_cr
+        elif retval == RunResult.unchanged:
+            continue
+        elif retval == RunResult.error:
+            # We found an error!
+            quit()
+        elif retval == RunResult.passing:
+            time.sleep(150)
+        else:
+            p_error('Unknown return value, abort')
+            quit()

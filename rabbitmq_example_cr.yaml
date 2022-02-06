@@ -2,6 +2,7 @@ apiVersion: rabbitmq.com/v1beta1
 kind: RabbitmqCluster
 metadata:
   name: production-ready
+  namespace: rabbitmq-system
 spec:
   affinity:
     podAntiAffinity:
@@ -43,16 +44,3 @@ spec:
     disableNonTLSListeners: false
     secretName: null
   tolerations: null
-  override:
-    statefulSet:
-      spec:
-        template:
-          spec:
-            containers: []
-            topologySpreadConstraints:
-            - maxSkew: 1
-              topologyKey: "topology.kubernetes.io/zone"
-              whenUnsatisfiable: DoNotSchedule
-              labelSelector:
-                matchLabels:
-                  app.kubernetes.io/name: production-ready
