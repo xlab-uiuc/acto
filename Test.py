@@ -7,17 +7,16 @@ import time
 import random
 from datetime import datetime
 from copy import deepcopy
+import signal
 
 from common import p_debug, p_error, RunResult
 import check_result
 
-
 corev1 = None
 appv1 = None
-metadata = {
-    'namespace': ''
-}
-workdir_name = 'testrun-%s' % datetime.now().strftime('%Y-%m-%d-%H-%M')
+metadata = {'namespace': '',
+            'current_dir_path': ''}
+workdir_path = 'testrun-%s' % datetime.now().strftime('%Y-%m-%d-%H-%M')
 
 
 def get_deployment_available_status(
@@ -82,8 +81,10 @@ def deploy_operator(operator_yaml_path: str):
         new_operator_documents = []
         for document in parsed_operator_documents:
             if document['kind'] == 'Deployment':
-                document['metadata']['labels']['testing/tag'] = 'operator-deployment'
-                document['spec']['template']['metadata']['labels']['testing/tag'] = 'operator-pod'
+                document['metadata']['labels'][
+                    'testing/tag'] = 'operator-deployment'
+                document['spec']['template']['metadata']['labels'][
+                    'testing/tag'] = 'operator-pod'
                 metadata['namespace'] = document['metadata']['namespace']
             new_operator_documents.append(document)
         yaml.dump_all(new_operator_documents, out_yaml)
@@ -95,7 +96,8 @@ def deploy_operator(operator_yaml_path: str):
         pod_ready = False
         for _ in range(60):
             operator_deployments = appv1.list_namespaced_deployment(
-                metadata['namespace'], watch=False,
+                metadata['namespace'],
+                watch=False,
                 label_selector='testing/tag=operator-deployment').items
             if len(operator_deployments) >= 1 \
                     and get_deployment_available_status(operator_deployments[0]):
@@ -113,7 +115,7 @@ def deploy_dependency(yaml_paths):
     for yaml_path in yaml_paths:
         os.system('kubectl apply -f %s' % yaml_path)
     if len(yaml_paths) > 0:
-        time.sleep(30) # TODO: how to wait smartly
+        time.sleep(30)  # TODO: how to wait smartly
     return
 
 
@@ -129,7 +131,8 @@ def construct_candidate_helper(node, node_path, result: dict):
         result[node_path] = node['candidates']
     else:
         for child_key, child_value in node.items():
-            construct_candidate_helper(child_value, '%s.%s' % (node_path, child_key), result)
+            construct_candidate_helper(child_value,
+                                       '%s.%s' % (node_path, child_key), result)
 
 
 def construct_candidate_from_yaml(yaml_path: str) -> dict:
@@ -179,12 +182,50 @@ def mutate_application_spec(current_spec: dict, candidates: dict):
     return current_spec
 
 
+def run_trial(initial_input: dict,
+              candidate_dict: dict,
+              trial_num: int,
+              num_mutation: int = 100):
+    trial_dir = os.path.join(workdir_path, str(trial_num))
+    os.makedirs(trial_dir, exist_ok=True)
+    global metadata
+    metadata['current_dir_path'] = trial_dir
+
+    current_cr = deepcopy(initial_input)
+    for generation in range(num_mutation):
+        parent_cr = deepcopy(current_cr)
+        mutate_application_spec(current_cr, candidate_dict)
+        mutated_filename = '%s/mutated-%d.yaml' % (trial_dir, generation)
+        with open(mutated_filename, 'w') as mutated_cr_file:
+            yaml.dump(current_cr, mutated_cr_file)
+
+        retval = check_result.run_and_check(
+            ['kubectl', 'apply', '-f', mutated_filename],
+            metadata,
+            generation=generation)
+
+        if retval == RunResult.invalidInput:
+            # Revert to parent CR
+            application_cr = parent_cr
+        elif retval == RunResult.unchanged:
+            continue
+        elif retval == RunResult.error:
+            # We found an error!
+            return
+        elif retval == RunResult.passing:
+            continue
+        else:
+            p_error('Unknown return value, abort')
+            quit()
+
+
+def timeout_handler():
+    raise TimeoutError
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Continuous testing')
 
-    construct_kind_cluster()
-    deploy_operator('cluster-operator.yml')
-    deploy_dependency([])
     candidate_dict = construct_candidate_from_yaml('rabbitmq_candidates.yaml')
     p_debug(candidate_dict)
 
@@ -195,28 +236,17 @@ if __name__ == '__main__':
     except:
         p_error('Failed to read cr yaml, aborting')
         quit()
-    
-    os.makedirs(workdir_name, exist_ok=True)
 
-    for generation in range(100):
-        parent_cr = deepcopy(application_cr)
-        mutate_application_spec(application_cr, candidate_dict)
-        mutated_filename = '%s/mutated-%d.yaml' % (workdir_name, generation)
-        with open(mutated_filename, 'w') as mutated_cr:
-            yaml.dump(application_cr, mutated_cr)
+    os.makedirs(workdir_path, exist_ok=True)
 
-        retval = check_result.run_and_check(['kubectl', 'apply', '-f', mutated_filename], metadata, generation=generation)
+    # register timeout to automatically stop after 12 hours
+    signal.signal(signal.SIGALRM, timeout_handler)
+    signal.alarm(12 * 60 * 60)
 
-        if retval == RunResult.invalidInput:
-            # Revert to parent CR
-            application_cr = parent_cr
-        elif retval == RunResult.unchanged:
-            continue
-        elif retval == RunResult.error:
-            # We found an error!
-            quit()
-        elif retval == RunResult.passing:
-            time.sleep(150)
-        else:
-            p_error('Unknown return value, abort')
-            quit()
+    trial_num = 0
+    while True:
+        construct_kind_cluster()
+        deploy_operator('cluster-operator.yml')
+        deploy_dependency([])
+        run_trial(application_cr, candidate_dict, trial_num)
+        trial_num = trial_num + 1
