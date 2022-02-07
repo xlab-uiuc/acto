@@ -186,6 +186,14 @@ def run_trial(initial_input: dict,
               candidate_dict: dict,
               trial_num: int,
               num_mutation: int = 100):
+    '''Run a trial starting with the initial input, mutate with the candidate_dict, and mutate for num_mutation times
+    
+    Args:
+        initial_input: the initial input without mutation
+        candidate_dict: guides the mutation
+        trial_num: how many trials have been run
+        num_mutation: how many mutations to run at each trial
+    '''
     trial_dir = os.path.join(workdir_path, str(trial_num))
     os.makedirs(trial_dir, exist_ok=True)
     global metadata

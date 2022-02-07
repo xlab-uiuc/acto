@@ -6,6 +6,16 @@ from common import p_print, p_debug, p_error, RunResult
 
 
 def run_and_check(cmd: list, metadata: dict, generation: int) -> RunResult:
+    '''Runs the cmd and check the result
+
+    Args:
+        cmd: list of cmd args
+        metadata: dict of test run info
+        generation: how many mutations have been run before
+
+    Returns:
+        result of the run
+    '''
     cli_result = subprocess.run(cmd, capture_output=True, text=True)
 
     if cli_result.stdout.find('error') != -1 or cli_result.stderr.find(
