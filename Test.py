@@ -1,5 +1,4 @@
 import argparse
-from distutils import core
 import os
 import kubernetes
 import yaml
@@ -8,14 +7,14 @@ import random
 from datetime import datetime
 from copy import deepcopy
 import signal
+import logging
 
-from common import p_debug, p_error, RunResult
+from common import RunResult
 import check_result
 
 corev1 = None
 appv1 = None
-metadata = {'namespace': '',
-            'current_dir_path': ''}
+metadata = {'namespace': '', 'current_dir_path': ''}
 workdir_path = 'testrun-%s' % datetime.now().strftime('%Y-%m-%d-%H-%M')
 
 
@@ -92,7 +91,7 @@ def deploy_operator(operator_yaml_path: str):
         os.system('kubectl apply -f %s' % 'new_operator.yaml')
         # os.system('cat <<EOF | kubectl apply -f -\n%s\nEOF' % yaml.dump_all(new_operator_documents))
 
-        p_debug('Deploying the operator, waiting for it to be ready')
+        logging.debug('Deploying the operator, waiting for it to be ready')
         pod_ready = False
         for _ in range(60):
             operator_deployments = appv1.list_namespaced_deployment(
@@ -101,17 +100,18 @@ def deploy_operator(operator_yaml_path: str):
                 label_selector='testing/tag=operator-deployment').items
             if len(operator_deployments) >= 1 \
                     and get_deployment_available_status(operator_deployments[0]):
-                p_debug('Operator ready')
+                logging.debug('Operator ready')
                 pod_ready = True
                 break
             time.sleep(1)
         if not pod_ready:
-            p_error("operator deployment failed to be ready within timeout")
+            logging.error(
+                "operator deployment failed to be ready within timeout")
             quit()
 
 
 def deploy_dependency(yaml_paths):
-    p_debug('Deploying dependencies')
+    logging.debug('Deploying dependencies')
     for yaml_path in yaml_paths:
         os.system('kubectl apply -f %s' % yaml_path)
     if len(yaml_paths) > 0:
@@ -132,7 +132,8 @@ def construct_candidate_helper(node, node_path, result: dict):
     else:
         for child_key, child_value in node.items():
             construct_candidate_helper(child_value,
-                                       '%s.%s' % (node_path, child_key), result)
+                                       '%s.%s' % (node_path, child_key),
+                                       result)
 
 
 def construct_candidate_from_yaml(yaml_path: str) -> dict:
@@ -172,8 +173,8 @@ def mutate_application_spec(current_spec: dict, candidates: dict):
         candidates: flat dictionary specifying list of valid values for each parameter
     '''
     path, v = elect_mutation_parameter(candidates)
-    p_debug('Elected parameter [%s]' % path)
-    p_debug('Elected value: %s' % v)
+    logging.debug('Elected parameter [%s]' % path)
+    logging.debug('Elected value: %s' % v)
     current_node = current_spec
     key_list = [x for x in path.split('.') if x]
     for key in key_list[:-1]:
@@ -199,6 +200,8 @@ def run_trial(initial_input: dict,
     global metadata
     metadata['current_dir_path'] = trial_dir
 
+    checker = check_result.Checker(metadata['namespace'], trial_dir, corev1, appv1)
+
     current_cr = deepcopy(initial_input)
     for generation in range(num_mutation):
         parent_cr = deepcopy(current_cr)
@@ -207,9 +210,8 @@ def run_trial(initial_input: dict,
         with open(mutated_filename, 'w') as mutated_cr_file:
             yaml.dump(current_cr, mutated_cr_file)
 
-        retval = check_result.run_and_check(
+        retval = checker.run_and_check(
             ['kubectl', 'apply', '-f', mutated_filename],
-            metadata,
             generation=generation)
 
         if retval == RunResult.invalidInput:
@@ -223,7 +225,7 @@ def run_trial(initial_input: dict,
         elif retval == RunResult.passing:
             continue
         else:
-            p_error('Unknown return value, abort')
+            logging.error('Unknown return value, abort')
             quit()
 
 
@@ -232,29 +234,41 @@ def timeout_handler():
 
 
 if __name__ == '__main__':
+    start_time = time.time()
+
     parser = argparse.ArgumentParser(description='Continuous testing')
 
+    os.makedirs(workdir_path, exist_ok=True)
+    logging.basicConfig(filename=os.path.join(workdir_path, 'test.log'),
+                        level=logging.DEBUG,
+                        filemode='w',
+                        format='%(levelname)s, %(name)s, %(message)s')
+    logging.getLogger("kubernetes").setLevel(logging.WARNING)
+
     candidate_dict = construct_candidate_from_yaml('rabbitmq_candidates.yaml')
-    p_debug(candidate_dict)
+    logging.debug(candidate_dict)
 
     application_cr: dict
     try:
         with open('rabbitmq_example_cr.yaml', 'r') as cr_file:
             application_cr = yaml.load(cr_file, Loader=yaml.FullLoader)
     except:
-        p_error('Failed to read cr yaml, aborting')
+        logging.error('Failed to read cr yaml, aborting')
         quit()
 
-    os.makedirs(workdir_path, exist_ok=True)
-
-    # register timeout to automatically stop after 12 hours
+    # register timeout to automatically stop after 6 hours
     signal.signal(signal.SIGALRM, timeout_handler)
-    signal.alarm(12 * 60 * 60)
+    signal.alarm(6 * 60 * 60)
 
     trial_num = 0
     while True:
+        trial_start_time = time.time()
         construct_kind_cluster()
         deploy_operator('cluster-operator.yml')
         deploy_dependency([])
         run_trial(application_cr, candidate_dict, trial_num)
+        trial_elapsed = time.strftime(
+            "%H:%M:%S", time.gmtime(time.time() - trial_start_time))
+        logging.info('Trial %d finished, completed in %s' %
+                     (trial_num, trial_elapsed))
         trial_num = trial_num + 1
