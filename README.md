@@ -1,9 +1,25 @@
 # Acto: Automatic, Continuous Testing for (Kubernetes/OpenShift) Operators
 
-e2e testing framework for k8s operators
+## Prerequisites
+- kubernetes  
+    `pip3 install kubernetes`
+- DeepDiff  
+    `pip3 install deepdiff`
+- [k8s Kind cluster](https://kind.sigs.k8s.io/)  
+    - For go(1.17+)  
+    `go install sigs.k8s.io/kind@v0.11.1`
+    - For older version  
+    `GO111MODULE="on" go get sigs.k8s.io/kind@v0.11.1`
 
-## Google Drive Directory
-https://drive.google.com/drive/folders/12XY6WmReuhvX2Du6KqB4xiFC3YEzRqMM
+## Usage
+To run the test:  
+```
+python3 acto.py --candidates [CANDIDATE_FILE] \
+                --seed [SEED_CR] \
+                --operator [OPERATOR_CR] \
+                --duration [#HOURS]
+```
 
-## Google Sheet for list of operators in the wild
-https://docs.google.com/spreadsheets/d/1_3-SlBRJO0Gtj6gt2Go1cOi4iRHdeBquoV-04Yel74A/edit?usp=sharing
+Example:  
+To run the test on the rabbitmq-operator:  
+`python3 acto.py --candidates data/rabbitmq-operator/candidates.yaml --seed data/rabbitmq-operator/cr.yaml --operator data/rabbitmq-operator/operator.yaml --duration 1`
