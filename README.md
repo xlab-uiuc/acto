@@ -1,4 +1,5 @@
-# Acto: Automatic, continuous testing for K8s/OpenShift operators
+# Acto: Automatic, Continuous Testing for (Kubernetes/OpenShift) Operators
+
 e2e testing framework for k8s operators
 
 ## Google Drive Directory
