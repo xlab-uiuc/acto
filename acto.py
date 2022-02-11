@@ -18,7 +18,6 @@ appv1Api = None
 customObjectsApi = None
 metadata = {'namespace': '', 'current_dir_path': ''}
 workdir_path = 'testrun-%s' % datetime.now().strftime('%Y-%m-%d-%H-%M')
-assert_path = 'asset'
 
 
 def get_deployment_available_status(
@@ -79,21 +78,21 @@ def deploy_operator(operator_yaml_path: str):
     '''
     global metadata
     with open(operator_yaml_path,'r') as operator_yaml, \
-            open('new_operator.yaml', 'w') as out_yaml:
+            open(os.path.join(workdir_path, 'new_operator.yaml'), 'w') as out_yaml:
         parsed_operator_documents = yaml.load_all(operator_yaml,
                                                   Loader=yaml.FullLoader)
         new_operator_documents = []
         for document in parsed_operator_documents:
             if document['kind'] == 'Deployment':
                 document['metadata']['labels'][
-                    'testing/tag'] = 'operator-deployment'
+                    'acto/tag'] = 'operator-deployment'
                 document['spec']['template']['metadata']['labels'][
-                    'testing/tag'] = 'operator-pod'
+                    'acto/tag'] = 'operator-pod'
                 metadata['namespace'] = document['metadata']['namespace']
             new_operator_documents.append(document)
         yaml.dump_all(new_operator_documents, out_yaml)
         out_yaml.flush()
-        os.system('kubectl apply -f %s' % 'new_operator.yaml')
+        os.system('kubectl apply -f %s' % os.path.join(workdir_path, 'new_operator.yaml'))
         # os.system('cat <<EOF | kubectl apply -f -\n%s\nEOF' % yaml.dump_all(new_operator_documents))
 
         logging.debug('Deploying the operator, waiting for it to be ready')
@@ -102,7 +101,7 @@ def deploy_operator(operator_yaml_path: str):
             operator_deployments = appv1Api.list_namespaced_deployment(
                 metadata['namespace'],
                 watch=False,
-                label_selector='testing/tag=operator-deployment').items
+                label_selector='acto/tag=operator-deployment').items
             if len(operator_deployments) >= 1 \
                     and get_deployment_available_status(operator_deployments[0]):
                 logging.debug('Operator ready')
@@ -252,7 +251,13 @@ def timeout_handler(sig, frame):
 if __name__ == '__main__':
     start_time = time.time()
 
-    parser = argparse.ArgumentParser(description='Continuous testing')
+    parser = argparse.ArgumentParser(description='Automatic, Continuous Testing for k8s/openshift Operators')
+    parser.add_argument('--candidates', '-c', dest='candidates', required=True)
+    parser.add_argument('--seed', '-s', dest='seed', required=True)
+    parser.add_argument('--operator', '-o', dest='operator', required=True)
+    parser.add_argument('--duration', '-d', dest='duration', default=6, help='Number of hours to run')
+
+    args = parser.parse_args()
 
     os.makedirs(workdir_path, exist_ok=True)
     logging.basicConfig(filename=os.path.join(workdir_path, 'test.log'),
@@ -261,12 +266,12 @@ if __name__ == '__main__':
                         format='%(levelname)s, %(name)s, %(message)s')
     logging.getLogger("kubernetes").setLevel(logging.WARNING)
 
-    candidate_dict = construct_candidate_from_yaml('rabbitmq_candidates.yaml')
+    candidate_dict = construct_candidate_from_yaml(args.candidates)
     logging.debug(candidate_dict)
 
     application_cr: dict
     try:
-        with open('rabbitmq_example_cr.yaml', 'r') as cr_file:
+        with open(args.seed, 'r') as cr_file:
             application_cr = yaml.load(cr_file, Loader=yaml.FullLoader)
     except:
         logging.error('Failed to read cr yaml, aborting')
@@ -274,13 +279,13 @@ if __name__ == '__main__':
 
     # register timeout to automatically stop after 6 hours
     signal.signal(signal.SIGALRM, timeout_handler)
-    signal.alarm(6 * 60 * 60)
+    signal.alarm(args.duration * 60 * 60)
 
     trial_num = 0
     while True:
         trial_start_time = time.time()
         construct_kind_cluster()
-        deploy_operator('cluster-operator.yml')
+        deploy_operator(args.operator)
         deploy_dependency([])
         run_trial(application_cr, candidate_dict, trial_num)
         trial_elapsed = time.strftime(

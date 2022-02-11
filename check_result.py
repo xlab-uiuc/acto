@@ -21,7 +21,6 @@ class Checker:
         self.appv1Api = appv1Api
         self.customObjectApi = customObjectApi
 
-
     def check_resources(self, input_diff, generation: int):
         # TODO: Get this into a loop
 
@@ -35,7 +34,7 @@ class Checker:
 
         # Check statefulSets
         current_sts = self.get_all_objects(
-            self.namespace, self.appv1Api.list_namespaced_stateful_set)
+            self.appv1Api.list_namespaced_stateful_set)
         sts_diff = DeepDiff(self.stateful_sets,
                             current_sts,
                             ignore_order=True,
@@ -43,7 +42,7 @@ class Checker:
         self.stateful_sets = current_sts
 
         current_config_maps = self.get_all_objects(
-            self.namespace, self.corev1Api.list_namespaced_config_map)
+            self.corev1Api.list_namespaced_config_map)
         config_maps_diff = DeepDiff(self.config_maps,
                                     current_config_maps,
                                     ignore_order=True,
@@ -51,7 +50,7 @@ class Checker:
         self.config_maps = current_config_maps
 
         current_services = self.get_all_objects(
-            self.namespace, self.corev1Api.list_namespaced_service)
+            self.corev1Api.list_namespaced_service)
         services_diff = DeepDiff(self.services,
                                  current_services,
                                  ignore_order=True,
@@ -82,7 +81,6 @@ class Checker:
             fout.write(str(services_diff.to_dict()))
             fout.write('\n----- CR Delta -----\n')
             fout.write(str(cr_diff.to_dict()))
-
 
     def run_and_check(self, cmd: list, input_diff,
                       generation: int) -> RunResult:
@@ -120,7 +118,6 @@ class Checker:
 
         return self.check_log(generation)
 
-
     def get_all_objects(self, method) -> dict:
         '''Get all pods in the application namespace
         
@@ -134,18 +131,16 @@ class Checker:
             result_dict[object.metadata.name] = object.to_dict()
         return result_dict
 
-
     def get_custom_resources(self, namespace: str, group: str, version: str,
                              plural: str) -> dict:
         # WIP
-        
+
         # result_dict = {}
         custom_resources = self.customObjectApi.list_namespaced_custom_object(
             group, version, namespace, plural)
         # for cr in custom_resources:
         #     result_dict[cr.metadata.name] = cr.to_dict()
         return custom_resources
-
 
     def check_log(self, generation: int) -> RunResult:
         '''Check the operator log for error msg
@@ -156,7 +151,7 @@ class Checker:
         operator_pod_list = self.corev1Api.list_namespaced_pod(
             namespace=self.namespace,
             watch=False,
-            label_selector="testing/tag=operator-pod").items
+            label_selector="acto/tag=operator-pod").items
         if len(operator_pod_list) >= 1:
             logging.debug('Got operator pod: pod name:' +
                           operator_pod_list[0].metadata.name)
