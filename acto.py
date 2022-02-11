@@ -279,7 +279,7 @@ if __name__ == '__main__':
 
     # register timeout to automatically stop after 6 hours
     signal.signal(signal.SIGALRM, timeout_handler)
-    signal.alarm(args.duration * 60 * 60)
+    signal.alarm(int(args.duration) * 60 * 60)
 
     trial_num = 0
     while True:
