@@ -1,4 +1,3 @@
-import kubernetes
 import subprocess
 import time
 import logging
@@ -9,21 +8,84 @@ from common import RunResult
 
 class Checker:
     pods = {}
+    stateful_sets = {}
+    config_maps = {}
+    services = {}
+    customResource = {}
 
-    def __init__(self, namespace: str, cur_path: str, corev1, appv1) -> None:
+    def __init__(self, namespace: str, cur_path: str, corev1Api, appv1Api,
+                 customObjectApi) -> None:
         self.namespace = namespace
         self.cur_path = cur_path
-        self.corev1 = corev1
-        self.appv1 = appv1
+        self.corev1Api = corev1Api
+        self.appv1Api = appv1Api
+        self.customObjectApi = customObjectApi
 
-    def check_resources(self):
+
+    def check_resources(self, input_diff, generation: int):
+        # TODO: Get this into a loop
+
         # Check pods
-        current_pods = self.get_all_pods(self.namespace)
-        diff = DeepDiff(self.pods, current_pods, ignore_order=True, report_repetition=True)
-        logging.info(diff)
+        current_pods = self.get_all_objects(self.corev1Api.list_namespaced_pod)
+        pods_diff = DeepDiff(self.pods,
+                             current_pods,
+                             ignore_order=True,
+                             report_repetition=True)
         self.pods = current_pods
 
-    def run_and_check(self, cmd: list, generation: int) -> RunResult:
+        # Check statefulSets
+        current_sts = self.get_all_objects(
+            self.namespace, self.appv1Api.list_namespaced_stateful_set)
+        sts_diff = DeepDiff(self.stateful_sets,
+                            current_sts,
+                            ignore_order=True,
+                            report_repetition=True)
+        self.stateful_sets = current_sts
+
+        current_config_maps = self.get_all_objects(
+            self.namespace, self.corev1Api.list_namespaced_config_map)
+        config_maps_diff = DeepDiff(self.config_maps,
+                                    current_config_maps,
+                                    ignore_order=True,
+                                    report_repetition=True)
+        self.config_maps = current_config_maps
+
+        current_services = self.get_all_objects(
+            self.namespace, self.corev1Api.list_namespaced_service)
+        services_diff = DeepDiff(self.services,
+                                 current_services,
+                                 ignore_order=True,
+                                 report_repetition=True)
+        self.services = current_services
+
+        current_cr = self.get_custom_resources(self.namespace, 'rabbitmq.com',
+                                               'v1beta1', 'rabbitmqclusters')
+        logging.debug(current_cr)
+
+        cr_diff = DeepDiff(self.customResource,
+                           current_cr,
+                           ignore_order=True,
+                           report_repetition=True)
+        self.customResource = current_cr
+
+        with open('%s/delta-%d.log' % (self.cur_path, generation),
+                  'w') as fout:
+            fout.write('----- Input Delta -----\n')
+            fout.write(str(input_diff.to_dict()))
+            fout.write('\n----- Pods Delta -----\n')
+            fout.write(str(pods_diff.to_dict()))
+            fout.write('\n----- Sts Delta -----\n')
+            fout.write(str(sts_diff.to_dict()))
+            fout.write('\n----- Config Map Delta -----\n')
+            fout.write(str(config_maps_diff.to_dict()))
+            fout.write('\n----- Services Delta -----\n')
+            fout.write(str(services_diff.to_dict()))
+            fout.write('\n----- CR Delta -----\n')
+            fout.write(str(cr_diff.to_dict()))
+
+
+    def run_and_check(self, cmd: list, input_diff,
+                      generation: int) -> RunResult:
         '''Runs the cmd and check the result
 
         Args:
@@ -47,36 +109,42 @@ class Checker:
                 'unchanged') != -1:
             logging.error('CR unchanged, continue')
             return RunResult.unchanged
-        logging.error('STDOUT: ' + cli_result.stdout)
-        logging.error('STDERR: ' + cli_result.stderr)
-        time.sleep(150)
+        logging.debug('STDOUT: ' + cli_result.stdout)
+        logging.debug('STDERR: ' + cli_result.stderr)
 
-        log_result = self.check_log(generation)
-        self.check_resources()
+        wait_duration = 180
+        logging.info('Wait for %d seconds' % wait_duration)
+        time.sleep(wait_duration)
 
-        return RunResult.passing
+        self.check_resources(input_diff, generation)
+
+        return self.check_log(generation)
 
 
-    def get_all_pods(self, namespace: str) -> dict:
+    def get_all_objects(self, method) -> dict:
         '''Get all pods in the application namespace
         
         Returns
             dict of all pods
         '''
-        pods_dict = {}
-        pods = self.corev1.list_namespaced_pod(namespace=namespace, watch=False).items
-        for pod in pods:
-            pods_dict[pod.metadata.name] = pod.to_dict()
-        return pods_dict
+        result_dict = {}
+        resource_objects = method(namespace=self.namespace, watch=False).items
+
+        for object in resource_objects:
+            result_dict[object.metadata.name] = object.to_dict()
+        return result_dict
 
 
-    def get_all_stateful_sets(self, namespace: str) -> dict:
-        sts_dict = {}
-        sts = self.appv1.list_namespaced_stateful_set(namespace=namespace,
-                                                watch=False).items
-        for stateful_set in sts:
-            sts_dict[stateful_set.metadata.name] = stateful_set.to_dict()
-        return sts_dict
+    def get_custom_resources(self, namespace: str, group: str, version: str,
+                             plural: str) -> dict:
+        # WIP
+        
+        # result_dict = {}
+        custom_resources = self.customObjectApi.list_namespaced_custom_object(
+            group, version, namespace, plural)
+        # for cr in custom_resources:
+        #     result_dict[cr.metadata.name] = cr.to_dict()
+        return custom_resources
 
 
     def check_log(self, generation: int) -> RunResult:
@@ -85,23 +153,21 @@ class Checker:
         Returns
             RunResult of the checking
         '''
-        operator_pod_list = self.corev1.list_namespaced_pod(
+        operator_pod_list = self.corev1Api.list_namespaced_pod(
             namespace=self.namespace,
             watch=False,
             label_selector="testing/tag=operator-pod").items
         if len(operator_pod_list) >= 1:
             logging.debug('Got operator pod: pod name:' +
-                        operator_pod_list[0].metadata.name)
+                          operator_pod_list[0].metadata.name)
         else:
             logging.error('Failed to find operator pod')
 
-        log = self.corev1.read_namespaced_pod_log(
-            name=operator_pod_list[0].metadata.name,
-            namespace=self.namespace)
+        log = self.corev1Api.read_namespaced_pod_log(
+            name=operator_pod_list[0].metadata.name, namespace=self.namespace)
 
-        with open(
-                '%s/operator-%d.log' % (self.cur_path, generation),
-                'w') as fout:
+        with open('%s/operator-%d.log' % (self.cur_path, generation),
+                  'w') as fout:
             fout.write(log)
 
         if log.find('error') != -1:

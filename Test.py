@@ -8,14 +8,17 @@ from datetime import datetime
 from copy import deepcopy
 import signal
 import logging
+from deepdiff import DeepDiff
 
 from common import RunResult
 import check_result
 
-corev1 = None
-appv1 = None
+corev1Api = None
+appv1Api = None
+customObjectsApi = None
 metadata = {'namespace': '', 'current_dir_path': ''}
 workdir_path = 'testrun-%s' % datetime.now().strftime('%Y-%m-%d-%H-%M')
+assert_path = 'asset'
 
 
 def get_deployment_available_status(
@@ -60,10 +63,12 @@ def construct_kind_cluster():
     os.system('kind create cluster --config %s' % kind_config_path)
 
     kubernetes.config.load_kube_config()
-    global corev1
-    global appv1
-    corev1 = kubernetes.client.CoreV1Api()
-    appv1 = kubernetes.client.AppsV1Api()
+    global corev1Api
+    global appv1Api
+    global customObjectsApi
+    corev1Api = kubernetes.client.CoreV1Api()
+    appv1Api = kubernetes.client.AppsV1Api()
+    customObjectsApi = kubernetes.client.CustomObjectsApi()
 
 
 def deploy_operator(operator_yaml_path: str):
@@ -94,7 +99,7 @@ def deploy_operator(operator_yaml_path: str):
         logging.debug('Deploying the operator, waiting for it to be ready')
         pod_ready = False
         for _ in range(60):
-            operator_deployments = appv1.list_namespaced_deployment(
+            operator_deployments = appv1Api.list_namespaced_deployment(
                 metadata['namespace'],
                 watch=False,
                 label_selector='testing/tag=operator-deployment').items
@@ -200,23 +205,34 @@ def run_trial(initial_input: dict,
     global metadata
     metadata['current_dir_path'] = trial_dir
 
-    checker = check_result.Checker(metadata['namespace'], trial_dir, corev1, appv1)
+    checker = check_result.Checker(metadata['namespace'], trial_dir, corev1Api,
+                                   appv1Api, customObjectsApi)
 
     current_cr = deepcopy(initial_input)
     for generation in range(num_mutation):
         parent_cr = deepcopy(current_cr)
         mutate_application_spec(current_cr, candidate_dict)
+
+        cr_diff = DeepDiff(parent_cr,
+                           current_cr,
+                           ignore_order=True,
+                           report_repetition=True)
+        if len(cr_diff) == 0:
+            logging.info('CR unchanged, continue')
+            continue
+
         mutated_filename = '%s/mutated-%d.yaml' % (trial_dir, generation)
         with open(mutated_filename, 'w') as mutated_cr_file:
             yaml.dump(current_cr, mutated_cr_file)
 
         retval = checker.run_and_check(
             ['kubectl', 'apply', '-f', mutated_filename],
+            cr_diff,
             generation=generation)
 
         if retval == RunResult.invalidInput:
             # Revert to parent CR
-            application_cr = parent_cr
+            current_cr = parent_cr
         elif retval == RunResult.unchanged:
             continue
         elif retval == RunResult.error:
@@ -229,7 +245,7 @@ def run_trial(initial_input: dict,
             quit()
 
 
-def timeout_handler():
+def timeout_handler(sig, frame):
     raise TimeoutError
 
 
