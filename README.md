@@ -1,4 +1,4 @@
-# k8s-operator-bugs
+# Acto: Automatic, continuous testing for Kubernetes/OpenShift operators
 e2e testing framework for k8s operators
 
 ## Google Drive Directory
