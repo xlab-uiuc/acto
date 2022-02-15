@@ -10,7 +10,7 @@ import signal
 import logging
 from deepdiff import DeepDiff
 
-from common import RunResult
+from common import RunResult, get_diff_stat
 import check_result
 
 corev1Api = None
@@ -215,7 +215,8 @@ def run_trial(initial_input: dict,
         cr_diff = DeepDiff(parent_cr,
                            current_cr,
                            ignore_order=True,
-                           report_repetition=True)
+                           report_repetition=True,
+                           view='tree')
         if len(cr_diff) == 0:
             logging.info('CR unchanged, continue')
             continue
@@ -236,6 +237,7 @@ def run_trial(initial_input: dict,
             continue
         elif retval == RunResult.error:
             # We found an error!
+            logging.info('Diff stat: %s ' % get_diff_stat())
             return
         elif retval == RunResult.passing:
             continue
@@ -252,9 +254,9 @@ if __name__ == '__main__':
     start_time = time.time()
 
     parser = argparse.ArgumentParser(description='Automatic, Continuous Testing for k8s/openshift Operators')
-    parser.add_argument('--candidates', '-c', dest='candidates', required=True)
-    parser.add_argument('--seed', '-s', dest='seed', required=True)
-    parser.add_argument('--operator', '-o', dest='operator', required=True)
+    parser.add_argument('--candidates', '-c', dest='candidates', required=True, help="yaml file to specify candidates for parameters")
+    parser.add_argument('--seed', '-s', dest='seed', required=True, help="seed CR file")
+    parser.add_argument('--operator', '-o', dest='operator', required=True, help="yaml file for deploying the operator")
     parser.add_argument('--duration', '-d', dest='duration', default=6, help='Number of hours to run')
 
     args = parser.parse_args()
@@ -277,7 +279,7 @@ if __name__ == '__main__':
         logging.error('Failed to read cr yaml, aborting')
         quit()
 
-    # register timeout to automatically stop after 6 hours
+    # register timeout to automatically stop after # hours
     signal.signal(signal.SIGALRM, timeout_handler)
     signal.alarm(int(args.duration) * 60 * 60)
 

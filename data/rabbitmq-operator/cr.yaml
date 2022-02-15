@@ -1,7 +1,7 @@
 apiVersion: rabbitmq.com/v1beta1
 kind: RabbitmqCluster
 metadata:
-  name: production-ready
+  name: test-cluster
   namespace: rabbitmq-system
 spec:
   affinity:
@@ -12,7 +12,7 @@ spec:
             - key: app.kubernetes.io/name
               operator: In
               values:
-              - production-ready
+              - test-cluster
         topologyKey: kubernetes.io/hostname
     podAffinity:
       requiredDuringSchedulingIgnoredDuringExecution: null

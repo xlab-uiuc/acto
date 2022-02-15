@@ -2,8 +2,9 @@ import subprocess
 import time
 import logging
 from deepdiff import DeepDiff
+import json
 
-from common import RunResult
+from common import RunResult, ActoEncoder, postprocess_diff, EXCLUDE_PATH_REGEX
 
 
 class Checker:
@@ -24,63 +25,64 @@ class Checker:
     def check_resources(self, input_diff, generation: int):
         # TODO: Get this into a loop
 
+        resource_diff = {'input_diff': postprocess_diff(input_diff)}
         # Check pods
         current_pods = self.get_all_objects(self.corev1Api.list_namespaced_pod)
-        pods_diff = DeepDiff(self.pods,
-                             current_pods,
-                             ignore_order=True,
-                             report_repetition=True)
+        resource_diff['pods_diff'] = postprocess_diff(
+            DeepDiff(self.pods,
+                     current_pods,
+                     exclude_regex_paths=EXCLUDE_PATH_REGEX,
+                     report_repetition=True,
+                     view='tree'))
         self.pods = current_pods
+        logging.debug(current_pods)
 
         # Check statefulSets
         current_sts = self.get_all_objects(
             self.appv1Api.list_namespaced_stateful_set)
-        sts_diff = DeepDiff(self.stateful_sets,
-                            current_sts,
-                            ignore_order=True,
-                            report_repetition=True)
+        resource_diff['sts_diff'] = postprocess_diff(
+            DeepDiff(self.stateful_sets,
+                     current_sts,
+                     exclude_regex_paths=EXCLUDE_PATH_REGEX,
+                     report_repetition=True,
+                     view='tree'))
         self.stateful_sets = current_sts
 
         current_config_maps = self.get_all_objects(
             self.corev1Api.list_namespaced_config_map)
-        config_maps_diff = DeepDiff(self.config_maps,
-                                    current_config_maps,
-                                    ignore_order=True,
-                                    report_repetition=True)
+        resource_diff['configmap_diff'] = postprocess_diff(
+            DeepDiff(self.config_maps,
+                     current_config_maps,
+                     exclude_regex_paths=EXCLUDE_PATH_REGEX,
+                     report_repetition=True,
+                     view='tree'))
         self.config_maps = current_config_maps
 
         current_services = self.get_all_objects(
             self.corev1Api.list_namespaced_service)
-        services_diff = DeepDiff(self.services,
-                                 current_services,
-                                 ignore_order=True,
-                                 report_repetition=True)
+        resource_diff['services_diff'] = postprocess_diff(
+            DeepDiff(self.services,
+                     current_services,
+                     exclude_regex_paths=EXCLUDE_PATH_REGEX,
+                     report_repetition=True,
+                     view='tree'))
         self.services = current_services
 
         current_cr = self.get_custom_resources(self.namespace, 'rabbitmq.com',
                                                'v1beta1', 'rabbitmqclusters')
         logging.debug(current_cr)
 
-        cr_diff = DeepDiff(self.customResource,
-                           current_cr,
-                           ignore_order=True,
-                           report_repetition=True)
+        resource_diff['cr_diff'] = postprocess_diff(
+            DeepDiff(self.customResource,
+                     current_cr,
+                     exclude_regex_paths=EXCLUDE_PATH_REGEX,
+                     report_repetition=True,
+                     view='tree'))
         self.customResource = current_cr
 
         with open('%s/delta-%d.log' % (self.cur_path, generation),
                   'w') as fout:
-            fout.write('----- Input Delta -----\n')
-            fout.write(str(input_diff.to_dict()))
-            fout.write('\n----- Pods Delta -----\n')
-            fout.write(str(pods_diff.to_dict()))
-            fout.write('\n----- Sts Delta -----\n')
-            fout.write(str(sts_diff.to_dict()))
-            fout.write('\n----- Config Map Delta -----\n')
-            fout.write(str(config_maps_diff.to_dict()))
-            fout.write('\n----- Services Delta -----\n')
-            fout.write(str(services_diff.to_dict()))
-            fout.write('\n----- CR Delta -----\n')
-            fout.write(str(cr_diff.to_dict()))
+            json.dump(resource_diff, fout, cls=ActoEncoder, indent=6)
 
     def run_and_check(self, cmd: list, input_diff,
                       generation: int) -> RunResult:
@@ -135,11 +137,11 @@ class Checker:
                              plural: str) -> dict:
         # WIP
 
-        # result_dict = {}
+        result_dict = {}
         custom_resources = self.customObjectApi.list_namespaced_custom_object(
-            group, version, namespace, plural)
-        # for cr in custom_resources:
-        #     result_dict[cr.metadata.name] = cr.to_dict()
+            group, version, namespace, plural)['items']
+        for cr in custom_resources:
+            result_dict[cr['metadata']['name']] = cr
         return custom_resources
 
     def check_log(self, generation: int) -> RunResult:
