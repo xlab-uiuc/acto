@@ -210,14 +210,15 @@ def run_trial(initial_input: dict,
     current_cr = deepcopy(initial_input)
     for generation in range(num_mutation):
         parent_cr = deepcopy(current_cr)
-        mutate_application_spec(current_cr, candidate_dict)
+        if generation != 0:
+            mutate_application_spec(current_cr, candidate_dict)
 
         cr_diff = DeepDiff(parent_cr,
                            current_cr,
                            ignore_order=True,
                            report_repetition=True,
                            view='tree')
-        if len(cr_diff) == 0:
+        if len(cr_diff) == 0 and generation != 0:
             logging.info('CR unchanged, continue')
             continue
 

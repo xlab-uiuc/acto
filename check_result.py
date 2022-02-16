@@ -3,8 +3,9 @@ import time
 import logging
 from deepdiff import DeepDiff
 import json
+import re
 
-from common import RunResult, ActoEncoder, postprocess_diff, EXCLUDE_PATH_REGEX
+from common import RunResult, ActoEncoder, postprocess_diff, EXCLUDE_PATH_REGEX, EXCLUDE_ERROR_REGEX
 
 
 class Checker:
@@ -122,6 +123,9 @@ class Checker:
 
     def get_all_objects(self, method) -> dict:
         '''Get all pods in the application namespace
+
+        Args:
+            method: function pointer for getting the object
         
         Returns
             dict of all pods
@@ -135,8 +139,16 @@ class Checker:
 
     def get_custom_resources(self, namespace: str, group: str, version: str,
                              plural: str) -> dict:
-        # WIP
+        '''Get custom resource object
 
+        Args:
+            namespace: namespace of the cr
+            group: API group of the cr
+            version: version of the cr
+            plural: plural name of the cr
+        
+        Returns
+        '''
         result_dict = {}
         custom_resources = self.customObjectApi.list_namespaced_custom_object(
             group, version, namespace, plural)['items']
@@ -167,8 +179,16 @@ class Checker:
                   'w') as fout:
             fout.write(log)
 
-        if log.find('error') != -1:
-            logging.info('Found error in operator log')
-            return RunResult.error
+        for line in log.split('\n'):
+            if 'error' in line:
+                skip = False
+                for regex in EXCLUDE_ERROR_REGEX:
+                    if re.search(regex, line):
+                        skip = True
+                if skip: continue
+                logging.info('Found error in operator log')
+                return RunResult.error
+            else:
+                continue
 
         return RunResult.passing

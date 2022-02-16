@@ -40,16 +40,15 @@ def get_diff_stat():
 
 class Diff:
 
-    def __init__(self, prev, curr, type='') -> None:
+    def __init__(self, prev, curr) -> None:
         # self.path = path
         self.prev = prev
         self.curr = curr
-        self.type = type
 
     def to_dict(self):
         '''serialize Diff object
         '''
-        return {'prev': self.prev, 'curr': self.curr, 'type': self.type}
+        return {'prev': self.prev, 'curr': self.curr}
 
 
 class ActoEncoder(json.JSONEncoder):
@@ -73,4 +72,8 @@ EXCLUDE_PATH_REGEX = [
     r"resource_version",
     r"observed_generation",
     r"observedGeneration",
+]
+
+EXCLUDE_ERROR_REGEX = [
+    r"the object has been modified; please apply your changes to the latest version and try again",
 ]
