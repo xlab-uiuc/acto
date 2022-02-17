@@ -4,8 +4,10 @@ import logging
 from deepdiff import DeepDiff
 import json
 import re
+from threading import Thread, Event
 
 from common import RunResult, ActoEncoder, postprocess_diff, EXCLUDE_PATH_REGEX, EXCLUDE_ERROR_REGEX
+import acto_timer
 
 
 class Checker:
@@ -81,8 +83,7 @@ class Checker:
                      view='tree'))
         self.customResource = current_cr
 
-        with open('%s/delta-%d.log' % (self.cur_path, generation),
-                  'w') as fout:
+        with open('%s/delta-%d.log' % (self.cur_path, generation), 'w') as fout:
             json.dump(resource_diff, fout, cls=ActoEncoder, indent=6)
 
     def run_and_check(self, cmd: list, input_diff,
@@ -113,9 +114,7 @@ class Checker:
         logging.debug('STDOUT: ' + cli_result.stdout)
         logging.debug('STDERR: ' + cli_result.stderr)
 
-        wait_duration = 180
-        logging.info('Wait for %d seconds' % wait_duration)
-        time.sleep(wait_duration)
+        self.wait_for_system_converge()
 
         self.check_resources(input_diff, generation)
 
@@ -185,10 +184,40 @@ class Checker:
                 for regex in EXCLUDE_ERROR_REGEX:
                     if re.search(regex, line):
                         skip = True
-                if skip: continue
+                if skip:
+                    continue
                 logging.info('Found error in operator log')
                 return RunResult.error
             else:
                 continue
 
         return RunResult.passing
+
+    def wait_for_system_converge(self, timeout=60):
+        '''This function blocks until the system converges
+        '''
+        start = time.time()
+        timer = acto_timer.ActoTimer(timeout)
+        watch_thread = Thread(target=watch_system_events,
+                              args=[self.corev1Api, self.namespace, timer])
+        timer.start()
+        watch_thread.start()
+
+        timer.join()
+        time_elapsed = time.strftime("%H:%M:%S",
+                                     time.gmtime(time.time() - start))
+        logging.info('System took %s to converge' % time_elapsed)
+        return
+
+
+def watch_system_events(api, namespace, timer: acto_timer.ActoTimer):
+    ret = api.list_namespaced_event(namespace,
+                                    _preload_content=False,
+                                    watch=True)
+    for _ in ret:
+        if timer.is_alive():
+            timer.reset()
+        else:
+            break
+    ret.close()
+    ret.release_conn()
