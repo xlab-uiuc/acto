@@ -38,7 +38,6 @@ class Checker:
                      report_repetition=True,
                      view='tree'))
         self.pods = current_pods
-        logging.debug(current_pods)
 
         # Check statefulSets
         current_sts = self.get_all_objects(
@@ -183,6 +182,7 @@ class Checker:
                 skip = False
                 for regex in EXCLUDE_ERROR_REGEX:
                     if re.search(regex, line):
+                        logging.debug('Skipped error msg: %s' % line)
                         skip = True
                 if skip:
                     continue
@@ -193,17 +193,22 @@ class Checker:
 
         return RunResult.passing
 
-    def wait_for_system_converge(self, timeout=60):
+    def wait_for_system_converge(self, timeout=360):
         '''This function blocks until the system converges
+
+        It sets up a resettable timer which goes off in 60 seconds.
+        It starts a thread that watches for system events, every time a system
+        event arrives, this thread resets the timer.
         '''
         start = time.time()
-        timer = acto_timer.ActoTimer(timeout)
+        timer = acto_timer.ActoTimer(60)
         watch_thread = Thread(target=watch_system_events,
                               args=[self.corev1Api, self.namespace, timer])
         timer.start()
         watch_thread.start()
 
-        timer.join()
+        timer.join(timeout)
+        timer.cancel()
         time_elapsed = time.strftime("%H:%M:%S",
                                      time.gmtime(time.time() - start))
         logging.info('System took %s to converge' % time_elapsed)
@@ -211,6 +216,8 @@ class Checker:
 
 
 def watch_system_events(api, namespace, timer: acto_timer.ActoTimer):
+    '''A function thread that watches namespaced events
+    '''
     ret = api.list_namespaced_event(namespace,
                                     _preload_content=False,
                                     watch=True)

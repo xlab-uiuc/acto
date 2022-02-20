@@ -206,9 +206,10 @@ def run_trial(initial_input: dict,
 
     checker = check_result.Checker(metadata['namespace'], trial_dir, corev1Api,
                                    appv1Api, customObjectsApi)
-
     current_cr = deepcopy(initial_input)
-    for generation in range(num_mutation):
+
+    generation = 0
+    while generation < num_mutation:
         parent_cr = deepcopy(current_cr)
         if generation != 0:
             mutate_application_spec(current_cr, candidate_dict)
@@ -230,6 +231,7 @@ def run_trial(initial_input: dict,
             ['kubectl', 'apply', '-f', mutated_filename],
             cr_diff,
             generation=generation)
+        generation += 1
 
         if retval == RunResult.invalidInput:
             # Revert to parent CR
