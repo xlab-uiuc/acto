@@ -11,11 +11,7 @@ import acto_timer
 
 
 class Checker:
-    pods = {}
-    stateful_sets = {}
-    config_maps = {}
-    services = {}
-    customResource = {}
+    resources = {}
 
     def __init__(self, namespace: str, cur_path: str, corev1Api, appv1Api,
                  customObjectApi) -> None:
@@ -25,64 +21,50 @@ class Checker:
         self.appv1Api = appv1Api
         self.customObjectApi = customObjectApi
 
+        self.resource_methods = {
+            'pod': self.corev1Api.list_namespaced_pod,
+            'stateful_set': self.appv1Api.list_namespaced_stateful_set,
+            'config_map': self.corev1Api.list_namespaced_config_map,
+            'service': self.corev1Api.list_namespaced_service,
+        }
+
+        for resource in self.resource_methods:
+            self.resources[resource] = {}
+        self.resources['custom_resource'] = {}
+
     def check_resources(self, input_diff, generation: int):
-        # TODO: Get this into a loop
+        '''Queries resources in the test namespace, computes delta
+        
+        Args:
+            input_diff: delta in the CR yaml input
+            generation: at which step in the trial
+        '''
 
         resource_diff = {'input_diff': postprocess_diff(input_diff)}
-        # Check pods
-        current_pods = self.get_all_objects(self.corev1Api.list_namespaced_pod)
-        resource_diff['pods_diff'] = postprocess_diff(
-            DeepDiff(self.pods,
-                     current_pods,
-                     exclude_regex_paths=EXCLUDE_PATH_REGEX,
-                     report_repetition=True,
-                     view='tree'))
-        self.pods = current_pods
+        for resource, method in self.resource_methods.items():
+            current_resource = self.__get_all_objects(method)
+            resource_diff[resource] = postprocess_diff(
+                DeepDiff(self.resources[resource],
+                         current_resource,
+                         exclude_regex_paths=EXCLUDE_PATH_REGEX,
+                         report_repetition=True,
+                         view='tree'))
+            self.resources[resource] = current_resource
 
-        # Check statefulSets
-        current_sts = self.get_all_objects(
-            self.appv1Api.list_namespaced_stateful_set)
-        resource_diff['sts_diff'] = postprocess_diff(
-            DeepDiff(self.stateful_sets,
-                     current_sts,
-                     exclude_regex_paths=EXCLUDE_PATH_REGEX,
-                     report_repetition=True,
-                     view='tree'))
-        self.stateful_sets = current_sts
-
-        current_config_maps = self.get_all_objects(
-            self.corev1Api.list_namespaced_config_map)
-        resource_diff['configmap_diff'] = postprocess_diff(
-            DeepDiff(self.config_maps,
-                     current_config_maps,
-                     exclude_regex_paths=EXCLUDE_PATH_REGEX,
-                     report_repetition=True,
-                     view='tree'))
-        self.config_maps = current_config_maps
-
-        current_services = self.get_all_objects(
-            self.corev1Api.list_namespaced_service)
-        resource_diff['services_diff'] = postprocess_diff(
-            DeepDiff(self.services,
-                     current_services,
-                     exclude_regex_paths=EXCLUDE_PATH_REGEX,
-                     report_repetition=True,
-                     view='tree'))
-        self.services = current_services
-
-        current_cr = self.get_custom_resources(self.namespace, 'rabbitmq.com',
+        current_cr = self.__get_custom_resources(self.namespace, 'rabbitmq.com',
                                                'v1beta1', 'rabbitmqclusters')
         logging.debug(current_cr)
 
         resource_diff['cr_diff'] = postprocess_diff(
-            DeepDiff(self.customResource,
+            DeepDiff(self.resources['custom_resource'],
                      current_cr,
                      exclude_regex_paths=EXCLUDE_PATH_REGEX,
                      report_repetition=True,
                      view='tree'))
-        self.customResource = current_cr
+        self.resources['custom_resource'] = current_cr
 
-        with open('%s/delta-%d.log' % (self.cur_path, generation), 'w') as fout:
+        with open('%s/delta-%d.log' % (self.cur_path, generation),
+                  'w') as fout:
             json.dump(resource_diff, fout, cls=ActoEncoder, indent=6)
 
     def run_and_check(self, cmd: list, input_diff,
@@ -119,7 +101,7 @@ class Checker:
 
         return self.check_log(generation)
 
-    def get_all_objects(self, method) -> dict:
+    def __get_all_objects(self, method) -> dict:
         '''Get all pods in the application namespace
 
         Args:
@@ -135,7 +117,7 @@ class Checker:
             result_dict[object.metadata.name] = object.to_dict()
         return result_dict
 
-    def get_custom_resources(self, namespace: str, group: str, version: str,
+    def __get_custom_resources(self, namespace: str, group: str, version: str,
                              plural: str) -> dict:
         '''Get custom resource object
 

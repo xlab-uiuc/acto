@@ -269,7 +269,7 @@ if __name__ == '__main__':
                         level=logging.DEBUG,
                         filemode='w',
                         format='%(levelname)s, %(name)s, %(message)s')
-    logging.getLogger("kubernetes").setLevel(logging.WARNING)
+    logging.getLogger("kubernetes").setLevel(logging.DEBUG)
 
     candidate_dict = construct_candidate_from_yaml(args.candidates)
     logging.debug(candidate_dict)

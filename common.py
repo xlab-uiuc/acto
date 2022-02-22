@@ -72,6 +72,7 @@ EXCLUDE_PATH_REGEX = [
     r"resource_version",
     r"observed_generation",
     r"observedGeneration",
+    r"control\-plane\.alpha\.kubernetes\.io\/leader",
 ]
 
 EXCLUDE_ERROR_REGEX = [
