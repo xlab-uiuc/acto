@@ -13,9 +13,9 @@ import acto_timer
 class Checker:
     resources = {}
 
-    def __init__(self, namespace: str, cur_path: str, corev1Api, appv1Api,
+    def __init__(self, context: dict, cur_path: str, corev1Api, appv1Api,
                  customObjectApi) -> None:
-        self.namespace = namespace
+        self.context = context
         self.cur_path = cur_path
         self.corev1Api = corev1Api
         self.appv1Api = appv1Api
@@ -51,8 +51,8 @@ class Checker:
                          view='tree'))
             self.resources[resource] = current_resource
 
-        current_cr = self.__get_custom_resources(self.namespace, 'rabbitmq.com',
-                                               'v1beta1', 'rabbitmqclusters')
+        current_cr = self.__get_custom_resources(self.context['namespace'], self.context['crd']['group'],
+                                               self.context['crd']['version'], self.context['crd']['plural'])
         logging.debug(current_cr)
 
         resource_diff['cr_diff'] = postprocess_diff(
@@ -111,7 +111,7 @@ class Checker:
             dict of all pods
         '''
         result_dict = {}
-        resource_objects = method(namespace=self.namespace, watch=False).items
+        resource_objects = method(namespace=self.context['namespace'], watch=False).items
 
         for object in resource_objects:
             result_dict[object.metadata.name] = object.to_dict()
@@ -143,7 +143,7 @@ class Checker:
             RunResult of the checking
         '''
         operator_pod_list = self.corev1Api.list_namespaced_pod(
-            namespace=self.namespace,
+            namespace=self.context['namespace'],
             watch=False,
             label_selector="acto/tag=operator-pod").items
         if len(operator_pod_list) >= 1:
@@ -153,7 +153,7 @@ class Checker:
             logging.error('Failed to find operator pod')
 
         log = self.corev1Api.read_namespaced_pod_log(
-            name=operator_pod_list[0].metadata.name, namespace=self.namespace)
+            name=operator_pod_list[0].metadata.name, namespace=self.context['namespace'])
 
         with open('%s/operator-%d.log' % (self.cur_path, generation),
                   'w') as fout:
@@ -185,7 +185,7 @@ class Checker:
         start = time.time()
         timer = acto_timer.ActoTimer(60)
         watch_thread = Thread(target=watch_system_events,
-                              args=[self.corev1Api, self.namespace, timer])
+                              args=[self.corev1Api, self.context['namespace'], timer])
         timer.start()
         watch_thread.start()
 

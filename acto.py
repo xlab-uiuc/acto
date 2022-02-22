@@ -16,7 +16,7 @@ import check_result
 corev1Api = None
 appv1Api = None
 customObjectsApi = None
-metadata = {'namespace': '', 'current_dir_path': ''}
+context = {'namespace': '', 'current_dir_path': ''}
 workdir_path = 'testrun-%s' % datetime.now().strftime('%Y-%m-%d-%H-%M')
 
 
@@ -76,7 +76,7 @@ def deploy_operator(operator_yaml_path: str):
     Args:
         operator_yaml_path - path pointing to the operator yaml file
     '''
-    global metadata
+    global context
     with open(operator_yaml_path,'r') as operator_yaml, \
             open(os.path.join(workdir_path, 'new_operator.yaml'), 'w') as out_yaml:
         parsed_operator_documents = yaml.load_all(operator_yaml,
@@ -88,7 +88,14 @@ def deploy_operator(operator_yaml_path: str):
                     'acto/tag'] = 'operator-deployment'
                 document['spec']['template']['metadata']['labels'][
                     'acto/tag'] = 'operator-pod'
-                metadata['namespace'] = document['metadata']['namespace']
+                context['namespace'] = document['metadata']['namespace']
+            elif document['kind'] == 'CustomResourceDefinition':
+                crd_data = {
+                    'group': document['spec']['group'],
+                    'plural': document['spec']['names']['plural'],
+                    'version': document['spec']['versions'][0]['name'],
+                }
+                context['crd'] = crd_data
             new_operator_documents.append(document)
         yaml.dump_all(new_operator_documents, out_yaml)
         out_yaml.flush()
@@ -99,7 +106,7 @@ def deploy_operator(operator_yaml_path: str):
         pod_ready = False
         for _ in range(60):
             operator_deployments = appv1Api.list_namespaced_deployment(
-                metadata['namespace'],
+                context['namespace'],
                 watch=False,
                 label_selector='acto/tag=operator-deployment').items
             if len(operator_deployments) >= 1 \
@@ -201,10 +208,10 @@ def run_trial(initial_input: dict,
     '''
     trial_dir = os.path.join(workdir_path, str(trial_num))
     os.makedirs(trial_dir, exist_ok=True)
-    global metadata
-    metadata['current_dir_path'] = trial_dir
+    global context
+    context['current_dir_path'] = trial_dir
 
-    checker = check_result.Checker(metadata['namespace'], trial_dir, corev1Api,
+    checker = check_result.Checker(context, trial_dir, corev1Api,
                                    appv1Api, customObjectsApi)
     current_cr = deepcopy(initial_input)
 
