@@ -50,7 +50,7 @@ class Diff:
     def __init__(self, prev, curr, path) -> None:
         # self.path = path
         self.prev = prev if not isinstance(prev, NotPresent) else None
-        self.curr = curr if not isinstance(prev, NotPresent) else None
+        self.curr = curr if not isinstance(curr, NotPresent) else None
         self.path = path
 
     def to_dict(self):
