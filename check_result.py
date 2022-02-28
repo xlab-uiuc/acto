@@ -67,6 +67,27 @@ class Checker:
                   'w') as fout:
             json.dump(resource_diff, fout, cls=ActoEncoder, indent=6)
 
+
+    def list_matched_fields(path: list, delta_dict: dict) -> list:
+        results = []
+        max_match = 0
+        for resource, changes in delta_dict.items():
+            for path_str, diff in changes.items():
+                position = 0
+                while path[-position-1] == diff.path[-position-1]:
+                    position += 1
+                    if position == min(len(path), len(diff.path)):
+                        break
+                if position == max_match and position != 0:
+                    results.append(diff)
+                elif position > max_match:
+                    results = [diff]
+                    max_match = position
+                else:
+                    pass
+
+        return results
+
     def run_and_check(self, cmd: list, input_diff,
                       generation: int) -> RunResult:
         '''Runs the cmd and check the result

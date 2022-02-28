@@ -3,6 +3,7 @@ import enum
 import json
 from deepdiff.helper import NotPresent
 from datetime import datetime, date
+import re
 
 ACTO_IDX_SKIP = 'ACTO-INGORE'
 TYPE_CHANGE = 'TYPE-CHANGE'
@@ -26,12 +27,18 @@ def postprocess_diff(diff):
         diff_dict[category] = {}
         for change in changes:
             # diff_dict[category].append(Diff(change.path(), change.t1, change.t2))
-            diff_dict[category][change.path()] = Diff(change.t1, change.t2)
+            diff_dict[category][change.path()] = Diff(
+                change.t1, change.t2, change.path(output_format='list'))
             if change.path() not in diff_dict:
                 diff_stat[change.path()] = 1
             else:
                 diff_stat[change.path()] += 1
     return diff_dict
+
+
+def canonicalize(s: str):
+    '''Replace all upper case letters with _lowercase'''
+    return re.sub(r"(?=[A-Z])", '_', s).lower()
 
 
 def get_diff_stat():
@@ -40,10 +47,11 @@ def get_diff_stat():
 
 class Diff:
 
-    def __init__(self, prev, curr) -> None:
+    def __init__(self, prev, curr, path) -> None:
         # self.path = path
         self.prev = prev
         self.curr = curr
+        self.path = path
 
     def to_dict(self):
         '''serialize Diff object
