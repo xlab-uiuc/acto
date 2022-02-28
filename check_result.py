@@ -39,11 +39,11 @@ class Checker:
             input_diff: delta in the CR yaml input
             generation: at which step in the trial
         '''
-
-        resource_diff = {'input_diff': postprocess_diff(input_diff)}
+        input_delta = postprocess_diff(input_diff)
+        system_delta = {}
         for resource, method in self.resource_methods.items():
             current_resource = self.__get_all_objects(method)
-            resource_diff[resource] = postprocess_diff(
+            system_delta[resource] = postprocess_diff(
                 DeepDiff(self.resources[resource],
                          current_resource,
                          exclude_regex_paths=EXCLUDE_PATH_REGEX,
@@ -55,7 +55,7 @@ class Checker:
                                                self.context['crd']['version'], self.context['crd']['plural'])
         logging.debug(current_cr)
 
-        resource_diff['cr_diff'] = postprocess_diff(
+        system_delta['cr_diff'] = postprocess_diff(
             DeepDiff(self.resources['custom_resource'],
                      current_cr,
                      exclude_regex_paths=EXCLUDE_PATH_REGEX,
@@ -65,28 +65,32 @@ class Checker:
 
         with open('%s/delta-%d.log' % (self.cur_path, generation),
                   'w') as fout:
-            json.dump(resource_diff, fout, cls=ActoEncoder, indent=6)
+            fout.write('---------- INPUT DELTA  ----------\n')
+            fout.write(json.dumps(input_delta, cls=ActoEncoder, indent=6))
+            fout.write('\n---------- SYSTEM DELTA ----------\n')
+            fout.write(json.dumps(system_delta, cls=ActoEncoder, indent=6))
+        
+        '''
+        System state oracle
 
+        For each delta in the input, find the longest matching fields in the system state.
+        Then compare the the delta values (prev, curr).
+        '''
+        for delta_list in input_delta.values():
+            for delta in delta_list.values():
+                # Find the longest matching field, compare the delta change
+                match_deltas = list_matched_fields(delta.path, system_delta)
+                if len(match_deltas) == 0:
+                    logging.error('Found no matching fields for input delta')
+                for match_delta in match_deltas:
+                    logging.debug('Input delta [%s] matched with [%s]' % (delta.path, match_delta.path))
+                    if delta.prev != match_delta.prev or delta.curr != match_delta.curr:
+                        logging.error('Matched delta inconsistent with input delta')
+                        logging.error('Input delta: %s -> %s' % (delta.prev, delta.curr))
+                        logging.error('Matched delta: %s -> %s' % (match_delta.prev, match_delta.curr))
+                        return RunResult.error
 
-    def list_matched_fields(path: list, delta_dict: dict) -> list:
-        results = []
-        max_match = 0
-        for resource, changes in delta_dict.items():
-            for path_str, diff in changes.items():
-                position = 0
-                while path[-position-1] == diff.path[-position-1]:
-                    position += 1
-                    if position == min(len(path), len(diff.path)):
-                        break
-                if position == max_match and position != 0:
-                    results.append(diff)
-                elif position > max_match:
-                    results = [diff]
-                    max_match = position
-                else:
-                    pass
-
-        return results
+        return RunResult.passing
 
     def run_and_check(self, cmd: list, input_diff,
                       generation: int) -> RunResult:
@@ -231,3 +235,34 @@ def watch_system_events(api, namespace, timer: acto_timer.ActoTimer):
             break
     ret.close()
     ret.release_conn()
+
+
+def list_matched_fields(path: list, delta_dict: dict) -> list:
+    '''Search through the entire system delta to find longest matching field
+    
+    Args:
+        path: path of input delta as list
+        delta_dict: dict of system delta
+
+    Returns:
+        list of system delta with longest matching field path with input delta
+    '''
+    results = []
+    max_match = 0
+    for resource_delta_list in delta_dict.values():
+        for type_delta_list in resource_delta_list.values():
+            for delta in type_delta_list.values():
+                position = 0
+                while path[-position-1] == delta.path[-position-1]:
+                    position += 1
+                    if position == min(len(path), len(delta.path)):
+                        break
+                if position == max_match and position != 0:
+                    results.append(delta)
+                elif position > max_match:
+                    results = [delta]
+                    max_match = position
+                else:
+                    pass
+
+    return results
