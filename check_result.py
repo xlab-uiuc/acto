@@ -155,7 +155,7 @@ class Checker:
             group, version, namespace, plural)['items']
         for cr in custom_resources:
             result_dict[cr['metadata']['name']] = cr
-        return custom_resources
+        return result_dict
 
     def check_log(self, generation: int) -> RunResult:
         '''Check the operator log for error msg
