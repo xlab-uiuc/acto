@@ -25,11 +25,11 @@ To run the test on the rabbitmq-operator:
 `python3 acto.py --candidates data/rabbitmq-operator/candidates.yaml --seed data/rabbitmq-operator/cr.yaml --operator data/rabbitmq-operator/operator.yaml --duration 1`
 
 ## Porting operators
-Acto aims to automate the E2E testing as much as possible to minize users' labor.
+Acto aims to automate the E2E testing as much as possible to minimize users' labor.
 
 Currently, porting operators still requires some manual effort, we need:
 1. The operator deployment yaml file to deploy the operator, the yaml file also needs to contain all the necessary prerequisites to deploy the operator, e.g. CRD, namespace creation, RBAC, etc.
-2. A candidates file specifying possible values for some parameters. The candidates file's format is very similar to a cr, except you replace the values with another field `candidates` and specify a list of values under `candidates`. Example:
+2. A candidates file specifying possible values for some parameters. The candidates file's format is very similar to a CR, except you replace the values with another field `candidates` and specify a list of values under `candidates`. Example:
     ```yaml
     image:
         candidates:
