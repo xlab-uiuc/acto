@@ -11,7 +11,6 @@ import acto_timer
 
 
 class Checker:
-    resources = {}
 
     def __init__(self, context: dict, cur_path: str, corev1Api, appv1Api,
                  customObjectApi) -> None:
@@ -20,6 +19,7 @@ class Checker:
         self.corev1Api = corev1Api
         self.appv1Api = appv1Api
         self.customObjectApi = customObjectApi
+        self.resources = {}
 
         self.resource_methods = {
             'pod': self.corev1Api.list_namespaced_pod,

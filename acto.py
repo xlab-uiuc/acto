@@ -90,10 +90,11 @@ def deploy_operator(operator_yaml_path: str):
                     'acto/tag'] = 'operator-pod'
                 context['namespace'] = document['metadata']['namespace']
             elif document['kind'] == 'CustomResourceDefinition':
+                # TODO: Handle multiple CRDs
                 crd_data = {
                     'group': document['spec']['group'],
                     'plural': document['spec']['names']['plural'],
-                    'version': document['spec']['versions'][0]['name'],
+                    'version': document['spec']['versions'][0]['name'],  # TODO: Handle multiple versions
                 }
                 context['crd'] = crd_data
             new_operator_documents.append(document)
