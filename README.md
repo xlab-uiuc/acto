@@ -9,7 +9,7 @@
     - For older version  
     `GO111MODULE="on" go get sigs.k8s.io/kind@v0.11.1`
 - kubectl
-    - [Installation](https://kind.sigs.k8s.io/docs/user/quick-start/#installation)
+    - [Installation](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/)
 
 ## Usage
 To run the test:  
