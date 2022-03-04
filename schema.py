@@ -1,9 +1,21 @@
 import logging
 import yaml
 from copy import deepcopy
+import random
 
 
-class StringSchema:
+class BaseSchema:
+    '''Base class for schemas
+    
+    Handles some keywords used for any types
+    '''
+
+    def __init__(self, schema) -> None:
+        self.default = None if 'default' not in schema else schema['default']
+        self.enum = None if 'enum' not in schema else schema['enum']
+
+
+class StringSchema(BaseSchema):
     '''Representation of a string node
     
     It handles
@@ -13,6 +25,7 @@ class StringSchema:
     '''
 
     def __init__(self, schema: dict) -> None:
+        super.__init__(schema)
         self.min_length = None if 'minLength' not in schema else schema[
             'minLength']
         self.max_length = None if 'maxLength' not in schema else schema[
@@ -23,7 +36,7 @@ class StringSchema:
         return 'String'
 
 
-class NumberSchema:
+class NumberSchema(BaseSchema):
     '''Representation of a number node
     
     It handles
@@ -35,6 +48,7 @@ class NumberSchema:
     '''
 
     def __init__(self, schema: dict) -> None:
+        super.__init__(schema)
         self.minimum = None if 'minimum' not in schema else schema['minimum']
         self.maximum = None if 'maximum' not in schema else schema['maximum']
         self.exclusive_minimum = None if 'exclusiveMinimum' not in schema else schema[
@@ -49,6 +63,7 @@ class NumberSchema:
 
 
 class IntegerSchema(NumberSchema):
+    '''Special case of NumberSchema'''
 
     def __init__(self, schema: dict) -> None:
         super().__init__(schema)
@@ -57,7 +72,7 @@ class IntegerSchema(NumberSchema):
         return 'Integer'
 
 
-class ObjectSchema:
+class ObjectSchema(BaseSchema):
     '''Representation of an object node
     
     It handles
@@ -73,6 +88,7 @@ class ObjectSchema:
     '''
 
     def __init__(self, schema: dict) -> None:
+        super.__init__(schema)
         self.children = {}
         self.additional_properties = None
         self.required = []
@@ -109,7 +125,7 @@ class ObjectSchema:
         return ret
 
 
-class ArraySchema:
+class ArraySchema(BaseSchema):
     '''Representation of an array node
     
     It handles
@@ -122,6 +138,7 @@ class ArraySchema:
     '''
 
     def __init__(self, schema: dict) -> None:
+        super.__init__(schema)
         self.item_schema = schema_node(schema['items'])
         self.min_items = None if 'minItems' not in schema else schema['minItems']
         self.max_items = None if 'maxItems' not in schema else schema['maxItems']
@@ -137,9 +154,10 @@ class ArraySchema:
         return 'Array'
 
 
-class AnyofSchema:
+class AnyofSchema(BaseSchema):
 
     def __init__(self, schema) -> None:
+        super.__init__(schema)
         self.possibilities = []
         for i in schema['anyOf']:
             base_schema = deepcopy(schema)
@@ -156,9 +174,10 @@ class AnyofSchema:
         return ret
 
 
-class BooleanSchema:
+class BooleanSchema(BaseSchema):
 
     def __init__(self, schema: dict) -> None:
+        super.__init__(schema)
         pass
 
     def __str__(self) -> str:
@@ -166,7 +185,7 @@ class BooleanSchema:
 
 
 def schema_node(schema: dict) -> object:
-    if 'anyOf' in schema and 'type' not in schema:
+    if 'anyOf' in schema:
         return AnyofSchema(schema)
     t = schema['type']
     if t == 'string':
