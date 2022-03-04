@@ -94,13 +94,15 @@ def deploy_operator(operator_yaml_path: str):
                 crd_data = {
                     'group': document['spec']['group'],
                     'plural': document['spec']['names']['plural'],
-                    'version': document['spec']['versions'][0]['name'],  # TODO: Handle multiple versions
+                    'version': document['spec']['versions'][0]
+                               ['name'],  # TODO: Handle multiple versions
                 }
                 context['crd'] = crd_data
             new_operator_documents.append(document)
         yaml.dump_all(new_operator_documents, out_yaml)
         out_yaml.flush()
-        os.system('kubectl apply -f %s' % os.path.join(workdir_path, 'new_operator.yaml'))
+        os.system('kubectl apply -f %s' %
+                  os.path.join(workdir_path, 'new_operator.yaml'))
         # os.system('cat <<EOF | kubectl apply -f -\n%s\nEOF' % yaml.dump_all(new_operator_documents))
 
         logging.debug('Deploying the operator, waiting for it to be ready')
@@ -144,8 +146,7 @@ def construct_candidate_helper(node, node_path, result: dict):
     else:
         for child_key, child_value in node.items():
             construct_candidate_helper(child_value,
-                                       '%s.%s' % (node_path, child_key),
-                                       result)
+                                       '%s.%s' % (node_path, child_key), result)
 
 
 def construct_candidate_from_yaml(yaml_path: str) -> dict:
@@ -212,8 +213,8 @@ def run_trial(initial_input: dict,
     global context
     context['current_dir_path'] = trial_dir
 
-    checker = check_result.Checker(context, trial_dir, corev1Api,
-                                   appv1Api, customObjectsApi)
+    checker = check_result.Checker(context, trial_dir, corev1Api, appv1Api,
+                                   customObjectsApi)
     current_cr = deepcopy(initial_input)
 
     generation = 0
@@ -264,11 +265,28 @@ def timeout_handler(sig, frame):
 if __name__ == '__main__':
     start_time = time.time()
 
-    parser = argparse.ArgumentParser(description='Automatic, Continuous Testing for k8s/openshift Operators')
-    parser.add_argument('--candidates', '-c', dest='candidates', required=True, help="yaml file to specify candidates for parameters")
-    parser.add_argument('--seed', '-s', dest='seed', required=True, help="seed CR file")
-    parser.add_argument('--operator', '-o', dest='operator', required=True, help="yaml file for deploying the operator")
-    parser.add_argument('--duration', '-d', dest='duration', default=6, help='Number of hours to run')
+    parser = argparse.ArgumentParser(
+        description='Automatic, Continuous Testing for k8s/openshift Operators')
+    parser.add_argument('--candidates',
+                        '-c',
+                        dest='candidates',
+                        required=True,
+                        help="yaml file to specify candidates for parameters")
+    parser.add_argument('--seed',
+                        '-s',
+                        dest='seed',
+                        required=True,
+                        help="seed CR file")
+    parser.add_argument('--operator',
+                        '-o',
+                        dest='operator',
+                        required=True,
+                        help="yaml file for deploying the operator")
+    parser.add_argument('--duration',
+                        '-d',
+                        dest='duration',
+                        default=6,
+                        help='Number of hours to run')
 
     args = parser.parse_args()
 

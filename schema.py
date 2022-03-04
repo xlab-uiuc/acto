@@ -11,13 +11,17 @@ class StringSchema:
         - maxLength
         - pattern
     '''
+
     def __init__(self, schema: dict) -> None:
-        self.min_length = None if 'minLength' not in schema else schema['minLength']
-        self.max_length = None if 'maxLength' not in schema else schema['maxLength']
+        self.min_length = None if 'minLength' not in schema else schema[
+            'minLength']
+        self.max_length = None if 'maxLength' not in schema else schema[
+            'maxLength']
         self.pattern = None if 'pattern' not in schema else schema['pattern']
 
     def __str__(self) -> str:
         return 'String'
+
 
 class NumberSchema:
     '''Representation of a number node
@@ -29,22 +33,29 @@ class NumberSchema:
         - exclusiveMaximum
         - multipleOf
     '''
+
     def __init__(self, schema: dict) -> None:
         self.minimum = None if 'minimum' not in schema else schema['minimum']
         self.maximum = None if 'maximum' not in schema else schema['maximum']
-        self.exclusive_minimum = None if 'exclusiveMinimum' not in schema else schema['exclusiveMinimum']
-        self.exclusive_maximum = None if 'exclusiveMaximum' not in schema else schema['exclusiveMaximum']
-        self.multiple_of = None if 'multipleOf' not in schema else schema['multipleOf']
+        self.exclusive_minimum = None if 'exclusiveMinimum' not in schema else schema[
+            'exclusiveMinimum']
+        self.exclusive_maximum = None if 'exclusiveMaximum' not in schema else schema[
+            'exclusiveMaximum']
+        self.multiple_of = None if 'multipleOf' not in schema else schema[
+            'multipleOf']
 
     def __str__(self) -> str:
         return 'Number'
 
+
 class IntegerSchema(NumberSchema):
+
     def __init__(self, schema: dict) -> None:
         super().__init__(schema)
 
     def __str__(self) -> str:
         return 'Integer'
+
 
 class ObjectSchema:
     '''Representation of an object node
@@ -60,6 +71,7 @@ class ObjectSchema:
         - patternProperties
         - regexp
     '''
+
     def __init__(self, schema: dict) -> None:
         self.children = {}
         self.additional_properties = None
@@ -69,7 +81,8 @@ class ObjectSchema:
                 print(property_key)
                 self.children[property_key] = schema_node(property_schema)
         if 'additionalProperties' in schema:
-            self.additional_properties = schema_node(schema['additionalProperties'])
+            self.additional_properties = schema_node(
+                schema['additionalProperties'])
         if 'required' in schema:
             self.required = schema['required']
         if 'minProperties' in schema:
@@ -95,6 +108,7 @@ class ObjectSchema:
         ret += '}'
         return ret
 
+
 class ArraySchema:
     '''Representation of an array node
     
@@ -111,14 +125,17 @@ class ArraySchema:
         self.item_schema = schema_node(schema['items'])
         self.min_items = None if 'minItems' not in schema else schema['minItems']
         self.max_items = None if 'maxItems' not in schema else schema['maxItems']
-        self.exclusive_minimum = None if 'exclusiveMinimum' not in schema else schema['exclusiveMinimum']
-        self.exclusive_maximum = None if 'exclusiveMaximum' not in schema else schema['exclusiveMaximum']
+        self.exclusive_minimum = None if 'exclusiveMinimum' not in schema else schema[
+            'exclusiveMinimum']
+        self.exclusive_maximum = None if 'exclusiveMaximum' not in schema else schema[
+            'exclusiveMaximum']
 
     def item_schema(self):
         return self.item_schema
 
     def __str__(self) -> str:
         return 'Array'
+
 
 class AnyofSchema:
 
@@ -138,12 +155,15 @@ class AnyofSchema:
         ret += ']'
         return ret
 
+
 class BooleanSchema:
+
     def __init__(self, schema: dict) -> None:
         pass
 
     def __str__(self) -> str:
         return 'boolean'
+
 
 def schema_node(schema: dict) -> object:
     if 'anyOf' in schema and 'type' not in schema:
@@ -167,10 +187,12 @@ def schema_node(schema: dict) -> object:
 
 
 if __name__ == '__main__':
-    with open('data/rabbitmq-operator/operator.yaml','r') as operator_yaml:
+    with open('data/rabbitmq-operator/operator.yaml', 'r') as operator_yaml:
         parsed_operator_documents = yaml.load_all(operator_yaml,
                                                   Loader=yaml.FullLoader)
         for document in parsed_operator_documents:
             if document['kind'] == 'CustomResourceDefinition':
-                spec_schema = ObjectSchema(document['spec']['versions'][0]['schema']['openAPIV3Schema']['properties']['spec'])
+                spec_schema = ObjectSchema(
+                    document['spec']['versions'][0]['schema']['openAPIV3Schema']
+                    ['properties']['spec'])
                 print(str(spec_schema))

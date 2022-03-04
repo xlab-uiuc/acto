@@ -1,14 +1,15 @@
 from threading import Thread, Event
 
+
 class ActoTimer(Thread):
     '''A resettable timer'''
-    
+
     def __init__(self, interval):
         Thread.__init__(self)
         self.interval = interval
         self.finished = Event()
         self.resetted = True
-    
+
     def cancel(self):
         """Stop the timer if it hasn't finished yet"""
         self.finished.set()
@@ -26,6 +27,7 @@ class ActoTimer(Thread):
         self.resetted = True
         self.finished.set()
         self.finished.clear()
+
 
 if __name__ == '__main__':
     timer = ActoTimer(10)

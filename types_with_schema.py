@@ -153,8 +153,8 @@ if __name__ == '__main__':
         for document in parsed_operator_documents:
             if document['kind'] == 'CustomResourceDefinition':
                 spec_schema = ObjectSchema(
-                    document['spec']['versions'][0]['schema']
-                    ['openAPIV3Schema']['properties']['spec'])
+                    document['spec']['versions'][0]['schema']['openAPIV3Schema']
+                    ['properties']['spec'])
 
     with open('data/rabbitmq-operator/test.yaml', 'r') as cr_yaml:
         cr = yaml.load(cr_yaml, Loader=yaml.FullLoader)

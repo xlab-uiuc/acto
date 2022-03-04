@@ -51,8 +51,10 @@ class Checker:
                          view='tree'))
             self.resources[resource] = current_resource
 
-        current_cr = self.__get_custom_resources(self.context['namespace'], self.context['crd']['group'],
-                                               self.context['crd']['version'], self.context['crd']['plural'])
+        current_cr = self.__get_custom_resources(self.context['namespace'],
+                                                 self.context['crd']['group'],
+                                                 self.context['crd']['version'],
+                                                 self.context['crd']['plural'])
         logging.debug(current_cr)
 
         system_delta['cr_diff'] = postprocess_diff(
@@ -63,13 +65,11 @@ class Checker:
                      view='tree'))
         self.resources['custom_resource'] = current_cr
 
-        with open('%s/delta-%d.log' % (self.cur_path, generation),
-                  'w') as fout:
+        with open('%s/delta-%d.log' % (self.cur_path, generation), 'w') as fout:
             fout.write('---------- INPUT DELTA  ----------\n')
             fout.write(json.dumps(input_delta, cls=ActoEncoder, indent=6))
             fout.write('\n---------- SYSTEM DELTA ----------\n')
             fout.write(json.dumps(system_delta, cls=ActoEncoder, indent=6))
-        
         '''
         System state oracle
 
@@ -83,11 +83,15 @@ class Checker:
                 if len(match_deltas) == 0:
                     logging.error('Found no matching fields for input delta')
                 for match_delta in match_deltas:
-                    logging.debug('Input delta [%s] matched with [%s]' % (delta.path, match_delta.path))
+                    logging.debug('Input delta [%s] matched with [%s]' %
+                                  (delta.path, match_delta.path))
                     if delta.prev != match_delta.prev or delta.curr != match_delta.curr:
-                        logging.error('Matched delta inconsistent with input delta')
-                        logging.error('Input delta: %s -> %s' % (delta.prev, delta.curr))
-                        logging.error('Matched delta: %s -> %s' % (match_delta.prev, match_delta.curr))
+                        logging.error(
+                            'Matched delta inconsistent with input delta')
+                        logging.error('Input delta: %s -> %s' %
+                                      (delta.prev, delta.curr))
+                        logging.error('Matched delta: %s -> %s' %
+                                      (match_delta.prev, match_delta.curr))
                         return RunResult.error
 
         return RunResult.passing
@@ -136,14 +140,15 @@ class Checker:
             dict of all pods
         '''
         result_dict = {}
-        resource_objects = method(namespace=self.context['namespace'], watch=False).items
+        resource_objects = method(namespace=self.context['namespace'],
+                                  watch=False).items
 
         for object in resource_objects:
             result_dict[object.metadata.name] = object.to_dict()
         return result_dict
 
     def __get_custom_resources(self, namespace: str, group: str, version: str,
-                             plural: str) -> dict:
+                               plural: str) -> dict:
         '''Get custom resource object
 
         Args:
@@ -178,7 +183,8 @@ class Checker:
             logging.error('Failed to find operator pod')
 
         log = self.corev1Api.read_namespaced_pod_log(
-            name=operator_pod_list[0].metadata.name, namespace=self.context['namespace'])
+            name=operator_pod_list[0].metadata.name,
+            namespace=self.context['namespace'])
 
         with open('%s/operator-%d.log' % (self.cur_path, generation),
                   'w') as fout:
@@ -209,8 +215,9 @@ class Checker:
         '''
         start = time.time()
         timer = acto_timer.ActoTimer(60)
-        watch_thread = Thread(target=watch_system_events,
-                              args=[self.corev1Api, self.context['namespace'], timer])
+        watch_thread = Thread(
+            target=watch_system_events,
+            args=[self.corev1Api, self.context['namespace'], timer])
         timer.start()
         watch_thread.start()
 
@@ -253,7 +260,7 @@ def list_matched_fields(path: list, delta_dict: dict) -> list:
         for type_delta_list in resource_delta_list.values():
             for delta in type_delta_list.values():
                 position = 0
-                while path[-position-1] == delta.path[-position-1]:
+                while path[-position - 1] == delta.path[-position - 1]:
                     position += 1
                     if position == min(len(path), len(delta.path)):
                         break
