@@ -31,7 +31,7 @@ class StringSchema(BaseSchema):
     '''
 
     def __init__(self, schema: dict) -> None:
-        super.__init__(schema)
+        super().__init__(schema)
         self.min_length = None if 'minLength' not in schema else schema[
             'minLength']
         self.max_length = None if 'maxLength' not in schema else schema[
@@ -58,7 +58,7 @@ class NumberSchema(BaseSchema):
     '''
 
     def __init__(self, schema: dict) -> None:
-        super.__init__(schema)
+        super().__init__(schema)
         self.minimum = None if 'minimum' not in schema else schema['minimum']
         self.maximum = None if 'maximum' not in schema else schema['maximum']
         self.exclusive_minimum = None if 'exclusiveMinimum' not in schema else schema[
@@ -110,7 +110,7 @@ class ObjectSchema(BaseSchema):
     '''
 
     def __init__(self, schema: dict) -> None:
-        super.__init__(schema)
+        super().__init__(schema)
         self.children = {}
         self.additional_properties = None
         self.required = []
@@ -167,7 +167,7 @@ class ArraySchema(BaseSchema):
     '''
 
     def __init__(self, schema: dict) -> None:
-        super.__init__(schema)
+        super().__init__(schema)
         self.item_schema = schema_node(schema['items'])
         self.min_items = None if 'minItems' not in schema else schema['minItems']
         self.max_items = None if 'maxItems' not in schema else schema['maxItems']
@@ -197,7 +197,7 @@ class AnyofSchema(BaseSchema):
     '''
 
     def __init__(self, schema) -> None:
-        super.__init__(schema)
+        super().__init__(schema)
         self.possibilities = []
         for i in schema['anyOf']:
             base_schema = deepcopy(schema)
@@ -221,7 +221,7 @@ class AnyofSchema(BaseSchema):
 class BooleanSchema(BaseSchema):
 
     def __init__(self, schema: dict) -> None:
-        super.__init__(schema)
+        super().__init__(schema)
         pass
 
     def __str__(self) -> str:
@@ -262,3 +262,4 @@ if __name__ == '__main__':
                     document['spec']['versions'][0]['schema']['openAPIV3Schema']
                     ['properties']['spec'])
                 print(str(spec_schema))
+                print(spec_schema.gen())
