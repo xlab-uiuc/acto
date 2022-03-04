@@ -1,7 +1,7 @@
 from collections.abc import MutableMapping, MutableSequence
 import yaml
 
-from schema import ObjectNode, ArrayNode
+from schema import ObjectSchema, ArraySchema
 
 
 class DictWithSchema(MutableMapping):
@@ -97,20 +97,50 @@ class ValueWithSchema():
     '''Primitive, with schema attached'''
 
     def __init__(self, value, schema) -> None:
-        self.store = value
         self.schema = schema
+        if value is None:
+            self.store = None
+        elif isinstance(value, dict):
+            self.store = {}
+            for k, v in value.items():
+                self.store[k] = attach_schema(v,
+                                              self.schema.get_child_schema(k))
+        elif isinstance(value, list):
+            value = []
+            for i in value:
+                self.store.append(attach_schema(i, self.schema.item_schema()))
+        else:
+            self.store = value
 
     def value(self):
         return self.store
 
     def __str__(self) -> str:
-        return str(self.store)
+        if self.store == None:
+            ret = 'None'
+        elif isinstance(self.store, dict):
+            ret = '{'
+            for k, v in self.store.items():
+                ret += str(k)
+                ret += ':'
+                ret += str(v)
+                ret += ', '
+            ret += '}'
+        elif isinstance(self.store, list):
+            ret = '['
+            for i in self.store:
+                ret += str(i)
+                ret += ', '
+            ret += ']'
+        else:
+            ret = str(self.store)
+        return ret
 
 
 def attach_schema(value, schema):
-    if isinstance(schema, ObjectNode):
+    if isinstance(schema, ObjectSchema):
         return DictWithSchema(value, schema)
-    elif isinstance(schema, ArrayNode):
+    elif isinstance(schema, ArraySchema):
         return ListWithSchema(value, schema)
     else:
         return ValueWithSchema(value, schema)
@@ -122,12 +152,12 @@ if __name__ == '__main__':
                                                   Loader=yaml.FullLoader)
         for document in parsed_operator_documents:
             if document['kind'] == 'CustomResourceDefinition':
-                spec_schema = ObjectNode(
+                spec_schema = ObjectSchema(
                     document['spec']['versions'][0]['schema']
                     ['openAPIV3Schema']['properties']['spec'])
 
     with open('data/rabbitmq-operator/test.yaml', 'r') as cr_yaml:
         cr = yaml.load(cr_yaml, Loader=yaml.FullLoader)
-    value = attach_schema(cr['spec'], spec_schema)
+    value = ValueWithSchema(cr['spec'], spec_schema)
     print(type(spec_schema))
     print(str(value))
