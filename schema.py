@@ -1,8 +1,9 @@
 import logging
 import yaml
+from copy import deepcopy
 
 
-class StringNode:
+class StringSchema:
     '''Representation of a string node
     
     It handles
@@ -18,7 +19,7 @@ class StringNode:
     def __str__(self) -> str:
         return 'String'
 
-class NumberNode:
+class NumberSchema:
     '''Representation of a number node
     
     It handles
@@ -38,14 +39,14 @@ class NumberNode:
     def __str__(self) -> str:
         return 'Number'
 
-class IntegerNode(NumberNode):
+class IntegerSchema(NumberSchema):
     def __init__(self, schema: dict) -> None:
         super().__init__(schema)
 
     def __str__(self) -> str:
         return 'Integer'
 
-class ObjectNode:
+class ObjectSchema:
     '''Representation of an object node
     
     It handles
@@ -76,6 +77,14 @@ class ObjectNode:
         if 'maxProperties' in schema:
             self.max_properties = schema['maxProperties']
 
+    def get_child_schema(self, key):
+        if key in self.children:
+            return self.children[key]
+        elif self.additional_properties != None:
+            return self.additional_properties
+        else:
+            raise TypeError
+
     def __str__(self) -> str:
         ret = '{'
         for k, v in self.children.items():
@@ -86,7 +95,7 @@ class ObjectNode:
         ret += '}'
         return ret
 
-class ArrayNode:
+class ArraySchema:
     '''Representation of an array node
     
     It handles
@@ -99,20 +108,27 @@ class ArrayNode:
     '''
 
     def __init__(self, schema: dict) -> None:
-        self.item = schema_node(schema['items'])
+        self.item_schema = schema_node(schema['items'])
         self.min_items = None if 'minItems' not in schema else schema['minItems']
         self.max_items = None if 'maxItems' not in schema else schema['maxItems']
         self.exclusive_minimum = None if 'exclusiveMinimum' not in schema else schema['exclusiveMinimum']
         self.exclusive_maximum = None if 'exclusiveMaximum' not in schema else schema['exclusiveMaximum']
 
+    def item_schema(self):
+        return self.item_schema
+
     def __str__(self) -> str:
         return 'Array'
 
-class AnyofNode:
+class AnyofSchema:
+
     def __init__(self, schema) -> None:
         self.possibilities = []
         for i in schema['anyOf']:
-            self.possibilities.append(schema_node(i))
+            base_schema = deepcopy(schema)
+            del base_schema['anyOf']
+            base_schema.update(i)
+            self.possibilities.append(schema_node(base_schema))
 
     def __str__(self) -> str:
         ret = '['
@@ -122,7 +138,7 @@ class AnyofNode:
         ret += ']'
         return ret
 
-class BooleanNode:
+class BooleanSchema:
     def __init__(self, schema: dict) -> None:
         pass
 
@@ -131,20 +147,20 @@ class BooleanNode:
 
 def schema_node(schema: dict) -> object:
     if 'anyOf' in schema and 'type' not in schema:
-        return AnyofNode(schema)
+        return AnyofSchema(schema)
     t = schema['type']
     if t == 'string':
-        return StringNode(schema)
+        return StringSchema(schema)
     elif t == 'number':
-        return NumberNode(schema)
+        return NumberSchema(schema)
     elif t == 'integer':
-        return IntegerNode(schema)
+        return IntegerSchema(schema)
     elif t == 'boolean':
-        return BooleanNode(schema)
+        return BooleanSchema(schema)
     elif t == 'array':
-        return ArrayNode(schema)
+        return ArraySchema(schema)
     elif t == 'object':
-        return ObjectNode(schema)
+        return ObjectSchema(schema)
     else:
         logging.error('Unsupported type %s' % t)
         return None
@@ -156,5 +172,5 @@ if __name__ == '__main__':
                                                   Loader=yaml.FullLoader)
         for document in parsed_operator_documents:
             if document['kind'] == 'CustomResourceDefinition':
-                spec_schema = ObjectNode(document['spec']['versions'][0]['schema']['openAPIV3Schema']['properties']['spec'])
+                spec_schema = ObjectSchema(document['spec']['versions'][0]['schema']['openAPIV3Schema']['properties']['spec'])
                 print(str(spec_schema))
