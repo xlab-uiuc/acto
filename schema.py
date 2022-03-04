@@ -2,6 +2,7 @@ import logging
 import yaml
 from copy import deepcopy
 import random
+from abc import abstractmethod
 
 
 class BaseSchema:
@@ -13,6 +14,11 @@ class BaseSchema:
     def __init__(self, schema) -> None:
         self.default = None if 'default' not in schema else schema['default']
         self.enum = None if 'enum' not in schema else schema['enum']
+
+    @abstractmethod
+    def gen(self):
+        # TODO: For all schemas, implement possibility of returning None
+        return None
 
 
 class StringSchema(BaseSchema):
@@ -34,6 +40,10 @@ class StringSchema(BaseSchema):
 
     def __str__(self) -> str:
         return 'String'
+
+    def gen(self):
+        # TODO
+        return 'random'
 
 
 class NumberSchema(BaseSchema):
@@ -61,6 +71,12 @@ class NumberSchema(BaseSchema):
     def __str__(self) -> str:
         return 'Number'
 
+    def gen(self):
+        # TODO: Use exclusive_minimum, exclusive_maximum, multiple_of
+        minimum = 0 if self.minimum == None else self.minimum
+        maximum = 5 if self.maximum == None else self.maximum
+        return random.uniform(minimum, maximum)
+
 
 class IntegerSchema(NumberSchema):
     '''Special case of NumberSchema'''
@@ -70,6 +86,12 @@ class IntegerSchema(NumberSchema):
 
     def __str__(self) -> str:
         return 'Integer'
+
+    def gen(self):
+        # TODO: Use exclusive_minimum, exclusive_maximum, multiple_of
+        minimum = 0 if self.minimum == None else self.minimum
+        maximum = 5 if self.maximum == None else self.maximum
+        return random.randint(minimum, maximum)
 
 
 class ObjectSchema(BaseSchema):
@@ -124,6 +146,13 @@ class ObjectSchema(BaseSchema):
         ret += '}'
         return ret
 
+    def gen(self):
+        # TODO: Use constraints: required, minProperties, maxProperties
+        result = {}
+        for k, v in self.children.items():
+            result[k] = v.gen()
+        return result
+
 
 class ArraySchema(BaseSchema):
     '''Representation of an array node
@@ -153,8 +182,19 @@ class ArraySchema(BaseSchema):
     def __str__(self) -> str:
         return 'Array'
 
+    def gen(self):
+        result = []
+        minimum = 0 if self.min_items == None else self.min_items
+        maximum = 5 if self.max_items == None else self.max_items
+        num = random.randint(minimum, maximum)
+        for _ in range(num):
+            result.append(self.item_schema.gen())
+        return result
+
 
 class AnyofSchema(BaseSchema):
+    '''Representing a schema with anyof keyword in it
+    '''
 
     def __init__(self, schema) -> None:
         super.__init__(schema)
@@ -173,6 +213,10 @@ class AnyofSchema(BaseSchema):
         ret += ']'
         return ret
 
+    def gen(self):
+        schema = random.choice(self.possibilities)
+        return schema.gen()
+
 
 class BooleanSchema(BaseSchema):
 
@@ -182,6 +226,9 @@ class BooleanSchema(BaseSchema):
 
     def __str__(self) -> str:
         return 'boolean'
+
+    def gen(self):
+        return random.choice([True, False, None])
 
 
 def schema_node(schema: dict) -> object:
