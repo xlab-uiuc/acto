@@ -3,6 +3,7 @@ import os
 import kubernetes
 import yaml
 import time
+from typing import List, Tuple
 import random
 from datetime import datetime
 from copy import deepcopy
@@ -86,6 +87,20 @@ def construct_kind_cluster():
     appv1Api = kubernetes.client.AppsV1Api()
     customObjectsApi = kubernetes.client.CustomObjectsApi()
 
+def get_namespaced_resources() -> Tuple[List[str], List[str]]:
+    '''Get namespaced and non-namespaced available resources list
+
+    Returns:
+        list of namespaced kind and list of non-namespaced kind
+    '''
+    namespaced_resources = []
+    non_namespaced_resources = []
+    for resource in appv1Api.get_api_resources().resources:
+        if resource.namespaced:
+            namespaced_resources.append(resource.kind)
+        else:
+            non_namespaced_resources.append(resource.kind)
+    return namespaced_resources, non_namespaced_resources
 
 def deploy_operator(operator_yaml_path: str):
     '''Deploy operator according to yaml
@@ -94,12 +109,16 @@ def deploy_operator(operator_yaml_path: str):
         operator_yaml_path - path pointing to the operator yaml file
     '''
     global context
+    namespaced_resources, _ = get_namespaced_resources()
     with open(operator_yaml_path,'r') as operator_yaml, \
             open(os.path.join(workdir_path, 'new_operator.yaml'), 'w') as out_yaml:
         parsed_operator_documents = yaml.load_all(operator_yaml,
                                                   Loader=yaml.FullLoader)
         new_operator_documents = []
         for document in parsed_operator_documents:
+            # set namespace to default if not specify
+            if document['kind'] in namespaced_resources and 'namespace' not in document['metadata']:
+                document['metadata']['namespace'] = 'default'
             if document['kind'] == 'Deployment':
                 document['metadata']['labels'][
                     'acto/tag'] = 'operator-deployment'
