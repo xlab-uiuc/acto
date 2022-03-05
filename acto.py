@@ -39,6 +39,23 @@ def get_deployment_available_status(
     return False
 
 
+def get_stateful_set_available_status(
+        stateful_set: kubernetes.client.models.V1StatefulSet) -> bool:
+    '''Get availability status from stateful set condition
+
+    Args:
+        stateful_set: stateful set object in kubernetes
+
+    Returns:
+        if the stateful set is available
+    '''
+    if stateful_set.status is None:
+        return False
+    if stateful_set.status.replicas > 0 and stateful_set.status.current_replicas == stateful_set.status.replicas:
+        return True
+    return False
+
+
 def construct_kind_cluster():
     '''Delete kind cluster then create a new one
     '''
@@ -89,6 +106,12 @@ def deploy_operator(operator_yaml_path: str):
                 document['spec']['template']['metadata']['labels'][
                     'acto/tag'] = 'operator-pod'
                 context['namespace'] = document['metadata']['namespace']
+            elif document['kind'] == 'StatefulSet':
+                document['metadata']['labels'][
+                    'acto/tag'] = 'operator-stateful-set'
+                document['spec']['template']['metadata']['labels'][
+                    'acto/tag'] = 'operator-pod'
+                context['namespace'] = document['metadata']['namespace']
             elif document['kind'] == 'CustomResourceDefinition':
                 # TODO: Handle multiple CRDs
                 crd_data = {
@@ -112,8 +135,15 @@ def deploy_operator(operator_yaml_path: str):
                 context['namespace'],
                 watch=False,
                 label_selector='acto/tag=operator-deployment').items
-            if len(operator_deployments) >= 1 \
-                    and get_deployment_available_status(operator_deployments[0]):
+            operator_stateful_states = appv1Api.list_namespaced_stateful_set(
+                context['namespace'],
+                watch=False,
+                label_selector='acto/tag=operator-stateful-set').items
+            operator_deployments_is_ready = len(operator_deployments) >= 1 \
+                    and get_deployment_available_status(operator_deployments[0])
+            operator_stateful_states_is_ready = len(operator_stateful_states) >= 1 \
+                    and get_stateful_set_available_status(operator_stateful_states[0])
+            if operator_deployments_is_ready or operator_stateful_states_is_ready:
                 logging.debug('Operator ready')
                 pod_ready = True
                 break
