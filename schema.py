@@ -18,7 +18,6 @@ class BaseSchema:
 
     @abstractmethod
     def gen(self):
-        # TODO: For all schemas, implement possibility of returning None
         return None
 
 
@@ -30,12 +29,13 @@ class StringSchema(BaseSchema):
         - maxLength
         - pattern
     '''
+    default_max_length = 10
 
     def __init__(self, schema: dict) -> None:
         super().__init__(schema)
         self.min_length = None if 'minLength' not in schema else schema[
             'minLength']
-        self.max_length = None if 'maxLength' not in schema else schema[
+        self.max_length = self.default_max_length if 'maxLength' not in schema else schema[
             'maxLength']
         self.pattern = None if 'pattern' not in schema else schema['pattern']
 
@@ -43,7 +43,11 @@ class StringSchema(BaseSchema):
         return 'String'
 
     def gen(self):
-        # TODO
+        # TODO: Use minLength: the exrex does not support minLength
+        if self.enum != None:
+            return random.choice(self.enum)
+        if self.pattern != None:
+            return exrex.getone(self.pattern, self.max_length)
         return 'random'
 
 
@@ -57,11 +61,13 @@ class NumberSchema(BaseSchema):
         - exclusiveMaximum
         - multipleOf
     '''
+    default_minimum = 0
+    default_maximum = 5
 
     def __init__(self, schema: dict) -> None:
         super().__init__(schema)
-        self.minimum = None if 'minimum' not in schema else schema['minimum']
-        self.maximum = None if 'maximum' not in schema else schema['maximum']
+        self.minimum = self.default_minimum if 'minimum' not in schema else schema['minimum']
+        self.maximum = self.default_maximum if 'maximum' not in schema else schema['maximum']
         self.exclusive_minimum = None if 'exclusiveMinimum' not in schema else schema[
             'exclusiveMinimum']
         self.exclusive_maximum = None if 'exclusiveMaximum' not in schema else schema[
@@ -74,9 +80,9 @@ class NumberSchema(BaseSchema):
 
     def gen(self):
         # TODO: Use exclusive_minimum, exclusive_maximum, multiple_of
-        minimum = 0 if self.minimum == None else self.minimum
-        maximum = 5 if self.maximum == None else self.maximum
-        return random.uniform(minimum, maximum)
+        if self.enum != None:
+            return random.choice(self.enum)
+        return random.uniform(self.minimum, self.maximum)
 
 
 class IntegerSchema(NumberSchema):
@@ -89,10 +95,13 @@ class IntegerSchema(NumberSchema):
         return 'Integer'
 
     def gen(self):
-        # TODO: Use exclusive_minimum, exclusive_maximum, multiple_of
-        minimum = 0 if self.minimum == None else self.minimum
-        maximum = 5 if self.maximum == None else self.maximum
-        return random.randint(minimum, maximum)
+        # TODO: Use exclusive_minimum, exclusive_maximum
+        if self.enum != None:
+            return random.choice(self.enum)
+        elif self.multiple_of != None:
+            return random.randrange(self.minimum, self.maximum+1, self.multiple_of)
+        else:
+            return random.randint(self.minimum, self.maximum)
 
 
 class ObjectSchema(BaseSchema):
@@ -149,9 +158,11 @@ class ObjectSchema(BaseSchema):
 
     def gen(self):
         # TODO: Use constraints: required, minProperties, maxProperties
+        if self.enum != None:
+            return random.choice(self.enum)
         result = {}
         for k, v in self.children.items():
-            if random.uniform(0, 1) < 0.1:
+            if random.uniform(0, 1) < 0.1 and k not in self.required:
                 # 10% of the chance this child will be null
                 result[k] = None
             else:
@@ -170,12 +181,14 @@ class ArraySchema(BaseSchema):
     TODO:
         - multipleOf
     '''
+    default_min_items = 0
+    default_max_items = 5
 
     def __init__(self, schema: dict) -> None:
         super().__init__(schema)
         self.item_schema = schema_node(schema['items'])
-        self.min_items = None if 'minItems' not in schema else schema['minItems']
-        self.max_items = None if 'maxItems' not in schema else schema['maxItems']
+        self.min_items = self.default_min_items if 'minItems' not in schema else schema['minItems']
+        self.max_items = self.default_max_items if 'maxItems' not in schema else schema['maxItems']
         self.exclusive_minimum = None if 'exclusiveMinimum' not in schema else schema[
             'exclusiveMinimum']
         self.exclusive_maximum = None if 'exclusiveMaximum' not in schema else schema[
@@ -188,13 +201,14 @@ class ArraySchema(BaseSchema):
         return 'Array'
 
     def gen(self):
-        result = []
-        minimum = 0 if self.min_items == None else self.min_items
-        maximum = 5 if self.max_items == None else self.max_items
-        num = random.randint(minimum, maximum)
-        for _ in range(num):
-            result.append(self.item_schema.gen())
-        return result
+        if self.enum != None:
+            return random.choice(self.enum)
+        else:
+            result = []
+            num = random.randint(self.min_items, self.max_items)
+            for _ in range(num):
+                result.append(self.item_schema.gen())
+            return result
 
 
 class AnyofSchema(BaseSchema):
