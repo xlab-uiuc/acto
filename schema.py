@@ -3,6 +3,7 @@ import yaml
 from copy import deepcopy
 import random
 from abc import abstractmethod
+import exrex
 
 
 class BaseSchema:
@@ -150,7 +151,11 @@ class ObjectSchema(BaseSchema):
         # TODO: Use constraints: required, minProperties, maxProperties
         result = {}
         for k, v in self.children.items():
-            result[k] = v.gen()
+            if random.uniform(0, 1) < 0.1:
+                # 10% of the chance this child will be null
+                result[k] = None
+            else:
+                result[k] = v.gen()
         return result
 
 
@@ -228,7 +233,7 @@ class BooleanSchema(BaseSchema):
         return 'boolean'
 
     def gen(self):
-        return random.choice([True, False, None])
+        return random.choice([True, False])
 
 
 def schema_node(schema: dict) -> object:
