@@ -66,8 +66,10 @@ class NumberSchema(BaseSchema):
 
     def __init__(self, schema: dict) -> None:
         super().__init__(schema)
-        self.minimum = self.default_minimum if 'minimum' not in schema else schema['minimum']
-        self.maximum = self.default_maximum if 'maximum' not in schema else schema['maximum']
+        self.minimum = self.default_minimum if 'minimum' not in schema else schema[
+            'minimum']
+        self.maximum = self.default_maximum if 'maximum' not in schema else schema[
+            'maximum']
         self.exclusive_minimum = None if 'exclusiveMinimum' not in schema else schema[
             'exclusiveMinimum']
         self.exclusive_maximum = None if 'exclusiveMaximum' not in schema else schema[
@@ -99,7 +101,8 @@ class IntegerSchema(NumberSchema):
         if self.enum != None:
             return random.choice(self.enum)
         elif self.multiple_of != None:
-            return random.randrange(self.minimum, self.maximum+1, self.multiple_of)
+            return random.randrange(self.minimum, self.maximum + 1,
+                                    self.multiple_of)
         else:
             return random.randint(self.minimum, self.maximum)
 
@@ -187,8 +190,10 @@ class ArraySchema(BaseSchema):
     def __init__(self, schema: dict) -> None:
         super().__init__(schema)
         self.item_schema = schema_node(schema['items'])
-        self.min_items = self.default_min_items if 'minItems' not in schema else schema['minItems']
-        self.max_items = self.default_max_items if 'maxItems' not in schema else schema['maxItems']
+        self.min_items = self.default_min_items if 'minItems' not in schema else schema[
+            'minItems']
+        self.max_items = self.default_max_items if 'maxItems' not in schema else schema[
+            'maxItems']
         self.exclusive_minimum = None if 'exclusiveMinimum' not in schema else schema[
             'exclusiveMinimum']
         self.exclusive_maximum = None if 'exclusiveMaximum' not in schema else schema[
@@ -211,8 +216,8 @@ class ArraySchema(BaseSchema):
             return result
 
 
-class AnyofSchema(BaseSchema):
-    '''Representing a schema with anyof keyword in it
+class AnyOfSchema(BaseSchema):
+    '''Representing a schema with AnyOf keyword in it
     '''
 
     def __init__(self, schema) -> None:
@@ -231,6 +236,9 @@ class AnyofSchema(BaseSchema):
             ret += ', '
         ret += ']'
         return ret
+
+    def possibilities(self):
+        return self.possibilities
 
     def gen(self):
         schema = random.choice(self.possibilities)
@@ -252,7 +260,7 @@ class BooleanSchema(BaseSchema):
 
 def schema_node(schema: dict) -> object:
     if 'anyOf' in schema:
-        return AnyofSchema(schema)
+        return AnyOfSchema(schema)
     t = schema['type']
     if t == 'string':
         return StringSchema(schema)

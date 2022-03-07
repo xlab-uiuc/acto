@@ -1,43 +1,29 @@
 from collections.abc import MutableMapping, MutableSequence
 import yaml
 
-from schema import ObjectSchema, ArraySchema
+from schema import AnyOfSchema, ObjectSchema, ArraySchema, StringSchema, NumberSchema, IntegerSchema, BooleanSchema
 
 
-class DictWithSchema(MutableMapping):
-    '''Dict-like structure, but with schema attached'''
+class ValueWithObjectSchema():
 
-    def __init__(self, value: dict, schema) -> None:
+    def __init__(self, value, schema) -> None:
         self.schema = schema
-        if value is None:
+        if value == None:
             self.store = None
         elif isinstance(value, dict):
             self.store = {}
             for k, v in value.items():
-                self.store[k] = attach_schema(v,
-                                              self.schema.get_child_schema(k))
+                self.store[k] = attach_schema_to_value(
+                    v, self.schema.get_child_schema(k))
         else:
             raise TypeError
 
-    def __getitem__(self, key):
-        return self.store[key]
-
-    def __setitem__(self, key, value):
-        self.store[key] = attach_schema(value,
-                                        self.schema.get_child_schema(key))
-
-    def __delitem__(self, key):
-        del self.store[key]
-
-    def __iter__(self):
-        return iter(self.store)
-
-    def __len__(self):
-        return len(self.store)
+    def value(self):
+        return self.store
 
     def __str__(self) -> str:
         if self.store == None:
-            return 'None'
+            ret = 'None'
         else:
             ret = '{'
             for k, v in self.store.items():
@@ -46,40 +32,25 @@ class DictWithSchema(MutableMapping):
                 ret += str(v)
                 ret += ', '
             ret += '}'
-            return ret
+        return ret
 
 
-class ListWithSchema(MutableSequence):
-    '''List-like structure, with schema attached'''
+class ValueWithArraySchema():
 
     def __init__(self, value, schema) -> None:
         self.schema = schema
-        if value is None:
+        if value == None:
             self.store = None
         elif isinstance(value, list):
+            self.store = []
             for i in value:
-                self.store.append(attach_schema(i, self.schema.item_schema()))
+                self.store.append(
+                    attach_schema_to_value(i, self.schema.item_schema()))
         else:
             raise TypeError
 
-    def __getitem__(self, i):
-        return self.store[i]
-
-    def __setitem__(self, key, value):
-        self.store[key] = attach_schema(value,
-                                        self.schema.get_child_schema(key))
-
-    def __delitem__(self, key):
-        del self.store[key]
-
-    def __iter__(self):
-        return iter(self.store)
-
-    def __len__(self):
-        return len(self.store)
-
-    def insert(self, i, v):
-        self.list.insert(i, attach_schema(v, self.schema.item_schema()))
+    def value(self):
+        return self.store
 
     def __str__(self) -> str:
         if self.store == None:
@@ -93,22 +64,53 @@ class ListWithSchema(MutableSequence):
             return ret
 
 
+class ValueWithAnyOfSchema():
+    '''Value with AnyOfSchema attached'''
+
+    def __init__(self, value, schema) -> None:
+        self.schema = schema
+        if value == None:
+            self.store = None
+
+        for possible_schema in self.schema.possibilities():
+            if self.__validate(value, possible_schema):
+                self.store = attach_schema_to_value(value, possible_schema)
+                return
+        raise TypeError
+
+    def __validate(self, value, schema) -> bool:
+        # XXX: Fragile! Use a complete validation utility from library
+        if isinstance(value, dict) and isinstance(schema, ObjectSchema):
+            return True
+        elif isinstance(value, list) and isinstance(schema, ArraySchema):
+            return True
+        elif isinstance(value, str) and isinstance(schema, StringSchema):
+            return True
+        elif isinstance(value, bool) and isinstance(schema, BooleanSchema):
+            return True
+        elif isinstance(value, int) and isinstance(schema, IntegerSchema):
+            return True
+        elif isinstance(value,
+                        (float, int)) and isinstance(schema, NumberSchema):
+            return True
+        else:
+            return False
+
+    def __str__(self) -> str:
+        if self.schema == None:
+            ret = 'None'
+        else:
+            ret = str(self.store)
+        return ret
+
+
 class ValueWithSchema():
-    '''Primitive, with schema attached'''
+    '''Value with schema attached for Number/Integer, Bool, String'''
 
     def __init__(self, value, schema) -> None:
         self.schema = schema
         if value is None:
             self.store = None
-        elif isinstance(value, dict):
-            self.store = {}
-            for k, v in value.items():
-                self.store[k] = attach_schema(v,
-                                              self.schema.get_child_schema(k))
-        elif isinstance(value, list):
-            value = []
-            for i in value:
-                self.store.append(attach_schema(i, self.schema.item_schema()))
         else:
             self.store = value
 
@@ -118,30 +120,18 @@ class ValueWithSchema():
     def __str__(self) -> str:
         if self.store == None:
             ret = 'None'
-        elif isinstance(self.store, dict):
-            ret = '{'
-            for k, v in self.store.items():
-                ret += str(k)
-                ret += ':'
-                ret += str(v)
-                ret += ', '
-            ret += '}'
-        elif isinstance(self.store, list):
-            ret = '['
-            for i in self.store:
-                ret += str(i)
-                ret += ', '
-            ret += ']'
         else:
             ret = str(self.store)
         return ret
 
 
-def attach_schema(value, schema):
+def attach_schema_to_value(value, schema):
     if isinstance(schema, ObjectSchema):
-        return DictWithSchema(value, schema)
+        return ValueWithObjectSchema(value, schema)
     elif isinstance(schema, ArraySchema):
-        return ListWithSchema(value, schema)
+        return ValueWithArraySchema(value, schema)
+    elif isinstance(schema, AnyOfSchema):
+        return ValueWithAnyOfSchema(value, schema)
     else:
         return ValueWithSchema(value, schema)
 
@@ -156,7 +146,7 @@ if __name__ == '__main__':
                     document['spec']['versions'][0]['schema']['openAPIV3Schema']
                     ['properties']['spec'])
 
-    with open('data/rabbitmq-operator/test.yaml', 'r') as cr_yaml:
+    with open('data/rabbitmq-operator/cr.yaml', 'r') as cr_yaml:
         cr = yaml.load(cr_yaml, Loader=yaml.FullLoader)
     value = ValueWithSchema(cr['spec'], spec_schema)
     print(type(spec_schema))
