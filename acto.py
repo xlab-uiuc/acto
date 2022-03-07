@@ -1,4 +1,5 @@
 import argparse
+import json
 import os
 import kubernetes
 import yaml
@@ -172,6 +173,46 @@ def deploy_operator(operator_yaml_path: str):
                 "operator deployment failed to be ready within timeout")
             quit()
 
+def deploy_operator_helm_chart(operator_helm_chart: str, crd_yaml: str):
+    # Install operator, CRD, RBAC, and so on.
+    # --wait: https://helm.sh/docs/helm/helm_upgrade/
+    os.system("helm install --wait --timeout 3m acto-test-operator " + operator_helm_chart)
+    stdout = os.popen('helm ls -o json').read()
+    helm_release = json.loads(stdout[stdout.find("[")+1:stdout.rfind("]")])
+
+    if helm_release["status"] != "deployed":
+        logging.error("Helm chart deployment failed to be ready within timeout")
+        quit()
+
+    # TODO (Kai-Hsun): This is not a good practice. It's better to use k8s API to get CRD info.
+    global context
+    context['namespace'] = helm_release['namespace']
+
+    with open(crd_yaml, 'r') as input_yaml:
+        
+        crd_info = yaml.load(input_yaml, Loader=yaml.FullLoader)
+        context['crd'] = {
+            'group': crd_info['spec']['group'],
+            'plural': crd_info['spec']['names']['plural'],
+            'version': crd_info['spec']['versions'][0]['name'],  # TODO: Handle multiple versions
+        }
+
+    # TODO (Kai-Hsun):
+    # We can use the following commands to get operator log
+    # Step1: kubectl get all --all-namespaces -l='app.kubernetes.io/managed-by=Helm'
+    #   NAMESPACE   NAME                                          READY   UP-TO-DATE   AVAILABLE   AGE
+    #   default     deployment.apps/mongodb-kubernetes-operator   1/1     1            1           30m
+    # 
+    # Step2: kubectl logs deployment/mongodb-kubernetes-operator
+    # 
+    # Other Methods:
+    # (1) the deployment will create a replicaset, and we can also collect logs by: 
+    #        kubectl logs replicaset/mongodb-kubernetes-operator-779c476757
+    # (2) the replicaset => Controlled By:  Deployment/mongodb-kubernetes-operator
+    #     operator pod   => Controlled By:  ReplicaSet/mongodb-kubernetes-operator-779c476757
+    # => We can also find the operator pod by method (2)
+
+
 
 def deploy_dependency(yaml_paths):
     logging.debug('Deploying dependencies')
@@ -245,7 +286,7 @@ def mutate_application_spec(current_spec: dict, candidates: dict):
     return current_spec
 
 
-def run_trial(initial_input: dict,
+def run_trial(initial_input: list,
               candidate_dict: dict,
               trial_num: int,
               num_mutation: int = 100):
@@ -264,14 +305,13 @@ def run_trial(initial_input: dict,
 
     checker = check_result.Checker(context, trial_dir, corev1Api, appv1Api,
                                    customObjectsApi)
-    current_cr = deepcopy(initial_input)
+    current_cr = deepcopy(initial_input[0])
 
     generation = 0
     while generation < num_mutation:
         parent_cr = deepcopy(current_cr)
         if generation != 0:
             mutate_application_spec(current_cr, candidate_dict)
-
         cr_diff = DeepDiff(parent_cr,
                            current_cr,
                            ignore_order=True,
@@ -283,8 +323,7 @@ def run_trial(initial_input: dict,
 
         mutated_filename = '%s/mutated-%d.yaml' % (trial_dir, generation)
         with open(mutated_filename, 'w') as mutated_cr_file:
-            yaml.dump(current_cr, mutated_cr_file)
-
+            yaml.dump_all([current_cr] + initial_input[1:], mutated_cr_file)
         retval = checker.run_and_check(
             ['kubectl', 'apply', '-f', mutated_filename],
             cr_diff,
@@ -336,6 +375,13 @@ if __name__ == '__main__':
                         dest='duration',
                         default=6,
                         help='Number of hours to run')
+    parser.add_argument('--helm',
+                        dest='operator_chart',
+                        help='Path of operator helm chart')
+    parser.add_argument('--crd',
+                        dest='crd',
+                        help='Path of CRD yaml file')
+
 
     args = parser.parse_args()
 
@@ -349,10 +395,10 @@ if __name__ == '__main__':
     candidate_dict = construct_candidate_from_yaml(args.candidates)
     logging.debug(candidate_dict)
 
-    application_cr: dict
+    cr_resource_list = []
     try:
         with open(args.seed, 'r') as cr_file:
-            application_cr = yaml.load(cr_file, Loader=yaml.FullLoader)
+            cr_resource_list = list(yaml.load_all(cr_file, Loader=yaml.FullLoader))
     except:
         logging.error('Failed to read cr yaml, aborting')
         quit()
@@ -365,9 +411,13 @@ if __name__ == '__main__':
     while True:
         trial_start_time = time.time()
         construct_kind_cluster()
-        deploy_operator(args.operator)
-        deploy_dependency([])
-        run_trial(application_cr, candidate_dict, trial_num)
+
+        if args.operator_chart is not None:
+            deploy_operator_helm_chart(args.operator_chart, args.crd)
+        else:
+            deploy_operator(args.operator)
+
+        run_trial(cr_resource_list, candidate_dict, trial_num)
         trial_elapsed = time.strftime(
             "%H:%M:%S", time.gmtime(time.time() - trial_start_time))
         logging.info('Trial %d finished, completed in %s' %

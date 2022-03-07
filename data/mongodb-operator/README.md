@@ -4,7 +4,7 @@
 helm install community-operator community-operator/
 
 # Step2: Create a custom resource
-kubectl apply -f community-operator/CR.yaml
+kubectl apply -f cr.yaml
 
 # Step3: Check CR status 
 kubectl get mdbc
