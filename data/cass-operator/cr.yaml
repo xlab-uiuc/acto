@@ -1,25 +1,15 @@
+
 apiVersion: cassandra.datastax.com/v1beta1
 kind: CassandraDatacenter
 metadata:
-  name: dc1
+  name: cassandra-datacenter
 spec:
   clusterName: cluster1
   serverType: cassandra
-  serverVersion: 3.11.11
+  serverVersion: 3.11.7
   managementApiAuth:
     insecure: {}
-  size: 3
-  podTemplateSpec:
-    spec:
-      initContainers:
-        - name: "server-config-init"
-          env:
-          - name: "EXTRA_PARAM"
-            value: "123"
-      containers:
-        - name: "cassandra"
-          terminationMessagePath: "/dev/other-termination-log"
-          terminationMessagePolicy: "File"
+  size: 1
   storageConfig:
     cassandraDataVolumeClaimSpec:
       storageClassName: server-storage
@@ -27,7 +17,7 @@ spec:
       - ReadWriteOnce
       resources:
         requests:
-          storage: 5Gi
+          storage: 3Gi
   config:
     cassandra-yaml:
       authenticator: org.apache.cassandra.auth.PasswordAuthenticator
