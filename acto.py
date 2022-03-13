@@ -262,8 +262,7 @@ def run_trial(initial_input: dict,
     global context
     context['current_dir_path'] = trial_dir
 
-    checker = check_result.Checker(context, trial_dir, corev1Api, appv1Api,
-                                   customObjectsApi)
+    checker = check_result.Checker(context, trial_dir)
     current_cr = deepcopy(initial_input)
 
     generation = 0
