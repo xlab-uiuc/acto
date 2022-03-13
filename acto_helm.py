@@ -48,6 +48,10 @@ def construct_kind_cluster(k8s_version: str):
     kubernetes.config.load_kube_config()
 
 def deploy_init_yml_file(init_yml: str):
+    """
+    Deploy an yaml file before operator deployment. 
+    For example, cass-operator requires an StorageClass as dependency.
+    """
     if init_yml:
         console.log("Apply init yml")
         sh.kubectl("apply", filename=init_yml)

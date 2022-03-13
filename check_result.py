@@ -175,7 +175,6 @@ class Checker:
             namespace=self.context['namespace'],
             watch=False,
             label_selector="acto/tag=operator-pod").items
-        print("operator_pod_list", operator_pod_list)
         if len(operator_pod_list) >= 1:
             logging.debug('Got operator pod: pod name:' +
                           operator_pod_list[0].metadata.name)
