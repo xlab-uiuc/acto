@@ -67,7 +67,7 @@ def deploy_operator_helm_chart(operator_helm_chart: str, crd_yaml: str):
     console.log("Installing helm chart dependency")
     sh.helm("dependency", "build", operator_helm_chart)
     console.log("Installing helm chart")
-    sh.helm("install", "acto-test-operator", operator_helm_chart, wait=True, timeout="3m")
+    sh.helm("install", "acto-test-operator", "--create-namespace", operator_helm_chart, wait=True, timeout="3m", namespace="acto-namespace")
     console.log("Get helm chart result")
     helm_ls_result = sh.helm("ls", o="json")
     helm_release = json.loads(helm_ls_result.stdout)[0]
