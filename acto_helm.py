@@ -21,7 +21,7 @@ corev1Api = None
 appv1Api = None
 customObjectsApi = None
 context = {'namespace': '', 'current_dir_path': ''}
-workdir_path = 'testrun-%s' % datetime.now().strftime('%Y-%m-%d-%H-%M')
+workdir_path = 'testrun/testrun-%s' % datetime.now().strftime('%Y-%m-%d-%H-%M')
 
 
 def get_deployment_available_status(
