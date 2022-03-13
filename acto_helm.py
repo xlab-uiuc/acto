@@ -11,10 +11,12 @@ from copy import deepcopy
 import signal
 import logging
 from deepdiff import DeepDiff
-
+import sh
 from common import RunResult, get_diff_stat
 import check_result
+from rich.console import Console
 
+console = Console()
 corev1Api = None
 appv1Api = None
 customObjectsApi = None
@@ -61,7 +63,9 @@ def get_stateful_set_available_status(
 def construct_kind_cluster():
     '''Delete kind cluster then create a new one
     '''
-    os.system('kind delete cluster')
+    console.log("Deleting Kind Cluster")
+    sh.kind("delete", "cluster")
+    console.log("Kind Cluster Deleted")
 
     kind_config_dir = 'kind_config'
     os.makedirs(kind_config_dir, exist_ok=True)
@@ -78,7 +82,9 @@ def construct_kind_cluster():
             kind_config_dict['nodes'].append({'role': 'control-plane'})
         yaml.dump(kind_config_dict, kind_config_file)
 
-    os.system('kind create cluster --config %s' % kind_config_path)
+    console.log("Installing Kind Cluster")
+    sh.kind("create", "cluster", config=kind_config_path)
+    console.log("Kind Cluster Installed")
 
     kubernetes.config.load_kube_config()
     global corev1Api
@@ -173,12 +179,16 @@ def deploy_operator(operator_yaml_path: str):
                 "operator deployment failed to be ready within timeout")
             quit()
 
-def deploy_operator_helm_chart(operator_helm_chart: str, crd_yaml: str):
+def deploy_operator_helm_chart(operator_helm_chart: str):
     # Install operator, CRD, RBAC, and so on.
     # --wait: https://helm.sh/docs/helm/helm_upgrade/
-    os.system("helm install --wait --timeout 3m acto-test-operator " + operator_helm_chart)
-    stdout = os.popen('helm ls -o json').read()
-    helm_release = json.loads(stdout[stdout.find("[")+1:stdout.rfind("]")])
+    console.log("Installing helm chart dependency")
+    sh.helm("dependency", "build", operator_helm_chart)
+    console.log("Installing helm chart")
+    sh.helm("install", "acto-test-operator", operator_helm_chart, wait=True, timeout="3m")
+    console.log("Get helm chart result")
+    helm_ls_result = sh.helm("ls", o="json")
+    helm_release = json.loads(helm_ls_result.stdout)[0]
 
     if helm_release["status"] != "deployed":
         logging.error("Helm chart deployment failed to be ready within timeout")
@@ -188,14 +198,13 @@ def deploy_operator_helm_chart(operator_helm_chart: str, crd_yaml: str):
     global context
     context['namespace'] = helm_release['namespace']
 
-    with open(crd_yaml, 'r') as input_yaml:
-        
-        crd_info = yaml.load(input_yaml, Loader=yaml.FullLoader)
-        context['crd'] = {
-            'group': crd_info['spec']['group'],
-            'plural': crd_info['spec']['names']['plural'],
-            'version': crd_info['spec']['versions'][0]['name'],  # TODO: Handle multiple versions
-        }
+    crds= sh.helm("show", "crds", operator_helm_chart).stdout
+    crd_info = yaml.load(crds, Loader=yaml.FullLoader)
+    context['crd'] = {
+        'group': crd_info['spec']['group'],
+        'plural': crd_info['spec']['names']['plural'],
+        'version': crd_info['spec']['versions'][0]['name'],  # TODO: Handle multiple versions
+    }
 
     # TODO (Kai-Hsun):
     # We can use the following commands to get operator log
@@ -309,6 +318,7 @@ def run_trial(initial_input: list,
 
     generation = 0
     while generation < num_mutation:
+        console.log(f"Run Trial {generation}")
         parent_cr = deepcopy(current_cr)
         if generation != 0:
             mutate_application_spec(current_cr, candidate_dict)
@@ -368,7 +378,7 @@ if __name__ == '__main__':
     parser.add_argument('--operator',
                         '-o',
                         dest='operator',
-                        required=True,
+                        required=False,
                         help="yaml file for deploying the operator")
     parser.add_argument('--duration',
                         '-d',
@@ -378,9 +388,6 @@ if __name__ == '__main__':
     parser.add_argument('--helm',
                         dest='operator_chart',
                         help='Path of operator helm chart')
-    parser.add_argument('--crd',
-                        dest='crd',
-                        help='Path of CRD yaml file')
 
 
     args = parser.parse_args()
@@ -413,7 +420,7 @@ if __name__ == '__main__':
         construct_kind_cluster()
 
         if args.operator_chart is not None:
-            deploy_operator_helm_chart(args.operator_chart, args.crd)
+            deploy_operator_helm_chart(args.operator_chart)
         else:
             deploy_operator(args.operator)
 
