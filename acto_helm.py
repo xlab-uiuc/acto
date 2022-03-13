@@ -47,6 +47,18 @@ def construct_kind_cluster(k8s_version: str):
     console.log("Kind Cluster Installed")
     kubernetes.config.load_kube_config()
 
+def deploy_init_yml_file(init_yml: str):
+    """
+    Deploy an yaml file before operator deployment. 
+    For example, cass-operator requires an StorageClass as dependency.
+    """
+    if init_yml:
+        console.log("Apply init yml")
+        sh.kubectl("apply", filename=init_yml)
+        console.log("Init yml applied")
+    else:
+        console.log("No init yml")
+
 def deploy_operator_helm_chart(operator_helm_chart: str, crd_yaml: str):
     # TODO: Check whether the helm chart has the label "acto/tag: operator-pod" for operator Pod or not
     
@@ -250,7 +262,10 @@ if __name__ == '__main__':
                         dest='crd',
                         required=True,
                         help='Path of CRD yaml file')
-
+    parser.add_argument('--init',
+                        dest='init',
+                        required=False,
+                        help='Path of init yaml file (deploy before operator)')
     args = parser.parse_args()
 
     os.makedirs(workdir_path, exist_ok=True)
@@ -280,6 +295,7 @@ if __name__ == '__main__':
     while True:
         trial_start_time = time.time()
         construct_kind_cluster("1.20.15")
+        deploy_init_yml_file(args.init)
         deploy_operator_helm_chart(args.operator_chart, args.crd)
         run_trial(cr_resource_list, candidate_dict, trial_num)
         trial_elapsed = time.strftime(
