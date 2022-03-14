@@ -4,9 +4,10 @@ import logging
 from deepdiff import DeepDiff
 import json
 import re
-from threading import Thread, Event
+from threading import Thread
+import copy
 
-from common import RunResult, ActoEncoder, postprocess_diff, EXCLUDE_PATH_REGEX, EXCLUDE_ERROR_REGEX
+from common import RunResult, ActoEncoder, postprocess_diff, EXCLUDE_PATH_REGEX, EXCLUDE_ERROR_REGEX, canonicalize
 import acto_timer
 
 
@@ -76,12 +77,13 @@ class Checker:
         For each delta in the input, find the longest matching fields in the system state.
         Then compare the the delta values (prev, curr).
         '''
+        system_delta_without_cr = copy.deepcopy(system_delta)
+        system_delta_without_cr.pop('cr_diff')
         for delta_list in input_delta.values():
             for delta in delta_list.values():
                 # Find the longest matching field, compare the delta change
-                match_deltas = list_matched_fields(delta.path, system_delta)
-                if len(match_deltas) == 0:
-                    logging.error('Found no matching fields for input delta')
+                match_deltas = list_matched_fields(delta.path,
+                                                   system_delta_without_cr)
                 for match_delta in match_deltas:
                     logging.debug('Input delta [%s] matched with [%s]' %
                                   (delta.path, match_delta.path))
@@ -93,6 +95,20 @@ class Checker:
                         logging.error('Matched delta: %s -> %s' %
                                       (match_delta.prev, match_delta.curr))
                         return RunResult.error
+
+                if len(match_deltas) == 0:
+                    # if prev and curr of the delta are the same, also consider it as a match
+                    found = False
+                    for resource_delta_list in system_delta_without_cr.values():
+                        for type_delta_list in resource_delta_list.values():
+                            for state_delta in type_delta_list.values():
+                                if delta.prev == state_delta.prev and delta.curr == state_delta.curr:
+                                    found = True
+                    if found:
+                        break
+                    logging.error('Found no matching fields for input delta')
+                    logging.error('Input delta [%s]' % delta.path)
+                    return RunResult.error
 
         return RunResult.passing
 
@@ -111,7 +127,7 @@ class Checker:
         cli_result = subprocess.run(cmd, capture_output=True, text=True)
 
         if cli_result.stdout.find('error') != -1 or cli_result.stderr.find(
-                'error') != -1:
+                'error') != -1 or cli_result.stderr.find('invalid') != -1:
             logging.error('Invalid input, reject mutation')
             logging.error('STDOUT: ' + cli_result.stdout)
             logging.error('STDERR: ' + cli_result.stderr)
@@ -126,9 +142,17 @@ class Checker:
 
         self.wait_for_system_converge()
 
-        self.check_resources(input_diff, generation)
+        result = self.check_resources(input_diff, generation)
+        if result != RunResult.passing:
+            logging.info('Report error from system state oracle')
+            return result
 
-        return self.check_log(generation)
+        result = self.check_log(generation)
+        if result != RunResult.passing:
+            logging.info('Report error from operator log oracle')
+            return result
+
+        return RunResult.passing
 
     def __get_all_objects(self, method) -> dict:
         '''Get all pods in the application namespace
@@ -232,6 +256,7 @@ class Checker:
 def watch_system_events(api, namespace, timer: acto_timer.ActoTimer):
     '''A function thread that watches namespaced events
     '''
+    # TODO: get rid of watch
     ret = api.list_namespaced_event(namespace,
                                     _preload_content=False,
                                     watch=True)
@@ -260,7 +285,9 @@ def list_matched_fields(path: list, delta_dict: dict) -> list:
         for type_delta_list in resource_delta_list.values():
             for delta in type_delta_list.values():
                 position = 0
-                while path[-position - 1] == delta.path[-position - 1]:
+                print(type(path[0]))
+                while canonicalize(path[-position - 1]) == canonicalize(
+                        delta.path[-position - 1]):
                     position += 1
                     if position == min(len(path), len(delta.path)):
                         break
