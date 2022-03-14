@@ -5,6 +5,7 @@ import random
 from abc import abstractmethod
 import exrex
 
+num_terminals = 0
 
 class BaseSchema:
     '''Base class for schemas
@@ -12,9 +13,13 @@ class BaseSchema:
     Handles some keywords used for any types
     '''
 
-    def __init__(self, schema) -> None:
+    def __init__(self, path: list, schema: dict) -> None:
+        self.path = path
         self.default = None if 'default' not in schema else schema['default']
         self.enum = None if 'enum' not in schema else schema['enum']
+
+    def get_path(self) -> list:
+        return self.path
 
     @abstractmethod
     def gen(self):
@@ -31,8 +36,8 @@ class StringSchema(BaseSchema):
     '''
     default_max_length = 10
 
-    def __init__(self, schema: dict) -> None:
-        super().__init__(schema)
+    def __init__(self, path: list, schema: dict) -> None:
+        super().__init__(path, schema)
         self.min_length = None if 'minLength' not in schema else schema[
             'minLength']
         self.max_length = self.default_max_length if 'maxLength' not in schema else schema[
@@ -64,8 +69,8 @@ class NumberSchema(BaseSchema):
     default_minimum = 0
     default_maximum = 5
 
-    def __init__(self, schema: dict) -> None:
-        super().__init__(schema)
+    def __init__(self, path: list, schema: dict) -> None:
+        super().__init__(path, schema)
         self.minimum = self.default_minimum if 'minimum' not in schema else schema[
             'minimum']
         self.maximum = self.default_maximum if 'maximum' not in schema else schema[
@@ -90,8 +95,8 @@ class NumberSchema(BaseSchema):
 class IntegerSchema(NumberSchema):
     '''Special case of NumberSchema'''
 
-    def __init__(self, schema: dict) -> None:
-        super().__init__(schema)
+    def __init__(self, path: list, schema: dict) -> None:
+        super().__init__(path, schema)
 
     def __str__(self) -> str:
         return 'Integer'
@@ -122,17 +127,18 @@ class ObjectSchema(BaseSchema):
         - regexp
     '''
 
-    def __init__(self, schema: dict) -> None:
-        super().__init__(schema)
-        self.children = {}
+    def __init__(self, path: list, schema: dict) -> None:
+        super().__init__(path, schema)
+        self.properties = {}
         self.additional_properties = None
         self.required = []
         if 'properties' in schema:
             for property_key, property_schema in schema['properties'].items():
-                print(property_key)
-                self.children[property_key] = schema_node(property_schema)
+                self.properties[property_key] = extract_schema(
+                    self.path + [property_key], property_schema)
         if 'additionalProperties' in schema:
-            self.additional_properties = schema_node(
+            self.additional_properties = extract_schema(
+                self.path + ['additional_properties'],
                 schema['additionalProperties'])
         if 'required' in schema:
             self.required = schema['required']
@@ -141,17 +147,23 @@ class ObjectSchema(BaseSchema):
         if 'maxProperties' in schema:
             self.max_properties = schema['maxProperties']
 
-    def get_child_schema(self, key):
-        if key in self.children:
-            return self.children[key]
+    def get_property_schema(self, key):
+        if key in self.properties:
+            return self.properties[key]
         elif self.additional_properties != None:
             return self.additional_properties
         else:
-            raise TypeError
+            raise TypeError('%s' % key)
+
+    def get_properties(self) -> dict:
+        return self.properties
+
+    def get_additional_properties(self):
+        return self.additional_properties
 
     def __str__(self) -> str:
         ret = '{'
-        for k, v in self.children.items():
+        for k, v in self.properties.items():
             ret += str(k)
             ret += ': '
             ret += str(v)
@@ -164,12 +176,19 @@ class ObjectSchema(BaseSchema):
         if self.enum != None:
             return random.choice(self.enum)
         result = {}
-        for k, v in self.children.items():
-            if random.uniform(0, 1) < 0.1 and k not in self.required:
-                # 10% of the chance this child will be null
-                result[k] = None
-            else:
-                result[k] = v.gen()
+        if len(self.properties) == 0:
+            if self.additional_properties == None:
+                # raise TypeError('[%s]: No properties and no additional properties' % self.path)
+                logging.warning('[%s]: No properties and no additional properties' % self.path)
+                return None
+            result['key'] = self.additional_properties.gen()
+        else:
+            for k, v in self.properties.items():
+                if random.uniform(0, 1) < 0.1 and k not in self.required:
+                    # 10% of the chance this child will be null
+                    result[k] = None
+                else:
+                    result[k] = v.gen()
         return result
 
 
@@ -179,27 +198,23 @@ class ArraySchema(BaseSchema):
     It handles
         - minItems
         - maxItems
-        - exclusiveMinimum
-        - exclusiveMaximum
-    TODO:
-        - multipleOf
+        - items
+        - uniqueItems
     '''
     default_min_items = 0
     default_max_items = 5
 
-    def __init__(self, schema: dict) -> None:
-        super().__init__(schema)
-        self.item_schema = schema_node(schema['items'])
+    def __init__(self, path: list, schema: dict) -> None:
+        super().__init__(path, schema)
+        self.item_schema = extract_schema(self.path + ['item'], schema['items'])
         self.min_items = self.default_min_items if 'minItems' not in schema else schema[
             'minItems']
         self.max_items = self.default_max_items if 'maxItems' not in schema else schema[
             'maxItems']
-        self.exclusive_minimum = None if 'exclusiveMinimum' not in schema else schema[
+        self.unique_items = None if 'uniqueItems' not in schema else schema[
             'exclusiveMinimum']
-        self.exclusive_maximum = None if 'exclusiveMaximum' not in schema else schema[
-            'exclusiveMaximum']
 
-    def item_schema(self):
+    def get_item_schema(self):
         return self.item_schema
 
     def __str__(self) -> str:
@@ -220,14 +235,15 @@ class AnyOfSchema(BaseSchema):
     '''Representing a schema with AnyOf keyword in it
     '''
 
-    def __init__(self, schema) -> None:
-        super().__init__(schema)
+    def __init__(self, path: list, schema: dict) -> None:
+        super().__init__(path, schema)
         self.possibilities = []
-        for i in schema['anyOf']:
+        for index, v in enumerate(schema['anyOf']):
             base_schema = deepcopy(schema)
             del base_schema['anyOf']
-            base_schema.update(i)
-            self.possibilities.append(schema_node(base_schema))
+            base_schema.update(v)
+            self.possibilities.append(
+                extract_schema(self.path + ['%s' % str(index)], base_schema))
 
     def __str__(self) -> str:
         ret = '['
@@ -237,7 +253,7 @@ class AnyOfSchema(BaseSchema):
         ret += ']'
         return ret
 
-    def possibilities(self):
+    def get_possibilities(self):
         return self.possibilities
 
     def gen(self):
@@ -247,8 +263,8 @@ class AnyOfSchema(BaseSchema):
 
 class BooleanSchema(BaseSchema):
 
-    def __init__(self, schema: dict) -> None:
-        super().__init__(schema)
+    def __init__(self, path: list, schema: dict) -> None:
+        super().__init__(path, schema)
         pass
 
     def __str__(self) -> str:
@@ -258,22 +274,27 @@ class BooleanSchema(BaseSchema):
         return random.choice([True, False])
 
 
-def schema_node(schema: dict) -> object:
+def extract_schema(path: list, schema: dict) -> object:
+    global num_terminals
     if 'anyOf' in schema:
-        return AnyOfSchema(schema)
+        return AnyOfSchema(path, schema)
     t = schema['type']
     if t == 'string':
-        return StringSchema(schema)
+        num_terminals += 1
+        return StringSchema(path, schema)
     elif t == 'number':
-        return NumberSchema(schema)
+        num_terminals += 1
+        return NumberSchema(path, schema)
     elif t == 'integer':
-        return IntegerSchema(schema)
+        num_terminals += 1
+        return IntegerSchema(path, schema)
     elif t == 'boolean':
-        return BooleanSchema(schema)
+        num_terminals += 1
+        return BooleanSchema(path, schema)
     elif t == 'array':
-        return ArraySchema(schema)
+        return ArraySchema(path, schema)
     elif t == 'object':
-        return ObjectSchema(schema)
+        return ObjectSchema(path, schema)
     else:
         logging.error('Unsupported type %s' % t)
         return None
@@ -286,7 +307,8 @@ if __name__ == '__main__':
         for document in parsed_operator_documents:
             if document['kind'] == 'CustomResourceDefinition':
                 spec_schema = ObjectSchema(
-                    document['spec']['versions'][0]['schema']['openAPIV3Schema']
-                    ['properties']['spec'])
+                    ['root'], document['spec']['versions'][0]['schema']
+                    ['openAPIV3Schema']['properties']['spec'])
                 print(str(spec_schema))
                 print(spec_schema.gen())
+                print(num_terminals)

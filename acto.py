@@ -13,11 +13,14 @@ from deepdiff import DeepDiff
 
 from common import RunResult, get_diff_stat
 import check_result
+import schema
+import value_with_schema
 
 corev1Api = None
 appv1Api = None
 customObjectsApi = None
 context = {'namespace': '', 'current_dir_path': ''}
+test_summary = {}
 workdir_path = 'testrun-%s' % datetime.now().strftime('%Y-%m-%d-%H-%M')
 
 
@@ -87,6 +90,7 @@ def construct_kind_cluster():
     appv1Api = kubernetes.client.AppsV1Api()
     customObjectsApi = kubernetes.client.CustomObjectsApi()
 
+
 def get_namespaced_resources() -> Tuple[List[str], List[str]]:
     '''Get namespaced and non-namespaced available resources list
 
@@ -101,6 +105,7 @@ def get_namespaced_resources() -> Tuple[List[str], List[str]]:
         else:
             non_namespaced_resources.append(resource.kind)
     return namespaced_resources, non_namespaced_resources
+
 
 def deploy_operator(operator_yaml_path: str):
     '''Deploy operator according to yaml
@@ -134,10 +139,17 @@ def deploy_operator(operator_yaml_path: str):
             elif document['kind'] == 'CustomResourceDefinition':
                 # TODO: Handle multiple CRDs
                 crd_data = {
-                    'group': document['spec']['group'],
-                    'plural': document['spec']['names']['plural'],
-                    'version': document['spec']['versions'][0]
-                               ['name'],  # TODO: Handle multiple versions
+                    'group':
+                        document['spec']['group'],
+                    'plural':
+                        document['spec']['names']['plural'],
+                    'version':
+                        document['spec']['versions'][0]
+                        ['name'],  # TODO: Handle multiple versions
+                    'spec_schema':
+                        schema.extract_schema(
+                            ['root'], document['spec']['versions'][0]['schema']
+                            ['openAPIV3Schema']['properties']['spec'])
                 }
                 context['crd'] = crd_data
             new_operator_documents.append(document)
@@ -265,12 +277,16 @@ def run_trial(initial_input: dict,
     checker = check_result.Checker(context, trial_dir, corev1Api, appv1Api,
                                    customObjectsApi)
     current_cr = deepcopy(initial_input)
+    spec_with_schema = value_with_schema.attach_schema_to_value(
+        current_cr['spec'], context['crd']['spec_schema'])
 
     generation = 0
     while generation < num_mutation:
         parent_cr = deepcopy(current_cr)
         if generation != 0:
-            mutate_application_spec(current_cr, candidate_dict)
+            # mutate_application_spec(current_cr, candidate_dict)
+            spec_with_schema.mutate()
+            current_cr['spec'] = spec_with_schema.raw_value()
 
         cr_diff = DeepDiff(parent_cr,
                            current_cr,
@@ -294,11 +310,12 @@ def run_trial(initial_input: dict,
         if retval == RunResult.invalidInput:
             # Revert to parent CR
             current_cr = parent_cr
+            spec_with_schema = value_with_schema.attach_schema_to_value(
+                current_cr['spec'], context['crd']['spec_schema'])
         elif retval == RunResult.unchanged:
             continue
         elif retval == RunResult.error:
             # We found an error!
-            logging.info('Diff stat: %s ' % get_diff_stat())
             return
         elif retval == RunResult.passing:
             continue
@@ -372,4 +389,5 @@ if __name__ == '__main__':
             "%H:%M:%S", time.gmtime(time.time() - trial_start_time))
         logging.info('Trial %d finished, completed in %s' %
                      (trial_num, trial_elapsed))
+        logging.info('---------------------------------------\n')
         trial_num = trial_num + 1

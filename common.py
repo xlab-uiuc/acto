@@ -5,9 +5,6 @@ from deepdiff.helper import NotPresent
 from datetime import datetime, date
 import re
 
-ACTO_IDX_SKIP = 'ACTO-INGORE'
-TYPE_CHANGE = 'TYPE-CHANGE'
-
 diff_stat = {}
 
 
@@ -38,6 +35,7 @@ def postprocess_diff(diff):
 
 def canonicalize(s: str):
     '''Replace all upper case letters with _lowercase'''
+    s = str(s)
     return re.sub(r"(?=[A-Z])", '_', s).lower()
 
 
