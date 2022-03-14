@@ -6,20 +6,19 @@ import json
 import re
 from threading import Thread
 import copy
+import kubernetes
 
 from common import RunResult, ActoEncoder, postprocess_diff, EXCLUDE_PATH_REGEX, EXCLUDE_ERROR_REGEX, canonicalize
 import acto_timer
 
-
 class Checker:
 
-    def __init__(self, context: dict, cur_path: str, corev1Api, appv1Api,
-                 customObjectApi) -> None:
+    def __init__(self, context: dict, cur_path: str) -> None:
         self.context = context
         self.cur_path = cur_path
-        self.corev1Api = corev1Api
-        self.appv1Api = appv1Api
-        self.customObjectApi = customObjectApi
+        self.corev1Api = kubernetes.client.CoreV1Api()
+        self.appv1Api = kubernetes.client.AppsV1Api()
+        self.customObjectApi = kubernetes.client.CustomObjectsApi()
         self.resources = {}
 
         self.resource_methods = {

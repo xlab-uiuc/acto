@@ -24,6 +24,9 @@ Example:
 To run the test on the rabbitmq-operator:  
 `python3 acto.py --candidates data/rabbitmq-operator/candidates.yaml --seed data/rabbitmq-operator/cr.yaml --operator data/rabbitmq-operator/operator.yaml --duration 1`
 
+cass-operator (using helm)   
+`python3 acto_helm.py --candidates data/cass-operator/candidates.yaml --seed data/cass-operator/cr.yaml --helm data/cass-operator/cass-operator --crd=data/cass-operator/cass-operator/crds/customresourcedefinition.yaml --init data/cass-operator/init.yaml --duration 1`
+
 ## Porting operators
 Acto aims to automate the E2E testing as much as possible to minimize users' labor.
 
