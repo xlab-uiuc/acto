@@ -11,6 +11,7 @@ import kubernetes
 from common import RunResult, ActoEncoder, postprocess_diff, EXCLUDE_PATH_REGEX, EXCLUDE_ERROR_REGEX, canonicalize
 import acto_timer
 
+
 class Checker:
 
     def __init__(self, context: dict, cur_path: str) -> None:
@@ -101,7 +102,8 @@ class Checker:
                     for resource_delta_list in system_delta_without_cr.values():
                         for type_delta_list in resource_delta_list.values():
                             for state_delta in type_delta_list.values():
-                                if delta.prev == state_delta.prev and delta.curr == state_delta.curr:
+                                if delta.prev == state_delta.prev \
+                                    and delta.curr == state_delta.curr:
                                     found = True
                     if found:
                         break
@@ -109,6 +111,19 @@ class Checker:
                     logging.error('Input delta [%s]' % delta.path)
                     return RunResult.error
 
+        return RunResult.passing
+
+    def check_health(self) -> RunResult:
+        '''System health oracle'''
+        # TODO: Add other resources, e.g. deployment
+        desired_replicas = self.resources['stateful_set']['status']['replicas']
+        available_replicas = self.resources['stateful_set']['status'][
+            'availableReplicas']
+        if desired_replicas != available_replicas:
+            logging.error(
+                'StatefulSet unhealthy desired replicas [%d] available replicas [%d]'
+                % (desired_replicas, available_replicas))
+            return RunResult.error
         return RunResult.passing
 
     def run_and_check(self, cmd: list, input_diff,
@@ -144,6 +159,11 @@ class Checker:
         result = self.check_resources(input_diff, generation)
         if result != RunResult.passing:
             logging.info('Report error from system state oracle')
+            return result
+
+        result = self.check_health()
+        if result != RunResult.passing:
+            logging.info('Report error from system health oracle')
             return result
 
         result = self.check_log(generation)
