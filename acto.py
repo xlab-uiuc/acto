@@ -11,14 +11,11 @@ import signal
 import logging
 from deepdiff import DeepDiff
 
-from common import RunResult, get_diff_stat
+from common import RunResult
 import check_result
 import schema
 import value_with_schema
 
-corev1Api = None
-appv1Api = None
-customObjectsApi = None
 context = {'namespace': '', 'current_dir_path': ''}
 test_summary = {}
 workdir_path = 'testrun-%s' % datetime.now().strftime('%Y-%m-%d-%H-%M')
@@ -83,12 +80,6 @@ def construct_kind_cluster():
     os.system('kind create cluster --config %s' % kind_config_path)
 
     kubernetes.config.load_kube_config()
-    global corev1Api
-    global appv1Api
-    global customObjectsApi
-    corev1Api = kubernetes.client.CoreV1Api()
-    appv1Api = kubernetes.client.AppsV1Api()
-    customObjectsApi = kubernetes.client.CustomObjectsApi()
 
 
 def get_namespaced_resources() -> Tuple[List[str], List[str]]:
@@ -99,6 +90,7 @@ def get_namespaced_resources() -> Tuple[List[str], List[str]]:
     '''
     namespaced_resources = []
     non_namespaced_resources = []
+    appv1Api = kubernetes.client.AppsV1Api()
     for resource in appv1Api.get_api_resources().resources:
         if resource.namespaced:
             namespaced_resources.append(resource.kind)
@@ -122,7 +114,9 @@ def deploy_operator(operator_yaml_path: str):
         new_operator_documents = []
         for document in parsed_operator_documents:
             # set namespace to default if not specify
-            if document['kind'] in namespaced_resources and 'namespace' not in document['metadata']:
+            if document[
+                    'kind'] in namespaced_resources and 'namespace' not in document[
+                        'metadata']:
                 document['metadata']['namespace'] = 'default'
             if document['kind'] == 'Deployment':
                 document['metadata']['labels'][
@@ -161,6 +155,7 @@ def deploy_operator(operator_yaml_path: str):
 
         logging.debug('Deploying the operator, waiting for it to be ready')
         pod_ready = False
+        appv1Api = kubernetes.client.AppsV1Api()
         for _ in range(60):
             operator_deployments = appv1Api.list_namespaced_deployment(
                 context['namespace'],
@@ -257,6 +252,20 @@ def mutate_application_spec(current_spec: dict, candidates: dict):
     return current_spec
 
 
+def prune_noneffective_change(diff):
+    '''
+    This helper function handles the corner case where an item is added to
+    dictionary, but the value assigned is null, which makes the change 
+    meaningless
+    '''
+    if 'dictionary_item_added' in diff:
+        for item in diff['dictionary_item_added']:
+            if item.t2 == None:
+                diff['dictionary_item_added'].remove(item)
+        if len(diff['dictionary_item_added']) == 0:
+            del diff['dictionary_item_added']
+
+
 def run_trial(initial_input: dict,
               candidate_dict: dict,
               trial_num: int,
@@ -292,6 +301,7 @@ def run_trial(initial_input: dict,
                            ignore_order=True,
                            report_repetition=True,
                            view='tree')
+        prune_noneffective_change(cr_diff)
         if len(cr_diff) == 0 and generation != 0:
             logging.info('CR unchanged, continue')
             continue
