@@ -4,6 +4,7 @@ from copy import deepcopy
 import random
 from abc import abstractmethod
 import exrex
+import string
 
 num_terminals = 0
 
@@ -53,7 +54,8 @@ class StringSchema(BaseSchema):
             return random.choice(self.enum)
         if self.pattern != None:
             return exrex.getone(self.pattern, self.max_length)
-        return 'random'
+        letters = string.ascii_lowercase
+        return ( ''.join(random.choice(letters) for i in range(10)) )
 
 
 class NumberSchema(BaseSchema):
