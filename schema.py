@@ -314,3 +314,6 @@ if __name__ == '__main__':
                 print(str(spec_schema))
                 print(spec_schema.gen())
                 print(num_terminals)
+
+    ss = StringSchema(None, {"type": "string"})
+    print(ss.gen())

@@ -116,14 +116,17 @@ class Checker:
     def check_health(self) -> RunResult:
         '''System health oracle'''
         # TODO: Add other resources, e.g. deployment
-        desired_replicas = self.resources['stateful_set']['status']['replicas']
-        available_replicas = self.resources['stateful_set']['status'][
-            'availableReplicas']
-        if desired_replicas != available_replicas:
-            logging.error(
-                'StatefulSet unhealthy desired replicas [%d] available replicas [%d]'
-                % (desired_replicas, available_replicas))
-            return RunResult.error
+        for sts in self.resources['stateful_set'].values():
+            desired_replicas = sts['status']['replicas']
+            if 'ready_replicas' not in sts['status']:
+                logging.error('StatefulSet unhealthy ready replicas None')
+                return RunResult.error
+            available_replicas = sts['status']['ready_replicas']
+            if desired_replicas != available_replicas:
+                logging.error(
+                    'StatefulSet unhealthy desired replicas [%s] available replicas [%s]'
+                    % (desired_replicas, available_replicas))
+                return RunResult.error
         return RunResult.passing
 
     def run_and_check(self, cmd: list, input_diff,
@@ -161,10 +164,10 @@ class Checker:
             logging.info('Report error from system state oracle')
             return result
 
-        result = self.check_health()
-        if result != RunResult.passing:
-            logging.info('Report error from system health oracle')
-            return result
+        # result = self.check_health()
+        # if result != RunResult.passing:
+        #     logging.info('Report error from system health oracle')
+        #     return result
 
         result = self.check_log(generation)
         if result != RunResult.passing:
