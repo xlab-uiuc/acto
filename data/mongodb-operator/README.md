@@ -22,6 +22,12 @@ echo "Visit http://127.0.0.1:8080 to use your application"
 kubectl --namespace default port-forward $POD_NAME 8080:$CONTAINER_PORT
 ```
 
+# How to apply acto to MongoDB operator?
+```
+# In acto root directory
+python3 acto_helm.py --helm data/mongodb-operator/community-operator/ --candidates data/mongodb-operator/candidates.yaml --seed data/mongodb-operator/cr.yaml --duration 1 --crd data/mongodb-operator/community-operator-crds/templates/mongodbcommunity.mongodb.com_mongodbcommunity.yaml
+```
+
 # Resources
 * https://github.com/mongodb/helm-charts
 * https://github.com/mongodb/mongodb-kubernetes-operator
