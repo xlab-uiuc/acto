@@ -183,7 +183,9 @@ class ObjectSchema(BaseSchema):
                 # raise TypeError('[%s]: No properties and no additional properties' % self.path)
                 logging.warning('[%s]: No properties and no additional properties' % self.path)
                 return None
-            result['key'] = self.additional_properties.gen()
+            letters = string.ascii_lowercase
+            key = ''.join(random.choice(letters) for i in range(5))
+            result[key] = self.additional_properties.gen()
         else:
             for k, v in self.properties.items():
                 if random.uniform(0, 1) < 0.1 and k not in self.required:
