@@ -8,7 +8,7 @@ from threading import Thread
 import copy
 import kubernetes
 
-from common import RunResult, ActoEncoder, postprocess_diff, EXCLUDE_PATH_REGEX, EXCLUDE_ERROR_REGEX, canonicalize
+from common import *
 import acto_timer
 
 
@@ -94,7 +94,10 @@ class Checker:
                                       (delta.prev, delta.curr))
                         logging.error('Matched delta: %s -> %s' %
                                       (match_delta.prev, match_delta.curr))
-                        return RunResult.error
+                        return ErrorResult(
+                            Oracle.SYSTEM_STATE,
+                            'Matched delta inconsistent with input delta',
+                            delta, match_delta)
 
                 if len(match_deltas) == 0:
                     # if prev and curr of the delta are the same, also consider it as a match
@@ -109,9 +112,11 @@ class Checker:
                         break
                     logging.error('Found no matching fields for input delta')
                     logging.error('Input delta [%s]' % delta.path)
-                    return RunResult.error
+                    return ErrorResult(Oracle.SYSTEM_STATE,
+                                       'Found no matching fields for input',
+                                       delta)
 
-        return RunResult.passing
+        return PassResult()
 
     def check_health(self) -> RunResult:
         '''System health oracle'''
@@ -120,14 +125,14 @@ class Checker:
             desired_replicas = sts['status']['replicas']
             if 'ready_replicas' not in sts['status']:
                 logging.error('StatefulSet unhealthy ready replicas None')
-                return RunResult.error
+                return None  # TODO
             available_replicas = sts['status']['ready_replicas']
             if desired_replicas != available_replicas:
                 logging.error(
                     'StatefulSet unhealthy desired replicas [%s] available replicas [%s]'
                     % (desired_replicas, available_replicas))
-                return RunResult.error
-        return RunResult.passing
+                return None # TODO
+        return PassResult()
 
     def run_and_check(self, cmd: list, input_diff,
                       generation: int) -> RunResult:
@@ -148,19 +153,19 @@ class Checker:
             logging.error('Invalid input, reject mutation')
             logging.error('STDOUT: ' + cli_result.stdout)
             logging.error('STDERR: ' + cli_result.stderr)
-            return RunResult.invalidInput
+            return InvalidInputResult()
 
         if cli_result.stdout.find('unchanged') != -1 or cli_result.stderr.find(
                 'unchanged') != -1:
             logging.error('CR unchanged, continue')
-            return RunResult.unchanged
+            return UnchangedInputResult()
         logging.debug('STDOUT: ' + cli_result.stdout)
         logging.debug('STDERR: ' + cli_result.stderr)
 
         self.wait_for_system_converge()
 
         result = self.check_resources(input_diff, generation)
-        if result != RunResult.passing:
+        if isinstance(result, ErrorResult):
             logging.info('Report error from system state oracle')
             return result
 
@@ -170,11 +175,11 @@ class Checker:
         #     return result
 
         result = self.check_log(generation)
-        if result != RunResult.passing:
+        if isinstance(result, ErrorResult):
             logging.info('Report error from operator log oracle')
             return result
 
-        return RunResult.passing
+        return PassResult()
 
     def __get_all_objects(self, method) -> dict:
         '''Get all pods in the application namespace
@@ -246,11 +251,11 @@ class Checker:
                 if skip:
                     continue
                 logging.info('Found error in operator log')
-                return RunResult.error
+                return ErrorResult(Oracle.ERROR_LOG, line)
             else:
                 continue
 
-        return RunResult.passing
+        return PassResult()
 
     def wait_for_system_converge(self, timeout=360):
         '''This function blocks until the system converges

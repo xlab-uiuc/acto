@@ -12,7 +12,7 @@ import signal
 import logging
 from deepdiff import DeepDiff
 
-from common import RunResult
+from common import *
 import check_result
 import schema
 import value_with_schema
@@ -246,7 +246,7 @@ def prune_noneffective_change(diff):
 def run_trial(initial_input: dict,
               candidate_dict: dict,
               trial_num: int,
-              num_mutation: int = 100):
+              num_mutation: int = 100) -> Tuple[ErrorResult, int]:
     '''Run a trial starting with the initial input, mutate with the candidate_dict, and mutate for num_mutation times
     
     Args:
@@ -287,27 +287,29 @@ def run_trial(initial_input: dict,
         with open(mutated_filename, 'w') as mutated_cr_file:
             yaml.dump(current_cr, mutated_cr_file)
 
-        retval = checker.run_and_check(
+        result = checker.run_and_check(
             ['kubectl', 'apply', '-f', mutated_filename],
             cr_diff,
             generation=generation)
         generation += 1
 
-        if retval == RunResult.invalidInput:
+        if isinstance(result, InvalidInputResult):
             # Revert to parent CR
             current_cr = parent_cr
             spec_with_schema = value_with_schema.attach_schema_to_value(
                 current_cr['spec'], context['crd']['spec_schema'])
-        elif retval == RunResult.unchanged:
+        elif isinstance(result, UnchangedInputResult):
             continue
-        elif retval == RunResult.error:
+        elif isinstance(result, ErrorResult):
             # We found an error!
-            return
-        elif retval == RunResult.passing:
+            return result, generation
+        elif isinstance(result, PassResult):
             continue
         else:
             logging.error('Unknown return value, abort')
             quit()
+
+    return None, generation
 
 
 def process_operator_yaml(operator_yaml_path: str):
@@ -432,10 +434,25 @@ if __name__ == '__main__':
         if not succeed:
             continue
         deploy_dependency([])
-        run_trial(application_cr, candidate_dict, trial_num)
+        trial_err, num_tests = run_trial(application_cr, candidate_dict, trial_num)
         trial_elapsed = time.strftime(
             "%H:%M:%S", time.gmtime(time.time() - trial_start_time))
         logging.info('Trial %d finished, completed in %s' %
                      (trial_num, trial_elapsed))
         logging.info('---------------------------------------\n')
+
+        result_dict = {}
+        result_dict['trial_num'] = trial_num
+        result_dict['duration'] = trial_elapsed
+        result_dict['num_tests'] = num_tests
+        if trial_err == None:
+            logging.info('Trial %d completed without error')
+        else:
+            result_dict['oracle'] = trial_err.oracle
+            result_dict['message'] = trial_err.message
+            result_dict['input_delta'] = trial_err.input_delta
+            result_dict['matched_system_delta'] = trial_err.matched_system_delta
+        result_path = os.path.join(context['current_dir_path'], 'result.json')
+        with open(result_path, 'w') as result_file:
+            json.dump(result_dict, result_file, cls=ActoEncoder, indent=6)
         trial_num = trial_num + 1

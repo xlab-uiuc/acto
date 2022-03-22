@@ -7,11 +7,52 @@ import re
 diff_stat = {}
 
 
-class RunResult(enum.Enum):
-    passing = 0
-    invalidInput = 1
-    error = 2
-    unchanged = 3
+class Diff:
+
+    def __init__(self, prev, curr, path) -> None:
+        # self.path = path
+        self.prev = prev if not isinstance(prev, NotPresent) else None
+        self.curr = curr if not isinstance(curr, NotPresent) else None
+        self.path = path
+
+    def to_dict(self):
+        '''serialize Diff object
+        '''
+        return {'prev': self.prev, 'curr': self.curr, 'path': self.path}
+
+
+class Oracle(str, enum.Enum):
+    ERROR_LOG = 'ErrorLog'
+    SYSTEM_STATE = 'SystemState'
+
+
+class RunResult():
+    pass
+
+
+class PassResult(RunResult):
+    pass
+
+
+class InvalidInputResult(RunResult):
+    pass
+
+
+class UnchangedInputResult(RunResult):
+    pass
+
+
+class ErrorResult(RunResult):
+
+    def __init__(self,
+                 oracle: Oracle,
+                 msg: str,
+                 input_delta: Diff = None,
+                 matched_system_delta: Diff = None) -> None:
+        self.oracle = oracle
+        self.message = msg
+        self.input_delta = input_delta
+        self.matched_system_delta = matched_system_delta
 
 
 def postprocess_diff(diff):
@@ -40,20 +81,6 @@ def canonicalize(s: str):
 
 def get_diff_stat():
     return diff_stat
-
-
-class Diff:
-
-    def __init__(self, prev, curr, path) -> None:
-        # self.path = path
-        self.prev = prev if not isinstance(prev, NotPresent) else None
-        self.curr = curr if not isinstance(curr, NotPresent) else None
-        self.path = path
-
-    def to_dict(self):
-        '''serialize Diff object
-        '''
-        return {'prev': self.prev, 'curr': self.curr}
 
 
 class ActoEncoder(json.JSONEncoder):
