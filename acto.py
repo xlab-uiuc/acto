@@ -20,7 +20,7 @@ import value_with_schema
 context = {
     'namespace': '',
     'current_dir_path': '',
-    'operator_image': '',
+    'preload_images': [],
 }
 test_summary = {}
 workdir_path = 'testrun-%s' % datetime.now().strftime('%Y-%m-%d-%H-%M')
@@ -107,20 +107,9 @@ def get_namespaced_resources() -> Tuple[List[str], List[str]]:
 def deploy_operator():
     '''Deploy operator according to yaml
     '''
-    if context['operator_image'] == '':
-        logging.error('Extracting operator image unsuccessful')
-        quit()
     if context['operator_yaml'] == '':
         logging.error('New operator yaml not found')
         quit()
-
-    # Preload operator image into kind, to avoid ImagePullBackOff
-    p = subprocess.run(['kind', 'load', 'docker-image', context['operator_image']])
-    if p.returncode != 0:
-        logging.info('Image not present local, pull and retry')
-        os.system('docker pull %s' % context['operator_image'])
-        p = subprocess.run(['kind', 'load', 'docker-image', context['operator_image']])
-
 
     cmd = ['kubectl', 'apply', '-f', context['operator_yaml']]
     cli_result = subprocess.run(cmd, capture_output=True, text=True)
@@ -334,21 +323,24 @@ def process_operator_yaml(operator_yaml_path: str):
         for document in parsed_operator_documents:
             # set namespace to default if not specify
             if document['kind'] in namespaced_resources \
-                and 'namespace' not in document['metadata']:
+                    and 'namespace' not in document['metadata']:
                 document['metadata']['namespace'] = 'default'
             if document['kind'] == 'Deployment':
                 document['metadata']['labels']['acto/tag'] \
                     = 'operator-deployment'
                 document['spec']['template']['metadata']['labels']['acto/tag'] \
                     = 'operator-pod'
+
                 context['namespace'] = document['metadata']['namespace']
-                context['operator_image'] \
-                    = document['spec']['template']['spec']['containers'][0]['image']
+                context['preload_images'].append(
+                    document['spec']['template']['spec']['containers'][0]
+                    ['image'])
             elif document['kind'] == 'StatefulSet':
                 document['metadata']['labels']['acto/tag'] \
                     = 'operator-stateful-set'
                 document['spec']['template']['metadata']['labels']['acto/tag'] \
                     = 'operator-pod'
+
                 context['namespace'] = document['metadata']['namespace']
             elif document['kind'] == 'CustomResourceDefinition':
                 # TODO: Handle multiple CRDs
@@ -369,6 +361,23 @@ def process_operator_yaml(operator_yaml_path: str):
             new_operator_documents.append(document)
         yaml.dump_all(new_operator_documents, out_yaml)
     context['operator_yaml'] = new_operator_path
+
+
+def preload_images():
+    '''Preload some frequently used images into Kind cluster to avoid ImagePullBackOff
+
+    Uses global context
+    '''
+    if len(context['preload_images']) == 0:
+        logging.error(
+            'No image to preload, we at least should have operator image')
+
+    for image in context['preload_images']:
+        p = subprocess.run(['kind', 'load', 'docker-image', image])
+        if p.returncode != 0:
+            logging.info('Image not present local, pull and retry')
+            os.system('docker pull %s' % image)
+            p = subprocess.run(['kind', 'load', 'docker-image', image])
 
 
 def timeout_handler(sig, frame):
@@ -400,6 +409,10 @@ if __name__ == '__main__':
                         dest='duration',
                         default=6,
                         help='Number of hours to run')
+    parser.add_argument('--preload-images',
+                        dest='preload_images',
+                        nargs='*',
+                        help='Docker images to preload into Kind cluster')
 
     args = parser.parse_args()
 
@@ -421,6 +434,10 @@ if __name__ == '__main__':
         logging.error('Failed to read cr yaml, aborting')
         quit()
 
+    # Preload frequently used images to amid ImagePullBackOff
+    context['preload_images'].extend(args.preload_images)
+    logging.info('%s will be preloaded into Kind cluster', args.preload_images)
+
     # register timeout to automatically stop after # hours
     signal.signal(signal.SIGALRM, timeout_handler)
     signal.alarm(int(args.duration) * 60 * 60)
@@ -430,11 +447,14 @@ if __name__ == '__main__':
         trial_start_time = time.time()
         construct_kind_cluster()
         process_operator_yaml(args.operator)
+        preload_images()
         succeed = deploy_operator()
         if not succeed:
             continue
         deploy_dependency([])
-        trial_err, num_tests = run_trial(application_cr, candidate_dict, trial_num)
+        trial_err, num_tests = run_trial(application_cr, candidate_dict,
+                                         trial_num)
+
         trial_elapsed = time.strftime(
             "%H:%M:%S", time.gmtime(time.time() - trial_start_time))
         logging.info('Trial %d finished, completed in %s' %
