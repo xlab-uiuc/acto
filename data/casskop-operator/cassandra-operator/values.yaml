@@ -1,0 +1,48 @@
+## Cassandra Operator Image
+##
+image:
+  repository: orangeopensource/casskop
+  tag: v2.1.0-release
+  pullPolicy: Always
+  imagePullSecrets:
+    enabled: false
+#    name:
+
+## Prometheus-operator resource limits & requests
+## Ref: https://kubernetes.io/docs/user-guide/compute-resources/
+resources:
+  requests:
+    cpu: 10m
+    memory: 50Mi
+  limits:
+    cpu: 1
+    memory: 512Mi
+
+readinessProbe:
+  timeouts:
+    initialDelaySeconds: 4
+    periodSeconds: 10
+    failureThreshold: 1
+livenessProbe:
+  timeouts:
+    initialDelaySeconds: 4
+    periodSeconds: 10
+    failureThreshold: 1
+
+## If true, create & deploy the CRD
+##
+createCustomResource: true
+
+## If true, create & use RBAC resources
+##
+rbacEnable: true
+
+## if true deploy service for metrics access
+metricService: false
+
+debug:
+  enabled: false
+
+##
+clusterServiceAccountsName:
+  - cassandra-cluster-node
