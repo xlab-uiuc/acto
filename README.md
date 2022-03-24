@@ -25,7 +25,13 @@ To run the test on the rabbitmq-operator:
 `python3 acto.py --candidates data/rabbitmq-operator/candidates.yaml --seed data/rabbitmq-operator/cr.yaml --operator data/rabbitmq-operator/operator.yaml --duration 1`
 
 cass-operator (using helm)   
-`python3 acto_helm.py --candidates data/cass-operator/candidates.yaml --seed data/cass-operator/cr.yaml --helm data/cass-operator/cass-operator --crd=data/cass-operator/cass-operator/crds/customresourcedefinition.yaml --init data/cass-operator/init.yaml --preload-images rabbitmq:3.8.21-management --duration 1`
+`python3 acto_helm.py --candidates data/cass-operator/candidates.yaml --seed data/cass-operator/cr.yaml --helm data/cass-operator/cass-operator --crd=data/cass-operator/cass-operator/crds/customresourcedefinition.yaml --init data/cass-operator/init.yaml --duration 1`
+
+zookeeper-operator (using helm)  
+`python3 acto_helm.py --candidates data/zookeeper-operator/candidates.yaml --seed data/zookeeper-operator/cr.yaml --helm data/zookeeper-operator/zookeeper-operator --crd=data/zookeeper-operator/crds/zookeeper.pravega.io_zookeeperclusters_crd.yaml --duration 1`
+
+casskop-operator (using helm)
+`python3 acto_helm.py --candidates data/casskop-operator/candidates.yaml --seed data/casskop-operator/cr.yaml --helm data/casskop-operator/cassandra-operator --crd=data/casskop-operator/cassandra-operator/crds/db.orange.com_cassandraclusters.yaml --init data/casskop-operator/init.yaml --duration 1`
 
 ## Porting operators
 Acto aims to automate the E2E testing as much as possible to minimize users' labor.
