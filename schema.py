@@ -56,6 +56,12 @@ class StringSchema(BaseSchema):
             return exrex.getone(self.pattern, self.max_length)
         letters = string.ascii_lowercase
         return ( ''.join(random.choice(letters) for i in range(10)) )
+    
+    def num_cases(self):
+        return 3
+
+    def num_fields(self):
+        return 1
 
 
 class NumberSchema(BaseSchema):
@@ -93,6 +99,12 @@ class NumberSchema(BaseSchema):
             return random.choice(self.enum)
         return random.uniform(self.minimum, self.maximum)
 
+    def num_cases():
+        return 3
+
+    def num_fields(self):
+        return 1
+
 
 class IntegerSchema(NumberSchema):
     '''Special case of NumberSchema'''
@@ -112,7 +124,12 @@ class IntegerSchema(NumberSchema):
                                     self.multiple_of)
         else:
             return random.randint(self.minimum, self.maximum)
+    
+    def num_cases(self):
+        return 3
 
+    def num_fields(self):
+        return 1
 
 class ObjectSchema(BaseSchema):
     '''Representation of an object node
@@ -195,6 +212,18 @@ class ObjectSchema(BaseSchema):
                     result[k] = v.gen()
         return result
 
+    def num_cases(self):
+        num = 0
+        for i in self.properties.values():
+            num += i.num_cases()
+        return num+1
+
+    def num_fields(self):
+        num = 0
+        for i in self.properties.values():
+            num += i.num_fields()
+        return num+1
+
 
 class ArraySchema(BaseSchema):
     '''Representation of an array node
@@ -234,6 +263,12 @@ class ArraySchema(BaseSchema):
                 result.append(self.item_schema.gen())
             return result
 
+    def num_cases(self):
+        return self.item_schema.num_cases()+3
+
+    def num_fields(self):
+        return self.item_schema.num_fields()+1
+
 
 class AnyOfSchema(BaseSchema):
     '''Representing a schema with AnyOf keyword in it
@@ -264,6 +299,18 @@ class AnyOfSchema(BaseSchema):
         schema = random.choice(self.possibilities)
         return schema.gen()
 
+    def num_cases(self):
+        num = 0
+        for i in self.possibilities:
+            num += i.num_cases()
+        return num+1
+
+    def num_fields(self):
+        num = 0
+        for i in self.possibilities:
+            num += i.num_fields()
+        return num
+
 
 class BooleanSchema(BaseSchema):
 
@@ -276,6 +323,12 @@ class BooleanSchema(BaseSchema):
 
     def gen(self):
         return random.choice([True, False])
+
+    def num_cases(self):
+        return 3
+    
+    def num_fields(self):
+        return 1
 
 
 def extract_schema(path: list, schema: dict) -> object:
@@ -315,7 +368,10 @@ if __name__ == '__main__':
                     ['openAPIV3Schema']['properties']['spec'])
                 print(str(spec_schema))
                 print(spec_schema.gen())
-                print(num_terminals)
+                print(spec_schema.num_fields())
+                for k,v in spec_schema.properties.items():
+                    print('%s has %d fields' % (k, v.num_fields()))
+                print(spec_schema.num_cases())
 
     ss = StringSchema(None, {"type": "string"})
     print(ss.gen())
