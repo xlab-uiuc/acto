@@ -12,7 +12,7 @@ import signal
 import logging
 from deepdiff import DeepDiff
 import sh
-from common import RunResult, get_diff_stat
+from common import *
 import check_result
 from rich.console import Console
 
@@ -174,7 +174,7 @@ def mutate_application_spec(current_spec: dict, candidates: dict):
 def run_trial(initial_input: list,
               candidate_dict: dict,
               trial_num: int,
-              num_mutation: int = 100):
+              num_mutation: int = 100) -> Tuple[ErrorResult, int]:
     '''Run a trial starting with the initial input, mutate with the candidate_dict, and mutate for num_mutation times
     
     Args:
@@ -212,22 +212,24 @@ def run_trial(initial_input: list,
         mutated_filename = '%s/mutated-%d.yaml' % (trial_dir, generation)
         with open(mutated_filename, 'w') as mutated_cr_file:
             yaml.dump_all([current_cr] + remain_yaml_list, mutated_cr_file)
-        retval = checker.run_and_check(
+        result = checker.run_and_check(
             ['kubectl', 'apply', '-f', mutated_filename],
             cr_diff,
             generation=generation)
         generation += 1
 
-        if retval == RunResult.invalidInput:
+        if isinstance(result, InvalidInputResult):
             # Revert to parent CR
             current_cr = parent_cr
-        elif retval == RunResult.unchanged:
+            # TODO: handle spec_with_schema: https://github.com/xlab-uiuc/acto/commit/d670db83928d791e13e57294d2d569ee01c7e76f
+            # spec_with_schema = value_with_schema.attach_schema_to_value(
+            #     current_cr['spec'], context['crd']['spec_schema'])
+        elif isinstance(result, UnchangedInputResult):
             continue
-        elif retval == RunResult.error:
+        elif isinstance(result, ErrorResult):
             # We found an error!
-            logging.info('Diff stat: %s ' % get_diff_stat())
-            return
-        elif retval == RunResult.passing:
+            return result, generation
+        elif isinstance(result, PassResult):
             continue
         else:
             logging.error('Unknown return value, abort')
