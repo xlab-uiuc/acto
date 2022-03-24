@@ -69,11 +69,15 @@ def deploy_operator_helm_chart(operator_helm_chart: str, crd_yaml: str):
     console.log("Installing helm chart")
     sh.helm("install", "acto-test-operator", "--create-namespace", operator_helm_chart, wait=True, timeout="3m", namespace="acto-namespace")
     console.log("Get helm chart result")
-    helm_ls_result = sh.helm("ls", o="json")
-    helm_release = json.loads(helm_ls_result.stdout)[0]
+    helm_ls_result = sh.helm("ls", o="json", all_namespaces=True, all=True)
+    try:
+        helm_release = json.loads(helm_ls_result.stdout)[0]
+    except Exception:
+        console.log("Failed to get helm chart's status", style="bold red")
+        quit()
 
     if helm_release["status"] != "deployed":
-        logging.error("Helm chart deployment failed to be ready within timeout")
+        console.log("Helm chart deployment failed to be ready within timeout", style="bold red")
         quit()
 
     # TODO (Kai-Hsun): This is not a good practice. It's better to use k8s API to get CRD info.
