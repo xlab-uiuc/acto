@@ -19,6 +19,7 @@ from rich.console import Console
 console = Console()
 context = {}
 workdir_path = 'testrun-%s' % datetime.now().strftime('%Y-%m-%d-%H-%M')
+ACTO_NAMESPACE = "acto-namespace"
 
 def construct_kind_cluster(k8s_version: str):
     '''Delete kind cluster then create a new one
@@ -67,7 +68,7 @@ def deploy_operator_helm_chart(operator_helm_chart: str, crd_yaml: str):
     console.log("Installing helm chart dependency")
     sh.helm("dependency", "build", operator_helm_chart)
     console.log("Installing helm chart")
-    sh.helm("install", "acto-test-operator", "--create-namespace", operator_helm_chart, wait=True, timeout="3m", namespace="acto-namespace")
+    sh.helm("install", "acto-test-operator", "--create-namespace", operator_helm_chart, wait=True, timeout="3m", namespace=ACTO_NAMESPACE)
     console.log("Get helm chart result")
     helm_ls_result = sh.helm("ls", o="json", all_namespaces=True, all=True)
     try:
@@ -213,7 +214,7 @@ def run_trial(initial_input: list,
         with open(mutated_filename, 'w') as mutated_cr_file:
             yaml.dump_all([current_cr] + remain_yaml_list, mutated_cr_file)
         result = checker.run_and_check(
-            ['kubectl', 'apply', '-f', mutated_filename],
+            ['kubectl', 'apply', '-n', ACTO_NAMESPACE, '-f', mutated_filename],
             cr_diff,
             generation=generation)
         generation += 1
