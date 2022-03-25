@@ -217,7 +217,7 @@ def run_trial(initial_input: list,
             cr_diff,
             generation=generation)
         generation += 1
-
+        console.log(f"Trial {generation} - {result}")
         if isinstance(result, InvalidInputResult):
             # Revert to parent CR
             current_cr = parent_cr
