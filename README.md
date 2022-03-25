@@ -33,6 +33,9 @@ zookeeper-operator (using helm)
 casskop-operator (using helm)
 `python3 acto_helm.py --candidates data/casskop-operator/candidates.yaml --seed data/casskop-operator/cr.yaml --helm data/casskop-operator/cassandra-operator --crd=data/casskop-operator/cassandra-operator/crds/db.orange.com_cassandraclusters.yaml --init data/casskop-operator/init.yaml --duration 1`
 
+nifikop-operator (using helm)
+`python3 acto_helm.py --candidates data/nifikop-operator/candidates.yaml --seed data/nifikop-operator/cr.yaml --helm data/nifikop-operator/nifikop-operator --crd=data/nifikop-operator/nifikop-operator/crds/nifi.orange.com_nificlusters.yaml --duration 1`
+
 ## Porting operators
 Acto aims to automate the E2E testing as much as possible to minimize users' labor.
 
