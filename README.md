@@ -36,6 +36,10 @@ casskop-operator (using helm)
 nifikop-operator (using helm)
 `python3 acto_helm.py --candidates data/nifikop-operator/candidates.yaml --seed data/nifikop-operator/cr.yaml --helm data/nifikop-operator/nifikop-operator --crd=data/nifikop-operator/nifikop-operator/crds/nifi.orange.com_nificlusters.yaml --duration 1`
 
+xtradb-operator (using helm)
+`python3 acto_helm.py --candidates data/xtradb-operator/candidates.yaml --seed data/xtradb-operator/cr.yaml --helm data/xtradb-operator/xtradb-operator --crd=data/xtradb-operator/xtradb-operator/crds/crd.yaml --duration 1`
+
+
 ## Porting operators
 Acto aims to automate the E2E testing as much as possible to minimize users' labor.
 
