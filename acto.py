@@ -378,6 +378,10 @@ def preload_images():
 
 
 def process_crd(crd_name: Optional[str] = None):
+    ''' Get crd from k8s and set context['crd']
+
+    When there are more than one crd in the cluster, user should set crd_name
+    '''
     global context
     apiextensionsV1Api = ApiextensionsV1Api()
     crds: List[models.V1CustomResourceDefinition] = apiextensionsV1Api.list_custom_resource_definition().items
@@ -396,6 +400,7 @@ def process_crd(crd_name: Optional[str] = None):
             'There are multiple crds, please specify parameter [crd_name]')
         quit()
     if crd:
+        # there is openAPIV3Schema schema issue when using python k8s client, need to fetch data from cli
         crd_result = subprocess.run(
             ['kubectl', 'get', 'crd', crd.metadata.name, "-o", "json"], capture_output=True, text=True)
         crd_obj = json.loads(crd_result.stdout)
@@ -412,6 +417,8 @@ def process_crd(crd_name: Optional[str] = None):
 
 
 def add_acto_label():
+    '''Add acto label to deployment, stateful_state and corresponding pods.
+    '''
     appv1Api = AppsV1Api()
     operator_deployments: List[models.V1Deployment] = appv1Api.list_namespaced_deployment(
         context['namespace'],
