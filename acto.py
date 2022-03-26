@@ -105,14 +105,10 @@ def get_namespaced_resources() -> Tuple[List[str], List[str]]:
     return namespaced_resources, non_namespaced_resources
 
 
-def deploy_operator():
+def deploy_operator(operator_yaml: str):
     '''Deploy operator according to yaml
     '''
-    if context['operator_yaml'] == '':
-        logging.error('New operator yaml not found')
-        quit()
-
-    cmd = ['kubectl', 'apply', '-f', context['operator_yaml']]
+    cmd = ['kubectl', 'apply', '-f', operator_yaml]
     cli_result = subprocess.run(cmd, capture_output=True, text=True)
     # logging.debug('Operator deploy STDOUT: %s' % cli_result.stdout)
     # logging.debug('Operator deploy STDERR: %s' % cli_result.stderr)
@@ -508,11 +504,8 @@ if __name__ == '__main__':
     while True:
         trial_start_time = time.time()
         construct_kind_cluster()
-        # WIP: replace process_operator_yaml with process_crd and add_acto_label
-        # process_operator_yaml(args.operator)
-        context['operator_yaml'] = args.operator
         preload_images()
-        succeed = deploy_operator()
+        succeed = deploy_operator(args.operator)
         if not succeed:
             continue
         process_crd()
