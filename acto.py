@@ -2,16 +2,16 @@ import argparse
 import subprocess
 import os
 import kubernetes
+from kubernetes.client import models, AppsV1Api, ApiextensionsV1Api
 import yaml
 import time
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 import random
 from datetime import datetime
 from copy import deepcopy
 import signal
 import logging
 from deepdiff import DeepDiff
-
 from common import *
 import check_result
 import schema
@@ -24,6 +24,7 @@ context = {
 }
 test_summary = {}
 workdir_path = 'testrun-%s' % datetime.now().strftime('%Y-%m-%d-%H-%M')
+ACTO_NAMESPACE = "acto-namespace"
 
 
 def get_deployment_available_status(
@@ -121,14 +122,14 @@ def deploy_operator():
     appv1Api = kubernetes.client.AppsV1Api()
     operator_stateful_states = []
     for tick in range(90):
+        # get all deployment and stateful set.
         operator_deployments = appv1Api.list_namespaced_deployment(
             context['namespace'],
-            watch=False,
-            label_selector='acto/tag=operator-deployment').items
+            watch=False).items
         operator_stateful_states = appv1Api.list_namespaced_stateful_set(
             context['namespace'],
-            watch=False,
-            label_selector='acto/tag=operator-stateful-set').items
+            watch=False).items
+        # TODO: we should check all deployment and stateful set are ready
         operator_deployments_is_ready = len(operator_deployments) >= 1 \
                 and get_deployment_available_status(operator_deployments[0])
         operator_stateful_states_is_ready = len(operator_stateful_states) >= 1 \
@@ -380,6 +381,66 @@ def preload_images():
             p = subprocess.run(['kind', 'load', 'docker-image', image])
 
 
+def process_crd(crd_name: Optional[str] = None):
+    global context
+    apiextensionsV1Api = ApiextensionsV1Api()
+    crds: List[models.V1CustomResourceDefinition] = apiextensionsV1Api.list_custom_resource_definition().items
+    crd: Optional[models.V1CustomResourceDefinition] = None
+    if len(crds) == 0:
+        logging.error(
+            'No crd is found')
+        quit()
+    elif len(crds) == 1:
+        crd = crds[0]
+    elif crd_name:
+        # TODO: loop over crd and find name=crd_name
+        crd = crds[0]
+    else:
+        logging.error(
+            'There are multiple crds, please specify parameter [crd_name]')
+        quit()
+    if crd:
+        crd_result = subprocess.run(
+            ['kubectl', 'get', 'crd', crd.metadata.name, "-o", "json"], capture_output=True, text=True)
+        crd_obj = json.loads(crd_result.stdout)
+        spec: models.V1CustomResourceDefinitionSpec = crd.spec
+        crd_data = {
+            'group': spec.group,
+            'plural': spec.names.plural,
+            'version': spec.versions[0].name,  # TODO: Handle multiple versions
+            'spec_schema':
+                schema.extract_schema(
+                    ['root'], crd_obj['spec']['versions'][0]['schema']['openAPIV3Schema']['properties']['spec'])
+        }
+        context['crd'] = crd_data
+
+
+def add_acto_label():
+    appv1Api = AppsV1Api()
+    operator_deployments: List[models.V1Deployment] = appv1Api.list_namespaced_deployment(
+        context['namespace'],
+        watch=False).items
+    operator_stateful_states: List[models.V1StatefulSet] = appv1Api.list_namespaced_stateful_set(
+        context['namespace'],
+        watch=False).items
+    for deployment in operator_deployments:
+        patches = [
+            {"metadata": {"labels": {"acto/tag": "operator-deployment"}}},
+            {"spec": {"template": {"metadata": {"labels": {"acto/tag": "operator-pod"}}}}}
+        ]
+        for patch in patches:
+            appv1Api.patch_namespaced_deployment(
+                deployment.metadata.name, deployment.metadata.namespace, patch)
+    for stateful_state in operator_stateful_states:
+        patches = [
+            {"metadata": {"labels": {"acto/tag": "operator-stateful-set"}}},
+            {"spec": {"template": {"metadata": {"labels": {"acto/tag": "operator-pod"}}}}}
+        ]
+        for patch in patches:
+            appv1Api.patch_namespaced_stateful_set(
+                stateful_state.metadata.name, deployment.metadata.namespace, patch)
+
+
 def timeout_handler(sig, frame):
     raise TimeoutError
 
@@ -435,8 +496,9 @@ if __name__ == '__main__':
         quit()
 
     # Preload frequently used images to amid ImagePullBackOff
-    context['preload_images'].extend(args.preload_images)
-    logging.info('%s will be preloaded into Kind cluster', args.preload_images)
+    if args.preload_images:
+        context['preload_images'].extend(args.preload_images)
+        logging.info('%s will be preloaded into Kind cluster', args.preload_images)
 
     # register timeout to automatically stop after # hours
     signal.signal(signal.SIGALRM, timeout_handler)
@@ -446,11 +508,15 @@ if __name__ == '__main__':
     while True:
         trial_start_time = time.time()
         construct_kind_cluster()
-        process_operator_yaml(args.operator)
+        # WIP: replace process_operator_yaml with process_crd and add_acto_label
+        # process_operator_yaml(args.operator)
+        context['operator_yaml'] = args.operator
         preload_images()
         succeed = deploy_operator()
         if not succeed:
             continue
+        process_crd()
+        add_acto_label()
         deploy_dependency([])
         trial_err, num_tests = run_trial(application_cr, candidate_dict,
                                          trial_num)
