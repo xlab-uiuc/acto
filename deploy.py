@@ -38,7 +38,7 @@ class Deploy:
 class Helm(Deploy):
     def deploy(self):
         if self.init_yaml:
-            sh.kubectl("apply", filename=self.init_yaml)
+            sh.kubectl("apply", filename=self.init_yaml, namespace=CONST.ACTO_NAMESPACE)
 
         sh.helm("dependency", "build", self.path)
         sh.helm(
@@ -71,6 +71,13 @@ class Helm(Deploy):
 
 class Yaml(Deploy):
     def deploy(self):
+        # TODO: We cannot specify namespace ACTO_NAMESPACE here.
+        # rabbitMQ operator will report the error message
+        '''
+           the namespace from the provided object "rabbitmq-system" does not 
+           match the namespace "acto-namespace". You must pass '--namespace=rabbitmq-system' to perform this operation.
+        '''
+
         if self.init_yaml:
             sh.kubectl("apply", filename=self.init_yaml)
         sh.kubectl("apply", filename=self.path)
@@ -90,6 +97,6 @@ class Yaml(Deploy):
 # if __name__ == '__main__':
 #     deploy = Deploy(DeployMethod.YAML, "data/rabbitmq-operator/operator.yaml").new()
 #     deploy.deploy()
-# 
+
 #     deploy1 = Deploy(DeployMethod.HELM, "data/mongodb-operator/community-operator/").new()
 #     deploy1.deploy()
