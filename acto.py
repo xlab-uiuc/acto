@@ -1,11 +1,9 @@
 import argparse
-import subprocess
 import os
 import kubernetes
-from kubernetes.client import models, AppsV1Api, ApiextensionsV1Api
 import yaml
 import time
-from typing import List, Tuple, Optional
+from typing import Tuple
 import random
 from datetime import datetime
 from copy import deepcopy
@@ -14,8 +12,10 @@ import logging
 from deepdiff import DeepDiff
 from common import *
 import check_result
-import schema
+from exception import UnknownDeployMethodError
+from preprocess import add_acto_label, preload_images, process_crd
 import value_with_schema
+from deploy import Deploy, DeployMethod
 
 context = {
     'namespace': '',
@@ -24,43 +24,6 @@ context = {
 }
 test_summary = {}
 workdir_path = 'testrun-%s' % datetime.now().strftime('%Y-%m-%d-%H-%M')
-ACTO_NAMESPACE = "acto-namespace"
-
-
-def get_deployment_available_status(
-        deployment: kubernetes.client.models.V1Deployment) -> bool:
-    '''Get availability status from deployment condition
-
-    Args:
-        deployment: Deployment object in kubernetes
-
-    Returns:
-        if the deployment is available
-    '''
-    if deployment.status is None or deployment.status.conditions is None:
-        return False
-
-    for condition in deployment.status.conditions:
-        if condition.type == 'Available' and condition.status == 'True':
-            return True
-    return False
-
-
-def get_stateful_set_available_status(
-        stateful_set: kubernetes.client.models.V1StatefulSet) -> bool:
-    '''Get availability status from stateful set condition
-
-    Args:
-        stateful_set: stateful set object in kubernetes
-
-    Returns:
-        if the stateful set is available
-    '''
-    if stateful_set.status is None:
-        return False
-    if stateful_set.status.replicas > 0 and stateful_set.status.current_replicas == stateful_set.status.replicas:
-        return True
-    return False
 
 
 def construct_kind_cluster():
@@ -86,61 +49,6 @@ def construct_kind_cluster():
     os.system('kind create cluster --config %s' % kind_config_path)
 
     kubernetes.config.load_kube_config()
-
-
-def get_namespaced_resources() -> Tuple[List[str], List[str]]:
-    '''Get namespaced and non-namespaced available resources list
-
-    Returns:
-        list of namespaced kind and list of non-namespaced kind
-    '''
-    namespaced_resources = []
-    non_namespaced_resources = []
-    appv1Api = kubernetes.client.AppsV1Api()
-    for resource in appv1Api.get_api_resources().resources:
-        if resource.namespaced:
-            namespaced_resources.append(resource.kind)
-        else:
-            non_namespaced_resources.append(resource.kind)
-    return namespaced_resources, non_namespaced_resources
-
-
-def deploy_operator(operator_yaml: str):
-    '''Deploy operator according to yaml
-    '''
-    cmd = ['kubectl', 'apply', '-f', operator_yaml]
-    cli_result = subprocess.run(cmd, capture_output=True, text=True)
-    # logging.debug('Operator deploy STDOUT: %s' % cli_result.stdout)
-    # logging.debug('Operator deploy STDERR: %s' % cli_result.stderr)
-
-    logging.debug('Deploying the operator, waiting for it to be ready')
-    pod_ready = False
-    appv1Api = kubernetes.client.AppsV1Api()
-    operator_stateful_states = []
-    for tick in range(90):
-        # get all deployment and stateful set.
-        operator_deployments = appv1Api.list_namespaced_deployment(
-            context['namespace'],
-            watch=False).items
-        operator_stateful_states = appv1Api.list_namespaced_stateful_set(
-            context['namespace'],
-            watch=False).items
-        # TODO: we should check all deployment and stateful set are ready
-        operator_deployments_is_ready = len(operator_deployments) >= 1 \
-                and get_deployment_available_status(operator_deployments[0])
-        operator_stateful_states_is_ready = len(operator_stateful_states) >= 1 \
-                and get_stateful_set_available_status(operator_stateful_states[0])
-        if operator_deployments_is_ready or operator_stateful_states_is_ready:
-            logging.debug('Operator ready')
-            pod_ready = True
-            break
-        time.sleep(1)
-    logging.info('Operator took %d seconds to get ready' % tick)
-    if not pod_ready:
-        logging.error("operator deployment failed to be ready within timeout")
-        return False
-    else:
-        return True
 
 
 def deploy_dependency(yaml_paths):
@@ -298,152 +206,6 @@ def run_trial(initial_input: dict,
     return None, generation
 
 
-def process_operator_yaml(operator_yaml_path: str):
-    '''Process the operator deployment yaml file
-
-    Extract the information needed later, including namespace, image, and CRD
-    Attach tag to operator so that we can identify it later
-
-    Args:
-        operator_yaml_path: path of the yaml file for deploying the operator
-
-    Modifies global context
-    '''
-    global context
-    namespaced_resources, _ = get_namespaced_resources()
-    new_operator_path = os.path.join(workdir_path, 'new_operator.yaml')
-    with open(operator_yaml_path,'r') as operator_yaml, \
-            open(new_operator_path, 'w') as out_yaml:
-        parsed_operator_documents = yaml.load_all(operator_yaml,
-                                                  Loader=yaml.FullLoader)
-        new_operator_documents = []
-        for document in parsed_operator_documents:
-            # set namespace to default if not specify
-            if document['kind'] in namespaced_resources \
-                    and 'namespace' not in document['metadata']:
-                document['metadata']['namespace'] = 'default'
-            if document['kind'] == 'Deployment':
-                document['metadata']['labels']['acto/tag'] \
-                    = 'operator-deployment'
-                document['spec']['template']['metadata']['labels']['acto/tag'] \
-                    = 'operator-pod'
-
-                context['namespace'] = document['metadata']['namespace']
-                context['preload_images'].append(
-                    document['spec']['template']['spec']['containers'][0]
-                    ['image'])
-            elif document['kind'] == 'StatefulSet':
-                document['metadata']['labels']['acto/tag'] \
-                    = 'operator-stateful-set'
-                document['spec']['template']['metadata']['labels']['acto/tag'] \
-                    = 'operator-pod'
-
-                context['namespace'] = document['metadata']['namespace']
-            elif document['kind'] == 'CustomResourceDefinition':
-                # TODO: Handle multiple CRDs
-                crd_data = {
-                    'group':
-                        document['spec']['group'],
-                    'plural':
-                        document['spec']['names']['plural'],
-                    'version':
-                        document['spec']['versions'][0]
-                        ['name'],  # TODO: Handle multiple versions
-                    'spec_schema':
-                        schema.extract_schema(
-                            ['root'], document['spec']['versions'][0]['schema']
-                            ['openAPIV3Schema']['properties']['spec'])
-                }
-                context['crd'] = crd_data
-            new_operator_documents.append(document)
-        yaml.dump_all(new_operator_documents, out_yaml)
-    context['operator_yaml'] = new_operator_path
-
-
-def preload_images():
-    '''Preload some frequently used images into Kind cluster to avoid ImagePullBackOff
-
-    Uses global context
-    '''
-    if len(context['preload_images']) == 0:
-        logging.error(
-            'No image to preload, we at least should have operator image')
-
-    for image in context['preload_images']:
-        p = subprocess.run(['kind', 'load', 'docker-image', image])
-        if p.returncode != 0:
-            logging.info('Image not present local, pull and retry')
-            os.system('docker pull %s' % image)
-            p = subprocess.run(['kind', 'load', 'docker-image', image])
-
-
-def process_crd(crd_name: Optional[str] = None):
-    ''' Get crd from k8s and set context['crd']
-
-    When there are more than one crd in the cluster, user should set crd_name
-    '''
-    global context
-    apiextensionsV1Api = ApiextensionsV1Api()
-    crds: List[models.V1CustomResourceDefinition] = apiextensionsV1Api.list_custom_resource_definition().items
-    crd: Optional[models.V1CustomResourceDefinition] = None
-    if len(crds) == 0:
-        logging.error(
-            'No crd is found')
-        quit()
-    elif len(crds) == 1:
-        crd = crds[0]
-    elif crd_name:
-        # TODO: loop over crd and find name=crd_name
-        crd = crds[0]
-    else:
-        logging.error(
-            'There are multiple crds, please specify parameter [crd_name]')
-        quit()
-    if crd:
-        # there is openAPIV3Schema schema issue when using python k8s client, need to fetch data from cli
-        crd_result = subprocess.run(
-            ['kubectl', 'get', 'crd', crd.metadata.name, "-o", "json"], capture_output=True, text=True)
-        crd_obj = json.loads(crd_result.stdout)
-        spec: models.V1CustomResourceDefinitionSpec = crd.spec
-        crd_data = {
-            'group': spec.group,
-            'plural': spec.names.plural,
-            'version': spec.versions[0].name,  # TODO: Handle multiple versions
-            'spec_schema':
-                schema.extract_schema(
-                    ['root'], crd_obj['spec']['versions'][0]['schema']['openAPIV3Schema']['properties']['spec'])
-        }
-        context['crd'] = crd_data
-
-
-def add_acto_label():
-    '''Add acto label to deployment, stateful_state and corresponding pods.
-    '''
-    appv1Api = AppsV1Api()
-    operator_deployments = appv1Api.list_namespaced_deployment(
-        context['namespace'],
-        watch=False).items
-    operator_stateful_states = appv1Api.list_namespaced_stateful_set(
-        context['namespace'],
-        watch=False).items
-    for deployment in operator_deployments:
-        patches = [
-            {"metadata": {"labels": {"acto/tag": "operator-deployment"}}},
-            {"spec": {"template": {"metadata": {"labels": {"acto/tag": "operator-pod"}}}}}
-        ]
-        for patch in patches:
-            appv1Api.patch_namespaced_deployment(
-                deployment.metadata.name, deployment.metadata.namespace, patch)
-    for stateful_state in operator_stateful_states:
-        patches = [
-            {"metadata": {"labels": {"acto/tag": "operator-stateful-set"}}},
-            {"spec": {"template": {"metadata": {"labels": {"acto/tag": "operator-pod"}}}}}
-        ]
-        for patch in patches:
-            appv1Api.patch_namespaced_stateful_set(
-                stateful_state.metadata.name, deployment.metadata.namespace, patch)
-
-
 def timeout_handler(sig, frame):
     raise TimeoutError
 
@@ -466,8 +228,16 @@ if __name__ == '__main__':
     parser.add_argument('--operator',
                         '-o',
                         dest='operator',
-                        required=True,
+                        required=False,
                         help="yaml file for deploying the operator")
+    parser.add_argument('--helm',
+                        dest='operator_chart',
+                        required=False,
+                        help='Path of operator helm chart')
+    parser.add_argument('--init',
+                        dest='init',
+                        required=False,
+                        help='Path of init yaml file (deploy before operator)')
     parser.add_argument('--duration',
                         '-d',
                         dest='duration',
@@ -511,12 +281,16 @@ if __name__ == '__main__':
     while True:
         trial_start_time = time.time()
         construct_kind_cluster()
-        preload_images()
-        succeed = deploy_operator(args.operator)
-        if not succeed:
-            continue
-        process_crd()
-        add_acto_label()
+        preload_images(context)
+        if args.operator_chart:
+            deploy = Deploy(DeployMethod.HELM, args.operator_chart, context, args.init).new()
+        elif args.operator:
+            deploy = Deploy(DeployMethod.YAML, args.operator, context, args.init).new()
+        else:
+            raise UnknownDeployMethodError()
+        deploy.deploy()
+        process_crd(context)
+        add_acto_label(context)
         deploy_dependency([])
         trial_err, num_tests = run_trial(application_cr, candidate_dict,
                                          trial_num)
