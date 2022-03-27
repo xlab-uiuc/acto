@@ -420,10 +420,10 @@ def add_acto_label():
     '''Add acto label to deployment, stateful_state and corresponding pods.
     '''
     appv1Api = AppsV1Api()
-    operator_deployments: List[models.V1Deployment] = appv1Api.list_namespaced_deployment(
+    operator_deployments = appv1Api.list_namespaced_deployment(
         context['namespace'],
         watch=False).items
-    operator_stateful_states: List[models.V1StatefulSet] = appv1Api.list_namespaced_stateful_set(
+    operator_stateful_states = appv1Api.list_namespaced_stateful_set(
         context['namespace'],
         watch=False).items
     for deployment in operator_deployments:
