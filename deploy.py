@@ -1,11 +1,12 @@
 from enum import Enum, auto, unique
 from rich.console import Console
-import constant
+from constant import CONST
 import sh
 import json
 import exception
 import time
 
+CONST = CONST()
 
 @unique
 class DeployMethod(Enum):
@@ -14,11 +15,11 @@ class DeployMethod(Enum):
 
 
 class Deploy:
-    def __init__(self, path: str, context, init_yaml):
+    def __init__(self, deploy_method: DeployMethod, path: str, init_yaml = None):
         self.path = path
-        self.context = context
         self.init_yaml = init_yaml
         self.console = Console()
+        self.deploy_method = deploy_method
 
     def deploy(self):
         pass
@@ -26,19 +27,15 @@ class Deploy:
     def check_status(self):
         time.sleep(60)
 
+    def new(self):
+        if self.deploy_method is DeployMethod.HELM:
+            return Helm(self.deploy_method, self.path, self.init_yaml)
+        elif self.deploy_method is DeployMethod.YAML:
+            return Yaml(self.deploy_method, self.path, self.init_yaml)
+        else:
+            raise exception.UnknownDeployMethodError 
 
 class Helm(Deploy):
-    def __init__(
-            self,
-            deploy_method: DeployMethod,
-            path: str,
-            context,
-            init_yaml):
-        if deploy_method is DeployMethod.HELM:
-            super().__init__(path, context, init_yaml)
-        else:
-            raise exception.UnknownDeployMethodError
-
     def deploy(self):
         if self.init_yaml:
             sh.kubectl("apply", filename=self.init_yaml)
@@ -51,7 +48,7 @@ class Helm(Deploy):
             self.path,
             wait=True,
             timeout="3m",
-            namespace=constant.ACTO_NAMESPACE)
+            namespace=CONST.ACTO_NAMESPACE)
 
         self.check_status()
 
@@ -73,17 +70,6 @@ class Helm(Deploy):
 
 
 class Yaml(Deploy):
-    def __init__(
-            self,
-            deploy_method: DeployMethod,
-            path: str,
-            context,
-            init_yaml):
-        if deploy_method is DeployMethod.YAML:
-            super().__init__(path, context, init_yaml)
-        else:
-            raise exception.UnknownDeployMethodError
-
     def deploy(self):
         if self.init_yaml:
             sh.kubectl("apply", filename=self.init_yaml)
@@ -99,3 +85,11 @@ class Yaml(Deploy):
 
     def check_status(self):
         pass
+
+# Example:
+# if __name__ == '__main__':
+#     deploy = Deploy(DeployMethod.YAML, "data/rabbitmq-operator/operator.yaml").new()
+#     deploy.deploy()
+# 
+#     deploy1 = Deploy(DeployMethod.HELM, "data/mongodb-operator/community-operator/").new()
+#     deploy1.deploy()
