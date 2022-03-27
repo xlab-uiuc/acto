@@ -1,0 +1,2 @@
+class UnknownDeployMethodError(Exception):
+    pass
