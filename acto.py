@@ -247,6 +247,10 @@ if __name__ == '__main__':
                         dest='preload_images',
                         nargs='*',
                         help='Docker images to preload into Kind cluster')
+    parser.add_argument('--crd-name',
+                        dest='crd_name',
+                        help='Name of CRD to use, required if there are multiple CRDs')
+
 
     args = parser.parse_args()
 
@@ -289,7 +293,7 @@ if __name__ == '__main__':
         else:
             raise UnknownDeployMethodError()
         deploy.deploy()
-        process_crd(context)
+        process_crd(context, args.crd_name)
         add_acto_label(context)
         deploy_dependency([])
         trial_err, num_tests = run_trial(application_cr, candidate_dict,

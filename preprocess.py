@@ -39,8 +39,14 @@ def process_crd(context: dict, crd_name: Optional[str] = None):
     elif len(crds) == 1:
         crd = crds[0]
     elif crd_name:
-        # TODO: loop over crd and find name=crd_name
-        crd = crds[0]
+        for c in crds:
+            if c.metadata.name == crd_name:
+                crd = c
+                break
+        if not crd:
+            logging.error(
+                'Cannot find crd %s' % crd_name)
+            quit()
     else:
         logging.error(
             'There are multiple crds, please specify parameter [crd_name]')
