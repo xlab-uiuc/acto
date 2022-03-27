@@ -79,8 +79,8 @@ class Yaml(Deploy):
         '''
 
         if self.init_yaml:
-            sh.kubectl("apply", filename=self.init_yaml)
-        sh.kubectl("apply", filename=self.path)
+            sh.kubectl("apply", filename=self.init_yaml, namespace= CONST.ACTO_NAMESPACE)
+        sh.kubectl("apply", filename=self.path, namespace= CONST.ACTO_NAMESPACE)
         super().check_status()
 
     # TODO: Do we need to check operator's status?
