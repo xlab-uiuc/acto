@@ -6,7 +6,6 @@ from abc import abstractmethod
 import exrex
 import string
 
-num_terminals = 0
 
 class BaseSchema:
     '''Base class for schemas
@@ -332,21 +331,16 @@ class BooleanSchema(BaseSchema):
 
 
 def extract_schema(path: list, schema: dict) -> object:
-    global num_terminals
     if 'anyOf' in schema:
         return AnyOfSchema(path, schema)
     t = schema['type']
     if t == 'string':
-        num_terminals += 1
         return StringSchema(path, schema)
     elif t == 'number':
-        num_terminals += 1
         return NumberSchema(path, schema)
     elif t == 'integer':
-        num_terminals += 1
         return IntegerSchema(path, schema)
     elif t == 'boolean':
-        num_terminals += 1
         return BooleanSchema(path, schema)
     elif t == 'array':
         return ArraySchema(path, schema)
