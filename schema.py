@@ -171,7 +171,8 @@ class ObjectSchema(BaseSchema):
         elif self.additional_properties != None:
             return self.additional_properties
         else:
-            raise TypeError('%s' % key)
+            logging.warning('Field [%s] does not have a schema, using opaque schema', key)
+            return OpaqueSchema(self.path + [key], {})
 
     def get_properties(self) -> dict:
         return self.properties
@@ -325,6 +326,26 @@ class BooleanSchema(BaseSchema):
 
     def num_cases(self):
         return 3
+    
+    def num_fields(self):
+        return 1
+
+
+class OpaqueSchema(BaseSchema):
+    '''Opaque schema to handle the fields that do not have a schema'''
+
+    def __init__(self, path: list, schema: dict) -> None:
+        super().__init__(path, schema)
+        pass
+
+    def __str__(self) -> str:
+        return 'any'
+
+    def gen(self):
+        return None
+
+    def num_cases(self):
+        return 1
     
     def num_fields(self):
         return 1

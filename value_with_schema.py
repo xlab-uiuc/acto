@@ -1,11 +1,31 @@
+from abc import abstractmethod
 from collections.abc import MutableMapping, MutableSequence
+from re import S
 import yaml
 import random
 
-from schema import AnyOfSchema, ObjectSchema, ArraySchema, StringSchema, NumberSchema, IntegerSchema, BooleanSchema
+from schema import AnyOfSchema, ObjectSchema, ArraySchema, StringSchema, NumberSchema, IntegerSchema, BooleanSchema, OpaqueSchema
 
 
-class ValueWithObjectSchema():
+class ValueWithSchema():
+
+    def __init__(self) -> None:
+        pass
+
+    @abstractmethod
+    def raw_value(self) -> object:
+        return None
+    
+    @abstractmethod
+    def mutate(self):
+        return
+
+    @abstractmethod
+    def update(self):
+        return
+
+
+class ValueWithObjectSchema(ValueWithSchema):
 
     def __init__(self, value, schema) -> None:
         self.schema = schema
@@ -95,7 +115,7 @@ class ValueWithObjectSchema():
             value, self.schema.get_property_schema(key))
 
 
-class ValueWithArraySchema():
+class ValueWithArraySchema(ValueWithSchema):
 
     def __init__(self, value, schema) -> None:
         self.schema = schema
@@ -187,7 +207,7 @@ class ValueWithArraySchema():
                                                  self.schema.get_item_schema())
 
 
-class ValueWithAnyOfSchema():
+class ValueWithAnyOfSchema(ValueWithSchema):
     '''Value with AnyOfSchema attached'''
 
     def __init__(self, value, schema) -> None:
@@ -267,7 +287,7 @@ class ValueWithAnyOfSchema():
                             (value, self.schema.get_path()))
 
 
-class ValueWithSchema():
+class ValueWithBasicSchema(ValueWithSchema):
     '''Value with schema attached for Number/Integer, Bool, String'''
 
     def __init__(self, value, schema) -> None:
@@ -310,6 +330,23 @@ class ValueWithSchema():
             self.store = value
 
 
+class ValueWithOpaqueSchema(ValueWithSchema):
+    '''Value with an opaque schema'''
+
+    def __init__(self, value, schema) -> None:
+        self.schema = schema
+        self.store = value
+
+    def raw_value(self) -> object:
+        return self.store
+
+    def mutate(self):
+        return
+
+    def update(self, value):
+        self.store = value
+
+
 def attach_schema_to_value(value, schema):
     if isinstance(schema, ObjectSchema):
         return ValueWithObjectSchema(value, schema)
@@ -317,8 +354,10 @@ def attach_schema_to_value(value, schema):
         return ValueWithArraySchema(value, schema)
     elif isinstance(schema, AnyOfSchema):
         return ValueWithAnyOfSchema(value, schema)
+    elif isinstance(schema, OpaqueSchema):
+        return ValueWithOpaqueSchema(value, schema)
     else:
-        return ValueWithSchema(value, schema)
+        return ValueWithBasicSchema(value, schema)
 
 
 if __name__ == '__main__':
