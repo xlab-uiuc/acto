@@ -182,7 +182,7 @@ def run_trial(initial_input: dict,
             yaml.dump(current_cr, mutated_cr_file)
 
         result = checker.run_and_check(
-            ['kubectl', 'apply', '-f', mutated_filename],
+            ['kubectl', 'apply', '-f', mutated_filename, '-n', context['namespace']],
             cr_diff,
             generation=generation)
         generation += 1
@@ -247,19 +247,21 @@ if __name__ == '__main__':
                         dest='preload_images',
                         nargs='*',
                         help='Docker images to preload into Kind cluster')
-    parser.add_argument('--crd-name',
-                        dest='crd_name',
-                        help='Name of CRD to use, required if there are multiple CRDs')
-
+    parser.add_argument(
+        '--crd-name',
+        dest='crd_name',
+        help='Name of CRD to use, required if there are multiple CRDs')
 
     args = parser.parse_args()
 
     os.makedirs(workdir_path, exist_ok=True)
-    logging.basicConfig(filename=os.path.join(workdir_path, 'test.log'),
-                        level=logging.DEBUG,
-                        filemode='w',
-                        format='%(levelname)s, %(name)s, %(message)s')
+    logging.basicConfig(
+        filename=os.path.join(workdir_path, 'test.log'),
+        level=logging.DEBUG,
+        filemode='w',
+        format='%(levelname)s, %(name)s, %(filename)s:%(lineno)d, %(message)s')
     logging.getLogger("kubernetes").setLevel(logging.ERROR)
+    logging.getLogger("sh").setLevel(logging.ERROR)
 
     candidate_dict = construct_candidate_from_yaml(args.candidates)
     logging.debug(candidate_dict)
@@ -275,7 +277,8 @@ if __name__ == '__main__':
     # Preload frequently used images to amid ImagePullBackOff
     if args.preload_images:
         context['preload_images'].extend(args.preload_images)
-        logging.info('%s will be preloaded into Kind cluster', args.preload_images)
+        logging.info('%s will be preloaded into Kind cluster',
+                     args.preload_images)
 
     # register timeout to automatically stop after # hours
     signal.signal(signal.SIGALRM, timeout_handler)
@@ -287,9 +290,11 @@ if __name__ == '__main__':
         construct_kind_cluster()
         preload_images(context)
         if args.operator_chart:
-            deploy = Deploy(DeployMethod.HELM, args.operator_chart, context, args.init).new()
+            deploy = Deploy(DeployMethod.HELM, args.operator_chart, context,
+                            args.init).new()
         elif args.operator:
-            deploy = Deploy(DeployMethod.YAML, args.operator, context, args.init).new()
+            deploy = Deploy(DeployMethod.YAML, args.operator, context,
+                            args.init).new()
         else:
             raise UnknownDeployMethodError()
         deploy.deploy()

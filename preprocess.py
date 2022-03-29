@@ -66,6 +66,7 @@ def process_crd(context: dict, crd_name: Optional[str] = None):
                     ['root'], crd_obj['spec']['versions'][0]['schema']['openAPIV3Schema']['properties']['spec'])
         }
         context['crd'] = crd_data
+    logging.debug('CRD data: %s' % crd_data)
 
 
 def add_acto_label(context: dict):

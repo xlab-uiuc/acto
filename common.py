@@ -126,7 +126,6 @@ def postprocess_diff(diff):
                         change.path(output_format='list')+path)
             elif (isinstance(change.t2, dict) or isinstance(change.t2, list)) \
                     and (change.t1 == None or isinstance(change.t1, NotPresent)):
-                logging.debug('dict created')
                 if isinstance(change.t2, dict):
                     flattened_changes = flatten_dict(change.t2, [])
                 else:
@@ -180,4 +179,5 @@ EXCLUDE_PATH_REGEX = [
 
 EXCLUDE_ERROR_REGEX = [
     r"the object has been modified; please apply your changes to the latest version and try again",
+    r"incorrect status code of 500 when calling endpoint",
 ]

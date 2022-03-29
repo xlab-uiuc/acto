@@ -1,6 +1,8 @@
 from abc import abstractmethod
 import yaml
 import random
+import string
+import logging
 
 from schema import AnyOfSchema, ObjectSchema, ArraySchema, StringSchema, NumberSchema, IntegerSchema, BooleanSchema, OpaqueSchema
 
@@ -81,9 +83,15 @@ class ValueWithObjectSchema(ValueWithSchema):
                 properties = self.schema.get_properties()
                 if len(properties) == 0:
                     # XXX: Handle additional properties better
-                    self.__setitem__(
-                        'key',
-                        self.schema.get_additional_properties().gen())
+                    if self.schema.get_additional_properties() == None:
+                        logging.warning('Object schema is opaque %s', self.schema.get_path())
+                        return
+                    else:
+                        letters = string.ascii_lowercase
+                        key = ''.join(random.choice(letters) for i in range(5))
+                        self.__setitem__(
+                            key,
+                            self.schema.get_additional_properties().gen())
                 else:
                     child_key = random.choice(list(
                         self.schema.get_properties()))

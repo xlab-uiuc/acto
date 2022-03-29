@@ -150,6 +150,8 @@ class ObjectSchema(BaseSchema):
         self.properties = {}
         self.additional_properties = None
         self.required = []
+        if 'properties' not in schema and 'additionalProperties' not in schema:
+            logging.warning('Object schema %s does not properties nor additionalProperties' % self.path)
         if 'properties' in schema:
             for property_key, property_schema in schema['properties'].items():
                 self.properties[property_key] = extract_schema(
