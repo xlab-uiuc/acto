@@ -1,10 +1,75 @@
 import logging
+from typing import Callable
+from xmlrpc.client import Boolean
 import yaml
 from copy import deepcopy
 import random
 from abc import abstractmethod
 import exrex
 import string
+from jsonschema import validate
+
+
+class TestCase:
+
+    def __init__(self,
+                 precondition: Callable,
+                 mutation: Callable,
+                 setup: Callable,
+                 additional_preconditions=[]) -> None:
+        '''Class represent a test case
+
+        Args:
+            precondition: a function returns whether the current value 
+                satisfies the test case's precondition
+            mutation: a function to change the value to execute the test case
+            setup: a function to setup the precondition if the precondition 
+                fails, so that we can run this test case next time
+            additional_preconditions: additional precondition callbacks, this
+                field is mainly used for AnyOfSchema
+        '''
+        self.precondition = precondition
+        self.mutation = mutation
+        self.setup = setup
+        self.additional_preconditions = additional_preconditions
+
+    def test_precondition(self, prev):
+        ret = self.precondition(prev)
+        for additional_precondition in self.additional_preconditions:
+            ret = ret and additional_precondition(prev)
+        return ret
+
+    def run(self, prev):
+        if self.precondition(prev):
+            self.mutation(prev)
+        else:
+            self.setup(prev)
+
+
+class EnumTestCase(TestCase):
+
+    def __init__(self, case) -> None:
+        self.case = case
+        super().__init__(self.enum_precondition, self.enum_mutation, self.setup)
+
+    def enum_precondition(*argv):
+        return True
+
+    def enum_mutation(self, prev):
+        return self.case
+
+    def setup(self, prev):
+        '''Never going to be called'''
+        assert ()
+
+
+class SchemaPrecondition:
+
+    def __init__(self, schema) -> None:
+        self.schema = schema
+
+    def precondition(self, prev):
+        return self.schema.validate(prev)
 
 
 class BaseSchema:
@@ -15,6 +80,7 @@ class BaseSchema:
 
     def __init__(self, path: list, schema: dict) -> None:
         self.path = path
+        self.raw_schema = schema
         self.default = None if 'default' not in schema else schema['default']
         self.enum = None if 'enum' not in schema else schema['enum']
 
@@ -24,6 +90,26 @@ class BaseSchema:
     @abstractmethod
     def gen(self):
         return None
+
+    @abstractmethod
+    def test_cases(self):
+        return None
+
+    def delete(self):
+        return None
+
+    def delete_precondition(self, prev):
+        return prev != None
+
+    def delete_setup(self, prev):
+        return self.gen()
+
+    def validate(self, instance) -> bool:
+        try:
+            validate(instance, self.raw_schema)
+            return True
+        except:
+            return False
 
 
 class StringSchema(BaseSchema):
@@ -54,13 +140,48 @@ class StringSchema(BaseSchema):
         if self.pattern != None:
             return exrex.getone(self.pattern, self.max_length)
         letters = string.ascii_lowercase
-        return ( ''.join(random.choice(letters) for i in range(10)) )
-    
+        return (''.join(random.choice(letters) for i in range(10)))
+
     def num_cases(self):
         return 3
 
     def num_fields(self):
         return 1
+
+    def test_cases(self):
+        '''String schema currently has two test cases, delete and change'''
+        ret = [
+            TestCase(self.delete_precondition, self.delete, self.delete_setup)
+        ]
+        if self.enum != None:
+            for case in self.enum:
+                ret.append(EnumTestCase(case))
+        else:
+            change_testcase = TestCase(self.change_precondition, self.change,
+                                       self.gen)
+            ret.append(change_testcase)
+        return ret
+
+    def change_precondition(self, prev):
+        return prev != None
+
+    def change(self, prev):
+        '''Test case to change the value to another one'''
+        if self.enum != None:
+            logging.fatal(
+                'String field with enum should not call change to mutate')
+        if self.pattern != None:
+            new_string = exrex.getone(self.pattern, self.max_length)
+        else:
+            letters = string.ascii_lowercase
+            new_string = (''.join(random.choice(letters) for i in range(10)))
+        if prev == new_string:
+            logging.error(
+                'Failed to chagne, generated the same string with previous one')
+        return new_string
+
+    def change_setup(self, prev):
+        return self.gen()
 
 
 class NumberSchema(BaseSchema):
@@ -104,6 +225,56 @@ class NumberSchema(BaseSchema):
     def num_fields(self):
         return 1
 
+    def test_cases(self):
+        ret = [
+            TestCase(self.delete_precondition, self.delete, self.delete_setup)
+        ]
+        if self.enum != None:
+            for case in self.enum:
+                ret.append(EnumTestCase(case))
+        else:
+            ret.append(
+                TestCase(self.increase_precondition, self.increase,
+                         self.increase_setup))
+            ret.append(
+                TestCase(self.decrease_precondition, self.decrease,
+                         self.decrease_setup))
+        return ret
+
+    def increase_precondition(self, prev):
+        if prev == None:
+            return False
+        if self.multiple_of == None:
+            return prev < self.maximum
+        else:
+            return prev < self.maximum - self.multiple_of
+
+    def increase(self, prev):
+        if self.multiple_of != None:
+            return prev + self.multiple_of
+        else:
+            return random.uniform(prev, self.maximum)
+
+    def increase_setup(self, prev):
+        return self.minimum
+
+    def decrease_precondition(self, prev):
+        if prev == None:
+            return False
+        if self.multiple_of == None:
+            return prev > self.minimum
+        else:
+            return prev > self.minimum + self.multiple_of
+
+    def decrease(self, prev):
+        if self.multiple_of != None:
+            return prev - self.multiple_of
+        else:
+            return random.uniform(self.minimum, prev)
+
+    def decrease_setup(self, prev):
+        return self.maximum
+
 
 class IntegerSchema(NumberSchema):
     '''Special case of NumberSchema'''
@@ -123,12 +294,50 @@ class IntegerSchema(NumberSchema):
                                     self.multiple_of)
         else:
             return random.randint(self.minimum, self.maximum)
-    
+
     def num_cases(self):
         return 3
 
     def num_fields(self):
         return 1
+
+    def test_cases(self):
+        return super().test_cases()
+
+    def increase_precondition(self, prev):
+        if prev == None:
+            return False
+        if self.multiple_of == None:
+            return prev < self.maximum
+        else:
+            return prev < self.maximum - self.multiple_of
+
+    def increase(self, prev):
+        if self.multiple_of != None:
+            return random.randrange(prev, self.maximum + 1, self.multiple_of)
+        else:
+            return random.randint(prev, self.maximum)
+
+    def increase_setup(self, prev):
+        return self.minimum
+
+    def decrease_precondition(self, prev):
+        if prev == None:
+            return False
+        if self.multiple_of == None:
+            return prev > self.minimum
+        else:
+            return prev > self.minimum + self.multiple_of
+
+    def decrease(self, prev):
+        if self.multiple_of != None:
+            return random.randrange(self.minimum, prev, self.multiple_of)
+        else:
+            return random.randint(self.minimum, prev)
+
+    def decrease_setup(self, prev):
+        return self.maximum
+
 
 class ObjectSchema(BaseSchema):
     '''Representation of an object node
@@ -151,7 +360,9 @@ class ObjectSchema(BaseSchema):
         self.additional_properties = None
         self.required = []
         if 'properties' not in schema and 'additionalProperties' not in schema:
-            logging.warning('Object schema %s does not properties nor additionalProperties' % self.path)
+            logging.warning(
+                'Object schema %s does not properties nor additionalProperties'
+                % self.path)
         if 'properties' in schema:
             for property_key, property_schema in schema['properties'].items():
                 self.properties[property_key] = extract_schema(
@@ -173,7 +384,8 @@ class ObjectSchema(BaseSchema):
         elif self.additional_properties != None:
             return self.additional_properties
         else:
-            logging.warning('Field [%s] does not have a schema, using opaque schema', key)
+            logging.warning(
+                'Field [%s] does not have a schema, using opaque schema', key)
             return OpaqueSchema(self.path + [key], {})
 
     def get_properties(self) -> dict:
@@ -200,7 +412,9 @@ class ObjectSchema(BaseSchema):
         if len(self.properties) == 0:
             if self.additional_properties == None:
                 # raise TypeError('[%s]: No properties and no additional properties' % self.path)
-                logging.warning('[%s]: No properties and no additional properties' % self.path)
+                logging.warning(
+                    '[%s]: No properties and no additional properties' %
+                    self.path)
                 return None
             letters = string.ascii_lowercase
             key = ''.join(random.choice(letters) for i in range(5))
@@ -218,13 +432,22 @@ class ObjectSchema(BaseSchema):
         num = 0
         for i in self.properties.values():
             num += i.num_cases()
-        return num+1
+        return num + 1
 
     def num_fields(self):
         num = 0
         for i in self.properties.values():
             num += i.num_fields()
-        return num+1
+        return num + 1
+
+    def test_cases(self):
+        ret = [
+            TestCase(self.delete_precondition, self.delete, self.delete_setup)
+        ]
+        if self.enum != None:
+            for case in self.enum:
+                ret.append(EnumTestCase(case))
+        return ret
 
 
 class ArraySchema(BaseSchema):
@@ -255,21 +478,71 @@ class ArraySchema(BaseSchema):
     def __str__(self) -> str:
         return 'Array'
 
-    def gen(self):
+    def gen(self, size=None):
         if self.enum != None:
             return random.choice(self.enum)
         else:
             result = []
-            num = random.randint(self.min_items, self.max_items)
+            num = random.randint(self.min_items,
+                                 self.max_items) if size != None else size
             for _ in range(num):
                 result.append(self.item_schema.gen())
             return result
 
     def num_cases(self):
-        return self.item_schema.num_cases()+3
+        return self.item_schema.num_cases() + 3
 
     def num_fields(self):
-        return self.item_schema.num_fields()+1
+        return self.item_schema.num_fields() + 1
+
+    def test_cases(self):
+        ret = [
+            TestCase(self.delete_precondition, self.delete, self.delete_setup)
+        ]
+        if self.enum != None:
+            for case in self.enum:
+                ret.append(EnumTestCase(case))
+        else:
+            ret.append(
+                TestCase(self.push_precondition, self.push_test,
+                         self.push_setup))
+            ret.append(
+                TestCase(self.pop_precondition, self.pop_test, self.pop_setup))
+        return ret
+
+    def push_precondition(self, prev):
+        if prev == None:
+            return False
+        if len(prev) >= self.max_items:
+            return False
+        return True
+
+    def push_test(self, prev):
+        new_item = self.item_schema.gen()
+        return prev + [new_item]
+
+    def push_setup(self, prev):
+        if prev == None:
+            return self.gen()
+        return self.gen(size=self.min_items)
+
+    def pop_precondition(self, prev):
+        if prev == None:
+            return False
+        if len(prev) <= self.min_items:
+            return False
+        if len(prev) == 0:
+            return False
+        return True
+
+    def pop_test(self, prev):
+        prev.pop()
+        return prev
+
+    def pop_setup(self, prev):
+        if prev == None:
+            return self.gen()
+        return self.gen(size=self.max_items)
 
 
 class AnyOfSchema(BaseSchema):
@@ -305,13 +578,29 @@ class AnyOfSchema(BaseSchema):
         num = 0
         for i in self.possibilities:
             num += i.num_cases()
-        return num+1
+        return num + 1
 
     def num_fields(self):
         num = 0
         for i in self.possibilities:
             num += i.num_fields()
         return num
+
+    def test_cases(self):
+        ret = [
+            TestCase(self.delete_precondition, self.delete, self.delete_setup)
+        ]
+        if self.enum != None:
+            for case in self.enum:
+                ret.append(EnumTestCase(case))
+        else:
+            for possibility in self.possibilities:
+                testcases = possibility.test_cases()
+                for testcase in testcases:
+                    testcase.additional_preconditions.append(
+                        SchemaPrecondition(possibility).precondition)
+                ret.extend(testcases)
+        return ret
 
 
 class BooleanSchema(BaseSchema):
@@ -328,9 +617,43 @@ class BooleanSchema(BaseSchema):
 
     def num_cases(self):
         return 3
-    
+
     def num_fields(self):
         return 1
+
+    def test_cases(self):
+        ret = [
+            TestCase(self.delete_precondition, self.delete, self.delete_setup)
+        ]
+        if self.enum != None:
+            for case in self.enum:
+                ret.append(EnumTestCase(case))
+        else:
+            ret.append(
+                TestCase(self.toggle_off_precondition, self.toggle_off,
+                         self.toggle_off_setup))
+            ret.append(
+                TestCase(self.toggle_on_precondition, self.toggle_on,
+                         self.toggle_on_setup))
+        return ret
+
+    def toggle_on_precondition(self, prev):
+        return prev == False
+
+    def toggle_on(self, prev):
+        return True
+
+    def toggle_on_setup(self, prev):
+        return False
+
+    def toggle_off_precondition(self, prev):
+        return prev == True
+
+    def toggle_off(self, prev):
+        return False
+
+    def toggle_off_setup(self, prev):
+        return True
 
 
 class OpaqueSchema(BaseSchema):
@@ -348,9 +671,12 @@ class OpaqueSchema(BaseSchema):
 
     def num_cases(self):
         return 1
-    
+
     def num_fields(self):
         return 1
+
+    def test_cases(self):
+        return []
 
 
 def extract_schema(path: list, schema: dict) -> object:
@@ -386,7 +712,7 @@ if __name__ == '__main__':
                 print(str(spec_schema))
                 print(spec_schema.gen())
                 print(spec_schema.num_fields())
-                for k,v in spec_schema.properties.items():
+                for k, v in spec_schema.properties.items():
                     print('%s has %d fields' % (k, v.num_fields()))
                 print(spec_schema.num_cases())
 

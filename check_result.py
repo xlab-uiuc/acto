@@ -312,7 +312,6 @@ def list_matched_fields(path: list, delta_dict: dict) -> list:
         for type_delta_list in resource_delta_list.values():
             for delta in type_delta_list.values():
                 position = 0
-                print(type(path[0]))
                 while canonicalize(path[-position - 1]) == canonicalize(
                         delta.path[-position - 1]):
                     position += 1
