@@ -1,6 +1,7 @@
 import subprocess
 import time
 import logging
+from unicodedata import name
 from deepdiff import DeepDiff
 import json
 import re
@@ -279,19 +280,45 @@ class Checker:
         logging.info('System took %s to converge' % time_elapsed)
         return
 
-
+# TODO: This method of creating new threads has to be changed. 
 def watch_system_events(api, namespace, timer: acto_timer.ActoTimer):
+
     '''A function thread that watches namespaced events
     '''
     # TODO: get rid of watch
+    # i = 0
+    
+    # while(True):
+    #     i += 1
+    #     # print(f"{i} in watch system events", namespace)
+    #     ret = api.list_namespaced_event(namespace,
+    #                                 watch=True,
+    #                                 _preload_content=False,
+    #                                 async_req=False,
+    #                                 timeout_seconds=timer.interval)
+
+    #     print(type(ret))
+    #     if timer.is_alive():
+    #         # print(f"{i} in watch system events, resetting...", namespace)
+    #         timer.reset()
+    #     else:
+    #         break
+
+ # TODO: get rid of watch
+    logging.info('Thread watch_system_events entered')
     ret = api.list_namespaced_event(namespace,
                                     _preload_content=False,
-                                    watch=True)
+                                    watch=True,
+                                    timeout_seconds=timer.interval)
+    # print(type(ret))
     for _ in ret:
+        # print(f"{i} in watch system events", namespace)
         if timer.is_alive():
+            # print(f"{i} in watch system events, resetting...", namespace)
             timer.reset()
         else:
             break
+    logging.info('Thread watch_system_events returns')
     ret.close()
     ret.release_conn()
 
