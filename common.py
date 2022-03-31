@@ -4,6 +4,7 @@ from deepdiff.helper import NotPresent
 from datetime import datetime, date
 import re
 import logging
+from test_case import TestCase
 
 
 class Diff:
@@ -162,6 +163,8 @@ class ActoEncoder(json.JSONEncoder):
             return None
         elif isinstance(obj, (datetime, date)):
             return obj.isoformat()
+        elif isinstance(obj, TestCase):
+            return obj.__str__()
         return json.JSONEncoder.default(self, obj)
 
 

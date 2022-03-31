@@ -10,6 +10,7 @@ from copy import deepcopy
 import signal
 import logging
 from deepdiff import DeepDiff
+
 from common import *
 import check_result
 from exception import UnknownDeployMethodError
@@ -17,11 +18,6 @@ from preprocess import add_acto_label, preload_images, process_crd
 import value_with_schema
 from deploy import Deploy, DeployMethod
 
-context = {
-    'namespace': '',
-    'current_dir_path': '',
-    'preload_images': [],
-}
 test_summary = {}
 workdir_path = 'testrun-%s' % datetime.now().strftime('%Y-%m-%d-%H-%M')
 
@@ -140,6 +136,8 @@ def prune_noneffective_change(diff):
 def run_trial(initial_input: dict,
               candidate_dict: dict,
               trial_num: int,
+              context: dict,
+              test_plan: dict,
               num_mutation: int = 100) -> Tuple[ErrorResult, int]:
     '''Run a trial starting with the initial input, mutate with the candidate_dict, and mutate for num_mutation times
     
@@ -151,7 +149,6 @@ def run_trial(initial_input: dict,
     '''
     trial_dir = os.path.join(workdir_path, str(trial_num))
     os.makedirs(trial_dir, exist_ok=True)
-    global context
     context['current_dir_path'] = trial_dir
 
     checker = check_result.Checker(context, trial_dir)
@@ -163,8 +160,19 @@ def run_trial(initial_input: dict,
     while generation < num_mutation:
         parent_cr = deepcopy(current_cr)
         if generation != 0:
-            # mutate_application_spec(current_cr, candidate_dict)
-            spec_with_schema.mutate()
+            field = random.choice(list(test_plan.keys()))
+            test_case = test_plan[field][-1]
+            prev_value = spec_with_schema.get_value_by_path(json.loads(field))
+            logging.debug('Selected field %s Previous value %s' % (field, prev_value))
+            if test_case.test_precondition(prev_value):
+                next_value = test_case.mutation(prev_value)
+                test_plan[field].pop()
+            else:
+                next_value = test_case.run_setup(prev_value)
+            logging.debug('Next value: %s' % next_value)
+            logging.debug(json.loads(field))
+            spec_with_schema.create_path(json.loads(field))
+            spec_with_schema.set_value_by_path(next_value, json.loads(field))
             current_cr['spec'] = spec_with_schema.raw_value()
 
         cr_diff = DeepDiff(parent_cr,
@@ -181,10 +189,11 @@ def run_trial(initial_input: dict,
         with open(mutated_filename, 'w') as mutated_cr_file:
             yaml.dump(current_cr, mutated_cr_file)
 
-        result = checker.run_and_check(
-            ['kubectl', 'apply', '-f', mutated_filename, '-n', context['namespace']],
-            cr_diff,
-            generation=generation)
+        cmd = [
+            'kubectl', 'apply', '-f', mutated_filename, '-n',
+            context['namespace']
+        ]
+        result = checker.run_and_check(cmd, cr_diff, generation=generation)
         generation += 1
 
         if isinstance(result, InvalidInputResult):
@@ -208,6 +217,78 @@ def run_trial(initial_input: dict,
 
 def timeout_handler(sig, frame):
     raise TimeoutError
+
+
+class Acto:
+
+    def __init__(self, seed, deploy, crd_name, preload_images_) -> None:
+        self.seed = seed
+        self.deploy = deploy
+        self.crd_name = crd_name
+        self.preload_images = []
+        if preload_images_:
+            self.preload_images.extend(preload_images_)
+        self.curr_trial = 0
+
+        # Some information needs to be fetched at runtime
+        self.context = {'namespace': '', 'current_dir_path': '', 'crd': None}
+
+        # Dummy run to automatically extract some information
+        construct_kind_cluster()
+        preload_images(self.preload_images)
+        self.deploy.deploy(self.context)
+        process_crd(self.context, self.crd_name)
+
+        # Generate test cases
+        schema_list = self.context['crd']['spec_schema'].get_all_schemas()
+        self.test_plan = {}
+        num_fields = len(schema_list)
+        num_testcases = 0
+        for schema in schema_list:
+            testcases = schema.test_cases()
+            self.test_plan[json.dumps(schema.path).replace('\"ITEM\"', '0')] = testcases
+            num_testcases += len(testcases)
+        logging.info('Parsed [%d] fields from schema', num_fields)
+        logging.info('Generated [%d] test cases in total', num_testcases)
+        with open(os.path.join(workdir_path, 'test_plan.json'),
+                  'w') as plan_file:
+            json.dump(self.test_plan, plan_file, cls=ActoEncoder, indent=6)
+
+    def run(self):
+        while True:
+            trial_start_time = time.time()
+            construct_kind_cluster()
+            preload_images(self.preload_images)
+            self.deploy.deploy(self.context)
+            add_acto_label(self.context)
+            deploy_dependency([])
+            trial_err, num_tests = run_trial(application_cr, candidate_dict,
+                                             self.curr_trial, self.context,
+                                             self.test_plan)
+
+            trial_elapsed = time.strftime(
+                "%H:%M:%S", time.gmtime(time.time() - trial_start_time))
+            logging.info('Trial %d finished, completed in %s' %
+                         (self.curr_trial, trial_elapsed))
+            logging.info('---------------------------------------\n')
+
+            result_dict = {}
+            result_dict['trial_num'] = self.curr_trial
+            result_dict['duration'] = trial_elapsed
+            result_dict['num_tests'] = num_tests
+            if trial_err == None:
+                logging.info('Trial %d completed without error')
+            else:
+                result_dict['oracle'] = trial_err.oracle
+                result_dict['message'] = trial_err.message
+                result_dict['input_delta'] = trial_err.input_delta
+                result_dict['matched_system_delta'] = \
+                    trial_err.matched_system_delta
+            result_path = os.path.join(self.context['current_dir_path'],
+                                       'result.json')
+            with open(result_path, 'w') as result_file:
+                json.dump(result_dict, result_file, cls=ActoEncoder, indent=6)
+            self.curr_trial = self.curr_trial + 1
 
 
 if __name__ == '__main__':
@@ -259,7 +340,7 @@ if __name__ == '__main__':
         filename=os.path.join(workdir_path, 'test.log'),
         level=logging.DEBUG,
         filemode='w',
-        format='%(levelname)s, %(name)s, %(filename)s:%(lineno)d, %(message)s')
+        format='%(asctime)s %(levelname)-6s, %(name)s, %(filename)s:%(lineno)d, %(message)s')
     logging.getLogger("kubernetes").setLevel(logging.ERROR)
     logging.getLogger("sh").setLevel(logging.ERROR)
 
@@ -276,7 +357,6 @@ if __name__ == '__main__':
 
     # Preload frequently used images to amid ImagePullBackOff
     if args.preload_images:
-        context['preload_images'].extend(args.preload_images)
         logging.info('%s will be preloaded into Kind cluster',
                      args.preload_images)
 
@@ -284,44 +364,12 @@ if __name__ == '__main__':
     signal.signal(signal.SIGALRM, timeout_handler)
     signal.alarm(int(args.duration) * 60 * 60)
 
-    trial_num = 0
-    while True:
-        trial_start_time = time.time()
-        construct_kind_cluster()
-        preload_images(context)
-        if args.operator_chart:
-            deploy = Deploy(DeployMethod.HELM, args.operator_chart, context,
-                            args.init).new()
-        elif args.operator:
-            deploy = Deploy(DeployMethod.YAML, args.operator, context,
-                            args.init).new()
-        else:
-            raise UnknownDeployMethodError()
-        deploy.deploy()
-        process_crd(context, args.crd_name)
-        add_acto_label(context)
-        deploy_dependency([])
-        trial_err, num_tests = run_trial(application_cr, candidate_dict,
-                                         trial_num)
+    if args.operator_chart:
+        deploy = Deploy(DeployMethod.HELM, args.operator_chart, args.init).new()
+    elif args.operator:
+        deploy = Deploy(DeployMethod.YAML, args.operator, args.init).new()
+    else:
+        raise UnknownDeployMethodError()
 
-        trial_elapsed = time.strftime(
-            "%H:%M:%S", time.gmtime(time.time() - trial_start_time))
-        logging.info('Trial %d finished, completed in %s' %
-                     (trial_num, trial_elapsed))
-        logging.info('---------------------------------------\n')
-
-        result_dict = {}
-        result_dict['trial_num'] = trial_num
-        result_dict['duration'] = trial_elapsed
-        result_dict['num_tests'] = num_tests
-        if trial_err == None:
-            logging.info('Trial %d completed without error')
-        else:
-            result_dict['oracle'] = trial_err.oracle
-            result_dict['message'] = trial_err.message
-            result_dict['input_delta'] = trial_err.input_delta
-            result_dict['matched_system_delta'] = trial_err.matched_system_delta
-        result_path = os.path.join(context['current_dir_path'], 'result.json')
-        with open(result_path, 'w') as result_file:
-            json.dump(result_dict, result_file, cls=ActoEncoder, indent=6)
-        trial_num = trial_num + 1
+    acto = Acto(application_cr, deploy, args.crd_name, args.preload_images)
+    acto.run()

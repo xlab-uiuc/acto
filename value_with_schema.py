@@ -15,13 +15,25 @@ class ValueWithSchema():
     @abstractmethod
     def raw_value(self) -> object:
         return None
-    
+
     @abstractmethod
     def mutate(self):
         return
 
     @abstractmethod
     def update(self):
+        return
+
+    @abstractmethod
+    def get_value_by_path(self, path: list):
+        return
+
+    @abstractmethod
+    def create_path(self, path: list):
+        return
+
+    @abstractmethod
+    def set_value_by_path(self, value, path):
         return
 
 
@@ -84,7 +96,8 @@ class ValueWithObjectSchema(ValueWithSchema):
                 if len(properties) == 0:
                     # XXX: Handle additional properties better
                     if self.schema.get_additional_properties() == None:
-                        logging.warning('Object schema is opaque %s', self.schema.get_path())
+                        logging.warning('Object schema is opaque %s',
+                                        self.schema.get_path())
                         return
                     else:
                         letters = string.ascii_lowercase
@@ -113,12 +126,48 @@ class ValueWithObjectSchema(ValueWithSchema):
             raise TypeError('Value [%s] Path [%s]' %
                             (value, self.schema.get_path()))
 
+    def get_value_by_path(self, path: list):
+        '''Fetch the value specified by path'''
+        if self.store == None:
+            return None
+        if len(path) == 0:
+            return self.raw_value()
+        key = path.pop(0)
+        if key not in self.store:
+            # path does not exist yet
+            return None
+        else:
+            return self.store[key].get_value_by_path(path)
+
+    def create_path(self, path: list):
+        '''Ensures the path exists'''
+        if len(path) == 0:
+            return
+        key = path.pop(0)
+        if self.store == None:
+            self.store = {}
+            self.__setitem__(key, None)
+        elif key not in self.store:
+            self.__setitem__(key, None)
+        self.store[key].create_path(path)
+
+    def set_value_by_path(self, value, path):
+        if len(path) == 0:
+            self.update(value)
+        else:
+            key = path.pop(0)
+            self.store[key].set_value_by_path(value, path)
+
     def __getitem__(self, key):
         return self.store[key]
 
     def __setitem__(self, key, value):
         self.store[key] = attach_schema_to_value(
             value, self.schema.get_property_schema(key))
+
+    def __contains__(self, item: string):
+        # in operator
+        return item in self.store
 
 
 class ValueWithArraySchema(ValueWithSchema):
@@ -199,11 +248,44 @@ class ValueWithArraySchema(ValueWithSchema):
                             (value, self.schema.get_path()))
 
     def append(self, value):
-        if value == None:
-            return
+        self.store.append(
+            attach_schema_to_value(value, self.schema.get_item_schema()))
+
+    def get_value_by_path(self, path: list):
+        '''Fetch the value specified by path'''
+        if self.store == None:
+            return None
+        if len(path) == 0:
+            return self.raw_value()
+        key = path.pop(0)
+        if key >= len(self.store):
+            # path does not exist yet
+            return None
         else:
-            self.store.append(
-                attach_schema_to_value(value, self.schema.get_item_schema()))
+            return self.store[key].get_value_by_path(path)
+
+    def create_path(self, path: list):
+        '''Ensures the path exists'''
+        if len(path) == 0:
+            return
+        key = path.pop(0)
+        if self.store == None:
+            self.store = []
+            for i in range(0, key):
+                self.append(None)
+            self.append(None)
+        elif key >= len(self.store):
+            for i in range(len(self.store), key):
+                self.append(None)
+            self.append(None)
+        self.store[key].create_path(path)
+
+    def set_value_by_path(self, value, path):
+        if len(path) == 0:
+            self.update(value)
+        else:
+            key = path.pop(0)
+            self.store[key].set_value_by_path(value, path)
 
     def __getitem__(self, key):
         return self.store[key]
@@ -212,9 +294,16 @@ class ValueWithArraySchema(ValueWithSchema):
         self.store[key] = attach_schema_to_value(value,
                                                  self.schema.get_item_schema())
 
+    def __contains__(self, item: int):
+        # in operator
+        return item < len(self.store)
+
 
 class ValueWithAnyOfSchema(ValueWithSchema):
-    '''Value with AnyOfSchema attached'''
+    '''Value with AnyOfSchema attached
+    
+    store here is an instance of ValueWithSchema
+    '''
 
     def __init__(self, value, schema) -> None:
         self.schema = schema
@@ -292,6 +381,28 @@ class ValueWithAnyOfSchema(ValueWithSchema):
             raise TypeError('Value [%s] Path [%s]' %
                             (value, self.schema.get_path()))
 
+    def get_value_by_path(self, path: list):
+        '''Fetch the value specified by path'''
+        if self.store == None:
+            return None
+        else:
+            return self.store.get_value_by_path(path)
+
+    def create_path(self, path: list):
+        '''Ensures the path exists'''
+        if len(path) == 0:
+            return
+        key = path.pop(0)
+
+        # XXX: Complicated, no use case yet, let's implement later
+        raise NotImplementedError
+
+    def set_value_by_path(self, value, path):
+        if len(path) == 0:
+            self.update(value)
+        else:
+            self.store.set_value_by_path(value, path)
+
 
 class ValueWithBasicSchema(ValueWithSchema):
     '''Value with schema attached for Number/Integer, Bool, String'''
@@ -334,6 +445,23 @@ class ValueWithBasicSchema(ValueWithSchema):
             self.store = None
         else:
             self.store = value
+
+    def get_value_by_path(self, path: list):
+        if len(path) > 0:
+            raise Exception('Reached basic value, but path is not exhausted')
+        return self.store
+
+    def create_path(self, path: list):
+        if len(path) == 0:
+            return
+        else:
+            raise Exception('Reached basic value, but path is not exhausted')
+
+    def set_value_by_path(self, value, path):
+        if len(path) == 0:
+            self.update(value)
+        else:
+            raise Exception('Reached basic value, but path is not exhausted')
 
 
 class ValueWithOpaqueSchema(ValueWithSchema):

@@ -1,75 +1,15 @@
+from common import ActoEncoder
 import logging
-from typing import Callable
-from xmlrpc.client import Boolean
 import yaml
 from copy import deepcopy
 import random
 from abc import abstractmethod
 import exrex
 import string
+import json
+
 from jsonschema import validate
-
-
-class TestCase:
-
-    def __init__(self,
-                 precondition: Callable,
-                 mutation: Callable,
-                 setup: Callable,
-                 additional_preconditions=[]) -> None:
-        '''Class represent a test case
-
-        Args:
-            precondition: a function returns whether the current value 
-                satisfies the test case's precondition
-            mutation: a function to change the value to execute the test case
-            setup: a function to setup the precondition if the precondition 
-                fails, so that we can run this test case next time
-            additional_preconditions: additional precondition callbacks, this
-                field is mainly used for AnyOfSchema
-        '''
-        self.precondition = precondition
-        self.mutation = mutation
-        self.setup = setup
-        self.additional_preconditions = additional_preconditions
-
-    def test_precondition(self, prev):
-        ret = self.precondition(prev)
-        for additional_precondition in self.additional_preconditions:
-            ret = ret and additional_precondition(prev)
-        return ret
-
-    def run(self, prev):
-        if self.precondition(prev):
-            self.mutation(prev)
-        else:
-            self.setup(prev)
-
-
-class EnumTestCase(TestCase):
-
-    def __init__(self, case) -> None:
-        self.case = case
-        super().__init__(self.enum_precondition, self.enum_mutation, self.setup)
-
-    def enum_precondition(*argv):
-        return True
-
-    def enum_mutation(self, prev):
-        return self.case
-
-    def setup(self, prev):
-        '''Never going to be called'''
-        assert ()
-
-
-class SchemaPrecondition:
-
-    def __init__(self, schema) -> None:
-        self.schema = schema
-
-    def precondition(self, prev):
-        return self.schema.validate(prev)
+from test_case import *
 
 
 class BaseSchema:
@@ -88,7 +28,7 @@ class BaseSchema:
         return self.path
 
     @abstractmethod
-    def gen(self):
+    def gen(self, **kwargs):
         return None
 
     @abstractmethod
@@ -133,7 +73,10 @@ class StringSchema(BaseSchema):
     def __str__(self) -> str:
         return 'String'
 
-    def gen(self):
+    def get_all_schemas(self) -> list:
+        return [self]
+
+    def gen(self, **kwargs):
         # TODO: Use minLength: the exrex does not support minLength
         if self.enum != None:
             return random.choice(self.enum)
@@ -158,7 +101,7 @@ class StringSchema(BaseSchema):
                 ret.append(EnumTestCase(case))
         else:
             change_testcase = TestCase(self.change_precondition, self.change,
-                                       self.gen)
+                                       self.change_setup)
             ret.append(change_testcase)
         return ret
 
@@ -177,7 +120,7 @@ class StringSchema(BaseSchema):
             new_string = (''.join(random.choice(letters) for i in range(10)))
         if prev == new_string:
             logging.error(
-                'Failed to chagne, generated the same string with previous one')
+                'Failed to change, generated the same string with previous one')
         return new_string
 
     def change_setup(self, prev):
@@ -213,7 +156,10 @@ class NumberSchema(BaseSchema):
     def __str__(self) -> str:
         return 'Number'
 
-    def gen(self):
+    def get_all_schemas(self) -> list:
+        return [self]
+
+    def gen(self, **kwargs):
         # TODO: Use exclusive_minimum, exclusive_maximum, multiple_of
         if self.enum != None:
             return random.choice(self.enum)
@@ -285,7 +231,10 @@ class IntegerSchema(NumberSchema):
     def __str__(self) -> str:
         return 'Integer'
 
-    def gen(self):
+    def get_all_schemas(self) -> list:
+        return [self]
+
+    def gen(self, **kwargs):
         # TODO: Use exclusive_minimum, exclusive_maximum
         if self.enum != None:
             return random.choice(self.enum)
@@ -404,7 +353,17 @@ class ObjectSchema(BaseSchema):
         ret += '}'
         return ret
 
-    def gen(self):
+    def get_all_schemas(self) -> list:
+        '''Return all the subschemas as a list'''
+        ret = [self]
+        if self.properties != None:
+            for value in self.properties.values():
+                ret.extend(value.get_all_schemas())
+        if self.additional_properties != None:
+            ret.append(self.additional_properties)
+        return ret
+
+    def gen(self, **kwargs):
         # TODO: Use constraints: required, minProperties, maxProperties
         if self.enum != None:
             return random.choice(self.enum)
@@ -464,7 +423,7 @@ class ArraySchema(BaseSchema):
 
     def __init__(self, path: list, schema: dict) -> None:
         super().__init__(path, schema)
-        self.item_schema = extract_schema(self.path + ['item'], schema['items'])
+        self.item_schema = extract_schema(self.path + ['ITEM'], schema['items'])
         self.min_items = self.default_min_items if 'minItems' not in schema else schema[
             'minItems']
         self.max_items = self.default_max_items if 'maxItems' not in schema else schema[
@@ -478,13 +437,20 @@ class ArraySchema(BaseSchema):
     def __str__(self) -> str:
         return 'Array'
 
-    def gen(self, size=None):
+    def get_all_schemas(self) -> list:
+        ret = [self]
+        ret.extend(self.item_schema.get_all_schemas())
+        return ret
+
+    def gen(self, **kwargs):
         if self.enum != None:
             return random.choice(self.enum)
         else:
             result = []
-            num = random.randint(self.min_items,
-                                 self.max_items) if size != None else size
+            if 'size' in kwargs and kwargs['size'] != None:
+                num = kwargs['size']
+            else:
+                num = random.randint(self.min_items, self.max_items)
             for _ in range(num):
                 result.append(self.item_schema.gen())
             return result
@@ -567,10 +533,13 @@ class AnyOfSchema(BaseSchema):
         ret += ']'
         return ret
 
+    def get_all_schemas(self) -> list:
+        return [self]
+
     def get_possibilities(self):
         return self.possibilities
 
-    def gen(self):
+    def gen(self, **kwargs):
         schema = random.choice(self.possibilities)
         return schema.gen()
 
@@ -612,7 +581,10 @@ class BooleanSchema(BaseSchema):
     def __str__(self) -> str:
         return 'boolean'
 
-    def gen(self):
+    def get_all_schemas(self) -> list:
+        return [self]
+
+    def gen(self, **kwargs):
         return random.choice([True, False])
 
     def num_cases(self):
@@ -666,7 +638,7 @@ class OpaqueSchema(BaseSchema):
     def __str__(self) -> str:
         return 'any'
 
-    def gen(self):
+    def gen(self, **kwargs):
         return None
 
     def num_cases(self):
@@ -715,6 +687,13 @@ if __name__ == '__main__':
                 for k, v in spec_schema.properties.items():
                     print('%s has %d fields' % (k, v.num_fields()))
                 print(spec_schema.num_cases())
+
+                schema_list = spec_schema.get_all_schemas()
+                test_plan = {}
+                for schema in schema_list:
+                    test_plan[str(schema.path)] = schema.test_cases()
+                with open('test_plan.json', 'w') as fout:
+                    json.dump(test_plan, fout, cls=ActoEncoder, indent=4)
 
     ss = StringSchema(None, {"type": "string"})
     print(ss.gen())
