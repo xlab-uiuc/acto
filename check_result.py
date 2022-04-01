@@ -5,7 +5,7 @@ from unicodedata import name
 from deepdiff import DeepDiff
 import json
 import re
-from threading import Thread
+from multiprocessing import Process, Queue
 import copy
 import kubernetes
 
@@ -265,62 +265,58 @@ class Checker:
         It starts a thread that watches for system events, every time a system
         event arrives, this thread resets the timer.
         '''
-        start = time.time()
-        timer = acto_timer.ActoTimer(60)
-        watch_thread = Thread(
-            target=watch_system_events,
-            args=[self.corev1Api, self.context['namespace'], timer])
-        timer.start()
-        watch_thread.start()
 
-        timer.join(timeout)
-        timer.cancel()
+        ret = self.corev1Api.list_namespaced_event(self.context['namespace'],
+                                                   _preload_content=False,
+                                                   watch=True)
+
+        combined_queue = Queue(maxsize=0)
+
+        timer_timeout  = acto_timer.ActoTimer(timeout, combined_queue, "timeout")
+        timer_converge = acto_timer.ActoTimer(60, combined_queue, "converge")
+        watch_thread   = Process(target=watch_system_events,
+                                args=(ret, combined_queue, "event"))
+
+        start = time.time()
+
+        timer_timeout.start()
+        timer_converge.start()
+        watch_thread.start()
+        while(True):
+            msg = combined_queue.get()
+            if msg == "event":
+                timer_converge.reset()
+            elif msg == "converge":
+                break
+            elif msg == "timeout":
+                break
+            else:
+                pass # should raise some error for safety
+        combined_queue.close()
+
+        timer_timeout.cancel()
+        timer_converge.cancel()
+        watch_thread.terminate()
+
+        ret.close()
+        ret.release_conn()
+
         time_elapsed = time.strftime("%H:%M:%S",
                                      time.gmtime(time.time() - start))
+
         logging.info('System took %s to converge' % time_elapsed)
         return
 
-# TODO: This method of creating new threads has to be changed. 
-def watch_system_events(api, namespace, timer: acto_timer.ActoTimer):
+def watch_system_events(ret, queue: Queue, queue_msg):
 
     '''A function thread that watches namespaced events
     '''
-    # TODO: get rid of watch
-    # i = 0
-    
-    # while(True):
-    #     i += 1
-    #     # print(f"{i} in watch system events", namespace)
-    #     ret = api.list_namespaced_event(namespace,
-    #                                 watch=True,
-    #                                 _preload_content=False,
-    #                                 async_req=False,
-    #                                 timeout_seconds=timer.interval)
-
-    #     print(type(ret))
-    #     if timer.is_alive():
-    #         # print(f"{i} in watch system events, resetting...", namespace)
-    #         timer.reset()
-    #     else:
-    #         break
-
- # TODO: get rid of watch
-    logging.info('Thread watch_system_events entered')
-    ret = api.list_namespaced_event(namespace,
-                                    _preload_content=False,
-                                    watch=True,
-                                    timeout_seconds=timer.interval)
-    # print(type(ret))
     for _ in ret:
-        # print(f"{i} in watch system events", namespace)
-        if timer.is_alive():
-            # print(f"{i} in watch system events, resetting...", namespace)
-            timer.reset()
-        else:
-            break
-    logging.info('Thread watch_system_events returns')
-    ret.close()
-    ret.release_conn()
+        # the queue might have been closed. It is safe to do so because system has converged
+        try:
+            queue.put(queue_msg)
+        except:
+            pass
 
 
 def list_matched_fields(path: list, delta_dict: dict) -> list:
