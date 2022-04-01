@@ -35,7 +35,7 @@ class BaseSchema:
     def test_cases(self):
         return None
 
-    def delete(self):
+    def delete(self, prev):
         return None
 
     def delete_precondition(self, prev):
@@ -470,10 +470,10 @@ class ArraySchema(BaseSchema):
                 ret.append(EnumTestCase(case))
         else:
             ret.append(
-                TestCase(self.push_precondition, self.push_test,
+                TestCase(self.push_precondition, self.push_mutator,
                          self.push_setup))
             ret.append(
-                TestCase(self.pop_precondition, self.pop_test, self.pop_setup))
+                TestCase(self.pop_precondition, self.pop_mutator, self.pop_setup))
         return ret
 
     def push_precondition(self, prev):
@@ -483,7 +483,7 @@ class ArraySchema(BaseSchema):
             return False
         return True
 
-    def push_test(self, prev):
+    def push_mutator(self, prev):
         new_item = self.item_schema.gen()
         return prev + [new_item]
 
@@ -501,7 +501,7 @@ class ArraySchema(BaseSchema):
             return False
         return True
 
-    def pop_test(self, prev):
+    def pop_mutator(self, prev):
         prev.pop()
         return prev
 
@@ -566,7 +566,7 @@ class AnyOfSchema(BaseSchema):
             for possibility in self.possibilities:
                 testcases = possibility.test_cases()
                 for testcase in testcases:
-                    testcase.additional_preconditions.append(
+                    testcase.add_precondition(
                         SchemaPrecondition(possibility).precondition)
                 ret.extend(testcases)
         return ret

@@ -138,7 +138,7 @@ def run_trial(initial_input: dict,
               trial_num: int,
               context: dict,
               test_plan: dict,
-              num_mutation: int = 100) -> Tuple[ErrorResult, int]:
+              num_mutation: int = 300) -> Tuple[ErrorResult, int]:
     '''Run a trial starting with the initial input, mutate with the candidate_dict, and mutate for num_mutation times
     
     Args:
@@ -159,16 +159,24 @@ def run_trial(initial_input: dict,
     generation = 0
     while generation < num_mutation:
         parent_cr = deepcopy(current_cr)
+        if len(test_plan) == 0:
+            logging.info('Finished all the test cases')
+            break
+        setup = False
         if generation != 0:
             field = random.choice(list(test_plan.keys()))
             test_case = test_plan[field][-1]
             prev_value = spec_with_schema.get_value_by_path(json.loads(field))
             logging.debug('Selected field %s Previous value %s' % (field, prev_value))
             if test_case.test_precondition(prev_value):
-                next_value = test_case.mutation(prev_value)
+                next_value = test_case.mutator(prev_value)
                 test_plan[field].pop()
+                if len(test_plan[field]) == 0:
+                    del test_plan[field]
             else:
+                setup = True
                 next_value = test_case.run_setup(prev_value)
+                logging.info('Precondition not satisfied, try setup')
             logging.debug('Next value: %s' % next_value)
             logging.debug(json.loads(field))
             spec_with_schema.create_path(json.loads(field))
@@ -197,6 +205,9 @@ def run_trial(initial_input: dict,
         generation += 1
 
         if isinstance(result, InvalidInputResult):
+            if setup:
+                logging.info('Setup failed due to invalid, discard this testcase %s' % test_case)
+                test_plan[field].pop()
             # Revert to parent CR
             current_cr = parent_cr
             spec_with_schema = value_with_schema.attach_schema_to_value(
@@ -205,6 +216,9 @@ def run_trial(initial_input: dict,
             continue
         elif isinstance(result, ErrorResult):
             # We found an error!
+            if setup:
+                logging.info('Setup failed due to error, discard this testcase %s' % test_case)
+                test_plan[field].pop()
             return result, generation
         elif isinstance(result, PassResult):
             continue
@@ -234,6 +248,7 @@ class Acto:
         self.context = {'namespace': '', 'current_dir_path': '', 'crd': None}
 
         # Dummy run to automatically extract some information
+        # TODO: Save the result to data directory
         construct_kind_cluster()
         preload_images(self.preload_images)
         self.deploy.deploy(self.context)
@@ -277,7 +292,7 @@ class Acto:
             result_dict['duration'] = trial_elapsed
             result_dict['num_tests'] = num_tests
             if trial_err == None:
-                logging.info('Trial %d completed without error')
+                logging.info('Trial %d completed without error', self.curr_trial)
             else:
                 result_dict['oracle'] = trial_err.oracle
                 result_dict['message'] = trial_err.message
