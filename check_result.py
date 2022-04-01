@@ -260,10 +260,9 @@ class Checker:
 
     def wait_for_system_converge(self, timeout=360):
         '''This function blocks until the system converges
-
         It sets up a resettable timer which goes off in 60 seconds.
-        It starts a thread that watches for system events, every time a system
-        event arrives, this thread resets the timer.
+        It starts a thread that watches for system events. 
+        When a event occurs, the function is notified and it will reset the timer thread.
         '''
 
         ret = self.corev1Api.list_namespaced_event(self.context['namespace'],
