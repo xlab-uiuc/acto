@@ -272,29 +272,24 @@ class Checker:
         combined_queue = Queue(maxsize=0)
 
         timer_timeout  = acto_timer.ActoTimer(timeout, combined_queue, "timeout")
-        timer_converge = acto_timer.ActoTimer(60, combined_queue, "converge")
         watch_thread   = Process(target=watch_system_events,
                                 args=(ret, combined_queue, "event"))
 
         start = time.time()
 
         timer_timeout.start()
-        timer_converge.start()
         watch_thread.start()
         while(True):
-            msg = combined_queue.get()
-            if msg == "event":
-                timer_converge.reset()
-            elif msg == "converge":
+            try:
+                msg = combined_queue.get(timeout = 60)
+            except:
                 break
-            elif msg == "timeout":
+            if msg == "timeout":
                 break
-            else:
-                pass # should raise some error for safety
+            
         combined_queue.close()
 
         timer_timeout.cancel()
-        timer_converge.cancel()
         watch_thread.terminate()
 
         ret.close()
