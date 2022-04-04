@@ -15,3 +15,7 @@ https://github.com/mongodb/helm-charts/pull/123
 ## pravega/zookeeper-operator
 
 https://github.com/pravega/zookeeper-operator/issues/454 confirmed
+
+## k8ssandra/cass-operator
+
+https://github.com/k8ssandra/cass-operator/issues/315
