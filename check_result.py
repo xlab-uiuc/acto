@@ -66,11 +66,17 @@ class Checker:
                      view='tree'))
         self.resources['custom_resource'] = current_cr
 
+        # Dump system delta
         with open('%s/delta-%d.log' % (self.cur_path, generation), 'w') as fout:
             fout.write('---------- INPUT DELTA  ----------\n')
             fout.write(json.dumps(input_delta, cls=ActoEncoder, indent=6))
             fout.write('\n---------- SYSTEM DELTA ----------\n')
             fout.write(json.dumps(system_delta, cls=ActoEncoder, indent=6))
+
+        # Dump system snapshot
+        with open('%s/system-state-%03d.json' % (self.cur_path, generation),
+                  'w') as fout:
+            json.dump(self.resources, fout, cls=ActoEncoder, indent=6)
         '''
         System state oracle
 
@@ -131,7 +137,7 @@ class Checker:
                 logging.error(
                     'StatefulSet unhealthy desired replicas [%s] available replicas [%s]'
                     % (desired_replicas, available_replicas))
-                return None # TODO
+                return None  # TODO
         return PassResult()
 
     def run_and_check(self, cmd: list, input_diff,
@@ -182,13 +188,13 @@ class Checker:
         return PassResult()
 
     def __get_all_objects(self, method) -> dict:
-        '''Get all pods in the application namespace
+        '''Get resources in the application namespace
 
         Args:
             method: function pointer for getting the object
         
         Returns
-            dict of all pods
+            dict of the resource
         '''
         result_dict = {}
         resource_objects = method(namespace=self.context['namespace'],
