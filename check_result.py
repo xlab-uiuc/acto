@@ -1,10 +1,11 @@
 import subprocess
 import time
 import logging
+from unicodedata import name
 from deepdiff import DeepDiff
 import json
 import re
-from threading import Thread
+from multiprocessing import Process, Queue
 import copy
 import kubernetes
 
@@ -259,41 +260,57 @@ class Checker:
 
     def wait_for_system_converge(self, timeout=360):
         '''This function blocks until the system converges
-
         It sets up a resettable timer which goes off in 60 seconds.
-        It starts a thread that watches for system events, every time a system
-        event arrives, this thread resets the timer.
+        It starts a thread that watches for system events. 
+        When a event occurs, the function is notified and it will reset the timer thread.
         '''
-        start = time.time()
-        timer = acto_timer.ActoTimer(60)
-        watch_thread = Thread(
-            target=watch_system_events,
-            args=[self.corev1Api, self.context['namespace'], timer])
-        timer.start()
-        watch_thread.start()
 
-        timer.join(timeout)
-        timer.cancel()
+        ret = self.corev1Api.list_namespaced_event(self.context['namespace'],
+                                                   _preload_content=False,
+                                                   watch=True)
+
+        combined_queue = Queue(maxsize=0)
+
+        timer_timeout  = acto_timer.ActoTimer(timeout, combined_queue, "timeout")
+        watch_thread   = Process(target=watch_system_events,
+                                args=(ret, combined_queue, "event"))
+
+        start = time.time()
+
+        timer_timeout.start()
+        watch_thread.start()
+        while(True):
+            try:
+                msg = combined_queue.get(timeout = 60)
+            except:
+                break
+            if msg == "timeout":
+                break
+            
+        combined_queue.close()
+
+        timer_timeout.cancel()
+        watch_thread.terminate()
+
+        ret.close()
+        ret.release_conn()
+
         time_elapsed = time.strftime("%H:%M:%S",
                                      time.gmtime(time.time() - start))
+
         logging.info('System took %s to converge' % time_elapsed)
         return
 
+def watch_system_events(ret, queue: Queue, queue_msg):
 
-def watch_system_events(api, namespace, timer: acto_timer.ActoTimer):
     '''A function thread that watches namespaced events
     '''
-    # TODO: get rid of watch
-    ret = api.list_namespaced_event(namespace,
-                                    _preload_content=False,
-                                    watch=True)
     for _ in ret:
-        if timer.is_alive():
-            timer.reset()
-        else:
-            break
-    ret.close()
-    ret.release_conn()
+        # the queue might have been closed. It is safe to do so because system has converged
+        try:
+            queue.put(queue_msg)
+        except:
+            pass
 
 
 def list_matched_fields(path: list, delta_dict: dict) -> list:
