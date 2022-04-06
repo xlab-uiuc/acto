@@ -310,7 +310,7 @@ class ObjectSchema(BaseSchema):
         self.required = []
         if 'properties' not in schema and 'additionalProperties' not in schema:
             logging.warning(
-                'Object schema %s does not properties nor additionalProperties'
+                'Object schema %s does not have properties nor additionalProperties'
                 % self.path)
         if 'properties' in schema:
             for property_key, property_schema in schema['properties'].items():
@@ -342,16 +342,6 @@ class ObjectSchema(BaseSchema):
 
     def get_additional_properties(self):
         return self.additional_properties
-
-    def __str__(self) -> str:
-        ret = '{'
-        for k, v in self.properties.items():
-            ret += str(k)
-            ret += ': '
-            ret += str(v)
-            ret += ', '
-        ret += '}'
-        return ret
 
     def get_all_schemas(self) -> list:
         '''Return all the subschemas as a list'''
@@ -408,6 +398,22 @@ class ObjectSchema(BaseSchema):
                 ret.append(EnumTestCase(case))
         return ret
 
+    def __str__(self) -> str:
+        ret = '{'
+        for k, v in self.properties.items():
+            ret += str(k)
+            ret += ': '
+            ret += str(v)
+            ret += ', '
+        ret += '}'
+        return ret
+
+    def __getitem__(self, key):
+        return self.properties[key]
+
+    def __setitem__(self, key, value):
+        self.properties[key] = value
+
 
 class ArraySchema(BaseSchema):
     '''Representation of an array node
@@ -433,9 +439,6 @@ class ArraySchema(BaseSchema):
 
     def get_item_schema(self):
         return self.item_schema
-
-    def __str__(self) -> str:
-        return 'Array'
 
     def get_all_schemas(self) -> list:
         ret = [self]
@@ -473,7 +476,8 @@ class ArraySchema(BaseSchema):
                 TestCase(self.push_precondition, self.push_mutator,
                          self.push_setup))
             ret.append(
-                TestCase(self.pop_precondition, self.pop_mutator, self.pop_setup))
+                TestCase(self.pop_precondition, self.pop_mutator,
+                         self.pop_setup))
         return ret
 
     def push_precondition(self, prev):
@@ -509,6 +513,15 @@ class ArraySchema(BaseSchema):
         if prev == None:
             return self.gen()
         return self.gen(size=self.max_items)
+
+    def __str__(self) -> str:
+        return 'Array'
+
+    def __getitem__(self, key):
+        return self.properties[key]
+
+    def __setitem__(self, key, value):
+        self.properties[key] = value
 
 
 class AnyOfSchema(BaseSchema):

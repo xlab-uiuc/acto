@@ -13,7 +13,7 @@ def preload_images(images: list):
     Uses global context
     '''
     if len(images) == 0:
-        logging.error(
+        logging.warning(
             'No image to preload, we at least should have operator image')
 
     for image in images:
@@ -67,10 +67,7 @@ def process_crd(context: dict, crd_name: Optional[str] = None):
                 spec.names.plural,
             'version':
                 spec.versions[0].name,  # TODO: Handle multiple versions
-            'spec_schema':
-                schema.extract_schema([],
-                                      crd_obj['spec']['versions'][0]['schema']
-                                      ['openAPIV3Schema']['properties']['spec'])
+            'body': crd_obj
         }
         context['crd'] = crd_data
     logging.debug('CRD data: %s' % crd_data)

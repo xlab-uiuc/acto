@@ -84,6 +84,7 @@ class Checker:
         For each delta in the input, find the longest matching fields in the system state.
         Then compare the the delta values (prev, curr).
         '''
+        # TODO: Include the cr.status diff
         system_delta_without_cr = copy.deepcopy(system_delta)
         system_delta_without_cr.pop('cr_diff')
         for delta_list in input_delta.values():

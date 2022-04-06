@@ -10,11 +10,13 @@ from copy import deepcopy
 import signal
 import logging
 from deepdiff import DeepDiff
+import importlib
 
 from common import *
 import check_result
 from exception import UnknownDeployMethodError
 from preprocess import add_acto_label, preload_images, process_crd
+from input import InputModel
 import value_with_schema
 from deploy import Deploy, DeployMethod
 
@@ -133,138 +135,52 @@ def prune_noneffective_change(diff):
             del diff['dictionary_item_added']
 
 
-def run_trial(initial_input: dict,
-              candidate_dict: dict,
-              trial_num: int,
-              context: dict,
-              test_plan: dict,
-              num_mutation: int = 300) -> Tuple[ErrorResult, int]:
-    '''Run a trial starting with the initial input, mutate with the candidate_dict, and mutate for num_mutation times
-    
-    Args:
-        initial_input: the initial input without mutation
-        candidate_dict: guides the mutation
-        trial_num: how many trials have been run
-        num_mutation: how many mutations to run at each trial
-    '''
-    trial_dir = os.path.join(workdir_path, str(trial_num))
-    os.makedirs(trial_dir, exist_ok=True)
-    context['current_dir_path'] = trial_dir
-
-    checker = check_result.Checker(context, trial_dir)
-    current_cr = deepcopy(initial_input)
-    spec_with_schema = value_with_schema.attach_schema_to_value(
-        current_cr['spec'], context['crd']['spec_schema'])
-
-    generation = 0
-    while generation < num_mutation:
-        parent_cr = deepcopy(current_cr)
-        if len(test_plan) == 0:
-            logging.info('Finished all the test cases')
-            break
-        setup = False
-        if generation != 0:
-            field = random.choice(list(test_plan.keys()))
-            test_case = test_plan[field][-1]
-            prev_value = spec_with_schema.get_value_by_path(json.loads(field))
-            logging.debug('Selected field %s Previous value %s' % (field, prev_value))
-            if test_case.test_precondition(prev_value):
-                next_value = test_case.mutator(prev_value)
-                test_plan[field].pop()
-                if len(test_plan[field]) == 0:
-                    del test_plan[field]
-            else:
-                setup = True
-                next_value = test_case.run_setup(prev_value)
-                logging.info('Precondition not satisfied, try setup')
-            logging.debug('Next value: %s' % next_value)
-            logging.debug(json.loads(field))
-            spec_with_schema.create_path(json.loads(field))
-            spec_with_schema.set_value_by_path(next_value, json.loads(field))
-            current_cr['spec'] = spec_with_schema.raw_value()
-
-        cr_diff = DeepDiff(parent_cr,
-                           current_cr,
-                           ignore_order=True,
-                           report_repetition=True,
-                           view='tree')
-        prune_noneffective_change(cr_diff)
-        if len(cr_diff) == 0 and generation != 0:
-            logging.info('CR unchanged, continue')
-            continue
-
-        mutated_filename = '%s/mutated-%d.yaml' % (trial_dir, generation)
-        with open(mutated_filename, 'w') as mutated_cr_file:
-            yaml.dump(current_cr, mutated_cr_file)
-
-        cmd = [
-            'kubectl', 'apply', '-f', mutated_filename, '-n',
-            context['namespace']
-        ]
-        result = checker.run_and_check(cmd, cr_diff, generation=generation)
-        generation += 1
-
-        if isinstance(result, InvalidInputResult):
-            if setup:
-                logging.info('Setup failed due to invalid, discard this testcase %s' % test_case)
-                test_plan[field].pop()
-            # Revert to parent CR
-            current_cr = parent_cr
-            spec_with_schema = value_with_schema.attach_schema_to_value(
-                current_cr['spec'], context['crd']['spec_schema'])
-        elif isinstance(result, UnchangedInputResult):
-            continue
-        elif isinstance(result, ErrorResult):
-            # We found an error!
-            if setup:
-                logging.info('Setup failed due to error, discard this testcase %s' % test_case)
-                test_plan[field].pop()
-            return result, generation
-        elif isinstance(result, PassResult):
-            continue
-        else:
-            logging.error('Unknown return value, abort')
-            quit()
-
-    return None, generation
-
-
 def timeout_handler(sig, frame):
     raise TimeoutError
 
 
 class Acto:
 
-    def __init__(self, seed, deploy, crd_name, preload_images_) -> None:
+    def __init__(self, seed, deploy, crd_name, preload_images_,
+                 custom_fields_src, context_file, dryrun) -> None:
         self.seed = seed
         self.deploy = deploy
         self.crd_name = crd_name
+        self.dryrun = dryrun
         self.preload_images = []
         if preload_images_:
             self.preload_images.extend(preload_images_)
         self.curr_trial = 0
 
-        # Some information needs to be fetched at runtime
-        self.context = {'namespace': '', 'current_dir_path': '', 'crd': None}
+        if os.path.exists(context_file):
+            with open(context_file, 'r') as context_fin:
+                self.context = json.load(context_fin)
+        else:
+            # Some information needs to be fetched at runtime
+            self.context = {
+                'namespace': '',
+                'current_dir_path': '',
+                'crd': None
+            }
 
-        # Dummy run to automatically extract some information
-        # TODO: Save the result to data directory
-        construct_kind_cluster()
-        preload_images(self.preload_images)
-        self.deploy.deploy(self.context)
-        process_crd(self.context, self.crd_name)
+            # Dummy run to automatically extract some information
+            construct_kind_cluster()
+            preload_images(self.preload_images)
+            self.deploy.deploy(self.context)
+            process_crd(self.context, self.crd_name)
+            with open(context_file, 'w') as context_fout:
+                json.dump(self.context, context_fout)
+
+        # Apply custom fields
+        self.input_model = InputModel(self.context['crd']['body'])
+        self.input_model.initialize(self.seed)
+        if custom_fields_src != None:
+            module = importlib.import_module(custom_fields_src)
+            for custom_field in module.custom_fields:
+                self.input_model.apply_custom_field(custom_field)
 
         # Generate test cases
-        schema_list = self.context['crd']['spec_schema'].get_all_schemas()
-        self.test_plan = {}
-        num_fields = len(schema_list)
-        num_testcases = 0
-        for schema in schema_list:
-            testcases = schema.test_cases()
-            self.test_plan[json.dumps(schema.path).replace('\"ITEM\"', '0')] = testcases
-            num_testcases += len(testcases)
-        logging.info('Parsed [%d] fields from schema', num_fields)
-        logging.info('Generated [%d] test cases in total', num_testcases)
+        self.test_plan = self.input_model.generate_test_plan()
         with open(os.path.join(workdir_path, 'test_plan.json'),
                   'w') as plan_file:
             json.dump(self.test_plan, plan_file, cls=ActoEncoder, indent=6)
@@ -277,9 +193,8 @@ class Acto:
             self.deploy.deploy(self.context)
             add_acto_label(self.context)
             deploy_dependency([])
-            trial_err, num_tests = run_trial(application_cr, candidate_dict,
-                                             self.curr_trial, self.context,
-                                             self.test_plan)
+            trial_err, num_tests = self.run_trial(self.curr_trial, self.dryrun)
+            self.input_model.reset_input()
 
             trial_elapsed = time.strftime(
                 "%H:%M:%S", time.gmtime(time.time() - trial_start_time))
@@ -292,7 +207,8 @@ class Acto:
             result_dict['duration'] = trial_elapsed
             result_dict['num_tests'] = num_tests
             if trial_err == None:
-                logging.info('Trial %d completed without error', self.curr_trial)
+                logging.info('Trial %d completed without error',
+                             self.curr_trial)
             else:
                 result_dict['oracle'] = trial_err.oracle
                 result_dict['message'] = trial_err.message
@@ -304,6 +220,74 @@ class Acto:
             with open(result_path, 'w') as result_file:
                 json.dump(result_dict, result_file, cls=ActoEncoder, indent=6)
             self.curr_trial = self.curr_trial + 1
+
+    def run_trial(self,
+                  trial_num: int,
+                  dryrun: bool = False,
+                  num_mutation: int = 300) -> Tuple[ErrorResult, int]:
+        '''Run a trial starting with the initial input, mutate with the candidate_dict, and mutate for num_mutation times
+        
+        Args:
+            initial_input: the initial input without mutation
+            candidate_dict: guides the mutation
+            trial_num: how many trials have been run
+            num_mutation: how many mutations to run at each trial
+        '''
+        trial_dir = os.path.join(workdir_path, 'trial-%04d' % trial_num)
+        os.makedirs(trial_dir, exist_ok=True)
+        self.context['current_dir_path'] = trial_dir
+
+        checker = check_result.Checker(self.context, trial_dir)
+        
+        curr_input = self.input_model.get_seed_input()
+
+        generation = 0
+        while generation < num_mutation:
+            setup = False
+            if generation != 0:
+                curr_input, setup = self.input_model.next_test()
+
+            input_delta = self.input_model.get_input_delta()
+            prune_noneffective_change(input_delta)
+            if len(input_delta) == 0 and generation != 0:
+                logging.info('CR unchanged, continue')
+                continue
+
+            mutated_filename = '%s/mutated-%d.yaml' % (trial_dir, generation)
+            with open(mutated_filename, 'w') as mutated_cr_file:
+                yaml.dump(curr_input, mutated_cr_file)
+
+            cmd = [
+                'kubectl', 'apply', '-f', mutated_filename, '-n',
+                self.context['namespace']
+            ]
+            if not dryrun:
+                result = checker.run_and_check(cmd,
+                                               input_delta,
+                                               generation=generation)
+            else:
+                result = PassResult()
+            generation += 1
+
+            if isinstance(result, InvalidInputResult):
+                if setup:
+                    self.input_model.discard_test_case()
+                # Revert to parent CR
+                self.input_model.revert()
+            elif isinstance(result, UnchangedInputResult):
+                continue
+            elif isinstance(result, ErrorResult):
+                # We found an error!
+                if setup:
+                    self.input_model.discard_test_case()
+                return result, generation
+            elif isinstance(result, PassResult):
+                continue
+            else:
+                logging.error('Unknown return value, abort')
+                quit()
+
+        return None, generation
 
 
 if __name__ == '__main__':
@@ -347,6 +331,14 @@ if __name__ == '__main__':
         '--crd-name',
         dest='crd_name',
         help='Name of CRD to use, required if there are multiple CRDs')
+    parser.add_argument(
+        '--custom-fields',
+        dest='custom_fields',
+        help='Python source file containing a list of custom fields')
+    parser.add_argument('--context', dest='context', help='Cached context data')
+    parser.add_argument('--dryrun',
+                        dest='dryrun',
+                        help='Only generate test cases without executing them')
 
     args = parser.parse_args()
 
@@ -355,7 +347,9 @@ if __name__ == '__main__':
         filename=os.path.join(workdir_path, 'test.log'),
         level=logging.DEBUG,
         filemode='w',
-        format='%(asctime)s %(levelname)-6s, %(name)s, %(filename)s:%(lineno)d, %(message)s')
+        format=
+        '%(asctime)s %(levelname)-6s, %(name)s, %(filename)s:%(lineno)d, %(message)s'
+    )
     logging.getLogger("kubernetes").setLevel(logging.ERROR)
     logging.getLogger("sh").setLevel(logging.ERROR)
 
@@ -386,5 +380,6 @@ if __name__ == '__main__':
     else:
         raise UnknownDeployMethodError()
 
-    acto = Acto(application_cr, deploy, args.crd_name, args.preload_images)
+    acto = Acto(application_cr, deploy, args.crd_name, args.preload_images,
+                args.custom_fields, args.context, args.dryrun)
     acto.run()

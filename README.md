@@ -14,15 +14,32 @@
 ## Usage
 To run the test:  
 ```
-python3 acto.py --candidates [CANDIDATE_FILE] \
-                --seed [SEED_CR] \
-                --operator [OPERATOR_CR] \
-                --duration [#HOURS]
+python3 acto.py \
+    --candidates CANDIDATES, -c CANDIDATES      yaml file to specify candidates for parameters
+    --seed SEED, -s SEED                        seed CR file
+    --operator OPERATOR, -o OPERATOR            yaml file for deploying the operator
+    --helm OPERATOR_CHART                       Path of operator helm chart
+    --init INIT                                 Path of init yaml file (deploy before operator)
+    --duration DURATION, -d DURATION            Number of hours to run
+    --preload-images [PRELOAD_IMAGES [PRELOAD_IMAGES ...]]
+                                                Docker images to preload into Kind cluster
+    --crd-name CRD_NAME                         Name of CRD to use, required if there are multiple CRDs
+    --custom-fields CUSTOM_FIELDS               Python source file containing a list of custom fields
+    --context CONTEXT                           Cached context data
+    --dryrun DRYRUN                             Only generate test cases without executing them
 ```
 
 Example:  
 To run the test on the rabbitmq-operator:  
-`python3 acto.py --candidates data/rabbitmq-operator/candidates.yaml --seed data/rabbitmq-operator/cr.yaml --operator data/rabbitmq-operator/operator.yaml --duration 1`
+```console
+python3 acto.py --candidates data/rabbitmq-operator/candidates.yaml \
+                --seed data/rabbitmq-operator/cr.yaml \
+                --operator data/rabbitmq-operator/operator.yaml \
+                --custom-fields rabbitmq \
+                --preload-images rabbitmqoperator/cluster-operator:1.10.0 rabbitmq:3.8.21-management \
+                --context data/rabbitmq-operator/context.json \
+                --duration 1
+```
 
 cass-operator (using helm)   
 `python3 acto.py --candidates data/cass-operator/candidates.yaml --seed data/cass-operator/cr.yaml --helm data/cass-operator/cass-operator --init data/cass-operator/init.yaml --duration 1`
