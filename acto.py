@@ -224,7 +224,7 @@ class Acto:
     def run_trial(self,
                   trial_num: int,
                   dryrun: bool = False,
-                  num_mutation: int = 300) -> Tuple[ErrorResult, int]:
+                  num_mutation: int = 5) -> Tuple[ErrorResult, int]:
         '''Run a trial starting with the initial input, mutate with the candidate_dict, and mutate for num_mutation times
         
         Args:

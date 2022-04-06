@@ -33,12 +33,16 @@ class InputModel:
     def initialize(self, initial_value: dict):
         self.seed_input = attach_schema_to_value(initial_value,
                                                  self.root_schema)
-        self.current_input = self.seed_input
-        self.previous_input = self.seed_input
+        self.current_input = attach_schema_to_value(initial_value,
+                                                 self.root_schema)
+        self.previous_input = attach_schema_to_value(initial_value,
+                                                 self.root_schema)
 
     def reset_input(self):
-        self.current_input = self.seed_input
-        self.previous_input = self.seed_input
+        self.current_input = attach_schema_to_value(self.seed_input.raw_value(),
+                                                 self.root_schema)
+        self.previous_input = attach_schema_to_value(self.seed_input.raw_value(),
+                                                 self.root_schema)
 
     def get_seed_input(self) -> dict:
         '''Get the raw value of the seed input'''
@@ -77,6 +81,7 @@ class InputModel:
         Returns:
             Tuple of (new value, if this is a setup)
         '''
+        logging.info('Progress [%d] fields left' % len(self.test_plan))
         field = random.choice(list(self.test_plan.keys()))
         self.curr_field = field
         if len(self.test_plan[field]) == 0:

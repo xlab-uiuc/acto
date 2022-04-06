@@ -49,8 +49,8 @@ class ValueWithObjectSchema(ValueWithSchema):
                 self.store[k] = attach_schema_to_value(
                     v, self.schema.get_property_schema(k))
         else:
-            raise TypeError('Value [%s] Path [%s]' %
-                            (value, self.schema.get_path()))
+            raise TypeError('Value [%s] has type [%s] Path [%s]' %
+                            (value, type(value), self.schema.get_path()))
 
     def value(self):
         return self.store
