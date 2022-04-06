@@ -1,3 +1,4 @@
+from multiprocessing.sharedctypes import Value
 from threading import Thread, Event
 from multiprocessing import Queue
 
@@ -22,10 +23,10 @@ class ActoTimer(Thread):
             self.finished.wait(self.interval)
         
         # notify the main thread using a queue
-        # the queue might have been closed. It is safe to do so because system has converged
+        
         try:    
             self.queue.put(self.queue_msg)
-        except: 
+        except ValueError: # the queue might have been closed. It is safe to do so because system has converged
             pass
         self.finished.set()
 

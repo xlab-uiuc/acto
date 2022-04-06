@@ -6,6 +6,7 @@ from deepdiff import DeepDiff
 import json
 import re
 from multiprocessing import Process, Queue
+import queue
 import copy
 import kubernetes
 
@@ -289,7 +290,7 @@ class Checker:
         while(True):
             try:
                 msg = combined_queue.get(timeout = 60)
-            except:
+            except queue.Empty:
                 break
             if msg == "timeout":
                 break
