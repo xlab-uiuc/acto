@@ -314,6 +314,10 @@ if __name__ == '__main__':
                         dest='operator_chart',
                         required=False,
                         help='Path of operator helm chart')
+    parser.add_argument('--kustomize',
+                        dest='kustomize',
+                        required=False,
+                        help='Path of folder with kustomize')
     parser.add_argument('--init',
                         dest='init',
                         required=False,
@@ -372,11 +376,12 @@ if __name__ == '__main__':
     # register timeout to automatically stop after # hours
     signal.signal(signal.SIGALRM, timeout_handler)
     signal.alarm(int(args.duration) * 60 * 60)
-
     if args.operator_chart:
         deploy = Deploy(DeployMethod.HELM, args.operator_chart, args.init).new()
     elif args.operator:
         deploy = Deploy(DeployMethod.YAML, args.operator, args.init).new()
+    elif args.kustomize:
+        deploy = Deploy(DeployMethod.KUSTOMIZE, args.kustomize, args.init).new()
     else:
         raise UnknownDeployMethodError()
 
