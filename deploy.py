@@ -27,7 +27,7 @@ class Deploy:
         self.console = Console()
         self.deploy_method = deploy_method
         self.appsV1api = AppsV1Api()
-        self.wait = 60 # 15 sec
+        self.wait = 60 # sec
 
     def deploy(self, context):
         # XXX: context param is temporary, need to figure out why rabbitmq complains about namespace
@@ -150,7 +150,8 @@ class Kustomize(Deploy):
             if self.init_yaml:
                 sh.kubectl("apply", filename=self.init_yaml)
             sleep(self.wait)
-            sh.kubectl("apply", "--force-conflicts", "--server-side",  "-k", self.path)
+            # sh.kubectl("apply", "--force-conflicts", "--server-side",  "-k", self.path)
+            os.system("kubectl apply --force-conflicts --server-side -k 'github.com/k8ssandra/cass-operator/config/deployments/cluster?ref=v1.10.3'")
             super().check_status()
             return True
         except Exception:
