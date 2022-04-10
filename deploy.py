@@ -8,7 +8,7 @@ import time
 import logging
 from kubernetes.client import AppsV1Api
 from k8s_helper import get_deployment_available_status, get_stateful_set_available_status, get_yaml_existing_namespace
-
+from time import sleep
 CONST = CONST()
 
 
@@ -16,7 +16,7 @@ CONST = CONST()
 class DeployMethod(Enum):
     HELM = auto()
     YAML = auto()
-
+    KUSTOMIZE = auto()
 
 class Deploy:
 
@@ -39,6 +39,8 @@ class Deploy:
             return Helm(self.deploy_method, self.path, self.init_yaml)
         elif self.deploy_method is DeployMethod.YAML:
             return Yaml(self.deploy_method, self.path, self.init_yaml)
+        elif self.deploy_method is DeployMethod.KUSTOMIZE:
+            return Kustomize(self.deploy_method, self.path, self.init_yaml)
         else:
             raise exception.UnknownDeployMethodError
 
@@ -131,6 +133,16 @@ class Yaml(Deploy):
     #     else:
     #         return True
 
+class Kustomize(Deploy):
+
+    def deploy(self, context):
+        namespace = "cass-operator"
+        context['namespace'] = namespace
+        if self.init_yaml:
+            sh.kubectl("apply", filename=self.init_yaml)
+        sleep(30)
+        sh.kubectl("apply", "--force-conflicts", "--server-side",  "-k", self.path)
+        super().check_status()
 
 # Example:
 # if __name__ == '__main__':
