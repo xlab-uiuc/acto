@@ -6,6 +6,7 @@ import json
 import exception
 import time
 import logging
+import os
 from kubernetes.client import AppsV1Api
 from k8s_helper import get_deployment_available_status, get_stateful_set_available_status, get_yaml_existing_namespace
 from time import sleep
@@ -26,6 +27,7 @@ class Deploy:
         self.console = Console()
         self.deploy_method = deploy_method
         self.appsV1api = AppsV1Api()
+        self.wait = 60 # 15 sec
 
     def deploy(self, context):
         # XXX: context param is temporary, need to figure out why rabbitmq complains about namespace
@@ -64,6 +66,9 @@ class Helm(Deploy):
 
         self.check_status()
 
+        # TODO: Return True if deploy successfully        
+        return True
+
     def check_status(self):
         helm_ls_result = sh.helm("ls", o="json", all_namespaces=True, all=True)
         try:
@@ -96,6 +101,9 @@ class Yaml(Deploy):
             sh.kubectl("apply", filename=self.init_yaml, namespace=namespace)
         sh.kubectl("apply", filename=self.path, namespace=namespace)
         super().check_status()
+
+        # TODO: Return True if deploy successfully 
+        return True
 
     # TODO: Do we need to check operator's status?
     # Even if the operator gets ready after the custom resource is created,
@@ -136,13 +144,22 @@ class Yaml(Deploy):
 class Kustomize(Deploy):
 
     def deploy(self, context):
-        namespace = "cass-operator"
-        context['namespace'] = namespace
-        if self.init_yaml:
-            sh.kubectl("apply", filename=self.init_yaml)
-        sleep(30)
-        sh.kubectl("apply", "--force-conflicts", "--server-side",  "-k", self.path)
-        super().check_status()
+        try:
+            namespace = "cass-operator"
+            context['namespace'] = namespace
+            if self.init_yaml:
+                sh.kubectl("apply", filename=self.init_yaml)
+            sleep(self.wait)
+            sh.kubectl("apply", "--force-conflicts", "--server-side",  "-k", self.path)
+            super().check_status()
+            return True
+        except Exception:
+            logging.info("deploy() failed. Double wait = " + str(self.wait))
+            self.wait = self.wait * 2
+            if self.wait > CONST.WAIT_LIMIT:
+                logging.info("Quit")
+                quit()
+            return False 
 
 # Example:
 # if __name__ == '__main__':

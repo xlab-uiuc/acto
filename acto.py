@@ -19,12 +19,14 @@ from preprocess import add_acto_label, preload_images, process_crd
 from input import InputModel
 import value_with_schema
 from deploy import Deploy, DeployMethod
+from constant import CONST
 
 test_summary = {}
 workdir_path = 'testrun-%s' % datetime.now().strftime('%Y-%m-%d-%H-%M')
 
+CONST = CONST()
 
-def construct_kind_cluster():
+def construct_kind_cluster(k8s_version: str):
     '''Delete kind cluster then create a new one
     '''
     os.system('kind delete cluster')
@@ -44,7 +46,7 @@ def construct_kind_cluster():
             kind_config_dict['nodes'].append({'role': 'control-plane'})
         yaml.dump(kind_config_dict, kind_config_file)
 
-    os.system('kind create cluster --config %s' % kind_config_path)
+    os.system('kind create cluster --config %s --image %s' % (kind_config_path, f"kindest/node:v{k8s_version}"))
 
     kubernetes.config.load_kube_config()
 
@@ -164,9 +166,13 @@ class Acto:
             }
 
             # Dummy run to automatically extract some information
-            construct_kind_cluster()
-            preload_images(self.preload_images)
-            self.deploy.deploy(self.context)
+            while True:
+                construct_kind_cluster(CONST.K8S_VERSION)
+                preload_images(self.preload_images)
+                deployed = self.deploy.deploy(self.context)
+                if deployed:
+                    break
+                
             process_crd(self.context, self.crd_name)
             with open(context_file, 'w') as context_fout:
                 json.dump(self.context, context_fout)
@@ -188,9 +194,13 @@ class Acto:
     def run(self):
         while True:
             trial_start_time = time.time()
-            construct_kind_cluster()
+            construct_kind_cluster(CONST.K8S_VERSION)
             preload_images(self.preload_images)
-            self.deploy.deploy(self.context)
+            deployed = self.deploy.deploy(self.context)
+            if not deployed:
+                logging.info('Not deployed. Try again!') 
+                continue
+
             add_acto_label(self.context)
             deploy_dependency([])
             trial_err, num_tests = self.run_trial(self.curr_trial, self.dryrun)
