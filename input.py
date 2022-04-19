@@ -81,14 +81,15 @@ class InputModel:
         Returns:
             Tuple of (new value, if this is a setup)
         '''
-        logging.info('Progress [%d] fields left' % len(self.test_plan))
+        logging.info('Progress [%d] cases left' % sum([len(i) for i in self.test_plan.values()]))
         field = random.choice(list(self.test_plan.keys()))
         self.curr_field = field
         if len(self.test_plan[field]) == 0:
             del self.test_plan[field]
         test_case = self.test_plan[field][-1]
         curr = self.current_input.get_value_by_path(json.loads(field))
-        logging.debug('Selected field %s Previous value %s' % (field, curr))
+        logging.info('Selected field %s Previous value %s' % (field, curr))
+        logging.info('Selected test [%s]' % test_case)
         if test_case.test_precondition(curr):
             setup = False
             next_value = test_case.mutator(curr)

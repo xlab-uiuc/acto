@@ -193,7 +193,7 @@ class Acto:
             self.deploy.deploy(self.context)
             add_acto_label(self.context)
             deploy_dependency([])
-            trial_err, num_tests = self.run_trial(self.curr_trial, self.dryrun)
+            trial_err, num_tests = self.run_trial(self.curr_trial)
             self.input_model.reset_input()
 
             trial_elapsed = time.strftime(
@@ -223,7 +223,6 @@ class Acto:
 
     def run_trial(self,
                   trial_num: int,
-                  dryrun: bool = False,
                   num_mutation: int = 5) -> Tuple[ErrorResult, int]:
         '''Run a trial starting with the initial input, mutate with the candidate_dict, and mutate for num_mutation times
         
@@ -261,7 +260,7 @@ class Acto:
                 'kubectl', 'apply', '-f', mutated_filename, '-n',
                 self.context['namespace']
             ]
-            if not dryrun:
+            if not self.dryrun:
                 result = checker.run_and_check(cmd,
                                                input_delta,
                                                generation=generation)
@@ -321,7 +320,7 @@ if __name__ == '__main__':
     parser.add_argument('--duration',
                         '-d',
                         dest='duration',
-                        default=6,
+                        required=False,
                         help='Number of hours to run')
     parser.add_argument('--preload-images',
                         dest='preload_images',
@@ -338,6 +337,7 @@ if __name__ == '__main__':
     parser.add_argument('--context', dest='context', help='Cached context data')
     parser.add_argument('--dryrun',
                         dest='dryrun',
+                        action='store_true',
                         help='Only generate test cases without executing them')
 
     args = parser.parse_args()
@@ -370,8 +370,9 @@ if __name__ == '__main__':
                      args.preload_images)
 
     # register timeout to automatically stop after # hours
-    signal.signal(signal.SIGALRM, timeout_handler)
-    signal.alarm(int(args.duration) * 60 * 60)
+    if args.duration != None:
+        signal.signal(signal.SIGALRM, timeout_handler)
+        signal.alarm(int(args.duration) * 60 * 60)
 
     if args.operator_chart:
         deploy = Deploy(DeployMethod.HELM, args.operator_chart, args.init).new()
