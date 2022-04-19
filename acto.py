@@ -381,6 +381,11 @@ if __name__ == '__main__':
     else:
         raise UnknownDeployMethodError()
 
+    if args.context == None:
+        context_cache = os.path.join(os.path.dirname(args.seed), 'context.json')
+    else:
+        context_cache = args.context
+
     acto = Acto(application_cr, deploy, args.crd_name, args.preload_images,
-                args.custom_fields, args.context, args.dryrun)
+                args.custom_fields, context_cache, args.dryrun)
     acto.run()
