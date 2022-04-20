@@ -266,7 +266,7 @@ class Checker:
 
         return PassResult()
 
-    def wait_for_system_converge(self, timeout=360):
+    def wait_for_system_converge(self, timeout=600):
         '''This function blocks until the system converges
         It sets up a resettable timer which goes off in 60 seconds.
         It starts a thread that watches for system events. 
@@ -293,6 +293,7 @@ class Checker:
             except queue.Empty:
                 break
             if msg == "timeout":
+                logging.debug('Hard timeout triggered')
                 break
             
         combined_queue.close()

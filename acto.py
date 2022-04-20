@@ -17,7 +17,6 @@ import check_result
 from exception import UnknownDeployMethodError
 from preprocess import add_acto_label, preload_images, process_crd
 from input import InputModel
-import value_with_schema
 from deploy import Deploy, DeployMethod
 
 test_summary = {}
@@ -221,9 +220,13 @@ class Acto:
                 json.dump(result_dict, result_file, cls=ActoEncoder, indent=6)
             self.curr_trial = self.curr_trial + 1
 
+            if self.input_model.is_empty():
+                logging.info('Test finished')
+                break
+
     def run_trial(self,
                   trial_num: int,
-                  num_mutation: int = 5) -> Tuple[ErrorResult, int]:
+                  num_mutation: int = 10) -> Tuple[ErrorResult, int]:
         '''Run a trial starting with the initial input, mutate with the candidate_dict, and mutate for num_mutation times
         
         Args:
@@ -274,6 +277,8 @@ class Acto:
                 # Revert to parent CR
                 self.input_model.revert()
             elif isinstance(result, UnchangedInputResult):
+                if setup:
+                    self.input_model.discard_test_case()
                 continue
             elif isinstance(result, ErrorResult):
                 # We found an error!

@@ -28,7 +28,8 @@ class InputModel:
         self.previous_input = None
         self.test_plan = None
 
-        self.curr_field = None
+        self.curr_field = None  # Bookkeeping in case we are running setup
+                                # so that we can run the test case itself right after the setup
 
     def initialize(self, initial_value: dict):
         self.seed_input = attach_schema_to_value(initial_value,
@@ -37,6 +38,9 @@ class InputModel:
                                                  self.root_schema)
         self.previous_input = attach_schema_to_value(initial_value,
                                                  self.root_schema)
+
+    def is_empty(self):
+        return len(self.test_plan) == 0
 
     def reset_input(self):
         self.current_input = attach_schema_to_value(self.seed_input.raw_value(),
@@ -82,7 +86,10 @@ class InputModel:
             Tuple of (new value, if this is a setup)
         '''
         logging.info('Progress [%d] cases left' % sum([len(i) for i in self.test_plan.values()]))
-        field = random.choice(list(self.test_plan.keys()))
+        if self.curr_field != None:
+            field = self.curr_field
+        else:
+            field = random.choice(list(self.test_plan.keys()))
         self.curr_field = field
         if len(self.test_plan[field]) == 0:
             del self.test_plan[field]
@@ -96,6 +103,7 @@ class InputModel:
             self.test_plan[field].pop()
             if len(self.test_plan[field]) == 0:
                 del self.test_plan[field]
+            self.curr_field = None
         else:
             setup = True
             next_value = test_case.run_setup(curr)
@@ -132,6 +140,7 @@ class InputModel:
                      discarded_case)
         if len(self.test_plan[self.curr_field]) == 0:
             del self.test_plan[self.curr_field]
+        self.curr_field = None
 
     def revert(self):
         '''Revert back to previous input'''
