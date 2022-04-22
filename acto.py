@@ -17,7 +17,6 @@ import check_result
 from exception import UnknownDeployMethodError
 from preprocess import add_acto_label, preload_images, process_crd
 from input import InputModel
-import value_with_schema
 from deploy import Deploy, DeployMethod
 from constant import CONST
 
@@ -203,7 +202,7 @@ class Acto:
 
             add_acto_label(self.context)
             deploy_dependency([])
-            trial_err, num_tests = self.run_trial(self.curr_trial, self.dryrun)
+            trial_err, num_tests = self.run_trial(self.curr_trial)
             self.input_model.reset_input()
 
             trial_elapsed = time.strftime(
@@ -231,10 +230,13 @@ class Acto:
                 json.dump(result_dict, result_file, cls=ActoEncoder, indent=6)
             self.curr_trial = self.curr_trial + 1
 
+            if self.input_model.is_empty():
+                logging.info('Test finished')
+                break
+
     def run_trial(self,
                   trial_num: int,
-                  dryrun: bool = False,
-                  num_mutation: int = 5) -> Tuple[ErrorResult, int]:
+                  num_mutation: int = 10) -> Tuple[ErrorResult, int]:
         '''Run a trial starting with the initial input, mutate with the candidate_dict, and mutate for num_mutation times
         
         Args:
@@ -271,7 +273,7 @@ class Acto:
                 'kubectl', 'apply', '-f', mutated_filename, '-n',
                 self.context['namespace']
             ]
-            if not dryrun:
+            if not self.dryrun:
                 result = checker.run_and_check(cmd,
                                                input_delta,
                                                generation=generation)
@@ -285,6 +287,8 @@ class Acto:
                 # Revert to parent CR
                 self.input_model.revert()
             elif isinstance(result, UnchangedInputResult):
+                if setup:
+                    self.input_model.discard_test_case()
                 continue
             elif isinstance(result, ErrorResult):
                 # We found an error!
@@ -335,7 +339,7 @@ if __name__ == '__main__':
     parser.add_argument('--duration',
                         '-d',
                         dest='duration',
-                        default=6,
+                        required=False,
                         help='Number of hours to run')
     parser.add_argument('--preload-images',
                         dest='preload_images',
@@ -352,6 +356,7 @@ if __name__ == '__main__':
     parser.add_argument('--context', dest='context', help='Cached context data')
     parser.add_argument('--dryrun',
                         dest='dryrun',
+                        action='store_true',
                         help='Only generate test cases without executing them')
 
     args = parser.parse_args()
@@ -384,8 +389,9 @@ if __name__ == '__main__':
                      args.preload_images)
 
     # register timeout to automatically stop after # hours
-    signal.signal(signal.SIGALRM, timeout_handler)
-    signal.alarm(int(args.duration) * 60 * 60)
+    if args.duration != None:
+        signal.signal(signal.SIGALRM, timeout_handler)
+        signal.alarm(int(args.duration) * 60 * 60)
     if args.operator_chart:
         deploy = Deploy(DeployMethod.HELM, args.operator_chart, args.init).new()
     elif args.operator:
@@ -395,6 +401,11 @@ if __name__ == '__main__':
     else:
         raise UnknownDeployMethodError()
 
+    if args.context == None:
+        context_cache = os.path.join(os.path.dirname(args.seed), 'context.json')
+    else:
+        context_cache = args.context
+
     acto = Acto(application_cr, deploy, args.crd_name, args.preload_images,
-                args.custom_fields, args.context, args.dryrun)
+                args.custom_fields, context_cache, args.dryrun)
     acto.run()

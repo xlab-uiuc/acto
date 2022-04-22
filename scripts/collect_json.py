@@ -21,16 +21,17 @@ if __name__ == "__main__":
 
     summary = {'SystemState': {}, 'ErrorLog': {}}
     for trial_num, result in total_result.items():
-        oracle = result['oracle']
-        if oracle not in summary:
-            summary[oracle] = {}
-        path_str = ' '.join(str(i) for i in result['input_delta']['path'])
-        if path_str not in summary[oracle]:
-            summary[oracle][path_str] = {}
-        msg = result['message']
-        if msg not in summary[oracle][path_str]:
-            summary[oracle][path_str][msg] = []
-        summary[oracle][path_str][msg].append(result)
+        if 'oracle' in result:
+            oracle = result['oracle']
+            if oracle not in summary:
+                summary[oracle] = {}
+            path_str = ' '.join(str(i) for i in result['input_delta']['path'])
+            if path_str not in summary[oracle]:
+                summary[oracle][path_str] = {}
+            msg = result['message']
+            if msg not in summary[oracle][path_str]:
+                summary[oracle][path_str][msg] = []
+            summary[oracle][path_str][msg].append(result)
 
     with open('summary.json', 'w') as summary_file:
         json.dump(summary, summary_file, indent=4, sort_keys=True)
