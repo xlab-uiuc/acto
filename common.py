@@ -4,6 +4,9 @@ from deepdiff.helper import NotPresent
 from datetime import datetime, date
 import re
 import logging
+import string
+import random
+
 from test_case import TestCase
 
 
@@ -152,6 +155,11 @@ def canonicalize(s: str):
 
 def get_diff_stat():
     return None
+
+def random_string(n: int):
+    '''Generate random string with length n'''
+    letters = string.ascii_lowercase
+    return (''.join(random.choice(letters) for i in range(10)))
 
 
 class ActoEncoder(json.JSONEncoder):

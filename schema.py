@@ -1,4 +1,3 @@
-from common import ActoEncoder
 import logging
 import yaml
 from copy import deepcopy
@@ -7,10 +6,10 @@ from abc import abstractmethod
 import exrex
 import string
 import json
-
 from jsonschema import validate
-from test_case import *
 
+from test_case import *
+from common import ActoEncoder, random_string
 
 class BaseSchema:
     '''Base class for schemas
@@ -82,8 +81,7 @@ class StringSchema(BaseSchema):
             return random.choice(self.enum)
         if self.pattern != None:
             return exrex.getone(self.pattern, self.max_length)
-        letters = string.ascii_lowercase
-        return (''.join(random.choice(letters) for i in range(10)))
+        return random_string(10)
 
     def num_cases(self):
         return 3
@@ -116,8 +114,7 @@ class StringSchema(BaseSchema):
         if self.pattern != None:
             new_string = exrex.getone(self.pattern, self.max_length)
         else:
-            letters = string.ascii_lowercase
-            new_string = (''.join(random.choice(letters) for i in range(10)))
+            new_string = random_string(10)
         if prev == new_string:
             logging.error(
                 'Failed to change, generated the same string with previous one')
@@ -365,8 +362,7 @@ class ObjectSchema(BaseSchema):
                     '[%s]: No properties and no additional properties' %
                     self.path)
                 return None
-            letters = string.ascii_lowercase
-            key = ''.join(random.choice(letters) for i in range(5))
+            key = random_string(5)
             result[key] = self.additional_properties.gen()
         else:
             for k, v in self.properties.items():

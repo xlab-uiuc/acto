@@ -252,6 +252,9 @@ class Acto:
             input_delta = self.input_model.get_input_delta()
             prune_noneffective_change(input_delta)
             if len(input_delta) == 0 and generation != 0:
+                if setup:
+                    logging.warning('Setup didn\'t change anything')
+                    self.input_model.discard_test_case()
                 logging.info('CR unchanged, continue')
                 continue
 

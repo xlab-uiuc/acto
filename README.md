@@ -42,7 +42,16 @@ python3 acto.py --candidates data/rabbitmq-operator/candidates.yaml \
 ```
 
 cass-operator (using helm)   
-`python3 acto.py --candidates data/cass-operator/candidates.yaml --seed data/cass-operator/cr.yaml --helm data/cass-operator/cass-operator --init data/cass-operator/init.yaml --duration 1`
+```
+python3 acto.py --candidates data/cass-operator/candidates.yaml \
+                --seed data/cass-operator/cr.yaml \
+                --kustomize "github.com/k8ssandra/cass-operator/config/deployments/cluster?ref=v1.10.3" \
+                --init data/cass-operator/init.yaml \
+                --custom-fields cass_operator \
+                --preload-images k8ssandra/cass-operator:v1.10.3 k8ssandra/cass-management-api:3.11.7 k8ssandra/system-logger:v1.10.3 datastax/cass-config-builder:1.0.4-ubi7 quay.io/jetstack/cert-manager-cainjector:v1.7.1 quay.io/jetstack/cert-manager-controller:v1.7.1 quay.io/jetstack/cert-manager-webhook:v1.7.1 docker.io/rancher/local-path-provisioner:v0.0.14 docker.io/kindest/kindnetd:v20211122-a2c10462 \
+                --context data/cass-operator/context.json \
+                --duration 1
+```
 
 zookeeper-operator (using helm)  
 `python3 acto.py --candidates data/zookeeper-operator/candidates.yaml --seed data/zookeeper-operator/cr.yaml --helm data/zookeeper-operator/zookeeper-operator --duration 1 --crd-name=zookeeperclusters.zookeeper.pravega.io`

@@ -8,6 +8,7 @@ from deepdiff import DeepDiff
 
 from schema import extract_schema, BaseSchema
 from value_with_schema import attach_schema_to_value
+from common import random_string
 
 
 class CustomField:
@@ -68,7 +69,8 @@ class InputModel:
         num_testcases = 0
         for schema in schema_list:
             testcases = schema.test_cases()
-            ret[json.dumps(schema.path).replace('\"ITEM\"', '0')] = testcases
+            path = json.dumps(schema.path).replace('\"ITEM\"', '0').replace('\"additional_properties\"', random_string(5))
+            ret[path] = testcases
             num_testcases += len(testcases)
         logging.info('Parsed [%d] fields from schema', num_fields)
         logging.info('Generated [%d] test cases in total', num_testcases)
