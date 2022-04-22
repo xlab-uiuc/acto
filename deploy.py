@@ -6,9 +6,10 @@ import json
 import exception
 import time
 import logging
+import os
 from kubernetes.client import AppsV1Api
 from k8s_helper import get_deployment_available_status, get_stateful_set_available_status, get_yaml_existing_namespace
-
+from time import sleep
 CONST = CONST()
 
 
@@ -16,7 +17,7 @@ CONST = CONST()
 class DeployMethod(Enum):
     HELM = auto()
     YAML = auto()
-
+    KUSTOMIZE = auto()
 
 class Deploy:
 
@@ -26,6 +27,7 @@ class Deploy:
         self.console = Console()
         self.deploy_method = deploy_method
         self.appsV1api = AppsV1Api()
+        self.wait = 60 # sec
 
     def deploy(self, context):
         # XXX: context param is temporary, need to figure out why rabbitmq complains about namespace
@@ -39,6 +41,8 @@ class Deploy:
             return Helm(self.deploy_method, self.path, self.init_yaml)
         elif self.deploy_method is DeployMethod.YAML:
             return Yaml(self.deploy_method, self.path, self.init_yaml)
+        elif self.deploy_method is DeployMethod.KUSTOMIZE:
+            return Kustomize(self.deploy_method, self.path, self.init_yaml)
         else:
             raise exception.UnknownDeployMethodError
 
@@ -61,6 +65,9 @@ class Helm(Deploy):
                 namespace=CONST.ACTO_NAMESPACE)
 
         self.check_status()
+
+        # TODO: Return True if deploy successfully        
+        return True
 
     def check_status(self):
         helm_ls_result = sh.helm("ls", o="json", all_namespaces=True, all=True)
@@ -94,6 +101,9 @@ class Yaml(Deploy):
             sh.kubectl("apply", filename=self.init_yaml, namespace=namespace)
         sh.kubectl("apply", filename=self.path, namespace=namespace)
         super().check_status()
+
+        # TODO: Return True if deploy successfully 
+        return True
 
     # TODO: Do we need to check operator's status?
     # Even if the operator gets ready after the custom resource is created,
@@ -131,6 +141,26 @@ class Yaml(Deploy):
     #     else:
     #         return True
 
+class Kustomize(Deploy):
+
+    def deploy(self, context):
+        try:
+            # TODO: We need to remove hardcoded namespace.
+            namespace = "cass-operator"
+            context['namespace'] = namespace
+            if self.init_yaml:
+                sh.kubectl("apply", filename=self.init_yaml)
+            sleep(self.wait)
+            sh.kubectl("apply", "--force-conflicts", "--server-side",  "-k", self.path)
+            super().check_status()
+            return True
+        except Exception:
+            logging.info("deploy() failed. Double wait = " + str(self.wait))
+            self.wait = self.wait * 2
+            if self.wait > CONST.WAIT_LIMIT:
+                logging.info("Quit")
+                quit()
+            return False 
 
 # Example:
 # if __name__ == '__main__':
