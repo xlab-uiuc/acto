@@ -150,8 +150,8 @@ class Kustomize(Deploy):
             if self.init_yaml:
                 sh.kubectl("apply", filename=self.init_yaml)
             sleep(self.wait)
-            # sh.kubectl("apply", "--force-conflicts", "--server-side",  "-k", self.path)
-            os.system("kubectl apply --force-conflicts --server-side -k 'github.com/k8ssandra/cass-operator/config/deployments/cluster?ref=v1.10.3'")
+            sh.kubectl("apply", "--force-conflicts", "--server-side",  "-k", self.path)
+            # os.system("kubectl apply --force-conflicts --server-side -k 'github.com/k8ssandra/cass-operator/config/deployments/cluster?ref=v1.10.3'")
             super().check_status()
             return True
         except Exception:
