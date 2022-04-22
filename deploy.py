@@ -145,6 +145,7 @@ class Kustomize(Deploy):
 
     def deploy(self, context):
         try:
+            # TODO: We need to remove hardcoded namespace.
             namespace = "cass-operator"
             context['namespace'] = namespace
             if self.init_yaml:
