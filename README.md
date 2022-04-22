@@ -53,6 +53,9 @@ python3 acto.py --candidates data/cass-operator/candidates.yaml \
                 --duration 1
 ```
 
+cass-operator (using kustomize)
+python3 acto.py --candidates data/cass-operator/candidates.yaml --seed data/cass-operator/cr.yaml --kustomize "github.com/k8ssandra/cass-operator/config/deployments/cluster" --init data/cass-operator/init.yaml --duration 24 --custom-fields rabbitmq  --context data/cass-operator/context.json --preload-images k8ssandra/cass-management-api:3.11.7 k8ssandra/cass-operator:latest k8ssandra/system-logger:latest
+
 zookeeper-operator (using helm)  
 `python3 acto.py --candidates data/zookeeper-operator/candidates.yaml --seed data/zookeeper-operator/cr.yaml --helm data/zookeeper-operator/zookeeper-operator --duration 1 --crd-name=zookeeperclusters.zookeeper.pravega.io`
 
