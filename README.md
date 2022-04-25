@@ -29,8 +29,8 @@ python3 acto.py \
     --dryrun DRYRUN                             Only generate test cases without executing them
 ```
 
-Example:  
-To run the test on the rabbitmq-operator:  
+Example:   
+**rabbitmq-operator**:  
 ```console
 python3 acto.py --candidates data/rabbitmq-operator/candidates.yaml \
                 --seed data/rabbitmq-operator/cr.yaml \
@@ -41,7 +41,7 @@ python3 acto.py --candidates data/rabbitmq-operator/candidates.yaml \
                 --duration 1
 ```
 
-cass-operator (using kustomize)   
+**cass-operator** (using kustomize)   
 ```console
 python3 acto.py --candidates data/cass-operator/candidates.yaml \
                 --seed data/cass-operator/cr.yaml \
@@ -66,7 +66,7 @@ nifikop-operator (using helm)
 xtradb-operator (using helm)
 `python3 acto.py --candidates data/xtradb-operator/candidates.yaml --seed data/xtradb-operator/cr.yaml --helm data/xtradb-operator/xtradb-operator  --duration 1 --crd-name=perconaxtradbclusters.pxc.percona.com`
 
-redis-operator
+**redis-operator**
 ```console
 python3 acto.py --seed data/redis-operator/cr.yaml \
                 --operator data/redis-operator/all-redis-operator-resources.yaml \
@@ -82,8 +82,9 @@ python3 acto.py --seed data/redis-operator/cr.yaml \
 Acto aims to automate the E2E testing as much as possible to minimize users' labor.
 
 Currently, porting operators still requires some manual effort, we need:
-1. The operator deployment yaml file to deploy the operator, the yaml file also needs to contain all the necessary prerequisites to deploy the operator, e.g. CRD, namespace creation, RBAC, etc.
-2. A candidates file specifying possible values for some parameters. The candidates file's format is very similar to a CR, except you replace the values with another field `candidates` and specify a list of values under `candidates`. Example:
+1. A way to deploy the operator, the deployment method needs to handle all the necessary prerequisites to deploy the operator, e.g. CRD, namespace creation, RBAC, etc. Current we support three deploy methods: `yaml`, `helm`, and `kustomize`. For example, rabbitmq-operator uses `yaml` for deployment, and the [example is shown here](data/rabbitmq-operator/operator.yaml)
+2. A seed CR yaml serving as the initial cr input. This can be any valid CR for your application. [Example](data/rabbitmq-operator/cr.yaml)
+3. (Optional) (Not yet supported)A candidates file specifying possible values for some parameters. The candidates file's format is very similar to a CR, except you replace the values with another field `candidates` and specify a list of values under `candidates`. Example:
     ```yaml
     image:
         candidates:
@@ -93,6 +94,3 @@ Currently, porting operators still requires some manual effort, we need:
         - null
     ```
     A complete example for rabbitmq-operator is [here](data/rabbitmq-operator/candidates.yaml)
-
-    We aim to remove this requirement for a candidates file in the future.
-3. A seed CR yaml serving as the initial cr input. This can be any valid CR for your application. [Example](data/rabbitmq-operator/cr.yaml)
