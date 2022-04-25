@@ -5,6 +5,7 @@ metadata:
 spec:
   sentinel:
     replicas: 2
+    imagePullPolicy: IfNotPresent
     affinity:
       podAntiAffinity:
         preferredDuringSchedulingIgnoredDuringExecution:
@@ -22,6 +23,7 @@ spec:
       - "failover-timeout 3000"
   redis:
     replicas: 2
+    imagePullPolicy: IfNotPresent
     customConfig:
       - "maxclients 100"
       - "hz 50"
