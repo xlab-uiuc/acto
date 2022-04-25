@@ -1,5 +1,6 @@
 import argparse
 import os
+import sys
 import kubernetes
 import yaml
 import time
@@ -11,6 +12,7 @@ import signal
 import logging
 from deepdiff import DeepDiff
 import importlib
+import traceback
 
 from common import *
 import check_result
@@ -24,6 +26,7 @@ test_summary = {}
 workdir_path = 'testrun-%s' % datetime.now().strftime('%Y-%m-%d-%H-%M')
 
 CONST = CONST()
+
 
 def construct_kind_cluster(k8s_version: str):
     '''Delete kind cluster then create a new one
@@ -45,7 +48,8 @@ def construct_kind_cluster(k8s_version: str):
             kind_config_dict['nodes'].append({'role': 'control-plane'})
         yaml.dump(kind_config_dict, kind_config_file)
 
-    os.system('kind create cluster --config %s --image %s' % (kind_config_path, f"kindest/node:v{k8s_version}"))
+    os.system('kind create cluster --config %s --image %s' %
+              (kind_config_path, f"kindest/node:v{k8s_version}"))
 
     kubernetes.config.load_kube_config()
 
@@ -171,7 +175,7 @@ class Acto:
                 deployed = self.deploy.deploy(self.context)
                 if deployed:
                     break
-                
+
             process_crd(self.context, self.crd_name)
             with open(context_file, 'w') as context_fout:
                 json.dump(self.context, context_fout)
@@ -197,7 +201,7 @@ class Acto:
             preload_images(self.preload_images)
             deployed = self.deploy.deploy(self.context)
             if not deployed:
-                logging.info('Not deployed. Try again!') 
+                logging.info('Not deployed. Try again!')
                 continue
 
             add_acto_label(self.context)
@@ -250,7 +254,7 @@ class Acto:
         self.context['current_dir_path'] = trial_dir
 
         checker = check_result.Checker(self.context, trial_dir)
-        
+
         curr_input = self.input_model.get_seed_input()
 
         generation = 0
@@ -305,6 +309,22 @@ class Acto:
                 quit()
 
         return None, generation
+
+
+def handle_excepthook(type, message, stack):
+    '''Custom exception handler
+    
+    Print detailed stack information with local variables
+    '''
+    if issubclass(type, KeyboardInterrupt):
+        sys.__excepthook__(type, message, stack)
+        return
+
+    stack_info = traceback.StackSummary.extract(traceback.walk_tb(stack),
+                                                capture_locals=True).format()
+    logging.critical(f'An exception occured: {message}.')
+    logging.critical(stack_info)
+    return
 
 
 if __name__ == '__main__':
@@ -374,6 +394,9 @@ if __name__ == '__main__':
     )
     logging.getLogger("kubernetes").setLevel(logging.ERROR)
     logging.getLogger("sh").setLevel(logging.ERROR)
+
+    # Register custom exception hook
+    sys.excepthook = handle_excepthook
 
     # We don't need this now, but it would be nice to support this in the future
     # candidate_dict = construct_candidate_from_yaml(args.candidates)
