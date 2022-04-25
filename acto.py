@@ -315,7 +315,7 @@ if __name__ == '__main__':
     parser.add_argument('--candidates',
                         '-c',
                         dest='candidates',
-                        required=True,
+                        required=False,
                         help="yaml file to specify candidates for parameters")
     parser.add_argument('--seed',
                         '-s',
@@ -375,8 +375,9 @@ if __name__ == '__main__':
     logging.getLogger("kubernetes").setLevel(logging.ERROR)
     logging.getLogger("sh").setLevel(logging.ERROR)
 
-    candidate_dict = construct_candidate_from_yaml(args.candidates)
-    logging.debug(candidate_dict)
+    # We don't need this now, but it would be nice to support this in the future
+    # candidate_dict = construct_candidate_from_yaml(args.candidates)
+    # logging.debug(candidate_dict)
 
     application_cr: dict
     try:

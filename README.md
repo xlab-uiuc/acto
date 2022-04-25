@@ -66,6 +66,17 @@ nifikop-operator (using helm)
 xtradb-operator (using helm)
 `python3 acto.py --candidates data/xtradb-operator/candidates.yaml --seed data/xtradb-operator/cr.yaml --helm data/xtradb-operator/xtradb-operator  --duration 1 --crd-name=perconaxtradbclusters.pxc.percona.com`
 
+redis-operator
+```console
+python3 acto.py --seed data/redis-operator/cr.yaml \
+                --operator data/redis-operator/all-redis-operator-resources.yaml \
+                --init data/redis-operator/databases.spotahome.com_redisfailovers.yaml \
+                --preload-images quay.io/spotahome/redis-operator:v1.1.0 redis:6.2.6-alpine \
+                --context data/redis-operator/context.json \
+                --custom-fields data.redis-operator.prune \
+                --duration 1
+```
+
 
 ## Porting operators
 Acto aims to automate the E2E testing as much as possible to minimize users' labor.
