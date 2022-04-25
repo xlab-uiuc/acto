@@ -8,7 +8,7 @@ import time
 import logging
 import os
 from kubernetes.client import AppsV1Api
-from k8s_helper import get_deployment_available_status, get_stateful_set_available_status, get_yaml_existing_namespace
+from k8s_helper import get_yaml_existing_namespace, create_namespace
 from time import sleep
 CONST = CONST()
 
@@ -97,6 +97,9 @@ class Yaml(Deploy):
         namespace = get_yaml_existing_namespace(
             self.path) or CONST.ACTO_NAMESPACE
         context['namespace'] = namespace
+        ret = create_namespace(namespace)
+        if ret == None:
+            logging.error('Failed to create namespace')
         if self.init_yaml:
             sh.kubectl("apply", filename=self.init_yaml, namespace=namespace)
         sh.kubectl("apply", filename=self.path, namespace=namespace)

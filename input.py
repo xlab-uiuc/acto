@@ -6,7 +6,7 @@ import random
 from typing import Tuple
 from deepdiff import DeepDiff
 
-from schema import extract_schema, BaseSchema
+from schema import extract_schema, BaseSchema, ObjectSchema
 from value_with_schema import attach_schema_to_value
 from common import random_string
 
@@ -17,6 +17,25 @@ class CustomField:
         self.path = path
         self.custom_schema = schema
 
+class CopiedOverField(CustomField):
+
+    class PruneChildrenSchema(ObjectSchema):
+
+        def __init__(self, path: list, schema: dict) -> None:
+            super().__init__(path, schema)
+
+        def __init__(self, schema_obj: BaseSchema) -> None:
+            super().__init__(schema_obj.path, schema_obj.raw_schema)
+
+        def get_all_schemas(self) -> list:
+            '''Return all the subschemas as a list'''
+            return [self]
+
+        def __str__(self) -> str:
+            return 'Children Pruned'
+
+    def __init__(self, path) -> None:
+        super().__init__(path, self.PruneChildrenSchema)
 
 class InputModel:
 
@@ -69,7 +88,7 @@ class InputModel:
         num_testcases = 0
         for schema in schema_list:
             testcases = schema.test_cases()
-            path = json.dumps(schema.path).replace('\"ITEM\"', '0').replace('\"additional_properties\"', random_string(5))
+            path = json.dumps(schema.path).replace('\"ITEM\"', '0').replace('additional_properties', random_string(5))
             ret[path] = testcases
             num_testcases += len(testcases)
         logging.info('Parsed [%d] fields from schema', num_fields)
@@ -96,6 +115,7 @@ class InputModel:
         if len(self.test_plan[field]) == 0:
             del self.test_plan[field]
         test_case = self.test_plan[field][-1]
+        logging.debug('field: %s' % field)
         curr = self.current_input.get_value_by_path(json.loads(field))
         logging.info('Selected field %s Previous value %s' % (field, curr))
         logging.info('Selected test [%s]' % test_case)

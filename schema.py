@@ -34,6 +34,10 @@ class BaseSchema:
     def test_cases(self):
         return None
 
+    @abstractmethod
+    def get_all_schemas(self):
+        return None
+
     def delete(self, prev):
         return None
 
@@ -682,14 +686,14 @@ def extract_schema(path: list, schema: dict) -> object:
 
 
 if __name__ == '__main__':
-    with open('data/rabbitmq-operator/operator.yaml', 'r') as operator_yaml:
+    with open('data/redis-operator/databases.spotahome.com_redisfailovers.yaml', 'r') as operator_yaml:
         parsed_operator_documents = yaml.load_all(operator_yaml,
                                                   Loader=yaml.FullLoader)
         for document in parsed_operator_documents:
             if document['kind'] == 'CustomResourceDefinition':
                 spec_schema = ObjectSchema(
                     ['root'], document['spec']['versions'][0]['schema']
-                    ['openAPIV3Schema']['properties']['spec'])
+                    ['openAPIV3Schema']['properties']['spec']['properties']['redis'])
                 print(str(spec_schema))
                 print(spec_schema.gen())
                 print(spec_schema.num_fields())

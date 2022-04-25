@@ -1,6 +1,6 @@
 import tempfile
 from kubernetes.client.models import V1Deployment, V1StatefulSet
-from kubernetes.client import AppsV1Api
+import kubernetes.client
 from typing import List, Optional, Tuple
 import yaml
 from constant import CONST
@@ -8,8 +8,7 @@ from constant import CONST
 CONST = CONST()
 
 
-def get_deployment_available_status(
-        deployment: V1Deployment) -> bool:
+def get_deployment_available_status(deployment: V1Deployment) -> bool:
     '''Get availability status from deployment condition
 
     Args:
@@ -27,8 +26,7 @@ def get_deployment_available_status(
     return False
 
 
-def get_stateful_set_available_status(
-        stateful_set: V1StatefulSet) -> bool:
+def get_stateful_set_available_status(stateful_set: V1StatefulSet) -> bool:
     '''Get availability status from stateful set condition
 
     Args:
@@ -52,7 +50,7 @@ def get_namespaced_resources() -> Tuple[List[str], List[str]]:
     '''
     namespaced_resources = []
     non_namespaced_resources = []
-    appv1Api = AppsV1Api()
+    appv1Api = kubernetes.client.AppsV1Api()
     for resource in appv1Api.get_api_resources().resources:
         if resource.namespaced:
             namespaced_resources.append(resource.kind)
@@ -104,3 +102,11 @@ def get_yaml_existing_namespace(fn: str) -> Optional[str]:
             if 'metadata' in document and 'namespace' in document['metadata']:
                 return document['metadata']['namespace']
     return None
+
+
+def create_namespace(name: str) -> kubernetes.client.V1Namespace:
+    corev1Api = kubernetes.client.CoreV1Api()
+    namespace = corev1Api.create_namespace(
+        kubernetes.client.V1Namespace(metadata=kubernetes.client.V1ObjectMeta(
+            name=name)))
+    return namespace

@@ -27,6 +27,7 @@ class Checker:
         self.resource_methods = {
             'pod': self.corev1Api.list_namespaced_pod,
             'stateful_set': self.appv1Api.list_namespaced_stateful_set,
+            'deployment': self.appv1Api.list_namespaced_deployment,
             'config_map': self.corev1Api.list_namespaced_config_map,
             'service': self.corev1Api.list_namespaced_service,
         }
