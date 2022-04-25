@@ -17,7 +17,12 @@ class CustomField:
         self.path = path
         self.custom_schema = schema
 
+
 class CopiedOverField(CustomField):
+    '''For pruning the fields that are simply copied over to other resources
+    
+    All the subfields of this field will be pruned
+    '''
 
     class PruneChildrenSchema(ObjectSchema):
 
@@ -37,6 +42,7 @@ class CopiedOverField(CustomField):
     def __init__(self, path) -> None:
         super().__init__(path, self.PruneChildrenSchema)
 
+
 class InputModel:
 
     def __init__(self, crd: dict, mount: list = None) -> None:
@@ -45,28 +51,31 @@ class InputModel:
             [], crd['spec']['versions'][0]['schema']['openAPIV3Schema'])
         self.seed_input = None
         self.current_input = None
-        self.previous_input = None
+        self.previous_input = None  # Previous input, for revert
         self.test_plan = None
+        self.discarded_tests = {}  # List of test cases failed to run
 
         self.curr_field = None  # Bookkeeping in case we are running setup
-                                # so that we can run the test case itself right after the setup
+        # so that we can run the test case itself right after the setup
 
     def initialize(self, initial_value: dict):
         self.seed_input = attach_schema_to_value(initial_value,
                                                  self.root_schema)
         self.current_input = attach_schema_to_value(initial_value,
-                                                 self.root_schema)
+                                                    self.root_schema)
         self.previous_input = attach_schema_to_value(initial_value,
-                                                 self.root_schema)
+                                                     self.root_schema)
 
     def is_empty(self):
+        '''if test plan is empty'''
         return len(self.test_plan) == 0
 
     def reset_input(self):
+        '''Reset the current input back to seed'''
         self.current_input = attach_schema_to_value(self.seed_input.raw_value(),
-                                                 self.root_schema)
-        self.previous_input = attach_schema_to_value(self.seed_input.raw_value(),
-                                                 self.root_schema)
+                                                    self.root_schema)
+        self.previous_input = attach_schema_to_value(
+            self.seed_input.raw_value(), self.root_schema)
 
     def get_seed_input(self) -> dict:
         '''Get the raw value of the seed input'''
@@ -79,6 +88,9 @@ class InputModel:
         '''Get all the schemas as a list'''
         return self.root_schema.get_all_schemas()
 
+    def get_discarded_tests(self) -> dict:
+        return self.discarded_tests
+
     def generate_test_plan(self):
         '''Generate test plan based on CRD'''
         ret = {}
@@ -88,7 +100,8 @@ class InputModel:
         num_testcases = 0
         for schema in schema_list:
             testcases = schema.test_cases()
-            path = json.dumps(schema.path).replace('\"ITEM\"', '0').replace('additional_properties', random_string(5))
+            path = json.dumps(schema.path).replace('\"ITEM\"', '0').replace(
+                'additional_properties', random_string(5))
             ret[path] = testcases
             num_testcases += len(testcases)
         logging.info('Parsed [%d] fields from schema', num_fields)
@@ -106,7 +119,8 @@ class InputModel:
         Returns:
             Tuple of (new value, if this is a setup)
         '''
-        logging.info('Progress [%d] cases left' % sum([len(i) for i in self.test_plan.values()]))
+        logging.info('Progress [%d] cases left' %
+                     sum([len(i) for i in self.test_plan.values()]))
         if self.curr_field != None:
             field = self.curr_field
         else:
@@ -119,6 +133,9 @@ class InputModel:
         curr = self.current_input.get_value_by_path(json.loads(field))
         logging.info('Selected field %s Previous value %s' % (field, curr))
         logging.info('Selected test [%s]' % test_case)
+
+        # run test if precondition satisfies
+        # run setup if precondition fails
         if test_case.test_precondition(curr):
             setup = False
             next_value = test_case.mutator(curr)
@@ -158,8 +175,15 @@ class InputModel:
     def discard_test_case(self):
         '''Discard the test case that was selected'''
         discarded_case = self.test_plan[self.curr_field].pop()
+
+        # Log it to discarded_tests
+        if self.curr_field in self.discarded_tests:
+            self.discarded_tests.append(discarded_case)
+        else:
+            self.discarded_tests[self.curr_field] = [discarded_case]
         logging.info('Setup failed due to invalid, discard this testcase %s' %
                      discarded_case)
+
         if len(self.test_plan[self.curr_field]) == 0:
             del self.test_plan[self.curr_field]
         self.curr_field = None

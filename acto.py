@@ -238,6 +238,9 @@ class Acto:
                 logging.info('Test finished')
                 break
 
+        logging.info('Failed test cases: %s' %
+                     json.dumps(self.input_model.get_discarded_tests))
+
     def run_trial(self,
                   trial_num: int,
                   num_mutation: int = 10) -> Tuple[ErrorResult, int]:
