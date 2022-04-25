@@ -17,10 +17,11 @@ import traceback
 from common import *
 import check_result
 from exception import UnknownDeployMethodError
-from preprocess import add_acto_label, preload_images, process_crd
+from preprocess import add_acto_label, preload_images, process_crd, update_preload_images
 from input import InputModel
 from deploy import Deploy, DeployMethod
 from constant import CONST
+
 
 test_summary = {}
 workdir_path = 'testrun-%s' % datetime.now().strftime('%Y-%m-%d-%H-%M')
@@ -172,7 +173,7 @@ class Acto:
             while True:
                 construct_kind_cluster(CONST.K8S_VERSION)
                 preload_images(self.preload_images)
-                deployed = self.deploy.deploy(self.context)
+                deployed = self.deploy.deploy_with_retry(self.context)
                 if deployed:
                     break
 
@@ -197,9 +198,10 @@ class Acto:
     def run(self):
         while True:
             trial_start_time = time.time()
+            self.preload_images = update_preload_images(self.preload_images, self.context)
             construct_kind_cluster(CONST.K8S_VERSION)
             preload_images(self.preload_images)
-            deployed = self.deploy.deploy(self.context)
+            deployed = self.deploy.deploy_with_retry(self.context)
             if not deployed:
                 logging.info('Not deployed. Try again!')
                 continue
@@ -262,6 +264,7 @@ class Acto:
 
         generation = 0
         while generation < num_mutation:
+            self.preload_images = update_preload_images(self.preload_images, self.context)
             setup = False
             if generation != 0:
                 curr_input, setup = self.input_model.next_test()
