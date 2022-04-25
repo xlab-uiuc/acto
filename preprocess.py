@@ -5,6 +5,7 @@ from typing import List, Optional
 import os
 import json
 import schema
+import sh
 
 
 def preload_images(images: list):
@@ -22,6 +23,17 @@ def preload_images(images: list):
             logging.info('Image not present local, pull and retry')
             os.system('docker pull %s' % image)
             p = subprocess.run(['kind', 'load', 'docker-image', image])
+
+
+def update_preload_images(preload_images: List[str], context: dict):
+    """Get used images from pod
+    """
+    namespace = context.get('namespace', '')
+    if not namespace:
+        return preload_images
+    images = sh.kubectl("get", "pods", namespace=namespace, o='jsonpath="{.items[*].spec.containers[*].image}"').strip().replace('"', '').replace("\\", "")
+    new_images = list(set(preload_images + images.split(" ")))
+    return new_images
 
 
 def process_crd(context: dict, crd_name: Optional[str] = None):
