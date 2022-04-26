@@ -96,37 +96,6 @@ def construct_candidate_from_yaml(yaml_path: str) -> dict:
         return result
 
 
-def elect_mutation_parameter(candidates_dict: dict):
-    '''method for electing the parameter to mutate and which value to pick
-    
-    Args:
-        candidates_dict: flat dictionary specifying list of valid values for each parameter
-
-    Returns:
-        (path, value)
-    '''
-    random_entry = random.choice(list(candidates_dict.items()))
-    return random_entry[0], random.choice(random_entry[1])
-
-
-def mutate_application_spec(current_spec: dict, candidates: dict):
-    '''mutate one of the fields in current spec according to candidates dict
-    
-    Args:
-        current_spec: last spec that fed to operator
-        candidates: flat dictionary specifying list of valid values for each parameter
-    '''
-    path, v = elect_mutation_parameter(candidates)
-    logging.debug('Elected parameter [%s]' % path)
-    logging.debug('Elected value: %s' % v)
-    current_node = current_spec
-    key_list = [x for x in path.split('.') if x]
-    for key in key_list[:-1]:
-        current_node = current_node[key]
-    current_node[key_list[-1]] = v
-    return current_spec
-
-
 def prune_noneffective_change(diff):
     '''
     This helper function handles the corner case where an item is added to
@@ -419,6 +388,8 @@ if __name__ == '__main__':
     # We don't need this now, but it would be nice to support this in the future
     # candidate_dict = construct_candidate_from_yaml(args.candidates)
     # logging.debug(candidate_dict)
+
+    logging.info('Acto started with [%s]' % sys.argv)
 
     # Preload frequently used images to amid ImagePullBackOff
     if args.preload_images:
