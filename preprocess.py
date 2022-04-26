@@ -25,15 +25,24 @@ def preload_images(images: list):
             p = subprocess.run(['kind', 'load', 'docker-image', image])
 
 
-def update_preload_images(preload_images: List[str], context: dict):
+def update_preload_images(context: dict):
     """Get used images from pod
     """
     namespace = context.get('namespace', '')
     if not namespace:
-        return preload_images
-    images = sh.kubectl("get", "pods", namespace=namespace, o='jsonpath="{.items[*].spec.containers[*].image}"').strip().replace('"', '').replace("\\", "")
-    new_images = list(set(preload_images + images.split(" ")))
-    return new_images
+        return
+
+    worker_list = ['kind-worker', 'kind-worker2', 'kind-worker3']
+    for worker in worker_list:
+        p = subprocess.run(
+            ['docker', 'exec', 'kind-worker', 'crictl', 'images'],
+            capture_output=True,
+            text=True)
+        output = p.stdout.strip()
+        for line in output.split('\n')[1:]:
+            items = line.split()
+            image = '%s:%s' % (items[0], items[1])
+            context['preload_images'].add(image)
 
 
 def process_crd(context: dict, crd_name: Optional[str] = None):
@@ -73,12 +82,9 @@ def process_crd(context: dict, crd_name: Optional[str] = None):
         crd_obj = json.loads(crd_result.stdout)
         spec: models.V1CustomResourceDefinitionSpec = crd.spec
         crd_data = {
-            'group':
-                spec.group,
-            'plural':
-                spec.names.plural,
-            'version':
-                spec.versions[0].name,  # TODO: Handle multiple versions
+            'group': spec.group,
+            'plural': spec.names.plural,
+            'version': spec.versions[0].name,  # TODO: Handle multiple versions
             'body': crd_obj
         }
         context['crd'] = crd_data

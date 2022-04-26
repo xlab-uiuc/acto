@@ -35,7 +35,7 @@ Example:
 python3 acto.py --candidates data/rabbitmq-operator/candidates.yaml \
                 --seed data/rabbitmq-operator/cr.yaml \
                 --operator data/rabbitmq-operator/operator.yaml \
-                --custom-fields rabbitmq \
+                --custom-fields data.rabbitmq-operator.prune \
                 --preload-images rabbitmqoperator/cluster-operator:1.10.0 rabbitmq:3.8.21-management \
                 --context data/rabbitmq-operator/context.json \
                 --duration 1
@@ -47,7 +47,7 @@ python3 acto.py --candidates data/cass-operator/candidates.yaml \
                 --seed data/cass-operator/cr.yaml \
                 --kustomize "github.com/k8ssandra/cass-operator/config/deployments/cluster?ref=v1.10.3" \
                 --init data/cass-operator/init.yaml \
-                --custom-fields cass-operator \
+                --custom-fields data.cass-operator.prune \
                 --preload-images k8ssandra/cass-operator:v1.10.3 k8ssandra/cass-management-api:3.11.7 k8ssandra/system-logger:v1.10.3 datastax/cass-config-builder:1.0.4-ubi7 quay.io/jetstack/cert-manager-cainjector:v1.7.1 quay.io/jetstack/cert-manager-controller:v1.7.1 quay.io/jetstack/cert-manager-webhook:v1.7.1 docker.io/rancher/local-path-provisioner:v0.0.14 docker.io/kindest/kindnetd:v20211122-a2c10462 \
                 --context data/cass-operator/context.json \
                 --crd-name cassandradatacenters.cassandra.datastax.com \
