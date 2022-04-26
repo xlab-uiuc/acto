@@ -211,7 +211,6 @@ class Acto:
     def run(self):
         while True:
             trial_start_time = time.time()
-            self.preload_images = update_preload_images(self.preload_images, self.context)
             construct_kind_cluster(CONST.K8S_VERSION)
             preload_images(self.context['preload_images'])
             deployed = self.deploy.deploy_with_retry(self.context)
@@ -277,7 +276,6 @@ class Acto:
 
         generation = 0
         while generation < num_mutation:
-            update_preload_images(self.context)
             setup = False
             if generation != 0:
                 curr_input, setup = self.input_model.next_test()

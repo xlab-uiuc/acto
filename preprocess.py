@@ -35,7 +35,7 @@ def update_preload_images(context: dict):
     worker_list = ['kind-worker', 'kind-worker2', 'kind-worker3']
     for worker in worker_list:
         p = subprocess.run(
-            ['docker', 'exec', 'kind-worker', 'crictl', 'images'],
+            ['docker', 'exec', worker, 'crictl', 'images'],
             capture_output=True,
             text=True)
         output = p.stdout.strip()
