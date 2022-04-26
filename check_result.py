@@ -16,9 +16,9 @@ import acto_timer
 
 class Checker:
 
-    def __init__(self, context: dict, cur_path: str) -> None:
+    def __init__(self, context: dict) -> None:
         self.context = context
-        self.cur_path = cur_path
+        self.cur_path = context['current_dir_path']
         self.corev1Api = kubernetes.client.CoreV1Api()
         self.appv1Api = kubernetes.client.AppsV1Api()
         self.customObjectApi = kubernetes.client.CustomObjectsApi()
@@ -266,6 +266,27 @@ class Checker:
                 continue
 
         return PassResult()
+
+    def run(self, cmd: list):
+        '''Simply run the cmd without checking'''
+
+        cli_result = subprocess.run(cmd, capture_output=True, text=True)
+
+        if cli_result.stdout.find('error') != -1 or cli_result.stderr.find(
+                'error') != -1 or cli_result.stderr.find('invalid') != -1:
+            logging.error('Invalid input, reject mutation')
+            logging.error('STDOUT: ' + cli_result.stdout)
+            logging.error('STDERR: ' + cli_result.stderr)
+            return InvalidInputResult()
+
+        if cli_result.stdout.find('unchanged') != -1 or cli_result.stderr.find(
+                'unchanged') != -1:
+            logging.error('CR unchanged, continue')
+            return UnchangedInputResult()
+        logging.debug('STDOUT: ' + cli_result.stdout)
+        logging.debug('STDERR: ' + cli_result.stderr)
+
+        self.wait_for_system_converge()
 
     def wait_for_system_converge(self, timeout=600):
         '''This function blocks until the system converges

@@ -173,6 +173,8 @@ class ActoEncoder(json.JSONEncoder):
             return obj.isoformat()
         elif isinstance(obj, TestCase):
             return obj.__str__()
+        elif isinstance(obj, set):
+            return list(obj)
         return json.JSONEncoder.default(self, obj)
 
 

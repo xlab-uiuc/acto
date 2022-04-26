@@ -147,39 +147,52 @@ def timeout_handler(sig, frame):
 
 class Acto:
 
-    def __init__(self, seed, deploy, crd_name, preload_images_,
+    def __init__(self, seed_file, deploy, crd_name, preload_images_,
                  custom_fields_src, context_file, dryrun) -> None:
-        self.seed = seed
+        try:
+            with open(seed_file, 'r') as cr_file:
+                self.seed = yaml.load(cr_file, Loader=yaml.FullLoader)
+        except:
+            logging.error('Failed to read seed yaml, aborting')
         self.deploy = deploy
         self.crd_name = crd_name
         self.dryrun = dryrun
-        self.preload_images = []
-        if preload_images_:
-            self.preload_images.extend(preload_images_)
         self.curr_trial = 0
 
         if os.path.exists(context_file):
             with open(context_file, 'r') as context_fin:
                 self.context = json.load(context_fin)
+                self.context['preload_images'] = set(self.context['preload_images'])
         else:
-            # Some information needs to be fetched at runtime
+            # Run learning run to collect some information from runtime
+            logging.info('Starting learning run to collect information')
             self.context = {
                 'namespace': '',
-                'current_dir_path': '',
-                'crd': None
+                'current_dir_path': os.path.join(workdir_path, 'learn'),
+                'crd': None,
+                'preload_images': set()
             }
 
-            # Dummy run to automatically extract some information
             while True:
                 construct_kind_cluster(CONST.K8S_VERSION)
-                preload_images(self.preload_images)
                 deployed = self.deploy.deploy_with_retry(self.context)
                 if deployed:
                     break
+            checker = check_result.Checker(self.context)
+            cmd = [
+                'kubectl', 'apply', '-f', seed_file, '-n',
+                self.context['namespace']
+            ]
+            checker.run(cmd)
 
+            update_preload_images(self.context)
             process_crd(self.context, self.crd_name)
             with open(context_file, 'w') as context_fout:
-                json.dump(self.context, context_fout)
+                json.dump(self.context, context_fout, cls=ActoEncoder)
+
+        # Add additional preload images from arguments
+        if preload_images_ != None:
+            self.context['preload_images'].update(preload_images_)
 
         # Apply custom fields
         self.input_model = InputModel(self.context['crd']['body'])
@@ -200,7 +213,7 @@ class Acto:
             trial_start_time = time.time()
             self.preload_images = update_preload_images(self.preload_images, self.context)
             construct_kind_cluster(CONST.K8S_VERSION)
-            preload_images(self.preload_images)
+            preload_images(self.context['preload_images'])
             deployed = self.deploy.deploy_with_retry(self.context)
             if not deployed:
                 logging.info('Not deployed. Try again!')
@@ -258,13 +271,13 @@ class Acto:
         os.makedirs(trial_dir, exist_ok=True)
         self.context['current_dir_path'] = trial_dir
 
-        checker = check_result.Checker(self.context, trial_dir)
+        checker = check_result.Checker(self.context)
 
         curr_input = self.input_model.get_seed_input()
 
         generation = 0
         while generation < num_mutation:
-            self.preload_images = update_preload_images(self.preload_images, self.context)
+            update_preload_images(self.context)
             setup = False
             if generation != 0:
                 curr_input, setup = self.input_model.next_test()
@@ -329,7 +342,8 @@ def handle_excepthook(type, message, stack):
     stack_info = traceback.StackSummary.extract(traceback.walk_tb(stack),
                                                 capture_locals=True).format()
     logging.critical(f'An exception occured: {message}.')
-    logging.critical(stack_info)
+    for i in stack_info:
+        logging.critical(i.encode().decode('unicode-escape'))
     return
 
 
@@ -408,14 +422,6 @@ if __name__ == '__main__':
     # candidate_dict = construct_candidate_from_yaml(args.candidates)
     # logging.debug(candidate_dict)
 
-    application_cr: dict
-    try:
-        with open(args.seed, 'r') as cr_file:
-            application_cr = yaml.load(cr_file, Loader=yaml.FullLoader)
-    except:
-        logging.error('Failed to read cr yaml, aborting')
-        quit()
-
     # Preload frequently used images to amid ImagePullBackOff
     if args.preload_images:
         logging.info('%s will be preloaded into Kind cluster',
@@ -439,6 +445,6 @@ if __name__ == '__main__':
     else:
         context_cache = args.context
 
-    acto = Acto(application_cr, deploy, args.crd_name, args.preload_images,
+    acto = Acto(args.seed, deploy, args.crd_name, args.preload_images,
                 args.custom_fields, context_cache, args.dryrun)
     acto.run()
