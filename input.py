@@ -178,7 +178,7 @@ class InputModel:
 
         # Log it to discarded_tests
         if self.curr_field in self.discarded_tests:
-            self.discarded_tests.append(discarded_case)
+            self.discarded_tests[self.curr_field].append(discarded_case)
         else:
             self.discarded_tests[self.curr_field] = [discarded_case]
         logging.info('Setup failed due to invalid, discard this testcase %s' %
