@@ -11,6 +11,7 @@ from jsonschema import validate
 from test_case import *
 from common import ActoEncoder, random_string
 
+
 class BaseSchema:
     '''Base class for schemas
     
@@ -354,8 +355,8 @@ class ObjectSchema(BaseSchema):
             ret.append(self.additional_properties)
         return ret
 
-    def gen(self, **kwargs):
-        # TODO: Use constraints: required, minProperties, maxProperties
+    def gen(self, minimum: bool = False, **kwargs) -> dict:
+        # TODO: Use constraints: minProperties, maxProperties
         if self.enum != None:
             return random.choice(self.enum)
         result = {}
@@ -367,17 +368,20 @@ class ObjectSchema(BaseSchema):
                     self.path)
                 return None
             key = random_string(5)
-            result[key] = self.additional_properties.gen()
+            result[key] = self.additional_properties.gen(minimum=minimum)
         else:
             for k, v in self.properties.items():
-                if random.uniform(0, 1) < 0.1 and k not in self.required:
-                    # 10% of the chance this child will be null
-                    result[k] = None
+                if minimum and k in self.required:
+                    result[k] = v.gen(minimum=True)
                 else:
-                    result[k] = v.gen()
+                    if random.uniform(0, 1) < 0.1 and k not in self.required:
+                        # 10% of the chance this child will be null
+                        result[k] = None
+                    else:
+                        result[k] = v.gen(minimum=minimum)
         return result
 
-    def num_cases(self):
+    def num_cases(self) -> int:
         num = 0
         for i in self.properties.values():
             num += i.num_cases()
@@ -445,7 +449,7 @@ class ArraySchema(BaseSchema):
         ret.extend(self.item_schema.get_all_schemas())
         return ret
 
-    def gen(self, **kwargs):
+    def gen(self, minimum: bool = False, **kwargs):
         if self.enum != None:
             return random.choice(self.enum)
         else:
@@ -455,7 +459,7 @@ class ArraySchema(BaseSchema):
             else:
                 num = random.randint(self.min_items, self.max_items)
             for _ in range(num):
-                result.append(self.item_schema.gen())
+                result.append(self.item_schema.gen(minimum=minimum))
             return result
 
     def num_cases(self):
@@ -552,9 +556,9 @@ class AnyOfSchema(BaseSchema):
     def get_possibilities(self):
         return self.possibilities
 
-    def gen(self, **kwargs):
+    def gen(self, minimum: bool = False, **kwargs):
         schema = random.choice(self.possibilities)
-        return schema.gen()
+        return schema.gen(minimum=minimum)
 
     def num_cases(self):
         num = 0
@@ -686,14 +690,16 @@ def extract_schema(path: list, schema: dict) -> object:
 
 
 if __name__ == '__main__':
-    with open('data/redis-operator/databases.spotahome.com_redisfailovers.yaml', 'r') as operator_yaml:
+    with open('data/redis-operator/databases.spotahome.com_redisfailovers.yaml',
+              'r') as operator_yaml:
         parsed_operator_documents = yaml.load_all(operator_yaml,
                                                   Loader=yaml.FullLoader)
         for document in parsed_operator_documents:
             if document['kind'] == 'CustomResourceDefinition':
                 spec_schema = ObjectSchema(
-                    ['root'], document['spec']['versions'][0]['schema']
-                    ['openAPIV3Schema']['properties']['spec']['properties']['redis'])
+                    ['root'],
+                    document['spec']['versions'][0]['schema']['openAPIV3Schema']
+                    ['properties']['spec']['properties']['redis'])
                 print(str(spec_schema))
                 print(spec_schema.gen())
                 print(spec_schema.num_fields())

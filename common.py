@@ -168,7 +168,7 @@ class ActoEncoder(json.JSONEncoder):
         if isinstance(obj, Diff):
             return obj.to_dict()
         elif isinstance(obj, NotPresent):
-            return None
+            return 'NotPresent'
         elif isinstance(obj, (datetime, date)):
             return obj.isoformat()
         elif isinstance(obj, TestCase):
