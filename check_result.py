@@ -9,6 +9,7 @@ from multiprocessing import Process, Queue
 import queue
 import copy
 import kubernetes
+from custom.compare import CompareMethods
 
 from common import *
 import acto_timer
@@ -24,6 +25,8 @@ class Checker:
         self.customObjectApi = kubernetes.client.CustomObjectsApi()
         self.resources = {}
 
+        self.compare = CompareMethods()
+        
         self.resource_methods = {
             'pod': self.corev1Api.list_namespaced_pod,
             'stateful_set': self.appv1Api.list_namespaced_stateful_set,
@@ -97,7 +100,7 @@ class Checker:
                 for match_delta in match_deltas:
                     logging.debug('Input delta [%s] matched with [%s]' %
                                   (delta.path, match_delta.path))
-                    if delta.prev != match_delta.prev or delta.curr != match_delta.curr:
+                    if self.compare(delta.prev, delta.curr, match_delta.prev, match_delta.curr):
                         logging.error(
                             'Matched delta inconsistent with input delta')
                         logging.error('Input delta: %s -> %s' %
@@ -115,9 +118,8 @@ class Checker:
                     for resource_delta_list in system_delta_without_cr.values():
                         for type_delta_list in resource_delta_list.values():
                             for state_delta in type_delta_list.values():
-                                if delta.prev == state_delta.prev \
-                                    and delta.curr == state_delta.curr:
-                                    found = True
+                                found = self.compare(delta.prev, delta.curr,\
+                                    state_delta.prev, state_delta.curr)
                     if found:
                         break
                     logging.error('Found no matching fields for input delta')
