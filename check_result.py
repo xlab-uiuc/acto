@@ -100,7 +100,7 @@ class Checker:
                 for match_delta in match_deltas:
                     logging.debug('Input delta [%s] matched with [%s]' %
                                   (delta.path, match_delta.path))
-                    if self.compare(delta.prev, delta.curr, match_delta.prev, match_delta.curr):
+                    if self.compare.compare(delta.prev, delta.curr, match_delta.prev, match_delta.curr):
                         logging.error(
                             'Matched delta inconsistent with input delta')
                         logging.error('Input delta: %s -> %s' %
@@ -118,8 +118,7 @@ class Checker:
                     for resource_delta_list in system_delta_without_cr.values():
                         for type_delta_list in resource_delta_list.values():
                             for state_delta in type_delta_list.values():
-                                found = self.compare(delta.prev, delta.curr,\
-                                    state_delta.prev, state_delta.curr)
+                                found = self.compare.compare(delta.prev, delta.curr, state_delta.prev, state_delta.curr)
                     if found:
                         break
                     logging.error('Found no matching fields for input delta')
