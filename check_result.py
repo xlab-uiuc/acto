@@ -176,20 +176,20 @@ class Checker:
 
         self.wait_for_system_converge()
 
-        result = self.check_resources(input_diff, generation)
-        if isinstance(result, ErrorResult):
-            logging.info('Report error from system state oracle')
-            return result
+        state_result = self.check_resources(input_diff, generation)
+        log_result = self.check_log(generation)
 
         # result = self.check_health()
         # if result != RunResult.passing:
         #     logging.info('Report error from system health oracle')
         #     return result
 
-        result = self.check_log(generation)
-        if isinstance(result, ErrorResult):
+        if isinstance(state_result, ErrorResult):
+            logging.info('Report error from system state oracle')
+            return state_result
+        elif isinstance(log_result, ErrorResult):
             logging.info('Report error from operator log oracle')
-            return result
+            return log_result
 
         return PassResult()
 

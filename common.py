@@ -126,7 +126,7 @@ def postprocess_diff(diff):
                     for i in path:
                         str_path += '[%s]' % i
                     diff_dict[category][str_path] = Diff(
-                        value, None,
+                        value, NotPresent,
                         change.path(output_format='list')+path)
             elif (isinstance(change.t2, dict) or isinstance(change.t2, list)) \
                     and (change.t1 == None or isinstance(change.t1, NotPresent)):
@@ -139,7 +139,7 @@ def postprocess_diff(diff):
                     for i in path:
                         str_path += '[%s]' % i
                     diff_dict[category][str_path] = Diff(
-                        None, value,
+                        NotPresent, value,
                         change.path(output_format='list')+path)
             else:
                 diff_dict[category][change.path()] = Diff(
