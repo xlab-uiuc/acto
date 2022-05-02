@@ -14,8 +14,8 @@ class Diff:
 
     def __init__(self, prev, curr, path) -> None:
         # self.path = path
-        self.prev = prev if not isinstance(prev, NotPresent) else None
-        self.curr = curr if not isinstance(curr, NotPresent) else None
+        self.prev = prev
+        self.curr = curr
         self.path = path
 
     def to_dict(self):
@@ -126,7 +126,7 @@ def postprocess_diff(diff):
                     for i in path:
                         str_path += '[%s]' % i
                     diff_dict[category][str_path] = Diff(
-                        value, NotPresent(),
+                        value, change.t2,
                         change.path(output_format='list')+path)
             elif (isinstance(change.t2, dict) or isinstance(change.t2, list)) \
                     and (change.t1 == None or isinstance(change.t1, NotPresent)):
@@ -139,7 +139,7 @@ def postprocess_diff(diff):
                     for i in path:
                         str_path += '[%s]' % i
                     diff_dict[category][str_path] = Diff(
-                        NotPresent(), value,
+                        change.t1, value,
                         change.path(output_format='list')+path)
             else:
                 diff_dict[category][change.path()] = Diff(
