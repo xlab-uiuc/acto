@@ -16,7 +16,7 @@ class CompareMethods:
             # if prev value is null or NotPresent, we only compare the current value
             # because operator could use default value
             for method in self:
-                if method(in_prev, in_curr, out_prev, out_curr):
+                if method(None, in_curr, None, out_curr):
                     return True
         else:
             for method in self:
