@@ -33,6 +33,7 @@ class Checker:
             'deployment': self.appv1Api.list_namespaced_deployment,
             'config_map': self.corev1Api.list_namespaced_config_map,
             'service': self.corev1Api.list_namespaced_service,
+            'pvc': self.corev1Api.list_namespaced_persistent_volume_claim,
         }
 
         for resource in self.resource_methods:
@@ -100,7 +101,7 @@ class Checker:
                 for match_delta in match_deltas:
                     logging.debug('Input delta [%s] matched with [%s]' %
                                   (delta.path, match_delta.path))
-                    if self.compare.compare(delta.prev, delta.curr, match_delta.prev, match_delta.curr):
+                    if not self.compare.compare(delta.prev, delta.curr, match_delta.prev, match_delta.curr):
                         logging.error(
                             'Matched delta inconsistent with input delta')
                         logging.error('Input delta: %s -> %s' %
@@ -118,7 +119,7 @@ class Checker:
                     for resource_delta_list in system_delta_without_cr.values():
                         for type_delta_list in resource_delta_list.values():
                             for state_delta in type_delta_list.values():
-                                found = self.compare.compare(delta.prev, delta.curr, state_delta.prev, state_delta.curr)
+                                found = not self.compare.compare(delta.prev, delta.curr, state_delta.prev, state_delta.curr)
                     if found:
                         break
                     logging.error('Found no matching fields for input delta')
@@ -244,6 +245,7 @@ class Checker:
         else:
             logging.error('Failed to find operator pod')
 
+        # TODO: get only new logs
         log = self.corev1Api.read_namespaced_pod_log(
             name=operator_pod_list[0].metadata.name,
             namespace=self.context['namespace'])
@@ -253,7 +255,9 @@ class Checker:
             fout.write(log)
 
         for line in log.split('\n'):
-            if 'error' in line:
+            if invalid_input_message(line):
+                return InvalidInputResult()
+            elif 'error' in line:
                 skip = False
                 for regex in EXCLUDE_ERROR_REGEX:
                     if re.search(regex, line):
@@ -295,7 +299,7 @@ class Checker:
         It starts a thread that watches for system events. 
         When a event occurs, the function is notified and it will reset the timer thread.
         '''
-
+        logging.info('Waiting for system to converge...')
         ret = self.corev1Api.list_namespaced_event(self.context['namespace'],
                                                    _preload_content=False,
                                                    watch=True)

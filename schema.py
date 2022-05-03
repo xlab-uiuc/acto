@@ -379,6 +379,8 @@ class ObjectSchema(BaseSchema):
                         result[k] = None
                     else:
                         result[k] = v.gen(minimum=minimum)
+        if 'enabled' in self.properties:
+            result['enabled'] = True
         return result
 
     def num_cases(self) -> int:
@@ -522,10 +524,10 @@ class ArraySchema(BaseSchema):
         return 'Array'
 
     def __getitem__(self, key):
-        return self.properties[key]
+        return self.item_schema
 
     def __setitem__(self, key, value):
-        self.properties[key] = value
+        self.item_schema = value
 
 
 class AnyOfSchema(BaseSchema):

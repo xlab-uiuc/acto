@@ -37,7 +37,8 @@ class Deploy:
         while retry_count > 0:
             try:
                 return self.deploy(context)
-            except Exception:
+            except Exception as e:
+                logging.warn(e)
                 logging.info("deploy() failed. Double wait = " + str(self.wait))
                 self.wait = self.wait * 2
                 retry_count -= 1
@@ -112,7 +113,7 @@ class Yaml(Deploy):
             logging.error('Failed to create namespace')
         if self.init_yaml:
             sh.kubectl("apply", filename=self.init_yaml, namespace=namespace)
-        sh.kubectl("apply", filename=self.path, namespace=namespace)
+        sh.kubectl("apply", server_side=True, filename=self.path, namespace=namespace)
         super().check_status()
 
         # TODO: Return True if deploy successfully 

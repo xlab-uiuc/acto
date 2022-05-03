@@ -22,7 +22,6 @@ from input import InputModel
 from deploy import Deploy, DeployMethod
 from constant import CONST
 
-
 test_summary = {}
 workdir_path = 'testrun-%s' % datetime.now().strftime('%Y-%m-%d-%H-%M')
 
@@ -117,12 +116,13 @@ def timeout_handler(sig, frame):
 class Acto:
 
     def __init__(self, seed_file, deploy, crd_name, preload_images_,
-                 custom_fields_src, context_file, dryrun) -> None:
+                 custom_fields_src, helper_crd, context_file, dryrun) -> None:
         try:
             with open(seed_file, 'r') as cr_file:
                 self.seed = yaml.load(cr_file, Loader=yaml.FullLoader)
         except:
             logging.error('Failed to read seed yaml, aborting')
+            quit()
         self.deploy = deploy
         self.crd_name = crd_name
         self.dryrun = dryrun
@@ -131,7 +131,8 @@ class Acto:
         if os.path.exists(context_file):
             with open(context_file, 'r') as context_fin:
                 self.context = json.load(context_fin)
-                self.context['preload_images'] = set(self.context['preload_images'])
+                self.context['preload_images'] = set(
+                    self.context['preload_images'])
         else:
             # Run learning run to collect some information from runtime
             logging.info('Starting learning run to collect information')
@@ -155,7 +156,7 @@ class Acto:
             checker.run(cmd)
 
             update_preload_images(self.context)
-            process_crd(self.context, self.crd_name)
+            process_crd(self.context, self.crd_name, helper_crd)
             with open(context_file, 'w') as context_fout:
                 json.dump(self.context, context_fout, cls=ActoEncoder)
 
@@ -221,8 +222,8 @@ class Acto:
                 logging.info('Test finished')
                 break
 
-        logging.info('Failed test cases: %s' %
-                     json.dumps(self.input_model.get_discarded_tests, cls=ActoEncoder, indent=4))
+        logging.info('Failed test cases: %s' % json.dumps(
+            self.input_model.get_discarded_tests, cls=ActoEncoder, indent=4))
 
     def run_trial(self,
                   trial_num: int,
@@ -359,6 +360,11 @@ if __name__ == '__main__':
         '--crd-name',
         dest='crd_name',
         help='Name of CRD to use, required if there are multiple CRDs')
+    # Temporary solution before integrating controller-gen
+    parser.add_argument(
+        '--helper-crd',
+        dest='helper_crd',
+        help='generated CRD file that helps with the input generation')
     parser.add_argument(
         '--custom-fields',
         dest='custom_fields',
@@ -415,5 +421,5 @@ if __name__ == '__main__':
         context_cache = args.context
 
     acto = Acto(args.seed, deploy, args.crd_name, args.preload_images,
-                args.custom_fields, context_cache, args.dryrun)
+                args.custom_fields, args.helper_crd, context_cache, args.dryrun)
     acto.run()

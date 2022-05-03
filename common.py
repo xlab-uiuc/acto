@@ -147,6 +147,14 @@ def postprocess_diff(diff):
     return diff_dict
 
 
+def invalid_input_message(log_line: str) -> bool:
+    '''Returns if the log shows the input is invalid'''
+    if 'is invalid' in log_line:
+        return True
+    else:
+        return False
+
+
 def canonicalize(s: str):
     '''Replace all upper case letters with _lowercase'''
     s = str(s)
@@ -193,4 +201,6 @@ EXCLUDE_PATH_REGEX = [
 EXCLUDE_ERROR_REGEX = [
     r"the object has been modified; please apply your changes to the latest version and try again",
     r"incorrect status code of 500 when calling endpoint",
+    r"failed to ensure version, running with default",
+    r"create issuer: no matches for kind", 
 ]
