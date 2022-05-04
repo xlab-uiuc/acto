@@ -24,6 +24,7 @@ class Checker:
         self.appv1Api = kubernetes.client.AppsV1Api()
         self.customObjectApi = kubernetes.client.CustomObjectsApi()
         self.resources = {}
+        self.log_line = 0
 
         self.compare = CompareMethods()
         
@@ -119,7 +120,7 @@ class Checker:
                     for resource_delta_list in system_delta_without_cr.values():
                         for type_delta_list in resource_delta_list.values():
                             for state_delta in type_delta_list.values():
-                                found = not self.compare.compare(delta.prev, delta.curr, state_delta.prev, state_delta.curr)
+                                found = self.compare.compare(delta.prev, delta.curr, state_delta.prev, state_delta.curr)
                     if found:
                         break
                     logging.error('Found no matching fields for input delta')
@@ -245,16 +246,20 @@ class Checker:
         else:
             logging.error('Failed to find operator pod')
 
-        # TODO: get only new logs
         log = self.corev1Api.read_namespaced_pod_log(
             name=operator_pod_list[0].metadata.name,
             namespace=self.context['namespace'])
+
+        # only get the new log since last time
+        log_lines = log.split('\n')
+        new_log_lines = log_lines[self.log_line:]
+        self.log_line = len(log_lines)
 
         with open('%s/operator-%d.log' % (self.cur_path, generation),
                   'w') as fout:
             fout.write(log)
 
-        for line in log.split('\n'):
+        for line in new_log_lines:
             if invalid_input_message(line):
                 return InvalidInputResult()
             elif 'error' in line:
