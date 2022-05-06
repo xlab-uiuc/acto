@@ -35,12 +35,17 @@ level 9
     ...
 }
 
-=> volumes / containers / initContainers / pod can be considered to prune. 
+=> volumes / containers / initContainers / pod can be considered to prune.
+
+(20220505 update)
+In addition, the tool also prints the paths with "additionalProperties". The field "additionalProperties" 
+will cause a lot of "Found no matching fields for input" false alarms.
+
 '''
 
 with open(args.path) as file:
     crd_yaml = yaml.load(file, Loader=yaml.FullLoader)
-    
+
     num_descendants_dict = {}
     def buildTree(d, path, level):
         num_descendants_dict[level] = num_descendants_dict.get(level, {})
@@ -51,7 +56,7 @@ with open(args.path) as file:
         elif type(d) is list:
             for i in range(len(d)):
                 num_descendants_dict[level][path] = num_descendants_dict[level].get(path, 0) + buildTree(d[i], path + "." + str(i), level + 1)
-            return num_descendants_dict[level].get(path, 1) 
+            return num_descendants_dict[level].get(path, 1)
         else:
             num_descendants_dict[level][path] = 1
             return 1
@@ -64,6 +69,17 @@ with open(args.path) as file:
         sorted_dict = dict(sorted(num_descendants_dict[level].items(), key=lambda item: item[1], reverse=True))
         print(json.dumps(sorted_dict, indent=4))
 
+    print("========================= additionalProperties =========================")
+    for level in range(max_depth):
+        sorted_dict = dict(sorted(num_descendants_dict[level].items(), key=lambda item: item[1], reverse=True))
+        for item in sorted_dict:
+            l = item.split('.')
+            if "additionalProperties" == l[-1]:
+                openapi_prefix_len = len(".spec.versions.0.schema.openAPIV3Schema.properties.".split('.'))
+                filtered_str = list(filter(lambda w: (w != "properties") and (w != "items"), l[openapi_prefix_len - 1:]))
+                print(".".join(filtered_str))
+
+    print("========================================================================")
     '''
     # Simple testcases
 
@@ -71,5 +87,7 @@ with open(args.path) as file:
     assert(num_descendants_dict[1][".metadata"] == 1)
     assert(num_descendants_dict[2][".spec.names"] == 5)
     assert(num_descendants_dict[9]['.spec.versions.0.schema.openAPIV3Schema.properties.spec.properties.clientService'] == 5)
-    assert(num_descendants_dict[9]['.spec.versions.0.schema.openAPIV3Schema.properties.spec.properties.adminServerService'] == 6) 
-    '''    
+    assert(num_descendants_dict[9]['.spec.versions.0.schema.openAPIV3Schema.properties.spec.properties.adminServerService'] == 6)
+    '''
+
+
