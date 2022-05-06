@@ -210,3 +210,12 @@ EXCLUDE_ERROR_REGEX = [
 INVALID_INPUT_LOG_REGEX = [
     r"is invalid",
 ]
+
+GENERIC_FIELDS = [
+    r"^name$",
+    r"^effect$",
+    r"^key$",
+    r"^operator$",
+    r"^value$",
+    r"\d",
+]

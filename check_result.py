@@ -363,6 +363,11 @@ def list_matched_fields(path: list, delta_dict: dict) -> list:
     Returns:
         list of system delta with longest matching field path with input delta
     '''
+    # if the name of the field is generic, don't match using the path
+    for regex in GENERIC_FIELDS:
+        if re.search(regex, path[0]):
+            return []
+
     results = []
     max_match = 0
     for resource_delta_list in delta_dict.values():
