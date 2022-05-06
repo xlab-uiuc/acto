@@ -180,10 +180,9 @@ class Checker:
         state_result = self.check_resources(input_diff, generation)
         log_result = self.check_log(generation)
 
-        # result = self.check_health()
-        # if result != RunResult.passing:
-        #     logging.info('Report error from system health oracle')
-        #     return result
+        if isinstance(log_result, InvalidInputResult):
+            logging.debug('Invalid input, skip this case')
+            return log_result
 
         if isinstance(state_result, ErrorResult):
             logging.info('Report error from system state oracle')
