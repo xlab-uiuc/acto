@@ -57,7 +57,8 @@ class CopiedOverField(CustomField):
     def __init__(self, path, array: bool = False) -> None:
         if array:
             super().__init__(path, self.PruneChildrenArraySchema)
-        super().__init__(path, self.PruneChildrenObjectSchema)
+        else:
+            super().__init__(path, self.PruneChildrenObjectSchema)
 
 
 class InputModel:
