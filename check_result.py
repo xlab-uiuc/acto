@@ -27,7 +27,7 @@ class Checker:
         self.log_line = 0
 
         self.compare = CompareMethods()
-        
+
         self.resource_methods = {
             'pod': self.corev1Api.list_namespaced_pod,
             'stateful_set': self.appv1Api.list_namespaced_stateful_set,
@@ -96,13 +96,19 @@ class Checker:
         system_delta_without_cr.pop('cr_diff')
         for delta_list in input_delta.values():
             for delta in delta_list.values():
+                if self.compare.input_compare(delta.prev, delta.curr):
+                    # if the input delta is considered as equivalent, skip
+                    continue
+
                 # Find the longest matching field, compare the delta change
                 match_deltas = list_matched_fields(delta.path,
                                                    system_delta_without_cr)
                 for match_delta in match_deltas:
                     logging.debug('Input delta [%s] matched with [%s]' %
                                   (delta.path, match_delta.path))
-                    if not self.compare.compare(delta.prev, delta.curr, match_delta.prev, match_delta.curr):
+                    if not self.compare.compare(delta.prev, delta.curr,
+                                                match_delta.prev,
+                                                match_delta.curr):
                         logging.error(
                             'Matched delta inconsistent with input delta')
                         logging.error('Input delta: %s -> %s' %
@@ -120,7 +126,9 @@ class Checker:
                     for resource_delta_list in system_delta_without_cr.values():
                         for type_delta_list in resource_delta_list.values():
                             for state_delta in type_delta_list.values():
-                                found = self.compare.compare(delta.prev, delta.curr, state_delta.prev, state_delta.curr)
+                                found = self.compare.compare(
+                                    delta.prev, delta.curr, state_delta.prev,
+                                    state_delta.curr)
                     if found:
                         break
                     logging.error('Found no matching fields for input delta')
@@ -310,23 +318,23 @@ class Checker:
 
         combined_queue = Queue(maxsize=0)
 
-        timer_timeout  = acto_timer.ActoTimer(timeout, combined_queue, "timeout")
-        watch_thread   = Process(target=watch_system_events,
-                                args=(ret, combined_queue, "event"))
+        timer_timeout = acto_timer.ActoTimer(timeout, combined_queue, "timeout")
+        watch_thread = Process(target=watch_system_events,
+                               args=(ret, combined_queue, "event"))
 
         start = time.time()
 
         timer_timeout.start()
         watch_thread.start()
-        while(True):
+        while (True):
             try:
-                msg = combined_queue.get(timeout = 60)
+                msg = combined_queue.get(timeout=60)
             except queue.Empty:
                 break
             if msg == "timeout":
                 logging.debug('Hard timeout triggered')
                 break
-            
+
         combined_queue.close()
 
         timer_timeout.cancel()
@@ -341,8 +349,8 @@ class Checker:
         logging.info('System took %s to converge' % time_elapsed)
         return
 
-def watch_system_events(ret, queue: Queue, queue_msg):
 
+def watch_system_events(ret, queue: Queue, queue_msg):
     '''A function thread that watches namespaced events
     '''
     for _ in ret:

@@ -43,6 +43,16 @@ class CompareMethods:
         else:
             return False
 
+    def input_compare(self, prev, curr) -> bool:
+        if prev == curr:
+            return True
+        elif prev == None and isinstance(curr, NotPresent):
+            return True
+        elif isinstance(prev, NotPresent) and curr == None:
+            return True
+        else:
+            return False
+
 
 if __name__ == '__main__':
     testcases = [
