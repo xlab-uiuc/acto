@@ -223,7 +223,7 @@ class Acto:
                 break
 
         logging.info('Failed test cases: %s' % json.dumps(
-            self.input_model.get_discarded_tests, cls=ActoEncoder, indent=4))
+            self.input_model.get_discarded_tests(), cls=ActoEncoder, indent=4))
 
     def run_trial(self,
                   trial_num: int,

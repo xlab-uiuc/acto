@@ -371,8 +371,11 @@ class ObjectSchema(BaseSchema):
             result[key] = self.additional_properties.gen(minimum=minimum)
         else:
             for k, v in self.properties.items():
-                if minimum and k in self.required:
-                    result[k] = v.gen(minimum=True)
+                if minimum:
+                    if k in self.required:
+                        result[k] = v.gen(minimum=True)
+                    else:
+                        continue
                 else:
                     if random.uniform(0, 1) < 0.1 and k not in self.required:
                         # 10% of the chance this child will be null
