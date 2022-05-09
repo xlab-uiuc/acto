@@ -145,7 +145,7 @@ class ValueWithObjectSchema(ValueWithSchema):
             return
         key = path.pop(0)
         if self.store == None:
-            self.store = {}
+            self.update(self.schema.gen(minimum=True))
             self.__setitem__(key, None)
         elif key not in self.store:
             self.__setitem__(key, None)

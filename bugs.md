@@ -23,3 +23,11 @@ https://github.com/k8ssandra/cass-operator/issues/315 confirmed
 https://github.com/k8ssandra/cass-operator/issues/324
 
 https://github.com/k8ssandra/k8ssandra/issues/1380 confirmed
+
+## spotahome/redis-operator
+
+https://github.com/spotahome/redis-operator/issues/400
+
+## kubernetes-sigs/controller-tools
+
+https://github.com/kubernetes-sigs/controller-tools/issues/665 confirmed

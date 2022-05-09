@@ -9,6 +9,7 @@ from multiprocessing import Process, Queue
 import queue
 import copy
 import kubernetes
+from custom.compare import CompareMethods
 
 from common import *
 import acto_timer
@@ -23,6 +24,9 @@ class Checker:
         self.appv1Api = kubernetes.client.AppsV1Api()
         self.customObjectApi = kubernetes.client.CustomObjectsApi()
         self.resources = {}
+        self.log_line = 0
+
+        self.compare = CompareMethods()
 
         self.resource_methods = {
             'pod': self.corev1Api.list_namespaced_pod,
@@ -30,6 +34,7 @@ class Checker:
             'deployment': self.appv1Api.list_namespaced_deployment,
             'config_map': self.corev1Api.list_namespaced_config_map,
             'service': self.corev1Api.list_namespaced_service,
+            'pvc': self.corev1Api.list_namespaced_persistent_volume_claim,
         }
 
         for resource in self.resource_methods:
@@ -91,13 +96,19 @@ class Checker:
         system_delta_without_cr.pop('cr_diff')
         for delta_list in input_delta.values():
             for delta in delta_list.values():
+                if self.compare.input_compare(delta.prev, delta.curr):
+                    # if the input delta is considered as equivalent, skip
+                    continue
+
                 # Find the longest matching field, compare the delta change
                 match_deltas = list_matched_fields(delta.path,
                                                    system_delta_without_cr)
                 for match_delta in match_deltas:
                     logging.debug('Input delta [%s] matched with [%s]' %
                                   (delta.path, match_delta.path))
-                    if delta.prev != match_delta.prev or delta.curr != match_delta.curr:
+                    if not self.compare.compare(delta.prev, delta.curr,
+                                                match_delta.prev,
+                                                match_delta.curr):
                         logging.error(
                             'Matched delta inconsistent with input delta')
                         logging.error('Input delta: %s -> %s' %
@@ -115,8 +126,9 @@ class Checker:
                     for resource_delta_list in system_delta_without_cr.values():
                         for type_delta_list in resource_delta_list.values():
                             for state_delta in type_delta_list.values():
-                                if delta.prev == state_delta.prev \
-                                    and delta.curr == state_delta.curr:
+                                if self.compare.compare(
+                                    delta.prev, delta.curr, state_delta.prev,
+                                    state_delta.curr):
                                     found = True
                     if found:
                         break
@@ -174,20 +186,19 @@ class Checker:
 
         self.wait_for_system_converge()
 
-        result = self.check_resources(input_diff, generation)
-        if isinstance(result, ErrorResult):
+        state_result = self.check_resources(input_diff, generation)
+        log_result = self.check_log(generation)
+
+        if isinstance(log_result, InvalidInputResult):
+            logging.debug('Invalid input, skip this case')
+            return log_result
+
+        if isinstance(state_result, ErrorResult):
             logging.info('Report error from system state oracle')
-            return result
-
-        # result = self.check_health()
-        # if result != RunResult.passing:
-        #     logging.info('Report error from system health oracle')
-        #     return result
-
-        result = self.check_log(generation)
-        if isinstance(result, ErrorResult):
+            return state_result
+        elif isinstance(log_result, ErrorResult):
             logging.info('Report error from operator log oracle')
-            return result
+            return log_result
 
         return PassResult()
 
@@ -247,12 +258,19 @@ class Checker:
             name=operator_pod_list[0].metadata.name,
             namespace=self.context['namespace'])
 
+        # only get the new log since last time
+        log_lines = log.split('\n')
+        new_log_lines = log_lines[self.log_line:]
+        self.log_line = len(log_lines)
+
         with open('%s/operator-%d.log' % (self.cur_path, generation),
                   'w') as fout:
             fout.write(log)
 
-        for line in log.split('\n'):
-            if 'error' in line:
+        for line in new_log_lines:
+            if invalid_input_message(line):
+                return InvalidInputResult()
+            elif 'error' in line:
                 skip = False
                 for regex in EXCLUDE_ERROR_REGEX:
                     if re.search(regex, line):
@@ -294,30 +312,30 @@ class Checker:
         It starts a thread that watches for system events. 
         When a event occurs, the function is notified and it will reset the timer thread.
         '''
-
+        logging.info('Waiting for system to converge...')
         ret = self.corev1Api.list_namespaced_event(self.context['namespace'],
                                                    _preload_content=False,
                                                    watch=True)
 
         combined_queue = Queue(maxsize=0)
 
-        timer_timeout  = acto_timer.ActoTimer(timeout, combined_queue, "timeout")
-        watch_thread   = Process(target=watch_system_events,
-                                args=(ret, combined_queue, "event"))
+        timer_timeout = acto_timer.ActoTimer(timeout, combined_queue, "timeout")
+        watch_thread = Process(target=watch_system_events,
+                               args=(ret, combined_queue, "event"))
 
         start = time.time()
 
         timer_timeout.start()
         watch_thread.start()
-        while(True):
+        while (True):
             try:
-                msg = combined_queue.get(timeout = 60)
+                msg = combined_queue.get(timeout=60)
             except queue.Empty:
                 break
             if msg == "timeout":
                 logging.debug('Hard timeout triggered')
                 break
-            
+
         combined_queue.close()
 
         timer_timeout.cancel()
@@ -332,8 +350,8 @@ class Checker:
         logging.info('System took %s to converge' % time_elapsed)
         return
 
-def watch_system_events(ret, queue: Queue, queue_msg):
 
+def watch_system_events(ret, queue: Queue, queue_msg):
     '''A function thread that watches namespaced events
     '''
     for _ in ret:
@@ -354,6 +372,11 @@ def list_matched_fields(path: list, delta_dict: dict) -> list:
     Returns:
         list of system delta with longest matching field path with input delta
     '''
+    # if the name of the field is generic, don't match using the path
+    for regex in GENERIC_FIELDS:
+        if re.search(regex, path[0]):
+            return []
+
     results = []
     max_match = 0
     for resource_delta_list in delta_dict.values():

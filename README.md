@@ -32,30 +32,33 @@ python3 acto.py \
 Example:   
 **rabbitmq-operator**:  
 ```console
-python3 acto.py --candidates data/rabbitmq-operator/candidates.yaml \
-                --seed data/rabbitmq-operator/cr.yaml \
+python3 acto.py --seed data/rabbitmq-operator/cr.yaml \
                 --operator data/rabbitmq-operator/operator.yaml \
                 --custom-fields data.rabbitmq-operator.prune \
-                --preload-images rabbitmqoperator/cluster-operator:1.10.0 rabbitmq:3.8.21-management \
-                --context data/rabbitmq-operator/context.json \
-                --duration 1
+                --context data/rabbitmq-operator/context.json
 ```
 
 **cass-operator** (using kustomize)   
 ```console
-python3 acto.py --candidates data/cass-operator/candidates.yaml \
-                --seed data/cass-operator/cr.yaml \
+python3 acto.py --seed data/cass-operator/cr.yaml \
                 --kustomize "github.com/k8ssandra/cass-operator/config/deployments/cluster?ref=v1.10.3" \
                 --init data/cass-operator/init.yaml \
                 --custom-fields data.cass-operator.prune \
-                --preload-images k8ssandra/cass-operator:v1.10.3 k8ssandra/cass-management-api:3.11.7 k8ssandra/system-logger:v1.10.3 datastax/cass-config-builder:1.0.4-ubi7 quay.io/jetstack/cert-manager-cainjector:v1.7.1 quay.io/jetstack/cert-manager-controller:v1.7.1 quay.io/jetstack/cert-manager-webhook:v1.7.1 docker.io/rancher/local-path-provisioner:v0.0.14 docker.io/kindest/kindnetd:v20211122-a2c10462 \
                 --context data/cass-operator/context.json \
-                --crd-name cassandradatacenters.cassandra.datastax.com \
-                --duration 1
+                --crd-name cassandradatacenters.cassandra.datastax.com
 ```
 
 zookeeper-operator (using helm)  
 `python3 acto.py --candidates data/zookeeper-operator/candidates.yaml --seed data/zookeeper-operator/cr.yaml --helm data/zookeeper-operator/zookeeper-operator --duration 1 --crd-name=zookeeperclusters.zookeeper.pravega.io`
+
+**mongodb-operator** (using helm)
+```console
+python3 acto.py --seed data/percona-server-mongodb-operator/cr.yaml \
+                --operator data/percona-server-mongodb-operator/bundle.yaml \
+                --context data/percona-server-mongodb-operator/context.json \
+                --crd-name perconaservermongodbs.psmdb.percona.com \
+                --custom-fields data.percona-server-mongodb-operator.prune
+```
 
 casskop-operator (using helm)
 `python3 acto.py --candidates data/casskop-operator/candidates.yaml --seed data/casskop-operator/cr.yaml --helm data/casskop-operator/cassandra-operator --init data/casskop-operator/init.yaml --duration 1 --crd-name=cassandraclusters.db.orange.com`

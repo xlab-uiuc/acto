@@ -14,8 +14,8 @@ class Diff:
 
     def __init__(self, prev, curr, path) -> None:
         # self.path = path
-        self.prev = prev if not isinstance(prev, NotPresent) else None
-        self.curr = curr if not isinstance(curr, NotPresent) else None
+        self.prev = prev
+        self.curr = curr
         self.path = path
 
     def to_dict(self):
@@ -126,8 +126,8 @@ def postprocess_diff(diff):
                     for i in path:
                         str_path += '[%s]' % i
                     diff_dict[category][str_path] = Diff(
-                        value, None,
-                        change.path(output_format='list')+path)
+                        value, change.t2,
+                        change.path(output_format='list') + path)
             elif (isinstance(change.t2, dict) or isinstance(change.t2, list)) \
                     and (change.t1 == None or isinstance(change.t1, NotPresent)):
                 if isinstance(change.t2, dict):
@@ -139,12 +139,21 @@ def postprocess_diff(diff):
                     for i in path:
                         str_path += '[%s]' % i
                     diff_dict[category][str_path] = Diff(
-                        None, value,
-                        change.path(output_format='list')+path)
+                        change.t1, value,
+                        change.path(output_format='list') + path)
             else:
                 diff_dict[category][change.path()] = Diff(
                     change.t1, change.t2, change.path(output_format='list'))
     return diff_dict
+
+
+def invalid_input_message(log_line: str) -> bool:
+    '''Returns if the log shows the input is invalid'''
+    for regex in INVALID_INPUT_LOG_REGEX:
+        if re.search(regex, log_line):
+            logging.info('recognized invalid input: %s' % log_line)
+            return True
+    return False
 
 
 def canonicalize(s: str):
@@ -155,6 +164,7 @@ def canonicalize(s: str):
 
 def get_diff_stat():
     return None
+
 
 def random_string(n: int):
     '''Generate random string with length n'''
@@ -168,7 +178,7 @@ class ActoEncoder(json.JSONEncoder):
         if isinstance(obj, Diff):
             return obj.to_dict()
         elif isinstance(obj, NotPresent):
-            return None
+            return 'NotPresent'
         elif isinstance(obj, (datetime, date)):
             return obj.isoformat()
         elif isinstance(obj, TestCase):
@@ -193,4 +203,19 @@ EXCLUDE_PATH_REGEX = [
 EXCLUDE_ERROR_REGEX = [
     r"the object has been modified; please apply your changes to the latest version and try again",
     r"incorrect status code of 500 when calling endpoint",
+    r"failed to ensure version, running with default",
+    r"create issuer: no matches for kind",
+]
+
+INVALID_INPUT_LOG_REGEX = [
+    r"is invalid",
+]
+
+GENERIC_FIELDS = [
+    r"^name$",
+    r"^effect$",
+    r"^key$",
+    r"^operator$",
+    r"^value$",
+    r"\d",
 ]

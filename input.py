@@ -6,7 +6,7 @@ import random
 from typing import Tuple
 from deepdiff import DeepDiff
 
-from schema import extract_schema, BaseSchema, ObjectSchema
+from schema import extract_schema, BaseSchema, ObjectSchema, ArraySchema
 from value_with_schema import attach_schema_to_value
 from common import random_string
 
@@ -24,7 +24,22 @@ class CopiedOverField(CustomField):
     All the subfields of this field will be pruned
     '''
 
-    class PruneChildrenSchema(ObjectSchema):
+    class PruneChildrenObjectSchema(ObjectSchema):
+
+        def __init__(self, path: list, schema: dict) -> None:
+            super().__init__(path, schema)
+
+        def __init__(self, schema_obj: BaseSchema) -> None:
+            super().__init__(schema_obj.path, schema_obj.raw_schema)
+
+        def get_all_schemas(self) -> list:
+            '''Return all the subschemas as a list'''
+            return [self]
+
+        def __str__(self) -> str:
+            return 'Children Pruned'
+    
+    class PruneChildrenArraySchema(ArraySchema):
 
         def __init__(self, path: list, schema: dict) -> None:
             super().__init__(path, schema)
@@ -39,8 +54,11 @@ class CopiedOverField(CustomField):
         def __str__(self) -> str:
             return 'Children Pruned'
 
-    def __init__(self, path) -> None:
-        super().__init__(path, self.PruneChildrenSchema)
+    def __init__(self, path, array: bool = False) -> None:
+        if array:
+            super().__init__(path, self.PruneChildrenArraySchema)
+        else:
+            super().__init__(path, self.PruneChildrenObjectSchema)
 
 
 class InputModel:
@@ -48,7 +66,7 @@ class InputModel:
     def __init__(self, crd: dict, mount: list = None) -> None:
         self.mount = ['spec']  # We model the cr.spec as the input
         self.root_schema = extract_schema(
-            [], crd['spec']['versions'][0]['schema']['openAPIV3Schema'])
+            [], crd['spec']['versions'][-1]['schema']['openAPIV3Schema'])
         self.seed_input = None
         self.current_input = None
         self.previous_input = None  # Previous input, for revert
@@ -178,7 +196,7 @@ class InputModel:
 
         # Log it to discarded_tests
         if self.curr_field in self.discarded_tests:
-            self.discarded_tests.append(discarded_case)
+            self.discarded_tests[self.curr_field].append(discarded_case)
         else:
             self.discarded_tests[self.curr_field] = [discarded_case]
         logging.info('Setup failed due to invalid, discard this testcase %s' %

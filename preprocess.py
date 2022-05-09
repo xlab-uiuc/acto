@@ -4,8 +4,7 @@ import logging
 from typing import List, Optional
 import os
 import json
-import schema
-import sh
+import yaml
 
 
 def preload_images(images: list):
@@ -34,10 +33,9 @@ def update_preload_images(context: dict):
 
     worker_list = ['kind-worker', 'kind-worker2', 'kind-worker3']
     for worker in worker_list:
-        p = subprocess.run(
-            ['docker', 'exec', worker, 'crictl', 'images'],
-            capture_output=True,
-            text=True)
+        p = subprocess.run(['docker', 'exec', worker, 'crictl', 'images'],
+                           capture_output=True,
+                           text=True)
         output = p.stdout.strip()
         for line in output.split('\n')[1:]:
             items = line.split()
@@ -45,47 +43,62 @@ def update_preload_images(context: dict):
             context['preload_images'].add(image)
 
 
-def process_crd(context: dict, crd_name: Optional[str] = None):
+def process_crd(context: dict,
+                crd_name: Optional[str] = None,
+                helper_crd: Optional[str] = None):
     ''' Get crd from k8s and set context['crd']
 
     When there are more than one crd in the cluster, user should set crd_name
     '''
-    apiextensionsV1Api = ApiextensionsV1Api()
-    crds: List[
-        models.
-        V1CustomResourceDefinition] = apiextensionsV1Api.list_custom_resource_definition(
-        ).items
-    crd: Optional[models.V1CustomResourceDefinition] = None
-    if len(crds) == 0:
-        logging.error('No crd is found')
-        quit()
-    elif len(crds) == 1:
-        crd = crds[0]
-    elif crd_name:
-        for c in crds:
-            if c.metadata.name == crd_name:
-                crd = c
-                break
-        if not crd:
-            logging.error('Cannot find crd %s' % crd_name)
+    if helper_crd == None:
+        apiextensionsV1Api = ApiextensionsV1Api()
+        crds: List[
+            models.
+            V1CustomResourceDefinition] = apiextensionsV1Api.list_custom_resource_definition(
+            ).items
+        crd: Optional[models.V1CustomResourceDefinition] = None
+        if len(crds) == 0:
+            logging.error('No crd is found')
             quit()
+        elif len(crds) == 1:
+            crd = crds[0]
+        elif crd_name:
+            for c in crds:
+                if c.metadata.name == crd_name:
+                    crd = c
+                    break
+            if not crd:
+                logging.error('Cannot find crd %s' % crd_name)
+                quit()
+        else:
+            logging.error(
+                'There are multiple crds, please specify parameter [crd_name]')
+            quit()
+        if crd:
+            # there is openAPIV3Schema schema issue when using python k8s client, need to fetch data from cli
+            crd_result = subprocess.run(
+                ['kubectl', 'get', 'crd', crd.metadata.name, "-o", "json"],
+                capture_output=True,
+                text=True)
+            crd_obj = json.loads(crd_result.stdout)
+            spec: models.V1CustomResourceDefinitionSpec = crd.spec
+            crd_data = {
+                'group': spec.group,
+                'plural': spec.names.plural,
+                'version':
+                    spec.versions[0].name,  # TODO: Handle multiple versions
+                'body': crd_obj
+            }
+            context['crd'] = crd_data
     else:
-        logging.error(
-            'There are multiple crds, please specify parameter [crd_name]')
-        quit()
-    if crd:
-        # there is openAPIV3Schema schema issue when using python k8s client, need to fetch data from cli
-        crd_result = subprocess.run(
-            ['kubectl', 'get', 'crd', crd.metadata.name, "-o", "json"],
-            capture_output=True,
-            text=True)
-        crd_obj = json.loads(crd_result.stdout)
-        spec: models.V1CustomResourceDefinitionSpec = crd.spec
+        with open(helper_crd, 'r') as helper_crd_f:
+            helper_crd_doc = yaml.load(helper_crd_f, Loader=yaml.FullLoader)
         crd_data = {
-            'group': spec.group,
-            'plural': spec.names.plural,
-            'version': spec.versions[0].name,  # TODO: Handle multiple versions
-            'body': crd_obj
+            'group': helper_crd_doc['spec']['group'],
+            'plural': helper_crd_doc['spec']['names']['plural'],
+            'version': helper_crd_doc['spec']['versions'][-1]
+                       ['name'],  # TODO: Handle multiple versions
+            'body': helper_crd_doc
         }
         context['crd'] = crd_data
     logging.debug('CRD data: %s' % crd_data)

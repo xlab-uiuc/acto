@@ -22,7 +22,6 @@ from input import InputModel
 from deploy import Deploy, DeployMethod
 from constant import CONST
 
-
 test_summary = {}
 workdir_path = 'testrun-%s' % datetime.now().strftime('%Y-%m-%d-%H-%M')
 
@@ -96,37 +95,6 @@ def construct_candidate_from_yaml(yaml_path: str) -> dict:
         return result
 
 
-def elect_mutation_parameter(candidates_dict: dict):
-    '''method for electing the parameter to mutate and which value to pick
-    
-    Args:
-        candidates_dict: flat dictionary specifying list of valid values for each parameter
-
-    Returns:
-        (path, value)
-    '''
-    random_entry = random.choice(list(candidates_dict.items()))
-    return random_entry[0], random.choice(random_entry[1])
-
-
-def mutate_application_spec(current_spec: dict, candidates: dict):
-    '''mutate one of the fields in current spec according to candidates dict
-    
-    Args:
-        current_spec: last spec that fed to operator
-        candidates: flat dictionary specifying list of valid values for each parameter
-    '''
-    path, v = elect_mutation_parameter(candidates)
-    logging.debug('Elected parameter [%s]' % path)
-    logging.debug('Elected value: %s' % v)
-    current_node = current_spec
-    key_list = [x for x in path.split('.') if x]
-    for key in key_list[:-1]:
-        current_node = current_node[key]
-    current_node[key_list[-1]] = v
-    return current_spec
-
-
 def prune_noneffective_change(diff):
     '''
     This helper function handles the corner case where an item is added to
@@ -148,12 +116,13 @@ def timeout_handler(sig, frame):
 class Acto:
 
     def __init__(self, seed_file, deploy, crd_name, preload_images_,
-                 custom_fields_src, context_file, dryrun) -> None:
+                 custom_fields_src, helper_crd, context_file, dryrun) -> None:
         try:
             with open(seed_file, 'r') as cr_file:
                 self.seed = yaml.load(cr_file, Loader=yaml.FullLoader)
         except:
             logging.error('Failed to read seed yaml, aborting')
+            quit()
         self.deploy = deploy
         self.crd_name = crd_name
         self.dryrun = dryrun
@@ -162,7 +131,8 @@ class Acto:
         if os.path.exists(context_file):
             with open(context_file, 'r') as context_fin:
                 self.context = json.load(context_fin)
-                self.context['preload_images'] = set(self.context['preload_images'])
+                self.context['preload_images'] = set(
+                    self.context['preload_images'])
         else:
             # Run learning run to collect some information from runtime
             logging.info('Starting learning run to collect information')
@@ -186,7 +156,7 @@ class Acto:
             checker.run(cmd)
 
             update_preload_images(self.context)
-            process_crd(self.context, self.crd_name)
+            process_crd(self.context, self.crd_name, helper_crd)
             with open(context_file, 'w') as context_fout:
                 json.dump(self.context, context_fout, cls=ActoEncoder)
 
@@ -252,8 +222,8 @@ class Acto:
                 logging.info('Test finished')
                 break
 
-        logging.info('Failed test cases: %s' %
-                     json.dumps(self.input_model.get_discarded_tests))
+        logging.info('Failed test cases: %s' % json.dumps(
+            self.input_model.get_discarded_tests(), cls=ActoEncoder, indent=4))
 
     def run_trial(self,
                   trial_num: int,
@@ -390,6 +360,11 @@ if __name__ == '__main__':
         '--crd-name',
         dest='crd_name',
         help='Name of CRD to use, required if there are multiple CRDs')
+    # Temporary solution before integrating controller-gen
+    parser.add_argument(
+        '--helper-crd',
+        dest='helper_crd',
+        help='generated CRD file that helps with the input generation')
     parser.add_argument(
         '--custom-fields',
         dest='custom_fields',
@@ -420,6 +395,8 @@ if __name__ == '__main__':
     # candidate_dict = construct_candidate_from_yaml(args.candidates)
     # logging.debug(candidate_dict)
 
+    logging.info('Acto started with [%s]' % sys.argv)
+
     # Preload frequently used images to amid ImagePullBackOff
     if args.preload_images:
         logging.info('%s will be preloaded into Kind cluster',
@@ -444,5 +421,5 @@ if __name__ == '__main__':
         context_cache = args.context
 
     acto = Acto(args.seed, deploy, args.crd_name, args.preload_images,
-                args.custom_fields, context_cache, args.dryrun)
+                args.custom_fields, args.helper_crd, context_cache, args.dryrun)
     acto.run()
