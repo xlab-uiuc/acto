@@ -4,14 +4,18 @@ sys.path.append('../..')
 import input
 
 custom_fields = [
+    input.CopiedOverField(['spec', 'discovery', 'additionalContainers'], True),
+    input.CopiedOverField(['spec', 'discovery', 'additionalVolumes'], True),
     input.CopiedOverField(['spec', 'discovery', 'initContainers'], True),
     input.CopiedOverField(['spec', 'discovery', 'affinity']),
     input.CopiedOverField(['spec', 'discovery', 'tolerations'], True),
+    input.CopiedOverField(['spec', 'discovery', 'podSecurityContext']),
     input.CopiedOverField(['spec', 'pd', 'additionalContainers'], True),
     input.CopiedOverField(['spec', 'pd', 'additionalVolumes'], True),
     input.CopiedOverField(['spec', 'pd', 'affinity']),
     input.CopiedOverField(['spec', 'pd', 'initContainers'], True),
     input.CopiedOverField(['spec', 'pd', 'tolerations'], True),
+    input.CopiedOverField(['spec', 'pd', 'podSecurityContext']),
     input.CopiedOverField(['spec', 'podSecurityContext']),
     input.CopiedOverField(['spec', 'pump', 'additionalContainers'], True),
     input.CopiedOverField(['spec', 'pump', 'additionalVolumes'], True),
