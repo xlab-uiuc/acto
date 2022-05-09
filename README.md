@@ -80,6 +80,16 @@ python3 acto.py --seed data/redis-operator/cr.yaml \
                 --duration 1
 ```
 
+**tidb-operator**
+```
+python3 acto.py --seed data/tidb-operator/cr.yaml \
+                --helm data/tidb-operator/tidb-operator \
+                --init data/tidb-operator/crd.yaml \
+                --context data/tidb-operator/context.json \
+                --custom-fields data.tidb-operator.prune \
+                --crd-name tidbclusters.pingcap.com \
+                --duration 1
+```
 
 ## Porting operators
 Acto aims to automate the E2E testing as much as possible to minimize users' labor.
