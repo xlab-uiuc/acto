@@ -62,7 +62,7 @@ class Helm(Deploy):
 
     def deploy(self, context):
         if self.init_yaml:
-            sh.kubectl("apply",
+            sh.kubectl("apply", server_side=True,
                        filename=self.init_yaml,
                        namespace=CONST.ACTO_NAMESPACE)
         context['namespace'] = CONST.ACTO_NAMESPACE

@@ -671,11 +671,16 @@ class OpaqueSchema(BaseSchema):
 
     def test_cases(self):
         return []
+    
+    def get_all_schemas(self):
+        return []
 
 
 def extract_schema(path: list, schema: dict) -> object:
     if 'anyOf' in schema:
         return AnyOfSchema(path, schema)
+    if 'type' not in schema:
+        return OpaqueSchema(path, schema)
     t = schema['type']
     if t == 'string':
         return StringSchema(path, schema)
