@@ -13,7 +13,7 @@ spec:
 #  unmanaged: false
   crVersion: 1.12.0
   image: percona/percona-server-mongodb:4.4.10-11
-  imagePullPolicy: Always
+  imagePullPolicy: IfNotPresent
 #  tls:
 #    # 90 days in hours
 #    certValidityDuration: 2160h
@@ -22,12 +22,12 @@ spec:
 #  runUid: 1001
   allowUnsafeConfigurations: false
   updateStrategy: SmartUpdate
-#  multiCluster:
-#    enabled: true
-#    DNSSuffix: svc.clusterset.local
+  multiCluster:
+    enabled: true
+    DNSSuffix: svc.clusterset.local
   upgradeOptions:
     versionServiceEndpoint: https://check.percona.com
-    apply: 4.4-recommended
+    apply: 4.4-never
     schedule: "0 2 * * *"
     setFCV: false
   secrets:
@@ -142,7 +142,7 @@ spec:
       maxUnavailable: 1
 #      minAvailable: 0
     expose:
-      enabled: false
+      enabled: true
       exposeType: ClusterIP
 #      loadBalancerSourceRanges:
 #        - 10.0.0.0/8
@@ -168,14 +168,14 @@ spec:
             storage: 3Gi
 
     nonvoting:
-      enabled: false
+      enabled: true
       size: 3
 #      # for more configuration fields refer to https://docs.mongodb.com/manual/reference/configuration-options/
-#      configuration: |
-#        operationProfiling:
-#          mode: slowOp
-#        systemLog:
-#          verbosity: 1
+      configuration: |
+        operationProfiling:
+          mode: slowOp
+        systemLog:
+          verbosity: 1
       affinity:
         antiAffinityTopologyKey: "kubernetes.io/hostname"
 #        advanced:
@@ -216,13 +216,13 @@ spec:
 #          path: /data
 #          type: Directory
         persistentVolumeClaim:
-#          storageClassName: standard
-#          accessModes: [ "ReadWriteOnce" ]
+          storageClassName: standard
+          accessModes: [ "ReadWriteOnce" ]
           resources:
             requests:
               storage: 3Gi
     arbiter:
-      enabled: false
+      enabled: true
       size: 1
       affinity:
         antiAffinityTopologyKey: "kubernetes.io/hostname"
@@ -323,7 +323,7 @@ spec:
       podDisruptionBudget:
         maxUnavailable: 1
       expose:
-        enabled: false
+        enabled: true
         exposeType: ClusterIP
 #        loadBalancerSourceRanges:
 #          - 10.0.0.0/8
@@ -462,7 +462,7 @@ spec:
 #          prefix: PREFIX-NAME
 #          credentialsSecret: SECRET-NAME
     pitr:
-      enabled: false
+      enabled: true
 #      oplogSpanMin: 10
       compressionType: gzip
       compressionLevel: 6

@@ -6,9 +6,7 @@ class CompareMethods:
     def __init__(self):
         # self.method_list = \
         #     [a for a in dir(self) if not a.startswith('__') and a != "compare" and callable(getattr(self, a))]
-        self.custom_operators = [
-            self.none_notpresent_operator, self.substring_operator
-        ]
+        self.custom_operators = [self.substring_operator]
 
     # def __iter__(self):
     #     # make the defined methods iterable
@@ -39,6 +37,12 @@ class CompareMethods:
         # try every compare method possible
         if self.operator(in_prev, out_prev) and self.operator(
                 in_curr, out_curr):
+            return True
+        elif self.none_notpresent_operator(in_prev, out_prev) \
+            and self.operator(in_curr, out_curr):
+            return True
+        elif self.operator(in_prev, out_prev) \
+            and self.none_notpresent_operator(in_curr, out_curr):
             return True
         else:
             return False

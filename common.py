@@ -205,6 +205,8 @@ EXCLUDE_ERROR_REGEX = [
     r"incorrect status code of 500 when calling endpoint",
     r"failed to ensure version, running with default",
     r"create issuer: no matches for kind",
+    r"failed to run smartUpdate",
+    r"dial: ping mongo",
 ]
 
 INVALID_INPUT_LOG_REGEX = [
