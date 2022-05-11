@@ -295,6 +295,9 @@ class Acto:
                 logging.error('Unknown return value, abort')
                 quit()
 
+            if self.input_model.is_empty():
+                break
+
         return None, generation
 
 

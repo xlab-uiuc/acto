@@ -22,6 +22,7 @@ class Checker:
         self.cur_path = context['current_dir_path']
         self.corev1Api = kubernetes.client.CoreV1Api()
         self.appv1Api = kubernetes.client.AppsV1Api()
+        self.batchv1Api = kubernetes.client.BatchV1Api()
         self.customObjectApi = kubernetes.client.CustomObjectsApi()
         self.resources = {}
         self.log_line = 0
@@ -35,6 +36,7 @@ class Checker:
             'config_map': self.corev1Api.list_namespaced_config_map,
             'service': self.corev1Api.list_namespaced_service,
             'pvc': self.corev1Api.list_namespaced_persistent_volume_claim,
+            'cronjob': self.batchv1Api.list_namespaced_cron_job,
         }
 
         for resource in self.resource_methods:
