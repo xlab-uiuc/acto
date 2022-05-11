@@ -16,11 +16,15 @@ https://github.com/mongodb/helm-charts/pull/123 fixed
 
 https://github.com/pravega/zookeeper-operator/issues/454 confirmed
 
+https://github.com/pravega/zookeeper-operator/issues/474
+
 ## k8ssandra/cass-operator
 
 https://github.com/k8ssandra/cass-operator/issues/315 confirmed
 
 https://github.com/k8ssandra/cass-operator/issues/324
+
+
 
 https://github.com/k8ssandra/k8ssandra/issues/1380 confirmed
 
@@ -28,6 +32,12 @@ https://github.com/k8ssandra/k8ssandra/issues/1380 confirmed
 
 https://github.com/spotahome/redis-operator/issues/400
 
+https://github.com/spotahome/redis-operator/issues/407
+
 ## kubernetes-sigs/controller-tools
 
 https://github.com/kubernetes-sigs/controller-tools/issues/665 confirmed
+
+## kubernetes/kubernetes
+
+https://github.com/kubernetes/kubernetes/issues/109839 confirmed
