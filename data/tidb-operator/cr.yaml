@@ -1,0 +1,42 @@
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: advanced-tidb
+spec:
+  version: "v5.4.0"
+  timezone: UTC
+  configUpdateStrategy: RollingUpdate
+  helper:
+    image: busybox:1.34.1
+  pvReclaimPolicy: Retain
+ 
+  enableDynamicConfiguration: true
+  pd:
+    baseImage: pingcap/pd
+    config: |
+      [dashboard]
+        internal-proxy = true
+    replicas: 3
+    maxFailoverCount: 0
+    requests:
+      storage: 10Gi
+    mountClusterClientSecret: true
+  tidb:
+    baseImage: pingcap/tidb
+    config: |
+      [performance]
+        tcp-keep-alive = true
+    replicas: 3
+    maxFailoverCount: 0
+    service:
+      type: NodePort
+      externalTrafficPolicy: Local
+  tikv:
+    baseImage: pingcap/tikv
+    config: |
+      log-level = "info"
+    replicas: 3
+    maxFailoverCount: 0
+    requests:
+      storage: 100Gi
+    mountClusterClientSecret: true
