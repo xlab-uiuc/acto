@@ -20,7 +20,7 @@ https://github.com/pravega/zookeeper-operator/issues/474
 
 ## k8ssandra/cass-operator
 
-https://github.com/k8ssandra/cass-operator/issues/315 confirmed
+https://github.com/k8ssandra/cass-operator/issues/315 fixed
 
 https://github.com/k8ssandra/cass-operator/issues/324
 
