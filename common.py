@@ -6,8 +6,11 @@ import re
 import logging
 import string
 import random
+import kubernetes
+import subprocess
 
 from test_case import TestCase
+from constant import CONST
 
 
 class Diff:
@@ -221,3 +224,94 @@ GENERIC_FIELDS = [
     r"^value$",
     r"\d",
 ]
+
+
+def kind_kubecontext(cluster_name: str) -> str:
+    '''Returns the kubecontext based onthe cluster name
+    Kind always adds `kind` before the cluster name
+    '''
+    return f'kind-{cluster_name}'
+
+
+def kind_create_cluster(name: str, config: str, version: str):
+    '''Use subprocess to create kind cluster
+
+    Args:
+        name: name of the kind cluster
+        config: path of the config file for cluster
+        version: k8s version
+    '''
+    cmd = ['kind', 'create', 'cluster']
+
+    if name:
+        cmd.extend(['--name', name])
+    else:
+        cmd.extend(['--name', CONST.KIND_CLUSTER])
+
+    if config:
+        cmd.extend(['--config', config])
+
+    if version:
+        cmd.extend(['--image', f"kindest/node:v{version}"])
+
+    p = subprocess.run(cmd)
+
+
+def kind_load_images(images: list, name: str):
+    '''Preload some frequently used images into Kind cluster to avoid ImagePullBackOff
+    '''
+    cmd = ['kind', 'load', 'docker-image']
+    if len(images) == 0:
+        logging.warning(
+            'No image to preload, we at least should have operator image')
+
+    if name != None:
+        cmd.extend(['--name', name])
+    else:
+        logging.error('Missing cluster name for kind load')
+
+    for image in images:
+        p = subprocess.run(cmd + [image])
+        if p.returncode != 0:
+            logging.info('Image not present local, pull and retry')
+            subprocess.run(['docker', 'pull', image])
+            p = subprocess.run(cmd + image)
+
+
+def kind_delete_cluster(name: str):
+    cmd = ['kind', 'delete', 'cluster']
+
+    if name:
+        cmd.extend(['--name', name])
+    else:
+        logging.error('Missing cluster name for kind delete')
+
+    subprocess.run(cmd)
+
+
+def kubectl(args: list, cluster_name: str, capture_output=False, text=False):
+    cmd = ['kubectl']
+    cmd.extend(args)
+
+    if cluster_name == None:
+        logging.error('Missing cluster name for kubectl')
+    cmd.extend(['--context', kind_kubecontext(cluster_name)])
+
+    p = subprocess.run(cmd, capture_output=capture_output, text=text)
+    return p
+
+
+def helm(args: list, cluster_name: str):
+    cmd = ['helm']
+    cmd.extend(args)
+
+    if cluster_name == None:
+        logging.error('Missing cluster name for helm')    
+    cmd.extend(['--kube-context', kind_kubecontext(cluster_name)])
+
+    subprocess.run(cmd)
+
+
+def kubernetes_client(cluster_name: str) -> kubernetes.client.ApiClient:
+    return kubernetes.config.kube_config.new_client_from_config(
+        context=kind_kubecontext(cluster_name))

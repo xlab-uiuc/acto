@@ -1,10 +1,12 @@
 from functools import reduce
 import json
 import logging
+import math
 import operator
 import random
 from typing import Tuple
 from deepdiff import DeepDiff
+import threading
 
 from schema import extract_schema, BaseSchema, ObjectSchema, ArraySchema
 from value_with_schema import attach_schema_to_value
@@ -38,7 +40,7 @@ class CopiedOverField(CustomField):
 
         def __str__(self) -> str:
             return 'Children Pruned'
-    
+
     class PruneChildrenArraySchema(ArraySchema):
 
         def __init__(self, path: list, schema: dict) -> None:
@@ -63,36 +65,45 @@ class CopiedOverField(CustomField):
 
 class InputModel:
 
-    def __init__(self, crd: dict, mount: list = None) -> None:
+    def __init__(self, crd: dict, num_workers: int, mount: list = None) -> None:
         self.mount = ['spec']  # We model the cr.spec as the input
         self.root_schema = extract_schema(
             [], crd['spec']['versions'][-1]['schema']['openAPIV3Schema'])
+        self.num_workers = num_workers
         self.seed_input = None
-        self.current_input = None
-        self.previous_input = None  # Previous input, for revert
         self.test_plan = None
+        self.test_plan_partitioned = None
         self.discarded_tests = {}  # List of test cases failed to run
 
-        self.curr_field = None  # Bookkeeping in case we are running setup
-        # so that we can run the test case itself right after the setup
+        # Thread local variables
+        self.thread_vars = threading.local()
 
     def initialize(self, initial_value: dict):
+        self.initial_value = initial_value
         self.seed_input = attach_schema_to_value(initial_value,
                                                  self.root_schema)
-        self.current_input = attach_schema_to_value(initial_value,
-                                                    self.root_schema)
-        self.previous_input = attach_schema_to_value(initial_value,
-                                                     self.root_schema)
+
+    def set_worker_id(self, id: int):
+        '''Claim this thread's id, so that we can split the test plan among threads'''
+        self.thread_vars.id = id
+        self.thread_vars.curr_field = None  # Bookkeeping in case we are running setup
+        # so that we can run the test case itself right after the setup
+        self.thread_vars.test_plan = dict(self.test_plan_partitioned[id])
+
+        self.thread_vars.current_input = attach_schema_to_value(
+            self.initial_value, self.root_schema)
+        self.thread_vars.previous_input = attach_schema_to_value(
+            self.initial_value, self.root_schema)
 
     def is_empty(self):
         '''if test plan is empty'''
-        return len(self.test_plan) == 0
+        return len(self.thread_vars.test_plan) == 0
 
     def reset_input(self):
         '''Reset the current input back to seed'''
-        self.current_input = attach_schema_to_value(self.seed_input.raw_value(),
-                                                    self.root_schema)
-        self.previous_input = attach_schema_to_value(
+        self.thread_vars.current_input = attach_schema_to_value(
+            self.seed_input.raw_value(), self.root_schema)
+        self.thread_vars.previous_input = attach_schema_to_value(
             self.seed_input.raw_value(), self.root_schema)
 
     def get_seed_input(self) -> dict:
@@ -125,6 +136,13 @@ class InputModel:
         logging.info('Parsed [%d] fields from schema', num_fields)
         logging.info('Generated [%d] test cases in total', num_testcases)
         self.test_plan = ret
+
+        test_plan_items = list(self.test_plan.items())
+        chunk_size = math.ceil(len(test_plan_items) / self.num_workers)
+        self.test_plan_partitioned = []
+        for i in range(0, len(test_plan_items), chunk_size):
+            self.test_plan_partitioned.append(test_plan_items[i:i+chunk_size])
+        assert(self.num_workers == len(self.test_plan_partitioned))
         return ret
 
     def next_test(self) -> Tuple[dict, bool]:
@@ -138,17 +156,16 @@ class InputModel:
             Tuple of (new value, if this is a setup)
         '''
         logging.info('Progress [%d] cases left' %
-                     sum([len(i) for i in self.test_plan.values()]))
-        if self.curr_field != None:
-            field = self.curr_field
+                     sum([len(i) for i in self.thread_vars.test_plan.values()]))
+        if self.thread_vars.curr_field != None:
+            field = self.thread_vars.curr_field
         else:
-            field = random.choice(list(self.test_plan.keys()))
-        self.curr_field = field
-        if len(self.test_plan[field]) == 0:
-            del self.test_plan[field]
-        test_case = self.test_plan[field][-1]
+            field = random.choice(list(self.thread_vars.test_plan.keys()))
+        self.thread_vars.curr_field = field
+        test_case = self.thread_vars.test_plan[field][-1]
         logging.debug('field: %s' % field)
-        curr = self.current_input.get_value_by_path(json.loads(field))
+        curr = self.thread_vars.current_input.get_value_by_path(
+            json.loads(field))
         logging.info('Selected field %s Previous value %s' % (field, curr))
         logging.info('Selected test [%s]' % test_case)
 
@@ -157,10 +174,10 @@ class InputModel:
         if test_case.test_precondition(curr):
             setup = False
             next_value = test_case.mutator(curr)
-            self.test_plan[field].pop()
-            if len(self.test_plan[field]) == 0:
-                del self.test_plan[field]
-            self.curr_field = None
+            self.thread_vars.test_plan[field].pop()
+            if len(self.thread_vars.test_plan[field]) == 0:
+                del self.thread_vars.test_plan[field]
+            self.thread_vars.curr_field = None
         else:
             setup = True
             next_value = test_case.run_setup(curr)
@@ -169,13 +186,14 @@ class InputModel:
         logging.debug(json.loads(field))
 
         # Save previous input
-        self.previous_input = attach_schema_to_value(
-            self.current_input.raw_value(), self.root_schema)
+        self.thread_vars.previous_input = attach_schema_to_value(
+            self.thread_vars.current_input.raw_value(), self.root_schema)
 
         # Create the path if not exist, then change the value
-        self.current_input.create_path(json.loads(field))
-        self.current_input.set_value_by_path(next_value, json.loads(field))
-        return self.current_input.raw_value(), setup
+        self.thread_vars.current_input.create_path(json.loads(field))
+        self.thread_vars.current_input.set_value_by_path(
+            next_value, json.loads(field))
+        return self.thread_vars.current_input.raw_value(), setup
 
     def get_input_delta(self):
         '''Compare the current input with the previous input
@@ -183,8 +201,8 @@ class InputModel:
         Returns
             a delta object in tree view
         '''
-        cr_diff = DeepDiff(self.previous_input.raw_value(),
-                           self.current_input.raw_value(),
+        cr_diff = DeepDiff(self.thread_vars.previous_input.raw_value(),
+                           self.thread_vars.current_input.raw_value(),
                            ignore_order=True,
                            report_repetition=True,
                            view='tree')
@@ -192,26 +210,27 @@ class InputModel:
 
     def discard_test_case(self):
         '''Discard the test case that was selected'''
-        discarded_case = self.test_plan[self.curr_field].pop()
+        discarded_case = self.thread_vars.test_plan[self.thread_vars.curr_field].pop()
 
         # Log it to discarded_tests
-        if self.curr_field in self.discarded_tests:
-            self.discarded_tests[self.curr_field].append(discarded_case)
+        if self.thread_vars.curr_field in self.discarded_tests:
+            self.discarded_tests[self.thread_vars.curr_field].append(
+                discarded_case)
         else:
-            self.discarded_tests[self.curr_field] = [discarded_case]
+            self.discarded_tests[self.thread_vars.curr_field] = [discarded_case]
         logging.info('Setup failed due to invalid, discard this testcase %s' %
                      discarded_case)
 
-        if len(self.test_plan[self.curr_field]) == 0:
-            del self.test_plan[self.curr_field]
-        self.curr_field = None
+        if len(self.thread_vars.test_plan[self.thread_vars.curr_field]) == 0:
+            del self.thread_vars.test_plan[self.thread_vars.curr_field]
+        self.thread_vars.curr_field = None
 
     def revert(self):
         '''Revert back to previous input'''
-        if self.previous_input == None:
+        if self.thread_vars.previous_input == None:
             logging.error('No previous input to revert to')
-        self.current_input = self.previous_input
-        self.previous_input = None
+        self.thread_vars.current_input = self.thread_vars.previous_input
+        self.thread_vars.previous_input = None
 
     def apply_custom_field(self, custom_field: CustomField):
         '''Applies custom field to the input model

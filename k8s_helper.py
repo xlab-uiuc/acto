@@ -1,6 +1,5 @@
-import tempfile
-from kubernetes.client.models import V1Deployment, V1StatefulSet
-import kubernetes.client
+from kubernetes.client.models import V1Deployment, V1StatefulSet, V1Namespace, V1ObjectMeta
+import kubernetes
 from typing import List, Optional, Tuple
 import yaml
 from constant import CONST
@@ -42,50 +41,6 @@ def get_stateful_set_available_status(stateful_set: V1StatefulSet) -> bool:
     return False
 
 
-def get_namespaced_resources() -> Tuple[List[str], List[str]]:
-    '''Get namespaced and non-namespaced available resources list
-
-    Returns:
-        list of namespaced kind and list of non-namespaced kind
-    '''
-    namespaced_resources = []
-    non_namespaced_resources = []
-    appv1Api = kubernetes.client.AppsV1Api()
-    for resource in appv1Api.get_api_resources().resources:
-        if resource.namespaced:
-            namespaced_resources.append(resource.kind)
-        else:
-            non_namespaced_resources.append(resource.kind)
-    return namespaced_resources, non_namespaced_resources
-
-
-def override_namespace(fn: str) -> str:
-    """_summary_
-
-    Args:
-        fn (str): Yaml file path
-
-    Returns:
-        str: New yaml file path with overridden namespace
-    """
-    namespaced_resources, _ = get_namespaced_resources()
-    new_document_list = []
-    with open(fn, 'r') as operator_yaml:
-        parsed_operator_documents = yaml.load_all(operator_yaml,
-                                                  Loader=yaml.FullLoader)
-        for document in parsed_operator_documents:
-            if document['kind'] in namespaced_resources:
-                document['metadata']['namespace'] = CONST.ACTO_NAMESPACE
-            if 'subjects' in document:
-                for subject in document['subjects']:
-                    subject['namespace'] = CONST.ACTO_NAMESPACE
-            new_document_list.append(document)
-    new_yaml = tempfile.mkstemp()[1]
-    with open(new_yaml, 'w') as f:
-        yaml.dump_all(new_document_list, f)
-    return new_yaml
-
-
 def get_yaml_existing_namespace(fn: str) -> Optional[str]:
     '''Get yaml's existing namespace
 
@@ -104,9 +59,8 @@ def get_yaml_existing_namespace(fn: str) -> Optional[str]:
     return None
 
 
-def create_namespace(name: str) -> kubernetes.client.V1Namespace:
-    corev1Api = kubernetes.client.CoreV1Api()
+def create_namespace(apiclient, name: str) -> V1Namespace:
+    corev1Api = kubernetes.client.CoreV1Api(apiclient)
     namespace = corev1Api.create_namespace(
-        kubernetes.client.V1Namespace(metadata=kubernetes.client.V1ObjectMeta(
-            name=name)))
+        V1Namespace(metadata=V1ObjectMeta(name=name)))
     return namespace

@@ -1,23 +1,21 @@
 import argparse
 import os
 import sys
+import threading
 import kubernetes
 import yaml
 import time
 from typing import Tuple
-import random
 from datetime import datetime
-from copy import deepcopy
 import signal
 import logging
-from deepdiff import DeepDiff
 import importlib
 import traceback
 
 from common import *
 import check_result
 from exception import UnknownDeployMethodError
-from preprocess import add_acto_label, preload_images, process_crd, update_preload_images
+from preprocess import add_acto_label, process_crd, update_preload_images
 from input import InputModel
 from deploy import Deploy, DeployMethod
 from constant import CONST
@@ -28,10 +26,14 @@ workdir_path = 'testrun-%s' % datetime.now().strftime('%Y-%m-%d-%H-%M')
 CONST = CONST()
 
 
-def construct_kind_cluster(k8s_version: str):
+def construct_kind_cluster(name: str, k8s_version: str):
     '''Delete kind cluster then create a new one
+
+    Args:
+        name: name of the k8s cluster
+        k8s_version: version of k8s to use
     '''
-    os.system('kind delete cluster')
+    kind_delete_cluster(name)
 
     kind_config_dir = 'kind_config'
     os.makedirs(kind_config_dir, exist_ok=True)
@@ -48,19 +50,9 @@ def construct_kind_cluster(k8s_version: str):
             kind_config_dict['nodes'].append({'role': 'control-plane'})
         yaml.dump(kind_config_dict, kind_config_file)
 
-    os.system('kind create cluster --config %s --image %s' %
-              (kind_config_path, f"kindest/node:v{k8s_version}"))
+    kind_create_cluster(name, kind_config_path, k8s_version)
 
-    kubernetes.config.load_kube_config()
-
-
-def deploy_dependency(yaml_paths):
-    logging.debug('Deploying dependencies')
-    for yaml_path in yaml_paths:
-        os.system('kubectl apply -f %s' % yaml_path)
-    if len(yaml_paths) > 0:
-        time.sleep(30)  # TODO: how to wait smartly
-    return
+    kubernetes.config.load_kube_config(context=kind_kubecontext(name))
 
 
 def construct_candidate_helper(node, node_path, result: dict):
@@ -116,7 +108,8 @@ def timeout_handler(sig, frame):
 class Acto:
 
     def __init__(self, seed_file, deploy, crd_name, preload_images_,
-                 custom_fields_src, helper_crd, context_file, dryrun) -> None:
+                 custom_fields_src, helper_crd, context_file, num_workers,
+                 dryrun) -> None:
         try:
             with open(seed_file, 'r') as cr_file:
                 self.seed = yaml.load(cr_file, Loader=yaml.FullLoader)
@@ -126,7 +119,7 @@ class Acto:
         self.deploy = deploy
         self.crd_name = crd_name
         self.dryrun = dryrun
-        self.curr_trial = 0
+        self.thread_vars = threading.local()
 
         if os.path.exists(context_file):
             with open(context_file, 'r') as context_fin:
@@ -138,25 +131,23 @@ class Acto:
             logging.info('Starting learning run to collect information')
             self.context = {
                 'namespace': '',
-                'current_dir_path': os.path.join(workdir_path, 'learn'),
                 'crd': None,
                 'preload_images': set()
             }
 
             while True:
-                construct_kind_cluster(CONST.K8S_VERSION)
-                deployed = self.deploy.deploy_with_retry(self.context)
+                construct_kind_cluster('learn', CONST.K8S_VERSION)
+                deployed = self.deploy.deploy_with_retry(self.context, 'learn')
                 if deployed:
                     break
+            apiclient = kubernetes_client('learn')
             checker = check_result.Checker(self.context)
-            cmd = [
-                'kubectl', 'apply', '-f', seed_file, '-n',
-                self.context['namespace']
-            ]
+            cmd = ['apply', '-f', seed_file, '-n', self.context['namespace']]
             checker.run(cmd)
 
             update_preload_images(self.context)
-            process_crd(self.context, self.crd_name, helper_crd)
+            process_crd(self.context, apiclient, 'learn', self.crd_name,
+                        helper_crd)
             with open(context_file, 'w') as context_fout:
                 json.dump(self.context, context_fout, cls=ActoEncoder)
 
@@ -165,7 +156,7 @@ class Acto:
             self.context['preload_images'].update(preload_images_)
 
         # Apply custom fields
-        self.input_model = InputModel(self.context['crd']['body'])
+        self.input_model = InputModel(self.context['crd']['body'], num_workers)
         self.input_model.initialize(self.seed)
         if custom_fields_src != None:
             module = importlib.import_module(custom_fields_src)
@@ -178,45 +169,55 @@ class Acto:
                   'w') as plan_file:
             json.dump(self.test_plan, plan_file, cls=ActoEncoder, indent=6)
 
-    def run(self):
+    def run(self, worker_id: int):
+        self.thread_vars.curr_trial = 0
+        self.thread_vars.current_dir_path = ""
+        self.thread_vars.apiclient = None
+        self.thread_vars.worker_id = worker_id
+        self.input_model.set_worker_id(worker_id)
+        self.thread_vars.cluster_name = f"acto-cluster-{worker_id}"
+
         while True:
             trial_start_time = time.time()
-            construct_kind_cluster(CONST.K8S_VERSION)
-            preload_images(self.context['preload_images'])
-            deployed = self.deploy.deploy_with_retry(self.context)
+            construct_kind_cluster(self.thread_vars.cluster_name,
+                                   CONST.K8S_VERSION)
+            self.thread_vars.apiclient = kubernetes_client(
+                self.thread_vars.cluster_name)
+            kind_load_images(self.context['preload_images'],
+                             self.thread_vars.cluster_name)
+            deployed = self.deploy.deploy_with_retry(self.context, self.thread_vars.cluster_name)
             if not deployed:
                 logging.info('Not deployed. Try again!')
                 continue
 
-            add_acto_label(self.context)
-            deploy_dependency([])
-            trial_err, num_tests = self.run_trial(self.curr_trial)
+            add_acto_label(self.thread_vars.apiclient, self.context)
+            trial_err, num_tests = self.run_trial(self.thread_vars.curr_trial)
             self.input_model.reset_input()
 
             trial_elapsed = time.strftime(
                 "%H:%M:%S", time.gmtime(time.time() - trial_start_time))
             logging.info('Trial %d finished, completed in %s' %
-                         (self.curr_trial, trial_elapsed))
+                         (self.thread_vars.curr_trial, trial_elapsed))
             logging.info('---------------------------------------\n')
 
             result_dict = {}
-            result_dict['trial_num'] = self.curr_trial
+            result_dict['trial_num'] = self.thread_vars.curr_trial
             result_dict['duration'] = trial_elapsed
             result_dict['num_tests'] = num_tests
             if trial_err == None:
                 logging.info('Trial %d completed without error',
-                             self.curr_trial)
+                             self.thread_vars.curr_trial)
             else:
                 result_dict['oracle'] = trial_err.oracle
                 result_dict['message'] = trial_err.message
                 result_dict['input_delta'] = trial_err.input_delta
                 result_dict['matched_system_delta'] = \
                     trial_err.matched_system_delta
-            result_path = os.path.join(self.context['current_dir_path'],
+            result_path = os.path.join(self.thread_vars.current_dir_path,
                                        'result.json')
             with open(result_path, 'w') as result_file:
                 json.dump(result_dict, result_file, cls=ActoEncoder, indent=6)
-            self.curr_trial = self.curr_trial + 1
+            self.thread_vars.curr_trial = self.thread_vars.curr_trial + 1
 
             if self.input_model.is_empty():
                 logging.info('Test finished')
@@ -236,11 +237,12 @@ class Acto:
             trial_num: how many trials have been run
             num_mutation: how many mutations to run at each trial
         '''
-        trial_dir = os.path.join(workdir_path, 'trial-%04d' % trial_num)
+        trial_dir = os.path.join(workdir_path, 'trial-%02d-%04d' % (self.thread_vars.worker_id, trial_num))
         os.makedirs(trial_dir, exist_ok=True)
-        self.context['current_dir_path'] = trial_dir
+        self.thread_vars.current_dir_path = trial_dir
 
-        checker = check_result.Checker(self.context)
+        checker = check_result.Checker(self.context, trial_dir,
+                                       self.thread_vars.cluster_name)
 
         curr_input = self.input_model.get_seed_input()
 
@@ -264,8 +266,7 @@ class Acto:
                 yaml.dump(curr_input, mutated_cr_file)
 
             cmd = [
-                'kubectl', 'apply', '-f', mutated_filename, '-n',
-                self.context['namespace']
+                'apply', '-f', mutated_filename, '-n', self.context['namespace']
             ]
             if not self.dryrun:
                 result = checker.run_and_check(cmd,
@@ -373,6 +374,11 @@ if __name__ == '__main__':
         dest='custom_fields',
         help='Python source file containing a list of custom fields')
     parser.add_argument('--context', dest='context', help='Cached context data')
+    parser.add_argument('--num-workers',
+                        dest='num_workers',
+                        type=int,
+                        default=1,
+                        help='Number of concurrent workers to run Acto with')
     parser.add_argument('--dryrun',
                         dest='dryrun',
                         action='store_true',
@@ -386,7 +392,7 @@ if __name__ == '__main__':
         level=logging.DEBUG,
         filemode='w',
         format=
-        '%(asctime)s %(levelname)-6s, %(name)s, %(filename)s:%(lineno)d, %(message)s'
+        '%(asctime)s %(threadName)-11s %(levelname)-6s, %(name)s, %(filename)s:%(lineno)d, %(message)s'
     )
     logging.getLogger("kubernetes").setLevel(logging.ERROR)
     logging.getLogger("sh").setLevel(logging.ERROR)
@@ -424,5 +430,14 @@ if __name__ == '__main__':
         context_cache = args.context
 
     acto = Acto(args.seed, deploy, args.crd_name, args.preload_images,
-                args.custom_fields, args.helper_crd, context_cache, args.dryrun)
-    acto.run()
+                args.custom_fields, args.helper_crd, context_cache,
+                args.num_workers, args.dryrun)
+
+    threads = []
+    for i in range(args.num_workers):
+        t = threading.Thread(target=acto.run, args=(i,))
+        t.start()
+        threads.append(t)
+
+    for t in threads:
+        t.join()

@@ -1,14 +1,12 @@
 import subprocess
 import time
 import logging
-from unicodedata import name
 from deepdiff import DeepDiff
 import json
 import re
 from multiprocessing import Process, Queue
 import queue
 import copy
-import kubernetes
 from custom.compare import CompareMethods
 
 from common import *
@@ -17,13 +15,15 @@ import acto_timer
 
 class Checker:
 
-    def __init__(self, context: dict) -> None:
+    def __init__(self, context: dict, cur_path: str, cluster_name: str) -> None:
         self.context = context
-        self.cur_path = context['current_dir_path']
-        self.corev1Api = kubernetes.client.CoreV1Api()
-        self.appv1Api = kubernetes.client.AppsV1Api()
-        self.batchv1Api = kubernetes.client.BatchV1Api()
-        self.customObjectApi = kubernetes.client.CustomObjectsApi()
+        self.cur_path = cur_path
+        self.cluster_name = cluster_name
+        apiclient = kubernetes_client(cluster_name)
+        self.corev1Api = kubernetes.client.CoreV1Api(apiclient)
+        self.appv1Api = kubernetes.client.AppsV1Api(apiclient)
+        self.batchv1Api = kubernetes.client.BatchV1Api(apiclient)
+        self.customObjectApi = kubernetes.client.CustomObjectsApi(apiclient)
         self.resources = {}
         self.log_line = 0
 
@@ -128,9 +128,9 @@ class Checker:
                     for resource_delta_list in system_delta_without_cr.values():
                         for type_delta_list in resource_delta_list.values():
                             for state_delta in type_delta_list.values():
-                                if self.compare.compare(
-                                    delta.prev, delta.curr, state_delta.prev,
-                                    state_delta.curr):
+                                if self.compare.compare(delta.prev, delta.curr,
+                                                        state_delta.prev,
+                                                        state_delta.curr):
                                     found = True
                     if found:
                         break
@@ -170,7 +170,7 @@ class Checker:
         Returns:
             result of the run
         '''
-        cli_result = subprocess.run(cmd, capture_output=True, text=True)
+        cli_result = kubectl(cmd, cluster_name=self.cluster_name, capture_output=True, text=True)
 
         if cli_result.stdout.find('error') != -1 or cli_result.stderr.find(
                 'error') != -1 or cli_result.stderr.find('invalid') != -1:

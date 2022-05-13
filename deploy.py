@@ -6,10 +6,11 @@ import json
 import exception
 import time
 import logging
-import os
-from kubernetes.client import AppsV1Api
-from k8s_helper import get_yaml_existing_namespace, create_namespace
 from time import sleep
+
+from k8s_helper import get_yaml_existing_namespace, create_namespace
+from common import *
+
 CONST = CONST()
 
 
@@ -19,6 +20,7 @@ class DeployMethod(Enum):
     YAML = auto()
     KUSTOMIZE = auto()
 
+
 class Deploy:
 
     def __init__(self, deploy_method: DeployMethod, path: str, init_yaml=None):
@@ -26,23 +28,22 @@ class Deploy:
         self.init_yaml = init_yaml
         self.console = Console()
         self.deploy_method = deploy_method
-        self.appsV1api = AppsV1Api()
-        self.wait = 10 # sec
+        self.wait = 10  # sec
 
-    def deploy(self, context):
+    def deploy(self, context, cluster_name: str):
         # XXX: context param is temporary, need to figure out why rabbitmq complains about namespace
         pass
-    
-    def deploy_with_retry(self, context, retry_count=3):
+
+    def deploy_with_retry(self, context, cluster_name, retry_count=3):
         while retry_count > 0:
             try:
-                return self.deploy(context)
+                return self.deploy(context, cluster_name)
             except Exception as e:
                 logging.warn(e)
                 logging.info("deploy() failed. Double wait = " + str(self.wait))
                 self.wait = self.wait * 2
                 retry_count -= 1
-        return False 
+        return False
 
     def check_status(self):
         time.sleep(10)
@@ -60,24 +61,21 @@ class Deploy:
 
 class Helm(Deploy):
 
-    def deploy(self, context):
-        if self.init_yaml:
-            sh.kubectl("apply", server_side=True,
-                       filename=self.init_yaml,
-                       namespace=CONST.ACTO_NAMESPACE)
+    def deploy(self, context, cluster_name):
         context['namespace'] = CONST.ACTO_NAMESPACE
-        sh.helm("dependency", "build", self.path)
-        sh.helm("install",
-                "acto-test-operator",
-                "--create-namespace",
-                self.path,
-                wait=True,
-                timeout="3m",
-                namespace=CONST.ACTO_NAMESPACE)
-
+        if self.init_yaml:
+            kubectl([
+                'apply', '--server-side', '-f', self.init_yaml, '-n',
+                context['namespace']
+            ], cluster_name)
+        helm(['dependency', 'build', self.path], cluster_name)
+        helm([
+            'install', 'acto-test-operator', '--create-namespace', self.path,
+            '--wait', '--timeout', '3m', '-n', context['namespace']
+        ], cluster_name)
         self.check_status()
 
-        # TODO: Return True if deploy successfully        
+        # TODO: Return True if deploy successfully
         return True
 
     def check_status(self):
@@ -98,7 +96,7 @@ class Helm(Deploy):
 
 class Yaml(Deploy):
 
-    def deploy(self, context):
+    def deploy(self, context, cluster_name):
         # TODO: We cannot specify namespace ACTO_NAMESPACE here.
         # rabbitMQ operator will report the error message
         '''
@@ -108,15 +106,21 @@ class Yaml(Deploy):
         namespace = get_yaml_existing_namespace(
             self.path) or CONST.ACTO_NAMESPACE
         context['namespace'] = namespace
-        ret = create_namespace(namespace)
+        ret = create_namespace(kubernetes_client(cluster_name), namespace)
         if ret == None:
             logging.error('Failed to create namespace')
         if self.init_yaml:
-            sh.kubectl("apply", filename=self.init_yaml, namespace=namespace)
-        sh.kubectl("apply", server_side=True, filename=self.path, namespace=namespace)
+            kubectl([
+                'apply', '--server-side', '-f', self.init_yaml, '-n',
+                context['namespace']
+            ], cluster_name)
+        kubectl([
+            'apply', '--server-side', '-f', self.path, '-n',
+            context['namespace']
+        ], cluster_name)
         super().check_status()
 
-        # TODO: Return True if deploy successfully 
+        # TODO: Return True if deploy successfully
         return True
 
     # TODO: Do we need to check operator's status?
@@ -155,16 +159,23 @@ class Yaml(Deploy):
     #     else:
     #         return True
 
+
 class Kustomize(Deploy):
 
-    def deploy(self, context):
+    def deploy(self, context, cluster_name):
         # TODO: We need to remove hardcoded namespace.
         namespace = "cass-operator"
         context['namespace'] = namespace
         if self.init_yaml:
-            sh.kubectl("apply", filename=self.init_yaml)
+            kubectl([
+                'apply', '--server-side', '-f', self.init_yaml, '-n',
+                context['namespace']
+            ], cluster_name)
         sleep(self.wait)
-        sh.kubectl("apply", "--force-conflicts", "--server-side",  "-k", self.path)
+        kubectl([
+            'apply', '--server-side', '-k', self.path, '-n',
+            context['namespace']
+        ], cluster_name)
         super().check_status()
         return True
 
