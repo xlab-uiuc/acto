@@ -254,7 +254,8 @@ def kind_create_cluster(name: str, config: str, version: str):
     if version:
         cmd.extend(['--image', f"kindest/node:v{version}"])
 
-    p = subprocess.run(cmd)
+    return subprocess.run(cmd)
+
 
 
 def kind_load_images(images: list, name: str):

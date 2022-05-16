@@ -33,24 +33,34 @@ def construct_kind_cluster(name: str, k8s_version: str):
         name: name of the k8s cluster
         k8s_version: version of k8s to use
     '''
+    logging.info('Deleting kind cluster...')
     kind_delete_cluster(name)
+    time.sleep(5)
 
     kind_config_dir = 'kind_config'
     os.makedirs(kind_config_dir, exist_ok=True)
     kind_config_path = os.path.join(kind_config_dir, 'kind.yaml')
 
-    with open(kind_config_path, 'w') as kind_config_file:
-        kind_config_dict = {}
-        kind_config_dict['kind'] = 'Cluster'
-        kind_config_dict['apiVersion'] = 'kind.x-k8s.io/v1alpha4'
-        kind_config_dict['nodes'] = []
-        for _ in range(3):
-            kind_config_dict['nodes'].append({'role': 'worker'})
-        for _ in range(1):
-            kind_config_dict['nodes'].append({'role': 'control-plane'})
-        yaml.dump(kind_config_dict, kind_config_file)
+    if not os.path.exists(kind_config_path):
+        with open(kind_config_path, 'w') as kind_config_file:
+            kind_config_dict = {}
+            kind_config_dict['kind'] = 'Cluster'
+            kind_config_dict['apiVersion'] = 'kind.x-k8s.io/v1alpha4'
+            kind_config_dict['nodes'] = []
+            for _ in range(2):
+                kind_config_dict['nodes'].append({'role': 'worker'})
+            for _ in range(1):
+                kind_config_dict['nodes'].append({'role': 'control-plane'})
+            yaml.dump(kind_config_dict, kind_config_file)
 
-    kind_create_cluster(name, kind_config_path, k8s_version)
+    p = kind_create_cluster(name, kind_config_path, k8s_version)
+    if p.returncode != 0:
+        logging.error('Failed to create kind cluster, retrying')
+        kind_delete_cluster(name)
+        time.sleep(5)
+        kind_create_cluster(name, kind_config_path, k8s_version)
+
+    logging.info('Created kind cluster')
 
     kubernetes.config.load_kube_config(context=kind_kubecontext(name))
 
