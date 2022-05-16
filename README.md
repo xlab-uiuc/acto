@@ -1,6 +1,7 @@
 # Acto: Automatic, Continuous Testing for (Kubernetes/OpenShift) Operators
 
 ## Prerequisites
+- Golang
 - Python dependencies
     - `pip3 install -r requirements.txt`
 - [k8s Kind cluster](https://kind.sigs.k8s.io/)  
@@ -15,18 +16,19 @@
 To run the test:  
 ```
 python3 acto.py \
-    --candidates CANDIDATES, -c CANDIDATES      yaml file to specify candidates for parameters
-    --seed SEED, -s SEED                        seed CR file
-    --operator OPERATOR, -o OPERATOR            yaml file for deploying the operator
-    --helm OPERATOR_CHART                       Path of operator helm chart
-    --init INIT                                 Path of init yaml file (deploy before operator)
-    --duration DURATION, -d DURATION            Number of hours to run
+    --seed SEED, -s SEED                    seed CR file
+    --operator OPERATOR, -o OPERATOR        yaml file for deploying the operator with kubectl
+    --helm OPERATOR_CHART                   Path of operator helm chart
+    --kustomize KUSTOMIZE                   Path of folder with kustomize
+    --init INIT                             Path of init yaml file (deploy before operator)
+    --duration DURATION, -d DURATION        Number of hours to run
     --preload-images [PRELOAD_IMAGES [PRELOAD_IMAGES ...]]
-                                                Docker images to preload into Kind cluster
-    --crd-name CRD_NAME                         Name of CRD to use, required if there are multiple CRDs
-    --custom-fields CUSTOM_FIELDS               Python source file containing a list of custom fields
-    --context CONTEXT                           Cached context data
-    --dryrun DRYRUN                             Only generate test cases without executing them
+                                            Docker images to preload into Kind cluster
+    --crd-name CRD_NAME                     Name of CRD to use, required if there are multiple CRDs
+    --helper-crd HELPER_CRD                 generated CRD file that helps with the input generation
+    --custom-fields CUSTOM_FIELDS           Python source file containing a list of custom fields
+    --context CONTEXT                       Cached context data
+    --dryrun                                Only generate test cases without executing them
 ```
 
 Example:   
@@ -49,9 +51,13 @@ python3 acto.py --seed data/cass-operator/cr.yaml \
 ```
 
 zookeeper-operator (using helm)  
-`python3 acto.py --candidates data/zookeeper-operator/candidates.yaml --seed data/zookeeper-operator/cr.yaml --helm data/zookeeper-operator/zookeeper-operator --duration 1 --crd-name=zookeeperclusters.zookeeper.pravega.io`
+```console
+python3 acto.py --seed data/zookeeper-operator/cr.yaml \
+                --helm data/zookeeper-operator/zookeeper-operator \
+                --crd-name=zookeeperclusters.zookeeper.pravega.io
+```
 
-**mongodb-operator** (using helm)
+**mongodb-operator** (using kubectl)
 ```console
 python3 acto.py --seed data/percona-server-mongodb-operator/cr.yaml \
                 --operator data/percona-server-mongodb-operator/bundle.yaml \
@@ -97,13 +103,3 @@ Acto aims to automate the E2E testing as much as possible to minimize users' lab
 Currently, porting operators still requires some manual effort, we need:
 1. A way to deploy the operator, the deployment method needs to handle all the necessary prerequisites to deploy the operator, e.g. CRD, namespace creation, RBAC, etc. Current we support three deploy methods: `yaml`, `helm`, and `kustomize`. For example, rabbitmq-operator uses `yaml` for deployment, and the [example is shown here](data/rabbitmq-operator/operator.yaml)
 2. A seed CR yaml serving as the initial cr input. This can be any valid CR for your application. [Example](data/rabbitmq-operator/cr.yaml)
-3. (Optional) (Not yet supported)A candidates file specifying possible values for some parameters. The candidates file's format is very similar to a CR, except you replace the values with another field `candidates` and specify a list of values under `candidates`. Example:
-    ```yaml
-    image:
-        candidates:
-        - "rabbitmq:3.8.21-management"
-        - "rabbitmq:latest"
-        - "rabbitmq:3.9-management"
-        - null
-    ```
-    A complete example for rabbitmq-operator is [here](data/rabbitmq-operator/candidates.yaml)

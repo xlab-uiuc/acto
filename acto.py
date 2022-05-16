@@ -323,29 +323,26 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(
         description='Automatic, Continuous Testing for k8s/openshift Operators')
-    parser.add_argument('--candidates',
-                        '-c',
-                        dest='candidates',
-                        required=False,
-                        help="yaml file to specify candidates for parameters")
     parser.add_argument('--seed',
                         '-s',
                         dest='seed',
                         required=True,
                         help="seed CR file")
-    parser.add_argument('--operator',
-                        '-o',
-                        dest='operator',
-                        required=False,
-                        help="yaml file for deploying the operator")
-    parser.add_argument('--helm',
-                        dest='operator_chart',
-                        required=False,
-                        help='Path of operator helm chart')
-    parser.add_argument('--kustomize',
-                        dest='kustomize',
-                        required=False,
-                        help='Path of folder with kustomize')
+    deploy_method = parser.add_mutually_exclusive_group(required=True)
+    deploy_method.add_argument('--operator',
+                               '-o',
+                               dest='operator',
+                               required=False,
+                               help="yaml file for deploying the\
+                                operator with kubectl")
+    deploy_method.add_argument('--helm',
+                               dest='operator_chart',
+                               required=False,
+                               help='Path of operator helm chart')
+    deploy_method.add_argument('--kustomize',
+                               dest='kustomize',
+                               required=False,
+                               help='Path of folder with kustomize')
     parser.add_argument('--init',
                         dest='init',
                         required=False,
