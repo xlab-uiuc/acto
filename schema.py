@@ -353,6 +353,9 @@ class ObjectSchema(BaseSchema):
                 ret.extend(value.get_all_schemas())
         if self.additional_properties != None:
             ret.append(self.additional_properties)
+        if len(ret) > 500:
+            # XXX: Temporary prune
+            return []
         return ret
 
     def gen(self, minimum: bool = False, **kwargs) -> dict:
