@@ -5,12 +5,11 @@
 - Python dependencies
     - `pip3 install -r requirements.txt`
 - [k8s Kind cluster](https://kind.sigs.k8s.io/)  
-    - For go(1.17+)  
     `go install sigs.k8s.io/kind@v0.11.1`
-    - For older version  
-    `GO111MODULE="on" go get sigs.k8s.io/kind@v0.11.1`
 - kubectl
     - [Installation](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/)
+- helm
+    - [Installing Helm](https://helm.sh/docs/intro/install/)
 
 ## Usage
 To run the test:  
