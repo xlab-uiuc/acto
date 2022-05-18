@@ -64,7 +64,10 @@ class CopiedOverField(CustomField):
 class InputModel:
 
     def __init__(self, crd: dict, mount: list = None) -> None:
-        self.mount = ['spec']  # We model the cr.spec as the input
+        if mount != None:
+            self.mount = mount
+        else:
+            self.mount = ['spec']  # We model the cr.spec as the input
         self.root_schema = extract_schema(
             [], crd['spec']['versions'][-1]['schema']['openAPIV3Schema'])
         self.seed_input = None
@@ -77,6 +80,7 @@ class InputModel:
         # so that we can run the test case itself right after the setup
 
     def initialize(self, initial_value: dict):
+        initial_value['metadata']['name'] = 'test-cluster'
         self.seed_input = attach_schema_to_value(initial_value,
                                                  self.root_schema)
         self.current_input = attach_schema_to_value(initial_value,

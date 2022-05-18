@@ -581,9 +581,7 @@ class AnyOfSchema(BaseSchema):
         return num
 
     def test_cases(self):
-        ret = [
-            TestCase(self.delete_precondition, self.delete, self.delete_setup)
-        ]
+        ret = []
         if self.enum != None:
             for case in self.enum:
                 ret.append(EnumTestCase(case))

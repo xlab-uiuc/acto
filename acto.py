@@ -22,9 +22,6 @@ from input import InputModel
 from deploy import Deploy, DeployMethod
 from constant import CONST
 
-test_summary = {}
-workdir_path = 'testrun-%s' % datetime.now().strftime('%Y-%m-%d-%H-%M')
-
 CONST = CONST()
 
 
@@ -115,8 +112,17 @@ def timeout_handler(sig, frame):
 
 class Acto:
 
-    def __init__(self, seed_file, deploy, crd_name, preload_images_,
-                 custom_fields_src, helper_crd, context_file, dryrun) -> None:
+    def __init__(self,
+                 seed_file,
+                 deploy,
+                 workdir_path,
+                 crd_name,
+                 preload_images_,
+                 custom_fields_src,
+                 helper_crd,
+                 context_file,
+                 dryrun,
+                 mount: list = None) -> None:
         try:
             with open(seed_file, 'r') as cr_file:
                 self.seed = yaml.load(cr_file, Loader=yaml.FullLoader)
@@ -125,6 +131,7 @@ class Acto:
             quit()
         self.deploy = deploy
         self.crd_name = crd_name
+        self.workdir_path = workdir_path
         self.dryrun = dryrun
         self.curr_trial = 0
 
@@ -138,7 +145,7 @@ class Acto:
             logging.info('Starting learning run to collect information')
             self.context = {
                 'namespace': '',
-                'current_dir_path': os.path.join(workdir_path, 'learn'),
+                'current_dir_path': os.path.join(self.workdir_path, 'learn'),
                 'crd': None,
                 'preload_images': set()
             }
@@ -165,7 +172,7 @@ class Acto:
             self.context['preload_images'].update(preload_images_)
 
         # Apply custom fields
-        self.input_model = InputModel(self.context['crd']['body'])
+        self.input_model = InputModel(self.context['crd']['body'], mount)
         self.input_model.initialize(self.seed)
         if custom_fields_src != None:
             module = importlib.import_module(custom_fields_src)
@@ -174,7 +181,7 @@ class Acto:
 
         # Generate test cases
         self.test_plan = self.input_model.generate_test_plan()
-        with open(os.path.join(workdir_path, 'test_plan.json'),
+        with open(os.path.join(self.workdir_path, 'test_plan.json'),
                   'w') as plan_file:
             json.dump(self.test_plan, plan_file, cls=ActoEncoder, indent=6)
 
@@ -236,7 +243,7 @@ class Acto:
             trial_num: how many trials have been run
             num_mutation: how many mutations to run at each trial
         '''
-        trial_dir = os.path.join(workdir_path, 'trial-%04d' % trial_num)
+        trial_dir = os.path.join(self.workdir_path, 'trial-%04d' % trial_num)
         os.makedirs(trial_dir, exist_ok=True)
         self.context['current_dir_path'] = trial_dir
 
@@ -312,7 +319,7 @@ def handle_excepthook(type, message, stack):
 
     stack_info = traceback.StackSummary.extract(traceback.walk_tb(stack),
                                                 capture_locals=True).format()
-    logging.critical(f'An exception occured: {message}.')
+    logging.critical(f'An exception occured: {type}: {message}.')
     for i in stack_info:
         logging.critical(i.encode().decode('unicode-escape'))
     return
@@ -320,6 +327,7 @@ def handle_excepthook(type, message, stack):
 
 if __name__ == '__main__':
     start_time = time.time()
+    workdir_path = 'testrun-%s' % datetime.now().strftime('%Y-%m-%d-%H-%M')
 
     parser = argparse.ArgumentParser(
         description='Automatic, Continuous Testing for k8s/openshift Operators')
@@ -420,6 +428,6 @@ if __name__ == '__main__':
     else:
         context_cache = args.context
 
-    acto = Acto(args.seed, deploy, args.crd_name, args.preload_images,
+    acto = Acto(args.seed, deploy, workdir_path, args.crd_name, args.preload_images,
                 args.custom_fields, args.helper_crd, context_cache, args.dryrun)
     acto.run()

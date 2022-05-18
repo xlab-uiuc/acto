@@ -41,7 +41,8 @@ class Checker:
 
         for resource in self.resource_methods:
             self.resources[resource] = {}
-        self.resources['custom_resource'] = {}
+        self.resources['custom_resource_status'] = {}
+        self.resources['custom_resource_spec'] = {}
 
     def check_resources(self, input_diff, generation: int):
         '''Queries resources in the test namespace, computes delta
@@ -67,14 +68,24 @@ class Checker:
                                                  self.context['crd']['version'],
                                                  self.context['crd']['plural'])
         logging.debug(current_cr)
+        current_cr_spec = current_cr['test-cluster']['spec']
+        current_cr_status = current_cr['test-cluster']['status']
 
-        system_delta['cr_diff'] = postprocess_diff(
-            DeepDiff(self.resources['custom_resource'],
-                     current_cr,
+        system_delta['cr_status_diff'] = postprocess_diff(
+            DeepDiff(self.resources['custom_resource_status'],
+                     current_cr_status,
                      exclude_regex_paths=EXCLUDE_PATH_REGEX,
                      report_repetition=True,
                      view='tree'))
-        self.resources['custom_resource'] = current_cr
+        self.resources['custom_resource_status'] = current_cr_status
+
+        system_delta['cr_spec_diff'] = postprocess_diff(
+            DeepDiff(self.resources['custom_resource_spec'],
+                     current_cr_spec,
+                     exclude_regex_paths=EXCLUDE_PATH_REGEX,
+                     report_repetition=True,
+                     view='tree'))
+        self.resources['custom_resource_spec'] = current_cr_spec
 
         # Dump system delta
         with open('%s/delta-%d.log' % (self.cur_path, generation), 'w') as fout:
@@ -95,7 +106,7 @@ class Checker:
         '''
         # TODO: Include the cr.status diff
         system_delta_without_cr = copy.deepcopy(system_delta)
-        system_delta_without_cr.pop('cr_diff')
+        system_delta_without_cr.pop('cr_spec_diff')
         for delta_list in input_delta.values():
             for delta in delta_list.values():
                 if self.compare.input_compare(delta.prev, delta.curr):
