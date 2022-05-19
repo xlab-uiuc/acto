@@ -24,7 +24,9 @@ https://github.com/k8ssandra/cass-operator/issues/315 fixed
 
 https://github.com/k8ssandra/cass-operator/issues/324
 
-https://github.com/k8ssandra/cass-operator/issues/330
+https://github.com/k8ssandra/cass-operator/issues/330 confirmed
+
+https://github.com/k8ssandra/cass-operator/issues/334
 
 
 https://github.com/k8ssandra/k8ssandra/issues/1380 confirmed
