@@ -41,6 +41,8 @@ https://github.com/spotahome/redis-operator/issues/407
 
 https://jira.percona.com/browse/K8SPSMDB-696
 
+https://jira.percona.com/browse/K8SPSMDB-697
+
 ## kubernetes-sigs/controller-tools
 
 https://github.com/kubernetes-sigs/controller-tools/issues/665 confirmed
