@@ -37,6 +37,10 @@ https://github.com/spotahome/redis-operator/issues/400
 
 https://github.com/spotahome/redis-operator/issues/407
 
+## percona-server-mongodb-operator
+
+https://jira.percona.com/browse/K8SPSMDB-696
+
 ## kubernetes-sigs/controller-tools
 
 https://github.com/kubernetes-sigs/controller-tools/issues/665 confirmed
