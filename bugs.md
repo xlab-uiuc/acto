@@ -26,7 +26,7 @@ https://github.com/k8ssandra/cass-operator/issues/324
 
 https://github.com/k8ssandra/cass-operator/issues/330 confirmed
 
-https://github.com/k8ssandra/cass-operator/issues/334
+https://github.com/k8ssandra/cass-operator/issues/334 confirmed
 
 
 https://github.com/k8ssandra/k8ssandra/issues/1380 confirmed
@@ -41,7 +41,7 @@ https://github.com/spotahome/redis-operator/issues/407
 
 https://jira.percona.com/browse/K8SPSMDB-696
 
-https://jira.percona.com/browse/K8SPSMDB-697
+https://jira.percona.com/browse/K8SPSMDB-697 confirmed
 
 ## kubernetes-sigs/controller-tools
 
