@@ -68,8 +68,15 @@ class Checker:
                                                  self.context['crd']['version'],
                                                  self.context['crd']['plural'])
         logging.debug(current_cr)
-        current_cr_spec = current_cr['test-cluster']['spec']
-        current_cr_status = current_cr['test-cluster']['status']
+
+        current_cr_spec = None
+        current_cr_status = None
+        if 'spec' in current_cr['test-cluster']:
+            # operator developer may choose not to return the field
+            current_cr_spec = current_cr['test-cluster']['spec']
+        if 'status' in current_cr['test-cluster']:
+            # operator developer may choose not to return the field
+            current_cr_status = current_cr['test-cluster']['status']
 
         system_delta['cr_status_diff'] = postprocess_diff(
             DeepDiff(self.resources['custom_resource_status'],
