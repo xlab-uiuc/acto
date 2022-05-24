@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go/types"
 	"os"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -139,6 +140,9 @@ func main() {
 
 	previousVariables := make(map[ssa.Value]Field)
 	mergeMaps(previousVariables, variableFieldMap)
+
+	valueSet := make(map[string]bool)
+	instSet := make(map[string]bool)
 	for {
 		newVariableFieldMap := make(map[ssa.Value]Field)
 		for variable, pathArray := range previousVariables {
@@ -160,7 +164,13 @@ func main() {
 						fmt.Printf("Instruction %s maps to %s\n", instruction.String(), field.Name())
 						newVariableFieldMap[fieldInst] = append(Field{}, pathArray...)
 						newVariableFieldMap[fieldInst] = append(newVariableFieldMap[fieldInst], getFieldNameFromJsonTag(tag))
+					default:
+						// Handle *ssa.Call, *ssa.MakeInterface, *ssa.UnOp
+						valueSet[reflect.TypeOf(fieldInst).String()] = true
 					}
+				default:
+					// Handle *ssa.Store, *ssa.Return
+					instSet[reflect.TypeOf(inst).String()] = true
 				}
 			}
 		}
@@ -170,7 +180,8 @@ func main() {
 			break
 		}
 	}
-	fmt.Println(variableFieldMap)
+	fmt.Println(valueSet)
+	fmt.Println(instSet)
 
 	for v, path := range variableFieldMap {
 		fmt.Printf("[%s] [%s] has path %s\n", v.Parent(), v.String(), path)
@@ -187,8 +198,6 @@ func getSeedVariablesFromFunction(f *ssa.Function) []ssa.Value {
 					v.Type().String() == "github.com/pravega/zookeeper-operator/api/v1beta1.ZookeeperCluster" {
 					ret = append(ret, v)
 				}
-			default:
-				fmt.Printf("Instruction is type [%T]\n", inst)
 			}
 		}
 	}
