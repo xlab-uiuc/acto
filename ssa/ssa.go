@@ -1,7 +1,9 @@
 package main
 
 import (
+	"flag"
 	"fmt"
+	"go/token"
 	"go/types"
 	"os"
 	"reflect"
@@ -88,11 +90,51 @@ func tagLookUp(tag string, key string) (string, bool) {
 	return "", false
 }
 
+func FindSeedValues(prog *ssa.Program, seedType string) []ssa.Value {
+	seedVariables := []ssa.Value{}
+	seedOutFile, err := os.Create("seed.txt")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to create file %s\n", err)
+	}
+
+	seed := findSeedType(prog, seedType)
+	if seed != nil {
+		fmt.Println(seed.String())
+		if seedStruct, ok := seed.Type().Underlying().(*types.Struct); ok {
+			for i := 0; i < seedStruct.NumFields(); i++ {
+				field := seedStruct.Field(i)
+				seedOutFile.WriteString(fmt.Sprintf("%s - %s\n", field.Name(), getFieldNameFromJsonTag(seedStruct.Tag(i))))
+			}
+		} else {
+			seedOutFile.WriteString(fmt.Sprintf("%T", seed.Type().Underlying()))
+		}
+	}
+
+	for f := range ssautil.AllFunctions(prog) {
+		if strings.Contains(f.Name(), "DeepCopy") {
+			continue
+		}
+		seedVariables = append(seedVariables, getSeedVariablesFromFunction(f, seed.Type())...)
+	}
+
+	for _, seedVar := range seedVariables {
+		seedOutFile.WriteString(fmt.Sprintf("Value %s is seed\n", seedVar.String()))
+	}
+	seedOutFile.WriteString(fmt.Sprintf("%d\n", len(seedVariables)))
+
+	return seedVariables
+}
+
 func main() {
 	// Load, parse, and type-check the whole program.
+
+	projectPath := flag.String("project-path", "/home/tyler/zookeeper-operator", "the path to the operator's source dir")
+	seedType := flag.String("seed-type", "ZookeeperCluster", "The type of the root")
+	flag.Parse()
+
 	cfg := packages.Config{
 		Mode: packages.LoadAllSyntax,
-		Dir:  "/home/tyler/zookeeper-operator",
+		Dir:  *projectPath,
 	}
 	initial, err := packages.Load(&cfg, ".")
 	if err != nil {
@@ -105,34 +147,8 @@ func main() {
 	// Build SSA code for the whole program.
 	prog.Build()
 
-	zk_pkg := prog.ImportedPackage("github.com/pravega/zookeeper-operator/api/v1beta1")
-	zk_pkg.WriteTo(os.Stdout)
-	// generator_func := zk_pkg.Members["Reconcile"].(*ssa.Function)
-	// generator_func.WriteTo(os.Stdout)
-
-	seed := findSeedType(prog, "ZookeeperCluster")
-	if seed != nil {
-		fmt.Println(seed.String())
-		if seedStruct, ok := seed.Type().Underlying().(*types.Struct); ok {
-			for i := 0; i < seedStruct.NumFields(); i++ {
-				field := seedStruct.Field(i)
-				fmt.Printf("%s - %s\n", field.Name(), getFieldNameFromJsonTag(seedStruct.Tag(i)))
-			}
-		} else {
-			fmt.Printf("%T", seed.Type().Underlying())
-		}
-	}
-
 	variableFieldMap := make(map[ssa.Value]Field)
-	seedVariables := []ssa.Value{}
-
-	for f := range ssautil.AllFunctions(prog) {
-		if strings.Contains(f.Name(), "DeepCopy") {
-			continue
-		}
-		seedVariables = append(seedVariables, getSeedVariablesFromFunction(f)...)
-	}
-	fmt.Println(len(seedVariables))
+	seedVariables := FindSeedValues(prog, *seedType)
 
 	for _, seedVariable := range seedVariables {
 		variableFieldMap[seedVariable] = Field{}
@@ -149,28 +165,55 @@ func main() {
 			// t := variable.Type()
 			referrers := variable.Referrers()
 			for _, instruction := range *referrers {
-				switch inst := instruction.(type) {
+				switch typedInst := instruction.(type) {
 				case ssa.Value:
-					switch fieldInst := inst.(type) {
+					switch typedValue := typedInst.(type) {
 					case *ssa.FieldAddr:
-						field := fieldInst.X.Type().Underlying().(*types.Pointer).Elem().Underlying().(*types.Struct).Field(fieldInst.Field)
-						tag := fieldInst.X.Type().Underlying().(*types.Pointer).Elem().Underlying().(*types.Struct).Tag(fieldInst.Field)
-						fmt.Printf("Instruction %s maps to %s\n", instruction.String(), field.Name())
-						newVariableFieldMap[fieldInst] = append(Field{}, pathArray...)
-						newVariableFieldMap[fieldInst] = append(newVariableFieldMap[fieldInst], getFieldNameFromJsonTag(tag))
+						tag := typedValue.X.Type().Underlying().(*types.Pointer).Elem().Underlying().(*types.Struct).Tag(typedValue.Field)
+						newVariableFieldMap[typedValue] = append(Field{}, pathArray...)
+						newVariableFieldMap[typedValue] = append(newVariableFieldMap[typedValue], getFieldNameFromJsonTag(tag))
 					case *ssa.Field:
-						field := fieldInst.X.Type().(*types.Struct).Field(fieldInst.Field)
-						tag := fieldInst.X.Type().(*types.Struct).Tag(fieldInst.Field)
-						fmt.Printf("Instruction %s maps to %s\n", instruction.String(), field.Name())
-						newVariableFieldMap[fieldInst] = append(Field{}, pathArray...)
-						newVariableFieldMap[fieldInst] = append(newVariableFieldMap[fieldInst], getFieldNameFromJsonTag(tag))
+						tag := typedValue.X.Type().(*types.Struct).Tag(typedValue.Field)
+						newVariableFieldMap[typedValue] = append(Field{}, pathArray...)
+						newVariableFieldMap[typedValue] = append(newVariableFieldMap[typedValue], getFieldNameFromJsonTag(tag))
+					case *ssa.Call:
+						// Inter-procedural
+						continue
+					case *ssa.MakeInterface:
+						// If variable is casted into another interface, propogate
+						fmt.Printf("Value %s is makeInterface\n", typedValue.String())
+						fmt.Printf("In package %s \n", typedValue.Parent().String())
+						newVariableFieldMap[typedValue] = append(Field{}, pathArray...)
+					case *ssa.UnOp:
+						switch typedValue.Op {
+						case token.MUL:
+							// If dereferenced, propogate
+							fmt.Printf("Value %s is UnOp\n", instruction.String())
+							newVariableFieldMap[typedValue] = append(Field{}, pathArray...)
+						default:
+							fmt.Printf("Value %s is UnOp\n", instruction.String())
+						}
 					default:
-						// Handle *ssa.Call, *ssa.MakeInterface, *ssa.UnOp
-						valueSet[reflect.TypeOf(fieldInst).String()] = true
+						// Report any unhandled value type
+						valueSet[reflect.TypeOf(typedValue).String()] = true
 					}
+				case *ssa.Store:
+					// Two cases, variable is referred as the addr, or the value
+					fmt.Printf("Instruction %s is Store\n", typedInst.String())
+					fmt.Printf("In package %s \n", typedInst.Parent().String())
+					typedInst.Parent().WriteTo(os.Stdout)
+					if typedInst.Addr == variable {
+						fmt.Printf("Referred as the addr\n")
+					} else {
+						fmt.Println("Referred as the value")
+						newVariableFieldMap[typedInst.Addr] = append(Field{}, pathArray...)
+					}
+				case *ssa.Return:
+					// TODO
+					continue
 				default:
-					// Handle *ssa.Store, *ssa.Return
-					instSet[reflect.TypeOf(inst).String()] = true
+					// Report any unhandled instruction type
+					instSet[reflect.TypeOf(typedInst).String()] = true
 				}
 			}
 		}
@@ -188,14 +231,17 @@ func main() {
 	}
 }
 
-func getSeedVariablesFromFunction(f *ssa.Function) []ssa.Value {
+func getSeedVariablesFromFunction(f *ssa.Function, seedType types.Type) []ssa.Value {
 	ret := []ssa.Value{}
 	for _, blk := range f.Blocks {
 		for _, inst := range blk.Instrs {
 			switch v := inst.(type) {
 			case ssa.Value:
-				if v.Type().String() == "*github.com/pravega/zookeeper-operator/api/v1beta1.ZookeeperCluster" ||
-					v.Type().String() == "github.com/pravega/zookeeper-operator/api/v1beta1.ZookeeperCluster" {
+				vType := v.Type()
+				if vType == seedType {
+					ret = append(ret, v)
+				}
+				if vPointer, ok := vType.(*types.Pointer); ok && vPointer.Elem() == seedType {
 					ret = append(ret, v)
 				}
 			}
@@ -203,7 +249,11 @@ func getSeedVariablesFromFunction(f *ssa.Function) []ssa.Value {
 	}
 
 	for _, param := range f.Params {
-		if param.Type().String() == "*github.com/pravega/zookeeper-operator/api/v1beta1.ZookeeperCluster" {
+		vType := param.Type()
+		if vType == seedType {
+			ret = append(ret, param)
+		}
+		if vPointer, ok := vType.(*types.Pointer); ok && vPointer.Elem() == seedType {
 			ret = append(ret, param)
 		}
 	}
