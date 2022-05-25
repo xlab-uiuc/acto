@@ -413,7 +413,8 @@ if __name__ == '__main__':
     # register timeout to automatically stop after # hours
     if args.duration != None:
         signal.signal(signal.SIGALRM, timeout_handler)
-        signal.alarm(int(args.duration) * 60 * 60)
+        # signal.alarm(int(args.duration) * 60 * 60)
+        signal.alarm(int(float(args.duration) * 60 * 60))
     if args.operator_chart:
         deploy = Deploy(DeployMethod.HELM, args.operator_chart, args.init).new()
     elif args.operator:
