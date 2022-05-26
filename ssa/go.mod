@@ -1,4 +1,4 @@
-module example.com/ssa
+module github.com/xlab-uiuc/acto/ssa
 
 go 1.17
 

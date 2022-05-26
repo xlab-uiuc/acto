@@ -7,21 +7,13 @@ import (
 	"go/types"
 	"os"
 	"reflect"
-	"strconv"
 	"strings"
 
+	. "github.com/xlab-uiuc/acto/ssa/util"
 	"golang.org/x/tools/go/packages"
 	"golang.org/x/tools/go/ssa"
 	"golang.org/x/tools/go/ssa/ssautil"
 )
-
-type Field []string
-
-func mergeMaps(m1 map[ssa.Value]Field, m2 map[ssa.Value]Field) {
-	for k, v := range m2 {
-		m1[k] = v
-	}
-}
 
 func findSeedType(prog *ssa.Program, seedStr string) *ssa.Type {
 	for _, pkg := range prog.AllPackages() {
@@ -31,63 +23,6 @@ func findSeedType(prog *ssa.Program, seedStr string) *ssa.Type {
 		}
 	}
 	return nil
-}
-
-func getFieldNameFromJsonTag(tag string) string {
-	jsonTag, _ := tagLookUp(tag, "json")
-	v := strings.Split(jsonTag, ",")[0]
-	return v
-}
-
-func tagLookUp(tag string, key string) (string, bool) {
-	for tag != "" {
-		// Skip leading space.
-		i := 0
-		for i < len(tag) && tag[i] == ' ' {
-			i++
-		}
-		tag = tag[i:]
-		if tag == "" {
-			break
-		}
-
-		// Scan to colon. A space, a quote or a control character is a syntax error.
-		// Strictly speaking, control chars include the range [0x7f, 0x9f], not just
-		// [0x00, 0x1f], but in practice, we ignore the multi-byte control characters
-		// as it is simpler to inspect the tag's bytes than the tag's runes.
-		i = 0
-		for i < len(tag) && tag[i] > ' ' && tag[i] != ':' && tag[i] != '"' && tag[i] != 0x7f {
-			i++
-		}
-		if i == 0 || i+1 >= len(tag) || tag[i] != ':' || tag[i+1] != '"' {
-			break
-		}
-		name := string(tag[:i])
-		tag = tag[i+1:]
-
-		// Scan quoted string to find value.
-		i = 1
-		for i < len(tag) && tag[i] != '"' {
-			if tag[i] == '\\' {
-				i++
-			}
-			i++
-		}
-		if i >= len(tag) {
-			break
-		}
-		qvalue := string(tag[:i+1])
-		tag = tag[i+1:]
-
-		if key == name {
-			value, err := strconv.Unquote(qvalue)
-			if err != nil {
-				break
-			}
-			return value, true
-		}
-	}
-	return "", false
 }
 
 func FindSeedValues(prog *ssa.Program, seedType string) []ssa.Value {
@@ -103,7 +38,7 @@ func FindSeedValues(prog *ssa.Program, seedType string) []ssa.Value {
 		if seedStruct, ok := seed.Type().Underlying().(*types.Struct); ok {
 			for i := 0; i < seedStruct.NumFields(); i++ {
 				field := seedStruct.Field(i)
-				seedOutFile.WriteString(fmt.Sprintf("%s - %s\n", field.Name(), getFieldNameFromJsonTag(seedStruct.Tag(i))))
+				seedOutFile.WriteString(fmt.Sprintf("%s - %s\n", field.Name(), GetFieldNameFromJsonTag(seedStruct.Tag(i))))
 			}
 		} else {
 			seedOutFile.WriteString(fmt.Sprintf("%T", seed.Type().Underlying()))
@@ -123,6 +58,20 @@ func FindSeedValues(prog *ssa.Program, seedType string) []ssa.Value {
 	seedOutFile.WriteString(fmt.Sprintf("%d\n", len(seedVariables)))
 
 	return seedVariables
+}
+
+// get all the types from program
+func getAllTypes(prog *ssa.Program) []*ssa.Type {
+	ret := []*ssa.Type{}
+	for _, pkg := range prog.AllPackages() {
+		for _, m := range pkg.Members {
+			switch typedMember := m.(type) {
+			case *ssa.Type:
+				ret = append(ret, typedMember)
+			}
+		}
+	}
+	return ret
 }
 
 func main() {
@@ -147,21 +96,25 @@ func main() {
 	// Build SSA code for the whole program.
 	prog.Build()
 
-	variableFieldMap := make(map[ssa.Value]Field)
+	variableFieldsMap := make(map[ssa.Value]*FieldSet)
 	seedVariables := FindSeedValues(prog, *seedType)
 
-	for _, seedVariable := range seedVariables {
-		variableFieldMap[seedVariable] = Field{}
-	}
+	allTypes := getAllTypes(prog)
 
-	previousVariables := make(map[ssa.Value]Field)
-	mergeMaps(previousVariables, variableFieldMap)
+	for _, seedVariable := range seedVariables {
+		rootField := []string{"root"}
+		variableFieldsMap[seedVariable] = NewFieldSet()
+		variableFieldsMap[seedVariable].Add(&Field{
+			Path: rootField,
+		})
+	}
 
 	valueSet := make(map[string]bool)
 	instSet := make(map[string]bool)
+	callValueSet := make(map[string]bool)
 	for {
-		newVariableFieldMap := make(map[ssa.Value]Field)
-		for variable, pathArray := range previousVariables {
+		changed := false
+		for variable, parentFieldSet := range variableFieldsMap {
 			// t := variable.Type()
 			referrers := variable.Referrers()
 			for _, instruction := range *referrers {
@@ -169,44 +122,117 @@ func main() {
 				case ssa.Value:
 					switch typedValue := typedInst.(type) {
 					case *ssa.FieldAddr:
-						tag := typedValue.X.Type().Underlying().(*types.Pointer).Elem().Underlying().(*types.Struct).Tag(typedValue.Field)
-						newVariableFieldMap[typedValue] = append(Field{}, pathArray...)
-						newVariableFieldMap[typedValue] = append(newVariableFieldMap[typedValue], getFieldNameFromJsonTag(tag))
+						for _, parentField := range parentFieldSet.Fields() {
+							newField := NewSubField(typedValue.X.Type().Underlying().(*types.Pointer).Elem().Underlying().(*types.Struct), parentField, typedValue.Field)
+							ok := AddFieldToValueFieldSetMap(variableFieldsMap, typedValue, newField)
+							if ok {
+								changed = true
+							}
+						}
 					case *ssa.Field:
-						tag := typedValue.X.Type().(*types.Struct).Tag(typedValue.Field)
-						newVariableFieldMap[typedValue] = append(Field{}, pathArray...)
-						newVariableFieldMap[typedValue] = append(newVariableFieldMap[typedValue], getFieldNameFromJsonTag(tag))
+						for _, parentField := range parentFieldSet.Fields() {
+							newField := NewSubField(typedValue.X.Type().(*types.Struct), parentField, typedValue.Field)
+							ok := AddFieldToValueFieldSetMap(variableFieldsMap, typedValue, newField)
+							if ok {
+								changed = true
+							}
+						}
 					case *ssa.Call:
 						// Inter-procedural
-						continue
+						// Two possibilities for Call: function call or interface invocation
+						if !typedValue.Call.IsInvoke() {
+							// ordinary function call
+							var paramIndex int
+							for index, param := range typedValue.Call.Args {
+								if param == typedValue {
+									paramIndex = index
+								}
+							}
+							switch callValue := typedValue.Call.Value.(type) {
+							case *ssa.Function:
+								// propogate to the function parameter
+								param := callValue.Params[paramIndex]
+								for _, parentField := range parentFieldSet.Fields() {
+									newField := parentField.Clone()
+									ok := AddFieldToValueFieldSetMap(variableFieldsMap, param, newField)
+									if ok {
+										changed = true
+									}
+								}
+							case *ssa.MakeClosure:
+								// XXX could be closure, let's handle it if it's used
+								fmt.Println("Warning, closure used")
+							case *ssa.Builtin:
+								// Stop propogation?
+								continue
+							default:
+								callValueSet[callValue.Name()] = true
+							}
+						} else {
+							// interface invocation
+							interfaceType := typedValue.Call.Value.Type().Underlying()
+							method := typedValue.Call.Method
+							fmt.Printf("Interface type %T\n", interfaceType)
+							for _, typ := range allTypes {
+								if types.Implements(typ.Type(), interfaceType.(*types.Interface)) {
+									fmt.Printf("%T implements %s\n", typ.Type(), interfaceType)
+									if concreteType, ok := typ.Type().(*types.Named); ok {
+										for i := 0; i < concreteType.NumMethods(); i++ {
+											if concreteType.Method(i).Name() == method.Name() {
+												fmt.Printf("Found concrete method for %s\n", method.FullName())
+											}
+										}
+									} else {
+										fmt.Fprintf(os.Stderr, "concrete type is not named, but %T\n", typ.Type())
+									}
+								}
+							}
+						}
 					case *ssa.MakeInterface:
 						// If variable is casted into another interface, propogate
-						fmt.Printf("Value %s is makeInterface\n", typedValue.String())
-						fmt.Printf("In package %s \n", typedValue.Parent().String())
-						newVariableFieldMap[typedValue] = append(Field{}, pathArray...)
+						for _, parentField := range parentFieldSet.Fields() {
+							newField := parentField.Clone()
+							ok := AddFieldToValueFieldSetMap(variableFieldsMap, typedValue, newField)
+							if ok {
+								changed = true
+							}
+						}
 					case *ssa.UnOp:
 						switch typedValue.Op {
 						case token.MUL:
 							// If dereferenced, propogate
-							fmt.Printf("Value %s is UnOp\n", instruction.String())
-							newVariableFieldMap[typedValue] = append(Field{}, pathArray...)
+							for _, parentField := range parentFieldSet.Fields() {
+								newField := parentField.Clone()
+								ok := AddFieldToValueFieldSetMap(variableFieldsMap, typedValue, newField)
+								if ok {
+									changed = true
+								}
+							}
 						default:
 							fmt.Printf("Value %s is UnOp\n", instruction.String())
 						}
+					case *ssa.BinOp:
+						// Do not handle BinOp in this pass
+						continue
 					default:
 						// Report any unhandled value type
 						valueSet[reflect.TypeOf(typedValue).String()] = true
+						fmt.Printf("Unhandled type %s\n", typedValue.String())
 					}
 				case *ssa.Store:
 					// Two cases, variable is referred as the addr, or the value
-					fmt.Printf("Instruction %s is Store\n", typedInst.String())
-					fmt.Printf("In package %s \n", typedInst.Parent().String())
-					typedInst.Parent().WriteTo(os.Stdout)
 					if typedInst.Addr == variable {
 						fmt.Printf("Referred as the addr\n")
 					} else {
-						fmt.Println("Referred as the value")
-						newVariableFieldMap[typedInst.Addr] = append(Field{}, pathArray...)
+						// referred as the value, propogate to addr
+						// XXX: may need to propogate backward
+						for _, parentField := range parentFieldSet.Fields() {
+							newField := parentField.Clone()
+							ok := AddFieldToValueFieldSetMap(variableFieldsMap, typedInst.Addr, newField)
+							if ok {
+								changed = true
+							}
+						}
 					}
 				case *ssa.Return:
 					// TODO
@@ -217,18 +243,17 @@ func main() {
 				}
 			}
 		}
-		mergeMaps(variableFieldMap, newVariableFieldMap)
-		previousVariables = newVariableFieldMap
-		if len(newVariableFieldMap) == 0 {
+		if !changed {
 			break
 		}
+
 	}
 	fmt.Println(valueSet)
 	fmt.Println(instSet)
-
-	for v, path := range variableFieldMap {
-		fmt.Printf("[%s] [%s] has path %s\n", v.Parent(), v.String(), path)
+	for v, path := range variableFieldsMap {
+		fmt.Printf("[%s] [%s]=[%s] has path %s\n", v.Parent(), v.Name(), v.String(), path)
 	}
+	fmt.Println("------------------------")
 }
 
 func getSeedVariablesFromFunction(f *ssa.Function, seedType types.Type) []ssa.Value {
