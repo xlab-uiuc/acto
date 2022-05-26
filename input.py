@@ -21,7 +21,7 @@ class CustomField:
 class CopiedOverField(CustomField):
     '''For pruning the fields that are simply copied over to other resources
     
-    All the subfields of this field will be pruned
+    All the subfields of this field (excluding this field) will be pruned
     '''
 
     class PruneChildrenObjectSchema(ObjectSchema):
@@ -60,6 +60,43 @@ class CopiedOverField(CustomField):
         else:
             super().__init__(path, self.PruneChildrenObjectSchema)
 
+class ProblemMaticField(CustomField):
+    '''For pruning the field that can not be simply generated using Acto's current generation mechanism.
+    
+    All the subfields of this field (including this field itself) will be pruned
+    '''
+    class PruneEntireObjectSchema(ObjectSchema):
+        
+        def __init__(self, path: list, schema: dict) -> None:
+            super().__init__(path, schema)
+
+        def __init__(self, schema_obj: BaseSchema) -> None:
+            super().__init__(schema_obj.path, schema_obj.raw_schema)
+        
+        def get_all_schemas(self) -> list:
+            return []
+
+        def __str__(self):
+            return "Field Pruned"        
+    class PruneEntireArraySchema(ArraySchema):
+        
+        def __init__(self, path: list, schema: dict) -> None:
+            super().__init__(path, schema)
+
+        def __init__(self, schema_obj: BaseSchema) -> None:
+            super().__init__(schema_obj.path, schema_obj.raw_schema)
+        
+        def get_all_schemas(self) -> list:
+            return []
+
+        def __str__(self):
+            return "Field Pruned"        
+
+    def __init__(self, path, array: bool = False) -> None:
+        if array:
+            super().__init__(path, self.PruneEntireArraySchema)
+        else:
+            super().__init__(path, self.PruneEntireObjectSchema)
 
 class InputModel:
 
