@@ -96,6 +96,12 @@ python3 acto.py --seed data/tidb-operator/cr.yaml \
                 --duration 1
 ```
 
+**spark-operator**
+```
+python3 acto.py --seed data/spark-operator/cr.yaml \
+                --helm data/spark-operator/spark-operator-chart --crd-name=sparkapplications.sparkoperator.k8s.io
+```
+
 ## Porting operators
 Acto aims to automate the E2E testing as much as possible to minimize users' labor.
 

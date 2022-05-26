@@ -21051,14 +21051,14 @@ spec:
       serviceAccountName: percona-server-mongodb-operator
       containers:
         - name: percona-server-mongodb-operator
-          image: perconalab/percona-server-mongodb-operator:main
+          image: perconalab/percona-server-mongodb-operator:release-1-12-0
           ports:
           - containerPort: 60000
             protocol: TCP
             name: metrics
           command:
           - percona-server-mongodb-operator
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           env:
             - name: WATCH_NAMESPACE
               valueFrom:
