@@ -285,12 +285,12 @@ class Checker:
 
         with open('%s/operator-%d.log' % (self.cur_path, generation),
                   'w') as fout:
-            fout.write(log)
+            fout.write(log) # TODO: change to new_log_lines
 
         for line in new_log_lines:
             if invalid_input_message(line):
                 return InvalidInputResult()
-            elif 'error' in line:
+            elif 'error' in line.lower():
                 skip = False
                 for regex in EXCLUDE_ERROR_REGEX:
                     if re.search(regex, line):
