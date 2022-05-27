@@ -287,7 +287,6 @@ class Acto:
                     self.input_model.discard_test_case()
                 # Revert to parent CR
                 self.input_model.revert()
-                time.sleep(1000)
             elif isinstance(result, UnchangedInputResult):
                 if setup:
                     self.input_model.discard_test_case()
