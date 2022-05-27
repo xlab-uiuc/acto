@@ -1,7 +1,6 @@
 package util
 
 import (
-	"fmt"
 	"go/types"
 )
 
@@ -37,7 +36,16 @@ func NewSubField(parentStruct *types.Struct, parentField Field, fieldIndex int) 
 
 	tag := parentStruct.Tag(fieldIndex)
 	newPath = append(newPath, GetFieldNameFromJsonTag(tag))
-	fmt.Printf("%s -> %s\n", parentField.Path, newPath)
+	return &Field{
+		Path: newPath,
+	}
+}
+
+func NewIndexField(parentField Field) *Field {
+	newPath := make([]string, len(parentField.Path))
+	copy(newPath, parentField.Path)
+
+	newPath = append(newPath, "INDEX")
 	return &Field{
 		Path: newPath,
 	}
@@ -72,4 +80,41 @@ func (fs *FieldSet) Contain(f Field) bool {
 
 func (fs FieldSet) Fields() []Field {
 	return fs.fields
+}
+
+func (fs FieldSet) IsMetadata() bool {
+	if len(fs.fields) == 1 {
+		if fs.fields[0].Equal(Field{Path: []string{"root", "metadata"}}) {
+			return true
+		}
+	}
+	return false
+}
+
+func (fs FieldSet) IsStatus() bool {
+	if len(fs.fields) == 1 {
+		if fs.fields[0].Equal(Field{Path: []string{"root", "status"}}) {
+			return true
+		}
+	}
+	return false
+}
+
+func (fs FieldSet) IsTypeMeta() bool {
+	if len(fs.fields) == 1 {
+		if fs.fields[0].Equal(Field{Path: []string{"root", ""}}) {
+			return true
+		}
+	}
+	return false
+}
+
+func MergeFieldSets(sets ...FieldSet) *FieldSet {
+	ret := NewFieldSet()
+	for _, set := range sets {
+		for _, field := range set.Fields() {
+			ret.Add(&field)
+		}
+	}
+	return ret
 }

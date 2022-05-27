@@ -1,10 +1,14 @@
 package util
 
 import (
+	"fmt"
+	"go/types"
+	"os"
 	"strconv"
 	"strings"
 
 	"golang.org/x/tools/go/ssa"
+	"golang.org/x/tools/go/ssa/ssautil"
 )
 
 func AddFieldToValueFieldSetMap(m map[ssa.Value]*FieldSet, v ssa.Value, f *Field) bool {
@@ -86,4 +90,95 @@ func tagLookUp(tag string, key string) (string, bool) {
 		}
 	}
 	return "", false
+}
+
+// get all the types from program
+func GetAllTypes(prog *ssa.Program) []*ssa.Type {
+	ret := []*ssa.Type{}
+	for _, pkg := range prog.AllPackages() {
+		for _, m := range pkg.Members {
+			switch typedMember := m.(type) {
+			case *ssa.Type:
+				ret = append(ret, typedMember)
+			}
+		}
+	}
+	return ret
+}
+
+func findSeedType(prog *ssa.Program, seedStr string) *ssa.Type {
+	for _, pkg := range prog.AllPackages() {
+		seed := pkg.Members[seedStr]
+		if typ, ok := seed.(*ssa.Type); ok {
+			return typ
+		}
+	}
+	return nil
+}
+
+func FindSeedValues(prog *ssa.Program, seedType string) []ssa.Value {
+	seedVariables := []ssa.Value{}
+	seedOutFile, err := os.Create("seed.txt")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to create file %s\n", err)
+	}
+
+	seed := findSeedType(prog, seedType)
+	if seed != nil {
+		fmt.Println(seed.String())
+		if seedStruct, ok := seed.Type().Underlying().(*types.Struct); ok {
+			for i := 0; i < seedStruct.NumFields(); i++ {
+				field := seedStruct.Field(i)
+				seedOutFile.WriteString(fmt.Sprintf("%s - %s\n", field.Name(), GetFieldNameFromJsonTag(seedStruct.Tag(i))))
+			}
+		} else {
+			seedOutFile.WriteString(fmt.Sprintf("%T", seed.Type().Underlying()))
+		}
+	}
+
+	for f := range ssautil.AllFunctions(prog) {
+		if strings.Contains(f.Name(), "DeepCopy") {
+			continue
+		}
+		if f.Name() == "Build" {
+			f.WriteTo(os.Stdout)
+		}
+		seedVariables = append(seedVariables, getSeedVariablesFromFunction(f, seed.Type())...)
+	}
+
+	for _, seedVar := range seedVariables {
+		seedOutFile.WriteString(fmt.Sprintf("Value %s is seed\n", seedVar.String()))
+	}
+	seedOutFile.WriteString(fmt.Sprintf("%d\n", len(seedVariables)))
+
+	return seedVariables
+}
+
+func getSeedVariablesFromFunction(f *ssa.Function, seedType types.Type) []ssa.Value {
+	ret := []ssa.Value{}
+	for _, blk := range f.Blocks {
+		for _, inst := range blk.Instrs {
+			switch v := inst.(type) {
+			case ssa.Value:
+				vType := v.Type()
+				if vType == seedType {
+					ret = append(ret, v)
+				}
+				if vPointer, ok := vType.(*types.Pointer); ok && vPointer.Elem() == seedType {
+					ret = append(ret, v)
+				}
+			}
+		}
+	}
+
+	for _, param := range f.Params {
+		vType := param.Type()
+		if vType == seedType {
+			ret = append(ret, param)
+		}
+		if vPointer, ok := vType.(*types.Pointer); ok && vPointer.Elem() == seedType {
+			ret = append(ret, param)
+		}
+	}
+	return ret
 }
