@@ -43,6 +43,10 @@ https://jira.percona.com/browse/K8SPSMDB-696
 
 https://jira.percona.com/browse/K8SPSMDB-697 confirmed
 
+## OT-CONTAINER-KIT/redis-operator
+
+https://github.com/OT-CONTAINER-KIT/redis-operator/issues/279
+
 ## kubernetes-sigs/controller-tools
 
 https://github.com/kubernetes-sigs/controller-tools/issues/665 confirmed
