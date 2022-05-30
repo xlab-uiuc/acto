@@ -278,6 +278,7 @@ class Acto:
                 result = checker.run_and_check(cmd,
                                                input_delta,
                                                generation=generation)
+                checker.dump_events()
             else:
                 result = PassResult()
             generation += 1

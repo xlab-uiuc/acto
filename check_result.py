@@ -43,20 +43,20 @@ class Checker:
             self.resources[resource] = {}
         self.resources['custom_resource_status'] = {}
         self.resources['custom_resource_spec'] = {}
-
-    def dump_resource_events(self, generation: int):
-        '''Queries events in the test namespace, dumps events into trial folder
-        
-        Args:
-            generation: at which step in the trial
-        '''
-        ret = self.corev1Api.list_namespaced_event(self.context['namespace'],
-                                                pretty=True
+    def dump_events(self):
+        events = self.corev1Api.list_namespaced_event(self.context['namespace'],
+                                                pretty=True,
                                                 _preload_content=True,
                                                 watch=False)
 
-        with open('%s/events-%d.log' % (self.cur_path, generation), 'w') as fout:
-            fout.write(ret)
+        with open("%s/events.log" % (self.cur_path), 'w') as fout:
+            for event in events.items:
+                fout.write("%s %s %s %s:\t%s\n" % (
+                    event.first_timestamp.strftime("%H:%M:%S") if event.first_timestamp != None else "None",
+                    event.involved_object.kind,
+                    event.involved_object.name,
+                    event.involved_object.resource_version,
+                    event.message))
 
     def dump_resource_states(self, input_diff, generation: int):
         '''Queries resources in the test namespace, computes delta
@@ -135,8 +135,9 @@ class Checker:
         self.log_line = len(log_lines)
 
         with open('%s/operator-%d.log' % (self.cur_path, generation),
-                    'w') as fout:
-            fout.write(new_log_lines)
+                    'a') as fout:
+            for line in new_log_lines:
+                fout.write(line)
 
 
     def parse_delta(self, generation: int):
@@ -168,7 +169,7 @@ class Checker:
         system_delta_without_cr.pop('cr_spec_diff')
         for delta_list in input_delta.values():
             for delta in delta_list.values():
-                delta = Diff(delta)
+                delta = Diff(delta['prev'], delta['curr'], delta['path'])
                 if self.compare.input_compare(delta.prev, delta.curr):
                     # if the input delta is considered as equivalent, skip
                     continue
@@ -199,6 +200,7 @@ class Checker:
                     for resource_delta_list in system_delta_without_cr.values():
                         for type_delta_list in resource_delta_list.values():
                             for state_delta in type_delta_list.values():
+                                state_delta = Diff(state_delta['prev'], state_delta['curr'], state_delta['path'])
                                 if self.compare.compare(
                                     delta.prev, delta.curr, state_delta.prev,
                                     state_delta.curr):
@@ -235,16 +237,12 @@ class Checker:
                         skip = True
                 if skip:
                     continue
-                logging.info('Found error in operator log')
+                logging.error('Found error in operator log')
                 return ErrorResult(Oracle.ERROR_LOG, line)
             else:
                 continue
 
         return PassResult()
-
-    def check_event(self, generation: int) -> RunResult:
-        #TODO: To be done after analyzing the dumped result
-        pass
 
     def check_health(self) -> RunResult:
         '''System health oracle'''
@@ -293,10 +291,8 @@ class Checker:
         self.wait_for_system_converge()
 
         self.dump_operator_log(generation)
-        self.dump_resource_events(generation)
         self.dump_resource_states(input_diff, generation)
 
-        event_result = self.check_event(generation)
         state_result = self.check_resources(generation)
         log_result = self.check_operator_log(generation)
 
@@ -348,7 +344,7 @@ class Checker:
         for cr in custom_resources:
             result_dict[cr['metadata']['name']] = cr
         return result_dict
-
+    
     def run(self, cmd: list):
         '''Simply run the cmd without checking'''
 
@@ -369,7 +365,7 @@ class Checker:
         logging.debug('STDERR: ' + cli_result.stderr)
 
         self.wait_for_system_converge()
-
+    
     def wait_for_system_converge(self, timeout=600):
         '''This function blocks until the system converges
         It sets up a resettable timer which goes off in 60 seconds.
@@ -446,6 +442,7 @@ def list_matched_fields(path: list, delta_dict: dict) -> list:
     for resource_delta_list in delta_dict.values():
         for type_delta_list in resource_delta_list.values():
             for delta in type_delta_list.values():
+                delta = Diff(delta['prev'], delta['curr'], delta['path'])
                 position = 0
                 while canonicalize(path[-position - 1]) == canonicalize(
                         delta.path[-position - 1]):

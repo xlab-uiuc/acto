@@ -17,11 +17,6 @@ class Diff:
         self.prev = prev
         self.curr = curr
         self.path = path
-    
-    def __init__(self, diff :dict) -> None:
-        self.prev = diff["prev"] if "prev" in diff else NotPresent # TODO: raise exception if the field is not present
-        self.curr = diff["curr"] if "curr" in diff else NotPresent
-        self.path = diff["path"] if "path" in diff else NotPresent
 
     def to_dict(self):
         '''serialize Diff object
