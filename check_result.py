@@ -44,11 +44,25 @@ class Checker:
         self.resources['custom_resource_status'] = {}
         self.resources['custom_resource_spec'] = {}
 
-    def check_resources(self, input_diff, generation: int):
+    def dump_resource_events(self, generation: int):
+        '''Queries events in the test namespace, dumps events into trial folder
+        
+        Args:
+            generation: at which step in the trial
+        '''
+        ret = self.corev1Api.list_namespaced_event(self.context['namespace'],
+                                                pretty=True
+                                                _preload_content=True,
+                                                watch=False)
+
+        with open('%s/events-%d.log' % (self.cur_path, generation), 'w') as fout:
+            fout.write(ret)
+
+    def dump_resource_states(self, input_diff, generation: int):
         '''Queries resources in the test namespace, computes delta
         
         Args:
-            input_diff: delta in the CR yaml input
+            input_diff: delta in the test namespace, computes delta
             generation: at which step in the trial
         '''
         input_delta = postprocess_diff(input_diff)
@@ -62,21 +76,15 @@ class Checker:
                          report_repetition=True,
                          view='tree'))
             self.resources[resource] = current_resource
-
+            
         current_cr = self.__get_custom_resources(self.context['namespace'],
                                                  self.context['crd']['group'],
                                                  self.context['crd']['version'],
-                                                 self.context['crd']['plural'])
+                                                 self.context['crd']['plural'])            
         logging.debug(current_cr)
 
-        current_cr_spec = None
-        current_cr_status = None
-        if 'spec' in current_cr['test-cluster']:
-            # operator developer may choose not to return the field
-            current_cr_spec = current_cr['test-cluster']['spec']
-        if 'status' in current_cr['test-cluster']:
-            # operator developer may choose not to return the field
-            current_cr_status = current_cr['test-cluster']['status']
+        current_cr_spec = current_cr['test-cluster']['spec'] if 'spec' in current_cr['test-cluster'] else None
+        current_cr_status = current_cr['test-cluster']['status'] if 'status' in current_cr['test-cluster'] else None
 
         system_delta['cr_status_diff'] = postprocess_diff(
             DeepDiff(self.resources['custom_resource_status'],
@@ -101,21 +109,66 @@ class Checker:
             fout.write('\n---------- SYSTEM DELTA ----------\n')
             fout.write(json.dumps(system_delta, cls=ActoEncoder, indent=6))
 
-        # Dump system snapshot
+        # Dump system state
         with open('%s/system-state-%03d.json' % (self.cur_path, generation),
                   'w') as fout:
             json.dump(self.resources, fout, cls=ActoEncoder, indent=6)
+
+    def dump_operator_log(self, generation: int):
+        operator_pod_list = self.corev1Api.list_namespaced_pod(
+            namespace=self.context['namespace'],
+            watch=False,
+            label_selector="acto/tag=operator-pod").items
+        if len(operator_pod_list) >= 1:
+            logging.debug('Got operator pod: pod name:' +
+                            operator_pod_list[0].metadata.name)
+        else:
+            logging.error('Failed to find operator pod')
+
+        log = self.corev1Api.read_namespaced_pod_log(
+            name=operator_pod_list[0].metadata.name,
+            namespace=self.context['namespace'])
+
+        # only get the new log since last time
+        log_lines = log.split('\n')
+        new_log_lines = log_lines[self.log_line:]
+        self.log_line = len(log_lines)
+
+        with open('%s/operator-%d.log' % (self.cur_path, generation),
+                    'w') as fout:
+            fout.write(new_log_lines)
+
+
+    def parse_delta(self, generation: int):
+        curr_section = ""
+        input_diff_str = ""
+        system_diff_str = ""
+        with open('%s/delta-%d.log' % (self.cur_path, generation), 'r') as f:
+            for line in f.readlines():
+                if line == "---------- INPUT DELTA  ----------\n":
+                    curr_section = 'input'
+                elif line == '---------- SYSTEM DELTA ----------\n':
+                    curr_section = 'system'
+                elif curr_section == 'input':
+                    input_diff_str += line
+                elif curr_section == 'system':
+                    system_diff_str += line
+        return (json.loads(input_diff_str), json.loads(system_diff_str))
+
+    def check_resources(self, generation: int):
         '''
         System state oracle
 
         For each delta in the input, find the longest matching fields in the system state.
         Then compare the the delta values (prev, curr).
         '''
+        input_delta, system_delta = self.parse_delta(generation)
         # TODO: Include the cr.status diff
         system_delta_without_cr = copy.deepcopy(system_delta)
         system_delta_without_cr.pop('cr_spec_diff')
         for delta_list in input_delta.values():
             for delta in delta_list.values():
+                delta = Diff(delta)
                 if self.compare.input_compare(delta.prev, delta.curr):
                     # if the input delta is considered as equivalent, skip
                     continue
@@ -159,6 +212,39 @@ class Checker:
                                        delta)
 
         return PassResult()
+
+    def check_operator_log(self, generation: int) -> RunResult:
+        '''Check the operator log for error msg
+        
+        Returns
+            RunResult of the checking
+        '''
+        # parse operator
+        log = []
+        with open("%s/operator-%d.log" % (self.cur_path, generation), 'r') as f:
+            log = f.readlines()
+
+        for line in log:
+            if invalid_input_message(line):
+                return InvalidInputResult()
+            elif 'error' in line.lower():
+                skip = False
+                for regex in EXCLUDE_ERROR_REGEX:
+                    if re.search(regex, line):
+                        logging.debug('Skipped error msg: %s' % line)
+                        skip = True
+                if skip:
+                    continue
+                logging.info('Found error in operator log')
+                return ErrorResult(Oracle.ERROR_LOG, line)
+            else:
+                continue
+
+        return PassResult()
+
+    def check_event(self, generation: int) -> RunResult:
+        #TODO: To be done after analyzing the dumped result
+        pass
 
     def check_health(self) -> RunResult:
         '''System health oracle'''
@@ -206,8 +292,13 @@ class Checker:
 
         self.wait_for_system_converge()
 
-        state_result = self.check_resources(input_diff, generation)
-        log_result = self.check_log(generation)
+        self.dump_operator_log(generation)
+        self.dump_resource_events(generation)
+        self.dump_resource_states(input_diff, generation)
+
+        event_result = self.check_event(generation)
+        state_result = self.check_resources(generation)
+        log_result = self.check_operator_log(generation)
 
         if isinstance(log_result, InvalidInputResult):
             logging.debug('Invalid input, skip this case')
@@ -257,53 +348,6 @@ class Checker:
         for cr in custom_resources:
             result_dict[cr['metadata']['name']] = cr
         return result_dict
-
-    def check_log(self, generation: int) -> RunResult:
-        '''Check the operator log for error msg
-        
-        Returns
-            RunResult of the checking
-        '''
-        operator_pod_list = self.corev1Api.list_namespaced_pod(
-            namespace=self.context['namespace'],
-            watch=False,
-            label_selector="acto/tag=operator-pod").items
-        if len(operator_pod_list) >= 1:
-            logging.debug('Got operator pod: pod name:' +
-                          operator_pod_list[0].metadata.name)
-        else:
-            logging.error('Failed to find operator pod')
-
-        log = self.corev1Api.read_namespaced_pod_log(
-            name=operator_pod_list[0].metadata.name,
-            namespace=self.context['namespace'])
-
-        # only get the new log since last time
-        log_lines = log.split('\n')
-        new_log_lines = log_lines[self.log_line:]
-        self.log_line = len(log_lines)
-
-        with open('%s/operator-%d.log' % (self.cur_path, generation),
-                  'w') as fout:
-            fout.write(log) # TODO: change to new_log_lines
-
-        for line in new_log_lines:
-            if invalid_input_message(line):
-                return InvalidInputResult()
-            elif 'error' in line.lower():
-                skip = False
-                for regex in EXCLUDE_ERROR_REGEX:
-                    if re.search(regex, line):
-                        logging.debug('Skipped error msg: %s' % line)
-                        skip = True
-                if skip:
-                    continue
-                logging.info('Found error in operator log')
-                return ErrorResult(Oracle.ERROR_LOG, line)
-            else:
-                continue
-
-        return PassResult()
 
     def run(self, cmd: list):
         '''Simply run the cmd without checking'''
