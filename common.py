@@ -187,11 +187,6 @@ class ActoEncoder(json.JSONEncoder):
             return list(obj)
         return json.JSONEncoder.default(self, obj)
 
-class ActoDecoder(json.JSONDecoder):
-    
-    def default(self, obj):
-        pass
-
 EXCLUDE_PATH_REGEX = [
     r"managed_fields",
     r"managedFields",

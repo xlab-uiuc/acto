@@ -480,7 +480,7 @@ def list_matched_fields(path: list, delta_dict: dict) -> list:
     '''
     # if the name of the field is generic, don't match using the path
     for regex in GENERIC_FIELDS:
-        if re.search(regex, path[0]):
+        if re.search(regex, str(path[-1])):
             return []
 
     results = []
