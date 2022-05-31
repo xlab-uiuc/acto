@@ -187,7 +187,6 @@ class ActoEncoder(json.JSONEncoder):
             return list(obj)
         return json.JSONEncoder.default(self, obj)
 
-
 EXCLUDE_PATH_REGEX = [
     r"managed_fields",
     r"managedFields",

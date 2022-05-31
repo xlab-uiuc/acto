@@ -23,7 +23,7 @@ from deploy import Deploy, DeployMethod
 from constant import CONST
 
 CONST = CONST()
-
+random.seed(0)
 
 def construct_kind_cluster(k8s_version: str):
     '''Delete kind cluster then create a new one
@@ -274,10 +274,12 @@ class Acto:
                 'kubectl', 'apply', '-f', mutated_filename, '-n',
                 self.context['namespace']
             ]
+
             if not self.dryrun:
-                result = checker.run_and_check(cmd,
-                                               input_delta,
-                                               generation=generation)
+                run_result = check_result.Result(checker.run(cmd), input_delta)
+                run_result.setup_path_by_generation(self.context['current_dir_path'], generation)
+                checker.dump_all(run_result)
+                result = checker.check(run_result)
             else:
                 result = PassResult()
             generation += 1
