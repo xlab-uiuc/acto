@@ -414,7 +414,6 @@ if __name__ == '__main__':
     if args.duration != None:
         signal.signal(signal.SIGALRM, timeout_handler)
         signal.alarm(int(args.duration) * 60 * 60)
-        # signal.alarm(int(float(args.duration) * 60 * 60)) # enable non-integer run time
     if args.operator_chart:
         deploy = Deploy(DeployMethod.HELM, args.operator_chart, args.init).new()
     elif args.operator:
