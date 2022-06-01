@@ -3,6 +3,7 @@ package util
 import (
 	"fmt"
 	"go/types"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -106,7 +107,7 @@ func GetAllTypes(prog *ssa.Program) []*ssa.Type {
 	return ret
 }
 
-func findSeedType(prog *ssa.Program, seedStr string) *ssa.Type {
+func FindSeedType(prog *ssa.Program, seedStr string) *ssa.Type {
 	for _, pkg := range prog.AllPackages() {
 		seed := pkg.Members[seedStr]
 		if typ, ok := seed.(*ssa.Type); ok {
@@ -120,12 +121,12 @@ func FindSeedValues(prog *ssa.Program, seedType string) []ssa.Value {
 	seedVariables := []ssa.Value{}
 	seedOutFile, err := os.Create("seed.txt")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to create file %s\n", err)
+		log.Fatalf("Failed to create file %s\n", err)
 	}
 
-	seed := findSeedType(prog, seedType)
+	seed := FindSeedType(prog, seedType)
 	if seed != nil {
-		fmt.Println(seed.String())
+		log.Println(seed.String())
 		if seedStruct, ok := seed.Type().Underlying().(*types.Struct); ok {
 			for i := 0; i < seedStruct.NumFields(); i++ {
 				field := seedStruct.Field(i)
@@ -140,9 +141,10 @@ func FindSeedValues(prog *ssa.Program, seedType string) []ssa.Value {
 		if strings.Contains(f.Name(), "DeepCopy") {
 			continue
 		}
-		if f.Name() == "Build" {
-			f.WriteTo(os.Stdout)
-		}
+		// if f.Name() == "Update" {
+		// 	seedVariables = append(seedVariables, getSeedVariablesFromFunction(f, seed.Type())...)
+		// 	f.WriteTo(os.Stdout)
+		// }
 		seedVariables = append(seedVariables, getSeedVariablesFromFunction(f, seed.Type())...)
 	}
 
@@ -181,4 +183,14 @@ func getSeedVariablesFromFunction(f *ssa.Function, seedType types.Type) []ssa.Va
 		}
 	}
 	return ret
+}
+
+func GetParamIndex(value ssa.Value, call *ssa.CallCommon) int {
+	var paramIndex int = -1
+	for index, param := range call.Args {
+		if param == value {
+			paramIndex = index
+		}
+	}
+	return paramIndex
 }
