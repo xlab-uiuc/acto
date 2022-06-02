@@ -1,7 +1,24 @@
-# Onboarding Task - Yuxuan
-
 ### Target Operator 
 [ot-container-kit/redis-operator](https://github.com/OT-CONTAINER-KIT/redis-operator)
+
+We use the commit [f1c547](https://github.com/OT-CONTAINER-KIT/redis-operator/commit/f1c547e26ece015c0c5cd8a8549ff277e8e7c2ab) as the version being tested.
+To reproduce experiment against this version, follow the below instructions.
+First, copy the following repo. This repo is forked from the original one and has been modified based on commit f1c547. We added a few logs inside the codebase for debugging purposes and also modified the docker image tag so that we can use the custom-built image and the official images simutaneously.
+```shell
+git clone git@github.com:Essoz/redis-operator-hack.git
+cd redis-operator-hack
+make docker-build
+```
+Go back to the acto folder:
+```shell
+python3 acto.py -s data/redis-ot-container-kit-operator/cr_cluster.yaml \
+            -o data/redis-ot-container-kit-operator/bundle.yaml \
+            --crd-name redisclusters.redis.redis.opstreelabs.in  \               
+            --custom-fields data.redis-ot-container-kit-operator.prune \
+            --preload-images f1c547e/redis-operator
+```
+
+
 
 ### Run test for the redis cluster support
 ```shell
