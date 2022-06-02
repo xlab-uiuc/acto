@@ -10,4 +10,5 @@ custom_fields = [
     
     input.ProblemMaticField(['spec', 'redisFollower', 'affinity'], False),
     input.ProblemMaticField(['spec', 'redisLeader', 'affinity'], False),
+    input.ProblemMaticField(['spec', 'storage', 'volumeClaimTemplate'], False),
 ]
