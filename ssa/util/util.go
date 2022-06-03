@@ -42,6 +42,7 @@ func GetFieldNameFromJsonTag(tag string) string {
 	return v
 }
 
+// copied from reflect
 func tagLookUp(tag string, key string) (string, bool) {
 	for tag != "" {
 		// Skip leading space.
@@ -141,10 +142,10 @@ func FindSeedValues(prog *ssa.Program, seedType string) []ssa.Value {
 		if strings.Contains(f.Name(), "DeepCopy") {
 			continue
 		}
-		// if f.Name() == "Update" {
-		// 	seedVariables = append(seedVariables, getSeedVariablesFromFunction(f, seed.Type())...)
-		// 	f.WriteTo(os.Stdout)
-		// }
+		if f.Name() == "appendVaultAnnotations" {
+			seedVariables = append(seedVariables, getSeedVariablesFromFunction(f, seed.Type())...)
+			f.WriteTo(log.Writer())
+		}
 		seedVariables = append(seedVariables, getSeedVariablesFromFunction(f, seed.Type())...)
 	}
 
@@ -193,4 +194,12 @@ func GetParamIndex(value ssa.Value, call *ssa.CallCommon) int {
 		}
 	}
 	return paramIndex
+}
+
+func IsK8sUpdateCall(call *ssa.CallCommon) bool {
+	if strings.Contains(call.Method.Pkg().Name(), "sigs.k8s.io/controller-runtime/pkg") {
+		log.Println(call.Method.Id())
+		return true
+	}
+	return false
 }

@@ -4,6 +4,8 @@ import (
 	"go/types"
 )
 
+type IndexField []int
+
 type Field struct {
 	Path []string
 }

@@ -8,7 +8,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/xlab-uiuc/acto/ssa/util"
 	. "github.com/xlab-uiuc/acto/ssa/util"
 	"golang.org/x/tools/go/ssa"
 )
@@ -319,22 +318,38 @@ func GetValueToFieldMappingPass(prog *ssa.Program, seedType string) (map[ssa.Val
 // Store
 // TypeAssert
 // UnOp
-func TaintAnalysisPass(prog *ssa.Program, frontierValues map[ssa.Value]bool) map[ssa.Value]bool {
+func TaintAnalysisPass(prog *ssa.Program, frontierValues map[ssa.Value]bool, valueFieldMap map[ssa.Value]*FieldSet) map[ssa.Value]bool {
 	tainted := make(map[ssa.Value]bool)
 	for value := range frontierValues {
-		if TaintK8sFromValue(value) {
+		if TaintK8sFromValue(value, valueFieldMap) {
 			tainted[value] = true
 		}
 	}
 	return tainted
 }
 
+// Represent a uniqle taint candidate
+type ReferredInstruction struct {
+	Instruction ssa.Instruction
+	Value       ssa.Value
+}
+
 // returns true if value taints k8s API calls
-func TaintK8sFromValue(value ssa.Value) bool {
+func TaintK8sFromValue(value ssa.Value, valueFieldMap map[ssa.Value]*FieldSet) bool {
+	// Initialize the tainted set
 	taintedSet := make(map[ssa.Value]bool)
 	taintedSet[value] = true
 
-	propogatedSet := make(map[ssa.Value]bool) // cache
+	// cache
+	// when we finish tainting all the referrers of a value, no need to taint again
+	propogatedSet := make(map[ssa.Value]bool)
+
+	// cache
+	// if we already tried to taint this instruction from the same referrer
+	// no need to try again
+	//
+	// The key is a composite of the instruction and the value
+	handledInstructionSet := make(map[ReferredInstruction]bool)
 
 	for {
 		changed := false
@@ -344,8 +359,21 @@ func TaintK8sFromValue(value ssa.Value) bool {
 			}
 			referrers := taintedValue.Referrers()
 			for _, instruction := range *referrers {
+				referredInstruction := ReferredInstruction{
+					Instruction: instruction,
+					Value:       taintedValue,
+				}
+				if _, ok := handledInstructionSet[referredInstruction]; ok {
+					continue
+				} else {
+					handledInstructionSet[referredInstruction] = true
+				}
 				switch typedInst := instruction.(type) {
 				case ssa.Value:
+					if _, exist := valueFieldMap[typedInst]; exist {
+						// quick return, if the referrer is already a field
+						continue
+					}
 					switch typedValue := typedInst.(type) {
 					case *ssa.Alloc:
 						// skip
@@ -368,9 +396,42 @@ func TaintK8sFromValue(value ssa.Value) bool {
 							}
 						}
 						log.Printf("Propogate to callee %s\n", typedValue.String())
-						ContextAwareFunctionAnalysis(taintedValue, typedValue, taintedSet)
+						ContextAwareFunctionAnalysis(taintedValue, typedValue, taintedSet, valueFieldMap, handledInstructionSet)
+					case *ssa.ChangeInterface:
+						if _, ok := taintedSet[typedValue]; !ok {
+							taintedSet[typedValue] = true
+							changed = true
+						}
+					case *ssa.ChangeType:
+						if _, ok := taintedSet[typedValue]; !ok {
+							taintedSet[typedValue] = true
+							changed = true
+						}
 					case *ssa.Extract:
-						// Handle with call
+						if _, ok := taintedSet[typedValue]; !ok {
+							taintedSet[typedValue] = true
+							changed = true
+						}
+					case *ssa.Field:
+						if _, ok := taintedSet[typedValue]; !ok {
+							taintedSet[typedValue] = true
+							changed = true
+						}
+					case *ssa.FieldAddr:
+						if _, ok := taintedSet[typedValue]; !ok {
+							taintedSet[typedValue] = true
+							changed = true
+						}
+					case *ssa.Index:
+						if _, ok := taintedSet[typedValue]; !ok {
+							taintedSet[typedValue] = true
+							changed = true
+						}
+					case *ssa.IndexAddr:
+						if _, ok := taintedSet[typedValue]; !ok {
+							taintedSet[typedValue] = true
+							changed = true
+						}
 					case *ssa.Lookup:
 						// Two cases: 1) referred as the X 2) referred as the Index
 						if taintedValue == typedValue.X {
@@ -391,11 +452,39 @@ func TaintK8sFromValue(value ssa.Value) bool {
 					case *ssa.MakeChan:
 						// skip
 					case *ssa.MakeClosure:
+						log.Println("Propogate to closure function as freevar")
+
+						// compute the index of tainted freevar
+						indices := []ssa.Value{}
+						for i, binding := range typedValue.Bindings {
+							if binding == taintedValue {
+								freeVar := typedValue.Fn.(*ssa.Function).FreeVars[i]
+								indices = append(indices, freeVar)
+							}
+						}
+						end, _, taintedRets := TaintFunction(typedValue.Fn.(*ssa.Function), indices, valueFieldMap, handledInstructionSet)
+						if end {
+							return true
+						}
+						if len(taintedRets) > 0 {
+							typedValue.Fn.(*ssa.Function).WriteTo(log.Writer())
+							log.Fatalf("MakeClosure freevar tainted return value\n")
+						}
+					case *ssa.MakeInterface:
+						if _, ok := taintedSet[typedValue]; !ok {
+							taintedSet[typedValue] = true
+							changed = true
+						}
 					case *ssa.MakeMap:
 						// skip
 					case *ssa.MakeSlice:
 						// skip
 					case *ssa.Next:
+						if _, ok := taintedSet[typedValue]; !ok {
+							taintedSet[typedValue] = true
+							changed = true
+						}
+					case *ssa.Phi:
 						if _, ok := taintedSet[typedValue]; !ok {
 							taintedSet[typedValue] = true
 							changed = true
@@ -415,9 +504,8 @@ func TaintK8sFromValue(value ssa.Value) bool {
 								taintedSet[typedValue] = true
 								changed = true
 							}
-						} else {
-							// do not propogate
 						}
+						// do not propogate in 2) case
 					case *ssa.TypeAssert:
 						if typedValue.CommaOk {
 							// returns a tuple, need to extract
@@ -430,15 +518,20 @@ func TaintK8sFromValue(value ssa.Value) bool {
 								changed = true
 							}
 						}
+					case *ssa.UnOp:
+						if _, ok := taintedSet[typedValue]; !ok {
+							taintedSet[typedValue] = true
+							changed = true
+						}
 					default:
 						log.Printf("Hit sink %T\n", typedValue)
 					}
 				case *ssa.DebugRef:
 					// skip
 				case *ssa.Defer:
-					ContextAwareFunctionAnalysis(taintedValue, typedInst.Value(), taintedSet)
+					ContextAwareFunctionAnalysis(taintedValue, typedInst.Value(), taintedSet, valueFieldMap, handledInstructionSet)
 				case *ssa.Go:
-					ContextAwareFunctionAnalysis(taintedValue, typedInst.Value(), taintedSet)
+					ContextAwareFunctionAnalysis(taintedValue, typedInst.Value(), taintedSet, valueFieldMap, handledInstructionSet)
 				case *ssa.Jump:
 					// skip
 				case *ssa.MapUpdate:
@@ -470,6 +563,17 @@ func TaintK8sFromValue(value ssa.Value) bool {
 					// used as Chan
 				case *ssa.Store:
 					// TODO: propogate back
+					// Two cases
+					// used as Addr
+					// used as Val
+					if taintedValue == typedInst.Val {
+						// used as Val, propogate back
+						// XXX need to taint to callsite
+						_, chg := BackwardPropogation(typedInst, taintedSet)
+						if chg {
+							changed = true
+						}
+					}
 				default:
 					log.Printf("Hit sink %T\n", typedInst)
 				}
@@ -483,10 +587,70 @@ func TaintK8sFromValue(value ssa.Value) bool {
 	return false
 }
 
+// propogate backward until find the source
+// it may find a value, or a parameter
+// in case of parameter, we need to propogate back to callee via ContextAware analysis
+func BackwardPropogation(storeInst *ssa.Store, taintedSet map[ssa.Value]bool) (taintedParam int, changed bool) {
+	addr := storeInst.Addr
+	source, _ := BackwardPropogationHelper(addr, []int{}, taintedSet)
+	if _, ok := taintedSet[source]; !ok {
+		taintedSet[source] = true
+		changed = true
+	}
+	taintedParam = -1
+	if sourceParam, ok := source.(*ssa.Parameter); ok {
+		for i, param := range storeInst.Parent().Params {
+			if param == sourceParam {
+				taintedParam = i
+			}
+		}
+	}
+	return
+}
+
+func BackwardPropogationHelper(value ssa.Value, path []int, taintedSet map[ssa.Value]bool) (addrSource ssa.Value, fullPath []int) {
+	switch typedValue := value.(type) {
+	case *ssa.Alloc:
+		return value, path
+	case *ssa.Call:
+		// returned from a Call
+		// XXX: assume the Call is just some New function
+		return value, path
+	case *ssa.FieldAddr:
+		path := append([]int{typedValue.Field}, path...)
+		return BackwardPropogationHelper(typedValue.X, path, taintedSet)
+	case *ssa.IndexAddr:
+		path := append([]int{tryResolveIndex(typedValue.Index)}, path...)
+		return BackwardPropogationHelper(typedValue.X, path, taintedSet)
+	case *ssa.Parameter:
+		log.Fatalf("Backward propogation hit parameter\n")
+		return value, path
+	default:
+		log.Fatalf("Backward propogation: not handle %T\n", typedValue)
+		return nil, path
+	}
+}
+
+// try to resolve the dynamic index of a slice
+func tryResolveIndex(value ssa.Value) int {
+	switch typedValue := value.(type) {
+	case *ssa.Const:
+		return int(typedValue.Int64())
+	}
+	return 0
+}
+
 // only taint the callsite
-func ContextAwareFunctionAnalysis(value ssa.Value, callInst ssa.CallInstruction, taintedSet map[ssa.Value]bool) bool {
-	changed := false
-	index := util.GetParamIndex(value, callInst.Common())
+// returns if the taint hits k8s client call, if taintedSet is updated
+//
+// Params:
+// @value is the source of the taint
+// @callInst is the call instruction
+//
+func ContextAwareFunctionAnalysis(value ssa.Value, callInst ssa.CallInstruction,
+	taintedSet map[ssa.Value]bool, valueFieldMap map[ssa.Value]*FieldSet,
+	handledInstructionSet map[ReferredInstruction]bool) (end bool, changed bool) {
+	index := GetParamIndex(value, callInst.Common())
 	if callInst.Common().IsInvoke() {
 		// invoke case
 	} else {
@@ -495,15 +659,20 @@ func ContextAwareFunctionAnalysis(value ssa.Value, callInst ssa.CallInstruction,
 		case *ssa.Function:
 			if callValue := callInst.Value(); callValue != nil {
 				// if it's a Call instruction
-				taintedIndices := TaintFunction(callee, index)
-				if len(taintedIndices) == 0 {
-					return false
+				end, taintedParams, taintedRets := TaintFunction(callee,
+					[]ssa.Value{callee.Params[index]}, valueFieldMap, handledInstructionSet)
+				if end {
+					return true, false
+				} else if len(taintedParams) == 0 && len(taintedRets) == 0 {
+					return false, false
 				}
+
+				// taint the callsite's return values
 				resultTuple := callee.Signature.Results()
 				if resultTuple != nil {
 					if resultTuple.Len() > 1 {
 						// handle extract
-						if handleExtractTaint(callValue, &taintedSet, taintedIndices) {
+						if handleExtractTaint(callValue, &taintedSet, taintedRets) {
 							changed = true
 						}
 					} else {
@@ -513,34 +682,112 @@ func ContextAwareFunctionAnalysis(value ssa.Value, callInst ssa.CallInstruction,
 						}
 					}
 				}
-			} else {
-				// Go, Defer instruction
+
+				// taint the callsite's parameter values
+				for _, taintedParamIndex := range taintedParams {
+					taintedParam := callInst.Common().Args[taintedParamIndex]
+					if _, ok := taintedSet[taintedParam]; ok {
+						taintedSet[taintedParam] = true
+						changed = true
+					}
+				}
 			}
+			// Go, Defer instruction
 		case *ssa.MakeClosure:
-			log.Panic("TODO: MakeClosure not properly handled\n")
+			functionBody := callee.Fn.(*ssa.Function)
+			if callValue := callInst.Value(); callValue != nil && functionBody != nil {
+				end, taintedParams, taintedRets := TaintFunction(functionBody,
+					[]ssa.Value{functionBody.Params[index]}, valueFieldMap, handledInstructionSet)
+				if end {
+					return true, false
+				} else if len(taintedParams) == 0 && len(taintedRets) == 0 {
+					return false, false
+				}
+
+				// taint the callsite's return values
+				resultTuple := functionBody.Signature.Results()
+				if resultTuple != nil {
+					if resultTuple.Len() > 1 {
+						// handle extract
+						if handleExtractTaint(callValue, &taintedSet, taintedRets) {
+							changed = true
+						}
+					} else {
+						if _, ok := taintedSet[callValue]; !ok {
+							taintedSet[callValue] = true
+							changed = true
+						}
+					}
+				}
+
+				// taint the callsite's parameter values
+				for _, taintedParamIndex := range taintedParams {
+					taintedParam := callInst.Common().Args[taintedParamIndex]
+					if _, ok := taintedSet[taintedParam]; ok {
+						taintedSet[taintedParam] = true
+						changed = true
+					}
+				}
+			}
 		case *ssa.Builtin:
 			// need to define the buildins to propogate
+			if _, ok := BUILTIN_PROPOGATE[callee.Name()]; ok {
+				if _, ok := taintedSet[value]; !ok {
+					taintedSet[value] = true
+					changed = true
+				}
+			}
 		default:
 		}
 	}
-	return changed
+	return false, changed
 }
 
+// TODO: Final version of this function needs to return the tained parameter, tainted return values
+//
+// TaintFunction tries to run taint analysis on the functionBody
+// The initial taints are specified in the
 // returns the indices of the tainted return values
-func TaintFunction(functionBody *ssa.Function, paramIndex int) []int {
-	param := functionBody.Params[paramIndex]
+func TaintFunction(functionBody *ssa.Function, entryPoints []ssa.Value,
+	valueFieldMap map[ssa.Value]*FieldSet,
+	handledInstructionSet map[ReferredInstruction]bool) (end bool, taintedParams []int, taintedRets []int) {
+
 	taintedSet := make(map[ssa.Value]bool)
-	taintedSet[param] = true
+	for _, entryPoint := range entryPoints {
+		taintedSet[entryPoint] = true
+	}
 
-	indexSet := make(map[int]bool) // used to store index for return
+	taintedParamIndexSet := NewSet[int]()  // used to store param index for return
+	taintedReturnIndexSet := NewSet[int]() // used to store return index for return
 
+	// cache
+	// when we finish tainting all the referrers of a value, no need to taint again
+	propogatedSet := make(map[ssa.Value]bool)
+
+	// loop until there is no new change
 	for {
 		changed := false
 		for taintedValue := range taintedSet {
+			if _, ok := propogatedSet[taintedValue]; ok {
+				continue
+			}
 			referrers := taintedValue.Referrers()
 			for _, instruction := range *referrers {
+				referredInstruction := ReferredInstruction{
+					Instruction: instruction,
+					Value:       taintedValue,
+				}
+				if _, ok := handledInstructionSet[referredInstruction]; ok {
+					continue
+				} else {
+					handledInstructionSet[referredInstruction] = true
+				}
 				switch typedInst := instruction.(type) {
 				case ssa.Value:
+					if _, exist := valueFieldMap[typedInst]; exist {
+						// quick return, if the referrer is already a field
+						continue
+					}
 					switch typedValue := typedInst.(type) {
 					case *ssa.Alloc:
 						// skip
@@ -557,17 +804,51 @@ func TaintFunction(functionBody *ssa.Function, paramIndex int) []int {
 							if functionSink(typedValue.Call.Method) {
 								continue
 							}
-							if strings.Contains(typedValue.Call.Method.Pkg().Name(), "sigs.k8s.io/controller-runtime/pkg") {
-								log.Println(typedValue.Call.Method.Id())
+							if IsK8sUpdateCall(&typedValue.Call) {
+								return true, taintedParamIndexSet.Items(), taintedReturnIndexSet.Items()
 							}
 						}
 						log.Printf("Propogate to callee %s\n", typedValue.String())
-						if ContextAwareFunctionAnalysis(taintedValue, typedValue, taintedSet) {
+						if end, chg := ContextAwareFunctionAnalysis(taintedValue, typedValue, taintedSet, valueFieldMap, handledInstructionSet); chg {
+							changed = true
+						} else if end {
+							return true, taintedParamIndexSet.Items(), taintedReturnIndexSet.Items()
+						}
+					case *ssa.ChangeInterface:
+						if _, ok := taintedSet[typedValue]; !ok {
+							taintedSet[typedValue] = true
+							changed = true
+						}
+					case *ssa.ChangeType:
+						if _, ok := taintedSet[typedValue]; !ok {
+							taintedSet[typedValue] = true
 							changed = true
 						}
 					case *ssa.Extract:
-						// Handle with call
-						log.Panic("Extract not handled properly\n")
+						if _, ok := taintedSet[typedValue]; !ok {
+							taintedSet[typedValue] = true
+							changed = true
+						}
+					case *ssa.Field:
+						if _, ok := taintedSet[typedValue]; !ok {
+							taintedSet[typedValue] = true
+							changed = true
+						}
+					case *ssa.FieldAddr:
+						if _, ok := taintedSet[typedValue]; !ok {
+							taintedSet[typedValue] = true
+							changed = true
+						}
+					case *ssa.Index:
+						if _, ok := taintedSet[typedValue]; !ok {
+							taintedSet[typedValue] = true
+							changed = true
+						}
+					case *ssa.IndexAddr:
+						if _, ok := taintedSet[typedValue]; !ok {
+							taintedSet[typedValue] = true
+							changed = true
+						}
 					case *ssa.Lookup:
 						// Two cases: 1) referred as the X 2) referred as the Index
 						if taintedValue == typedValue.X {
@@ -588,12 +869,39 @@ func TaintFunction(functionBody *ssa.Function, paramIndex int) []int {
 					case *ssa.MakeChan:
 						// skip
 					case *ssa.MakeClosure:
-						log.Panic("MakeClosure tainted\n")
+						log.Println("Propogate to closure function as freevar")
+
+						// compute the index of tainted freevar
+						indices := []ssa.Value{}
+						for i, binding := range typedValue.Bindings {
+							if binding == taintedValue {
+								freeVar := typedValue.Fn.(*ssa.Function).FreeVars[i]
+								indices = append(indices, freeVar)
+							}
+						}
+						end, _, taintedRets := TaintFunction(typedValue.Fn.(*ssa.Function), indices, valueFieldMap, handledInstructionSet)
+						if end {
+							return true, taintedParamIndexSet.Items(), taintedReturnIndexSet.Items()
+						}
+						if len(taintedRets) > 0 {
+							typedValue.Fn.(*ssa.Function).WriteTo(log.Writer())
+							log.Fatalf("MakeClosure freevar tainted return value\n")
+						}
+					case *ssa.MakeInterface:
+						if _, ok := taintedSet[typedValue]; !ok {
+							taintedSet[typedValue] = true
+							changed = true
+						}
 					case *ssa.MakeMap:
 						// skip
 					case *ssa.MakeSlice:
 						// skip
 					case *ssa.Next:
+						if _, ok := taintedSet[typedValue]; !ok {
+							taintedSet[typedValue] = true
+							changed = true
+						}
+					case *ssa.Phi:
 						if _, ok := taintedSet[typedValue]; !ok {
 							taintedSet[typedValue] = true
 							changed = true
@@ -613,9 +921,8 @@ func TaintFunction(functionBody *ssa.Function, paramIndex int) []int {
 								taintedSet[typedValue] = true
 								changed = true
 							}
-						} else {
-							// do not propogate
 						}
+						// do not propogate in 2) case
 					case *ssa.TypeAssert:
 						if typedValue.CommaOk {
 							// returns a tuple, need to extract
@@ -628,18 +935,27 @@ func TaintFunction(functionBody *ssa.Function, paramIndex int) []int {
 								changed = true
 							}
 						}
+					case *ssa.UnOp:
+						if _, ok := taintedSet[typedValue]; !ok {
+							taintedSet[typedValue] = true
+							changed = true
+						}
 					default:
 						log.Printf("Hit sink %T\n", typedValue)
 					}
 				case *ssa.DebugRef:
 					// skip
 				case *ssa.Defer:
-					if ContextAwareFunctionAnalysis(taintedValue, typedInst, taintedSet) {
+					if end, chg := ContextAwareFunctionAnalysis(taintedValue, typedInst, taintedSet, valueFieldMap, handledInstructionSet); chg {
 						changed = true
+					} else if end {
+						return true, taintedParamIndexSet.Items(), taintedReturnIndexSet.Items()
 					}
 				case *ssa.Go:
-					if ContextAwareFunctionAnalysis(taintedValue, typedInst, taintedSet) {
+					if end, chg := ContextAwareFunctionAnalysis(taintedValue, typedInst, taintedSet, valueFieldMap, handledInstructionSet); chg {
 						changed = true
+					} else if end {
+						return true, taintedParamIndexSet.Items(), taintedReturnIndexSet.Items()
 					}
 				case *ssa.Jump:
 					// skip
@@ -665,7 +981,7 @@ func TaintFunction(functionBody *ssa.Function, paramIndex int) []int {
 				case *ssa.Return:
 					for i, result := range typedInst.Results {
 						if result == taintedValue {
-							indexSet[i] = true
+							taintedReturnIndexSet.Add(i)
 						}
 					}
 				case *ssa.RunDefers:
@@ -676,22 +992,30 @@ func TaintFunction(functionBody *ssa.Function, paramIndex int) []int {
 					// used as Chan
 				case *ssa.Store:
 					// TODO: propogate back
+					if taintedValue == typedInst.Val {
+						// used as Val, propogate back
+						// backward propogation may propogate to parameter, need to taint the callsite
+						// through context aware analysis
+						taintedParam, chg := BackwardPropogation(typedInst, taintedSet)
+						if chg {
+							changed = true
+						}
+						if taintedParam != -1 {
+							taintedParamIndexSet.Add(taintedParam)
+						}
+					}
 				default:
 					log.Printf("Hit sink %T\n", typedInst)
 				}
 			}
+			propogatedSet[taintedValue] = true
 		}
 		if !changed {
 			break
 		}
 	}
 
-	ret := []int{}
-	for k, _ := range indexSet {
-		ret = append(ret, k)
-	}
-	sort.Ints(ret)
-	return ret
+	return false, taintedParamIndexSet.Items(), taintedReturnIndexSet.Items()
 }
 
 func handleExtractTaint(typeAssertValue ssa.Value, taintedSet *map[ssa.Value]bool, retIndices []int) bool {
@@ -726,4 +1050,16 @@ var sinks = map[string]bool{
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil.ContainsFinalizer(t11, \"deletion.finalize...\":string)": true,
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil.SetControllerReference(t25, t26, t24)":                   true,
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil.SetControllerReference(t138, t139, t137)":                true,
+}
+
+var BUILTIN_PROPOGATE = map[string]bool{
+	"append":  true,
+	"cap":     true,
+	"complex": true,
+	"copy":    true,
+	"imag":    true,
+	"len":     true,
+	"make":    true,
+	"new":     true,
+	"real":    true,
 }

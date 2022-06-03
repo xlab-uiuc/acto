@@ -29,6 +29,7 @@ func main() {
 	}
 
 	log.SetOutput(logFile)
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	log.Printf("Building ssa program for project %s\n", *projectPath)
 
@@ -81,6 +82,6 @@ func main() {
 	// }
 	log.Println("------------------------")
 
-	taintedSet := analysis.TaintAnalysisPass(prog, frontierSet)
+	taintedSet := analysis.TaintAnalysisPass(prog, frontierSet, valueFieldSetMap)
 	log.Println(taintedSet)
 }
