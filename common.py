@@ -44,6 +44,8 @@ class InvalidInputResult(RunResult):
 class UnchangedInputResult(RunResult):
     pass
 
+class ConnectionRefusedResult(RunResult):
+    pass
 
 class ErrorResult(RunResult):
 

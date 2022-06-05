@@ -109,6 +109,7 @@ class InputModel:
             [], crd['spec']['versions'][-1]['schema']['openAPIV3Schema'])
         self.seed_input = None
         self.current_input = None
+        self.current_input_setup = False
         self.previous_input = None  # Previous input, for revert
         self.test_plan = None
         self.discarded_tests = {}  # List of test cases failed to run
@@ -168,6 +169,9 @@ class InputModel:
         self.test_plan = ret
         return ret
 
+    def curr_test(self) -> Tuple[dict, bool]:
+        return self.current_input.raw_value(), self.current_input_setup
+
     def next_test(self) -> Tuple[dict, bool]:
         '''Selects next test case to run from the test plan
         
@@ -216,6 +220,7 @@ class InputModel:
         # Create the path if not exist, then change the value
         self.current_input.create_path(json.loads(field))
         self.current_input.set_value_by_path(next_value, json.loads(field))
+        self.current_input_setup = setup
         return self.current_input.raw_value(), setup
 
     def get_input_delta(self):
@@ -249,6 +254,7 @@ class InputModel:
 
     def revert(self):
         '''Revert back to previous input'''
+        # FIXME
         if self.previous_input == None:
             logging.error('No previous input to revert to')
         self.current_input = self.previous_input

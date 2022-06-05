@@ -252,9 +252,13 @@ class Acto:
         curr_input = self.input_model.get_seed_input()
 
         generation = 0
+        retry = False
         while generation < num_mutation:
             setup = False
-            if generation != 0:
+
+            if retry == True:
+                curr_input, setup  = self.input_model.curr_test()
+            elif generation != 0:
                 curr_input, setup = self.input_model.next_test()
 
             input_delta = self.input_model.get_input_delta()
@@ -284,6 +288,12 @@ class Acto:
                 result = PassResult()
             generation += 1
 
+            if isinstance(result, ConnectionRefusedError):
+                # Connection refused due to webhook not ready, let's wait for a bit
+                time.sleep(30)
+                # retry
+                retry = True
+                continue
             if isinstance(result, InvalidInputResult):
                 if setup:
                     self.input_model.discard_test_case()
