@@ -72,6 +72,7 @@ class Checker:
             'service': self.corev1Api.list_namespaced_service,
             'pvc': self.corev1Api.list_namespaced_persistent_volume_claim,
             'cronjob': self.batchv1Api.list_namespaced_cron_job,
+            'ingress': kubernetes.client.NetworkingV1Api().list_namespaced_ingress,
         }
 
         for resource in self.resource_methods:
