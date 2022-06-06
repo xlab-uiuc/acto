@@ -182,7 +182,7 @@ class Checker:
 
         with open(result.get_operator_log_path(), 'a') as fout:
             for line in new_log_lines:
-                fout.write(line)
+                fout.write("%s\n" % line)
 
 
     def parse_delta(self, result: Result):
