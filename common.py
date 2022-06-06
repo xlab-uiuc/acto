@@ -208,6 +208,7 @@ EXCLUDE_ERROR_REGEX = [
     r"create issuer: no matches for kind",
     r"failed to run smartUpdate",
     r"dial: ping mongo",
+    r"pod is not running",
 ]
 
 INVALID_INPUT_LOG_REGEX = [
