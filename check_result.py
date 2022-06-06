@@ -262,7 +262,7 @@ class Checker:
                                     state_delta.curr):
                                     found = True
                     if found:
-                        break
+                        continue
                     logging.error('Found no matching fields for input delta')
                     logging.error('Input delta [%s]' % delta.path)
                     return ErrorResult(Oracle.SYSTEM_STATE,
