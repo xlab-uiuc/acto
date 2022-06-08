@@ -222,4 +222,7 @@ GENERIC_FIELDS = [
     r"^operator$",
     r"^value$",
     r"\d",
+    r"^claimName$",
+    r"^secretName$",
+    r"^host$",
 ]
