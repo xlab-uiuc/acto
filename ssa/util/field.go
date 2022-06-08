@@ -71,6 +71,16 @@ func (fs *FieldSet) Add(f *Field) bool {
 	return true
 }
 
+func (fs *FieldSet) Delete(f *Field) {
+	newFields := []Field{}
+	for _, field := range fs.fields {
+		if !field.Equal(*f) {
+			newFields = append(newFields, field)
+		}
+	}
+	fs.fields = newFields
+}
+
 func (fs *FieldSet) Contain(f Field) bool {
 	for _, field := range fs.fields {
 		if field.Equal(f) {

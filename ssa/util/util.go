@@ -142,8 +142,8 @@ func FindSeedValues(prog *ssa.Program, seedType string) []ssa.Value {
 		if strings.Contains(f.Name(), "DeepCopy") {
 			continue
 		}
-		if f.Name() == "appendVaultAnnotations" {
-			seedVariables = append(seedVariables, getSeedVariablesFromFunction(f, seed.Type())...)
+		if f.Name() == "podTemplateSpec" {
+			// seedVariables = append(seedVariables, getSeedVariablesFromFunction(f, seed.Type())...)
 			f.WriteTo(log.Writer())
 		}
 		seedVariables = append(seedVariables, getSeedVariablesFromFunction(f, seed.Type())...)
@@ -186,17 +186,32 @@ func getSeedVariablesFromFunction(f *ssa.Function, seedType types.Type) []ssa.Va
 	return ret
 }
 
-func GetParamIndex(value ssa.Value, call *ssa.CallCommon) int {
-	var paramIndex int = -1
+// returns the list of parameter indices of the taint source
+func GetParamIndices(value ssa.Value, call *ssa.CallCommon) []int {
+	paramSet := NewSet[int]()
 	for index, param := range call.Args {
 		if param == value {
-			paramIndex = index
+			paramSet.Add(index)
 		}
 	}
-	return paramIndex
+	return paramSet.Items()
+}
+
+// returns the list of return indices of the taint source
+func GetReturnIndices(taintSource ssa.Value, returnInst *ssa.Return) []int {
+	retIndexSet := NewSet[int]()
+	for index, ret := range returnInst.Results {
+		if ret == taintSource {
+			retIndexSet.Add(index)
+		}
+	}
+	return retIndexSet.Items()
 }
 
 func IsK8sUpdateCall(call *ssa.CallCommon) bool {
+	if call.Method.Pkg() == nil {
+		return false
+	}
 	if strings.Contains(call.Method.Pkg().Name(), "sigs.k8s.io/controller-runtime/pkg") {
 		log.Println(call.Method.Id())
 		return true
