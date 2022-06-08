@@ -59,6 +59,8 @@ class Checker:
         self.appv1Api = kubernetes.client.AppsV1Api()
         self.batchv1Api = kubernetes.client.BatchV1Api()
         self.customObjectApi = kubernetes.client.CustomObjectsApi()
+        self.networkingv1Api = kubernetes.client.NetworkingV1Api()
+        self.policyv1Api = kubernetes.client.PolicyV1Api()
         self.resources = {}
         self.log_line = 0
 
@@ -72,7 +74,8 @@ class Checker:
             'service': self.corev1Api.list_namespaced_service,
             'pvc': self.corev1Api.list_namespaced_persistent_volume_claim,
             'cronjob': self.batchv1Api.list_namespaced_cron_job,
-            'ingress': kubernetes.client.NetworkingV1Api().list_namespaced_ingress,
+            'ingress': self.networkingv1Api.list_namespaced_ingress,
+            'pod_disruption_budget': self.policyv1Api.list_namespaced_pod_disruption_budget,
         }
 
         for resource in self.resource_methods:
