@@ -98,8 +98,9 @@ python3 acto.py --seed data/tidb-operator/cr.yaml \
 
 **spark-operator**
 ```
-python3 acto.py --seed data/spark-operator/cr.yaml \
-                --helm data/spark-operator/spark-operator-chart --crd-name=sparkapplications.sparkoperator.k8s.io
+python3 acto.py --seed data/spark-operator/cr.yaml \      
+                --helm data/spark-operator/spark-operator-chart --crd-name=sparkapplications.sparkoperator.k8s.io  \
+                --custom-fields data.spark-operator.prune
 ```
 
 ## Porting operators

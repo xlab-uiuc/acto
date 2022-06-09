@@ -8,7 +8,7 @@ custom_fields = [
     input.CopiedOverField(['spec', 'securityContext'], False),
     input.CopiedOverField(['spec', 'tolerations'], True),
     
-    input.ProblemMaticField(['spec', 'redisFollower', 'affinity'], False),
-    input.ProblemMaticField(['spec', 'redisLeader', 'affinity'], False),
-    input.ProblemMaticField(['spec', 'storage', 'volumeClaimTemplate'], False),
+    input.ProblemMaticField(['spec', 'redisFollower', 'affinity'], "object"),
+    input.ProblemMaticField(['spec', 'redisLeader', 'affinity'], "object"),
+    input.ProblemMaticField(['spec', 'storage', 'volumeClaimTemplate'], "object"),
 ]
