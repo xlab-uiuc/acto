@@ -3,10 +3,10 @@ import json
 import logging
 import operator
 import random
-from typing import Tuple
+from typing import Tuple, Literal
 from deepdiff import DeepDiff
 
-from schema import extract_schema, BaseSchema, ObjectSchema, ArraySchema
+from schema import extract_schema, BaseSchema, ObjectSchema, ArraySchema, IntegerSchema
 from value_with_schema import attach_schema_to_value
 from common import random_string
 
@@ -90,13 +90,28 @@ class ProblemMaticField(CustomField):
             return []
 
         def __str__(self):
-            return "Field Pruned"        
+            return "Field Pruned"  
+    class PruneEntireIntegerSchema(IntegerSchema):
+        
+        def __init__(self, path: list, schema: dict) -> None:
+            super().__init__(path, schema)
 
-    def __init__(self, path, array: bool = False) -> None:
-        if array:
+        def __init__(self, schema_obj: BaseSchema) -> None:
+            super().__init__(schema_obj.path, schema_obj.raw_schema)
+        
+        def get_all_schemas(self) -> list:
+            return []
+
+        def __str__(self):
+            return "Field Pruned"  
+    
+    def __init__(self, path, type: Literal["object", "array", "integer"]) -> None:
+        if type == 'array':
             super().__init__(path, self.PruneEntireArraySchema)
-        else:
+        elif type =="object":
             super().__init__(path, self.PruneEntireObjectSchema)
+        elif type == "integer":
+            super().__init__(path, self.PruneEntireIntegerSchema)
 
 class InputModel:
 
