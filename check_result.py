@@ -101,7 +101,7 @@ class Result(object):
 
         return input_delta, system_state_delta
 
-    def get_cli_result(self) -> tuple[str, str]:
+    def get_cli_result(self):
         cli_result = {}
         
         with open(self.cli_output_path, 'r') as f:
