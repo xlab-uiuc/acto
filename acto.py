@@ -15,7 +15,7 @@ import importlib
 import traceback
 
 from common import *
-import check_result
+import check_result  
 from exception import UnknownDeployMethodError
 from preprocess import add_acto_label, preload_images, process_crd, update_preload_images
 from input import InputModel
@@ -134,6 +134,7 @@ class Acto:
         self.workdir_path = workdir_path
         self.dryrun = dryrun
         self.curr_trial = 0
+        self.result = None
 
         if os.path.exists(context_file):
             with open(context_file, 'r') as context_fin:
@@ -155,13 +156,13 @@ class Acto:
                 deployed = self.deploy.deploy_with_retry(self.context)
                 if deployed:
                     break
-            checker = check_result.Checker(self.context)
+            runner = check_result.Runner(self.context)
             cmd = [
                 'kubectl', 'apply', '-f', seed_file, '-n',
                 self.context['namespace']
             ]
-            checker.run(cmd)
-
+            runner.run(cmd)
+            
             update_preload_images(self.context)
             process_crd(self.context, self.crd_name, helper_crd)
             with open(context_file, 'w') as context_fout:
@@ -199,6 +200,7 @@ class Acto:
             deploy_dependency([])
             trial_err, num_tests = self.run_trial(self.curr_trial)
             self.input_model.reset_input()
+            self.result = None
 
             trial_elapsed = time.strftime(
                 "%H:%M:%S", time.gmtime(time.time() - trial_start_time))
@@ -247,6 +249,7 @@ class Acto:
         os.makedirs(trial_dir, exist_ok=True)
         self.context['current_dir_path'] = trial_dir
 
+        runner = check_result.Runner(self.context)
         checker = check_result.Checker(self.context)
 
         curr_input = self.input_model.get_seed_input()
@@ -278,12 +281,12 @@ class Acto:
                 'kubectl', 'apply', '-f', mutated_filename, '-n',
                 self.context['namespace']
             ]
-
+            
             if not self.dryrun:
-                run_result = check_result.Result(checker.run(cmd), input_delta)
-                run_result.setup_path_by_generation(self.context['current_dir_path'], generation)
-                checker.dump_all(run_result)
-                result = checker.check(run_result)
+                self.result = check_result.Result(self.context, self.result, runner.run(cmd))
+                self.result.setup_path_by_generation(trial_dir, generation)
+                self.result.collect_all_result()
+                result = checker.check(self.result)
             else:
                 result = PassResult()
             generation += 1
@@ -299,6 +302,8 @@ class Acto:
                     self.input_model.discard_test_case()
                 # Revert to parent CR
                 self.input_model.revert()
+                self.result = self.result.prev_result
+
             elif isinstance(result, UnchangedInputResult):
                 if setup:
                     self.input_model.discard_test_case()
