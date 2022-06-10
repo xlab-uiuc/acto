@@ -26,7 +26,8 @@ class ActoTimer(Thread):
         
         try:    
             self.queue.put(self.queue_msg)
-        except ValueError: # the queue might have been closed. It is safe to do so because system has converged
+        except (ValueError, AssertionError): # the queue might have been closed. It is safe to do so because system has converged
+            # above python 3.8, a valueError is raised while below 3.8, an AssertionError is raised
             pass
         self.finished.set()
 
