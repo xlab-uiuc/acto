@@ -60,7 +60,7 @@ class Result(object):
         self.input_path        = "%s/mutated-%d.yaml"        % (cur_path, generation)
         self.cli_output_path   = "%s/cli-output-%d.log"      % (cur_path, generation)
 
-    def get_deltas(self) -> tuple[dict, dict]:
+    def get_deltas(self):
         curr_input, curr_system_state = {}, {}
         prev_input, prev_system_state = {}, {}
 
@@ -402,6 +402,8 @@ class Checker(object):
                 # Find the longest matching field, compare the delta change
                 match_deltas = self._list_matched_fields(delta.path,
                                                    system_delta_without_cr)
+
+                # TODO: should the delta match be inclusive?
                 for match_delta in match_deltas:
                     logging.debug('Input delta [%s] matched with [%s]' %
                                   (delta.path, match_delta.path))
