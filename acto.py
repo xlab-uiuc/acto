@@ -258,9 +258,10 @@ class Acto:
         retry = False
         while generation < num_mutation:
             setup = False
-
+            # if connection refused, feed the current test as input again
             if retry == True:
                 curr_input, setup  = self.input_model.curr_test()
+                retry = False
             elif generation != 0:
                 curr_input, setup = self.input_model.next_test()
 
@@ -285,15 +286,23 @@ class Acto:
             if not self.dryrun:
                 self.result = check_result.Result(self.context, self.result, runner.run(cmd))
                 self.result.setup_path_by_generation(trial_dir, generation)
-                self.result.collect_all_result()
-                result = checker.check(self.result)
+                self.result.collect_cli_output()
+                # check for connection refused error
+                _, stderr = self.result.get_cli_result()
+                if stderr.find('connection refused') != -1:
+                    result = ConnectionRefusedResult()
+                else:
+                    self.result.collect_all_result()
+                    result = checker.check(self.result)
+                    generation += 1
             else:
                 result = PassResult()
-            generation += 1
+                generation += 1
 
-            if isinstance(result, ConnectionRefusedError):
+            if isinstance(result, ConnectionRefusedResult):
                 # Connection refused due to webhook not ready, let's wait for a bit
-                time.sleep(30)
+                logging.info('Connection failed. Retry the test after 20 seconds')
+                time.sleep(20)
                 # retry
                 retry = True
                 continue

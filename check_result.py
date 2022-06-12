@@ -360,9 +360,7 @@ class Checker(object):
 
     def check_input(self, result: Result) -> RunResult:
         stdout, stderr = result.get_cli_result()
-        if stderr.find('connection refused') != -1:
-            logging.info('Connection failed. Retry the test after 30 seconds')
-            return ConnectionRefusedResult()
+
         if stdout.find('error') != -1 or stderr.find(
                 'error') != -1 or stderr.find('invalid') != -1:
             logging.info('Invalid input, reject mutation')
