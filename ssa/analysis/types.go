@@ -1,14 +1,20 @@
 package analysis
 
+import "fmt"
+
 type FunctionCall struct {
 	FunctionName string
 	TaintSource  string
 }
 
 type FunctionTaintResult struct {
-	End           bool
-	TaintedParams []int
-	TaintedRets   []int
+	End         bool
+	TaintedArgs []int
+	TaintedRets []int
+}
+
+func (r FunctionTaintResult) String() string {
+	return fmt.Sprintf("{End : %t, TaintedArgs: %v, TaintedRets: %v}", r.End, r.TaintedArgs, r.TaintedRets)
 }
 
 type CallStack []FunctionCall

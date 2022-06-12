@@ -142,7 +142,7 @@ func FindSeedValues(prog *ssa.Program, seedType string) []ssa.Value {
 		if strings.Contains(f.Name(), "DeepCopy") {
 			continue
 		}
-		if f.Name() == "podTemplateSpec" {
+		if f.String() == "github.com/rabbitmq/cluster-operator/internal/resource.updateProperty" {
 			// seedVariables = append(seedVariables, getSeedVariablesFromFunction(f, seed.Type())...)
 			f.WriteTo(log.Writer())
 		}
@@ -187,7 +187,7 @@ func getSeedVariablesFromFunction(f *ssa.Function, seedType types.Type) []ssa.Va
 }
 
 // returns the list of parameter indices of the taint source
-func GetParamIndices(value ssa.Value, call *ssa.CallCommon) []int {
+func GetCallsiteArgIndices(value ssa.Value, call *ssa.CallCommon) []int {
 	paramSet := NewSet[int]()
 	for index, param := range call.Args {
 		if param == value {
@@ -195,6 +195,15 @@ func GetParamIndices(value ssa.Value, call *ssa.CallCommon) []int {
 		}
 	}
 	return paramSet.Items()
+}
+
+func GetCalleeParamIndex(value ssa.Value, callee *ssa.Function) int {
+	for index, param := range callee.Params {
+		if param == value {
+			return index
+		}
+	}
+	return -1
 }
 
 // returns the list of return indices of the taint source
@@ -208,6 +217,19 @@ func GetReturnIndices(taintSource ssa.Value, returnInst *ssa.Return) []int {
 	return retIndexSet.Items()
 }
 
+// This function taints the invoke callsite's arguments using the parameter index from
+// a concrete callee
+// This needs to be carefully handled because the concrete callee's parameter list would contain
+// the receiver, but the invoke callsite's argument list does not contain the receiver
+func TaintInvokeCallSiteArgFromCallee(callSite ssa.CallInstruction, calleeParamIndex int, taintedSet map[ssa.Value]bool) bool {
+	taintedParam := callSite.Common().Args[calleeParamIndex+1]
+	if _, ok := taintedSet[taintedParam]; ok {
+		taintedSet[taintedParam] = true
+		return true
+	}
+	return false
+}
+
 func IsK8sUpdateCall(call *ssa.CallCommon) bool {
 	if call.Method.Pkg() == nil {
 		return false
@@ -217,4 +239,21 @@ func IsK8sUpdateCall(call *ssa.CallCommon) bool {
 		return true
 	}
 	return false
+}
+
+// returns if the value represent any pass by reference type
+func IsPointerType(value ssa.Value) bool {
+	switch value.Type().Underlying().(type) {
+	case *types.Map:
+		return true
+	case *types.Slice:
+		return true
+	case *types.Pointer:
+		return true
+	case *types.Interface:
+		return true
+	default:
+		// XXX: channel, func could also be pass by reference
+		return false
+	}
 }

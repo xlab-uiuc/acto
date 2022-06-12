@@ -9,19 +9,20 @@ import (
 // propogate backward until find the source
 // it may find a value, or a parameter
 // in case of parameter, we need to propogate back to callee via ContextAware analysis
-func BackwardPropogation(storeInst *ssa.Store, taintedSet map[ssa.Value]bool) (taintedParam int, changed bool) {
-	log.Printf("Doing backward propogation on the inst [%s] in function [%s]\n", storeInst.String(), storeInst.Parent().String())
-	addr := storeInst.Addr
+func BackwardPropogation(addr ssa.Value, taintedSet map[ssa.Value]bool) (taintedParam int, changed bool) {
+	log.Printf("Doing backward propogation on the inst [%s] in function [%s]\n", addr.String(), addr.Parent().String())
 	source, _ := BackwardPropogationHelper(addr, []int{}, taintedSet)
+	log.Printf("It is from %s\n", source)
 	if _, ok := taintedSet[source]; !ok {
 		taintedSet[source] = true
 		changed = true
 	}
 	taintedParam = -1
 	if sourceParam, ok := source.(*ssa.Parameter); ok {
-		for i, param := range storeInst.Parent().Params {
+		for i, param := range addr.Parent().Params {
 			if param == sourceParam {
 				taintedParam = i
+				log.Printf("Tainted %dth parameter\n", i)
 			}
 		}
 	}
@@ -52,6 +53,8 @@ func BackwardPropogationHelper(value ssa.Value, path []int,
 		return BackwardPropogationHelper(typedValue.X, path, taintedSet)
 	case *ssa.Parameter:
 		return value, path
+	case *ssa.MakeInterface:
+		return BackwardPropogationHelper(typedValue.X, path, taintedSet)
 	case *ssa.Global:
 		return value, path
 	case *ssa.MakeSlice:

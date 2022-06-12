@@ -64,6 +64,9 @@ func GetValueToFieldMappingPass(prog *ssa.Program, seedType string) (map[ssa.Val
 				continue
 			}
 			referrers := variable.Referrers()
+			if variable.String() == "*t256" {
+				log.Printf("&t227.AdvancedConfig [#2] has %d referrers\n", len(*referrers))
+			}
 			for _, instruction := range *referrers {
 				switch typedInst := instruction.(type) {
 				case ssa.Value:
@@ -73,7 +76,7 @@ func GetValueToFieldMappingPass(prog *ssa.Program, seedType string) (map[ssa.Val
 						// Two possibilities for Call: function call or interface invocation
 						if !typedValue.Call.IsInvoke() {
 							// ordinary function call
-							callSiteTaintedParamIndexSet := GetParamIndices(variable, typedValue.Common())
+							callSiteTaintedParamIndexSet := GetCallsiteArgIndices(variable, typedValue.Common())
 							if len(callSiteTaintedParamIndexSet) == -1 {
 								log.Println("Error, unable to find the param index")
 							}
@@ -225,6 +228,7 @@ func GetValueToFieldMappingPass(prog *ssa.Program, seedType string) (map[ssa.Val
 									changed = true
 								}
 							}
+							log.Printf("Propogate to dereference at [%s]\n", typedValue)
 						default:
 							// not dereference, do not propogate
 							// frontier
@@ -262,7 +266,18 @@ func GetValueToFieldMappingPass(prog *ssa.Program, seedType string) (map[ssa.Val
 						// 		changed = true
 						// 	}
 						// }
-						frontierValues[variable] = true
+						if _, ok := typedInst.Addr.(*ssa.Alloc); ok {
+							// only propogate to the address if it's alloc
+							for _, parentField := range parentFieldSet.Fields() {
+								newField := parentField.Clone()
+								ok := AddFieldToValueFieldSetMap(valueFieldSetMap, typedInst.Addr, newField)
+								if ok {
+									changed = true
+								}
+							}
+						} else {
+							frontierValues[variable] = true
+						}
 					}
 				case *ssa.Return:
 					// XXX: no need to handle them now
