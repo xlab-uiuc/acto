@@ -7,10 +7,8 @@ import time
 from typing import Tuple
 import random
 from datetime import datetime
-from copy import deepcopy
 import signal
 import logging
-from deepdiff import DeepDiff
 import importlib
 import traceback
 
@@ -21,6 +19,9 @@ from preprocess import add_acto_label, preload_images, process_crd, update_prelo
 from input import InputModel
 from deploy import Deploy, DeployMethod
 from constant import CONST
+from runner import Runner
+from check_result import Checker
+from snapshot import EmptySnapshot
 
 CONST = CONST()
 random.seed(0)
@@ -134,7 +135,7 @@ class Acto:
         self.workdir_path = workdir_path
         self.dryrun = dryrun
         self.curr_trial = 0
-        self.result = None
+        self.snapshots = []
 
         if os.path.exists(context_file):
             with open(context_file, 'r') as context_fin:
@@ -200,7 +201,7 @@ class Acto:
             deploy_dependency([])
             trial_err, num_tests = self.run_trial(self.curr_trial)
             self.input_model.reset_input()
-            self.result = None
+            self.snapshots = []
 
             trial_elapsed = time.strftime(
                 "%H:%M:%S", time.gmtime(time.time() - trial_start_time))
@@ -249,18 +250,20 @@ class Acto:
         os.makedirs(trial_dir, exist_ok=True)
         self.context['current_dir_path'] = trial_dir
 
-        runner = check_result.Runner(self.context)
-        checker = check_result.Checker(self.context)
+        runner = Runner(self.context, trial_dir)
+        checker = Checker(self.context, trial_dir)
 
         curr_input = self.input_model.get_seed_input()
+        self.snapshots.append(EmptySnapshot(curr_input))
 
         generation = 0
         retry = False
         while generation < num_mutation:
             setup = False
-
+            # if connection refused, feed the current test as input again
             if retry == True:
                 curr_input, setup  = self.input_model.curr_test()
+                retry = False
             elif generation != 0:
                 curr_input, setup = self.input_model.next_test()
 
@@ -272,28 +275,20 @@ class Acto:
                     self.input_model.discard_test_case()
                 logging.info('CR unchanged, continue')
                 continue
-
-            mutated_filename = '%s/mutated-%d.yaml' % (trial_dir, generation)
-            with open(mutated_filename, 'w') as mutated_cr_file:
-                yaml.dump(curr_input, mutated_cr_file)
-
-            cmd = [
-                'kubectl', 'apply', '-f', mutated_filename, '-n',
-                self.context['namespace']
-            ]
             
             if not self.dryrun:
-                self.result = check_result.Result(self.context, self.result, runner.run(cmd))
-                self.result.setup_path_by_generation(trial_dir, generation)
-                self.result.collect_all_result()
-                result = checker.check(self.result)
+                snapshot = runner.run(curr_input, generation)
+                result = checker.check(snapshot, self.snapshots[-1], generation)
+                self.snapshots.append(snapshot)
+                generation += 1
             else:
                 result = PassResult()
-            generation += 1
+                generation += 1
 
-            if isinstance(result, ConnectionRefusedError):
+            if isinstance(result, ConnectionRefusedResult):
                 # Connection refused due to webhook not ready, let's wait for a bit
-                time.sleep(30)
+                logging.info('Connection failed. Retry the test after 20 seconds')
+                time.sleep(20)
                 # retry
                 retry = True
                 continue
@@ -302,7 +297,7 @@ class Acto:
                     self.input_model.discard_test_case()
                 # Revert to parent CR
                 self.input_model.revert()
-                self.result = self.result.prev_result
+                self.snapshots.pop()
 
             elif isinstance(result, UnchangedInputResult):
                 if setup:

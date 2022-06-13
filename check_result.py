@@ -1,337 +1,22 @@
 import subprocess
 import time
 import logging
-from unicodedata import name
 from deepdiff import DeepDiff
-import json
-import yaml
 import re
-from multiprocessing import Process, Queue
-import queue
 import copy
-from kubernetes.client import *
 
 from common import *
-import acto_timer
 from custom.compare import CompareMethods
+from snapshot import Snapshot
 
-class Result(object):
-    def __init__(self, context: dict, prev_result = None, cli_result = None,\
-        input_path = None, cli_output_path = None, delta_log_path = None,\
-        system_state_path = None, operator_log_path = None, events_log_path = None):
-        self.namespace: str     = context['namespace']
-        self.crd_metainfo: dict = context['crd']
-        self.prev_result        = prev_result
-        self.cli_result         = cli_result
-        self.log_num            = 0
-
-        self.input_path         = input_path
-        self.cli_output_path    = cli_output_path
-        self.delta_log_path     = delta_log_path
-        self.system_state_path  = system_state_path
-        self.operator_log_path  = operator_log_path
-        self.events_log_path    = events_log_path
-
-        self.coreV1Api          = CoreV1Api()
-        self.appV1Api           = AppsV1Api()
-        self.batchV1Api         = BatchV1Api()
-        self.customObjectApi    = CustomObjectsApi()
-        self.policyV1Api        = PolicyV1Api()
-        self.networkingV1Api    = NetworkingV1Api()
-        self.resource_methods   = {
-            'pod': self.coreV1Api.list_namespaced_pod,
-            'stateful_set': self.appV1Api.list_namespaced_stateful_set,
-            'deployment': self.appV1Api.list_namespaced_deployment,
-            'config_map': self.coreV1Api.list_namespaced_config_map,
-            'service': self.coreV1Api.list_namespaced_service,
-            'pvc': self.coreV1Api.list_namespaced_persistent_volume_claim,
-            'cronjob': self.batchV1Api.list_namespaced_cron_job,
-            'ingress': self.networkingV1Api.list_namespaced_ingress,
-            'pod_disruption_budget': self.policyV1Api.list_namespaced_pod_disruption_budget,
-        }
-
-    def setup_path_by_generation(self, cur_path: string, generation: int):
-        '''An alternative way to setup path fields
-        '''
-        self.delta_log_path    = "%s/delta-%d.log"           % (cur_path, generation)
-        self.operator_log_path = "%s/operator-%d.log"        % (cur_path, generation)
-        self.system_state_path = "%s/system-state-%03d.json" % (cur_path, generation)
-        self.events_log_path   = "%s/events.log"             % (cur_path)
-        self.input_path        = "%s/mutated-%d.yaml"        % (cur_path, generation)
-        self.cli_output_path   = "%s/cli-output-%d.log"      % (cur_path, generation)
-
-    def get_deltas(self):
-        curr_input, curr_system_state = {}, {}
-        prev_input, prev_system_state = {}, {}
-
-        # read input & system state from the current result
-        with open(self.input_path, 'r') as f:
-            curr_input = yaml.load(f, Loader=yaml.loader.SafeLoader)
-
-        with open(self.system_state_path, 'r') as f:
-            curr_system_state = json.load(f)
-        
-        # read input & system state from the previous result if possible
-        if self.prev_result == None:
-            prev_input = curr_input
-            prev_system_state = {}
-        else:
-            with open(self.prev_result.input_path, 'r') as f:
-                prev_input = yaml.load(f, Loader=yaml.loader.SafeLoader)
-            with open(self.prev_result.system_state_path, 'r') as f:
-                prev_system_state = json.load(f)
-
-        input_delta = postprocess_diff(
-                    DeepDiff(prev_input, 
-                    curr_input,
-                    ignore_order=True,
-                    report_repetition=True,
-                    view='tree'))
-        
-        system_state_delta = {}
-        for resource in curr_system_state:
-            if resource not in prev_system_state:
-                prev_system_state[resource] = {}
-            system_state_delta[resource] = postprocess_diff(
-                        DeepDiff(prev_system_state[resource],
-                        curr_system_state[resource],
-                        exclude_regex_paths=EXCLUDE_PATH_REGEX,
-                        report_repetition=True,
-                        view='tree'))
-
-        return input_delta, system_state_delta
-
-    def get_cli_result(self):
-        cli_result = {}
-        
-        with open(self.cli_output_path, 'r') as f:
-            cli_result = json.load(f)
-        
-        return cli_result['stdout'], cli_result['stderr']
-
-    def get_operator_log(self):
-        log = []
-        
-        with open(self.operator_log_path, 'r') as f:
-             log = f.readlines()
-             
-        return log
-        
-    def collect_all_result(self):
-        self.collect_events()
-        self.collect_operator_log()
-        self.collect_cli_output()
-        self.collect_system_state()
-        self.collect_delta() # delta must be collected after system state
-
-    def collect_system_state(self):
-        '''Queries resources in the test namespace, computes delta
-        
-        Args:
-            result: includes the path to the resource state file
-        '''
-        resources = {}
-
-        for resource, method in self.resource_methods.items():
-            resources[resource] = self.__get_all_objects(method)
-            
-        current_cr = self.__get_custom_resources(self.namespace,
-                                                 self.crd_metainfo['group'],
-                                                 self.crd_metainfo['version'],
-                                                 self.crd_metainfo['plural'])
-        logging.debug(current_cr)
-
-        resources['custom_resource_spec'] = current_cr['test-cluster']['spec'] \
-            if 'spec' in current_cr['test-cluster'] else None
-        resources['custom_resource_status'] = current_cr['test-cluster']['status'] \
-            if 'status' in current_cr['test-cluster'] else None
-
-        # Dump system state
-        with open(self.system_state_path, 'w') as fout:
-            json.dump(resources, fout, cls=ActoEncoder, indent=6)
-
-    def collect_delta(self):
-        input_delta, system_delta = self.get_deltas()
-        with open(self.delta_log_path, 'w') as f:
-            f.write('---------- INPUT DELTA  ----------\n')
-            f.write(json.dumps(input_delta, cls=ActoEncoder, indent=6))
-            f.write('\n---------- SYSTEM DELTA ----------\n')
-            f.write(json.dumps(system_delta, cls=ActoEncoder, indent=6))
-
-    def collect_operator_log(self):
-        '''Queries operator log in the test namespace
-        
-        Args:
-            result: includes the path to the operator log file
-        '''
-        operator_pod_list = self.coreV1Api.list_namespaced_pod(
-            namespace=self.namespace,
-            watch=False,
-            label_selector="acto/tag=operator-pod").items
-
-        if len(operator_pod_list) >= 1:
-            logging.debug('Got operator pod: pod name:' +
-                            operator_pod_list[0].metadata.name)
-        else:
-            logging.error('Failed to find operator pod')
-            #TODO: refine what should be done if no operator pod can be found
-
-        log = self.coreV1Api.read_namespaced_pod_log(
-            name=operator_pod_list[0].metadata.name,
-            namespace=self.namespace)
-
-        # only get the new log since previous result
-        new_log = log.split('\n')
-        if self.prev_result != None:
-            # exclude the old logs
-            prev_log_num = self.prev_result.log_num
-            new_log = new_log[prev_log_num:]
-
-        self.log_num = len(new_log)
-
-        with open(self.operator_log_path, 'a') as f:
-            for line in new_log:
-                f.write("%s\n" % line)
-
-    def collect_events(self):
-        events = self.coreV1Api.list_namespaced_event(self.namespace,
-                                                pretty=True,
-                                                _preload_content=True,
-                                                watch=False)
-
-        with open(self.events_log_path, 'w') as f:
-            for event in events.items:
-                f.write("%s %s %s %s:\t%s\n" % (
-                    event.first_timestamp.strftime("%H:%M:%S") if event.first_timestamp != None else "None",
-                    event.involved_object.kind,
-                    event.involved_object.name,
-                    event.involved_object.resource_version,
-                    event.message))
-
-    def collect_cli_output(self):
-        cli_output = {}
-        cli_output["stdout"] = self.cli_result.stdout
-        cli_output["stderr"] = self.cli_result.stderr
-        with open(self.cli_output_path, 'w') as f:
-            f.write(json.dumps(cli_output, cls=ActoEncoder, indent=6))
-
-    def __get_all_objects(self, method) -> dict:
-        '''Get resources in the application namespace
-
-        Args:
-            method: function pointer for getting the object
-        
-        Returns
-            resource in dict
-        '''
-        result_dict = {}
-        resource_objects = method(namespace=self.namespace,
-                                  watch=False).items
-
-        for object in resource_objects:
-            result_dict[object.metadata.name] = object.to_dict()
-        return result_dict
-
-    def __get_custom_resources(self, namespace: str, group: str, version: str,
-                               plural: str) -> dict:
-        '''Get custom resource object
-
-        Args:
-            namespace: namespace of the cr
-            group: API group of the cr
-            version: version of the cr
-            plural: plural name of the cr
-        
-        Returns:
-            custom resouce object
-        '''
-        result_dict = {}
-        custom_resources = self.customObjectApi.list_namespaced_custom_object(
-            group, version, namespace, plural)['items']
-        for cr in custom_resources:
-            result_dict[cr['metadata']['name']] = cr
-        return result_dict
-
-class Runner(object):
-    def __init__(self, context: dict):
-        self.namespace = context["namespace"]
-        self.log_line = 0
-
-        self.coreV1Api = CoreV1Api()
-    
-    def run(self, cmd: list) -> subprocess.CompletedProcess:
-        '''Simply run the cmd and dumps system_state, delta, operator log, events and input files without checking. 
-           The function blocks until system converges.
-
-        Args:
-            cmd: subprocess command to be executed using subprocess.run
-
-        Returns:
-            result 
-        '''
-        cli_result = subprocess.run(cmd, capture_output=True, text=True)
-        self.wait_for_system_converge()
-
-        logging.debug('STDOUT: ' + cli_result.stdout)
-        logging.debug('STDERR: ' + cli_result.stderr)
-        
-        return cli_result
-
-    def wait_for_system_converge(self, hard_timeout = 600):
-        '''This function blocks until the system converges. It keeps 
-           watching for incoming events. If there is no event within 
-           60 seconds, the system is considered to have converged. 
-        
-        Args:
-            hard_timeout: the maximal wait time for system convergence
-        '''
-        
-        start_timestamp = time.time()
-        logging.info("Waiting for system to converge... ")
-
-        event_stream = self.coreV1Api.list_namespaced_event(self.namespace, 
-                                                       _preload_content=False,
-                                                       watch = True)
-
-        combined_event_queue = Queue(maxsize = 0)
-        timer_hard_timeout = acto_timer.ActoTimer(hard_timeout, combined_event_queue, "timeout")
-        watch_process = Process(target=self.watch_system_events,
-                        args=(event_stream, "event"))
-
-        timer_hard_timeout.start()
-        watch_process.start()
-
-        while (True):
-            try:
-                event = combined_event_queue.get(timeout=60)
-                if event == "timeout":
-                    logging.debug('Hard timeout %d triggered', hard_timeout)
-                    break
-            except queue.Empty:
-                break
-
-        event_stream.close()
-        timer_hard_timeout.cancel()
-        watch_process.terminate()
-
-        time_elapsed = time.strftime("%H:%M:%S", time.gmtime(time.time() - start_timestamp))
-        logging.info('System took %s to converge' % time_elapsed)
-
-    def watch_system_events(self, event_stream, queue: Queue):
-        '''A process that watches namespaced events
-        '''
-        for event in event_stream:
-            try:
-                queue.put(event)
-            except:
-                pass
 
 class Checker(object):
-    def __init__(self, context: dict) -> None:
+    def __init__(self, context: dict, trial_dir: str) -> None:
         self.namespace      = context['namespace']
         self.compare_method = CompareMethods()
+        self.trial_dir = trial_dir
 
-    def check(self, result: Result) -> RunResult:
+    def check(self, snapshot: Snapshot, prev_snapshot: Snapshot, generation: int) -> RunResult:
         '''Use acto oracles against the results to check for any errors
 
         Args:        
@@ -340,12 +25,15 @@ class Checker(object):
         Returns:
             RunResult of the checking
         '''
-        input_result = self.check_input(result)
-        state_result = self.check_resources(result)
-        log_result = self.check_operator_log(result)
+        self.delta_log_path = "%s/delta-%d.log" % (self.trial_dir, generation)
 
+        input_result = self.check_input(snapshot)
         if not isinstance(input_result, PassResult):
             return input_result
+
+        state_result = self.check_resources(snapshot, prev_snapshot)
+        log_result = self.check_operator_log(snapshot, prev_snapshot)
+
         if isinstance(log_result, InvalidInputResult):
             logging.info('Invalid input, skip this case')
             return log_result
@@ -358,8 +46,12 @@ class Checker(object):
 
         return PassResult()
 
-    def check_input(self, result: Result) -> RunResult:
-        stdout, stderr = result.get_cli_result()
+    def check_input(self, snapshot: Snapshot) -> RunResult:
+        stdout, stderr = snapshot.cli_result
+
+        if stderr.find('connection refused') != -1:
+            return ConnectionRefusedResult()
+
         if stdout.find('error') != -1 or stderr.find(
                 'error') != -1 or stderr.find('invalid') != -1:
             logging.info('Invalid input, reject mutation')
@@ -374,7 +66,7 @@ class Checker(object):
 
         return PassResult()
 
-    def check_resources(self, result: Result) -> RunResult:
+    def check_resources(self, snapshot: Snapshot, prev_snapshot: Snapshot) -> RunResult:
         '''
         System state oracle
 
@@ -387,7 +79,13 @@ class Checker(object):
         Returns:
             RunResult of the checking
         '''
-        input_delta, system_delta = result.get_deltas()
+        input_delta, system_delta = self.get_deltas(snapshot, prev_snapshot)
+
+        with open(self.delta_log_path, 'w') as f:
+            f.write('---------- INPUT DELTA  ----------\n')
+            f.write(json.dumps(input_delta, cls=ActoEncoder, indent=6))
+            f.write('\n---------- SYSTEM DELTA ----------\n')
+            f.write(json.dumps(system_delta, cls=ActoEncoder, indent=6))
         
         # cr_spec_diff is same as input delta, so it is excluded
         system_delta_without_cr = copy.deepcopy(system_delta)
@@ -440,7 +138,7 @@ class Checker(object):
                                        delta)
         return PassResult()
     
-    def check_operator_log(self, result: Result) -> RunResult:
+    def check_operator_log(self, snapshot: Snapshot, prev_snapshot: Snapshot) -> RunResult:
         '''Check the operator log for error msg
         
         Args:
@@ -449,7 +147,8 @@ class Checker(object):
         Returns:
             RunResult of the checking
         '''
-        log = result.get_operator_log()
+        log = snapshot.operator_log
+        log = log[len(prev_snapshot.operator_log):]
 
         for line in log:
             if invalid_input_message(line):
@@ -484,7 +183,7 @@ class Checker(object):
                 return None  # TODO
         return PassResult()
 
-    def check_events_log(self, result: Result) -> RunResult:
+    def check_events_log(self, snapshot: Snapshot) -> RunResult:
         pass
 
     def _list_matched_fields(self, path: list, delta_dict: dict) -> list:
@@ -522,6 +221,30 @@ class Checker(object):
                         pass
 
         return results
+
+    def get_deltas(self, snapshot: Snapshot, prev_snapshot: Snapshot):
+        curr_input, curr_system_state = snapshot.input, snapshot.system_state
+        prev_input, prev_system_state = prev_snapshot.input, prev_snapshot.system_state
+
+        input_delta = postprocess_diff(
+                    DeepDiff(prev_input, 
+                    curr_input,
+                    ignore_order=True,
+                    report_repetition=True,
+                    view='tree'))
+        
+        system_state_delta = {}
+        for resource in curr_system_state:
+            if resource not in prev_system_state:
+                prev_system_state[resource] = {}
+            system_state_delta[resource] = postprocess_diff(
+                        DeepDiff(prev_system_state[resource],
+                        curr_system_state[resource],
+                        exclude_regex_paths=EXCLUDE_PATH_REGEX,
+                        report_repetition=True,
+                        view='tree'))
+
+        return input_delta, system_state_delta
 
 # check file testing
 if __name__ == "__main__":
