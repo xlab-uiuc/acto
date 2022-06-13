@@ -6,7 +6,7 @@ import re
 import copy
 
 from common import *
-from custom.compare import CompareMethods
+from compare import CompareMethods
 from snapshot import Snapshot
 
 

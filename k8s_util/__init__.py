@@ -1,1 +1,1 @@
-from k8sutil import canonicalizeQuantity
+# from k8sutil import canonicalizeQuantity
