@@ -4,7 +4,6 @@ from copy import deepcopy
 import random
 from abc import abstractmethod
 import exrex
-import string
 import json
 from jsonschema import validate
 
