@@ -3,6 +3,7 @@ package main
 import "C"
 import (
 	"fmt"
+	"strconv"
 
 	"k8s.io/apimachinery/pkg/api/resource"
 )
@@ -10,9 +11,8 @@ import (
 //export parse
 func parse(valuePtr *C.char) *C.char {
 	value := C.GoString(valuePtr)
-	q := resource.Quantity{Format: resource.DecimalSI}
-	q.UnmarshalJSON([]byte(value))
-	return C.CString(q.String())
+	q := resource.MustParse(value)
+	return C.CString(strconv.FormatInt(q.Value(), 10))
 }
 
 func main() {
