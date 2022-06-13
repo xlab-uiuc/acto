@@ -14,17 +14,19 @@ from common import *
 
 class Runner(object):
 
-    def __init__(self, context: dict, trial_dir: str):
+    def __init__(self, context: dict, trial_dir: str, cluster_name: str):
         self.namespace = context["namespace"]
         self.crd_metainfo: dict = context['crd']
         self.trial_dir = trial_dir
+        self.cluster_name = cluster_name
 
-        self.coreV1Api = kubernetes.client.CoreV1Api()
-        self.appV1Api = kubernetes.client.AppsV1Api()
-        self.batchV1Api = kubernetes.client.BatchV1Api()
-        self.customObjectApi = kubernetes.client.CustomObjectsApi()
-        self.policyV1Api = kubernetes.client.PolicyV1Api()
-        self.networkingV1Api = kubernetes.client.NetworkingV1Api()
+        apiclient = kubernetes_client(cluster_name)
+        self.coreV1Api = kubernetes.client.CoreV1Api(apiclient)
+        self.appV1Api = kubernetes.client.AppsV1Api(apiclient)
+        self.batchV1Api = kubernetes.client.BatchV1Api(apiclient)
+        self.customObjectApi = kubernetes.client.CustomObjectsApi(apiclient)
+        self.policyV1Api = kubernetes.client.PolicyV1Api(apiclient)
+        self.networkingV1Api = kubernetes.client.NetworkingV1Api(apiclient)
         self.resource_methods = {
             'pod': self.coreV1Api.list_namespaced_pod,
             'stateful_set': self.appV1Api.list_namespaced_stateful_set,
@@ -36,7 +38,6 @@ class Runner(object):
             'ingress': self.networkingV1Api.list_namespaced_ingress,
             'pod_disruption_budget': self.policyV1Api.list_namespaced_pod_disruption_budget,
         }
-
 
     def run(self, input: dict, generation: int) -> Snapshot:
         '''Simply run the cmd and dumps system_state, delta, operator log, events and input files without checking. 
@@ -57,12 +58,9 @@ class Runner(object):
         with open(mutated_filename, 'w') as mutated_cr_file:
             yaml.dump(input, mutated_cr_file)
 
-        cmd = [
-            'kubectl', 'apply', '-f', mutated_filename, '-n',
-            self.namespace
-        ]
+        cmd = ['apply', '-f', mutated_filename, '-n', self.namespace]
 
-        cli_result = subprocess.run(cmd, capture_output=True, text=True)
+        cli_result = kubectl(cmd, cluster_name=self.cluster_name, capture_output=True, text=True)
         self.wait_for_system_converge()
 
         logging.debug('STDOUT: ' + cli_result.stdout)
@@ -74,6 +72,12 @@ class Runner(object):
 
         snapshot = Snapshot(input, self.collect_cli_result(cli_result), system_state, operator_log)
         return snapshot
+
+    def run_without_collect(self, seed_file: str):
+        cmd = ['apply', '-f', seed_file, '-n', self.context['namespace']]
+        _ = kubectl(cmd, cluster_name=self.cluster_name)
+
+        self.wait_for_system_converge()
 
     def collect_system_state(self) -> dict:
         '''Queries resources in the test namespace, computes delta
@@ -99,7 +103,7 @@ class Runner(object):
         # Dump system state
         with open(self.system_state_path, 'w') as fout:
             json.dump(resources, fout, cls=ActoEncoder, indent=6)
-        
+
         return resources
 
     def collect_operator_log(self) -> list:
@@ -203,7 +207,8 @@ class Runner(object):
 
         combined_event_queue = Queue(maxsize=0)
         timer_hard_timeout = acto_timer.ActoTimer(hard_timeout, combined_event_queue, "timeout")
-        watch_process = Process(target=self.watch_system_events, args=(event_stream, combined_event_queue))
+        watch_process = Process(target=self.watch_system_events,
+                                args=(event_stream, combined_event_queue))
 
         timer_hard_timeout.start()
         watch_process.start()

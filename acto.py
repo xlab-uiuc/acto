@@ -1,6 +1,7 @@
 import argparse
 import os
 import sys
+import threading
 import kubernetes
 import yaml
 import time
@@ -13,9 +14,9 @@ import importlib
 import traceback
 
 from common import *
-import check_result  
+import check_result
 from exception import UnknownDeployMethodError
-from preprocess import add_acto_label, preload_images, process_crd, update_preload_images
+from preprocess import add_acto_label, process_crd, update_preload_images
 from input import InputModel
 from deploy import Deploy, DeployMethod
 from constant import CONST
@@ -26,39 +27,44 @@ from snapshot import EmptySnapshot
 CONST = CONST()
 random.seed(0)
 
-def construct_kind_cluster(k8s_version: str):
+
+def construct_kind_cluster(cluster_name: str, k8s_version: str):
     '''Delete kind cluster then create a new one
+
+    Args:
+        name: name of the k8s cluster
+        k8s_version: version of k8s to use
     '''
-    os.system('kind delete cluster')
+    logging.info('Deleting kind cluster...')
+    kind_delete_cluster(cluster_name)
+    time.sleep(5)
 
     kind_config_dir = 'kind_config'
     os.makedirs(kind_config_dir, exist_ok=True)
     kind_config_path = os.path.join(kind_config_dir, 'kind.yaml')
 
-    with open(kind_config_path, 'w') as kind_config_file:
-        kind_config_dict = {}
-        kind_config_dict['kind'] = 'Cluster'
-        kind_config_dict['apiVersion'] = 'kind.x-k8s.io/v1alpha4'
-        kind_config_dict['nodes'] = []
-        for _ in range(3):
-            kind_config_dict['nodes'].append({'role': 'worker'})
-        for _ in range(1):
-            kind_config_dict['nodes'].append({'role': 'control-plane'})
-        yaml.dump(kind_config_dict, kind_config_file)
+    if not os.path.exists(kind_config_path):
+        with open(kind_config_path, 'w') as kind_config_file:
+            kind_config_dict = {}
+            kind_config_dict['kind'] = 'Cluster'
+            kind_config_dict['apiVersion'] = 'kind.x-k8s.io/v1alpha4'
+            kind_config_dict['nodes'] = []
+            for _ in range(3):
+                kind_config_dict['nodes'].append({'role': 'worker'})
+            for _ in range(1):
+                kind_config_dict['nodes'].append({'role': 'control-plane'})
+            yaml.dump(kind_config_dict, kind_config_file)
 
-    os.system('kind create cluster --config %s --image %s' %
-              (kind_config_path, f"kindest/node:v{k8s_version}"))
+    p = kind_create_cluster(cluster_name, kind_config_path, k8s_version)
+    if p.returncode != 0:
+        logging.error('Failed to create kind cluster, retrying')
+        kind_delete_cluster(cluster_name)
+        time.sleep(5)
+        kind_create_cluster(cluster_name, kind_config_path, k8s_version)
 
-    kubernetes.config.load_kube_config()
+    logging.info('Created kind cluster')
 
-
-def deploy_dependency(yaml_paths):
-    logging.debug('Deploying dependencies')
-    for yaml_path in yaml_paths:
-        os.system('kubectl apply -f %s' % yaml_path)
-    if len(yaml_paths) > 0:
-        time.sleep(30)  # TODO: how to wait smartly
-    return
+    kubernetes.config.load_kube_config(context=kind_kubecontext(cluster_name))
 
 
 def construct_candidate_helper(node, node_path, result: dict):
@@ -73,8 +79,7 @@ def construct_candidate_helper(node, node_path, result: dict):
         result[node_path] = node['candidates']
     else:
         for child_key, child_value in node.items():
-            construct_candidate_helper(child_value,
-                                       '%s.%s' % (node_path, child_key), result)
+            construct_candidate_helper(child_value, '%s.%s' % (node_path, child_key), result)
 
 
 def construct_candidate_from_yaml(yaml_path: str) -> dict:
@@ -111,133 +116,73 @@ def timeout_handler(sig, frame):
     raise TimeoutError
 
 
-class Acto:
+class TrialRunner:
 
-    def __init__(self,
-                 seed_file,
-                 deploy,
-                 workdir_path,
-                 crd_name,
-                 preload_images_,
-                 custom_fields_src,
-                 helper_crd,
-                 context_file,
-                 dryrun,
-                 mount: list = None) -> None:
-        try:
-            with open(seed_file, 'r') as cr_file:
-                self.seed = yaml.load(cr_file, Loader=yaml.FullLoader)
-        except:
-            logging.error('Failed to read seed yaml, aborting')
-            quit()
+    def __init__(self, context: dict, input_model: InputModel, deploy: Deploy, workdir: str,
+                 worker_id: int, dryrun: bool) -> None:
+        self.context = context
+        self.workdir = workdir
+        self.worker_id = worker_id
+        self.cluster_name = f"acto-cluster-{worker_id}"
+        self.input_model = input_model
         self.deploy = deploy
-        self.crd_name = crd_name
-        self.workdir_path = workdir_path
         self.dryrun = dryrun
-        self.curr_trial = 0
+
         self.snapshots = []
 
-        if os.path.exists(context_file):
-            with open(context_file, 'r') as context_fin:
-                self.context = json.load(context_fin)
-                self.context['preload_images'] = set(
-                    self.context['preload_images'])
-        else:
-            # Run learning run to collect some information from runtime
-            logging.info('Starting learning run to collect information')
-            self.context = {
-                'namespace': '',
-                'current_dir_path': os.path.join(self.workdir_path, 'learn'),
-                'crd': None,
-                'preload_images': set()
-            }
-
-            while True:
-                construct_kind_cluster(CONST.K8S_VERSION)
-                deployed = self.deploy.deploy_with_retry(self.context)
-                if deployed:
-                    break
-            runner = check_result.Runner(self.context)
-            cmd = [
-                'kubectl', 'apply', '-f', seed_file, '-n',
-                self.context['namespace']
-            ]
-            runner.run(cmd)
-            
-            update_preload_images(self.context)
-            process_crd(self.context, self.crd_name, helper_crd)
-            with open(context_file, 'w') as context_fout:
-                json.dump(self.context, context_fout, cls=ActoEncoder)
-
-        # Add additional preload images from arguments
-        if preload_images_ != None:
-            self.context['preload_images'].update(preload_images_)
-
-        # Apply custom fields
-        self.input_model = InputModel(self.context['crd']['body'], mount)
-        self.input_model.initialize(self.seed)
-        if custom_fields_src != None:
-            module = importlib.import_module(custom_fields_src)
-            for custom_field in module.custom_fields:
-                self.input_model.apply_custom_field(custom_field)
-
-        # Generate test cases
-        self.test_plan = self.input_model.generate_test_plan()
-        with open(os.path.join(self.workdir_path, 'test_plan.json'),
-                  'w') as plan_file:
-            json.dump(self.test_plan, plan_file, cls=ActoEncoder, indent=6)
-
     def run(self):
+        self.input_model.set_worker_id(self.worker_id)
+        curr_trial = 0
+        apiclient = None
+
         while True:
             trial_start_time = time.time()
-            construct_kind_cluster(CONST.K8S_VERSION)
-            preload_images(self.context['preload_images'])
-            deployed = self.deploy.deploy_with_retry(self.context)
+            construct_kind_cluster(self.cluster_name, CONST.K8S_VERSION)
+            apiclient = kubernetes_client(self.cluster_name)
+            kind_load_images(self.context['preload_images'], self.cluster_name)
+            deployed = self.deploy.deploy_with_retry(self.context, self.cluster_name)
             if not deployed:
                 logging.info('Not deployed. Try again!')
                 continue
 
-            add_acto_label(self.context)
-            deploy_dependency([])
-            trial_err, num_tests = self.run_trial(self.curr_trial)
+            add_acto_label(apiclient, self.context)
+
+            trial_dir = os.path.join(self.workdir, 'trial-%02d-%04d' % (self.worker_id, curr_trial))
+            os.makedirs(trial_dir, exist_ok=True)
+
+            trial_err, num_tests = self.run_trial(trial_dir=trial_dir)
             self.input_model.reset_input()
             self.snapshots = []
 
-            trial_elapsed = time.strftime(
-                "%H:%M:%S", time.gmtime(time.time() - trial_start_time))
-            logging.info('Trial %d finished, completed in %s' %
-                         (self.curr_trial, trial_elapsed))
+            trial_elapsed = time.strftime("%H:%M:%S", time.gmtime(time.time() - trial_start_time))
+            logging.info('Trial %d finished, completed in %s' % (curr_trial, trial_elapsed))
             logging.info('---------------------------------------\n')
 
             result_dict = {}
-            result_dict['trial_num'] = self.curr_trial
+            result_dict['trial_num'] = curr_trial
             result_dict['duration'] = trial_elapsed
             result_dict['num_tests'] = num_tests
             if trial_err == None:
-                logging.info('Trial %d completed without error',
-                             self.curr_trial)
+                logging.info('Trial %d completed without error', curr_trial)
             else:
                 result_dict['oracle'] = trial_err.oracle
                 result_dict['message'] = trial_err.message
                 result_dict['input_delta'] = trial_err.input_delta
                 result_dict['matched_system_delta'] = \
                     trial_err.matched_system_delta
-            result_path = os.path.join(self.context['current_dir_path'],
-                                       'result.json')
+            result_path = os.path.join(trial_dir, 'result.json')
             with open(result_path, 'w') as result_file:
                 json.dump(result_dict, result_file, cls=ActoEncoder, indent=6)
-            self.curr_trial = self.curr_trial + 1
+            curr_trial = curr_trial + 1
 
             if self.input_model.is_empty():
                 logging.info('Test finished')
                 break
 
-        logging.info('Failed test cases: %s' % json.dumps(
-            self.input_model.get_discarded_tests(), cls=ActoEncoder, indent=4))
+        logging.info('Failed test cases: %s' %
+                     json.dumps(self.input_model.get_discarded_tests(), cls=ActoEncoder, indent=4))
 
-    def run_trial(self,
-                  trial_num: int,
-                  num_mutation: int = 10) -> Tuple[ErrorResult, int]:
+    def run_trial(self, trial_dir: str, num_mutation: int = 10) -> Tuple[ErrorResult, int]:
         '''Run a trial starting with the initial input, mutate with the candidate_dict, and mutate for num_mutation times
         
         Args:
@@ -246,11 +191,8 @@ class Acto:
             trial_num: how many trials have been run
             num_mutation: how many mutations to run at each trial
         '''
-        trial_dir = os.path.join(self.workdir_path, 'trial-%04d' % trial_num)
-        os.makedirs(trial_dir, exist_ok=True)
-        self.context['current_dir_path'] = trial_dir
 
-        runner = Runner(self.context, trial_dir)
+        runner = Runner(self.context, trial_dir, self.cluster_name)
         checker = Checker(self.context, trial_dir)
 
         curr_input = self.input_model.get_seed_input()
@@ -262,7 +204,7 @@ class Acto:
             setup = False
             # if connection refused, feed the current test as input again
             if retry == True:
-                curr_input, setup  = self.input_model.curr_test()
+                curr_input, setup = self.input_model.curr_test()
                 retry = False
             elif generation != 0:
                 curr_input, setup = self.input_model.next_test()
@@ -275,7 +217,7 @@ class Acto:
                     self.input_model.discard_test_case()
                 logging.info('CR unchanged, continue')
                 continue
-            
+
             if not self.dryrun:
                 snapshot = runner.run(curr_input, generation)
                 result = checker.check(snapshot, self.snapshots[-1], generation)
@@ -320,6 +262,86 @@ class Acto:
         return None, generation
 
 
+class Acto:
+
+    def __init__(self,
+                 seed_file,
+                 deploy: Deploy,
+                 workdir_path,
+                 crd_name,
+                 preload_images_,
+                 custom_fields_src,
+                 helper_crd: str,
+                 context_file: str,
+                 num_workers: int,
+                 dryrun: bool,
+                 mount: list = None) -> None:
+        try:
+            with open(seed_file, 'r') as cr_file:
+                self.seed = yaml.load(cr_file, Loader=yaml.FullLoader)
+        except:
+            logging.error('Failed to read seed yaml, aborting')
+            quit()
+        self.deploy = deploy
+        self.crd_name = crd_name
+        self.workdir_path = workdir_path
+        self.num_workers = num_workers
+        self.dryrun = dryrun
+        self.snapshots = []
+
+        if os.path.exists(context_file):
+            with open(context_file, 'r') as context_fin:
+                self.context = json.load(context_fin)
+                self.context['preload_images'] = set(self.context['preload_images'])
+        else:
+            # Run learning run to collect some information from runtime
+            logging.info('Starting learning run to collect information')
+            self.context = {'namespace': '', 'crd': None, 'preload_images': set()}
+
+            while True:
+                construct_kind_cluster('learn', CONST.K8S_VERSION)
+                deployed = self.deploy.deploy_with_retry(self.context, 'learn')
+                if deployed:
+                    break
+            apiclient = kubernetes_client('learn')
+            runner = Runner(self.context, 'learn', 'learn')
+            runner.run_without_collect(seed_file)
+
+            update_preload_images(self.context)
+            process_crd(self.context, apiclient, 'learn', self.crd_name, helper_crd)
+            with open(context_file, 'w') as context_fout:
+                json.dump(self.context, context_fout, cls=ActoEncoder)
+
+        # Add additional preload images from arguments
+        if preload_images_ != None:
+            self.context['preload_images'].update(preload_images_)
+
+        # Apply custom fields
+        self.input_model = InputModel(self.context['crd']['body'], num_workers, mount)
+        self.input_model.initialize(self.seed)
+        if custom_fields_src != None:
+            module = importlib.import_module(custom_fields_src)
+            for custom_field in module.custom_fields:
+                self.input_model.apply_custom_field(custom_field)
+
+        # Generate test cases
+        self.test_plan = self.input_model.generate_test_plan()
+        with open(os.path.join(self.workdir_path, 'test_plan.json'), 'w') as plan_file:
+            json.dump(self.test_plan, plan_file, cls=ActoEncoder, indent=6)
+
+    def run(self):
+        threads = []
+        for i in range(self.num_workers):
+            runner = TrialRunner(self.context, self.input_model, self.deploy, self.workdir_path, i,
+                                 self.dryrun)
+            t = threading.Thread(target=runner.run, args=())
+            t.start()
+            threads.append(t)
+
+        for t in threads:
+            t.join()
+
+
 def handle_excepthook(type, message, stack):
     '''Custom exception handler
     
@@ -337,17 +359,30 @@ def handle_excepthook(type, message, stack):
     return
 
 
+def thread_excepthook(args, /):
+    exc_type = args.exc_type
+    exc_value = args.exc_value
+    exc_traceback = args.exc_traceback
+    thread = args.thread
+    if issubclass(exc_type, KeyboardInterrupt):
+        threading.__excepthook__(args)
+        return
+
+    stack_info = traceback.StackSummary.extract(traceback.walk_tb(exc_traceback),
+                                                capture_locals=True).format()
+    logging.critical(f'An exception occured: {exc_type}: {exc_value}.')
+    for i in stack_info:
+        logging.critical(i.encode().decode('unicode-escape'))
+    return
+
+
 if __name__ == '__main__':
     start_time = time.time()
     workdir_path = 'testrun-%s' % datetime.now().strftime('%Y-%m-%d-%H-%M')
 
     parser = argparse.ArgumentParser(
         description='Automatic, Continuous Testing for k8s/openshift Operators')
-    parser.add_argument('--seed',
-                        '-s',
-                        dest='seed',
-                        required=True,
-                        help="seed CR file")
+    parser.add_argument('--seed', '-s', dest='seed', required=True, help="seed CR file")
     deploy_method = parser.add_mutually_exclusive_group(required=True)
     deploy_method.add_argument('--operator',
                                '-o',
@@ -376,20 +411,22 @@ if __name__ == '__main__':
                         dest='preload_images',
                         nargs='*',
                         help='Docker images to preload into Kind cluster')
-    parser.add_argument(
-        '--crd-name',
-        dest='crd_name',
-        help='Name of CRD to use, required if there are multiple CRDs')
+    parser.add_argument('--crd-name',
+                        dest='crd_name',
+                        help='Name of CRD to use, required if there are multiple CRDs')
     # Temporary solution before integrating controller-gen
-    parser.add_argument(
-        '--helper-crd',
-        dest='helper_crd',
-        help='generated CRD file that helps with the input generation')
-    parser.add_argument(
-        '--custom-fields',
-        dest='custom_fields',
-        help='Python source file containing a list of custom fields')
+    parser.add_argument('--helper-crd',
+                        dest='helper_crd',
+                        help='generated CRD file that helps with the input generation')
+    parser.add_argument('--custom-fields',
+                        dest='custom_fields',
+                        help='Python source file containing a list of custom fields')
     parser.add_argument('--context', dest='context', help='Cached context data')
+    parser.add_argument('--num-workers',
+                        dest='num_workers',
+                        type=int,
+                        default=1,
+                        help='Number of concurrent workers to run Acto with')
     parser.add_argument('--dryrun',
                         dest='dryrun',
                         action='store_true',
@@ -403,13 +440,14 @@ if __name__ == '__main__':
         level=logging.DEBUG,
         filemode='w',
         format=
-        '%(asctime)s %(levelname)-6s, %(name)s, %(filename)s:%(lineno)d, %(message)s'
+        '%(asctime)s %(threadName)-11s %(levelname)-7s, %(name)s, %(filename)-9s:%(lineno)d, %(message)s'
     )
     logging.getLogger("kubernetes").setLevel(logging.ERROR)
     logging.getLogger("sh").setLevel(logging.ERROR)
 
     # Register custom exception hook
     sys.excepthook = handle_excepthook
+    threading.excepthook = thread_excepthook
 
     # We don't need this now, but it would be nice to support this in the future
     # candidate_dict = construct_candidate_from_yaml(args.candidates)
@@ -419,8 +457,7 @@ if __name__ == '__main__':
 
     # Preload frequently used images to amid ImagePullBackOff
     if args.preload_images:
-        logging.info('%s will be preloaded into Kind cluster',
-                     args.preload_images)
+        logging.info('%s will be preloaded into Kind cluster', args.preload_images)
 
     # register timeout to automatically stop after # hours
     if args.duration != None:
@@ -441,5 +478,5 @@ if __name__ == '__main__':
         context_cache = args.context
 
     acto = Acto(args.seed, deploy, workdir_path, args.crd_name, args.preload_images,
-                args.custom_fields, args.helper_crd, context_cache, args.dryrun)
+                args.custom_fields, args.helper_crd, context_cache, args.num_workers, args.dryrun)
     acto.run()
