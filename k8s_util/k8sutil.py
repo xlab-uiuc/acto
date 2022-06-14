@@ -2,7 +2,7 @@ import ctypes
 import re
 
 def canonicalizeQuantity(value):
-    if not isinstance(value, str) or not bool(re.match('^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$', value)):
+    if not isinstance(value, str) or not bool(re.match('^[-+]?((\.[0-9]+)|([0-9]+(\.[0-9]+)?)|([0-9]+\.))(([KMGTPE]i)|([eE][-+]?((\.[0-9]+)|([0-9](\.[0-9]+)?)|([0-9]+\.)))|([mkMGTPE]|))$', value)):
         return value
     k8sutil = ctypes.cdll.LoadLibrary('k8s_util/lib/k8sutil.so')
     parse = k8sutil.parse
@@ -15,6 +15,6 @@ def canonicalizeQuantity(value):
     return parse_string
 
 if __name__ == '__main__':
-    print(canonicalizeQuantity(8080))
+    print(canonicalizeQuantity('172.18.0.4'))
     print(canonicalizeQuantity('1Mi'))
     print(canonicalizeQuantity('asd'))

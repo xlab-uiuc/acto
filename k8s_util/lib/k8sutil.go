@@ -11,7 +11,10 @@ import (
 //export parse
 func parse(valuePtr *C.char) *C.char {
 	value := C.GoString(valuePtr)
-	q := resource.MustParse(value)
+	q, err := resource.ParseQuantity(value)
+	if err != nil {
+		return C.CString(value)
+	}
 	return C.CString(strconv.FormatInt(q.Value(), 10))
 }
 
