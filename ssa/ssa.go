@@ -95,7 +95,21 @@ func main() {
 		// tainted.Parent().WriteTo(log.Writer())
 	}
 
+	controlFlowResult := ControlFlowResult{}
 	for _, field := range mergedFieldSet.Fields() {
 		log.Printf("Path %s does not flow into k8s\n", field)
+		controlFlowResult.Paths = append(controlFlowResult.Paths, field.Path)
 	}
+	controlFlowResultFile, err := os.Create("controlFlowResult.json")
+	if err != nil {
+		log.Fatalf("Failed to create mapping.txt to write mapping: %v\n", err)
+	}
+	defer controlFlowResultFile.Close()
+
+	marshalled, _ := json.MarshalIndent(controlFlowResult, "", "\t")
+	controlFlowResultFile.Write(marshalled)
+}
+
+type ControlFlowResult struct {
+	Paths [][]string `json:"paths"`
 }
