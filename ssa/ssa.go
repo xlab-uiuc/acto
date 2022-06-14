@@ -60,7 +60,10 @@ func main() {
 	fieldSets := []util.FieldSet{}
 	for v, path := range valueFieldSetMap {
 		fmt.Fprintf(valueFieldSetMapFile, "Path %s at [%s] [%s]=[%s] \n", path.Fields(), v.Parent(), v.Name(), v.String())
-		fieldSets = append(fieldSets, *path)
+
+		if _, ok := frontierSet[v]; ok {
+			fieldSets = append(fieldSets, *path)
+		}
 	}
 
 	log.Println("------------------------")
@@ -83,5 +86,30 @@ func main() {
 	log.Println("------------------------")
 
 	taintedSet := analysis.TaintAnalysisPass(prog, frontierSet, valueFieldSetMap)
-	log.Println(taintedSet)
+	for tainted := range taintedSet {
+		for _, path := range valueFieldSetMap[tainted].Fields() {
+			log.Printf("Path [%s] taints\n", path.Path)
+			mergedFieldSet.Delete(&path)
+		}
+		log.Printf("value %s with path %s\n", tainted, valueFieldSetMap[tainted])
+		// tainted.Parent().WriteTo(log.Writer())
+	}
+
+	controlFlowResult := ControlFlowResult{}
+	for _, field := range mergedFieldSet.Fields() {
+		log.Printf("Path %s does not flow into k8s\n", field)
+		controlFlowResult.Paths = append(controlFlowResult.Paths, field.Path)
+	}
+	controlFlowResultFile, err := os.Create("controlFlowResult.json")
+	if err != nil {
+		log.Fatalf("Failed to create mapping.txt to write mapping: %v\n", err)
+	}
+	defer controlFlowResultFile.Close()
+
+	marshalled, _ := json.MarshalIndent(controlFlowResult, "", "\t")
+	controlFlowResultFile.Write(marshalled)
+}
+
+type ControlFlowResult struct {
+	Paths [][]string `json:"paths"`
 }
