@@ -217,15 +217,13 @@ class TrialRunner:
                     self.input_model.discard_test_case()
                 logging.info('CR unchanged, continue')
                 continue
-
             if not self.dryrun:
                 snapshot = runner.run(curr_input, generation)
                 result = checker.check(snapshot, self.snapshots[-1], generation)
                 self.snapshots.append(snapshot)
-                generation += 1
             else:
                 result = PassResult()
-                generation += 1
+            generation += 1
 
             if isinstance(result, ConnectionRefusedResult):
                 # Connection refused due to webhook not ready, let's wait for a bit
@@ -233,6 +231,7 @@ class TrialRunner:
                 time.sleep(20)
                 # retry
                 retry = True
+                generation -= 1 # should not increment generation since we are feeding the same test case
                 continue
             if isinstance(result, InvalidInputResult):
                 if setup:
@@ -359,7 +358,7 @@ def handle_excepthook(type, message, stack):
     return
 
 
-def thread_excepthook(args, /):
+def thread_excepthook(args):
     exc_type = args.exc_type
     exc_value = args.exc_value
     exc_traceback = args.exc_traceback

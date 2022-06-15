@@ -50,6 +50,7 @@ class Checker(object):
         stdout, stderr = snapshot.cli_result
 
         if stderr.find('connection refused') != -1:
+            logging.info('-------- Find connection refused error ---------')
             return ConnectionRefusedResult()
 
         if stdout.find('error') != -1 or stderr.find(
@@ -157,7 +158,6 @@ class Checker(object):
                 skip = False
                 for regex in EXCLUDE_ERROR_REGEX:
                     if re.search(regex, line):
-                        logging.debug('Skipped error msg: %s' % line)
                         skip = True
                 if skip:
                     continue
