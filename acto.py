@@ -14,14 +14,13 @@ import importlib
 import traceback
 
 from common import *
-import check_result
 from exception import UnknownDeployMethodError
 from preprocess import add_acto_label, process_crd, update_preload_images
 from input import InputModel
 from deploy import Deploy, DeployMethod
 from constant import CONST
 from runner import Runner
-from check_result import Checker
+from checker import Checker
 from snapshot import EmptySnapshot
 
 CONST = CONST()
@@ -158,21 +157,7 @@ class TrialRunner:
             logging.info('Trial %d finished, completed in %s' % (curr_trial, trial_elapsed))
             logging.info('---------------------------------------\n')
 
-            result_dict = {}
-            result_dict['trial_num'] = curr_trial
-            result_dict['duration'] = trial_elapsed
-            result_dict['num_tests'] = num_tests
-            if trial_err == None:
-                logging.info('Trial %d completed without error', curr_trial)
-            else:
-                result_dict['oracle'] = trial_err.oracle
-                result_dict['message'] = trial_err.message
-                result_dict['input_delta'] = trial_err.input_delta
-                result_dict['matched_system_delta'] = \
-                    trial_err.matched_system_delta
-            result_path = os.path.join(trial_dir, 'result.json')
-            with open(result_path, 'w') as result_file:
-                json.dump(result_dict, result_file, cls=ActoEncoder, indent=6)
+            save_result(trial_dir, curr_trial, trial_err, num_tests, trial_elapsed)
             curr_trial = curr_trial + 1
 
             if self.input_model.is_empty():
@@ -272,6 +257,7 @@ class Acto:
                  custom_fields_src,
                  helper_crd: str,
                  context_file: str,
+                 analysis_result: str,
                  num_workers: int,
                  dryrun: bool,
                  mount: list = None) -> None:
@@ -314,6 +300,10 @@ class Acto:
         # Add additional preload images from arguments
         if preload_images_ != None:
             self.context['preload_images'].update(preload_images_)
+
+        if analysis_result != None:
+            with open(analysis_result, 'r') as analysis_file:
+                self.context['analysis_result'] = json.load(analysis_file)
 
         # Apply custom fields
         self.input_model = InputModel(self.context['crd']['body'], num_workers, mount)
@@ -420,6 +410,9 @@ if __name__ == '__main__':
     parser.add_argument('--custom-fields',
                         dest='custom_fields',
                         help='Python source file containing a list of custom fields')
+    parser.add_argument('--analysis-result',
+                        dest='analysis_result',
+                        help='JSON file resulted from the code analysis')
     parser.add_argument('--context', dest='context', help='Cached context data')
     parser.add_argument('--num-workers',
                         dest='num_workers',
@@ -448,10 +441,6 @@ if __name__ == '__main__':
     sys.excepthook = handle_excepthook
     threading.excepthook = thread_excepthook
 
-    # We don't need this now, but it would be nice to support this in the future
-    # candidate_dict = construct_candidate_from_yaml(args.candidates)
-    # logging.debug(candidate_dict)
-
     logging.info('Acto started with [%s]' % sys.argv)
 
     # Preload frequently used images to amid ImagePullBackOff
@@ -477,5 +466,5 @@ if __name__ == '__main__':
         context_cache = args.context
 
     acto = Acto(args.seed, deploy, workdir_path, args.crd_name, args.preload_images,
-                args.custom_fields, args.helper_crd, context_cache, args.num_workers, args.dryrun)
+                args.custom_fields, args.helper_crd, context_cache, args.analysis_result, args.num_workers, args.dryrun)
     acto.run()

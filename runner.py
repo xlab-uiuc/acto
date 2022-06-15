@@ -158,7 +158,7 @@ class Runner(object):
         cli_output["stderr"] = p.stderr
         with open(self.cli_output_path, 'w') as f:
             f.write(json.dumps(cli_output, cls=ActoEncoder, indent=6))
-        return p.stdout, p.stderr
+        return cli_output
 
     def __get_all_objects(self, method) -> dict:
         '''Get resources in the application namespace
