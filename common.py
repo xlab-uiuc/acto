@@ -1,5 +1,6 @@
 import enum
 import json
+import os
 from deepdiff.helper import NotPresent
 from datetime import datetime, date
 import re
@@ -47,8 +48,10 @@ class InvalidInputResult(RunResult):
 class UnchangedInputResult(RunResult):
     pass
 
+
 class ConnectionRefusedResult(RunResult):
     pass
+
 
 class ErrorResult(RunResult):
 
@@ -130,9 +133,8 @@ def postprocess_diff(diff):
                     str_path = change.path()
                     for i in path:
                         str_path += '[%s]' % i
-                    diff_dict[category][str_path] = Diff(
-                        value, change.t2,
-                        change.path(output_format='list') + path)
+                    diff_dict[category][str_path] = Diff(value, change.t2,
+                                                         change.path(output_format='list') + path)
             elif (isinstance(change.t2, dict) or isinstance(change.t2, list)) \
                     and (change.t1 == None or isinstance(change.t1, NotPresent)):
                 if isinstance(change.t2, dict):
@@ -143,12 +145,11 @@ def postprocess_diff(diff):
                     str_path = change.path()
                     for i in path:
                         str_path += '[%s]' % i
-                    diff_dict[category][str_path] = Diff(
-                        change.t1, value,
-                        change.path(output_format='list') + path)
+                    diff_dict[category][str_path] = Diff(change.t1, value,
+                                                         change.path(output_format='list') + path)
             else:
-                diff_dict[category][change.path()] = Diff(
-                    change.t1, change.t2, change.path(output_format='list'))
+                diff_dict[category][change.path()] = Diff(change.t1, change.t2,
+                                                          change.path(output_format='list'))
     return diff_dict
 
 
@@ -177,6 +178,25 @@ def random_string(n: int):
     return (''.join(random.choice(letters) for i in range(10)))
 
 
+def save_result(trial_dir: str, trial_err: ErrorResult, num_tests: int,
+                trial_elapsed):
+    result_dict = {}
+    result_dict['trial_num'] = trial_dir
+    result_dict['duration'] = trial_elapsed
+    result_dict['num_tests'] = num_tests
+    if trial_err == None:
+        logging.info('Trial %d completed without error', trial_dir)
+    else:
+        result_dict['oracle'] = trial_err.oracle
+        result_dict['message'] = trial_err.message
+        result_dict['input_delta'] = trial_err.input_delta
+        result_dict['matched_system_delta'] = \
+            trial_err.matched_system_delta
+    result_path = os.path.join(trial_dir, 'result.json')
+    with open(result_path, 'w') as result_file:
+        json.dump(result_dict, result_file, cls=ActoEncoder, indent=6)
+
+
 class ActoEncoder(json.JSONEncoder):
 
     def default(self, obj):
@@ -191,6 +211,7 @@ class ActoEncoder(json.JSONEncoder):
         elif isinstance(obj, set):
             return list(obj)
         return json.JSONEncoder.default(self, obj)
+
 
 EXCLUDE_PATH_REGEX = [
     r"managed_fields",
@@ -230,6 +251,7 @@ GENERIC_FIELDS = [
     r"^host$",
 ]
 
+
 def kind_kubecontext(cluster_name: str) -> str:
     '''Returns the kubecontext based onthe cluster name
     Kind always adds `kind` before the cluster name
@@ -265,8 +287,7 @@ def kind_load_images(images: list, name: str):
     '''
     cmd = ['kind', 'load', 'docker-image']
     if len(images) == 0:
-        logging.warning(
-            'No image to preload, we at least should have operator image')
+        logging.warning('No image to preload, we at least should have operator image')
 
     if name != None:
         cmd.extend(['--name', name])
@@ -309,7 +330,7 @@ def helm(args: list, cluster_name: str):
     cmd.extend(args)
 
     if cluster_name == None:
-        logging.error('Missing cluster name for helm')    
+        logging.error('Missing cluster name for helm')
     cmd.extend(['--kube-context', kind_kubecontext(cluster_name)])
 
     subprocess.run(cmd)
