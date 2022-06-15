@@ -18,7 +18,7 @@ class Checker(object):
         self.compare_method = CompareMethods()
         self.trial_dir = trial_dir
 
-        logging.debug(self.context['analysis_result']['paths'])
+        # logging.debug(self.context['analysis_result']['paths'])
 
     def check(self, snapshot: Snapshot, prev_snapshot: Snapshot, generation: int) -> RunResult:
         '''Use acto oracles against the results to check for any errors
