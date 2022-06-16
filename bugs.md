@@ -54,3 +54,7 @@ https://github.com/kubernetes-sigs/controller-tools/issues/665 confirmed
 ## kubernetes/kubernetes
 
 https://github.com/kubernetes/kubernetes/issues/109839 confirmed
+
+## cockroach-operator
+
+https://github.com/cockroachdb/cockroach-operator/issues/918
