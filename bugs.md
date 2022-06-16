@@ -41,7 +41,7 @@ https://github.com/spotahome/redis-operator/issues/407
 
 https://jira.percona.com/browse/K8SPSMDB-696
 
-https://jira.percona.com/browse/K8SPSMDB-697 confirmed
+https://jira.percona.com/browse/K8SPSMDB-697 fixed
 
 ## OT-CONTAINER-KIT/redis-operator
 
