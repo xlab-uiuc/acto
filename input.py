@@ -133,6 +133,7 @@ class InputModel:
         self.thread_vars.curr_field = None  # Bookkeeping in case we are running setup
         # so that we can run the test case itself right after the setup
         self.thread_vars.test_plan = dict(self.test_plan_partitioned[id])
+        self.thread_vars.current_input_setup = False
 
         self.thread_vars.current_input = attach_schema_to_value(
             self.initial_value, self.root_schema)

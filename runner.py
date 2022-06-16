@@ -66,9 +66,15 @@ class Runner(object):
         logging.debug('STDOUT: ' + cli_result.stdout)
         logging.debug('STDERR: ' + cli_result.stderr)
 
-        system_state = self.collect_system_state()
-        operator_log = self.collect_operator_log()
-        events_log = self.collect_events()
+        # if connection refused occurs, we cannot collect the system state since it is empty
+        try:
+            system_state = self.collect_system_state()
+            operator_log = self.collect_operator_log()
+            events_log = self.collect_events()
+        except KeyError as e:
+            logging.warn(e)
+            system_state = {}
+            operator_log = ''
 
         snapshot = Snapshot(input, self.collect_cli_result(cli_result), system_state, operator_log)
         return snapshot

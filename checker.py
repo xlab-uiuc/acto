@@ -58,7 +58,7 @@ class Checker(object):
         if stderr.find('connection refused') != -1:
             return ConnectionRefusedResult()
 
-        if stdout.find('error') != -1 or stderr.find('error') != -1 or stderr.find('invalid') != -1:
+        elif stdout.find('error') != -1 or stderr.find('error') != -1 or stderr.find('invalid') != -1:
             logging.info('Invalid input, reject mutation')
             logging.info('STDOUT: ' + stdout)
             logging.info('STDERR: ' + stderr)
@@ -173,7 +173,7 @@ class Checker(object):
                 skip = False
                 for regex in EXCLUDE_ERROR_REGEX:
                     if re.search(regex, line):
-                        logging.debug('Skipped error msg: %s' % line)
+                        # logging.debug('Skipped error msg: %s' % line)
                         skip = True
                 if skip:
                     continue
