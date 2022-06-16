@@ -74,7 +74,7 @@ class Runner(object):
         return snapshot
 
     def run_without_collect(self, seed_file: str):
-        cmd = ['apply', '-f', seed_file, '-n', self.context['namespace']]
+        cmd = ['apply', '-f', seed_file, '-n', self.namespace]
         _ = kubectl(cmd, cluster_name=self.cluster_name)
 
         self.wait_for_system_converge()

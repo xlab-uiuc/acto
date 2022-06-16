@@ -5,6 +5,8 @@ from deepdiff import DeepDiff
 import re
 import copy
 
+from numpy import require
+
 from common import *
 from compare import CompareMethods
 from snapshot import EmptySnapshot, Snapshot
@@ -263,6 +265,16 @@ if __name__ == "__main__":
     import os
     import yaml
     import traceback
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description='Standalone checker for Acto')
+
+    parser.add_argument('--context', dest='context', required=True)
+    parser.add_argument('--analysis-file', dest='analysis_file', required=False)
+    parser.add_argument('--testrun-dir', dest='testrun_dir', required=True)
+    parser.add_argument('--seed', dest='seed', required=True)
+    args = parser.parse_args()
 
     logging.basicConfig(
         filename=os.path.join('.', 'test.log'),
@@ -290,19 +302,23 @@ if __name__ == "__main__":
 
     sys.excepthook = handle_excepthook
 
-    testrun_dir = 'testrun-test/*'
-    trial_dirs = glob.glob(testrun_dir)
-    with open('data/rabbitmq-operator/context.json', 'r') as context_fin:
+    trial_dirs = glob.glob(args.testrun_dir+'/*')
+    with open(args.context, 'r') as context_fin:
         context = json.load(context_fin)
         context['preload_images'] = set(context['preload_images'])
 
-    with open('controlFlowResult.json', 'r') as analysis_file:
-        context['analysis_result'] = json.load(analysis_file)
+    if args.analysis_file != None:
+        with open(args.analysis_file, 'r') as analysis_file:
+            context['analysis_result'] = json.load(analysis_file)
+    else:
+        context['analysis_result'] = {
+            'paths': []
+        }
 
     for path in context['analysis_result']['paths']:
         path.pop(0)
 
-    with open('data/rabbitmq-operator/cr.yaml', 'r') as seed_file:
+    with open(args.seed, 'r') as seed_file:
         seed = yaml.load(seed_file, Loader=yaml.FullLoader)
 
     num_alarms = 0

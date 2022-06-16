@@ -6,7 +6,7 @@ from acto import construct_kind_cluster
 from constant import CONST
 from deploy import Deploy, DeployMethod
 from exception import UnknownDeployMethodError
-from preprocess import preload_images
+from common import kind_load_images
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -50,7 +50,7 @@ if __name__ == '__main__':
     with open(args.context, 'r') as context_fin:
         context = json.load(context_fin)
         context['preload_images'] = set(context['preload_images'])
-    preload_images(context['preload_images'])
+    kind_load_images(context['preload_images'])
     deployed = deploy.deploy_with_retry(context)
 
     cmd = ['kubectl', 'apply', '-f', args.seed, '-n', context['namespace']]
