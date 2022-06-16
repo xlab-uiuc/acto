@@ -1,0 +1,22 @@
+name: python-syntax-checker
+
+on: 
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  python-syntax-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+        with:
+          python-version: "3.8"
+      - name: Install Packages
+        run: pip install codespell flake8 
+      - name: Check Spelling
+        run: codespell || true  
+      - name: Check Syntax Error
+        run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
