@@ -157,7 +157,7 @@ class TrialRunner:
             logging.info('Trial %d finished, completed in %s' % (curr_trial, trial_elapsed))
             logging.info('---------------------------------------\n')
 
-            save_result(trial_dir, curr_trial, trial_err, num_tests, trial_elapsed)
+            save_result(trial_dir, trial_err, num_tests, trial_elapsed)
             curr_trial = curr_trial + 1
 
             if self.input_model.is_empty():

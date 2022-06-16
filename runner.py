@@ -74,7 +74,7 @@ class Runner(object):
         except KeyError as e:
             logging.warn(e)
             system_state = {}
-            operator_log = None
+            operator_log = ''
 
         snapshot = Snapshot(input, self.collect_cli_result(cli_result), system_state, operator_log)
         return snapshot
