@@ -17,6 +17,6 @@ jobs:
       - name: Install Packages
         run: pip install codespell flake8 
       - name: Check Spelling
-        run: codespell || true  
+        run: codespell --skip="./data"|| true  
       - name: Check Syntax Error
         run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
