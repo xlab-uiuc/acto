@@ -251,7 +251,6 @@ GENERIC_FIELDS = [
     r"^host$",
     r"^optional$",
     r"^containerName$",
-    r"^divisor$",
 ]
 
 
