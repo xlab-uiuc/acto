@@ -12,11 +12,18 @@ def canonicalizeQuantity(value):
     parse_output = parse(str(value).encode("utf-8"))
     parse_bytes = ctypes.string_at(parse_output)
     parse_string = parse_bytes.decode('utf-8')
-    return parse_string
+    return str(float(parse_string))
 
 if __name__ == '__main__':
-    # print(canonicalizeQuantity('172.18.0.4'))
+    print(canonicalizeQuantity('172.18.0.4'))
     # print(canonicalizeQuantity('1Mi'))
-    # print(canonicalizeQuantity('asd'))
+    print(canonicalizeQuantity('asd'))
     for i in ["+.9", "-.484785E-7466", "900m", "0"]:
         print(canonicalizeQuantity(i))
+    print(canonicalizeQuantity('-.298Mi')) # -312474
+    print(canonicalizeQuantity('-312475648m')) # -312476
+    # print(canonicalizeQuantity('100M'))
+    # print(canonicalizeQuantity('.298Mi'))
+    print(canonicalizeQuantity('-.01Ki'))
+    print(canonicalizeQuantity('.01Ki'))
+    assert(float(canonicalizeQuantity('-.484785E-7466')) == float(canonicalizeQuantity('0')))
