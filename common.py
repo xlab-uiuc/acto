@@ -249,6 +249,9 @@ GENERIC_FIELDS = [
     r"^claimName$",
     r"^secretName$",
     r"^host$",
+    r"^optional$",
+    r"^containerName$",
+    r"^divisor$",
 ]
 
 
