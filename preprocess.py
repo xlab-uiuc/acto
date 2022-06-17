@@ -60,7 +60,8 @@ def process_crd(context: dict,
             quit()
         if crd:
             # there is openAPIV3Schema schema issue when using python k8s client, need to fetch data from cli
-            crd_result = kubectl(['get', 'crd', crd.metadata.name, "-o", "json"], cluster_name)
+            crd_result = kubectl(['get', 'crd', crd.metadata.name, "-o", "json"], \
+                cluster_name, True, True)
             crd_obj = json.loads(crd_result.stdout)
             spec: kubernetes.client.models.V1CustomResourceDefinitionSpec = crd.spec
             crd_data = {

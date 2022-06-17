@@ -238,8 +238,8 @@ class Runner(object):
     def watch_system_events(self, event_stream, queue: Queue):
         '''A process that watches namespaced events
         '''
-        for event in event_stream:
+        for _ in event_stream:
             try:
-                queue.put(event)
-            except:
+                queue.put("event")
+            except (ValueError, AssertionError):
                 pass
