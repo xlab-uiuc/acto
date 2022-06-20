@@ -1,0 +1,99 @@
+# Default values for Koperator Helm chart.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+# Lists the secrets you need to use to pull kafka-operator image from a private registry.
+imagePullSecrets: []
+  # - private-registry-key
+
+operator:
+  annotations: {}
+  image:
+    repository: ghcr.io/banzaicloud/kafka-operator
+    tag: ""
+    pullPolicy: IfNotPresent
+  namespaces: ""
+  verboseLogging: false
+  developmentLogging: false
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  serviceAccount:
+    create: true
+    name: kafka-operator
+
+webhook:
+  enabled: true
+#  serverPort:
+#  tls:
+#    certDir: ""
+  certs:
+    generate: true
+    secret: "kafka-operator-serving-cert"
+
+certManager:
+  namespace: "cert-manager"
+  enabled: false
+
+certSigning:
+  enabled: true
+
+alertManager:
+  enable: true
+
+prometheusMetrics:
+  enabled: true
+  authProxy:
+    enabled: true
+    image:
+      repository: gcr.io/kubebuilder/kube-rbac-proxy
+      tag: v0.8.0
+      pullPolicy: IfNotPresent
+    serviceAccount:
+      create: true
+      name: kafka-operator-authproxy
+
+#metricEndpoint:
+#  port:
+
+nameOverride: ""
+fullnameOverride: ""
+
+rbac:
+  enabled: true
+
+crd:
+  enabled: false
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+## Additional Sidecars Configuration.
+additionalSidecars: {}
+# - name: nginx
+#   image: nginx:latest
+
+## Additional Environment Variables.
+additionalEnv: {}
+
+## Additional volumes required for sidecar(s).
+additionalVolumes: {}
+# - name: volume1
+#   emptyDir: {}
+# - name: volume2
+#   emptyDir: {}
+
+# Pod Security Context
+# See https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+podSecurityContext: {}
+# Container Security Context
+containerSecurityContext: {}
