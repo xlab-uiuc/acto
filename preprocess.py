@@ -15,7 +15,7 @@ def update_preload_images(context: dict):
     if not namespace:
         return
 
-    worker_list = ['learn-kind-worker', 'learn-kind-worker2', 'learn-kind-worker3']
+    worker_list = ['learn-worker', 'learn-worker2', 'learn-worker3']
     for worker in worker_list:
         p = subprocess.run(['docker', 'exec', worker, 'crictl', 'images'],
                            capture_output=True,
