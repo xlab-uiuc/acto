@@ -186,6 +186,10 @@ class InputModel:
         self.test_plan_partitioned = []
         for i in range(0, len(test_plan_items), chunk_size):
             self.test_plan_partitioned.append(test_plan_items[i:i + chunk_size])
+        # appending empty lists to avoid no test cases distributed to certain work nodes
+        if len(test_plan_items) < self.num_workers:
+            for i in range(self.num_workers-len(test_plan_items)):
+                self.test_plan_partitioned.append([])
         assert (self.num_workers == len(self.test_plan_partitioned))
 
         return ret
