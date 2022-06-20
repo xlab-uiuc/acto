@@ -149,14 +149,12 @@ func parse(valuePtr *C.char) *C.char {
 
 func main() {
 	// fmt.Println("Hello, world.")
-	test := "-.1Ki"
+	test := "+4678410156.347680E+.6994785"
 	ans, err := resource.ParseQuantity(test)
-	if err == nil {
-		fmt.Println(ans.Value())
-		// 	fmt.Println(ans.ScaledValue(0))
-		// 	fmt.Println("parsed value:", ans.Value())
-		// 	fmt.Println("parsed format:", ans.Format)
+	if err != nil {
+		fmt.Printf("Error in converting the string %v", err)
 	}
+	fmt.Println(ans.Value())
 	// positive, value, num, denom, suffix, err := parseQuantityString(test)
 	// if err != nil {
 	// 	fmt.Println("error")
