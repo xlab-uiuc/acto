@@ -17,17 +17,17 @@
 | percona-server-mongodb-operator  | [https://jira.percona.com/browse/K8SPSMDB-696](https://jira.percona.com/browse/K8SPSMDB-696)                                     |           |
 |                                  | [https://jira.percona.com/browse/K8SPSMDB-697](https://jira.percona.com/browse/K8SPSMDB-697)                                     | fixed     |
 | OT-CONTAINER-KIT/redis-operator  | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/279](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/279)   |           |
-| OT-CONTAINER-KIT/redis-operator  | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/283](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/283)   |           |
-| OT-CONTAINER-KIT/redis-operator  | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/286](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/286)   |           |
-| OT-CONTAINER-KIT/redis-operator  | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/287](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/287)   |           |
+|                                  | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/283](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/283)   |           |
+|                                  | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/286](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/286)   |           |
+|                                  | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/287](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/287)   |           |
 |                                  | 
 | kubernetes-sigs/controller-tools | [https://github.com/kubernetes-sigs/controller-tools/issues/665](https://github.com/kubernetes-sigs/controller-tools/issues/665) | confirmed |
 | kubernetes/kubernetes            | [https://github.com/kubernetes/kubernetes/issues/109839](https://github.com/kubernetes/kubernetes/issues/109839)                 | confirmed |
-| kubernetes/kubernetes            | [https://github.com/kubernetes/kubernetes/issues/110653](https://github.com/kubernetes/kubernetes/issues/110653)                 |  |
-| kubernetes/kubernetes            | [https://github.com/kubernetes/kubernetes/issues/110654](https://github.com/kubernetes/kubernetes/issues/110654)                 |  |
+|                                  | [https://github.com/kubernetes/kubernetes/issues/110653](https://github.com/kubernetes/kubernetes/issues/110653)                 |  |
+|                                  | [https://github.com/kubernetes/kubernetes/issues/110654](https://github.com/kubernetes/kubernetes/issues/110654)                 |  |
 | cockroach-operator               | [https://github.com/cockroachdb/cockroach-operator/issues/918](https://github.com/cockroachdb/cockroach-operator/issues/918)     |
-| cockroach-operator               | [https://github.com/cockroachdb/cockroach-operator/issues/919](https://github.com/cockroachdb/cockroach-operator/issues/919)     |
-| cockroach-operator               | [https://github.com/cockroachdb/cockroach-operator/issues/920](https://github.com/cockroachdb/cockroach-operator/issues/920)     |
+|                                  | [https://github.com/cockroachdb/cockroach-operator/issues/919](https://github.com/cockroachdb/cockroach-operator/issues/919)     |
+|                                  | [https://github.com/cockroachdb/cockroach-operator/issues/920](https://github.com/cockroachdb/cockroach-operator/issues/920)     |
 
 ## rabbitmq/cluster-operator
 
