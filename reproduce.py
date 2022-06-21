@@ -6,7 +6,7 @@ from acto import construct_kind_cluster
 from constant import CONST
 from deploy import Deploy, DeployMethod
 from exception import UnknownDeployMethodError
-from common import kind_load_images
+from common import kind_load_images, kubectl
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -46,12 +46,13 @@ if __name__ == '__main__':
     else:
         raise UnknownDeployMethodError()
 
-    construct_kind_cluster(CONST.K8S_VERSION)
+    construct_kind_cluster('test', CONST.K8S_VERSION)
     with open(args.context, 'r') as context_fin:
         context = json.load(context_fin)
         context['preload_images'] = set(context['preload_images'])
-    kind_load_images(context['preload_images'])
-    deployed = deploy.deploy_with_retry(context)
+    kind_load_images(context['preload_images'], 'test')
+    deployed = deploy.deploy_with_retry(context, 'test')
 
     cmd = ['kubectl', 'apply', '-f', args.seed, '-n', context['namespace']]
     subprocess.run(cmd)
+    kubectl(['apply', '-f', args.seed, '-n', context['namespace']], 'test')
