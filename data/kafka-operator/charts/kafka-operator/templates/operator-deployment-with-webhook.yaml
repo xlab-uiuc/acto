@@ -1,0 +1,253 @@
+{{- $tlsCrt := "" }}
+{{- $tlsKey := "" }}
+{{- $caCrt := "" }}
+{{- if and (.Values.webhook.certs.generate) (.Values.webhook.enabled) -}}
+{{- $ca := genCA "kafka-operator-ca" 3650 }}
+{{- $svcName := include "kafka-operator.fullname" . }}
+{{- $cn := printf "%s-operator.%s.svc" $svcName .Release.Namespace }}
+{{- $altName1 := printf "%s.cluster.local" $cn }}
+{{- $altName2 := printf "%s" $cn }}
+{{- $server := genSignedCert $cn nil (list $altName1 $altName2) 365 $ca }}
+{{- $tlsCrt = b64enc $server.Cert }}
+{{- $tlsKey = b64enc $server.Key }}
+{{- $caCrt =  b64enc $ca.Cert }}
+{{- else if .Values.webhook.enabled }}
+{{- $tlsCrt = required "Required when certs.generate is false" .Values.webhook.certs.server.tls.crt }}
+{{- $tlsKey = required "Required when certs.generate is false" .Values.webhook.certs.server.tls.key }}
+{{- $caCrt = required "Required when certs.generate is false" .Values.webhook.certs.ca.crt }}
+{{- end }}
+
+{{- if .Values.webhook.enabled }}
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  labels:
+    app.kubernetes.io/name: {{ include "kafka-operator.name" . }}
+    helm.sh/chart: {{ include "kafka-operator.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    app.kubernetes.io/component: webhook
+  name: {{ include "kafka-operator.name" . }}-validating-webhook
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    caBundle: {{ $caCrt }}
+    service:
+      name: "{{ include "kafka-operator.fullname" . }}-operator"
+      namespace: {{ .Release.Namespace }}
+      path: /validate
+  failurePolicy: Fail
+  name: kafkatopics.kafka.banzaicloud.io
+  rules:
+  - apiGroups:
+    - kafka.banzaicloud.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - kafkatopics
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    caBundle: {{ $caCrt }}
+    service:
+      name: "{{ include "kafka-operator.fullname" . }}-operator"
+      namespace: {{ .Release.Namespace }}
+      path: /validate
+  failurePolicy: Fail
+  name: kafkaclusters.kafka.banzaicloud.io
+  rules:
+  - apiGroups:
+    - kafka.banzaicloud.io
+    apiVersions:
+    - v1beta1
+    operations:
+    - UPDATE
+    resources:
+    - kafkaclusters
+  sideEffects: None
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    app.kubernetes.io/name: {{ include "kafka-operator.name" . }}
+    helm.sh/chart: {{ include "kafka-operator.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    app.kubernetes.io/component: operator-certificates
+  name: {{ .Values.webhook.certs.secret }}
+  namespace: {{ .Release.Namespace }}
+data:
+  tls.crt: {{ $tlsCrt }}
+  tls.key: {{ $tlsKey }}
+  ca.crt:  {{ $caCrt }}
+{{- end }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ include "kafka-operator.fullname" . }}-operator"
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    control-plane: controller-manager
+    controller-tools.k8s.io: "1.0"
+    app.kubernetes.io/name: {{ include "kafka-operator.name" . }}
+    helm.sh/chart: {{ include "kafka-operator.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    app.kubernetes.io/component: operator
+  {{- with .Values.operator.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  selector:
+    matchLabels:
+      control-plane: controller-manager
+      controller-tools.k8s.io: "1.0"
+      app.kubernetes.io/name: {{ include "kafka-operator.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: operator
+  replicas: {{ .Values.replicaCount }}
+  template:
+    metadata:
+      annotations:
+        {{- if .Values.webhook.enabled }}
+        checksum/config: {{ print $tlsKey $tlsCrt $caCrt | sha256sum }}
+        {{- end }}
+        {{- with .Values.operator.annotations -}}
+        {{ toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        control-plane: controller-manager
+        controller-tools.k8s.io: "1.0"
+        app.kubernetes.io/name: {{ include "kafka-operator.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: operator
+        app: prometheus
+        component: alertmanager
+    spec:
+      serviceAccountName: {{ include "operator.serviceAccountName" .}}
+      volumes:
+      {{- if .Values.webhook.enabled }}
+        - name: serving-cert
+          secret:
+            secretName: {{ .Values.webhook.certs.secret }}
+      {{- end }}
+      {{- if .Values.additionalVolumes }}
+      {{- include "chart.additionalVolumes" . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.podSecurityContext }}
+      securityContext:
+      {{ toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- end }}
+      containers:
+      {{- if and .Values.prometheusMetrics.enabled .Values.prometheusMetrics.authProxy.enabled }}
+        - name: kube-rbac-proxy
+          image: "{{ .Values.prometheusMetrics.authProxy.image.repository }}:{{ .Values.prometheusMetrics.authProxy.image.tag }}"
+          imagePullPolicy: {{ .Values.prometheusMetrics.authProxy.image.pullPolicy }}
+          args:
+            - "--secure-listen-address=0.0.0.0:8443"
+            - "--upstream=http://127.0.0.1:8080/"
+            - "--logtostderr=true"
+            - "--v=10"
+          ports:
+            - containerPort: 8443
+              name: https
+      {{- end }}
+        - command:
+            - /manager
+          args:
+            - --enable-leader-election
+            - --cert-manager-namespace={{ .Values.certManager.namespace }}
+            - --cert-manager-enabled={{ .Values.certManager.enabled }}
+          {{- if not .Values.certSigning.enabled }}
+            - --disable-cert-signing-support
+          {{- end }}
+          {{- if .Values.webhook.enabled }}
+            {{- if (.Values.webhook.tls).certDir }}
+            - --tls-cert-dir={{ .Values.webhook.tls.certDir }}
+            {{- end}}
+            {{- if .Values.webhook.serverPort }}
+            - --webhook-server-port={{ .Values.webhook.serverPort }}
+            {{- end }}
+          {{- else }}
+            - --disable-webhooks
+          {{- end }}
+          {{- if .Values.operator.namespaces }}
+            - --namespaces={{ .Values.operator.namespaces }}
+          {{- end }}
+          {{- if .Values.operator.verboseLogging }}
+            - --verbose
+          {{- end }}
+          {{- if .Values.operator.developmentLogging }}
+            - --development
+          {{- end }}
+          {{- if (.Values.metricEndpoint).port }}
+            - --metrics-addr=":{{ .Values.metricEndpoint.port }}"
+          {{- end }}
+          image: "{{ .Values.operator.image.repository }}:{{ .Values.operator.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.operator.image.pullPolicy }}
+          name: manager
+          env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.namespace
+            - name: SERVICE_ACCOUNT
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: spec.serviceAccountName
+          {{- if .Values.additionalEnv }}
+          {{ toYaml .Values.additionalEnv | nindent 12 }}
+          {{- end }}
+          ports:
+          {{- if .Values.webhook.enabled }}
+            - containerPort: {{ .Values.webhook.serverPort | default 443 }}
+              name: webhook-server
+              protocol: TCP
+          {{- end }}
+            - containerPort: {{ (.Values.metricEndpoint).port | default 8080 }}
+              name: metrics
+              protocol: TCP
+            - containerPort: 9001
+              name: alerts
+              protocol: TCP
+          volumeMounts:
+          {{- if .Values.webhook.enabled }}
+            - mountPath: {{ (.Values.webhook.tls).certDir | default "/etc/webhook/certs" }}
+              name: serving-cert
+              readOnly: true
+          {{- end }}
+          resources:
+          {{ toYaml .Values.operator.resources | nindent 12 }}
+          {{- if .Values.containerSecurityContext }}
+          securityContext:
+          {{ toYaml .Values.containerSecurityContext | nindent 12 }}
+          {{- end }}
+{{- if .Values.additionalSidecars }}
+{{- include "chart.additionalSidecars" . | nindent 8 }}
+{{- end }}
+{{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+{{- end }}
+{{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | nindent 8 }}
+{{- end }}
+{{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | nindent 8 }}
+{{- end }}
+      terminationGracePeriodSeconds: 10

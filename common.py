@@ -299,7 +299,7 @@ def kind_load_images(images: list, name: str):
         if p.returncode != 0:
             logging.info('Image not present local, pull and retry')
             subprocess.run(['docker', 'pull', image])
-            p = subprocess.run(cmd + image)
+            p = subprocess.run(cmd + [image])
 
 
 def kind_delete_cluster(name: str):

@@ -294,6 +294,7 @@ class Acto:
 
             update_preload_images(self.context)
             process_crd(self.context, apiclient, 'learn', self.crd_name, helper_crd)
+            kind_delete_cluster('learn')
             with open(context_file, 'w') as context_fout:
                 json.dump(self.context, context_fout, cls=ActoEncoder)
 

@@ -5,7 +5,7 @@
 - Python dependencies
     - `pip3 install -r requirements.txt`
 - [k8s Kind cluster](https://kind.sigs.k8s.io/)  
-    `go install sigs.k8s.io/kind@v0.11.1`
+    - `go install sigs.k8s.io/kind@v0.14.0`
 - kubectl
     - [Installation](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/)
 - helm
@@ -15,22 +15,48 @@
 To run the test:  
 ```
 python3 acto.py \
-    --seed SEED, -s SEED                    seed CR file
-    --operator OPERATOR, -o OPERATOR        yaml file for deploying the operator with kubectl
-    --helm OPERATOR_CHART                   Path of operator helm chart
-    --kustomize KUSTOMIZE                   Path of folder with kustomize
-    --init INIT                             Path of init yaml file (deploy before operator)
-    --duration DURATION, -d DURATION        Number of hours to run
-    --preload-images [PRELOAD_IMAGES [PRELOAD_IMAGES ...]]
-                                            Docker images to preload into Kind cluster
-    --crd-name CRD_NAME                     Name of CRD to use, required if there are multiple CRDs
-    --helper-crd HELPER_CRD                 generated CRD file that helps with the input generation
-    --custom-fields CUSTOM_FIELDS           Python source file containing a list of custom fields
-    --context CONTEXT                       Cached context data
-    --dryrun                                Only generate test cases without executing them
+    --seed SEED, -s SEED  seed CR file
+    --operator OPERATOR, -o OPERATOR
+                            yaml file for deploying the operator with kubectl
+    --helm OPERATOR_CHART
+                            Path of operator helm chart
+    --kustomize KUSTOMIZE
+                            Path of folder with kustomize
+    --init INIT           Path of init yaml file (deploy before operator)
+    --duration DURATION, -d DURATION
+                            Number of hours to run
+    --preload-images [PRELOAD_IMAGES ...]
+                            Docker images to preload into Kind cluster
+    --crd-name CRD_NAME   Name of CRD to use, required if there are multiple CRDs
+    --helper-crd HELPER_CRD
+                            generated CRD file that helps with the input generation
+    --custom-fields CUSTOM_FIELDS
+                            Python source file containing a list of custom fields
+    --analysis-result ANALYSIS_RESULT
+                            JSON file resulted from the code analysis
+    --context CONTEXT     Cached context data
+    --num-workers NUM_WORKERS
+                            Number of concurrent workers to run Acto with
+    --dryrun              Only generate test cases without executing them
 ```
 
-Example:   
+## Known Issues
+- ([A Known Issue of Kind](https://kind.sigs.k8s.io/docs/user/known-issues/#pod-errors-due-to-too-many-open-files)) Failed cluster creation when using the multiple worker functionality by specifying `--num-workers`.
+
+  This may be caused by running out of inotify resources. Resource limits are defined by fs.inotify.max_user_watches and fs.inotify.max_user_instances system variables. For example, in Ubuntu these default to 8192 and 128 respectively, which is not enough to create a cluster with many nodes.
+  
+  To increase these limits temporarily, run the following commands on the host:
+  ```shell
+  sudo sysctl fs.inotify.max_user_watches=524288
+  sudo sysctl fs.inotify.max_user_instances=512
+  ```
+  To make the changes persistent, edit the file /etc/sysctl.conf and add these lines:
+  ```shell
+  fs.inotify.max_user_watches = 524288
+  fs.inotify.max_user_instances = 512
+  ```
+
+## Example:   
 **rabbitmq-operator**:  
 ```console
 python3 acto.py --seed data/rabbitmq-operator/cr.yaml \
@@ -102,6 +128,21 @@ python3 acto.py --seed data/spark-operator/cr.yaml \
                 --helm data/spark-operator/spark-operator-chart --crd-name=sparkapplications.sparkoperator.k8s.io
 ```
 
+**ot-container-kit/redis-operator**
+```
+python3 acto.py --seed data/redis-ot-container-kit-operator/cr_cluster.yaml \
+                --operator data/redis-ot-container-kit-operator/bundle.yaml \
+                --crd-name redisclusters.redis.redis.opstreelabs.in  \               
+                --custom-fields data.redis-ot-container-kit-operator.prune \
+```
+
+**percona-xtradb-cluster-operator**
+```
+python3 acto.py --seed data/percona-xtradb-cluster-operator/cr.yaml \
+                --operator data/percona-xtradb-cluster-operator/bundle.yaml \
+                --crd-name perconaxtradbclusters.pxc.percona.com \
+                --custom-fields data.percona-xtradb-cluster-operator.prune
+```
 ## Porting operators
 Acto aims to automate the E2E testing as much as possible to minimize users' labor.
 
