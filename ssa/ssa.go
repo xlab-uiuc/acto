@@ -20,6 +20,7 @@ func main() {
 
 	projectPath := flag.String("project-path", "/home/tyler/zookeeper-operator", "the path to the operator's source dir")
 	seedType := flag.String("seed-type", "ZookeeperCluster", "The type of the root")
+	seedPkgPath := flag.String("seed-pkg", "ZookeeperCluster", "The package path of the root")
 	flag.Parse()
 
 	logFile, err := os.Create("ssa.log")
@@ -34,10 +35,11 @@ func main() {
 	log.Printf("Building ssa program for project %s\n", *projectPath)
 
 	cfg := packages.Config{
-		Mode: packages.LoadAllSyntax,
+		Mode: packages.NeedModule | packages.LoadAllSyntax,
 		Dir:  *projectPath,
 	}
 	initial, err := packages.Load(&cfg, ".")
+	log.Printf("Got %d initial packages\n", len(initial))
 	if err != nil {
 		log.Println(err)
 	}
@@ -48,8 +50,15 @@ func main() {
 	// Build SSA code for the whole program.
 	prog.Build()
 
+	context := analysis.Context{
+		Program:      prog,
+		MainPackages: ssautil.MainPackages(prog.AllPackages()),
+		RootModule:   initial[0].Module,
+	}
+
 	log.Println("Running initial pass...")
-	valueFieldSetMap, frontierSet := analysis.GetValueToFieldMappingPass(prog, *seedType)
+	log.Printf("Root Module is %s\n", context.RootModule.Path)
+	valueFieldSetMap, frontierSet := analysis.GetValueToFieldMappingPass(context, prog, seedType, seedPkgPath)
 
 	valueFieldSetMapFile, err := os.Create("mapping.txt")
 	if err != nil {
@@ -85,7 +94,7 @@ func main() {
 	// }
 	log.Println("------------------------")
 
-	taintedSet := analysis.TaintAnalysisPass(prog, frontierSet, valueFieldSetMap)
+	taintedSet := analysis.TaintAnalysisPass(context, prog, frontierSet, valueFieldSetMap)
 	for tainted := range taintedSet {
 		for _, path := range valueFieldSetMap[tainted].Fields() {
 			log.Printf("Path [%s] taints\n", path.Path)

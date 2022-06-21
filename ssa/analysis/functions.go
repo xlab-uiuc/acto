@@ -69,6 +69,10 @@ func GetKnownStaticFunction(function *ssa.Function, callSiteTaintedParamIndexSet
 		return &knownFunctionResult
 	}
 
+	if knownFunctionResult, ok := KnownFunctionWithoutReceiver[function.Name()]; ok {
+		return &knownFunctionResult
+	}
+
 	functionCall := FunctionCall{
 		FunctionName: function.String(),
 		TaintSource:  fmt.Sprint(callSiteTaintedParamIndexSet),
@@ -102,6 +106,7 @@ var (
 		"log":     true,
 		"reflect": true,
 		"errors":  true,
+		"logr":    true,
 	}
 
 	InterfaceFunctionSinks = map[string]bool{
@@ -112,18 +117,75 @@ var (
 		"(github.com/go-logr/logr.Logger).Error":                                                          true,
 		"(github.com/go-logr/logr.Logger).Info":                                                           true,
 		"(k8s.io/client-go/tools/record.EventRecorder).Event":                                             true, // this gets into events
+		"(k8s.io/apimachinery/pkg/apis/meta/v1.Object).GetLabels":                                         true,
+		"(k8s.io/client-go/tools/record.EventRecorder).Eventf":                                            true,
+		"(sigs.k8s.io/controller-runtime/pkg/client.Reader).List":                                         true,
+		"(sigs.k8s.io/controller-runtime/pkg/client.StatusClient).Status":                                 true,
+		"(k8s.io/apimachinery/pkg/apis/meta/v1.Object).SetOwnerReferences":                                true,
+		"(k8s.io/apimachinery/pkg/apis/meta/v1.Object).GetOwnerReferences":                                true,
+		"k8s.io/apimachinery/pkg/apis/meta/v1.IsControlledBy":                                             true,
 	}
 
 	StaticFunctionSinks = map[string]bool{
-		"fmt.Errorf": true,
-		"fmt.Printf": true,
+		"context.WithTimeout": true,
+		"fmt.Errorf":          true,
+		"fmt.Printf":          true,
+		"strings.Contains":    true,
 		"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil.SetControllerReference": true,
+		"(*sigs.k8s.io/controller-runtime/pkg/builder.WebhookBuilder).For":                    true,
+		"(*sigs.k8s.io/controller-runtime/pkg/builder.WebhookBuilder).registerWebhooks":       true,
 		"(*sigs.k8s.io/controller-runtime/pkg/builder.Builder).For":                           true,
 		"k8s.io/apimachinery/pkg/api/errors.NewBadRequest":                                    true,
 		"(*sigs.k8s.io/controller-runtime/pkg/scheme.Builder).Register":                       true,
+		"sigs.k8s.io/controller-runtime/pkg/client/fake.NewFakeClient":                        true,
+		"(*k8s.io/apimachinery/pkg/runtime.Scheme).AddKnownTypes":                             true,
+		"k8s.io/kubernetes/pkg/util/hash.DeepHashObject":                                      true,
+		"unicode/utf8.Valid":    true,
+		"net.LookupIP":          true,
+		"(*net/http.Client).do": true,
+		"sigs.k8s.io/controller-runtime/pkg/client.IgnoreNotFound": true,
+		"(*github.com/hashicorp/go-version.Version).Compare":       true,
+		"(*k8s.io/client-go/rest.Request).Do":                      true,
+	}
+
+	KnownFunctionWithoutReceiver = map[string]FunctionTaintResult{
+		"DeepCopy": {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{0},
+		},
+		"DeepCopyInto": {
+			End:         false,
+			TaintedArgs: []int{1},
+			TaintedRets: []int{},
+		},
 	}
 
 	KnownStaticFunction = map[FunctionCall]FunctionTaintResult{
+		{
+			FunctionName: "strconv.ParseInt",
+			TaintSource:  fmt.Sprint([]int{0}),
+		}: {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{0},
+		},
+		{
+			FunctionName: "strings.ReplaceAll",
+			TaintSource:  fmt.Sprint([]int{0}),
+		}: {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{0},
+		},
+		{
+			FunctionName: "(k8s.io/client-go/rest.Result).Into",
+			TaintSource:  fmt.Sprint([]int{1}),
+		}: {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{},
+		},
 		{
 			FunctionName: "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil.AddFinalizer",
 			TaintSource:  fmt.Sprint([]int{1}),
@@ -196,6 +258,22 @@ var (
 			TaintedArgs: []int{},
 			TaintedRets: []int{},
 		},
+		{
+			FunctionName: "(*text/template.Template).Execute",
+			TaintSource:  fmt.Sprint([]int{0}),
+		}: {
+			End:         false,
+			TaintedArgs: []int{1},
+			TaintedRets: []int{},
+		},
+		{
+			FunctionName: "(*text/template.Template).Execute",
+			TaintSource:  fmt.Sprint([]int{2}),
+		}: {
+			End:         false,
+			TaintedArgs: []int{1},
+			TaintedRets: []int{},
+		},
 	}
 
 	KnownStaticFunctionWithoutParam = map[string]FunctionTaintResult{
@@ -205,6 +283,16 @@ var (
 			TaintedRets: []int{0},
 		},
 		"fmt.Sprint": {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{0},
+		},
+		"strings.Split": {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{0},
+		},
+		"strings.EqualFold": {
 			End:         false,
 			TaintedArgs: []int{},
 			TaintedRets: []int{0},
@@ -229,7 +317,52 @@ var (
 			TaintedArgs: []int{},
 			TaintedRets: []int{0},
 		},
+		"strings.ToLower": {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{0},
+		},
+		"strconv.Itoa": {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{0},
+		},
+		"strconv.FormatBool": {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{0},
+		},
+		"strconv.ParseFloat": {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{0},
+		},
+		"sort.Strings": {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{0},
+		},
 		"net/url.escape": {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{0},
+		},
+		"net/url.Parse": {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{0},
+		},
+		"net.ParseIP": {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{0},
+		},
+		"net/http.NewRequest": {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{0},
+		},
+		"(net/url.Values).Encode": {
 			End:         false,
 			TaintedArgs: []int{},
 			TaintedRets: []int{0},
@@ -244,12 +377,37 @@ var (
 			TaintedArgs: []int{},
 			TaintedRets: []int{0},
 		},
+		"encoding/pem.Decode": {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{0, 1},
+		},
 		"errors.Is": {
 			End:         false,
 			TaintedArgs: []int{},
 			TaintedRets: []int{0},
 		},
 		"k8s.io/apimachinery/pkg/api/meta.Accessor": {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{0},
+		},
+		"k8s.io/apimachinery/pkg/labels.SelectorFromSet": {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{0},
+		},
+		"k8s.io/apimachinery/pkg/util/intstr.FromInt": {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{0},
+		},
+		"k8s.io/kubernetes/pkg/util/slice.ContainsString": {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{0},
+		},
+		"k8s.io/apimachinery/pkg/util/validation.IsDNS1035Label": {
 			End:         false,
 			TaintedArgs: []int{},
 			TaintedRets: []int{0},
@@ -268,6 +426,11 @@ var (
 			End:         false,
 			TaintedArgs: []int{},
 			TaintedRets: []int{0},
+		},
+		"sigs.k8s.io/controller-runtime/pkg/client.MergeFrom": {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{},
 		},
 		"(*k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta).GetUID": {
 			End:         false,
@@ -329,6 +492,11 @@ var (
 			TaintedArgs: []int{},
 			TaintedRets: []int{0},
 		},
+		"(k8s.io/apimachinery/pkg/types.NamespacedName).String": {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{0},
+		},
 		"(*k8s.io/client-go/rest.Request).VersionedParams": {
 			End:         false,
 			TaintedArgs: []int{},
@@ -349,6 +517,31 @@ var (
 			TaintedArgs: []int{},
 			TaintedRets: []int{0},
 		},
+		"(*regexp.Regexp).MatchString": {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{0},
+		},
+		"(*regexp.Regexp).FindAllString": {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{0},
+		},
+		"regexp.Compile": {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{0},
+		},
+		"github.com/hashicorp/go-version.NewVersion": {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{0},
+		},
+		"github.com/hashicorp/go-version.Must": {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{0},
+		},
 	}
 
 	KnownInterfaceFunction = map[FunctionCall]FunctionTaintResult{
@@ -365,6 +558,46 @@ var (
 			TaintSource:  fmt.Sprint([]int{1}),
 		}: {
 			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{},
+		},
+		{
+			FunctionName: "(sigs.k8s.io/controller-runtime/pkg/client.StatusWriter).Patch",
+			TaintSource:  fmt.Sprint([]int{0}),
+		}: {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{},
+		},
+		{
+			FunctionName: "(sigs.k8s.io/controller-runtime/pkg/client.StatusWriter).Patch",
+			TaintSource:  fmt.Sprint([]int{1}),
+		}: {
+			End:         true,
+			TaintedArgs: []int{},
+			TaintedRets: []int{},
+		},
+		{
+			FunctionName: "(sigs.k8s.io/controller-runtime/pkg/client.Writer).Patch",
+			TaintSource:  fmt.Sprint([]int{-1}),
+		}: {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{},
+		},
+		{
+			FunctionName: "(sigs.k8s.io/controller-runtime/pkg/client.Writer).Patch",
+			TaintSource:  fmt.Sprint([]int{0}),
+		}: {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{},
+		},
+		{
+			FunctionName: "(sigs.k8s.io/controller-runtime/pkg/client.Writer).Patch",
+			TaintSource:  fmt.Sprint([]int{1}),
+		}: {
+			End:         true,
 			TaintedArgs: []int{},
 			TaintedRets: []int{},
 		},
@@ -391,13 +624,23 @@ var (
 			TaintedArgs: []int{},
 			TaintedRets: []int{0},
 		},
+		"(k8s.io/apimachinery/pkg/labels.Selector).Add": {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{0},
+		},
 	}
 
 	K8sInterfaceFunctions = map[string]bool{
-		"(sigs.k8s.io/controller-runtime/pkg/client.Writer).Delete":       true,
-		"(sigs.k8s.io/controller-runtime/pkg/client.Writer).Update":       true,
-		"(k8s.io/apimachinery/pkg/apis/meta/v1.Object).SetAnnotations":    true,
-		"(sigs.k8s.io/controller-runtime/pkg/client.StatusWriter).Update": true,
+		"(sigs.k8s.io/controller-runtime/pkg/client.Writer).Create":               true,
+		"(sigs.k8s.io/controller-runtime/pkg/client.Writer).Delete":               true,
+		"(sigs.k8s.io/controller-runtime/pkg/client.Writer).Update":               true,
+		"(k8s.io/apimachinery/pkg/apis/meta/v1.Object).SetAnnotations":            true,
+		"(sigs.k8s.io/controller-runtime/pkg/client.StatusWriter).Update":         true,
+		"(k8s.io/client-go/kubernetes/typed/core/v1.ConfigMapInterface).Create":   true,
+		"(k8s.io/client-go/kubernetes/typed/apps/v1.StatefulSetInterface).Create": true,
+		"(k8s.io/client-go/kubernetes/typed/core/v1.ServiceInterface).Create":     true,
+		"(k8s.io/client-go/kubernetes/typed/apps/v1.DeploymentInterface).Create":  true,
 	}
 
 	K8sStaticFunctions = map[string]bool{

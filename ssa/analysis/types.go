@@ -1,6 +1,11 @@
 package analysis
 
-import "fmt"
+import (
+	"fmt"
+
+	"golang.org/x/tools/go/packages"
+	"golang.org/x/tools/go/ssa"
+)
 
 type FunctionCall struct {
 	FunctionName string
@@ -49,4 +54,10 @@ func (cs *CallStack) Contain(call FunctionCall) bool {
 
 func NewCallStack() *CallStack {
 	return &CallStack{}
+}
+
+type Context struct {
+	Program      *ssa.Program
+	MainPackages []*ssa.Package
+	RootModule   *packages.Module
 }

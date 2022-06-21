@@ -108,24 +108,26 @@ func GetAllTypes(prog *ssa.Program) []*ssa.Type {
 	return ret
 }
 
-func FindSeedType(prog *ssa.Program, seedStr string) *ssa.Type {
+func FindSeedType(prog *ssa.Program, seedStr *string, pkgPath *string) *ssa.Type {
 	for _, pkg := range prog.AllPackages() {
-		seed := pkg.Members[seedStr]
-		if typ, ok := seed.(*ssa.Type); ok {
-			return typ
+		if pkg.Pkg.Path() == *pkgPath {
+			seed := pkg.Members[*seedStr]
+			if typ, ok := seed.(*ssa.Type); ok {
+				return typ
+			}
 		}
 	}
 	return nil
 }
 
-func FindSeedValues(prog *ssa.Program, seedType string) []ssa.Value {
+func FindSeedValues(prog *ssa.Program, seedType *string, pkgPath *string) []ssa.Value {
 	seedVariables := []ssa.Value{}
 	seedOutFile, err := os.Create("seed.txt")
 	if err != nil {
 		log.Fatalf("Failed to create file %s\n", err)
 	}
 
-	seed := FindSeedType(prog, seedType)
+	seed := FindSeedType(prog, seedType, pkgPath)
 	if seed != nil {
 		log.Println(seed.String())
 		if seedStruct, ok := seed.Type().Underlying().(*types.Struct); ok {

@@ -9,7 +9,6 @@ import (
 
 	. "github.com/xlab-uiuc/acto/ssa/util"
 	"golang.org/x/tools/go/ssa"
-	"golang.org/x/tools/go/ssa/ssautil"
 )
 
 // Forward pass
@@ -36,10 +35,10 @@ import (
 //
 // Frontier values:
 //	- if all a value's all referrers are propogated, it's not frontier
-func GetValueToFieldMappingPass(prog *ssa.Program, seedType string) (map[ssa.Value]*FieldSet, map[ssa.Value]bool) {
+func GetValueToFieldMappingPass(context Context, prog *ssa.Program, seedType *string, seedPkgPath *string) (map[ssa.Value]*FieldSet, map[ssa.Value]bool) {
 	valueFieldSetMap := make(map[ssa.Value]*FieldSet)
 	frontierValues := make(map[ssa.Value]bool)
-	seedVariables := FindSeedValues(prog, seedType)
+	seedVariables := FindSeedValues(prog, seedType, seedPkgPath)
 
 	allTypes := GetAllTypes(prog)
 
@@ -51,7 +50,7 @@ func GetValueToFieldMappingPass(prog *ssa.Program, seedType string) (map[ssa.Val
 		})
 	}
 
-	mainPkg := ssautil.MainPackages(prog.AllPackages())[0]
+	rootMod := context.RootModule
 
 	valueSet := make(map[string]bool)
 	instSet := make(map[string]bool)
@@ -83,8 +82,18 @@ func GetValueToFieldMappingPass(prog *ssa.Program, seedType string) (map[ssa.Val
 							switch callValue := typedValue.Call.Value.(type) {
 							case *ssa.Function:
 								// propogate to the function parameter
+								// propogate to return value if it is DeepCopy
 								// stop propogate if external library call
-								if strings.Contains(callValue.Pkg.Pkg.Path(), mainPkg.Pkg.Path()) {
+								if callValue.Name() == "DeepCopy" {
+									log.Printf("Propogate through DeepCopy\n")
+									for _, parentField := range parentFieldSet.Fields() {
+										newField := parentField.Clone()
+										ok := AddFieldToValueFieldSetMap(valueFieldSetMap, typedValue, newField)
+										if ok {
+											changed = true
+										}
+									}
+								} else if strings.Contains(callValue.Pkg.Pkg.Path(), rootMod.Path) {
 									for _, paramIndex := range callSiteTaintedParamIndexSet {
 										log.Printf("value %s Propogate into function %s at %dth parameter with path %s\n", variable.Name(), callValue.String(), paramIndex, parentFieldSet.Fields())
 

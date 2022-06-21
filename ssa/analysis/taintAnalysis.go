@@ -11,7 +11,6 @@ import (
 	"golang.org/x/tools/go/callgraph"
 	"golang.org/x/tools/go/pointer"
 	"golang.org/x/tools/go/ssa"
-	"golang.org/x/tools/go/ssa/ssautil"
 )
 
 // Alloc
@@ -50,13 +49,13 @@ import (
 // Store
 // TypeAssert
 // UnOp
-func TaintAnalysisPass(prog *ssa.Program, frontierValues map[ssa.Value]bool, valueFieldMap map[ssa.Value]*FieldSet) map[ssa.Value]bool {
+func TaintAnalysisPass(context Context, prog *ssa.Program, frontierValues map[ssa.Value]bool, valueFieldMap map[ssa.Value]*FieldSet) map[ssa.Value]bool {
 	log.Println("Constructing call graph using pointer analysis")
 	cfg := pointer.Config{
-		Mains:          ssautil.MainPackages(prog.AllPackages()),
+		Mains:          context.MainPackages,
 		BuildCallGraph: true,
 	}
-	log.Printf("Main packages %s\n", ssautil.MainPackages(prog.AllPackages()))
+	log.Printf("Main packages %s\n", context.MainPackages)
 	result, err := pointer.Analyze(&cfg)
 	if err != nil {
 		log.Fatalf("Failed to run pointer analysis to construct callgraph %V\n", err)
@@ -77,7 +76,7 @@ func TaintAnalysisPass(prog *ssa.Program, frontierValues map[ssa.Value]bool, val
 		// 	}
 		// }
 		log.Printf("Checking if value [%s] in function [%s] taints\n", value.String(), value.Parent().String())
-		if TaintK8sFromValue(value, valueFieldMap, callGraph, backCallStack, false) {
+		if TaintK8sFromValue(context, value, valueFieldMap, callGraph, backCallStack, false) {
 			tainted[value] = true
 			log.Printf("Value [%s] taints", value.String())
 		} else {
@@ -95,7 +94,7 @@ type ReferredInstruction struct {
 }
 
 // returns true if value taints k8s API calls
-func TaintK8sFromValue(value ssa.Value, valueFieldMap map[ssa.Value]*FieldSet, callGraph *callgraph.Graph, backCallStack *CallStack, fromArg bool) bool {
+func TaintK8sFromValue(context Context, value ssa.Value, valueFieldMap map[ssa.Value]*FieldSet, callGraph *callgraph.Graph, backCallStack *CallStack, fromArg bool) bool {
 	log.Printf("Checking if value [%s] in function [%s] taints\n", value.String(), value.Parent().String())
 	// Maintain backCallStack
 	functionCall := FunctionCall{
@@ -143,7 +142,7 @@ func TaintK8sFromValue(value ssa.Value, valueFieldMap map[ssa.Value]*FieldSet, c
 				} else {
 					taintedParam = inEdge.Site.Common().Args[taintedParamIndex]
 				}
-				if TaintK8sFromValue(taintedParam, valueFieldMap, callGraph, backCallStack, true) {
+				if TaintK8sFromValue(context, taintedParam, valueFieldMap, callGraph, backCallStack, true) {
 					return true
 				}
 			}
@@ -186,7 +185,7 @@ func TaintK8sFromValue(value ssa.Value, valueFieldMap map[ssa.Value]*FieldSet, c
 						} else {
 							log.Printf("Propogate to shared callee %s \n", typedValue.String())
 						}
-						end, taintedArgs, taintedRets := ContextAwareFunctionAnalysis(taintedValue, typedValue, callGraph, taintedSet, valueFieldMap, callStack)
+						end, taintedArgs, taintedRets := ContextAwareFunctionAnalysis(context, taintedValue, typedValue, callGraph, taintedSet, valueFieldMap, callStack)
 						if end {
 							return true
 						}
@@ -200,7 +199,7 @@ func TaintK8sFromValue(value ssa.Value, valueFieldMap map[ssa.Value]*FieldSet, c
 							// TODO: backward propogation in case of map, pointer, slice, interface
 							switch taintedArg.Type().(type) {
 							case *types.Map:
-								end, chg := handlePointerArgBackwardPropogation(taintedArg, valueFieldMap, taintedSet, callGraph, backCallStack)
+								end, chg := handlePointerArgBackwardPropogation(context, taintedArg, valueFieldMap, taintedSet, callGraph, backCallStack)
 								if end {
 									return true
 								}
@@ -208,7 +207,7 @@ func TaintK8sFromValue(value ssa.Value, valueFieldMap map[ssa.Value]*FieldSet, c
 									changed = true
 								}
 							case *types.Pointer:
-								end, chg := handlePointerArgBackwardPropogation(taintedArg, valueFieldMap, taintedSet, callGraph, backCallStack)
+								end, chg := handlePointerArgBackwardPropogation(context, taintedArg, valueFieldMap, taintedSet, callGraph, backCallStack)
 								if end {
 									return true
 								}
@@ -216,7 +215,7 @@ func TaintK8sFromValue(value ssa.Value, valueFieldMap map[ssa.Value]*FieldSet, c
 									changed = true
 								}
 							case *types.Slice:
-								end, chg := handlePointerArgBackwardPropogation(taintedArg, valueFieldMap, taintedSet, callGraph, backCallStack)
+								end, chg := handlePointerArgBackwardPropogation(context, taintedArg, valueFieldMap, taintedSet, callGraph, backCallStack)
 								if end {
 									return true
 								}
@@ -224,7 +223,7 @@ func TaintK8sFromValue(value ssa.Value, valueFieldMap map[ssa.Value]*FieldSet, c
 									changed = true
 								}
 							case *types.Interface:
-								end, chg := handlePointerArgBackwardPropogation(taintedArg, valueFieldMap, taintedSet, callGraph, backCallStack)
+								end, chg := handlePointerArgBackwardPropogation(context, taintedArg, valueFieldMap, taintedSet, callGraph, backCallStack)
 								if end {
 									return true
 								}
@@ -290,7 +289,7 @@ func TaintK8sFromValue(value ssa.Value, valueFieldMap map[ssa.Value]*FieldSet, c
 							}
 						} else {
 							// skip
-							log.Fatal("Referred as Index in Lookup\n")
+							log.Printf("Referred as Index in Lookup\n")
 						}
 					case *ssa.MakeChan:
 						// skip
@@ -305,7 +304,7 @@ func TaintK8sFromValue(value ssa.Value, valueFieldMap map[ssa.Value]*FieldSet, c
 								indices = append(indices, freeVar)
 							}
 						}
-						end, _, _ := TaintFunction(typedValue.Fn.(*ssa.Function), indices, callGraph, valueFieldMap, callStack)
+						end, _, _ := TaintFunction(context, typedValue.Fn.(*ssa.Function), indices, callGraph, valueFieldMap, callStack)
 						if end {
 							return true
 						}
@@ -370,9 +369,9 @@ func TaintK8sFromValue(value ssa.Value, valueFieldMap map[ssa.Value]*FieldSet, c
 				case *ssa.DebugRef:
 					// skip
 				case *ssa.Defer:
-					ContextAwareFunctionAnalysis(taintedValue, typedInst.Value(), callGraph, taintedSet, valueFieldMap, callStack)
+					ContextAwareFunctionAnalysis(context, taintedValue, typedInst, callGraph, taintedSet, valueFieldMap, callStack)
 				case *ssa.Go:
-					ContextAwareFunctionAnalysis(taintedValue, typedInst.Value(), callGraph, taintedSet, valueFieldMap, callStack)
+					ContextAwareFunctionAnalysis(context, taintedValue, typedInst, callGraph, taintedSet, valueFieldMap, callStack)
 				case *ssa.Jump:
 					// skip
 				case *ssa.MapUpdate:
@@ -381,16 +380,29 @@ func TaintK8sFromValue(value ssa.Value, valueFieldMap map[ssa.Value]*FieldSet, c
 					// 1) used as Map
 					// 2) used as Key - taint Map
 					// 3) used as Value - taint Map
+
+					// Need to further taint backward, because map is pass by reference
 					if taintedValue == typedInst.Key {
 						if _, ok := taintedSet[typedInst.Map]; !ok {
+							log.Printf("%s -> %s\n", taintedValue, typedInst.Map)
 							taintedSet[typedInst.Map] = true
 							changed = true
 						}
 					} else if taintedValue == typedInst.Value {
 						if _, ok := taintedSet[typedInst.Map]; !ok {
+							log.Printf("%s -> %s\n", taintedValue, typedInst.Map)
 							taintedSet[typedInst.Map] = true
 							changed = true
 						}
+
+						end, chg := handlePointerArgBackwardPropogation(context, typedInst.Map, valueFieldMap, taintedSet, callGraph, backCallStack)
+						if end {
+							return true
+						}
+						if chg {
+							changed = true
+						}
+
 						// XXX: Handle parameter
 						if param, ok := typedInst.Map.(*ssa.Parameter); ok {
 							// updating map directly from the parameter
@@ -416,7 +428,7 @@ func TaintK8sFromValue(value ssa.Value, valueFieldMap map[ssa.Value]*FieldSet, c
 									localParamIndex--
 								}
 								callsiteParamValue := inEdge.Site.Common().Args[localParamIndex]
-								if TaintK8sFromValue(callsiteParamValue, valueFieldMap, callGraph, backCallStack, true) {
+								if TaintK8sFromValue(context, callsiteParamValue, valueFieldMap, callGraph, backCallStack, true) {
 									return true
 								}
 							}
@@ -430,30 +442,37 @@ func TaintK8sFromValue(value ssa.Value, valueFieldMap map[ssa.Value]*FieldSet, c
 					// find the tainted index in the returned value (hanlde the case of returning tuple)
 					// TODO Handle call stack carefully here
 					taintedReturnSet := GetReturnIndices(taintedValue, typedInst)
-					node := callGraph.Nodes[taintedValue.Parent()]
-					for _, inEdge := range node.In {
-						// if it returns to a K8s client function, return true to end
-						if IsK8sStaticFunction(inEdge.Site.Parent()) {
-							return true
-						}
+					node, err := callGraph.Nodes[taintedValue.Parent()]
+					if err {
+						log.Printf("Failed to retrieve call graph node for %s %T\n", taintedValue, taintedValue)
+					}
+					if node == nil {
+						log.Printf("No caller for %s %T at %s\n", taintedValue, taintedValue, taintedValue.Parent().Pkg.Prog.Fset.Position(taintedValue.Pos()))
+					} else {
+						for _, inEdge := range node.In {
+							// if it returns to a K8s client function, return true to end
+							if IsK8sStaticFunction(inEdge.Site.Parent()) {
+								return true
+							}
 
-						if callSiteReturnValue := inEdge.Site.Value(); callSiteReturnValue != nil {
-							if typedInst.Parent().Signature.Results().Len() > 1 {
-								// if return value is a tuple
-								// propogate to the callsite recursively
-								for _, tainted := range getExtractTaint(callSiteReturnValue, taintedReturnSet) {
-									if TaintK8sFromValue(tainted, valueFieldMap, callGraph, backCallStack, false) {
+							if callSiteReturnValue := inEdge.Site.Value(); callSiteReturnValue != nil {
+								if typedInst.Parent().Signature.Results().Len() > 1 {
+									// if return value is a tuple
+									// propogate to the callsite recursively
+									for _, tainted := range getExtractTaint(callSiteReturnValue, taintedReturnSet) {
+										if TaintK8sFromValue(context, tainted, valueFieldMap, callGraph, backCallStack, false) {
+											return true
+										}
+									}
+								} else {
+									log.Printf("Propogate to the callsites %s from function %s\n", inEdge.Site.Parent().String(), typedInst.Parent())
+									if TaintK8sFromValue(context, callSiteReturnValue, valueFieldMap, callGraph, backCallStack, false) {
 										return true
 									}
 								}
 							} else {
-								log.Printf("Propogate to the callsites %s from function %s\n", inEdge.Site.Parent().String(), typedInst.Parent())
-								if TaintK8sFromValue(callSiteReturnValue, valueFieldMap, callGraph, backCallStack, false) {
-									return true
-								}
+								log.Fatalf("return to a non-call callsite\n")
 							}
-						} else {
-							log.Fatalf("return to a non-call callsite\n")
 						}
 					}
 				case *ssa.RunDefers:
@@ -502,7 +521,7 @@ func TaintK8sFromValue(value ssa.Value, valueFieldMap map[ssa.Value]*FieldSet, c
 								} else {
 									taintedParam = inEdge.Site.Common().Args[localTaintedParamIndex]
 								}
-								if TaintK8sFromValue(taintedParam, valueFieldMap, callGraph, backCallStack, true) {
+								if TaintK8sFromValue(context, taintedParam, valueFieldMap, callGraph, backCallStack, true) {
 									return true
 								}
 							}
@@ -529,7 +548,7 @@ func TaintK8sFromValue(value ssa.Value, valueFieldMap map[ssa.Value]*FieldSet, c
 // @callInst is the call instruction
 //
 // TODO: XXX Do backward propogation for tainted parameters
-func ContextAwareFunctionAnalysis(value ssa.Value, callInst ssa.CallInstruction, callGraph *callgraph.Graph,
+func ContextAwareFunctionAnalysis(context Context, value ssa.Value, callInst ssa.CallInstruction, callGraph *callgraph.Graph,
 	taintedSet map[ssa.Value]bool, valueFieldMap map[ssa.Value]*FieldSet,
 	callStack *CallStack) (end bool, taintedArgs []ssa.Value, taintedRets []ssa.Value) {
 
@@ -591,8 +610,8 @@ func ContextAwareFunctionAnalysis(value ssa.Value, callInst ssa.CallInstruction,
 					taintedRetSet.Add(taintedRet)
 				}
 			} else {
-				if !strings.Contains(callInst.Common().Method.Pkg().String(), "github.com/rabbitmq/cluster-operator") {
-					log.Printf("Interface Callee [%s] in package [%s] is in external library\n", callInst.Common().Method.FullName(), callInst.Common().Method.Pkg().Name())
+				if !strings.Contains(callInst.Common().Method.Pkg().Path(), context.RootModule.Path) {
+					log.Printf("Interface Callee [%s] in package [%s] is in external library\n", callInst.Common().Method.FullName(), callInst.Common().Method.Pkg().Path())
 				}
 				calleeSet := CalleeSet(callGraph, callInst)
 				if len(calleeSet) > 20 {
@@ -614,7 +633,7 @@ func ContextAwareFunctionAnalysis(value ssa.Value, callInst ssa.CallInstruction,
 					}
 
 					// Run recursive function and check if the parameter is tainted
-					endCache, taintedArgsCache, taintedRetsCache := TaintFunction(callee,
+					endCache, taintedArgsCache, taintedRetsCache := TaintFunction(context, callee,
 						entryPoints, callGraph, valueFieldMap, callStack)
 					if endCache {
 						end = true
@@ -712,8 +731,8 @@ func ContextAwareFunctionAnalysis(value ssa.Value, callInst ssa.CallInstruction,
 						taintedArgs = append(taintedArgs, taintedArg)
 					}
 				} else {
-					if !strings.Contains(callee.Pkg.String(), "github.com/rabbitmq/cluster-operator") {
-						log.Printf("Callee [%s] is in external library\n", callee.String())
+					if !strings.Contains(callee.Pkg.Pkg.Path(), context.RootModule.Path) {
+						log.Printf("Static callee [%s] is in external library\n", callee.String())
 					}
 
 					// initialize the entryPoints to taint when propogating to the callee
@@ -723,7 +742,7 @@ func ContextAwareFunctionAnalysis(value ssa.Value, callInst ssa.CallInstruction,
 					for _, callSiteTaintedArgIndex := range callSiteTaintedArgIndexSet {
 						entryPoints = append(entryPoints, callee.Params[callSiteTaintedArgIndex])
 					}
-					endCache, taintedArgsCache, taintedRetsCache := TaintFunction(callee,
+					endCache, taintedArgsCache, taintedRetsCache := TaintFunction(context, callee,
 						entryPoints, callGraph, valueFieldMap, callStack)
 
 					// save this taint result in cache
@@ -810,7 +829,7 @@ func ContextAwareFunctionAnalysis(value ssa.Value, callInst ssa.CallInstruction,
 					for _, callSiteTaintedArgIndex := range callSiteTaintedArgIndexSet {
 						entryPoints = append(entryPoints, functionBody.Params[callSiteTaintedArgIndex])
 					}
-					endCache, taintedArgsCache, taintedRetsCache := TaintFunction(functionBody,
+					endCache, taintedArgsCache, taintedRetsCache := TaintFunction(context, functionBody,
 						entryPoints, callGraph, valueFieldMap, callStack)
 
 					// save this taint result in cache
@@ -868,7 +887,7 @@ func ContextAwareFunctionAnalysis(value ssa.Value, callInst ssa.CallInstruction,
 // TaintFunction tries to run taint analysis on the functionBody
 // The initial taints are specified in the
 // returns the indices of the tainted return values
-func TaintFunction(functionBody *ssa.Function, entryPoints []ssa.Value, callGraph *callgraph.Graph,
+func TaintFunction(context Context, functionBody *ssa.Function, entryPoints []ssa.Value, callGraph *callgraph.Graph,
 	valueFieldMap map[ssa.Value]*FieldSet,
 	callStack *CallStack) (end bool, taintedParams []int, taintedRets []int) {
 
@@ -926,7 +945,7 @@ func TaintFunction(functionBody *ssa.Function, entryPoints []ssa.Value, callGrap
 					case *ssa.Call:
 						// context aware
 
-						end, taintedArgs, taintedRets := ContextAwareFunctionAnalysis(taintedValue, typedValue, callGraph, taintedSet, valueFieldMap, callStack)
+						end, taintedArgs, taintedRets := ContextAwareFunctionAnalysis(context, taintedValue, typedValue, callGraph, taintedSet, valueFieldMap, callStack)
 
 						for _, taintedArg := range taintedArgs {
 							if _, ok := taintedSet[taintedArg]; !ok {
@@ -1012,7 +1031,7 @@ func TaintFunction(functionBody *ssa.Function, entryPoints []ssa.Value, callGrap
 								indices = append(indices, freeVar)
 							}
 						}
-						end, _, _ := TaintFunction(typedValue.Fn.(*ssa.Function), indices, callGraph, valueFieldMap, callStack)
+						end, _, _ := TaintFunction(context, typedValue.Fn.(*ssa.Function), indices, callGraph, valueFieldMap, callStack)
 						if end {
 							return true, taintedParamIndexSet.Items(), taintedReturnIndexSet.Items()
 						}
@@ -1044,7 +1063,7 @@ func TaintFunction(functionBody *ssa.Function, entryPoints []ssa.Value, callGrap
 							changed = true
 						}
 					case *ssa.Select:
-						log.Fatalf("Referred in Select\n")
+						// skip
 					case *ssa.Slice:
 						// Two cases: 1) referred as the X 2) referred as the Low, High, Max
 						if taintedValue == typedValue.X {
@@ -1077,7 +1096,7 @@ func TaintFunction(functionBody *ssa.Function, entryPoints []ssa.Value, callGrap
 				case *ssa.DebugRef:
 					// skip
 				case *ssa.Defer:
-					end, taintedArgs, taintedRets := ContextAwareFunctionAnalysis(taintedValue, typedInst, callGraph, taintedSet, valueFieldMap, callStack)
+					end, taintedArgs, taintedRets := ContextAwareFunctionAnalysis(context, taintedValue, typedInst, callGraph, taintedSet, valueFieldMap, callStack)
 
 					for _, taintedArg := range taintedArgs {
 						if _, ok := taintedSet[taintedArg]; !ok {
@@ -1096,7 +1115,7 @@ func TaintFunction(functionBody *ssa.Function, entryPoints []ssa.Value, callGrap
 						return true, taintedParamIndexSet.Items(), taintedReturnIndexSet.Items()
 					}
 				case *ssa.Go:
-					end, taintedArgs, taintedRets := ContextAwareFunctionAnalysis(taintedValue, typedInst, callGraph, taintedSet, valueFieldMap, callStack)
+					end, taintedArgs, taintedRets := ContextAwareFunctionAnalysis(context, taintedValue, typedInst, callGraph, taintedSet, valueFieldMap, callStack)
 
 					for _, taintedArg := range taintedArgs {
 						if _, ok := taintedSet[taintedArg]; !ok {
@@ -1132,6 +1151,14 @@ func TaintFunction(functionBody *ssa.Function, entryPoints []ssa.Value, callGrap
 							taintedSet[typedInst.Map] = true
 							changed = true
 						}
+						taintedParam, chg := BackwardPropogation(typedInst.Map, taintedSet)
+						if chg {
+							changed = true
+						}
+						if taintedParam != -1 {
+							taintedParamIndexSet.Add(taintedParam)
+						}
+
 						// XXX: Handle parameter
 						if param, ok := typedInst.Map.(*ssa.Parameter); ok {
 							// updating map directly from the parameter
@@ -1159,7 +1186,6 @@ func TaintFunction(functionBody *ssa.Function, entryPoints []ssa.Value, callGrap
 					// used as X
 					// used as Chan
 				case *ssa.Store:
-					// TODO: propogate back
 					if taintedValue == typedInst.Val {
 						// used as Val, propogate back
 						// backward propogation may propogate to parameter, need to taint the callsite
@@ -1227,7 +1253,7 @@ func getExtractTaint(taintSource ssa.Value, retIndices []int) (tainted []ssa.Val
 
 // This function handles the tainted argument from function callsite
 // if the tainted argument is map, pointer, slice, interface, we need to propogate backwards
-func handlePointerArgBackwardPropogation(taintedArg ssa.Value, valueFieldMap map[ssa.Value]*FieldSet,
+func handlePointerArgBackwardPropogation(context Context, taintedArg ssa.Value, valueFieldMap map[ssa.Value]*FieldSet,
 	taintedSet map[ssa.Value]bool, callGraph *callgraph.Graph, backCallStack *CallStack) (end bool, changed bool) {
 
 	taintedParamIndex, chg := BackwardPropogation(taintedArg, taintedSet)
@@ -1256,7 +1282,7 @@ func handlePointerArgBackwardPropogation(taintedArg ssa.Value, valueFieldMap map
 			} else {
 				taintedParam = inEdge.Site.Common().Args[taintedParamIndex]
 			}
-			if TaintK8sFromValue(taintedParam, valueFieldMap, callGraph, backCallStack, true) {
+			if TaintK8sFromValue(context, taintedParam, valueFieldMap, callGraph, backCallStack, true) {
 				end = true
 				return
 			}
