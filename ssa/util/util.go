@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"go/types"
 	"log"
-	"os"
 	"strconv"
 	"strings"
 
@@ -122,10 +121,6 @@ func FindSeedType(prog *ssa.Program, seedStr *string, pkgPath *string) *ssa.Type
 
 func FindSeedValues(prog *ssa.Program, seedType *string, pkgPath *string) []ssa.Value {
 	seedVariables := []ssa.Value{}
-	seedOutFile, err := os.Create("seed.txt")
-	if err != nil {
-		log.Fatalf("Failed to create file %s\n", err)
-	}
 
 	seed := FindSeedType(prog, seedType, pkgPath)
 	if seed != nil {
@@ -133,10 +128,10 @@ func FindSeedValues(prog *ssa.Program, seedType *string, pkgPath *string) []ssa.
 		if seedStruct, ok := seed.Type().Underlying().(*types.Struct); ok {
 			for i := 0; i < seedStruct.NumFields(); i++ {
 				field := seedStruct.Field(i)
-				seedOutFile.WriteString(fmt.Sprintf("%s - %s\n", field.Name(), GetFieldNameFromJsonTag(seedStruct.Tag(i))))
+				log.Printf("%s\n", fmt.Sprintf("%s - %s\n", field.Name(), GetFieldNameFromJsonTag(seedStruct.Tag(i))))
 			}
 		} else {
-			seedOutFile.WriteString(fmt.Sprintf("%T", seed.Type().Underlying()))
+			log.Printf("%s\n", fmt.Sprintf("%T", seed.Type().Underlying()))
 		}
 	}
 
@@ -152,9 +147,9 @@ func FindSeedValues(prog *ssa.Program, seedType *string, pkgPath *string) []ssa.
 	}
 
 	for _, seedVar := range seedVariables {
-		seedOutFile.WriteString(fmt.Sprintf("Value %s is seed\n", seedVar.String()))
+		log.Printf("%s\n", fmt.Sprintf("Value %s is seed\n", seedVar.String()))
 	}
-	seedOutFile.WriteString(fmt.Sprintf("%d\n", len(seedVariables)))
+	log.Printf("%s\n", fmt.Sprintf("%d\n", len(seedVariables)))
 
 	return seedVariables
 }
