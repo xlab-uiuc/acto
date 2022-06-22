@@ -23,7 +23,7 @@ spec:
 EOF
 
 # Step4: Install Prometheus-operator 
-kubectl apply -n default -f https://raw.githubusercontent.com/coreos/prometheus-operator/master/bundle.yaml
+kubectl create -n default -f https://raw.githubusercontent.com/coreos/prometheus-operator/master/bundle.yaml
 
 # Step5: Install CRD
 kubectl create --validate=false -f https://github.com/banzaicloud/koperator/releases/download/v0.21.2/kafka-operator.crds.yaml
