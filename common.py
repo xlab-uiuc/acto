@@ -233,6 +233,7 @@ EXCLUDE_ERROR_REGEX = [
     r"failed to run smartUpdate",
     r"dial: ping mongo",
     r"pod is not running",
+    r"failed to sync(.)*status",
 ]
 
 INVALID_INPUT_LOG_REGEX = [
@@ -247,7 +248,6 @@ GENERIC_FIELDS = [
     r"^value$",
     r"\d",
     r"^claimName$",
-    r"^secretName$",
     r"^host$",
 ]
 
