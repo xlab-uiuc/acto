@@ -149,3 +149,6 @@ Acto aims to automate the E2E testing as much as possible to minimize users' lab
 Currently, porting operators still requires some manual effort, we need:
 1. A way to deploy the operator, the deployment method needs to handle all the necessary prerequisites to deploy the operator, e.g. CRD, namespace creation, RBAC, etc. Current we support three deploy methods: `yaml`, `helm`, and `kustomize`. For example, rabbitmq-operator uses `yaml` for deployment, and the [example is shown here](data/rabbitmq-operator/operator.yaml)
 2. A seed CR yaml serving as the initial cr input. This can be any valid CR for your application. [Example](data/rabbitmq-operator/cr.yaml)
+
+## Known Limitations 
+* https://github.com/xlab-uiuc/acto/issues/121
