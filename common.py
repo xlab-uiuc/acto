@@ -181,7 +181,11 @@ def random_string(n: int):
 def save_result(trial_dir: str, trial_err: ErrorResult, num_tests: int,
                 trial_elapsed):
     result_dict = {}
-    result_dict['trial_num'] = trial_dir
+    try:
+        trial_num = '-'.join(trial_dir.split('-')[-2:])
+        result_dict['trial_num'] = trial_num
+    except:
+        result_dict['trial_num'] = trial_dir
     result_dict['duration'] = trial_elapsed
     result_dict['num_tests'] = num_tests
     if trial_err == None:
