@@ -238,6 +238,8 @@ EXCLUDE_ERROR_REGEX = [
     r"dial: ping mongo",
     r"pod is not running",
     r"failed to sync(.)*status",
+    r"sync failed",
+    r"invalid",
 ]
 
 INVALID_INPUT_LOG_REGEX = [
