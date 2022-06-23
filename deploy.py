@@ -44,7 +44,7 @@ class Deploy:
                 retry_count -= 1
         return False
 
-    def check_status(self):
+    def check_status(self, cluster_name):
         time.sleep(10)
 
     def new(self):
@@ -61,11 +61,6 @@ class Deploy:
 class Helm(Deploy):
 
     def deploy(self, context: dict, cluster_name: str):
-        if self.init_yaml:
-            sh.kubectl("apply",
-                       server_side=True,
-                       filename=self.init_yaml,
-                       namespace=CONST.ACTO_NAMESPACE)
         context['namespace'] = CONST.ACTO_NAMESPACE
         if self.init_yaml:
             kubectl(['apply', '--server-side', '-f', self.init_yaml, '-n', context['namespace']],
@@ -75,13 +70,13 @@ class Helm(Deploy):
             'install', 'acto-test-operator', '--create-namespace', self.path, '--wait', '--timeout',
             '3m', '-n', context['namespace']
         ], cluster_name)
-        self.check_status()
+        self.check_status(cluster_name)
 
         # TODO: Return True if deploy successfully
         return True
 
-    def check_status(self):
-        helm_ls_result = sh.helm("ls", o="json", all_namespaces=True, all=True)
+    def check_status(self, cluster_name: str):
+        helm_ls_result = helm(['list', '-o', 'json', '--all-namespaces', '--all'], cluster_name)
         try:
             helm_release = json.loads(helm_ls_result.stdout)[0]
         except Exception:
@@ -117,7 +112,7 @@ class Yaml(Deploy):
             'apply', '--server-side', '-f', self.path, '-n',
             context['namespace']
         ], cluster_name)
-        super().check_status()
+        super().check_status(cluster_name)
 
         # TODO: Return True if deploy successfully
         return True
@@ -175,7 +170,7 @@ class Kustomize(Deploy):
             'apply', '--server-side', '-k', self.path, '-n',
             context['namespace']
         ], cluster_name)
-        super().check_status()
+        super().check_status(cluster_name)
         return True
 
 
