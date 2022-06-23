@@ -12,7 +12,7 @@ import (
 
 	"io/ioutil"
 
-	"github.com/xlab-uiuc/acto/ssa/analysis"
+	analysis "github.com/xlab-uiuc/acto/ssa/passes"
 	"github.com/xlab-uiuc/acto/ssa/util"
 	"golang.org/x/tools/go/packages"
 	"golang.org/x/tools/go/ssa/ssautil"

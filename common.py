@@ -14,6 +14,37 @@ from constant import CONST
 from test_case import TestCase
 
 
+class DeployConfig:
+
+    def __init__(self, method: str, file: str, init: str) -> None:
+        self.method = method
+        self.file = file
+        self.init = init
+
+
+class SeedType:
+
+    def __init__(self, type: str, package: str) -> None:
+        self.type = type
+        self.package = package
+
+
+class OperatorConfig:
+
+    def __init__(self, github_link: str, commit: str, deploy: DeployConfig, crd_name: str,
+                 custom_fields: str, context: str, seed_custom_resource: str, source_path: str,
+                 seedType: SeedType) -> None:
+        self.github_link = github_link
+        self.commit = commit
+        self.deploy = deploy
+        self.crd_name = crd_name
+        self.custom_fields = custom_fields
+        self.context = context
+        self.seed_custom_resource = seed_custom_resource
+        self.source_path = source_path
+        self.seedType = seedType
+
+
 class Diff:
 
     def __init__(self, prev, curr, path) -> None:
@@ -178,8 +209,7 @@ def random_string(n: int):
     return (''.join(random.choice(letters) for i in range(10)))
 
 
-def save_result(trial_dir: str, trial_err: ErrorResult, num_tests: int,
-                trial_elapsed):
+def save_result(trial_dir: str, trial_err: ErrorResult, num_tests: int, trial_elapsed):
     result_dict = {}
     result_dict['trial_num'] = trial_dir
     result_dict['duration'] = trial_elapsed
@@ -233,6 +263,7 @@ EXCLUDE_ERROR_REGEX = [
     r"failed to run smartUpdate",
     r"dial: ping mongo",
     r"pod is not running",
+    r"Secret (.)* not found",
 ]
 
 INVALID_INPUT_LOG_REGEX = [
