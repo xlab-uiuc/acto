@@ -25,7 +25,7 @@
 | kubernetes/kubernetes            | [https://github.com/kubernetes/kubernetes/issues/109839](https://github.com/kubernetes/kubernetes/issues/109839)                 | confirmed |
 |                                  | [https://github.com/kubernetes/kubernetes/issues/110653](https://github.com/kubernetes/kubernetes/issues/110653)                 | confirmed |
 |                                  | [https://github.com/kubernetes/kubernetes/issues/110654](https://github.com/kubernetes/kubernetes/issues/110654)                 | confirmed |
-| cockroach-operator               | [https://github.com/cockroachdb/cockroach-operator/issues/918](https://github.com/cockroachdb/cockroach-operator/issues/918)     |
+| cockroachdb/cockroach-operator               | [https://github.com/cockroachdb/cockroach-operator/issues/918](https://github.com/cockroachdb/cockroach-operator/issues/918)     |
 |                                  | [https://github.com/cockroachdb/cockroach-operator/issues/919](https://github.com/cockroachdb/cockroach-operator/issues/919)     |
 |                                  | [https://github.com/cockroachdb/cockroach-operator/issues/920](https://github.com/cockroachdb/cockroach-operator/issues/920)     |
 
@@ -88,7 +88,7 @@ https://github.com/kubernetes/kubernetes/issues/110653
 
 https://github.com/kubernetes/kubernetes/issues/110654
 
-## cockroach-operator
+## cockroachdb/cockroach-operator
 
 https://github.com/cockroachdb/cockroach-operator/issues/918
 
