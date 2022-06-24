@@ -339,7 +339,7 @@ def helm(args: list, cluster_name: str) -> subprocess.CompletedProcess:
         logging.error('Missing cluster name for helm')
     cmd.extend(['--kube-context', kind_kubecontext(cluster_name)])
 
-    return subprocess.run(cmd)
+    return subprocess.run(cmd, capture_output=True, text=True)
 
 
 def kubernetes_client(cluster_name: str) -> kubernetes.client.ApiClient:

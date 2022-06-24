@@ -60,7 +60,7 @@ class Deploy:
 
 class Helm(Deploy):
 
-    def deploy(self, context: dict, cluster_name: str):
+    def deploy(self, context: dict, cluster_name: str) -> bool:
         context['namespace'] = CONST.ACTO_NAMESPACE
         if self.init_yaml:
             kubectl(['apply', '--server-side', '-f', self.init_yaml, '-n', context['namespace']],
@@ -70,23 +70,29 @@ class Helm(Deploy):
             'install', 'acto-test-operator', '--create-namespace', self.path, '--wait', '--timeout',
             '3m', '-n', context['namespace']
         ], cluster_name)
-        self.check_status(cluster_name)
+
+        counter = 0 # use a counter to wait for 2 min (thus 24 below, since each wait is 5s)
+        while not self.check_status(cluster_name):
+            if counter > 24:
+                logging.fatal('Helm chart deployment failed to be ready within timeout')
+                return False
+            time.sleep(5)
 
         # TODO: Return True if deploy successfully
         return True
 
-    def check_status(self, cluster_name: str):
+    def check_status(self, cluster_name: str) -> bool:
         helm_ls_result = helm(['list', '-o', 'json', '--all-namespaces', '--all'], cluster_name)
         try:
             helm_release = json.loads(helm_ls_result.stdout)[0]
-        except Exception:
-            self.console.log("Failed to get helm chart's status", style="bold red")
+        except Exception as e:
+            logging.error('Failed to get helm chart\'s status: %s' % e)
             quit()
 
         if helm_release["status"] != "deployed":
-            self.console.log("Helm chart deployment failed to be ready within timeout",
-                             style="bold red")
-            raise Exception
+            return False
+        else:
+            return True
 
 
 class Yaml(Deploy):
