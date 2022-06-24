@@ -269,6 +269,7 @@ EXCLUDE_ERROR_REGEX = [
     r"failed to sync(.)*status",
     r"sync failed",
     r"Secret (.)* not found",
+    r"failed to get proxySQL db",
 ]
 
 INVALID_INPUT_LOG_REGEX = [

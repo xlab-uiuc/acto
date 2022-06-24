@@ -62,11 +62,19 @@ def construct_kind_cluster(cluster_name: str, k8s_version: str):
         logging.error('Failed to create kind cluster, retrying')
         kind_delete_cluster(cluster_name)
         time.sleep(5)
-        kind_create_cluster(cluster_name, kind_config_path, k8s_version)
-
+        p = kind_create_cluster(cluster_name, kind_config_path, k8s_version)
+        if p.returncode != 0:
+            logging.CRITICAL("Cannot create kind cluster, aborting")
+            raise RuntimeError
+    
     logging.info('Created kind cluster')
-
-    kubernetes.config.load_kube_config(context=kind_kubecontext(cluster_name))
+    try:
+        kubernetes.config.load_kube_config(context=kind_kubecontext(cluster_name))
+    except Exception as e:
+        with open(f"{os.getenv('HOME')}/.kube/config") as f:
+            logging.debug(f.read())
+        raise e
+        
 
 
 def construct_candidate_helper(node, node_path, result: dict):

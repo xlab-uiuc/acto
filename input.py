@@ -147,7 +147,10 @@ class InputModel:
     def reset_input(self):
         '''Reset the current input back to seed'''
         self.thread_vars.current_input = attach_schema_to_value(self.seed_input.raw_value(), self.root_schema)
+        self.thread_vars.current_input_setup = False
+        
         self.thread_vars.previous_input = attach_schema_to_value(self.seed_input.raw_value(), self.root_schema)
+        
 
     def get_seed_input(self) -> dict:
         '''Get the raw value of the seed input'''
