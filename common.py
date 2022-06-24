@@ -273,7 +273,7 @@ EXCLUDE_ERROR_REGEX = [
 ]
 
 INVALID_INPUT_LOG_REGEX = [
-    r"is invalid",
+    r"invalid",
 ]
 
 GENERIC_FIELDS = [

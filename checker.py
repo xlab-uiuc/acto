@@ -171,7 +171,7 @@ class Checker(object):
             elif 'error' in line.lower():
                 skip = False
                 for regex in EXCLUDE_ERROR_REGEX:
-                    if re.search(regex, line):
+                    if re.search(regex, line, re.IGNORECASE):
                         # logging.debug('Skipped error msg: %s' % line)
                         skip = True
                 if skip:
