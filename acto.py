@@ -229,14 +229,13 @@ class TrialRunner:
             elif isinstance(result, UnchangedInputResult):
                 if setup:
                     self.input_model.discard_test_case()
-                continue
             elif isinstance(result, ErrorResult):
                 # We found an error!
                 if setup:
                     self.input_model.discard_test_case()
                 return result, generation
             elif isinstance(result, PassResult):
-                continue
+                pass
             else:
                 logging.error('Unknown return value, abort')
                 quit()
