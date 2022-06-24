@@ -288,11 +288,12 @@ def kind_create_cluster(name: str, config: str, version: str):
     return subprocess.run(cmd)
 
 
-def kind_load_images(images: list, name: str):
+def kind_load_images(images_archive: str, name: str):
     '''Preload some frequently used images into Kind cluster to avoid ImagePullBackOff
     '''
-    cmd = ['kind', 'load', 'docker-image']
-    if len(images) == 0:
+    logging.info('Loading preload images')
+    cmd = ['kind', 'load', 'image-archive']
+    if images_archive == None:
         logging.warning('No image to preload, we at least should have operator image')
 
     if name != None:
@@ -300,12 +301,9 @@ def kind_load_images(images: list, name: str):
     else:
         logging.error('Missing cluster name for kind load')
 
-    for image in images:
-        p = subprocess.run(cmd + [image])
-        if p.returncode != 0:
-            logging.info('Image not present local, pull and retry')
-            subprocess.run(['docker', 'pull', image])
-            p = subprocess.run(cmd + [image])
+    p = subprocess.run(cmd + [images_archive])
+    if p.returncode != 0:
+        logging.error('Failed to preload images archive')
 
 
 def kind_delete_cluster(name: str):

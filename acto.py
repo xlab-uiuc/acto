@@ -121,6 +121,7 @@ class TrialRunner:
                  worker_id: int, dryrun: bool) -> None:
         self.context = context
         self.workdir = workdir
+        self.images_archive = os.path.join(workdir, 'images.tar')
         self.worker_id = worker_id
         self.cluster_name = f"acto-cluster-{worker_id}"
         self.input_model = input_model
@@ -138,7 +139,7 @@ class TrialRunner:
             trial_start_time = time.time()
             construct_kind_cluster(self.cluster_name, CONST.K8S_VERSION)
             apiclient = kubernetes_client(self.cluster_name)
-            kind_load_images(self.context['preload_images'], self.cluster_name)
+            kind_load_images(self.images_archive, self.cluster_name)
             deployed = self.deploy.deploy_with_retry(self.context, self.cluster_name)
             if not deployed:
                 logging.info('Not deployed. Try again!')
@@ -216,7 +217,7 @@ class TrialRunner:
                 time.sleep(20)
                 # retry
                 retry = True
-                generation -= 1 # should not increment generation since we are feeding the same test case
+                generation -= 1  # should not increment generation since we are feeding the same test case
                 continue
             if isinstance(result, InvalidInputResult):
                 if setup:
@@ -270,6 +271,7 @@ class Acto:
         self.deploy = deploy
         self.crd_name = crd_name
         self.workdir_path = workdir_path
+        self.images_archive = os.path.join(workdir_path, 'images.tar')
         self.num_workers = num_workers
         self.dryrun = dryrun
         self.snapshots = []
@@ -301,6 +303,15 @@ class Acto:
         # Add additional preload images from arguments
         if preload_images_ != None:
             self.context['preload_images'].update(preload_images_)
+
+        # Build an archive to be preloaded
+        if len(self.context['preload_images']) > 0:
+            logging.info('Creating preload images archive')
+            # first make sure images are present locally
+            for image in self.context['preload_images']:
+                subprocess.run(['docker', 'pull', image])
+            subprocess.run(['docker', 'image', 'save', '-o',
+                            self.images_archive] + list(self.context['preload_images']))
 
         if analysis_result != None:
             with open(analysis_result, 'r') as analysis_file:
@@ -467,5 +478,6 @@ if __name__ == '__main__':
         context_cache = args.context
 
     acto = Acto(args.seed, deploy, workdir_path, args.crd_name, args.preload_images,
-                args.custom_fields, args.helper_crd, context_cache, args.analysis_result, args.num_workers, args.dryrun)
+                args.custom_fields, args.helper_crd, context_cache, args.analysis_result,
+                args.num_workers, args.dryrun)
     acto.run()
