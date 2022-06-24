@@ -2,6 +2,7 @@ import argparse
 import os
 import sys
 import threading
+from types import SimpleNamespace
 import kubernetes
 import yaml
 import time
@@ -12,6 +13,7 @@ import signal
 import logging
 import importlib
 import traceback
+import tempfile
 
 from common import *
 from exception import UnknownDeployMethodError
@@ -22,6 +24,7 @@ from constant import CONST
 from runner import Runner
 from checker import Checker
 from snapshot import EmptySnapshot
+from ssa.analysis import analyze
 
 CONST = CONST()
 random.seed(0)
@@ -249,32 +252,71 @@ class TrialRunner:
 class Acto:
 
     def __init__(self,
-                 seed_file,
-                 deploy: Deploy,
-                 workdir_path,
-                 crd_name,
-                 preload_images_,
-                 custom_fields_src,
-                 helper_crd: str,
+                 workdir_path: str,
+                 operator_config: OperatorConfig,
+                 preload_images_: list,
                  context_file: str,
-                 analysis_result: str,
+                 helper_crd: str,
                  num_workers: int,
                  dryrun: bool,
                  mount: list = None) -> None:
         try:
-            with open(seed_file, 'r') as cr_file:
+            with open(operator_config.seed_custom_resource, 'r') as cr_file:
                 self.seed = yaml.load(cr_file, Loader=yaml.FullLoader)
         except:
             logging.error('Failed to read seed yaml, aborting')
             quit()
+
+        if operator_config.deploy.method == 'HELM':
+            deploy = Deploy(DeployMethod.HELM, operator_config.deploy.file,
+                            operator_config.deploy.init).new()
+        elif operator_config.deploy.method == 'YAML':
+            deploy = Deploy(DeployMethod.YAML, operator_config.deploy.file,
+                            operator_config.deploy.init).new()
+        elif operator_config.deploy.method == 'KUSTOMIZE':
+            deploy = Deploy(DeployMethod.KUSTOMIZE, operator_config.deploy.file,
+                            operator_config.deploy.init).new()
+        else:
+            raise UnknownDeployMethodError()
+
         self.deploy = deploy
-        self.crd_name = crd_name
+        self.operator_config = operator_config
+        self.crd_name = operator_config.crd_name
         self.workdir_path = workdir_path
         self.images_archive = os.path.join(workdir_path, 'images.tar')
         self.num_workers = num_workers
         self.dryrun = dryrun
         self.snapshots = []
 
+        self.__learn(context_file=context_file, helper_crd=helper_crd)
+
+        # Add additional preload images from arguments
+        if preload_images_ != None:
+            self.context['preload_images'].update(preload_images_)
+
+        # Apply custom fields
+        self.input_model = InputModel(self.context['crd']['body'], num_workers, mount)
+        self.input_model.initialize(self.seed)
+        if operator_config.custom_fields != None:
+            module = importlib.import_module(operator_config.custom_fields)
+            for custom_field in module.custom_fields:
+                self.input_model.apply_custom_field(custom_field)
+
+        # Build an archive to be preloaded
+        if len(self.context['preload_images']) > 0:
+            logging.info('Creating preload images archive')
+            # first make sure images are present locally
+            for image in self.context['preload_images']:
+                subprocess.run(['docker', 'pull', image])
+            subprocess.run(['docker', 'image', 'save', '-o',
+                            self.images_archive] + list(self.context['preload_images']))
+
+        # Generate test cases
+        self.test_plan = self.input_model.generate_test_plan()
+        with open(os.path.join(self.workdir_path, 'test_plan.json'), 'w') as plan_file:
+            json.dump(self.test_plan, plan_file, cls=ActoEncoder, indent=6)
+
+    def __learn(self, context_file, helper_crd):
         if os.path.exists(context_file):
             with open(context_file, 'r') as context_fin:
                 self.context = json.load(context_fin)
@@ -291,43 +333,20 @@ class Acto:
                     break
             apiclient = kubernetes_client('learn')
             runner = Runner(self.context, 'learn', 'learn')
-            runner.run_without_collect(seed_file)
+            runner.run_without_collect(self.operator_config.seed_custom_resource)
 
             update_preload_images(self.context)
             process_crd(self.context, apiclient, 'learn', self.crd_name, helper_crd)
             kind_delete_cluster('learn')
+
+            with tempfile.TemporaryDirectory() as project_src:
+                subprocess.run(['git', 'clone', self.operator_config.github_link, project_src])
+                subprocess.run(['git', '-C', project_src, 'checkout', self.operator_config.commit])
+                self.context['analysis_result'] = analyze(project_src,
+                                                          self.operator_config.seedType.type,
+                                                          self.operator_config.seedType.package)
             with open(context_file, 'w') as context_fout:
                 json.dump(self.context, context_fout, cls=ActoEncoder)
-
-        # Add additional preload images from arguments
-        if preload_images_ != None:
-            self.context['preload_images'].update(preload_images_)
-
-        # Build an archive to be preloaded
-        if len(self.context['preload_images']) > 0:
-            logging.info('Creating preload images archive')
-            # first make sure images are present locally
-            for image in self.context['preload_images']:
-                subprocess.run(['docker', 'pull', image])
-            subprocess.run(['docker', 'image', 'save', '-o',
-                            self.images_archive] + list(self.context['preload_images']))
-
-        if analysis_result != None:
-            with open(analysis_result, 'r') as analysis_file:
-                self.context['analysis_result'] = json.load(analysis_file)
-
-        # Apply custom fields
-        self.input_model = InputModel(self.context['crd']['body'], num_workers, mount)
-        self.input_model.initialize(self.seed)
-        if custom_fields_src != None:
-            module = importlib.import_module(custom_fields_src)
-            for custom_field in module.custom_fields:
-                self.input_model.apply_custom_field(custom_field)
-
-        # Generate test cases
-        self.test_plan = self.input_model.generate_test_plan()
-        with open(os.path.join(self.workdir_path, 'test_plan.json'), 'w') as plan_file:
-            json.dump(self.test_plan, plan_file, cls=ActoEncoder, indent=6)
 
     def run(self):
         threads = []
@@ -382,7 +401,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(
         description='Automatic, Continuous Testing for k8s/openshift Operators')
-    parser.add_argument('--seed', '-s', dest='seed', required=True, help="seed CR file")
+    parser.add_argument('--config', '-c', dest='config', help='Operator port config path')
     deploy_method = parser.add_mutually_exclusive_group(required=True)
     deploy_method.add_argument('--operator',
                                '-o',
@@ -398,10 +417,6 @@ if __name__ == '__main__':
                                dest='kustomize',
                                required=False,
                                help='Path of folder with kustomize')
-    parser.add_argument('--init',
-                        dest='init',
-                        required=False,
-                        help='Path of init yaml file (deploy before operator)')
     parser.add_argument('--duration',
                         '-d',
                         dest='duration',
@@ -411,19 +426,10 @@ if __name__ == '__main__':
                         dest='preload_images',
                         nargs='*',
                         help='Docker images to preload into Kind cluster')
-    parser.add_argument('--crd-name',
-                        dest='crd_name',
-                        help='Name of CRD to use, required if there are multiple CRDs')
     # Temporary solution before integrating controller-gen
     parser.add_argument('--helper-crd',
                         dest='helper_crd',
                         help='generated CRD file that helps with the input generation')
-    parser.add_argument('--custom-fields',
-                        dest='custom_fields',
-                        help='Python source file containing a list of custom fields')
-    parser.add_argument('--analysis-result',
-                        dest='analysis_result',
-                        help='JSON file resulted from the code analysis')
     parser.add_argument('--context', dest='context', help='Cached context data')
     parser.add_argument('--num-workers',
                         dest='num_workers',
@@ -438,6 +444,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     os.makedirs(workdir_path, exist_ok=True)
+    # Setting up log infra
     logging.basicConfig(
         filename=os.path.join(workdir_path, 'test.log'),
         level=logging.DEBUG,
@@ -452,7 +459,10 @@ if __name__ == '__main__':
     sys.excepthook = handle_excepthook
     threading.excepthook = thread_excepthook
 
+    with open(args.config, 'r') as config_file:
+        config = json.load(config_file, object_hook=lambda d: SimpleNamespace(**d))
     logging.info('Acto started with [%s]' % sys.argv)
+    logging.info('Operator config: %s', config)
 
     # Preload frequently used images to amid ImagePullBackOff
     if args.preload_images:
@@ -462,21 +472,12 @@ if __name__ == '__main__':
     if args.duration != None:
         signal.signal(signal.SIGALRM, timeout_handler)
         signal.alarm(int(args.duration) * 60 * 60)
-    if args.operator_chart:
-        deploy = Deploy(DeployMethod.HELM, args.operator_chart, args.init).new()
-    elif args.operator:
-        deploy = Deploy(DeployMethod.YAML, args.operator, args.init).new()
-    elif args.kustomize:
-        deploy = Deploy(DeployMethod.KUSTOMIZE, args.kustomize, args.init).new()
-    else:
-        raise UnknownDeployMethodError()
 
     if args.context == None:
-        context_cache = os.path.join(os.path.dirname(args.seed), 'context.json')
+        context_cache = os.path.join(os.path.dirname(config.seed_custom_resource), 'context.json')
     else:
         context_cache = args.context
 
-    acto = Acto(args.seed, deploy, workdir_path, args.crd_name, args.preload_images,
-                args.custom_fields, args.helper_crd, context_cache, args.analysis_result,
+    acto = Acto(workdir_path, config, args.preload_images, context_cache, args.helper_crd,
                 args.num_workers, args.dryrun)
     acto.run()

@@ -5,8 +5,6 @@ from deepdiff import DeepDiff
 import re
 import copy
 
-from numpy import require
-
 from common import *
 from compare import CompareMethods
 from snapshot import EmptySnapshot, Snapshot
@@ -58,7 +56,8 @@ class Checker(object):
         if stderr.find('connection refused') != -1:
             return ConnectionRefusedResult()
 
-        elif stdout.find('error') != -1 or stderr.find('error') != -1 or stderr.find('invalid') != -1:
+        elif stdout.find('error') != -1 or stderr.find('error') != -1 or stderr.find(
+                'invalid') != -1:
             logging.info('Invalid input, reject mutation')
             logging.info('STDOUT: ' + stdout)
             logging.info('STDERR: ' + stderr)
@@ -267,8 +266,7 @@ if __name__ == "__main__":
     import traceback
     import argparse
 
-    parser = argparse.ArgumentParser(
-        description='Standalone checker for Acto')
+    parser = argparse.ArgumentParser(description='Standalone checker for Acto')
 
     parser.add_argument('--context', dest='context', required=True)
     parser.add_argument('--analysis-file', dest='analysis_file', required=False)
@@ -302,7 +300,7 @@ if __name__ == "__main__":
 
     sys.excepthook = handle_excepthook
 
-    trial_dirs = glob.glob(args.testrun_dir+'/*')
+    trial_dirs = glob.glob(args.testrun_dir + '/*')
     with open(args.context, 'r') as context_fin:
         context = json.load(context_fin)
         context['preload_images'] = set(context['preload_images'])
@@ -311,9 +309,7 @@ if __name__ == "__main__":
         with open(args.analysis_file, 'r') as analysis_file:
             context['analysis_result'] = json.load(analysis_file)
     else:
-        context['analysis_result'] = {
-            'paths': []
-        }
+        context['analysis_result'] = {'paths': []}
 
     for path in context['analysis_result']['paths']:
         path.pop(0)
@@ -350,7 +346,9 @@ if __name__ == "__main__":
                 operator_log = operator_log.read().splitlines()
                 snapshot = Snapshot(input, cli_result, system_state, operator_log)
 
-                result = checker.check(snapshot=snapshot, prev_snapshot=snapshots[-1], generation=generation)
+                result = checker.check(snapshot=snapshot,
+                                       prev_snapshot=snapshots[-1],
+                                       generation=generation)
                 snapshots.append(snapshot)
 
                 if isinstance(result, ConnectionRefusedResult):

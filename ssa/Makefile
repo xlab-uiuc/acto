@@ -1,7 +1,7 @@
 .PHONY: analysis
 
 analysis:
-	go build -buildmode=c-shared -o analysis.so ssa.go
+	go build -buildmode=c-shared -o libanalysis.so ssa.go
 
 clean:
 	rm ./analysis.so
