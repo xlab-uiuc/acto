@@ -319,7 +319,7 @@ def kind_delete_cluster(name: str):
     subprocess.run(cmd)
 
 
-def kubectl(args: list, cluster_name: str, capture_output=False, text=False):
+def kubectl(args: list, cluster_name: str, capture_output=False, text=False) -> subprocess.CompletedProcess:
     cmd = ['kubectl']
     cmd.extend(args)
 
@@ -331,7 +331,7 @@ def kubectl(args: list, cluster_name: str, capture_output=False, text=False):
     return p
 
 
-def helm(args: list, cluster_name: str):
+def helm(args: list, cluster_name: str) -> subprocess.CompletedProcess:
     cmd = ['helm']
     cmd.extend(args)
 
@@ -339,7 +339,7 @@ def helm(args: list, cluster_name: str):
         logging.error('Missing cluster name for helm')
     cmd.extend(['--kube-context', kind_kubecontext(cluster_name)])
 
-    subprocess.run(cmd)
+    return subprocess.run(cmd)
 
 
 def kubernetes_client(cluster_name: str) -> kubernetes.client.ApiClient:
