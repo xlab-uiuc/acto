@@ -14,11 +14,14 @@ def analyze(project_path: str, seed_type: str, seed_pkg: str) -> dict:
     tainted_fields = taint_analysis_result['taintedPaths']
 
     for tainted_field in tainted_fields:
-        all_fields.remove(tainted_field)
-        for field in all_fields:
-            if is_subfield(tainted_field, field):
-                all_fields.remove(field)
-    return json.loads(analysis_result_bytes)
+        try:
+            all_fields.remove(tainted_field)
+            for field in all_fields:
+                if is_subfield(tainted_field, field):
+                    all_fields.remove(field)
+        except ValueError:
+            continue
+    return all_fields
 
 
 def is_subfield(path: list, subpath: list) -> bool:
