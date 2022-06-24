@@ -139,7 +139,7 @@ python3 acto.py --seed data/redis-ot-container-kit-operator/cr_cluster.yaml \
 **percona-xtradb-cluster-operator**
 ```
 python3 acto.py --seed data/percona-xtradb-cluster-operator/cr.yaml \
-                --operator data/percona-xtradb-cluster-operator/bundle.yaml \
+                --operator data/percona-xtradb-cluster-operator/cw-bundle.yaml \
                 --crd-name perconaxtradbclusters.pxc.percona.com \
                 --custom-fields data.percona-xtradb-cluster-operator.prune
 ```
