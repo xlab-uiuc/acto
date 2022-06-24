@@ -1,0 +1,1 @@
+kind get clusters | while read line; do kind delete cluster --name "$line"; done
