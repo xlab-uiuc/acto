@@ -22,27 +22,26 @@ class DeployConfig:
         self.init = init
 
 
-class SeedType:
+class AnalysisConfig:
 
-    def __init__(self, type: str, package: str) -> None:
+    def __init__(self, github_link: str, commit: str, type: str, package: str) -> None:
+        self.github_link = github_link
+        self.commit = commit
         self.type = type
         self.package = package
 
 
 class OperatorConfig:
 
-    def __init__(self, github_link: str, commit: str, deploy: DeployConfig, crd_name: str,
-                 custom_fields: str, context: str, seed_custom_resource: str, source_path: str,
-                 seedType: SeedType) -> None:
-        self.github_link = github_link
-        self.commit = commit
+    def __init__(self, deploy: DeployConfig, crd_name: str, custom_fields: str, context: str,
+                 seed_custom_resource: str, source_path: str, analysis: AnalysisConfig) -> None:
         self.deploy = deploy
         self.crd_name = crd_name
         self.custom_fields = custom_fields
         self.context = context
         self.seed_custom_resource = seed_custom_resource
         self.source_path = source_path
-        self.seedType = seedType
+        self.analysis = analysis
 
 
 class Diff:
@@ -348,7 +347,10 @@ def kind_delete_cluster(name: str):
     subprocess.run(cmd)
 
 
-def kubectl(args: list, cluster_name: str, capture_output=False, text=False) -> subprocess.CompletedProcess:
+def kubectl(args: list,
+            cluster_name: str,
+            capture_output=False,
+            text=False) -> subprocess.CompletedProcess:
     cmd = ['kubectl']
     cmd.extend(args)
 

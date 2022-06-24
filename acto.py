@@ -308,8 +308,8 @@ class Acto:
             # first make sure images are present locally
             for image in self.context['preload_images']:
                 subprocess.run(['docker', 'pull', image])
-            subprocess.run(['docker', 'image', 'save', '-o',
-                            self.images_archive] + list(self.context['preload_images']))
+            subprocess.run(['docker', 'image', 'save', '-o', self.images_archive] +
+                           list(self.context['preload_images']))
 
         # Generate test cases
         self.test_plan = self.input_model.generate_test_plan()
@@ -339,12 +339,16 @@ class Acto:
             process_crd(self.context, apiclient, 'learn', self.crd_name, helper_crd)
             kind_delete_cluster('learn')
 
-            with tempfile.TemporaryDirectory() as project_src:
-                subprocess.run(['git', 'clone', self.operator_config.github_link, project_src])
-                subprocess.run(['git', '-C', project_src, 'checkout', self.operator_config.commit])
-                self.context['analysis_result'] = analyze(project_src,
-                                                          self.operator_config.seedType.type,
-                                                          self.operator_config.seedType.package)
+            if self.operator_config.analysis != None:
+                with tempfile.TemporaryDirectory() as project_src:
+                    subprocess.run(
+                        ['git', 'clone', self.operator_config.analysis.github_link, project_src])
+                    subprocess.run([
+                        'git', '-C', project_src, 'checkout', self.operator_config.analysis.commit
+                    ])
+                    self.context['analysis_result'] = analyze(project_src,
+                                                              self.operator_config.analysis.type,
+                                                              self.operator_config.analysis.package)
             with open(context_file, 'w') as context_fout:
                 json.dump(self.context, context_fout, cls=ActoEncoder)
 
@@ -402,21 +406,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Automatic, Continuous Testing for k8s/openshift Operators')
     parser.add_argument('--config', '-c', dest='config', help='Operator port config path')
-    deploy_method = parser.add_mutually_exclusive_group(required=True)
-    deploy_method.add_argument('--operator',
-                               '-o',
-                               dest='operator',
-                               required=False,
-                               help="yaml file for deploying the\
-                                operator with kubectl")
-    deploy_method.add_argument('--helm',
-                               dest='operator_chart',
-                               required=False,
-                               help='Path of operator helm chart')
-    deploy_method.add_argument('--kustomize',
-                               dest='kustomize',
-                               required=False,
-                               help='Path of folder with kustomize')
     parser.add_argument('--duration',
                         '-d',
                         dest='duration',

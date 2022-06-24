@@ -15,29 +15,38 @@
 To run the test:  
 ```
 python3 acto.py \
-    --seed SEED, -s SEED  seed CR file
-    --operator OPERATOR, -o OPERATOR
-                            yaml file for deploying the operator with kubectl
-    --helm OPERATOR_CHART
-                            Path of operator helm chart
-    --kustomize KUSTOMIZE
-                            Path of folder with kustomize
-    --init INIT           Path of init yaml file (deploy before operator)
-    --duration DURATION, -d DURATION
-                            Number of hours to run
-    --preload-images [PRELOAD_IMAGES ...]
-                            Docker images to preload into Kind cluster
-    --crd-name CRD_NAME   Name of CRD to use, required if there are multiple CRDs
-    --helper-crd HELPER_CRD
-                            generated CRD file that helps with the input generation
-    --custom-fields CUSTOM_FIELDS
-                            Python source file containing a list of custom fields
-    --analysis-result ANALYSIS_RESULT
-                            JSON file resulted from the code analysis
-    --context CONTEXT     Cached context data
-    --num-workers NUM_WORKERS
-                            Number of concurrent workers to run Acto with
-    --dryrun              Only generate test cases without executing them
+  --config CONFIG, -c CONFIG
+                        Operator port config path
+  --duration DURATION, -d DURATION
+                        Number of hours to run
+  --preload-images [PRELOAD_IMAGES [PRELOAD_IMAGES ...]]
+                        Docker images to preload into Kind cluster
+  --helper-crd HELPER_CRD
+                        generated CRD file that helps with the input generation
+  --context CONTEXT     Cached context data
+  --num-workers NUM_WORKERS
+                        Number of concurrent workers to run Acto with
+  --dryrun              Only generate test cases without executing them
+```
+
+## Operator config example
+```json
+{
+    "deploy": {
+        "method": "YAML",  // Three deploy methods [YAML HELM KUSTOMIZE]
+        "file": "data/rabbitmq-operator/operator.yaml",  // the deployment file
+        "init": null  // any yaml to deploy for deploying the operator itself
+    },
+    "crd_name": null,  // name of the CRD to test, optional if there is only one CRD
+    "custom_fields": "data.rabbitmq-operator.prune",  // to guide the pruning
+    "seed_custom_resource": "data/rabbitmq-operator/cr.yaml",  // the seed CR file
+    "analysis": {
+        "github_link": "https://github.com/rabbitmq/cluster-operator.git",  // github link for the operator repo
+        "commit": "f2ab5cecca7fa4bbba62ba084bfa4ae1b25d15ff",  // specific commit hash of the repo
+        "type": "RabbitmqCluster",  // the root type of the CR
+        "package": "github.com/rabbitmq/cluster-operator/api/v1beta1"  // package of the root type
+    }
+}
 ```
 
 ## Known Issues
