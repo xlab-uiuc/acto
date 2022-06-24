@@ -268,7 +268,6 @@ EXCLUDE_ERROR_REGEX = [
     r"pod is not running",
     r"failed to sync(.)*status",
     r"sync failed",
-    r"invalid",
     r"Secret (.)* not found",
 ]
 
