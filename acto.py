@@ -64,16 +64,18 @@ def construct_kind_cluster(cluster_name: str, k8s_version: str):
         time.sleep(5)
         p = kind_create_cluster(cluster_name, kind_config_path, k8s_version)
         if p.returncode != 0:
-            logging.CRITICAL("Cannot create kind cluster, aborting")
+            logging.critical("Cannot create kind cluster, aborting")
             raise RuntimeError
 
     logging.info('Created kind cluster')
     try:
         kubernetes.config.load_kube_config(context=kind_kubecontext(cluster_name))
-    except Exception as e:
+    except:
+        logging.debug("Incorrect kube config file:")
         with open(f"{os.getenv('HOME')}/.kube/config") as f:
             logging.debug(f.read())
-        raise e
+        raise ValueError
+        
 
 
 def construct_candidate_helper(node, node_path, result: dict):
