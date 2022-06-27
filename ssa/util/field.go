@@ -1,6 +1,8 @@
 package util
 
 import (
+	"bytes"
+	"fmt"
 	"go/types"
 )
 
@@ -30,6 +32,10 @@ func (f *Field) Clone() *Field {
 	return &Field{
 		Path: newPath,
 	}
+}
+
+func (f *Field) String() string {
+	return fmt.Sprint(f.Path)
 }
 
 func NewSubField(parentStruct *types.Struct, parentField Field, fieldIndex int) *Field {
@@ -119,6 +125,16 @@ func (fs FieldSet) IsTypeMeta() bool {
 		}
 	}
 	return false
+}
+
+func (fs FieldSet) String() string {
+	var buf bytes.Buffer
+	buf.WriteString("[")
+	for _, field := range fs.fields {
+		buf.WriteString(field.String())
+	}
+	buf.WriteString("]")
+	return buf.String()
 }
 
 func MergeFieldSets(sets ...FieldSet) *FieldSet {

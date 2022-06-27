@@ -49,7 +49,7 @@ import (
 // Store
 // TypeAssert
 // UnOp
-func TaintAnalysisPass(context Context, prog *ssa.Program, frontierValues map[ssa.Value]bool, valueFieldMap map[ssa.Value]*FieldSet) map[ssa.Value]bool {
+func TaintAnalysisPass(context *Context, prog *ssa.Program, frontierValues map[ssa.Value]bool, valueFieldMap map[ssa.Value]*FieldSet) map[ssa.Value]bool {
 	log.Println("Constructing call graph using pointer analysis")
 	cfg := pointer.Config{
 		Mains:          context.MainPackages,
@@ -94,7 +94,7 @@ type ReferredInstruction struct {
 }
 
 // returns true if value taints k8s API calls
-func TaintK8sFromValue(context Context, value ssa.Value, valueFieldMap map[ssa.Value]*FieldSet, callGraph *callgraph.Graph, backCallStack *CallStack, fromArg bool) bool {
+func TaintK8sFromValue(context *Context, value ssa.Value, valueFieldMap map[ssa.Value]*FieldSet, callGraph *callgraph.Graph, backCallStack *CallStack, fromArg bool) bool {
 	log.Printf("Checking if value [%s] in function [%s] taints\n", value.String(), value.Parent().String())
 	// Maintain backCallStack
 	functionCall := FunctionCall{
@@ -548,7 +548,7 @@ func TaintK8sFromValue(context Context, value ssa.Value, valueFieldMap map[ssa.V
 // @callInst is the call instruction
 //
 // TODO: XXX Do backward propogation for tainted parameters
-func ContextAwareFunctionAnalysis(context Context, value ssa.Value, callInst ssa.CallInstruction, callGraph *callgraph.Graph,
+func ContextAwareFunctionAnalysis(context *Context, value ssa.Value, callInst ssa.CallInstruction, callGraph *callgraph.Graph,
 	taintedSet map[ssa.Value]bool, valueFieldMap map[ssa.Value]*FieldSet,
 	callStack *CallStack) (end bool, taintedArgs []ssa.Value, taintedRets []ssa.Value) {
 
@@ -887,7 +887,7 @@ func ContextAwareFunctionAnalysis(context Context, value ssa.Value, callInst ssa
 // TaintFunction tries to run taint analysis on the functionBody
 // The initial taints are specified in the
 // returns the indices of the tainted return values
-func TaintFunction(context Context, functionBody *ssa.Function, entryPoints []ssa.Value, callGraph *callgraph.Graph,
+func TaintFunction(context *Context, functionBody *ssa.Function, entryPoints []ssa.Value, callGraph *callgraph.Graph,
 	valueFieldMap map[ssa.Value]*FieldSet,
 	callStack *CallStack) (end bool, taintedParams []int, taintedRets []int) {
 
@@ -1253,7 +1253,7 @@ func getExtractTaint(taintSource ssa.Value, retIndices []int) (tainted []ssa.Val
 
 // This function handles the tainted argument from function callsite
 // if the tainted argument is map, pointer, slice, interface, we need to propogate backwards
-func handlePointerArgBackwardPropogation(context Context, taintedArg ssa.Value, valueFieldMap map[ssa.Value]*FieldSet,
+func handlePointerArgBackwardPropogation(context *Context, taintedArg ssa.Value, valueFieldMap map[ssa.Value]*FieldSet,
 	taintedSet map[ssa.Value]bool, callGraph *callgraph.Graph, backCallStack *CallStack) (end bool, changed bool) {
 
 	taintedParamIndex, chg := BackwardPropogation(taintedArg, taintedSet)

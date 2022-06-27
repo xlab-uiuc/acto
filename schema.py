@@ -228,6 +228,8 @@ class IntegerSchema(NumberSchema):
 
     def __init__(self, path: list, schema: dict) -> None:
         super().__init__(path, schema)
+        if self.default == None:
+            self.default = 0
 
     def __str__(self) -> str:
         return 'Integer'
@@ -598,6 +600,8 @@ class BooleanSchema(BaseSchema):
 
     def __init__(self, path: list, schema: dict) -> None:
         super().__init__(path, schema)
+        if self.default == None:
+            self.default = False
         pass
 
     def __str__(self) -> str:
@@ -632,7 +636,12 @@ class BooleanSchema(BaseSchema):
         return ret
 
     def toggle_on_precondition(self, prev):
-        return prev == False
+        if prev == None and self.default == False:
+            return True
+        elif prev == False:
+            return True
+        else:
+            return False
 
     def toggle_on(self, prev):
         return True
@@ -641,7 +650,12 @@ class BooleanSchema(BaseSchema):
         return False
 
     def toggle_off_precondition(self, prev):
-        return prev == True
+        if prev == None and self.default == True:
+            return True
+        elif prev == True:
+            return True
+        else:
+            return False
 
     def toggle_off(self, prev):
         return False

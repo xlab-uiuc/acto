@@ -1,8 +1,10 @@
 package analysis
 
 import (
+	"bytes"
 	"fmt"
 
+	"github.com/xlab-uiuc/acto/ssa/util"
 	"golang.org/x/tools/go/packages"
 	"golang.org/x/tools/go/ssa"
 )
@@ -57,7 +59,28 @@ func NewCallStack() *CallStack {
 }
 
 type Context struct {
-	Program      *ssa.Program
-	MainPackages []*ssa.Package
-	RootModule   *packages.Module
+	Program        *ssa.Program
+	MainPackages   []*ssa.Package
+	RootModule     *packages.Module
+	PostDominators map[*ssa.Function]*PostDominator
+
+	ValueFieldMap   map[ssa.Value]*util.FieldSet
+	DefaultValueMap map[ssa.Value]*ssa.Const
+}
+
+func (c *Context) String() string {
+	var b bytes.Buffer
+	b.WriteString(fmt.Sprintf("Root module: %s\n", c.RootModule.Path))
+	b.WriteString("Post Dominators:\n")
+
+	for fn, pd := range c.PostDominators {
+		b.WriteString(fmt.Sprintf("%s\n", fn.String()))
+		b.WriteString(pd.String())
+	}
+
+	b.WriteString("Default value map:\n")
+	for v, constant := range c.DefaultValueMap {
+		b.WriteString(fmt.Sprintf("%v: %s\n", c.ValueFieldMap[v].String(), constant.Value.ExactString()))
+	}
+	return b.String()
 }

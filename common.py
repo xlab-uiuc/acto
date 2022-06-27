@@ -24,9 +24,11 @@ class DeployConfig:
 
 class AnalysisConfig:
 
-    def __init__(self, github_link: str, commit: str, type: str, package: str) -> None:
+    def __init__(self, github_link: str, commit: str, entrypoint: str, type: str,
+                 package: str) -> None:
         self.github_link = github_link
         self.commit = commit
+        self.entrypoint = entrypoint
         self.type = type
         self.package = package
 

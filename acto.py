@@ -66,7 +66,7 @@ def construct_kind_cluster(cluster_name: str, k8s_version: str):
         if p.returncode != 0:
             logging.CRITICAL("Cannot create kind cluster, aborting")
             raise RuntimeError
-    
+
     logging.info('Created kind cluster')
     try:
         kubernetes.config.load_kube_config(context=kind_kubecontext(cluster_name))
@@ -74,7 +74,6 @@ def construct_kind_cluster(cluster_name: str, k8s_version: str):
         with open(f"{os.getenv('HOME')}/.kube/config") as f:
             logging.debug(f.read())
         raise e
-        
 
 
 def construct_candidate_helper(node, node_path, result: dict):
@@ -262,6 +261,7 @@ class Acto:
     def __init__(self,
                  workdir_path: str,
                  operator_config: OperatorConfig,
+                 enable_analysis: bool,
                  preload_images_: list,
                  context_file: str,
                  helper_crd: str,
@@ -289,6 +289,7 @@ class Acto:
 
         self.deploy = deploy
         self.operator_config = operator_config
+        self.enable_analysis = enable_analysis
         self.crd_name = operator_config.crd_name
         self.workdir_path = workdir_path
         self.images_archive = os.path.join(workdir_path, 'images.tar')
@@ -347,7 +348,7 @@ class Acto:
             process_crd(self.context, apiclient, 'learn', self.crd_name, helper_crd)
             kind_delete_cluster('learn')
 
-            if self.operator_config.analysis != None:
+            if self.enable_analysis and self.operator_config.analysis != None:
                 with tempfile.TemporaryDirectory() as project_src:
                     subprocess.run(
                         ['git', 'clone', self.operator_config.analysis.github_link, project_src])
@@ -414,6 +415,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Automatic, Continuous Testing for k8s/openshift Operators')
     parser.add_argument('--config', '-c', dest='config', help='Operator port config path')
+    parser.add_argument('--enable-analysis',
+                        dest='enable_analysis',
+                        action='store_true',
+                        help='Enables static analysis to prune false alarms')
     parser.add_argument('--duration',
                         '-d',
                         dest='duration',
@@ -475,6 +480,6 @@ if __name__ == '__main__':
     else:
         context_cache = args.context
 
-    acto = Acto(workdir_path, config, args.preload_images, context_cache, args.helper_crd,
+    acto = Acto(workdir_path, config, args.enable_analysis, args.preload_images, context_cache, args.helper_crd,
                 args.num_workers, args.dryrun)
     acto.run()

@@ -15,6 +15,7 @@ import (
 	analysis "github.com/xlab-uiuc/acto/ssa/passes"
 	"github.com/xlab-uiuc/acto/ssa/util"
 	"golang.org/x/tools/go/packages"
+	"golang.org/x/tools/go/ssa"
 	"golang.org/x/tools/go/ssa/ssautil"
 )
 
@@ -47,10 +48,12 @@ func analyze(projectPath string, seedType string, seedPkgPath string) string {
 	// Build SSA code for the whole program.
 	prog.Build()
 
-	context := analysis.Context{
-		Program:      prog,
-		MainPackages: ssautil.MainPackages(prog.AllPackages()),
-		RootModule:   initial[0].Module,
+	context := &analysis.Context{
+		Program:         prog,
+		MainPackages:    ssautil.MainPackages(prog.AllPackages()),
+		RootModule:      initial[0].Module,
+		PostDominators:  map[*ssa.Function]*analysis.PostDominator{},
+		DefaultValueMap: map[ssa.Value]*ssa.Const{},
 	}
 
 	valueFieldSetMap, frontierSet := analysis.GetValueToFieldMappingPass(context, prog, &seedType, &seedPkgPath)
@@ -107,7 +110,7 @@ func main() {
 		Mode: packages.NeedModule | packages.LoadAllSyntax,
 		Dir:  *projectPath,
 	}
-	initial, err := packages.Load(&cfg, ".")
+	initial, err := packages.Load(&cfg)
 	log.Printf("Got %d initial packages\n", len(initial))
 	if err != nil {
 		log.Println(err)
@@ -118,16 +121,20 @@ func main() {
 
 	// Build SSA code for the whole program.
 	prog.Build()
+	log.Printf("%s\n", initial[0])
 
-	context := analysis.Context{
-		Program:      prog,
-		MainPackages: ssautil.MainPackages(prog.AllPackages()),
-		RootModule:   initial[0].Module,
+	context := &analysis.Context{
+		Program:         prog,
+		MainPackages:    ssautil.MainPackages(prog.AllPackages()),
+		RootModule:      initial[0].Module,
+		PostDominators:  map[*ssa.Function]*analysis.PostDominator{},
+		DefaultValueMap: map[ssa.Value]*ssa.Const{},
 	}
 
 	log.Println("Running initial pass...")
 	log.Printf("Root Module is %s\n", context.RootModule.Path)
 	valueFieldSetMap, frontierSet := analysis.GetValueToFieldMappingPass(context, prog, seedType, seedPkgPath)
+	context.ValueFieldMap = valueFieldSetMap
 
 	valueFieldSetMapFile, err := os.Create("mapping.txt")
 	if err != nil {
@@ -168,28 +175,31 @@ func main() {
 		taintAnalysisResult.UsedPaths = append(taintAnalysisResult.UsedPaths, field.Path)
 	}
 
-	taintedFieldSet := util.FieldSet{}
-	taintedSet := analysis.TaintAnalysisPass(context, prog, frontierSet, valueFieldSetMap)
-	for tainted := range taintedSet {
-		for _, path := range valueFieldSetMap[tainted].Fields() {
-			log.Printf("Path [%s] taints\n", path.Path)
-			taintedFieldSet.Add(&path)
-		}
-		log.Printf("value %s with path %s\n", tainted, valueFieldSetMap[tainted])
-		// tainted.Parent().WriteTo(log.Writer())
-	}
-	for _, field := range taintedFieldSet.Fields() {
-		taintAnalysisResult.TaintedPaths = append(taintAnalysisResult.TaintedPaths, field.Path)
-	}
+	// taintedFieldSet := util.FieldSet{}
+	// taintedSet := analysis.TaintAnalysisPass(context, prog, frontierSet, valueFieldSetMap)
+	// for tainted := range taintedSet {
+	// 	for _, path := range valueFieldSetMap[tainted].Fields() {
+	// 		log.Printf("Path [%s] taints\n", path.Path)
+	// 		taintedFieldSet.Add(&path)
+	// 	}
+	// 	log.Printf("value %s with path %s\n", tainted, valueFieldSetMap[tainted])
+	// 	// tainted.Parent().WriteTo(log.Writer())
+	// }
+	// for _, field := range taintedFieldSet.Fields() {
+	// 	taintAnalysisResult.TaintedPaths = append(taintAnalysisResult.TaintedPaths, field.Path)
+	// }
 
-	controlFlowResultFile, err := os.Create("controlFlowResult.json")
-	if err != nil {
-		log.Fatalf("Failed to create mapping.txt to write mapping: %v\n", err)
-	}
-	defer controlFlowResultFile.Close()
+	// controlFlowResultFile, err := os.Create("controlFlowResult.json")
+	// if err != nil {
+	// 	log.Fatalf("Failed to create mapping.txt to write mapping: %v\n", err)
+	// }
+	// defer controlFlowResultFile.Close()
 
-	marshalled, _ := json.MarshalIndent(taintAnalysisResult, "", "\t")
-	controlFlowResultFile.Write(marshalled)
+	// marshalled, _ := json.MarshalIndent(taintAnalysisResult, "", "\t")
+	// controlFlowResultFile.Write(marshalled)
+
+	analysis.GetDefaultValue(context, frontierSet, valueFieldSetMap)
+	log.Printf("%s", context.String())
 }
 
 type TaintAnalysisResult struct {

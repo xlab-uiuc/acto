@@ -35,7 +35,7 @@ import (
 //
 // Frontier values:
 //	- if all a value's all referrers are propogated, it's not frontier
-func GetValueToFieldMappingPass(context Context, prog *ssa.Program, seedType *string, seedPkgPath *string) (map[ssa.Value]*FieldSet, map[ssa.Value]bool) {
+func GetValueToFieldMappingPass(context *Context, prog *ssa.Program, seedType *string, seedPkgPath *string) (map[ssa.Value]*FieldSet, map[ssa.Value]bool) {
 	valueFieldSetMap := make(map[ssa.Value]*FieldSet)
 	frontierValues := make(map[ssa.Value]bool)
 	seedVariables := FindSeedValues(prog, seedType, seedPkgPath)
@@ -262,6 +262,7 @@ func GetValueToFieldMappingPass(context Context, prog *ssa.Program, seedType *st
 				case *ssa.Store:
 					// Two cases, variable is referred as the addr, or the value
 					if typedInst.Addr == variable {
+						frontierValues[variable] = true
 						log.Printf("Referred as the addr\n")
 					} else {
 						// referred as the value, propogate to addr
