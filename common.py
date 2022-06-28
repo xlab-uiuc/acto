@@ -9,9 +9,32 @@ import string
 import random
 import subprocess
 import kubernetes
-from constant import CONST
+import requests
 
+from constant import CONST
 from test_case import TestCase
+
+
+def notify_crash(exception: str):
+    import socket
+    import sys
+
+    hostname = socket.gethostname()
+
+    url = 'https://docs.google.com/forms/d/1Hxjg8TDKqBf_47H9gyP63gr3JVCGFwyqxUtSFA7OXhk/formResponse'
+    form_data = {
+        'entry.471699079': exception,
+        'entry.1614228781': f'{sys.argv}',
+        'entry.481598949': hostname
+    }
+    user_agent = {
+        'Referer':
+            'https://docs.google.com/forms/d/1Hxjg8TDKqBf_47H9gyP63gr3JVCGFwyqxUtSFA7OXhk/viewform',
+        'User-Agent':
+            "Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/28.0.1500.52 Safari/537.36"
+    }
+    r = requests.post(url, data=form_data, headers=user_agent)
+    logging.info('Send notify to google form')
 
 
 class DeployConfig:

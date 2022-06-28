@@ -29,6 +29,8 @@ from ssa.analysis import analyze
 CONST = CONST()
 random.seed(0)
 
+notify_crash_ = False
+
 
 def construct_kind_cluster(cluster_name: str, k8s_version: str):
     '''Delete kind cluster then create a new one
@@ -75,7 +77,6 @@ def construct_kind_cluster(cluster_name: str, k8s_version: str):
         with open(f"{os.getenv('HOME')}/.kube/config") as f:
             logging.debug(f.read())
         raise ValueError
-        
 
 
 def construct_candidate_helper(node, node_path, result: dict):
@@ -385,6 +386,10 @@ def handle_excepthook(type, message, stack):
         sys.__excepthook__(type, message, stack)
         return
 
+    global notify_crash_
+    if notify_crash_:
+        notify_crash(f'An exception occured: {type}: {message}.')
+
     stack_info = traceback.StackSummary.extract(traceback.walk_tb(stack),
                                                 capture_locals=True).format()
     logging.critical(f'An exception occured: {type}: {message}.')
@@ -401,6 +406,10 @@ def thread_excepthook(args):
     if issubclass(exc_type, KeyboardInterrupt):
         threading.__excepthook__(args)
         return
+
+    global notify_crash_
+    if notify_crash_:
+        notify_crash(f'An exception occured: {exc_type}: {exc_value}.')
 
     stack_info = traceback.StackSummary.extract(traceback.walk_tb(exc_traceback),
                                                 capture_locals=True).format()
@@ -440,6 +449,10 @@ if __name__ == '__main__':
                         type=int,
                         default=1,
                         help='Number of concurrent workers to run Acto with')
+    parser.add_argument('--notify-crash',
+                        dest='notify_crash',
+                        action='store_true',
+                        help='Submit a google form response to notify')
     parser.add_argument('--dryrun',
                         dest='dryrun',
                         action='store_true',
@@ -463,6 +476,9 @@ if __name__ == '__main__':
     sys.excepthook = handle_excepthook
     threading.excepthook = thread_excepthook
 
+    if args.notify_crash:
+        notify_crash_ = True
+
     with open(args.config, 'r') as config_file:
         config = json.load(config_file, object_hook=lambda d: SimpleNamespace(**d))
     logging.info('Acto started with [%s]' % sys.argv)
@@ -482,6 +498,6 @@ if __name__ == '__main__':
     else:
         context_cache = args.context
 
-    acto = Acto(workdir_path, config, args.enable_analysis, args.preload_images, context_cache, args.helper_crd,
-                args.num_workers, args.dryrun)
+    acto = Acto(workdir_path, config, args.enable_analysis, args.preload_images, context_cache,
+                args.helper_crd, args.num_workers, args.dryrun)
     acto.run()
