@@ -1,5 +1,6 @@
 import ctypes
 import re
+import logging
 
 def canonicalizeQuantity(value):
     if not isinstance(value, str) or not bool(re.match('^[-+]?((\.[0-9]+)|([0-9]+(\.[0-9]+)?)|([0-9]+\.))(([KMGTPE]i)|([eE][-+]?((\.[0-9]+)|([0-9]+(\.[0-9]+)?)|([0-9]+\.)))|([mkMGTPE]|))$', value)):
@@ -8,14 +9,14 @@ def canonicalizeQuantity(value):
     parse = k8sutil.parse
     parse.argtypes = [ctypes.c_char_p]
     parse.restype = ctypes.c_void_p
-
     parse_output = parse(str(value).encode("utf-8"))
     parse_bytes = ctypes.string_at(parse_output)
     parse_string = parse_bytes.decode('utf-8')
-    # if the string returned from parse is not parsed at all, then return the original string
-    if value == parse_string:
-        return value
-    return str(float(parse_string))
+    if 'INVALID' == parse_string:
+        logging.error('the regex for number conversion is incorrect! The input string cannot be parsed')
+        return parse_string
+    return format(float(parse_string), ".3f")
+    
 
 if __name__ == '__main__':
     # print(canonicalizeQuantity('172.18.0.4'))
@@ -31,4 +32,6 @@ if __name__ == '__main__':
     # print(canonicalizeQuantity('+4678410156.347680E+.6994785'))
     print(canonicalizeQuantity("+838612.516637636"))
     print(canonicalizeQuantity("838612517m"))
-    assert(canonicalizeQuantity("+838612.516637636") == canonicalizeQuantity("838612517m"))
+    # assert(canonicalizeQuantity("+838612.516637636") == canonicalizeQuantity("838612517m"))
+    print(canonicalizeQuantity('+099'))
+    print(canonicalizeQuantity('99'))
