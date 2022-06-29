@@ -28,4 +28,7 @@ if __name__ == '__main__':
     # print(canonicalizeQuantity('-.01Ki'))
     # print(canonicalizeQuantity('.01Ki'))
     # assert(float(canonicalizeQuantity('-.484785E-7466')) == float(canonicalizeQuantity('0')))
-    print(canonicalizeQuantity('+4678410156.347680E+.6994785'))
+    # print(canonicalizeQuantity('+4678410156.347680E+.6994785'))
+    print(canonicalizeQuantity("+838612.516637636"))
+    print(canonicalizeQuantity("838612517m"))
+    assert(canonicalizeQuantity("+838612.516637636") == canonicalizeQuantity("838612517m"))
