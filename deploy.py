@@ -63,15 +63,14 @@ class Helm(Deploy):
     def deploy(self, context: dict, cluster_name: str) -> bool:
         context['namespace'] = CONST.ACTO_NAMESPACE
         if self.init_yaml:
-            kubectl(['apply', '--server-side', '-f', self.init_yaml, '-n', context['namespace']],
-                    cluster_name)
+            kubectl(['apply', '--server-side', '-f', self.init_yaml], cluster_name)
         helm(['dependency', 'build', self.path], cluster_name)
         helm([
             'install', 'acto-test-operator', '--create-namespace', self.path, '--wait', '--timeout',
             '3m', '-n', context['namespace']
         ], cluster_name)
 
-        counter = 0 # use a counter to wait for 2 min (thus 24 below, since each wait is 5s)
+        counter = 0  # use a counter to wait for 2 min (thus 24 below, since each wait is 5s)
         while not self.check_status(cluster_name):
             if counter > 24:
                 logging.fatal('Helm chart deployment failed to be ready within timeout')
@@ -110,14 +109,10 @@ class Yaml(Deploy):
         if ret == None:
             logging.error('Failed to create namespace')
         if self.init_yaml:
-            kubectl([
-                'apply', '--server-side', '-f', self.init_yaml, '-n',
-                context['namespace']
-            ], cluster_name)
-        kubectl([
-            'apply', '--server-side', '-f', self.path, '-n',
-            context['namespace']
-        ], cluster_name)
+            kubectl(['apply', '--server-side', '-f', self.init_yaml],
+                    cluster_name)
+        kubectl(['apply', '--server-side', '-f', self.path, '-n', context['namespace']],
+                cluster_name)
         super().check_status(cluster_name)
 
         # TODO: Return True if deploy successfully
@@ -167,15 +162,11 @@ class Kustomize(Deploy):
         namespace = "cass-operator"
         context['namespace'] = namespace
         if self.init_yaml:
-            kubectl([
-                'apply', '--server-side', '-f', self.init_yaml, '-n',
-                context['namespace']
-            ], cluster_name)
+            kubectl(['apply', '--server-side', '-f', self.init_yaml],
+                    cluster_name)
         sleep(self.wait)
-        kubectl([
-            'apply', '--server-side', '-k', self.path, '-n',
-            context['namespace']
-        ], cluster_name)
+        kubectl(['apply', '--server-side', '-k', self.path, '-n', context['namespace']],
+                cluster_name)
         super().check_status(cluster_name)
         return True
 

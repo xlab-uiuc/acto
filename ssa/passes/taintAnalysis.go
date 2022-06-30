@@ -9,7 +9,6 @@ import (
 
 	. "github.com/xlab-uiuc/acto/ssa/util"
 	"golang.org/x/tools/go/callgraph"
-	"golang.org/x/tools/go/pointer"
 	"golang.org/x/tools/go/ssa"
 )
 
@@ -50,19 +49,6 @@ import (
 // TypeAssert
 // UnOp
 func TaintAnalysisPass(context *Context, prog *ssa.Program, frontierValues map[ssa.Value]bool, valueFieldMap map[ssa.Value]*FieldSet) map[ssa.Value]bool {
-	log.Println("Constructing call graph using pointer analysis")
-	cfg := pointer.Config{
-		Mains:          context.MainPackages,
-		BuildCallGraph: true,
-	}
-	log.Printf("Main packages %s\n", context.MainPackages)
-	result, err := pointer.Analyze(&cfg)
-	if err != nil {
-		log.Fatalf("Failed to run pointer analysis to construct callgraph %V\n", err)
-	}
-	callGraph := result.CallGraph
-	callGraph.Root.Func.WriteTo(log.Writer())
-	log.Println("Finished constructing call graph")
 
 	tainted := make(map[ssa.Value]bool)
 	for value := range frontierValues {
@@ -76,9 +62,9 @@ func TaintAnalysisPass(context *Context, prog *ssa.Program, frontierValues map[s
 		// 	}
 		// }
 		log.Printf("Checking if value [%s] in function [%s] taints\n", value.String(), value.Parent().String())
-		if TaintK8sFromValue(context, value, valueFieldMap, callGraph, backCallStack, false) {
+		if TaintK8sFromValue(context, value, valueFieldMap, context.CallGraph, backCallStack, false) {
 			tainted[value] = true
-			log.Printf("Value [%s] taints", value.String())
+			log.Printf("Value [%s] with path [%s] taint", value.String(), valueFieldMap[value].Fields())
 		} else {
 			log.Printf("Value [%s] with path [%s] does not taint", value.String(), valueFieldMap[value].Fields())
 		}
@@ -442,8 +428,8 @@ func TaintK8sFromValue(context *Context, value ssa.Value, valueFieldMap map[ssa.
 					// find the tainted index in the returned value (hanlde the case of returning tuple)
 					// TODO Handle call stack carefully here
 					taintedReturnSet := GetReturnIndices(taintedValue, typedInst)
-					node, err := callGraph.Nodes[taintedValue.Parent()]
-					if err {
+					node, ok := callGraph.Nodes[taintedValue.Parent()]
+					if !ok {
 						log.Printf("Failed to retrieve call graph node for %s %T\n", taintedValue, taintedValue)
 					}
 					if node == nil {

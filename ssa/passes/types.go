@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/xlab-uiuc/acto/ssa/util"
+	"golang.org/x/tools/go/callgraph"
 	"golang.org/x/tools/go/packages"
 	"golang.org/x/tools/go/ssa"
 )
@@ -62,6 +63,7 @@ type Context struct {
 	Program        *ssa.Program
 	MainPackages   []*ssa.Package
 	RootModule     *packages.Module
+	CallGraph      *callgraph.Graph
 	PostDominators map[*ssa.Function]*PostDominator
 
 	ValueFieldMap   map[ssa.Value]*util.FieldSet

@@ -146,6 +146,9 @@ var (
 		"sigs.k8s.io/controller-runtime/pkg/client.IgnoreNotFound": true,
 		"(*github.com/hashicorp/go-version.Version).Compare":       true,
 		"(*k8s.io/client-go/rest.Request).Do":                      true,
+		"k8s.io/client-go/transport/spdy.RoundTripperFor":          true,
+		"k8s.io/client-go/kubernetes.NewForConfigOrDie":            true,
+		"(*database/sql.DB).Exec":                                  true,
 	}
 
 	KnownFunctionWithoutReceiver = map[string]FunctionTaintResult{
@@ -264,6 +267,14 @@ var (
 		}: {
 			End:         false,
 			TaintedArgs: []int{1},
+			TaintedRets: []int{},
+		},
+		{
+			FunctionName: "(*text/template.Template).Execute",
+			TaintSource:  fmt.Sprint([]int{1}),
+		}: {
+			End:         false,
+			TaintedArgs: []int{},
 			TaintedRets: []int{},
 		},
 		{
@@ -546,6 +557,14 @@ var (
 
 	KnownInterfaceFunction = map[FunctionCall]FunctionTaintResult{
 		{
+			FunctionName: "(k8s.io/apimachinery/pkg/apis/meta/v1.Object).SetLabels",
+			TaintSource:  fmt.Sprint([]int{0}),
+		}: {
+			End:         false,
+			TaintedArgs: []int{-1},
+			TaintedRets: []int{},
+		},
+		{
 			FunctionName: "(sigs.k8s.io/controller-runtime/pkg/client.Reader).List",
 			TaintSource:  fmt.Sprint([]int{2}),
 		}: {
@@ -632,15 +651,17 @@ var (
 	}
 
 	K8sInterfaceFunctions = map[string]bool{
-		"(sigs.k8s.io/controller-runtime/pkg/client.Writer).Create":               true,
-		"(sigs.k8s.io/controller-runtime/pkg/client.Writer).Delete":               true,
-		"(sigs.k8s.io/controller-runtime/pkg/client.Writer).Update":               true,
-		"(k8s.io/apimachinery/pkg/apis/meta/v1.Object).SetAnnotations":            true,
-		"(sigs.k8s.io/controller-runtime/pkg/client.StatusWriter).Update":         true,
-		"(k8s.io/client-go/kubernetes/typed/core/v1.ConfigMapInterface).Create":   true,
-		"(k8s.io/client-go/kubernetes/typed/apps/v1.StatefulSetInterface).Create": true,
-		"(k8s.io/client-go/kubernetes/typed/core/v1.ServiceInterface).Create":     true,
-		"(k8s.io/client-go/kubernetes/typed/apps/v1.DeploymentInterface).Create":  true,
+		"(sigs.k8s.io/controller-runtime/pkg/client.Writer).Create":                         true,
+		"(sigs.k8s.io/controller-runtime/pkg/client.Writer).Delete":                         true,
+		"(sigs.k8s.io/controller-runtime/pkg/client.Writer).Update":                         true,
+		"(k8s.io/apimachinery/pkg/apis/meta/v1.Object).SetAnnotations":                      true,
+		"(sigs.k8s.io/controller-runtime/pkg/client.StatusWriter).Update":                   true,
+		"(k8s.io/client-go/kubernetes/typed/core/v1.ConfigMapInterface).Create":             true,
+		"(k8s.io/client-go/kubernetes/typed/apps/v1.StatefulSetInterface).Create":           true,
+		"(k8s.io/client-go/kubernetes/typed/apps/v1.StatefulSetInterface).UpdateScale":      true,
+		"(k8s.io/client-go/kubernetes/typed/core/v1.ServiceInterface).Create":               true,
+		"(k8s.io/client-go/kubernetes/typed/apps/v1.DeploymentInterface).Create":            true,
+		"(k8s.io/client-go/kubernetes/typed/core/v1.PersistentVolumeClaimInterface).Update": true,
 	}
 
 	K8sStaticFunctions = map[string]bool{

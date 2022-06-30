@@ -56,6 +56,14 @@ func BackwardPropogationHelper(value ssa.Value, path []int,
 	case *ssa.Extract:
 		// extracted from a tuple
 		// XXX
+		switch typedTuple := typedValue.Tuple.(type) {
+		case *ssa.Lookup:
+			return BackwardPropogationHelper(typedTuple, path, taintedSet)
+		case *ssa.TypeAssert:
+			return BackwardPropogationHelper(typedTuple, path, taintedSet)
+		case *ssa.UnOp:
+			log.Fatal("Back propogated to UpOp\n")
+		}
 		return []ssa.Value{value}
 	case *ssa.FieldAddr:
 		path := append([]int{typedValue.Field}, path...)

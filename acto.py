@@ -292,7 +292,6 @@ class Acto:
 
         self.deploy = deploy
         self.operator_config = operator_config
-        self.enable_analysis = enable_analysis
         self.crd_name = operator_config.crd_name
         self.workdir_path = workdir_path
         self.images_archive = os.path.join(workdir_path, 'images.tar')
@@ -301,6 +300,8 @@ class Acto:
         self.snapshots = []
 
         self.__learn(context_file=context_file, helper_crd=helper_crd)
+
+        self.context['enable_analysis'] = enable_analysis
 
         # Add additional preload images from arguments
         if preload_images_ != None:
@@ -351,16 +352,16 @@ class Acto:
             process_crd(self.context, apiclient, 'learn', self.crd_name, helper_crd)
             kind_delete_cluster('learn')
 
-            if self.enable_analysis and self.operator_config.analysis != None:
+            if self.operator_config.analysis != None:
                 with tempfile.TemporaryDirectory() as project_src:
                     subprocess.run(
                         ['git', 'clone', self.operator_config.analysis.github_link, project_src])
                     subprocess.run([
                         'git', '-C', project_src, 'checkout', self.operator_config.analysis.commit
                     ])
-                    self.context['analysis_result'] = analyze(project_src,
-                                                              self.operator_config.analysis.type,
-                                                              self.operator_config.analysis.package)
+                    self.context['analysis_result'] = analyze(
+                        os.path.join(project_src, self.operator_config.analysis.entrypoint),
+                        self.operator_config.analysis.type, self.operator_config.analysis.package)
             with open(context_file, 'w') as context_fout:
                 json.dump(self.context, context_fout, cls=ActoEncoder)
 

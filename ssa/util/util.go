@@ -147,7 +147,7 @@ func FindSeedValues(prog *ssa.Program, seedType *string, pkgPath *string) []ssa.
 	}
 
 	for _, seedVar := range seedVariables {
-		log.Printf("%s\n", fmt.Sprintf("Value %s is seed\n", seedVar.String()))
+		log.Printf("%s\n", fmt.Sprintf("Value %s is seed", seedVar.String()))
 	}
 	log.Printf("%s\n", fmt.Sprintf("%d\n", len(seedVariables)))
 
@@ -186,6 +186,9 @@ func getSeedVariablesFromFunction(f *ssa.Function, seedType types.Type) []ssa.Va
 // returns the list of parameter indices of the taint source
 func GetCallsiteArgIndices(value ssa.Value, call *ssa.CallCommon) []int {
 	paramSet := NewSet[int]()
+	if value == call.Value {
+		paramSet.Add(-1)
+	}
 	for index, param := range call.Args {
 		if param == value {
 			paramSet.Add(index)

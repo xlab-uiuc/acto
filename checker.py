@@ -96,13 +96,12 @@ class Checker(object):
 
         for delta_list in input_delta.values():
             for delta in delta_list.values():
-                logging.debug(delta.to_dict())
                 if self.compare_method.input_compare(delta.prev, delta.curr):
                     # if the input delta is considered as equivalent, skip
                     continue
 
-                # if self.should_skip_input_delta(delta):
-                #     continue
+                if self.context['enable_analysis'] and self.should_skip_input_delta(delta):
+                    continue
 
                 # Find the longest matching field, compare the delta change
                 match_deltas = self._list_matched_fields(delta.path, system_delta_without_cr)
@@ -148,9 +147,20 @@ class Checker(object):
             if the arg input_delta should be skipped in oracle
         '''
 
-        control_flow_fields = self.context['analysis_result']['paths']
-        if input_delta.path in control_flow_fields:
-            return True
+        control_flow_fields = self.context['analysis_result']['control_flow_fields']
+        for control_flow_field in control_flow_fields:
+            if len(input_delta.path) == len(control_flow_field):
+                not_match = False
+                for i in range(len(input_delta.path)):
+                    if control_flow_field[i] == 'INDEX' and re.match(r"^\d$", str(input_delta.path[i])):
+                        continue
+                    elif input_delta.path[i] != control_flow_field[i]:
+                        not_match = True
+                        break
+                if not_match:
+                    continue
+                else:
+                    return True
         return False
 
     def check_operator_log(self, snapshot: Snapshot, prev_snapshot: Snapshot) -> RunResult:
@@ -269,7 +279,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Standalone checker for Acto')
 
     parser.add_argument('--context', dest='context', required=True)
-    parser.add_argument('--analysis-file', dest='analysis_file', required=False)
     parser.add_argument('--testrun-dir', dest='testrun_dir', required=True)
     parser.add_argument('--seed', dest='seed', required=True)
     args = parser.parse_args()
@@ -305,14 +314,10 @@ if __name__ == "__main__":
         context = json.load(context_fin)
         context['preload_images'] = set(context['preload_images'])
 
-    if args.analysis_file != None:
-        with open(args.analysis_file, 'r') as analysis_file:
-            context['analysis_result'] = json.load(analysis_file)
-    else:
-        context['analysis_result'] = {'paths': []}
-
-    for path in context['analysis_result']['paths']:
+    for path in context['analysis_result']['control_flow_fields']:
         path.pop(0)
+
+    context['enable_analysis'] = True
 
     with open(args.seed, 'r') as seed_file:
         seed = yaml.load(seed_file, Loader=yaml.FullLoader)
@@ -324,6 +329,8 @@ if __name__ == "__main__":
         checker = Checker(context=context, trial_dir=trial_dir)
         snapshots = []
         snapshots.append(EmptySnapshot(seed))
+
+        alarm = False
         for generation in range(0, 10):
             mutated_filename = '%s/mutated-%d.yaml' % (trial_dir, generation)
             operator_log_path = "%s/operator-%d.log" % (trial_dir, generation)
@@ -363,11 +370,15 @@ if __name__ == "__main__":
                     logging.info('%s reports an alarm' % system_state_path)
                     save_result(trial_dir, result, generation, None)
                     num_alarms += 1
+                    alarm = True
                 elif isinstance(result, PassResult):
-                    continue
+                    pass
                 else:
                     logging.error('Unknown return value, abort')
                     quit()
+
+        if not alarm:
+            logging.info('%s deos not report an alarm' % system_state_path)
 
     logging.info('Number of alarms: %d', num_alarms)
 

@@ -2,7 +2,7 @@ package util
 
 import (
 	"bytes"
-	"fmt"
+	"encoding/json"
 	"go/types"
 )
 
@@ -35,7 +35,8 @@ func (f *Field) Clone() *Field {
 }
 
 func (f *Field) String() string {
-	return fmt.Sprint(f.Path)
+	b, _ := json.Marshal(f.Path)
+	return string(b[:])
 }
 
 func NewSubField(parentStruct *types.Struct, parentField Field, fieldIndex int) *Field {

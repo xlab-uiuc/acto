@@ -15,6 +15,7 @@ import (
 	analysis "github.com/xlab-uiuc/acto/ssa/passes"
 	"github.com/xlab-uiuc/acto/ssa/util"
 	"golang.org/x/tools/go/packages"
+	"golang.org/x/tools/go/pointer"
 	"golang.org/x/tools/go/ssa"
 	"golang.org/x/tools/go/ssa/ssautil"
 )
@@ -26,6 +27,11 @@ func Analyze(projectPathPtr *C.char, seedTypePtr *C.char, seedPkgPtr *C.char) *C
 	seedPkg := C.GoString(seedPkgPtr)
 
 	log.SetOutput(ioutil.Discard)
+
+	logFile, _ := os.Create("ssa.log")
+
+	log.SetOutput(logFile)
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	analysisResult := analyze(projectPath, seedType, seedPkg)
 	return C.CString(analysisResult)
@@ -47,16 +53,36 @@ func analyze(projectPath string, seedType string, seedPkgPath string) string {
 
 	// Build SSA code for the whole program.
 	prog.Build()
+	log.Printf("%s\n", initial[0])
 
 	context := &analysis.Context{
 		Program:         prog,
 		MainPackages:    ssautil.MainPackages(prog.AllPackages()),
 		RootModule:      initial[0].Module,
+		CallGraph:       nil,
 		PostDominators:  map[*ssa.Function]*analysis.PostDominator{},
 		DefaultValueMap: map[ssa.Value]*ssa.Const{},
 	}
 
+	log.Println("Running initial pass...")
+	log.Printf("Root Module is %s\n", context.RootModule.Path)
+
+	log.Println("Constructing call graph using pointer analysis")
+	pointerCfg := pointer.Config{
+		Mains:          context.MainPackages,
+		BuildCallGraph: true,
+	}
+	log.Printf("Main packages %s\n", context.MainPackages)
+	result, err := pointer.Analyze(&pointerCfg)
+	if err != nil {
+		log.Fatalf("Failed to run pointer analysis to construct callgraph %V\n", err)
+	}
+	context.CallGraph = result.CallGraph
+	log.Println("Finished constructing call graph")
+
 	valueFieldSetMap, frontierSet := analysis.GetValueToFieldMappingPass(context, prog, &seedType, &seedPkgPath)
+	context.ValueFieldMap = valueFieldSetMap
+
 	fieldSets := []util.FieldSet{}
 	for v, path := range valueFieldSetMap {
 		if _, ok := frontierSet[v]; ok {
@@ -65,9 +91,11 @@ func analyze(projectPath string, seedType string, seedPkgPath string) string {
 	}
 	mergedFieldSet := util.MergeFieldSets(fieldSets...)
 
-	taintAnalysisResult := TaintAnalysisResult{}
+	analysisResult := AnalysisResult{
+		DefaultValues: map[string]string{},
+	}
 	for _, field := range mergedFieldSet.Fields() {
-		taintAnalysisResult.UsedPaths = append(taintAnalysisResult.UsedPaths, field.Path)
+		analysisResult.UsedPaths = append(analysisResult.UsedPaths, field.Path)
 	}
 	taintedFieldSet := util.FieldSet{}
 	taintedSet := analysis.TaintAnalysisPass(context, prog, frontierSet, valueFieldSetMap)
@@ -80,10 +108,17 @@ func analyze(projectPath string, seedType string, seedPkgPath string) string {
 		// tainted.Parent().WriteTo(log.Writer())
 	}
 	for _, field := range taintedFieldSet.Fields() {
-		taintAnalysisResult.TaintedPaths = append(taintAnalysisResult.TaintedPaths, field.Path)
+		analysisResult.TaintedPaths = append(analysisResult.TaintedPaths, field.Path)
 	}
 
-	marshalled, _ := json.MarshalIndent(taintAnalysisResult, "", "\t")
+	analysis.GetDefaultValue(context, frontierSet, valueFieldSetMap)
+	for value, constant := range context.DefaultValueMap {
+		for _, field := range context.ValueFieldMap[value].Fields() {
+			analysisResult.DefaultValues[field.String()] = constant.Value.ExactString()
+		}
+	}
+
+	marshalled, _ := json.MarshalIndent(analysisResult, "", "\t")
 	return string(marshalled[:])
 }
 
@@ -133,6 +168,20 @@ func main() {
 
 	log.Println("Running initial pass...")
 	log.Printf("Root Module is %s\n", context.RootModule.Path)
+
+	log.Println("Constructing call graph using pointer analysis")
+	pointerCfg := pointer.Config{
+		Mains:          context.MainPackages,
+		BuildCallGraph: true,
+	}
+	log.Printf("Main packages %s\n", context.MainPackages)
+	result, err := pointer.Analyze(&pointerCfg)
+	if err != nil {
+		log.Fatalf("Failed to run pointer analysis to construct callgraph %V\n", err)
+	}
+	context.CallGraph = result.CallGraph
+	log.Println("Finished constructing call graph")
+
 	valueFieldSetMap, frontierSet := analysis.GetValueToFieldMappingPass(context, prog, seedType, seedPkgPath)
 	context.ValueFieldMap = valueFieldSetMap
 
@@ -170,39 +219,40 @@ func main() {
 	// }
 	log.Println("------------------------")
 
-	taintAnalysisResult := TaintAnalysisResult{}
+	analysisResult := AnalysisResult{}
 	for _, field := range mergedFieldSet.Fields() {
-		taintAnalysisResult.UsedPaths = append(taintAnalysisResult.UsedPaths, field.Path)
+		analysisResult.UsedPaths = append(analysisResult.UsedPaths, field.Path)
 	}
 
-	// taintedFieldSet := util.FieldSet{}
-	// taintedSet := analysis.TaintAnalysisPass(context, prog, frontierSet, valueFieldSetMap)
-	// for tainted := range taintedSet {
-	// 	for _, path := range valueFieldSetMap[tainted].Fields() {
-	// 		log.Printf("Path [%s] taints\n", path.Path)
-	// 		taintedFieldSet.Add(&path)
-	// 	}
-	// 	log.Printf("value %s with path %s\n", tainted, valueFieldSetMap[tainted])
-	// 	// tainted.Parent().WriteTo(log.Writer())
-	// }
-	// for _, field := range taintedFieldSet.Fields() {
-	// 	taintAnalysisResult.TaintedPaths = append(taintAnalysisResult.TaintedPaths, field.Path)
-	// }
+	taintedFieldSet := util.FieldSet{}
+	taintedSet := analysis.TaintAnalysisPass(context, prog, frontierSet, valueFieldSetMap)
+	for tainted := range taintedSet {
+		for _, path := range valueFieldSetMap[tainted].Fields() {
+			log.Printf("Path [%s] taints\n", path.Path)
+			taintedFieldSet.Add(&path)
+		}
+		log.Printf("value %s with path %s\n", tainted, valueFieldSetMap[tainted])
+		// tainted.Parent().WriteTo(log.Writer())
+	}
+	for _, field := range taintedFieldSet.Fields() {
+		analysisResult.TaintedPaths = append(analysisResult.TaintedPaths, field.Path)
+	}
 
-	// controlFlowResultFile, err := os.Create("controlFlowResult.json")
-	// if err != nil {
-	// 	log.Fatalf("Failed to create mapping.txt to write mapping: %v\n", err)
-	// }
-	// defer controlFlowResultFile.Close()
+	controlFlowResultFile, err := os.Create("controlFlowResult.json")
+	if err != nil {
+		log.Fatalf("Failed to create mapping.txt to write mapping: %v\n", err)
+	}
+	defer controlFlowResultFile.Close()
 
-	// marshalled, _ := json.MarshalIndent(taintAnalysisResult, "", "\t")
-	// controlFlowResultFile.Write(marshalled)
+	marshalled, _ := json.MarshalIndent(analysisResult, "", "\t")
+	controlFlowResultFile.Write(marshalled)
 
 	analysis.GetDefaultValue(context, frontierSet, valueFieldSetMap)
 	log.Printf("%s", context.String())
 }
 
-type TaintAnalysisResult struct {
-	UsedPaths    [][]string `json:"usedPaths"`
-	TaintedPaths [][]string `json:"taintedPaths"`
+type AnalysisResult struct {
+	UsedPaths     [][]string        `json:"usedPaths"`
+	TaintedPaths  [][]string        `json:"taintedPaths"`
+	DefaultValues map[string]string `json:"defaultValues"`
 }
