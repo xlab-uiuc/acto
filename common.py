@@ -292,13 +292,15 @@ EXCLUDE_ERROR_REGEX = [
     r"dial: ping mongo",
     r"pod is not running",
     r"failed to sync(.)*status",
-    r"sync failed",
+    r"can't failover, requeuing",
     r"Secret (.)* not found",
     r"failed to get proxySQL db",
 ]
 
 INVALID_INPUT_LOG_REGEX = [
     r"invalid",
+    r"not valid",
+    r"unsupported",
 ]
 
 GENERIC_FIELDS = [

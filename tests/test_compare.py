@@ -1,7 +1,9 @@
 import unittest
 import sys
+from deepdiff.helper import NotPresent
 
 sys.path.append('..')
+sys.path.append('.')
 from compare import CompareMethods
 
 
@@ -39,6 +41,18 @@ class TestCompare(unittest.TestCase):
         ]
         for case in not_match_testcases:
             self.assertFalse(compare.config_operator(case[0], case[1]))
+
+    def test_compare_format(self):
+        compare = CompareMethods()
+
+        testcases = [
+            [
+                '838612517m',
+                '+838612.516637636'
+            ],
+        ]
+        for case in testcases:
+            self.assertTrue(compare.compare(NotPresent(), case[0], None, case[1]))
 
 if __name__ == '__main__':
     unittest.main()
