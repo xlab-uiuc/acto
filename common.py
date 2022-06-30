@@ -243,7 +243,7 @@ def save_result(trial_dir: str, trial_err: ErrorResult, num_tests: int, trial_el
     result_dict['duration'] = trial_elapsed
     result_dict['num_tests'] = num_tests
     if trial_err == None:
-        logging.info('Trial %d completed without error', trial_dir)
+        logging.info('Trial %s completed without error', trial_dir)
     else:
         result_dict['oracle'] = trial_err.oracle
         result_dict['message'] = trial_err.message
@@ -369,7 +369,8 @@ def kind_delete_cluster(name: str):
     else:
         logging.error('Missing cluster name for kind delete')
 
-    subprocess.run(cmd)
+    while subprocess.run(cmd).returncode != 0:
+        continue
 
 
 def kubectl(args: list,
