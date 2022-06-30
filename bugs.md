@@ -17,10 +17,14 @@
 | percona-server-mongodb-operator  | [https://jira.percona.com/browse/K8SPSMDB-696](https://jira.percona.com/browse/K8SPSMDB-696)                                     |           |
 |                                  | [https://jira.percona.com/browse/K8SPSMDB-697](https://jira.percona.com/browse/K8SPSMDB-697)                                     | fixed     |
 | OT-CONTAINER-KIT/redis-operator  | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/279](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/279)   |           |
-|                                  | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/283](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/283)   |           |
+|                                  | [https://github.com/OT-CONTAINER-KIT/redis-operator/pull/280](https://github.com/OT-CONTAINER-KIT/redis-operator/pull/280)       | fixed     |
+|                                  | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/283](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/283)   | fixed     |
 |                                  | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/286](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/286)   |           |
 |                                  | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/287](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/287)   |           |
-|                                  | 
+|                                  | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/289](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/289)   |           |
+|                                  | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/290](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/290)   |           |
+|                                  | [https://github.com/OT-CONTAINER-KIT/redis-operator/pull/292](https://github.com/OT-CONTAINER-KIT/redis-operator/pull/292)       | fixed     |
+|                                  | [https://github.com/OT-CONTAINER-KIT/redis-operator/pull/293](https://github.com/OT-CONTAINER-KIT/redis-operator/pull/293)       | fixed     |
 | kubernetes-sigs/controller-tools | [https://github.com/kubernetes-sigs/controller-tools/issues/665](https://github.com/kubernetes-sigs/controller-tools/issues/665) | confirmed |
 | kubernetes/kubernetes            | [https://github.com/kubernetes/kubernetes/issues/109839](https://github.com/kubernetes/kubernetes/issues/109839)                 | confirmed |
 |                                  | [https://github.com/kubernetes/kubernetes/issues/110653](https://github.com/kubernetes/kubernetes/issues/110653)                 | confirmed |
