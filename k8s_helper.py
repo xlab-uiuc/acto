@@ -1,8 +1,10 @@
+import logging
 from kubernetes.client.models import V1Deployment, V1StatefulSet, V1Namespace, V1ObjectMeta
 import kubernetes
 from typing import List, Optional, Tuple
 import yaml
 from constant import CONST
+import time
 
 CONST = CONST()
 
@@ -64,3 +66,24 @@ def create_namespace(apiclient, name: str) -> V1Namespace:
     namespace = corev1Api.create_namespace(
         V1Namespace(metadata=V1ObjectMeta(name=name)))
     return namespace
+
+def delete_operator_pod(apiclient, namespace: str) -> bool:
+    coreV1Api = kubernetes.client.CoreV1Api(apiclient)
+
+    operator_pod_list = coreV1Api.list_namespaced_pod(
+        namespace=namespace, watch=False, label_selector="acto/tag=operator-pod").items
+
+    if len(operator_pod_list) >= 1:
+        logging.debug('Got operator pod: pod name:' + operator_pod_list[0].metadata.name)
+    else:
+        logging.error('Failed to find operator pod')
+        return False
+        #TODO: refine what should be done if no operator pod can be found
+
+    pod = coreV1Api.delete_namespaced_pod(name=operator_pod_list[0].metadata.name,
+                                                     namespace=namespace)
+    if pod == None:
+        return False
+    else:
+        time.sleep(10)
+        return True

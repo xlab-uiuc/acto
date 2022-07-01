@@ -27,7 +27,7 @@ class Deploy:
         self.init_yaml = init_yaml
         self.console = Console()
         self.deploy_method = deploy_method
-        self.wait = 10  # sec
+        self.wait = 20  # sec
 
     def deploy(self, context: dict, cluster_name: str):
         # XXX: context param is temporary, need to figure out why rabbitmq complains about namespace

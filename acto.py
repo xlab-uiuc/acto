@@ -17,6 +17,7 @@ import tempfile
 
 from common import *
 from exception import UnknownDeployMethodError
+from k8s_helper import delete_operator_pod
 from preprocess import add_acto_label, process_crd, update_preload_images
 from input import InputModel
 from deploy import Deploy, DeployMethod
@@ -53,10 +54,21 @@ def construct_kind_cluster(cluster_name: str, k8s_version: str):
             kind_config_dict['kind'] = 'Cluster'
             kind_config_dict['apiVersion'] = 'kind.x-k8s.io/v1alpha4'
             kind_config_dict['nodes'] = []
+            extra_mounts = []
+            extra_mounts.append({
+                'hostPath': 'profile/data',
+                'containerPath': '/tmp/profile'
+            })
             for _ in range(3):
-                kind_config_dict['nodes'].append({'role': 'worker'})
+                kind_config_dict['nodes'].append({'role': 'worker', 'extraMounts': [{
+                    'hostPath': 'profile/data',
+                    'containerPath': '/tmp/profile'
+                }]})
             for _ in range(1):
-                kind_config_dict['nodes'].append({'role': 'control-plane'})
+                kind_config_dict['nodes'].append({'role': 'control-plane', 'extraMounts': [{
+                    'hostPath': 'profile/data',
+                    'containerPath': '/tmp/profile'
+                }]})
             yaml.dump(kind_config_dict, kind_config_file)
 
     p = kind_create_cluster(cluster_name, kind_config_path, k8s_version)
@@ -171,6 +183,7 @@ class TrialRunner:
             logging.info('Trial %d finished, completed in %s' % (curr_trial, trial_elapsed))
             logging.info('---------------------------------------\n')
 
+            delete_operator_pod(apiclient, self.context['namespace'])
             save_result(trial_dir, trial_err, num_tests, trial_elapsed)
             curr_trial = curr_trial + 1
 
@@ -359,8 +372,13 @@ class Acto:
                     subprocess.run([
                         'git', '-C', project_src, 'checkout', self.operator_config.analysis.commit
                     ])
+
+                    if self.operator_config.analysis.entrypoint != None:
+                        entrypoint_path = os.path.join(project_src, self.operator_config.analysis.entrypoint)
+                    else:
+                        entrypoint_path = project_src
                     self.context['analysis_result'] = analyze(
-                        os.path.join(project_src, self.operator_config.analysis.entrypoint),
+                        entrypoint_path,
                         self.operator_config.analysis.type, self.operator_config.analysis.package)
             with open(context_file, 'w') as context_fout:
                 json.dump(self.context, context_fout, cls=ActoEncoder)

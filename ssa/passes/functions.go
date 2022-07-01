@@ -109,6 +109,10 @@ var (
 		"logr":    true,
 	}
 
+	StructSinks = map[string]bool {
+		"(*k8s.io/apimachinery/pkg/apis/meta/v1/unstructured.Unstructured)": true,
+	}
+
 	InterfaceFunctionSinks = map[string]bool{
 		"(k8s.io/client-go/kubernetes/typed/apps/v1.StatefulSetsGetter).StatefulSets":                     true,
 		"(k8s.io/client-go/kubernetes/typed/apps/v1.StatefulSetInterface).Get":                            true,
@@ -149,6 +153,8 @@ var (
 		"k8s.io/client-go/transport/spdy.RoundTripperFor":          true,
 		"k8s.io/client-go/kubernetes.NewForConfigOrDie":            true,
 		"(*database/sql.DB).Exec":                                  true,
+		"(*k8s.io/apimachinery/pkg/apis/meta/v1/unstructured.Unstructured).SetName": true,
+		"(*k8s.io/apimachinery/pkg/apis/meta/v1/unstructured.Unstructured).SetNamespace": true,
 	}
 
 	KnownFunctionWithoutReceiver = map[string]FunctionTaintResult{
@@ -297,6 +303,11 @@ var (
 			End:         false,
 			TaintedArgs: []int{},
 			TaintedRets: []int{0},
+		},
+		"fmt.Fprintf": {
+			End:         false,
+			TaintedArgs: []int{0},
+			TaintedRets: []int{},
 		},
 		"strings.Split": {
 			End:         false,
@@ -617,6 +628,14 @@ var (
 			TaintSource:  fmt.Sprint([]int{1}),
 		}: {
 			End:         true,
+			TaintedArgs: []int{},
+			TaintedRets: []int{},
+		},
+		{
+			FunctionName: "(sigs.k8s.io/controller-runtime/pkg/client.Writer).Patch",
+			TaintSource:  fmt.Sprint([]int{2}),
+		}: {
+			End:         false,
 			TaintedArgs: []int{},
 			TaintedRets: []int{},
 		},

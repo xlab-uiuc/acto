@@ -75,7 +75,6 @@ class CompareMethods:
             and self.none_notpresent_operator(in_curr, out_curr):
             return True
         else:
-            logging.debug('%s, %s, %s, %s', in_prev, in_curr, out_prev, out_curr)
             return False
 
     def input_compare(self, prev, curr) -> bool:
