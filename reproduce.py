@@ -50,7 +50,7 @@ if __name__ == '__main__':
     with open(args.context, 'r') as context_fin:
         context = json.load(context_fin)
         context['preload_images'] = set(context['preload_images'])
-    kind_load_images(context['preload_images'], 'test')
+    # kind_load_images(context['preload_images'], 'test') # FIXME the first parameter is not a str, while it is expected to be
     deployed = deploy.deploy_with_retry(context, 'test')
 
     cmd = ['kubectl', 'apply', '-f', args.seed, '-n', context['namespace']]

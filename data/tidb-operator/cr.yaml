@@ -11,6 +11,29 @@ spec:
   pvReclaimPolicy: Retain
  
   enableDynamicConfiguration: true
+  pump:
+    baseImage: pingcap/tidb-binlog
+    version: v5.4.1
+    requests:
+      storage: 1Gi
+    replicas: 1
+  tiflash:
+    baseImage: pingcap/tiflash
+    replicas: 1
+    storageClaims:
+      - resources:
+          requests:
+            storage: 1Gi
+    # storageClaims:
+    # - {}
+    # - {}
+    # - {}
+  ticdc:
+    baseImage: pingcap/ticdc
+    version: "v5.4.1"
+    # requests:
+    #   storage: 1Gi
+    replicas: 1
   pd:
     baseImage: pingcap/pd
     config: |
