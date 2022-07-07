@@ -185,6 +185,7 @@ class InputModel:
         self.test_plan = ret
 
         test_plan_items = list(self.test_plan.items())
+        random.shuffle(test_plan_items)  # randomize to amid skewness among workers
         chunk_size = math.ceil(len(test_plan_items) / self.num_workers)
         self.test_plan_partitioned = []
         for i in range(0, len(test_plan_items), chunk_size):
