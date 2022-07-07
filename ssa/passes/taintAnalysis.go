@@ -358,6 +358,8 @@ func TaintK8sFromValue(context *Context, value ssa.Value, valueFieldMap map[ssa.
 					ContextAwareFunctionAnalysis(context, taintedValue, typedInst, callGraph, taintedSet, valueFieldMap, callStack)
 				case *ssa.Go:
 					ContextAwareFunctionAnalysis(context, taintedValue, typedInst, callGraph, taintedSet, valueFieldMap, callStack)
+				case *ssa.If:
+					// skip
 				case *ssa.Jump:
 					// skip
 				case *ssa.MapUpdate:
@@ -457,7 +459,7 @@ func TaintK8sFromValue(context *Context, value ssa.Value, valueFieldMap map[ssa.
 									}
 								}
 							} else {
-								log.Fatalf("return to a non-call callsite\n")
+								log.Fatalf("return to a non-call callsite from function %s\n", taintedValue.Parent().Pkg.Prog.Fset.Position(taintedValue.Pos()))
 							}
 						}
 					}
@@ -565,13 +567,6 @@ func ContextAwareFunctionAnalysis(context *Context, value ssa.Value, callInst ss
 		if callValue := callInst.Value(); callValue != nil {
 			taintedArgSet := NewSet[int]()
 			taintedRetSet := NewSet[int]()
-
-			// if the receiver is tainted, taint the receiver at the callee
-			// since the invoke callsite's receiver is not in the arg list, add -1
-			if value == callInst.Common().Value {
-				callSiteTaintedArgIndexSet = append(callSiteTaintedArgIndexSet, -1)
-				sort.Ints(callSiteTaintedArgIndexSet)
-			}
 
 			// construct this function call signiture
 			functionCall := FunctionCall{
@@ -718,7 +713,7 @@ func ContextAwareFunctionAnalysis(context *Context, value ssa.Value, callInst ss
 					}
 				} else {
 					if !strings.Contains(callee.Pkg.Pkg.Path(), context.RootModule.Path) {
-						log.Printf("Static callee [%s] is in external library\n", callee.String())
+						log.Printf("Static callee [%s] is in external library [%s]\n", callee.String(), callee.Pkg.Pkg.Path())
 					}
 
 					// initialize the entryPoints to taint when propogating to the callee
