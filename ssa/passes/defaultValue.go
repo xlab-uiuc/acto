@@ -26,8 +26,8 @@ func BlockDominees(context *Context, bb *ssa.BasicBlock, branch bool) (dominees 
 		worklist = append(worklist, falseBlock)
 	}
 
-	if !pd.Dominate(worklist[0], bb) {
-		dominees = append(dominees, worklist[0])
+	if pd.Dominate(worklist[0], bb) {
+		return
 	}
 
 	for len(worklist) > 0 {

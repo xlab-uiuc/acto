@@ -66,8 +66,15 @@ type Context struct {
 	CallGraph      *callgraph.Graph
 	PostDominators map[*ssa.Function]*PostDominator
 
-	ValueFieldMap   map[ssa.Value]*util.FieldSet
-	DefaultValueMap map[ssa.Value]*ssa.Const
+	ValueFieldMap       map[ssa.Value]*util.FieldSet
+	DefaultValueMap     map[ssa.Value]*ssa.Const
+	BranchStmts         map[ssa.Instruction]*[]ssa.Value
+	BranchValueDominees map[ssa.Instruction]*UsesInBranch
+}
+
+type UsesInBranch struct {
+	TrueBranch  *[]ssa.Value
+	FalseBranch *[]ssa.Value
 }
 
 func (c *Context) String() string {
@@ -83,6 +90,21 @@ func (c *Context) String() string {
 	b.WriteString("Default value map:\n")
 	for v, constant := range c.DefaultValueMap {
 		b.WriteString(fmt.Sprintf("%v: %s\n", c.ValueFieldMap[v].String(), constant.Value.ExactString()))
+	}
+
+	b.WriteString("Dominators:\n")
+	for inst := range c.BranchStmts {
+		b.WriteString(fmt.Sprintf("%s at %s\n", inst, c.Program.Fset.Position(inst.(*ssa.If).Cond.Pos())))
+	}
+
+	for ifInst, usesInBranch := range c.BranchValueDominees {
+		for _, v := range *usesInBranch.TrueBranch {
+			b.WriteString(fmt.Sprintf("%s is dominated by %s's true branch at %s\n", c.ValueFieldMap[v], v, c.Program.Fset.Position(ifInst.(*ssa.If).Cond.Pos())))
+		}
+
+		for _, v := range *usesInBranch.FalseBranch {
+			b.WriteString(fmt.Sprintf("%s is dominated by %s's false branch at %s\n", c.ValueFieldMap[v], v, c.Program.Fset.Position(ifInst.(*ssa.If).Cond.Pos())))
+		}
 	}
 	return b.String()
 }

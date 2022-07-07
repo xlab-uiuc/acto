@@ -10,7 +10,7 @@ import (
 )
 
 func IsStaticFunctionSink(function *ssa.Function) bool {
-	if function.Pkg != nil && PackageSinks[function.Pkg.Pkg.Name()] {
+	if function.Pkg != nil && PackageSinks[function.Pkg.Pkg.Path()] {
 		return true
 	}
 
@@ -22,7 +22,7 @@ func IsStaticFunctionSink(function *ssa.Function) bool {
 }
 
 func IsInterfaceFunctionSink(function *types.Func) bool {
-	if function.Pkg() != nil && PackageSinks[function.Pkg().Name()] {
+	if function.Pkg() != nil && PackageSinks[function.Pkg().Path()] {
 		log.Printf("%s is interface function sink\n", function.Id())
 		return true
 	}
@@ -103,13 +103,17 @@ func GetKnownStaticFunction(function *ssa.Function, callSiteTaintedParamIndexSet
 
 var (
 	PackageSinks = map[string]bool{
-		"log":     true,
-		"reflect": true,
-		"errors":  true,
-		"logr":    true,
+		"log":                           true,
+		"reflect":                       true,
+		"github.com/pkg/errors":         true,
+		"github.com/go-logr/logr":       true,
+		"github.com/go-openapi/runtime": true,
+		"k8s.io/klog/v2":                true,
+		"github.com/Azure/azure-storage-blob-go/azblob": true,
+		"github.com/hashicorp/go-version":               true,
 	}
 
-	StructSinks = map[string]bool {
+	StructSinks = map[string]bool{
 		"(*k8s.io/apimachinery/pkg/apis/meta/v1/unstructured.Unstructured)": true,
 	}
 
@@ -128,6 +132,7 @@ var (
 		"(k8s.io/apimachinery/pkg/apis/meta/v1.Object).SetOwnerReferences":                                true,
 		"(k8s.io/apimachinery/pkg/apis/meta/v1.Object).GetOwnerReferences":                                true,
 		"k8s.io/apimachinery/pkg/apis/meta/v1.IsControlledBy":                                             true,
+		"(sigs.k8s.io/controller-runtime/pkg/controller.Controller).Watch":                                true,
 	}
 
 	StaticFunctionSinks = map[string]bool{
@@ -135,6 +140,7 @@ var (
 		"fmt.Errorf":          true,
 		"fmt.Printf":          true,
 		"strings.Contains":    true,
+		"strings.Index":       true,
 		"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil.SetControllerReference": true,
 		"(*sigs.k8s.io/controller-runtime/pkg/builder.WebhookBuilder).For":                    true,
 		"(*sigs.k8s.io/controller-runtime/pkg/builder.WebhookBuilder).registerWebhooks":       true,
@@ -142,18 +148,19 @@ var (
 		"k8s.io/apimachinery/pkg/api/errors.NewBadRequest":                                    true,
 		"(*sigs.k8s.io/controller-runtime/pkg/scheme.Builder).Register":                       true,
 		"sigs.k8s.io/controller-runtime/pkg/client/fake.NewFakeClient":                        true,
+		"sigs.k8s.io/controller-runtime/pkg/client/apiutil.GVKForObject":                      true,
 		"(*k8s.io/apimachinery/pkg/runtime.Scheme).AddKnownTypes":                             true,
 		"k8s.io/kubernetes/pkg/util/hash.DeepHashObject":                                      true,
 		"unicode/utf8.Valid":    true,
 		"net.LookupIP":          true,
 		"(*net/http.Client).do": true,
-		"sigs.k8s.io/controller-runtime/pkg/client.IgnoreNotFound": true,
-		"(*github.com/hashicorp/go-version.Version).Compare":       true,
-		"(*k8s.io/client-go/rest.Request).Do":                      true,
-		"k8s.io/client-go/transport/spdy.RoundTripperFor":          true,
-		"k8s.io/client-go/kubernetes.NewForConfigOrDie":            true,
-		"(*database/sql.DB).Exec":                                  true,
-		"(*k8s.io/apimachinery/pkg/apis/meta/v1/unstructured.Unstructured).SetName": true,
+		"sigs.k8s.io/controller-runtime/pkg/client.IgnoreNotFound":                       true,
+		"(*github.com/hashicorp/go-version.Version).Compare":                             true,
+		"(*k8s.io/client-go/rest.Request).Do":                                            true,
+		"k8s.io/client-go/transport/spdy.RoundTripperFor":                                true,
+		"k8s.io/client-go/kubernetes.NewForConfigOrDie":                                  true,
+		"(*database/sql.DB).Exec":                                                        true,
+		"(*k8s.io/apimachinery/pkg/apis/meta/v1/unstructured.Unstructured).SetName":      true,
 		"(*k8s.io/apimachinery/pkg/apis/meta/v1/unstructured.Unstructured).SetNamespace": true,
 	}
 
@@ -172,7 +179,23 @@ var (
 
 	KnownStaticFunction = map[FunctionCall]FunctionTaintResult{
 		{
+			FunctionName: "(*sync.Map).LoadOrStore",
+			TaintSource:  fmt.Sprint([]int{1}),
+		}: {
+			End:         false,
+			TaintedArgs: []int{0},
+			TaintedRets: []int{},
+		},
+		{
 			FunctionName: "strconv.ParseInt",
+			TaintSource:  fmt.Sprint([]int{0}),
+		}: {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{0},
+		},
+		{
+			FunctionName: "strings.Replace",
 			TaintSource:  fmt.Sprint([]int{0}),
 		}: {
 			End:         false,
@@ -266,6 +289,14 @@ var (
 			End:         false,
 			TaintedArgs: []int{},
 			TaintedRets: []int{},
+		},
+		{
+			FunctionName: "gopkg.in/yaml.v2.Unmarshal",
+			TaintSource:  fmt.Sprint([]int{0}),
+		}: {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{0},
 		},
 		{
 			FunctionName: "(*text/template.Template).Execute",
@@ -639,13 +670,21 @@ var (
 			TaintedArgs: []int{},
 			TaintedRets: []int{},
 		},
+		{
+			FunctionName: "(github.com/go-openapi/runtime.ClientTransport).Submith",
+			TaintSource:  fmt.Sprint([]int{-1}),
+		}: {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{},
+		},
 	}
 
 	KnownInterfaceFunctionWithoutParam = map[string]FunctionTaintResult{
 		"(sigs.k8s.io/controller-runtime/pkg/client.Reader).Get": {
 			End:         false,
 			TaintedArgs: []int{},
-			TaintedRets: []int{0},
+			TaintedRets: []int{},
 		},
 		"(*k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta).GetName": {
 			End:         false,
