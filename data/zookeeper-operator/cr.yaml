@@ -1,6 +1,18 @@
-apiVersion: "zookeeper.pravega.io/v1beta1"
-kind: "ZookeeperCluster"
+apiVersion: zookeeper.pravega.io/v1beta1
+kind: ZookeeperCluster
 metadata:
-  name: "zookeeper"
+  name: zookeeper
 spec:
-  replicas: 3
+  replicas: 2
+  image:
+    pullPolicy: IfNotPresent
+    repository: pravega/zookeeper
+    tag: 0.2.14
+  storageType: persistence
+  persistence:
+    reclaimPolicy: Delete
+    spec:
+      storageClassName: "standard"
+      resources:
+        requests:
+          storage: 20Gi
