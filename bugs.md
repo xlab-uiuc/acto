@@ -32,6 +32,7 @@
 | cockroachdb/cockroach-operator               | [https://github.com/cockroachdb/cockroach-operator/issues/918](https://github.com/cockroachdb/cockroach-operator/issues/918)     |
 |                                  | [https://github.com/cockroachdb/cockroach-operator/issues/919](https://github.com/cockroachdb/cockroach-operator/issues/919)     |
 |                                  | [https://github.com/cockroachdb/cockroach-operator/issues/920](https://github.com/cockroachdb/cockroach-operator/issues/920)     |
+| pingcap/tidb-operator | https://github.com/pingcap/tidb-operator/pull/4608 | confirmed |
 
 ## rabbitmq/cluster-operator
 
