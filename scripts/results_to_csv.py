@@ -12,7 +12,7 @@ if __name__ == '__main__':
     with open(os.path.join(result_folder, 'result.csv'), 'w') as result_file:
         writer = csv.writer(result_file, delimiter=',')
         writer.writerow(
-            ['Trial number', 'Oracle type', 'Message', 'Input path', 'True/False alarm', 'Comment'])
+            ['Trial number', 'Oracle type', 'Message', 'Input path', 'True/False alarm', 'Category', 'Comment'])
 
         for json_path in json_paths:
             with open(json_path, 'r') as json_file:
