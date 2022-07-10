@@ -56,15 +56,19 @@ def get_yaml_existing_namespace(fn: str) -> Optional[str]:
         parsed_operator_documents = yaml.load_all(operator_yaml,
                                                   Loader=yaml.FullLoader)
         for document in parsed_operator_documents:
-            if 'metadata' in document and 'namespace' in document['metadata']:
+            if document != None and 'metadata' in document and 'namespace' in document['metadata']:
                 return document['metadata']['namespace']
     return None
 
 
 def create_namespace(apiclient, name: str) -> V1Namespace:
     corev1Api = kubernetes.client.CoreV1Api(apiclient)
-    namespace = corev1Api.create_namespace(
-        V1Namespace(metadata=V1ObjectMeta(name=name)))
+    namespace = None
+    try:
+        namespace = corev1Api.create_namespace(
+            V1Namespace(metadata=V1ObjectMeta(name=name)))
+    except Exception as e:
+                logging.error(e)
     return namespace
 
 def delete_operator_pod(apiclient, namespace: str) -> bool:
