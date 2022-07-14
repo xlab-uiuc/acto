@@ -295,6 +295,7 @@ EXCLUDE_ERROR_REGEX = [
     r"can't failover, requeuing",
     r"Secret (.)* not found",
     r"failed to get proxySQL db",
+    r"{\"severity\":\"INFO\"",
 ]
 
 INVALID_INPUT_LOG_REGEX = [
@@ -351,7 +352,8 @@ def kind_load_images(images_archive: str, name: str):
     logging.info('Loading preload images')
     cmd = ['kind', 'load', 'image-archive']
     if images_archive == None:
-        logging.warning('No image to preload, we at least should have operator image')
+        logging.warning(
+            'No image to preload, we at least should have operator image')
 
     if name != None:
         cmd.extend(['--name', name])

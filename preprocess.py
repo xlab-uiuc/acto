@@ -17,13 +17,20 @@ def update_preload_images(context: dict):
 
     worker_list = ['learn-worker', 'learn-worker2', 'learn-worker3']
     for worker in worker_list:
-        p = subprocess.run(['docker', 'exec', worker, 'crictl', 'images'],
+        p = subprocess.run(['docker', 'exec', worker, 'crictl', 'images', "--digests", "--no-trunc"],
                            capture_output=True,
                            text=True)
         output = p.stdout.strip()
         for line in output.split('\n')[1:]:
             items = line.split()
-            image = '%s:%s' % (items[0], items[1])
+            if "none" not in items[1]:
+                image = '%s:%s' % (items[0], items[1])
+            elif "none" not in items[2]:
+                image = '%s@%s' % (items[0], items[2])
+            else:
+                logging.error(
+                    "image %s has neither tag nor sha256, acto will not preload images for this run" % (items[0]))
+
             context['preload_images'].add(image)
 
 
@@ -56,18 +63,20 @@ def process_crd(context: dict,
                 logging.error('Cannot find crd %s' % crd_name)
                 quit()
         else:
-            logging.error('There are multiple crds, please specify parameter [crd_name]')
+            logging.error(
+                'There are multiple crds, please specify parameter [crd_name]')
             quit()
         if crd:
             # there is openAPIV3Schema schema issue when using python k8s client, need to fetch data from cli
-            crd_result = kubectl(['get', 'crd', crd.metadata.name, "-o", "json"], \
-                cluster_name, True, True)
+            crd_result = kubectl(['get', 'crd', crd.metadata.name, "-o", "json"],
+                                 cluster_name, True, True)
             crd_obj = json.loads(crd_result.stdout)
             spec: kubernetes.client.models.V1CustomResourceDefinitionSpec = crd.spec
             crd_data = {
                 'group': spec.group,
                 'plural': spec.names.plural,
-                'version': spec.versions[0].name,  # TODO: Handle multiple versions
+                # TODO: Handle multiple versions
+                'version': spec.versions[0].name,
                 'body': crd_obj
             }
             context['crd'] = crd_data
@@ -78,7 +87,7 @@ def process_crd(context: dict,
             'group': helper_crd_doc['spec']['group'],
             'plural': helper_crd_doc['spec']['names']['plural'],
             'version': helper_crd_doc['spec']['versions'][-1]
-                       ['name'],  # TODO: Handle multiple versions
+            ['name'],  # TODO: Handle multiple versions
             'body': helper_crd_doc
         }
         context['crd'] = crd_data

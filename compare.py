@@ -35,7 +35,7 @@ class CompareMethods:
             return True
 
     def substring_operator(self, input, output) -> bool:
-        if str(input) in str(output):
+        if str(input).lower() in str(output).lower():
             return True
 
     def config_operator(self, input, output) -> bool:
