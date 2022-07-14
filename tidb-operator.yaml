@@ -1,0 +1,378 @@
+---
+# Source: tidb-operator/templates/controller-manager-rbac.yaml
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: tidb-controller-manager
+  namespace: acto-namespace
+  labels:
+    app.kubernetes.io/name: tidb-operator
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: acto-test-operator
+    app.kubernetes.io/component: controller-manager
+    helm.sh/chart: tidb-operator-v1-canary
+---
+# Source: tidb-operator/templates/scheduler-rbac.yaml
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: tidb-scheduler
+  namespace: acto-namespace
+  labels:
+    app.kubernetes.io/name: tidb-operator
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: acto-test-operator
+    app.kubernetes.io/component: scheduler
+    helm.sh/chart: tidb-operator-v1-canary
+---
+# Source: tidb-operator/templates/scheduler-config-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tidb-scheduler-config
+  namespace: acto-namespace
+  labels:
+    app.kubernetes.io/name: tidb-operator
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: acto-test-operator
+    app.kubernetes.io/component: scheduler
+    helm.sh/chart: tidb-operator-v1-canary
+data:
+  scheduler-config.yaml: |-
+    
+    apiVersion: kubescheduler.config.k8s.io/v1beta1
+    kind: KubeSchedulerConfiguration
+    leaderElection:
+      leaderElect: true
+      resourceNamespace: acto-namespace
+      resourceName: tidb-scheduler
+    healthzBindAddress: 0.0.0.0:10261
+    metricsBindAddress: 0.0.0.0:10261
+    profiles:
+      - schedulerName: tidb-scheduler
+    extenders:
+      - urlPrefix: http://127.0.0.1:10262/scheduler
+        filterVerb: filter
+        preemptVerb: preempt
+        weight: 1
+        enableHTTPS: false
+        httpTimeout: 30s
+---
+# Source: tidb-operator/templates/controller-manager-rbac.yaml
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: acto-test-operator:tidb-controller-manager
+  labels:
+    app.kubernetes.io/name: tidb-operator
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: acto-test-operator
+    app.kubernetes.io/component: controller-manager
+    helm.sh/chart: tidb-operator-v1-canary
+rules:
+- apiGroups: [""]
+  resources:
+  - services
+  - events
+  verbs: ["*"]
+- apiGroups: [""]
+  resources: ["endpoints","configmaps"]
+  verbs: ["create", "get", "list", "watch", "update","delete"]
+- apiGroups: [""]
+  resources: ["serviceaccounts"]
+  verbs: ["create","get","update","delete"]
+- apiGroups: ["batch"]
+  resources: ["jobs"]
+  verbs: ["get", "list", "watch", "create", "update", "delete"]
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["create", "update", "get", "list", "watch","delete"]
+- apiGroups: [""]
+  resources: ["persistentvolumeclaims"]
+  verbs: ["get", "list", "watch", "create", "update", "delete", "patch"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch","update", "delete"]
+- apiGroups: ["apps"]
+  resources: ["statefulsets","deployments", "controllerrevisions"]
+  verbs: ["*"]
+- apiGroups: ["extensions"]
+  resources: ["ingresses"]
+  verbs: ["*"]
+- apiGroups: ["networking.k8s.io"]
+  resources: ["ingresses"]
+  verbs: ["*"]
+- apiGroups: ["apps.pingcap.com"]
+  resources: ["statefulsets", "statefulsets/status"]
+  verbs: ["*"]
+- apiGroups: ["pingcap.com"]
+  resources: ["*"]
+  verbs: ["*"]
+- nonResourceURLs: ["/metrics"]
+  verbs: ["get"]
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["persistentvolumes"]
+  verbs: ["get", "list", "watch", "patch","update"]
+- apiGroups: ["storage.k8s.io"]
+  resources: ["storageclasses"]
+  verbs: ["get", "list", "watch"]
+
+- apiGroups: ["rbac.authorization.k8s.io"]
+  resources: [clusterroles,roles]
+  verbs: ["escalate","create","get","update", "delete"]
+- apiGroups: ["rbac.authorization.k8s.io"]
+  resources: ["rolebindings","clusterrolebindings"]
+  verbs: ["create","get","update", "delete"]
+---
+# Source: tidb-operator/templates/scheduler-rbac.yaml
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: acto-test-operator:tidb-scheduler
+  labels:
+    app.kubernetes.io/name: tidb-operator
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: acto-test-operator
+    app.kubernetes.io/component: scheduler
+    helm.sh/chart: tidb-operator-v1-canary
+rules:
+# ConfigMap permission for --policy-configmap
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["get", "list"]
+- apiGroups: ["pingcap.com"]
+  resources: ["tidbclusters"]
+  verbs: ["get"]
+- apiGroups: [""]
+  resources: ["persistentvolumeclaims"]
+  verbs: ["get", "list", "update"]
+# Extra permissions for endpoints other than kube-scheduler
+- apiGroups: [""]
+  resources: ["endpoints"]
+  verbs: ["delete", "get", "patch", "update"]
+- apiGroups: ["coordination.k8s.io"]
+  resources: ["leases"]
+  verbs: ["create"]
+- apiGroups: ["coordination.k8s.io"]
+  resources: ["leases"]
+  resourceNames: ["tidb-scheduler"]
+  verbs: ["get", "update"]
+---
+# Source: tidb-operator/templates/controller-manager-rbac.yaml
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: acto-test-operator:tidb-controller-manager
+  labels:
+    app.kubernetes.io/name: tidb-operator
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: acto-test-operator
+    app.kubernetes.io/component: controller-manager
+    helm.sh/chart: tidb-operator-v1-canary
+subjects:
+- kind: ServiceAccount
+  name: tidb-controller-manager
+  namespace: acto-namespace
+roleRef:
+  kind: ClusterRole
+  name: acto-test-operator:tidb-controller-manager
+  apiGroup: rbac.authorization.k8s.io
+---
+# Source: tidb-operator/templates/scheduler-rbac.yaml
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: acto-test-operator:tidb-scheduler
+  labels:
+    app.kubernetes.io/name: tidb-operator
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: acto-test-operator
+    app.kubernetes.io/component: scheduler
+    helm.sh/chart: tidb-operator-v1-canary
+subjects:
+- kind: ServiceAccount
+  name: tidb-scheduler
+  namespace: acto-namespace
+roleRef:
+  kind: ClusterRole
+  name: acto-test-operator:tidb-scheduler
+  apiGroup: rbac.authorization.k8s.io
+---
+# Source: tidb-operator/templates/scheduler-rbac.yaml
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: acto-test-operator:kube-scheduler
+  labels:
+    app.kubernetes.io/name: tidb-operator
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: acto-test-operator
+    app.kubernetes.io/component: scheduler
+    helm.sh/chart: tidb-operator-v1-canary
+subjects:
+- kind: ServiceAccount
+  name: tidb-scheduler
+  namespace: acto-namespace
+roleRef:
+  kind: ClusterRole
+  name: system:kube-scheduler
+  apiGroup: rbac.authorization.k8s.io
+---
+# Source: tidb-operator/templates/scheduler-rbac.yaml
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: acto-test-operator:volume-scheduler
+  labels:
+    app.kubernetes.io/name: tidb-operator
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: acto-test-operator
+    app.kubernetes.io/component: scheduler
+    helm.sh/chart: tidb-operator-v1-canary
+subjects:
+- kind: ServiceAccount
+  name: tidb-scheduler
+  namespace: acto-namespace
+roleRef:
+  kind: ClusterRole
+  name: system:volume-scheduler
+  apiGroup: rbac.authorization.k8s.io
+---
+# Source: tidb-operator/templates/controller-manager-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tidb-controller-manager
+  namespace: acto-namespace
+  labels:
+    app.kubernetes.io/name: tidb-operator
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: acto-test-operator
+    app.kubernetes.io/component: controller-manager
+    helm.sh/chart: tidb-operator-v1-canary
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: tidb-operator
+      app.kubernetes.io/instance: acto-test-operator
+      app.kubernetes.io/component: controller-manager
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: tidb-operator
+        app.kubernetes.io/instance: acto-test-operator
+        app.kubernetes.io/component: controller-manager
+    spec:
+      serviceAccount: tidb-controller-manager
+      containers:
+      - name: tidb-operator
+        image: unw9527/tidb-operator:latest
+        imagePullPolicy: IfNotPresent
+        resources:
+            requests:
+              cpu: 80m
+              memory: 50Mi
+        livenessProbe:
+          tcpSocket:
+            port: 6060
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          failureThreshold: 10
+        command:
+          - /usr/local/bin/tidb-controller-manager
+          - -tidb-backup-manager-image=unw9527/tidb-backup-manager:latest
+          - -tidb-discovery-image=unw9527/tidb-operator:latest
+          - -cluster-scoped=true
+          - -cluster-permission-node=true
+          - -cluster-permission-pv=true
+          - -cluster-permission-sc=true
+          - -auto-failover=true
+          - -pd-failover-period=5m
+          - -tikv-failover-period=5m
+          - -tiflash-failover-period=5m
+          - -tidb-failover-period=5m
+          - -dm-master-failover-period=5m
+          - -dm-worker-failover-period=5m
+          - -v=2
+        env:
+          - name: NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: TZ
+            value: UTC
+---
+# Source: tidb-operator/templates/scheduler-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tidb-scheduler
+  namespace: acto-namespace
+  labels:
+    app.kubernetes.io/name: tidb-operator
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: acto-test-operator
+    app.kubernetes.io/component: scheduler
+    helm.sh/chart: tidb-operator-v1-canary
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: tidb-operator
+      app.kubernetes.io/instance: acto-test-operator
+      app.kubernetes.io/component: scheduler
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: tidb-operator
+        app.kubernetes.io/instance: acto-test-operator
+        app.kubernetes.io/component: scheduler
+    spec:
+      serviceAccount: tidb-scheduler
+      containers:
+      - name: tidb-scheduler
+        image: unw9527/tidb-operator:latest
+        imagePullPolicy: IfNotPresent
+        resources:
+            limits:
+              cpu: 250m
+              memory: 150Mi
+            requests:
+              cpu: 80m
+              memory: 50Mi
+        command:
+          - /usr/local/bin/tidb-scheduler
+          - -v=2
+          - -port=10262
+      - name: kube-scheduler
+        image: k8s.gcr.io/kube-scheduler:v1.22.9
+        imagePullPolicy: IfNotPresent
+        resources:
+            limits:
+              cpu: 250m
+              memory: 150Mi
+            requests:
+              cpu: 80m
+              memory: 50Mi
+        command:
+        - kube-scheduler
+        - --v=2
+        - --config=/etc/kubernetes/scheduler-config.yaml
+        volumeMounts:
+        - name: scheduler-config
+          mountPath: /etc/kubernetes
+      volumes:
+      - name: scheduler-config
+        configMap:
+          name: tidb-scheduler-config
+
