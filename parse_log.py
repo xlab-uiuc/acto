@@ -32,11 +32,10 @@ def parse_log(line: str) -> dict:
     Returns:
         a dict containing 'level' and 'message'
     '''
+    log_line = {}
     if re.search(klog_regex, line) != None:
         # log is in klog format
         match = re.search(klog_regex, line)
-        log_line = {}
-        
         if match.group(1) == 'E':
             log_line['level'] = 'error'
         elif match.group(1) == 'I':
@@ -46,15 +45,12 @@ def parse_log(line: str) -> dict:
         elif match.group(1) == 'F':
             log_line['level'] = 'fatal'
         
-        log_line['message'] = match.group(11)
+        log_line['msg'] = match.group(11)
     elif re.search(logr_regex, line) != None:
         # log is in logr format
         match = re.search(logr_regex, line)
-
-        log_line = {}
-
         log_line['level'] = match.group(2).lower()
-        log_line['message'] = match.group(4)
+        log_line['msg'] = match.group(4)
     else:
         try:
             log_line = json.loads(line)
@@ -65,37 +61,47 @@ def parse_log(line: str) -> dict:
 
 
 if __name__ == '__main__':
-    log_filepath = 'testrun-2022-06-29-23-59/trial-00-0003/operator-2.log'
-
-    with open(log_filepath, 'r') as log_file:
-        for line in log_file:
-            if re.search(klog_regex, line) != None:
-                # log is in klog format
-                match = re.search(klog_regex, line)
-                log_line = {}
+    # line = '  	Ports: []v1.ServicePort{'
+    # line = 'E0714 23:11:19.386396       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover'
+    line = 'E0624 08:02:40.303209       1 tidb_cluster_control.go:129] tidb cluster acto-namespace/test-cluster is not valid and must be fixed first, aggregated error: [spec.tikv.env[0].valueFrom.fieldRef: Invalid value: "": fieldRef is not supported, spec.tikv.env[0].valueFrom: Invalid value: "": may not have more than one field specified at a time]'
+    # line = '{"level":"error","ts":1655678404.9488907,"logger":"controller-runtime.injectors-warning","msg":"Injectors are deprecated, and will be removed in v0.10.x"}'
+    if parse_log(line) == {} or parse_log(line)['level'] != 'error' and parse_log(line)['level'] != 'fatal':
+        print('Test passed')
+    else:
+        print("level:", parse_log(line)['level'])
+        print("msg:", parse_log(line)['msg'])
+    # log_filepath = '/home/kunle/acto/testrun/testrun-tidb-1/trial-01-0532/operator-1.log'
+    # with open(log_filepath, 'r') as log_file:
+    #     line = log_file.readline()
+    #     print(parse_log(line)['level'])
+        # for line in log_file:
+        #     if re.search(klog_regex, line) != None:
+        #         # log is in klog format
+        #         match = re.search(klog_regex, line)
+        #         log_line = {}
                 
-                if match.group(1) == 'E':
-                    log_line['level'] = 'error'
-                elif match.group(1) == 'I':
-                    log_line['level'] = 'info'
-                elif match.group(1) == 'W':
-                    log_line['level'] = 'warn'
-                elif match.group(1) == 'F':
-                    log_line['level'] = 'fatal'
+        #         if match.group(1) == 'E':
+        #             log_line['level'] = 'error'
+        #         elif match.group(1) == 'I':
+        #             log_line['level'] = 'info'
+        #         elif match.group(1) == 'W':
+        #             log_line['level'] = 'warn'
+        #         elif match.group(1) == 'F':
+        #             log_line['level'] = 'fatal'
                 
-                log_line['message'] = match.group(10)
-            elif re.search(logr_regex, line) != None:
-                # log is in logr format
-                match = re.search(logr_regex, line)
+        #         log_line['message'] = match.group(10)
+        #     elif re.search(logr_regex, line) != None:
+        #         # log is in logr format
+        #         match = re.search(logr_regex, line)
 
-                log_line = {}
+        #         log_line = {}
 
-                log_line['level'] = match.group(2).lower()
-                log_line['message'] = match.group(4)
-            else:
-                try:
-                    log_line = json.loads(line)
-                except:
-                    continue
+        #         log_line['level'] = match.group(2).lower()
+        #         log_line['message'] = match.group(4)
+        #     else:
+        #         try:
+        #             log_line = json.loads(line)
+        #         except:
+        #             continue
 
-            print(log_line['message'])
+        #     print(log_line['level'])
