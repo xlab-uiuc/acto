@@ -208,11 +208,25 @@ def postprocess_diff(diff):
     return diff_dict
 
 
-def invalid_input_message(log_line: str) -> bool:
+def invalid_input_message(log_line: str, field_val_pair: dict) -> bool:
     '''Returns if the log shows the input is invalid'''
     for regex in INVALID_INPUT_LOG_REGEX:
         if re.search(regex, log_line):
             logging.info('recognized invalid input: %s' % log_line)
+            return True
+                
+    # Check if the log line contains the field or value
+    # If so, also return True
+    if len(list(field_val_pair.keys())) != 1:
+        return False
+    field_val_list = []
+    field = list(field_val_pair.keys())[0]
+    if type(field) == str:
+        field_val_list.append(field)
+    val = field_val_pair[field]
+    field_val_list += list(set([i for i in str(val).split('\'') if i.isalnum()]))
+    for item in field_val_list:
+        if item in log_line:
             return True
     return False
 
@@ -296,6 +310,7 @@ EXCLUDE_ERROR_REGEX = [
     r"Secret (.)* not found",
     r"failed to get proxySQL db",
     r"{\"severity\":\"INFO\"",
+    r"PD failover replicas \(0\) reaches the limit \(0\)",
 ]
 
 INVALID_INPUT_LOG_REGEX = [
@@ -406,3 +421,10 @@ def helm(args: list, cluster_name: str) -> subprocess.CompletedProcess:
 def kubernetes_client(cluster_name: str) -> kubernetes.client.ApiClient:
     return kubernetes.config.kube_config.new_client_from_config(
         context=kind_kubecontext(cluster_name))
+
+if __name__ == '__main__':
+    line = 'E0624 08:02:40.303209       1 tidb_cluster_control.go:129] tidb cluster acto-namespace/test-cluster is not valid and must be fixed first, aggregated error: [spec.tikv.env[0].valueFrom.fieldRef: Invalid value: "": fieldRef is not supported, spec.tikv.env[0].valueFrom: Invalid value: "": may not have more than one field specified at a time]'
+
+    field_val_pair = {'valueFrom': {'configMapKeyRef': {'key': 'ltzbphvbqz', 'name': 'fmtfbuyrwg', 'optional': True}, 'fieldRef': {'apiVersion': 'cyunlsgtrz', 'fieldPath': 'xihwjoiwit'}, 'resourceFieldRef': None, 'secretKeyRef': None}}
+
+    print(invalid_input_message(line, field_val_pair)) # Tested on 7.14. Expected True, got True. Test passed.
