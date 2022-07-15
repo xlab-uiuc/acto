@@ -232,7 +232,8 @@ class TrialRunner:
                 continue
             if not self.dryrun:
                 snapshot = runner.run(curr_input, generation)
-                result = checker.check(snapshot, self.snapshots[-1], generation, field_val_dict)
+                snapshot.field_val_dict = field_val_dict
+                result = checker.check(snapshot, self.snapshots[-1], generation)
                 self.snapshots.append(snapshot)
             else:
                 result = PassResult()
@@ -519,5 +520,5 @@ if __name__ == '__main__':
         context_cache = args.context
 
     acto = Acto(workdir_path, config, args.enable_analysis, args.preload_images, context_cache,
-                args.helper_crd, args.num_workers, args.dryrun)
+                args.helper_crd, args.num_workers, args.dryrun, ["spec", "tidb", "slowLogVolumeName"])
     acto.run()
