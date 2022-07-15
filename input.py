@@ -201,7 +201,7 @@ class InputModel:
     def curr_test(self) -> Tuple[dict, bool]:
         return self.thread_vars.current_input.raw_value(), self.thread_vars.current_input_setup
 
-    def next_test(self) -> Tuple[dict, bool, list]:
+    def next_test(self) -> Tuple[dict, bool, dict]:
         '''Selects next test case to run from the test plan
         
         Randomly select a test field, and fetch the tail of the test case list
