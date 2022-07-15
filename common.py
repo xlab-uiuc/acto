@@ -210,10 +210,10 @@ def postprocess_diff(diff):
 
 def invalid_input_message(log_line: str, field_val_pair: dict) -> bool:
     '''Returns if the log shows the input is invalid'''
-    for regex in INVALID_INPUT_LOG_REGEX:
-        if re.search(regex, log_line):
-            logging.info('recognized invalid input: %s' % log_line)
-            return True
+    # for regex in INVALID_INPUT_LOG_REGEX:
+    #     if re.search(regex, log_line):
+    #         logging.info('recognized invalid input: %s' % log_line)
+    #         return True
                 
     # Check if the log line contains the field or value
     # If so, also return True
@@ -227,6 +227,7 @@ def invalid_input_message(log_line: str, field_val_pair: dict) -> bool:
     field_val_list += list(set([i for i in str(val).split('\'') if i.isalnum()]))
     for item in field_val_list:
         if item in log_line:
+            logging.info('recognized invalid input: %s' % log_line)
             return True
     return False
 
