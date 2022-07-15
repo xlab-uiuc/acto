@@ -70,13 +70,13 @@ class Runner(object):
         try:
             system_state = self.collect_system_state()
             operator_log = self.collect_operator_log()
-            events_log = self.collect_events()
+            # events_log = self.collect_events()
         except (KeyError, ValueError) as e:
             logging.warn(e)
             system_state = {}
             operator_log = ''
 
-        snapshot = Snapshot(input, self.collect_cli_result(cli_result), system_state, operator_log)
+        snapshot = Snapshot(input, self.collect_cli_result(cli_result), system_state, operator_log, {})
         return snapshot
 
     def run_without_collect(self, seed_file: str):

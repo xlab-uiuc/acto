@@ -21,7 +21,7 @@ class Checker(object):
 
         # logging.debug(self.context['analysis_result']['paths'])
 
-    def check(self, snapshot: Snapshot, prev_snapshot: Snapshot, generation: int, field_val_dict: dict) -> RunResult:
+    def check(self, snapshot: Snapshot, prev_snapshot: Snapshot, generation: int) -> RunResult:
         '''Use acto oracles against the results to check for any errors
 
         Args:        
@@ -37,7 +37,7 @@ class Checker(object):
             return input_result
 
         state_result = self.check_resources(snapshot, prev_snapshot)
-        log_result = self.check_operator_log(snapshot, prev_snapshot, field_val_dict)
+        log_result = self.check_operator_log(snapshot, prev_snapshot)
 
         if isinstance(log_result, InvalidInputResult):
             logging.info('Invalid input, skip this case')
@@ -164,7 +164,7 @@ class Checker(object):
                     return True
         return False
 
-    def check_operator_log(self, snapshot: Snapshot, prev_snapshot: Snapshot, field_val_dict: dict) -> RunResult:
+    def check_operator_log(self, snapshot: Snapshot, prev_snapshot: Snapshot) -> RunResult:
         '''Check the operator log for error msg
         
         Args:
@@ -175,6 +175,7 @@ class Checker(object):
         '''
         log = snapshot.operator_log
         log = log[len(prev_snapshot.operator_log):]
+        field_val_dict = snapshot.field_val_dict
 
         for line in log:
             # We do not check the log line if it is not an error/fatal message
@@ -317,10 +318,10 @@ if __name__ == "__main__":
         context = json.load(context_fin)
         context['preload_images'] = set(context['preload_images'])
 
-    for path in context['analysis_result']['control_flow_fields']:
-        path.pop(0)
+    # for path in context['analysis_result']['control_flow_fields']:
+    #     path.pop(0)
 
-    context['enable_analysis'] = True
+    context['enable_analysis'] = False
 
     with open(args.seed, 'r') as seed_file:
         seed = yaml.load(seed_file, Loader=yaml.FullLoader)
@@ -340,6 +341,7 @@ if __name__ == "__main__":
             system_state_path = "%s/system-state-%03d.json" % (trial_dir, generation)
             events_log_path = "%s/events.log" % (trial_dir)
             cli_output_path = "%s/cli-output-%d.log" % (trial_dir, generation)
+            field_val_dict_path = "%s/field-val-dict-%d.json" % (trial_dir, generation)
 
             if not os.path.exists(operator_log_path):
                 break
@@ -348,13 +350,14 @@ if __name__ == "__main__":
                 open(operator_log_path, 'r') as operator_log, \
                 open(system_state_path, 'r') as system_state, \
                 open(events_log_path, 'r') as events_log, \
-                open(cli_output_path, 'r') as cli_output:
+                open(cli_output_path, 'r') as cli_output, \
+                open(field_val_dict_path, 'r') as field_val_dict:
                 input = yaml.load(input_file, Loader=yaml.FullLoader)
                 cli_result = json.load(cli_output)
                 logging.info(cli_result)
                 system_state = json.load(system_state)
                 operator_log = operator_log.read().splitlines()
-                snapshot = Snapshot(input, cli_result, system_state, operator_log)
+                snapshot = Snapshot(input, cli_result, system_state, operator_log, field_val_dict)
 
                 result = checker.check(snapshot=snapshot,
                                        prev_snapshot=snapshots[-1],
