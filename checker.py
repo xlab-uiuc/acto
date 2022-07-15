@@ -21,7 +21,7 @@ class Checker(object):
 
         # logging.debug(self.context['analysis_result']['paths'])
 
-    def check(self, snapshot: Snapshot, prev_snapshot: Snapshot, generation: int, field_val_pair: dict) -> RunResult:
+    def check(self, snapshot: Snapshot, prev_snapshot: Snapshot, generation: int, field_val_dict: dict) -> RunResult:
         '''Use acto oracles against the results to check for any errors
 
         Args:        
@@ -37,7 +37,7 @@ class Checker(object):
             return input_result
 
         state_result = self.check_resources(snapshot, prev_snapshot)
-        log_result = self.check_operator_log(snapshot, prev_snapshot, field_val_pair)
+        log_result = self.check_operator_log(snapshot, prev_snapshot, field_val_dict)
 
         if isinstance(log_result, InvalidInputResult):
             logging.info('Invalid input, skip this case')
@@ -164,7 +164,7 @@ class Checker(object):
                     return True
         return False
 
-    def check_operator_log(self, snapshot: Snapshot, prev_snapshot: Snapshot, field_val_pair: dict) -> RunResult:
+    def check_operator_log(self, snapshot: Snapshot, prev_snapshot: Snapshot, field_val_dict: dict) -> RunResult:
         '''Check the operator log for error msg
         
         Args:
@@ -181,7 +181,7 @@ class Checker(object):
             if parse_log(line) == {} or parse_log(line)['level'] != 'error' and parse_log(line)['level'] != 'fatal':
                 continue
             msg = parse_log(line)['msg']
-            if invalid_input_message(msg, field_val_pair):
+            if invalid_input_message(msg, field_val_dict):
                 return InvalidInputResult()
             skip = False
             for regex in EXCLUDE_ERROR_REGEX:
