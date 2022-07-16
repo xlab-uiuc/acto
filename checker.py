@@ -177,6 +177,7 @@ class Checker(object):
         input_delta, _ = self.get_deltas(snapshot, prev_snapshot)
         log = snapshot.operator_log
         log = log[len(prev_snapshot.operator_log):]
+        logging.debug('Checking log messages from line %d to %d', len(prev_snapshot.operator_log), len(log))
 
         for line in log:
             # We do not check the log line if it is not an error/fatal message
