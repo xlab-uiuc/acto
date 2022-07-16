@@ -13,6 +13,7 @@ import requests
 
 from constant import CONST
 from test_case import TestCase
+from parse_log import parse_log
 
 
 def notify_crash(exception: str):
@@ -208,7 +209,7 @@ def postprocess_diff(diff):
     return diff_dict
 
 
-def invalid_input_message(log_line: str, field_val_dict: dict) -> bool:
+def invalid_input_message(log_msg: str, input_delta: dict) -> bool:
     '''Returns if the log shows the input is invalid'''
     # for regex in INVALID_INPUT_LOG_REGEX:
     #     if re.search(regex, log_line):
@@ -217,19 +218,16 @@ def invalid_input_message(log_line: str, field_val_dict: dict) -> bool:
                 
     # Check if the log line contains the field or value
     # If so, also return True
-    if len(list(field_val_dict.keys())) != 1:
-        logging.error('Expect only one field in field_val_dict, got %d fields' % len(list(field_val_dict.keys())))
-        return False
-    field_val_list = []
-    field = list(field_val_dict.keys())[0]
-    if type(field) == str and field != 'NOT_HELPFUL_FIELD':
-        field_val_list.append(field)
-    val = field_val_dict[field]
-    field_val_list += list(set([i for i in str(val).split('\'') if i.isalnum()]))
-    for item in field_val_list:
-        if item in log_line:
-            logging.info('recognized invalid input: %s' % log_line)
-            return True
+
+    for delta_category in input_delta:
+        for delta in delta_category:
+            if isinstance(delta.path[-1], str) and delta.path[-1] in log_msg:
+                logging.info("Recognized invalid input through field in error message: %s" % log_msg)
+                return True
+            elif str(delta.curr) in log_msg:
+                logging.info("Recognized invalid input through value in error message: %s" % log_msg)
+                return True
+
     return False
 
 

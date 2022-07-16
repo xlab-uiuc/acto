@@ -173,27 +173,28 @@ class Checker(object):
         Returns:
             RunResult of the checking
         '''
-        field_val_dict = {}
+        input_delta, _ = self.get_deltas(snapshot, prev_snapshot)
         log = snapshot.operator_log
         log = log[len(prev_snapshot.operator_log):]
 
         for line in log:
             # We do not check the log line if it is not an error/fatal message
-            if parse_log(line) == {} or parse_log(line)['level'] != 'error' and parse_log(line)['level'] != 'fatal':
+
+            parsed_log = parse_log(line)
+            if parsed_log == {} or parsed_log['level'] != 'error' and parsed_log['level'] != 'fatal':
                 continue
             msg = parse_log(line)['msg']
-            if invalid_input_message(msg, field_val_dict):
+
+            if invalid_input_message(msg, input_delta):
                 return InvalidInputResult()
-            skip = False
+
             for regex in EXCLUDE_ERROR_REGEX:
-                if re.search(regex, msg, re.IGNORECASE):
+                if re.search(regex, line, re.IGNORECASE):
                     # logging.debug('Skipped error msg: %s' % line)
-                    skip = True
-                    break
-            if skip:
-                continue
+                    continue
+                
             logging.error('Found error in operator log')
-            return ErrorResult(Oracle.ERROR_LOG, msg)
+            return ErrorResult(Oracle.ERROR_LOG, line)
         return PassResult()
 
     def check_health(self) -> RunResult:
