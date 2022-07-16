@@ -213,6 +213,8 @@ class InputModel:
         '''
         logging.info('Progress [%d] cases left' %
                      sum([len(i) for i in self.thread_vars.test_plan.values()]))
+
+        # TODO: multi-testcase
         if self.thread_vars.curr_field != None:
             field = self.thread_vars.curr_field
         else:
