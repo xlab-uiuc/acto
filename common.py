@@ -218,10 +218,11 @@ def invalid_input_message(log_line: str, field_val_dict: dict) -> bool:
     # Check if the log line contains the field or value
     # If so, also return True
     if len(list(field_val_dict.keys())) != 1:
+        logging.error('Expect only one field in field_val_dict, got %d fields' % len(list(field_val_dict.keys())))
         return False
     field_val_list = []
     field = list(field_val_dict.keys())[0]
-    if type(field) == str:
+    if type(field) == str and field != 'NOT_HELPFUL_FIELD':
         field_val_list.append(field)
     val = field_val_dict[field]
     field_val_list += list(set([i for i in str(val).split('\'') if i.isalnum()]))

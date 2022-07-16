@@ -76,7 +76,7 @@ class Runner(object):
             system_state = {}
             operator_log = ''
 
-        snapshot = Snapshot(input, self.collect_cli_result(cli_result), system_state, operator_log, {})
+        snapshot = Snapshot(input, self.collect_cli_result(cli_result), system_state, operator_log)
         return snapshot
 
     def run_without_collect(self, seed_file: str):
