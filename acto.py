@@ -215,12 +215,11 @@ class TrialRunner:
         while generation < num_mutation:
             setup = False
             # if connection refused, feed the current test as input again
-            field_val_dict = {}
             if retry == True:
                 curr_input, setup = self.input_model.curr_test()
                 retry = False
             elif generation != 0:
-                curr_input, setup, field_val_dict = self.input_model.next_test()
+                curr_input, setup = self.input_model.next_test()
 
             input_delta = self.input_model.get_input_delta()
             prune_noneffective_change(input_delta)
@@ -232,7 +231,6 @@ class TrialRunner:
                 continue
             if not self.dryrun:
                 snapshot = runner.run(curr_input, generation)
-                snapshot.field_val_dict = field_val_dict
                 result = checker.check(snapshot, self.snapshots[-1], generation)
                 self.snapshots.append(snapshot)
             else:
@@ -520,5 +518,5 @@ if __name__ == '__main__':
         context_cache = args.context
 
     acto = Acto(workdir_path, config, args.enable_analysis, args.preload_images, context_cache,
-                args.helper_crd, args.num_workers, args.dryrun,)
+                args.helper_crd, args.num_workers, args.dryrun, ["spec", "tidb", "slowLogVolumeName"])
     acto.run()

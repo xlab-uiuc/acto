@@ -201,7 +201,7 @@ class InputModel:
     def curr_test(self) -> Tuple[dict, bool]:
         return self.thread_vars.current_input.raw_value(), self.thread_vars.current_input_setup
 
-    def next_test(self) -> Tuple[dict, bool, dict]:
+    def next_test(self) -> Tuple[dict, bool]:
         '''Selects next test case to run from the test plan
         
         Randomly select a test field, and fetch the tail of the test case list
@@ -238,13 +238,6 @@ class InputModel:
             next_value = test_case.run_setup(curr)
             logging.info('Precondition not satisfied, try setup')
         logging.debug('Next value: %s' % next_value)
-        # logging.debug(json.loads(field))
-
-        # Save current input field and the next value
-        try:
-            field_val_dict = {field[-1]: next_value}
-        except:
-            field_val_dict = {}
 
         # Save previous input
         self.thread_vars.previous_input = attach_schema_to_value(
@@ -254,7 +247,7 @@ class InputModel:
         self.thread_vars.current_input.create_path(json.loads(field))
         self.thread_vars.current_input.set_value_by_path(next_value, json.loads(field))
         self.thread_vars.current_input_setup = setup
-        return self.thread_vars.current_input.raw_value(), setup, field_val_dict
+        return self.thread_vars.current_input.raw_value(), setup
 
     def get_input_delta(self):
         '''Compare the current input with the previous input
