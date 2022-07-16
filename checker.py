@@ -153,7 +153,8 @@ class Checker(object):
             if len(input_delta.path) == len(control_flow_field):
                 not_match = False
                 for i in range(len(input_delta.path)):
-                    if control_flow_field[i] == 'INDEX' and re.match(r"^\d$", str(input_delta.path[i])):
+                    if control_flow_field[i] == 'INDEX' and re.match(r"^\d$",
+                                                                     str(input_delta.path[i])):
                         continue
                     elif input_delta.path[i] != control_flow_field[i]:
                         not_match = True
@@ -188,11 +189,15 @@ class Checker(object):
             if invalid_input_message(msg, input_delta):
                 return InvalidInputResult()
 
+            skip = False
             for regex in EXCLUDE_ERROR_REGEX:
                 if re.search(regex, line, re.IGNORECASE):
                     # logging.debug('Skipped error msg: %s' % line)
-                    continue
-                
+                    skip = True
+                    break
+            if skip:
+                continue
+
             logging.error('Found error in operator log')
             return ErrorResult(Oracle.ERROR_LOG, line)
         return PassResult()
@@ -351,14 +356,13 @@ if __name__ == "__main__":
                 open(operator_log_path, 'r') as operator_log, \
                 open(system_state_path, 'r') as system_state, \
                 open(events_log_path, 'r') as events_log, \
-                open(cli_output_path, 'r') as cli_output, \
-                open(field_val_dict_path, 'r') as field_val_dict:
+                open(cli_output_path, 'r') as cli_output:
                 input = yaml.load(input_file, Loader=yaml.FullLoader)
                 cli_result = json.load(cli_output)
                 logging.info(cli_result)
                 system_state = json.load(system_state)
                 operator_log = operator_log.read().splitlines()
-                snapshot = Snapshot(input, cli_result, system_state, operator_log, field_val_dict)
+                snapshot = Snapshot(input, cli_result, system_state, operator_log)
 
                 result = checker.check(snapshot=snapshot,
                                        prev_snapshot=snapshots[-1],
