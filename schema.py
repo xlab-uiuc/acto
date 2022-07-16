@@ -9,6 +9,7 @@ from jsonschema import validate
 
 from test_case import *
 from common import ActoEncoder, random_string
+from testplan import TreeNode
 
 
 class BaseSchema:
@@ -31,11 +32,16 @@ class BaseSchema:
         return None
 
     @abstractmethod
-    def test_cases(self):
+    def test_cases(self) -> list:
         return None
 
     @abstractmethod
     def get_all_schemas(self):
+        return None
+
+    @abstractmethod
+    def to_tree(self) -> TreeNode:
+        '''Returns tree structure, used for input generation'''
         return None
 
     def delete(self, prev):
@@ -67,17 +73,10 @@ class StringSchema(BaseSchema):
 
     def __init__(self, path: list, schema: dict) -> None:
         super().__init__(path, schema)
-        self.min_length = None if 'minLength' not in schema else schema[
-            'minLength']
+        self.min_length = None if 'minLength' not in schema else schema['minLength']
         self.max_length = self.default_max_length if 'maxLength' not in schema else schema[
             'maxLength']
         self.pattern = None if 'pattern' not in schema else schema['pattern']
-
-    def __str__(self) -> str:
-        return 'String'
-
-    def get_all_schemas(self) -> list:
-        return [self]
 
     def gen(self, **kwargs):
         # TODO: Use minLength: the exrex does not support minLength
@@ -87,25 +86,31 @@ class StringSchema(BaseSchema):
             return exrex.getone(self.pattern, self.max_length)
         return random_string(10)
 
+    def test_cases(self):
+        '''String schema currently has two test cases, delete and change'''
+        ret = [TestCase(self.delete_precondition, self.delete, self.delete_setup)]
+        if self.enum != None:
+            for case in self.enum:
+                ret.append(EnumTestCase(case))
+        else:
+            change_testcase = TestCase(self.change_precondition, self.change, self.change_setup)
+            ret.append(change_testcase)
+        return ret
+
+    def get_all_schemas(self) -> list:
+        return [self]
+
+    def to_tree(self) -> TreeNode:
+        return TreeNode()
+
     def num_cases(self):
         return 3
 
     def num_fields(self):
         return 1
 
-    def test_cases(self):
-        '''String schema currently has two test cases, delete and change'''
-        ret = [
-            TestCase(self.delete_precondition, self.delete, self.delete_setup)
-        ]
-        if self.enum != None:
-            for case in self.enum:
-                ret.append(EnumTestCase(case))
-        else:
-            change_testcase = TestCase(self.change_precondition, self.change,
-                                       self.change_setup)
-            ret.append(change_testcase)
-        return ret
+    def __str__(self) -> str:
+        return 'String'
 
     def change_precondition(self, prev):
         return prev != None
@@ -113,15 +118,13 @@ class StringSchema(BaseSchema):
     def change(self, prev):
         '''Test case to change the value to another one'''
         if self.enum != None:
-            logging.fatal(
-                'String field with enum should not call change to mutate')
+            logging.fatal('String field with enum should not call change to mutate')
         if self.pattern != None:
             new_string = exrex.getone(self.pattern, self.max_length)
         else:
             new_string = random_string(10)
         if prev == new_string:
-            logging.error(
-                'Failed to change, generated the same string with previous one')
+            logging.error('Failed to change, generated the same string with previous one')
         return new_string
 
     def change_setup(self, prev):
@@ -143,50 +146,44 @@ class NumberSchema(BaseSchema):
 
     def __init__(self, path: list, schema: dict) -> None:
         super().__init__(path, schema)
-        self.minimum = self.default_minimum if 'minimum' not in schema else schema[
-            'minimum']
-        self.maximum = self.default_maximum if 'maximum' not in schema else schema[
-            'maximum']
+        self.minimum = self.default_minimum if 'minimum' not in schema else schema['minimum']
+        self.maximum = self.default_maximum if 'maximum' not in schema else schema['maximum']
         self.exclusive_minimum = None if 'exclusiveMinimum' not in schema else schema[
             'exclusiveMinimum']
         self.exclusive_maximum = None if 'exclusiveMaximum' not in schema else schema[
             'exclusiveMaximum']
-        self.multiple_of = None if 'multipleOf' not in schema else schema[
-            'multipleOf']
+        self.multiple_of = None if 'multipleOf' not in schema else schema['multipleOf']
 
-    def __str__(self) -> str:
-        return 'Number'
-
-    def get_all_schemas(self) -> list:
-        return [self]
-
-    def gen(self, **kwargs):
+    def gen(self, **kwargs) -> float:
         # TODO: Use exclusive_minimum, exclusive_maximum, multiple_of
         if self.enum != None:
             return random.choice(self.enum)
         return random.uniform(self.minimum, self.maximum)
 
-    def num_cases():
-        return 3
-
-    def num_fields(self):
-        return 1
-
-    def test_cases(self):
-        ret = [
-            TestCase(self.delete_precondition, self.delete, self.delete_setup)
-        ]
+    def test_cases(self) -> list:
+        ret = [TestCase(self.delete_precondition, self.delete, self.delete_setup)]
         if self.enum != None:
             for case in self.enum:
                 ret.append(EnumTestCase(case))
         else:
-            ret.append(
-                TestCase(self.increase_precondition, self.increase,
-                         self.increase_setup))
-            ret.append(
-                TestCase(self.decrease_precondition, self.decrease,
-                         self.decrease_setup))
+            ret.append(TestCase(self.increase_precondition, self.increase, self.increase_setup))
+            ret.append(TestCase(self.decrease_precondition, self.decrease, self.decrease_setup))
         return ret
+
+    def get_all_schemas(self) -> list:
+        return [self]
+
+    def to_tree(self) -> TreeNode:
+        return TreeNode()
+
+    def num_cases() -> int:
+        return 3
+
+    def num_fields(self) -> int:
+        return 1
+
+    def __str__(self) -> str:
+        return 'Number'
 
     def increase_precondition(self, prev):
         if prev == None:
@@ -231,30 +228,32 @@ class IntegerSchema(NumberSchema):
         if self.default == None:
             self.default = 0
 
-    def __str__(self) -> str:
-        return 'Integer'
-
-    def get_all_schemas(self) -> list:
-        return [self]
-
-    def gen(self, **kwargs):
+    def gen(self, **kwargs) -> int:
         # TODO: Use exclusive_minimum, exclusive_maximum
         if self.enum != None:
             return random.choice(self.enum)
         elif self.multiple_of != None:
-            return random.randrange(self.minimum, self.maximum + 1,
-                                    self.multiple_of)
+            return random.randrange(self.minimum, self.maximum + 1, self.multiple_of)
         else:
             return random.randint(self.minimum, self.maximum)
 
-    def num_cases(self):
+    def test_cases(self) -> list:
+        return super().test_cases()
+
+    def get_all_schemas(self) -> list:
+        return [self]
+
+    def to_tree(self) -> TreeNode:
+        return super().to_tree()
+
+    def num_cases(self) -> int:
         return 3
 
-    def num_fields(self):
+    def num_fields(self) -> int:
         return 1
 
-    def test_cases(self):
-        return super().test_cases()
+    def __str__(self) -> str:
+        return 'Integer'
 
     def increase_precondition(self, prev):
         if prev == None:
@@ -312,52 +311,21 @@ class ObjectSchema(BaseSchema):
         self.additional_properties = None
         self.required = []
         if 'properties' not in schema and 'additionalProperties' not in schema:
-            logging.warning(
-                'Object schema %s does not have properties nor additionalProperties'
-                % self.path)
+            logging.warning('Object schema %s does not have properties nor additionalProperties' %
+                            self.path)
         if 'properties' in schema:
             for property_key, property_schema in schema['properties'].items():
-                self.properties[property_key] = extract_schema(
-                    self.path + [property_key], property_schema)
+                self.properties[property_key] = extract_schema(self.path + [property_key],
+                                                               property_schema)
         if 'additionalProperties' in schema:
-            self.additional_properties = extract_schema(
-                self.path + ['additional_properties'],
-                schema['additionalProperties'])
+            self.additional_properties = extract_schema(self.path + ['additional_properties'],
+                                                        schema['additionalProperties'])
         if 'required' in schema:
             self.required = schema['required']
         if 'minProperties' in schema:
             self.min_properties = schema['minProperties']
         if 'maxProperties' in schema:
             self.max_properties = schema['maxProperties']
-
-    def get_property_schema(self, key):
-        if key in self.properties:
-            return self.properties[key]
-        elif self.additional_properties != None:
-            return self.additional_properties
-        else:
-            logging.warning(
-                'Field [%s] does not have a schema, using opaque schema', key)
-            return OpaqueSchema(self.path + [key], {})
-
-    def get_properties(self) -> dict:
-        return self.properties
-
-    def get_additional_properties(self):
-        return self.additional_properties
-
-    def get_all_schemas(self) -> list:
-        '''Return all the subschemas as a list'''
-        ret = [self]
-        if self.properties != None:
-            for value in self.properties.values():
-                ret.extend(value.get_all_schemas())
-        if self.additional_properties != None:
-            ret.append(self.additional_properties)
-        # if len(ret) > 500:
-        #     # XXX: Temporary prune
-        #     return []
-        return ret
 
     def gen(self, minimum: bool = False, **kwargs) -> dict:
         # TODO: Use constraints: minProperties, maxProperties
@@ -367,9 +335,7 @@ class ObjectSchema(BaseSchema):
         if len(self.properties) == 0:
             if self.additional_properties == None:
                 # raise TypeError('[%s]: No properties and no additional properties' % self.path)
-                logging.warning(
-                    '[%s]: No properties and no additional properties' %
-                    self.path)
+                logging.warning('[%s]: No properties and no additional properties' % self.path)
                 return None
             key = random_string(5)
             result[key] = self.additional_properties.gen(minimum=minimum)
@@ -390,6 +356,52 @@ class ObjectSchema(BaseSchema):
             result['enabled'] = True
         return result
 
+    def test_cases(self):
+        ret = [TestCase(self.delete_precondition, self.delete, self.delete_setup)]
+        if self.enum != None:
+            for case in self.enum:
+                ret.append(EnumTestCase(case))
+        return ret
+
+    def get_all_schemas(self) -> list:
+        '''Return all the subschemas as a list'''
+        ret = [self]
+        if self.properties != None:
+            for value in self.properties.values():
+                ret.extend(value.get_all_schemas())
+        if self.additional_properties != None:
+            ret.append(self.additional_properties)
+        # if len(ret) > 500:
+        #     # XXX: Temporary prune
+        #     return []
+        return ret
+
+    def to_tree(self) -> TreeNode:
+        node = TreeNode()
+        if self.properties != None:
+            for key, value in self.properties.items():
+                node.add_child(key, value.to_tree())
+
+        if self.additional_properties != None:
+            node.add_child('additional_properties', self.additional_properties.to_tree())
+
+        return node
+
+    def get_property_schema(self, key):
+        if key in self.properties:
+            return self.properties[key]
+        elif self.additional_properties != None:
+            return self.additional_properties
+        else:
+            logging.warning('Field [%s] does not have a schema, using opaque schema', key)
+            return OpaqueSchema(self.path + [key], {})
+
+    def get_properties(self) -> dict:
+        return self.properties
+
+    def get_additional_properties(self):
+        return self.additional_properties
+
     def num_cases(self) -> int:
         num = 0
         for i in self.properties.values():
@@ -401,15 +413,6 @@ class ObjectSchema(BaseSchema):
         for i in self.properties.values():
             num += i.num_fields()
         return num + 1
-
-    def test_cases(self):
-        ret = [
-            TestCase(self.delete_precondition, self.delete, self.delete_setup)
-        ]
-        if self.enum != None:
-            for case in self.enum:
-                ret.append(EnumTestCase(case))
-        return ret
 
     def __str__(self) -> str:
         ret = '{'
@@ -443,22 +446,14 @@ class ArraySchema(BaseSchema):
     def __init__(self, path: list, schema: dict) -> None:
         super().__init__(path, schema)
         self.item_schema = extract_schema(self.path + ['ITEM'], schema['items'])
-        self.min_items = self.default_min_items if 'minItems' not in schema else schema[
-            'minItems']
-        self.max_items = self.default_max_items if 'maxItems' not in schema else schema[
-            'maxItems']
-        self.unique_items = None if 'uniqueItems' not in schema else schema[
-            'exclusiveMinimum']
+        self.min_items = self.default_min_items if 'minItems' not in schema else schema['minItems']
+        self.max_items = self.default_max_items if 'maxItems' not in schema else schema['maxItems']
+        self.unique_items = None if 'uniqueItems' not in schema else schema['exclusiveMinimum']
 
     def get_item_schema(self):
         return self.item_schema
 
-    def get_all_schemas(self) -> list:
-        ret = [self]
-        ret.extend(self.item_schema.get_all_schemas())
-        return ret
-
-    def gen(self, minimum: bool = False, **kwargs):
+    def gen(self, minimum: bool = False, **kwargs) -> list:
         if self.enum != None:
             return random.choice(self.enum)
         else:
@@ -471,27 +466,31 @@ class ArraySchema(BaseSchema):
                 result.append(self.item_schema.gen(minimum=minimum))
             return result
 
+    def test_cases(self) -> list:
+        ret = [TestCase(self.delete_precondition, self.delete, self.delete_setup)]
+        if self.enum != None:
+            for case in self.enum:
+                ret.append(EnumTestCase(case))
+        else:
+            ret.append(TestCase(self.push_precondition, self.push_mutator, self.push_setup))
+            ret.append(TestCase(self.pop_precondition, self.pop_mutator, self.pop_setup))
+        return ret
+
+    def get_all_schemas(self) -> list:
+        ret = [self]
+        ret.extend(self.item_schema.get_all_schemas())
+        return ret
+
+    def to_tree(self) -> TreeNode:
+        node = TreeNode()
+        node.add_child('ITEM', self.item_schema)
+        return node
+
     def num_cases(self):
         return self.item_schema.num_cases() + 3
 
     def num_fields(self):
         return self.item_schema.num_fields() + 1
-
-    def test_cases(self):
-        ret = [
-            TestCase(self.delete_precondition, self.delete, self.delete_setup)
-        ]
-        if self.enum != None:
-            for case in self.enum:
-                ret.append(EnumTestCase(case))
-        else:
-            ret.append(
-                TestCase(self.push_precondition, self.push_mutator,
-                         self.push_setup))
-            ret.append(
-                TestCase(self.pop_precondition, self.pop_mutator,
-                         self.pop_setup))
-        return ret
 
     def push_precondition(self, prev):
         if prev == None:
@@ -548,19 +547,7 @@ class AnyOfSchema(BaseSchema):
             base_schema = deepcopy(schema)
             del base_schema['anyOf']
             base_schema.update(v)
-            self.possibilities.append(
-                extract_schema(self.path + ['%s' % str(index)], base_schema))
-
-    def __str__(self) -> str:
-        ret = '['
-        for i in self.possibilities:
-            ret += str(i)
-            ret += ', '
-        ret += ']'
-        return ret
-
-    def get_all_schemas(self) -> list:
-        return [self]
+            self.possibilities.append(extract_schema(self.path + ['%s' % str(index)], base_schema))
 
     def get_possibilities(self):
         return self.possibilities
@@ -569,19 +556,7 @@ class AnyOfSchema(BaseSchema):
         schema = random.choice(self.possibilities)
         return schema.gen(minimum=minimum)
 
-    def num_cases(self):
-        num = 0
-        for i in self.possibilities:
-            num += i.num_cases()
-        return num + 1
-
-    def num_fields(self):
-        num = 0
-        for i in self.possibilities:
-            num += i.num_fields()
-        return num
-
-    def test_cases(self):
+    def test_cases(self) -> list:
         ret = []
         if self.enum != None:
             for case in self.enum:
@@ -590,9 +565,34 @@ class AnyOfSchema(BaseSchema):
             for possibility in self.possibilities:
                 testcases = possibility.test_cases()
                 for testcase in testcases:
-                    testcase.add_precondition(
-                        SchemaPrecondition(possibility).precondition)
+                    testcase.add_precondition(SchemaPrecondition(possibility).precondition)
                 ret.extend(testcases)
+        return ret
+
+    def get_all_schemas(self) -> list:
+        return [self]
+
+    def to_tree(self) -> TreeNode:
+        return TreeNode()
+
+    def num_cases(self) -> int:
+        num = 0
+        for i in self.possibilities:
+            num += i.num_cases()
+        return num + 1
+
+    def num_fields(self) -> int:
+        num = 0
+        for i in self.possibilities:
+            num += i.num_fields()
+        return num
+
+    def __str__(self) -> str:
+        ret = '['
+        for i in self.possibilities:
+            ret += str(i)
+            ret += ', '
+        ret += ']'
         return ret
 
 
@@ -620,19 +620,14 @@ class BooleanSchema(BaseSchema):
         return 1
 
     def test_cases(self):
-        ret = [
-            TestCase(self.delete_precondition, self.delete, self.delete_setup)
-        ]
+        ret = [TestCase(self.delete_precondition, self.delete, self.delete_setup)]
         if self.enum != None:
             for case in self.enum:
                 ret.append(EnumTestCase(case))
         else:
             ret.append(
-                TestCase(self.toggle_off_precondition, self.toggle_off,
-                         self.toggle_off_setup))
-            ret.append(
-                TestCase(self.toggle_on_precondition, self.toggle_on,
-                         self.toggle_on_setup))
+                TestCase(self.toggle_off_precondition, self.toggle_off, self.toggle_off_setup))
+            ret.append(TestCase(self.toggle_on_precondition, self.toggle_on, self.toggle_on_setup))
         return ret
 
     def toggle_on_precondition(self, prev):
@@ -685,7 +680,7 @@ class OpaqueSchema(BaseSchema):
 
     def test_cases(self):
         return []
-    
+
     def get_all_schemas(self):
         return []
 
@@ -716,13 +711,11 @@ def extract_schema(path: list, schema: dict) -> object:
 if __name__ == '__main__':
     with open('data/redis-operator/databases.spotahome.com_redisfailovers.yaml',
               'r') as operator_yaml:
-        parsed_operator_documents = yaml.load_all(operator_yaml,
-                                                  Loader=yaml.FullLoader)
+        parsed_operator_documents = yaml.load_all(operator_yaml, Loader=yaml.FullLoader)
         for document in parsed_operator_documents:
             if document['kind'] == 'CustomResourceDefinition':
                 spec_schema = ObjectSchema(
-                    ['root'],
-                    document['spec']['versions'][0]['schema']['openAPIV3Schema']
+                    ['root'], document['spec']['versions'][0]['schema']['openAPIV3Schema']
                     ['properties']['spec']['properties']['redis'])
                 print(str(spec_schema))
                 print(spec_schema.gen())
