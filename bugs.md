@@ -41,3 +41,4 @@
 | Operator                         | Link                                                                                                                             | Status    |
 | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | --------- |
 | mongodb/mongodb-kubernetes-operator | [https://github.com/mongodb/helm-charts/pull/123](https://github.com/mongodb/helm-charts/pull/123)                            | fixed     |
+| pingcap/tidb-operator | https://github.com/pingcap/tidb-operator/issues/4614 | confirmed |
