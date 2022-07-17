@@ -33,7 +33,6 @@
 |                                  | [https://github.com/cockroachdb/cockroach-operator/issues/919](https://github.com/cockroachdb/cockroach-operator/issues/919)     |
 |                                  | [https://github.com/cockroachdb/cockroach-operator/issues/920](https://github.com/cockroachdb/cockroach-operator/issues/920)     | confirmed |
 | pingcap/tidb-operator | https://github.com/pingcap/tidb-operator/pull/4608 | confirmed |
-| | https://github.com/pingcap/tidb-operator/issues/4614 | confirmed |
 | | https://github.com/pingcap/tidb-operator/issues/4632 | 
 
 # Byproduct bugs
