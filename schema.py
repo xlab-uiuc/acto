@@ -101,7 +101,7 @@ class StringSchema(BaseSchema):
         return [self]
 
     def to_tree(self) -> TreeNode:
-        return TreeNode()
+        return TreeNode(self.path)
 
     def num_cases(self):
         return 3
@@ -174,7 +174,7 @@ class NumberSchema(BaseSchema):
         return [self]
 
     def to_tree(self) -> TreeNode:
-        return TreeNode()
+        return TreeNode(self.path)
 
     def num_cases() -> int:
         return 3
@@ -377,7 +377,7 @@ class ObjectSchema(BaseSchema):
         return ret
 
     def to_tree(self) -> TreeNode:
-        node = TreeNode()
+        node = TreeNode(self.path)
         if self.properties != None:
             for key, value in self.properties.items():
                 node.add_child(key, value.to_tree())
@@ -482,7 +482,7 @@ class ArraySchema(BaseSchema):
         return ret
 
     def to_tree(self) -> TreeNode:
-        node = TreeNode()
+        node = TreeNode(self.path)
         node.add_child('ITEM', self.item_schema)
         return node
 
@@ -573,7 +573,7 @@ class AnyOfSchema(BaseSchema):
         return [self]
 
     def to_tree(self) -> TreeNode:
-        return TreeNode()
+        return TreeNode(self.path)
 
     def num_cases(self) -> int:
         num = 0
