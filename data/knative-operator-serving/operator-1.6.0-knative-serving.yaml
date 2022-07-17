@@ -2470,7 +2470,8 @@ spec:
         - name: operator-webhook
           # This is the Go import path for the binary that is containerized
           # and substituted here.
-          image: gcr.io/knative-releases/knative.dev/operator/cmd/webhook@sha256:88f81a928b97dcb1371a5964ad7e478cb6a5765f73cbd2e1f558188ba73f95af
+          image: gcr.io/knative-releases/knative.dev/operator/cmd/webhook:v1.6.0
+          imagePullPolicy: IfNotPresent
           resources:
             requests:
               cpu: 100m
@@ -2785,7 +2786,7 @@ spec:
       serviceAccountName: knative-operator
       containers:
         - name: knative-operator
-          image: gcr.io/knative-releases/knative.dev/operator/cmd/operator@sha256:2cbbbe9a7873fc9414a09c3ed558dde13a8105e70e4c83300e3a0a820534897f
+          image: gcr.io/knative-releases/knative.dev/operator/cmd/operator:v1.6.0
           imagePullPolicy: IfNotPresent
           env:
             - name: POD_NAME
