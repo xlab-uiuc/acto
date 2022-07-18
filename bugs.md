@@ -36,6 +36,7 @@
 | | https://github.com/pingcap/tidb-operator/issues/4613 |
 | | https://github.com/pingcap/tidb-operator/issues/4632 | 
 | | https://github.com/pingcap/tidb-operator/issues/4634 |
+| | https://github.com/pingcap/tidb-operator/issues/4637 |
 
 # Byproduct bugs
 
