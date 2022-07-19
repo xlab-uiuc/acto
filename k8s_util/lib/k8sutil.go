@@ -20,7 +20,7 @@ func parse(valuePtr *C.char) *C.char {
 
 func main() {
 	// fmt.Println("Hello, world.")
-	test := "+4678410156.347680E+.6994785"
+	test := "-92743e6047801799"
 	ans, err := resource.ParseQuantity(test)
 	if err != nil {
 		fmt.Printf("Error in converting the string %v", err)

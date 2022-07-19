@@ -9,6 +9,7 @@ def canonicalizeQuantity(value):
     parse = k8sutil.parse
     parse.argtypes = [ctypes.c_char_p]
     parse.restype = ctypes.c_void_p
+    # print(str(value).encode("utf-8"))
     parse_output = parse(str(value).encode("utf-8"))
     parse_bytes = ctypes.string_at(parse_output)
     parse_string = parse_bytes.decode('utf-8')
@@ -30,8 +31,10 @@ if __name__ == '__main__':
     # print(canonicalizeQuantity('.01Ki'))
     # assert(float(canonicalizeQuantity('-.484785E-7466')) == float(canonicalizeQuantity('0')))
     # print(canonicalizeQuantity('+4678410156.347680E+.6994785'))
-    print(canonicalizeQuantity("+838612.516637636"))
-    print(canonicalizeQuantity("838612517m"))
+    # print(canonicalizeQuantity("+838612.516637636"))
+    # print(canonicalizeQuantity("838612517m"))
     # assert(canonicalizeQuantity("+838612.516637636") == canonicalizeQuantity("838612517m"))
-    print(canonicalizeQuantity('+099'))
-    print(canonicalizeQuantity('99'))
+    # print(canonicalizeQuantity('+099'))
+    # print(canonicalizeQuantity('99'))
+    print(canonicalizeQuantity(".2316344e999842"))
+    # print(canonicalizeQuantity("-92743e6047801799")) # crash
