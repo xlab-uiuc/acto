@@ -31,12 +31,16 @@
 |                                  | [https://github.com/kubernetes/kubernetes/issues/110654](https://github.com/kubernetes/kubernetes/issues/110654)                 | confirmed |
 | cockroachdb/cockroach-operator               | [https://github.com/cockroachdb/cockroach-operator/issues/918](https://github.com/cockroachdb/cockroach-operator/issues/918)     | confirmed |
 |                                  | [https://github.com/cockroachdb/cockroach-operator/issues/919](https://github.com/cockroachdb/cockroach-operator/issues/919)     |
-|                                  | [https://github.com/cockroachdb/cockroach-operator/issues/920](https://github.com/cockroachdb/cockroach-operator/issues/920)     |
+|                                  | [https://github.com/cockroachdb/cockroach-operator/issues/920](https://github.com/cockroachdb/cockroach-operator/issues/920)     | confirmed |
 | pingcap/tidb-operator | https://github.com/pingcap/tidb-operator/pull/4608 | confirmed |
-|  | https://github.com/pingcap/tidb-operator/pull/4614 | confirmed |
+| | https://github.com/pingcap/tidb-operator/issues/4613 |
+| | https://github.com/pingcap/tidb-operator/issues/4632 | 
+| | https://github.com/pingcap/tidb-operator/issues/4634 |
+| | https://github.com/pingcap/tidb-operator/issues/4637 |
 
 # Byproduct bugs
 
 | Operator                         | Link                                                                                                                             | Status    |
 | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | --------- |
 | mongodb/mongodb-kubernetes-operator | [https://github.com/mongodb/helm-charts/pull/123](https://github.com/mongodb/helm-charts/pull/123)                            | fixed     |
+| pingcap/tidb-operator | https://github.com/pingcap/tidb-operator/issues/4614 | confirmed |
