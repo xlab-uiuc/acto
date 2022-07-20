@@ -9,29 +9,8 @@ spec:
   helper:
     image: busybox:1.34.1
   pvReclaimPolicy: Retain
-  recoverFailover: false
+  # recoverFailover: false # should be enabled
   enableDynamicConfiguration: true
-  # pump:
-  #   baseImage: pingcap/tidb-binlog
-  #   version: v5.4.1
-  #   requests:
-  #     storage: 1Gi
-  #   replicas: 1
-  # tiflash:
-  #   baseImage: pingcap/tiflash
-  #   replicas: 2
-  #   storageClaims:
-  #     - resources:
-  #         requests:
-  #           storage: 1Gi
-  #   # storageClaims: []
-  #   configUpdateStrategy: RollingUpdate
-  # ticdc:
-  #   baseImage: pingcap/ticdc
-  #   version: "v5.4.1"
-  #   # requests:
-  #   #   storage: 1Gi
-  #   replicas: 1
   pd:
     baseImage: pingcap/pd
     config: |
@@ -42,12 +21,6 @@ spec:
     requests:
       storage: 10Gi
     mountClusterClientSecret: true
-    # dataSubDir: xtpxnorqpf
-    # service:
-    #   annotations:
-    #     emowrglwba: fohobpdwcl
-  # services:
-  # - name: uytjmpivol
   tidb:
     baseImage: pingcap/tidb
     config: |
@@ -56,26 +29,21 @@ spec:
     replicas: 3
     maxFailoverCount: 0
     service:
-      # clusterIP: ofswknfqxr
       type: NodePort
       externalTrafficPolicy: Local
-    plugins: null
-    # annotations:
-    #   dbquixhddr: klsdfjkjlf
   tikv:
     baseImage: pingcap/tikv
     config: |
       log-level = "info"
     replicas: 3
-    rocksDBLogVolumeName: gdddopafvx
     maxFailoverCount: 0
-    separateRaftLog: true
-    shouldSeparateRocksDBLog: true
+    # separateRaftLog: true # should be enabled
+    # shouldSeparateRocksDBLog: true # should be enabled
     requests:
       storage: 100Gi
     mountClusterClientSecret: true
-  tlsCluster:
-    enabled: true
+  # tlsCluster:
+  #   enabled: true # should be enabled
   # cluster:
   #   clusterDomain: asdasd # this is a bug of tidb
   #   name: obsakkicls # this is a bug of tidb
