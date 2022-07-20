@@ -37,6 +37,7 @@
 | | https://github.com/pingcap/tidb-operator/issues/4632 | 
 | | https://github.com/pingcap/tidb-operator/issues/4634 |
 | | https://github.com/pingcap/tidb-operator/issues/4637 |
+| runtime/cgo | https://github.com/golang/go/issues/53958 | confirmed |
 
 # Byproduct bugs
 
