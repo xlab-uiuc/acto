@@ -42,7 +42,7 @@ class BaseSchema:
     @abstractmethod
     def to_tree(self) -> TreeNode:
         '''Returns tree structure, used for input generation'''
-        return None
+        return TreeNode(self.path)
 
     def delete(self, prev):
         return None
@@ -244,7 +244,7 @@ class IntegerSchema(NumberSchema):
         return [self]
 
     def to_tree(self) -> TreeNode:
-        return super().to_tree()
+        return TreeNode(self.path)
 
     def num_cases(self) -> int:
         return 3
@@ -483,7 +483,7 @@ class ArraySchema(BaseSchema):
 
     def to_tree(self) -> TreeNode:
         node = TreeNode(self.path)
-        node.add_child('ITEM', self.item_schema)
+        node.add_child('ITEM', self.item_schema.to_tree())
         return node
 
     def num_cases(self):
@@ -609,6 +609,9 @@ class BooleanSchema(BaseSchema):
 
     def get_all_schemas(self) -> list:
         return [self]
+
+    def to_tree(self) -> TreeNode:
+        return TreeNode(self.path)
 
     def gen(self, **kwargs):
         return random.choice([True, False])

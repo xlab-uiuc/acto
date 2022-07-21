@@ -6,7 +6,7 @@ from types import SimpleNamespace
 import kubernetes
 import yaml
 import time
-from typing import Tuple
+from typing import Callable, Tuple
 import random
 from datetime import datetime
 import signal
@@ -26,6 +26,7 @@ from runner import Runner
 from checker import Checker
 from snapshot import EmptySnapshot
 from ssa.analysis import analyze
+from value_with_schema import ValueWithSchema, attach_schema_to_value
 
 CONST = CONST()
 random.seed(0)
@@ -55,20 +56,23 @@ def construct_kind_cluster(cluster_name: str, k8s_version: str):
             kind_config_dict['apiVersion'] = 'kind.x-k8s.io/v1alpha4'
             kind_config_dict['nodes'] = []
             extra_mounts = []
-            extra_mounts.append({
-                'hostPath': 'profile/data',
-                'containerPath': '/tmp/profile'
-            })
+            extra_mounts.append({'hostPath': 'profile/data', 'containerPath': '/tmp/profile'})
             for _ in range(3):
-                kind_config_dict['nodes'].append({'role': 'worker', 'extraMounts': [{
-                    'hostPath': 'profile/data',
-                    'containerPath': '/tmp/profile'
-                }]})
+                kind_config_dict['nodes'].append({
+                    'role': 'worker',
+                    'extraMounts': [{
+                        'hostPath': 'profile/data',
+                        'containerPath': '/tmp/profile'
+                    }]
+                })
             for _ in range(1):
-                kind_config_dict['nodes'].append({'role': 'control-plane', 'extraMounts': [{
-                    'hostPath': 'profile/data',
-                    'containerPath': '/tmp/profile'
-                }]})
+                kind_config_dict['nodes'].append({
+                    'role': 'control-plane',
+                    'extraMounts': [{
+                        'hostPath': 'profile/data',
+                        'containerPath': '/tmp/profile'
+                    }]
+                })
             yaml.dump(kind_config_dict, kind_config_file)
 
     p = kind_create_cluster(cluster_name, kind_config_path, k8s_version)
@@ -136,6 +140,12 @@ def prune_noneffective_change(diff):
             del diff['dictionary_item_added']
 
 
+def apply_testcase(value_with_schema: ValueWithSchema, path: list, value):
+    logging.info('Applying [%s] to path [%s]', value, path)
+    value_with_schema.create_path(list(path))
+    value_with_schema.set_value_by_path(value, list(path))
+
+
 def timeout_handler(sig, frame):
     raise TimeoutError
 
@@ -154,6 +164,7 @@ class TrialRunner:
         self.dryrun = dryrun
 
         self.snapshots = []
+        self.discarded_testcases = {}  # List of test cases failed to run
 
     def run(self):
         self.input_model.set_worker_id(self.worker_id)
@@ -176,7 +187,6 @@ class TrialRunner:
             os.makedirs(trial_dir, exist_ok=True)
 
             trial_err, num_tests = self.run_trial(trial_dir=trial_dir)
-            self.input_model.reset_input()
             self.snapshots = []
 
             trial_elapsed = time.strftime("%H:%M:%S", time.gmtime(time.time() - trial_start_time))
@@ -192,7 +202,7 @@ class TrialRunner:
                 break
 
         logging.info('Failed test cases: %s' %
-                     json.dumps(self.input_model.get_discarded_tests(), cls=ActoEncoder, indent=4))
+                     json.dumps(self.discarded_testcases, cls=ActoEncoder, indent=4))
 
     def run_trial(self, trial_dir: str, num_mutation: int = 10) -> Tuple[ErrorResult, int]:
         '''Run a trial starting with the initial input, mutate with the candidate_dict, and mutate for num_mutation times
@@ -211,65 +221,91 @@ class TrialRunner:
         self.snapshots.append(EmptySnapshot(curr_input))
 
         generation = 0
-        retry = False
         while generation < num_mutation:
-            setup = False
-            # if connection refused, feed the current test as input again
-            if retry == True:
-                curr_input, setup = self.input_model.curr_test()
-                retry = False
-            elif generation != 0:
-                curr_input, setup = self.input_model.next_test()
+            curr_input_with_schema = attach_schema_to_value(self.snapshots[-1].input,
+                                                            self.input_model.root_schema)
+            next_tests = self.input_model.next_test()
 
-            input_delta = self.input_model.get_input_delta()
-            prune_noneffective_change(input_delta)
-            if len(input_delta) == 0 and generation != 0:
-                if setup:
-                    logging.warning('Setup didn\'t change anything')
-                    self.input_model.discard_test_case()
-                logging.info('CR unchanged, continue')
-                continue
-            if not self.dryrun:
-                snapshot = runner.run(curr_input, generation)
-                result = checker.check(snapshot, self.snapshots[-1], generation)
-                self.snapshots.append(snapshot)
-            else:
-                result = PassResult()
-            generation += 1
+            ready_testcases = []
+            for (field_node, testcase) in next_tests:
+                field_curr_value = curr_input_with_schema.get_value_by_path(list(field_node.get_path()))
 
-            if isinstance(result, ConnectionRefusedResult):
-                # Connection refused due to webhook not ready, let's wait for a bit
-                logging.info('Connection failed. Retry the test after 20 seconds')
-                time.sleep(20)
-                # retry
-                retry = True
-                generation -= 1  # should not increment generation since we are feeding the same test case
-                continue
+                if testcase.test_precondition(field_curr_value):
+                    # precondition of this testcase satisfies
+                    logging.info('Precondition of %s satisfies', field_node.get_path())
+                    ready_testcases.append((field_node, testcase))
+                else:
+                    # precondition fails, first run setup
+                    logging.info('Precondition of %s fails, try setup first', field_node.get_path())
+                    apply_testcase(curr_input_with_schema, field_node.get_path(),
+                                   testcase.run_setup(field_curr_value))
+
+                    result = TrialRunner.run_and_check(runner, checker,
+                                                       curr_input_with_schema.raw_value(),
+                                                       self.snapshots, generation, self.dryrun)
+
+                    if isinstance(result, InvalidInputResult):
+                        self.snapshots.pop()
+                        field_node.discard_testcase(self.discarded_testcases)
+                    elif isinstance(result, UnchangedInputResult):
+                        field_node.discard_testcase(self.discarded_testcases)
+                    elif isinstance(result, ErrorResult):
+                        field_node.discard_testcase(self.discarded_testcases)
+                        return result, generation
+                    elif isinstance(result, PassResult):
+                        ready_testcases.append((field_node, testcase))
+                    else:
+                        logging.error('Unknown return value, abort')
+                        quit()
+
+                    generation += 1
+
+            logging.info('Running bundled testcases')
+            for field_node, testcase in ready_testcases:
+                field_curr_value = curr_input_with_schema.get_value_by_path(list(field_node.get_path()))
+                if testcase.test_precondition(field_curr_value):
+                    apply_testcase(curr_input_with_schema, field_node.get_path(),
+                                   testcase.mutator(field_curr_value))
+                    field_node.get_testcases().pop()  # finish testcase
+
+            result = TrialRunner.run_and_check(runner, checker, curr_input_with_schema.raw_value(),
+                                               self.snapshots, generation, self.dryrun)
+
             if isinstance(result, InvalidInputResult):
-                if setup:
-                    self.input_model.discard_test_case()
-                # Revert to parent CR
-                self.input_model.revert()
                 self.snapshots.pop()
-
             elif isinstance(result, UnchangedInputResult):
-                if setup:
-                    self.input_model.discard_test_case()
+                pass
             elif isinstance(result, ErrorResult):
-                # We found an error!
-                if setup:
-                    self.input_model.discard_test_case()
                 return result, generation
             elif isinstance(result, PassResult):
                 pass
             else:
                 logging.error('Unknown return value, abort')
                 quit()
+            generation += 1
 
             if self.input_model.is_empty():
                 break
 
         return None, generation
+
+    def run_and_check(runner: Runner, checker: Checker, input: dict, snapshots: list,
+                      generation: int, dryrun: bool) -> RunResult:
+        while True:
+            if not dryrun:
+                snapshot = runner.run(input, generation)
+                result = checker.check(snapshot, snapshots[-1], generation)
+                snapshots.append(snapshot)
+            else:
+                result = PassResult()
+
+            if isinstance(result, ConnectionRefusedResult):
+                # Connection refused due to webhook not ready, let's wait for a bit
+                logging.info('Connection failed. Retry the test after 20 seconds')
+                time.sleep(20)
+            else:
+                break
+        return result
 
 
 class Acto:
@@ -374,12 +410,13 @@ class Acto:
                     ])
 
                     if self.operator_config.analysis.entrypoint != None:
-                        entrypoint_path = os.path.join(project_src, self.operator_config.analysis.entrypoint)
+                        entrypoint_path = os.path.join(project_src,
+                                                       self.operator_config.analysis.entrypoint)
                     else:
                         entrypoint_path = project_src
-                    self.context['analysis_result'] = analyze(
-                        entrypoint_path,
-                        self.operator_config.analysis.type, self.operator_config.analysis.package)
+                    self.context['analysis_result'] = analyze(entrypoint_path,
+                                                              self.operator_config.analysis.type,
+                                                              self.operator_config.analysis.package)
             with open(context_file, 'w') as context_fout:
                 json.dump(self.context, context_fout, cls=ActoEncoder)
 
