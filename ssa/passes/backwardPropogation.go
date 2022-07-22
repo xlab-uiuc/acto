@@ -10,7 +10,9 @@ import (
 // it may find a value, or a parameter
 // in case of parameter, we need to propogate back to callee via ContextAware analysis
 func BackwardPropogation(addr ssa.Value, taintedSet map[ssa.Value]bool) (taintedParam int, changed bool) {
-	log.Printf("Doing backward propogation on the inst [%s] in function [%s]\n", addr.String(), addr.Parent().String())
+	if addr.Parent() != nil {
+		log.Printf("Doing backward propogation on the inst [%s] in function [%s]\n", addr.String(), addr.Parent().String())
+	}
 
 	addrSources := BackwardPropogationHelper(addr, []int{}, taintedSet)
 

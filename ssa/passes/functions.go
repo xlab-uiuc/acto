@@ -111,6 +111,7 @@ var (
 		"k8s.io/klog/v2":                true,
 		"github.com/Azure/azure-storage-blob-go/azblob": true,
 		"github.com/hashicorp/go-version":               true,
+		"database/sql":                                  true,
 	}
 
 	StructSinks = map[string]bool{
@@ -136,11 +137,12 @@ var (
 	}
 
 	StaticFunctionSinks = map[string]bool{
-		"context.WithTimeout": true,
-		"fmt.Errorf":          true,
-		"fmt.Printf":          true,
-		"strings.Contains":    true,
-		"strings.Index":       true,
+		"context.WithTimeout":                    true,
+		"fmt.Errorf":                             true,
+		"fmt.Printf":                             true,
+		"strings.Contains":                       true,
+		"strings.Index":                          true,
+		"(*k8s.io/client-go/rest.Request).Watch": true,
 		"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil.SetControllerReference": true,
 		"(*sigs.k8s.io/controller-runtime/pkg/builder.WebhookBuilder).For":                    true,
 		"(*sigs.k8s.io/controller-runtime/pkg/builder.WebhookBuilder).registerWebhooks":       true,
@@ -215,6 +217,22 @@ var (
 			TaintSource:  fmt.Sprint([]int{1}),
 		}: {
 			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{},
+		},
+		{
+			FunctionName: "(*k8s.io/client-go/rest.Request).Body",
+			TaintSource:  fmt.Sprint([]int{0}),
+		}: {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{},
+		},
+		{
+			FunctionName: "(*k8s.io/client-go/rest.Request).Body",
+			TaintSource:  fmt.Sprint([]int{1}),
+		}: {
+			End:         true,
 			TaintedArgs: []int{},
 			TaintedRets: []int{},
 		},
@@ -598,6 +616,22 @@ var (
 	}
 
 	KnownInterfaceFunction = map[FunctionCall]FunctionTaintResult{
+		{
+			FunctionName: "(k8s.io/client-go/kubernetes/typed/core/v1.PersistentVolumeClaimInterface).Patch",
+			TaintSource:  fmt.Sprint([]int{3}),
+		}: {
+			End:         true,
+			TaintedArgs: []int{},
+			TaintedRets: []int{},
+		},
+		{
+			FunctionName: "(k8s.io/client-go/kubernetes/typed/batch/v1.JobInterface).Create",
+			TaintSource:  fmt.Sprint([]int{1}),
+		}: {
+			End:         true,
+			TaintedArgs: []int{},
+			TaintedRets: []int{},
+		},
 		{
 			FunctionName: "(k8s.io/apimachinery/pkg/apis/meta/v1.Object).SetLabels",
 			TaintSource:  fmt.Sprint([]int{0}),
