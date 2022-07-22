@@ -228,7 +228,8 @@ class TrialRunner:
 
             ready_testcases = []
             for (field_node, testcase) in next_tests:
-                field_curr_value = curr_input_with_schema.get_value_by_path(list(field_node.get_path()))
+                field_curr_value = curr_input_with_schema.get_value_by_path(
+                    list(field_node.get_path()))
 
                 if testcase.test_precondition(field_curr_value):
                     # precondition of this testcase satisfies
@@ -239,6 +240,13 @@ class TrialRunner:
                     logging.info('Precondition of %s fails, try setup first', field_node.get_path())
                     apply_testcase(curr_input_with_schema, field_node.get_path(),
                                    testcase.run_setup(field_curr_value))
+
+                    if not testcase.test_precondition(
+                            curr_input_with_schema.get_value_by_path(list(field_node.get_path()))):
+                        # just in case the setup does not work correctly, drop this testcase
+                        logging.error('Setup does not work correctly')
+                        field_node.discard_testcase(self.discarded_testcases)
+                        continue
 
                     result = TrialRunner.run_and_check(runner, checker,
                                                        curr_input_with_schema.raw_value(),
@@ -260,9 +268,13 @@ class TrialRunner:
 
                     generation += 1
 
+            if len(ready_testcases) == 0:
+                logging.info('All setups failed')
+                continue
             logging.info('Running bundled testcases')
             for field_node, testcase in ready_testcases:
-                field_curr_value = curr_input_with_schema.get_value_by_path(list(field_node.get_path()))
+                field_curr_value = curr_input_with_schema.get_value_by_path(
+                    list(field_node.get_path()))
                 if testcase.test_precondition(field_curr_value):
                     apply_testcase(curr_input_with_schema, field_node.get_path(),
                                    testcase.mutator(field_curr_value))
