@@ -224,61 +224,63 @@ class TrialRunner:
         while generation < num_mutation:
             curr_input_with_schema = attach_schema_to_value(self.snapshots[-1].input,
                                                             self.input_model.root_schema)
-            next_tests = self.input_model.next_test()
+            
+            if generation > 0:
+                next_tests = self.input_model.next_test()
 
-            ready_testcases = []
-            for (field_node, testcase) in next_tests:
-                field_curr_value = curr_input_with_schema.get_value_by_path(
-                    list(field_node.get_path()))
+                ready_testcases = []
+                for (field_node, testcase) in next_tests:
+                    field_curr_value = curr_input_with_schema.get_value_by_path(
+                        list(field_node.get_path()))
 
-                if testcase.test_precondition(field_curr_value):
-                    # precondition of this testcase satisfies
-                    logging.info('Precondition of %s satisfies', field_node.get_path())
-                    ready_testcases.append((field_node, testcase))
-                else:
-                    # precondition fails, first run setup
-                    logging.info('Precondition of %s fails, try setup first', field_node.get_path())
-                    apply_testcase(curr_input_with_schema, field_node.get_path(),
-                                   testcase.run_setup(field_curr_value))
-
-                    if not testcase.test_precondition(
-                            curr_input_with_schema.get_value_by_path(list(field_node.get_path()))):
-                        # just in case the setup does not work correctly, drop this testcase
-                        logging.error('Setup does not work correctly')
-                        field_node.discard_testcase(self.discarded_testcases)
-                        continue
-
-                    result = TrialRunner.run_and_check(runner, checker,
-                                                       curr_input_with_schema.raw_value(),
-                                                       self.snapshots, generation, self.dryrun)
-
-                    if isinstance(result, InvalidInputResult):
-                        self.snapshots.pop()
-                        field_node.discard_testcase(self.discarded_testcases)
-                    elif isinstance(result, UnchangedInputResult):
-                        field_node.discard_testcase(self.discarded_testcases)
-                    elif isinstance(result, ErrorResult):
-                        field_node.discard_testcase(self.discarded_testcases)
-                        return result, generation
-                    elif isinstance(result, PassResult):
+                    if testcase.test_precondition(field_curr_value):
+                        # precondition of this testcase satisfies
+                        logging.info('Precondition of %s satisfies', field_node.get_path())
                         ready_testcases.append((field_node, testcase))
                     else:
-                        logging.error('Unknown return value, abort')
-                        quit()
+                        # precondition fails, first run setup
+                        logging.info('Precondition of %s fails, try setup first', field_node.get_path())
+                        apply_testcase(curr_input_with_schema, field_node.get_path(),
+                                    testcase.run_setup(field_curr_value))
 
-                    generation += 1
+                        if not testcase.test_precondition(
+                                curr_input_with_schema.get_value_by_path(list(field_node.get_path()))):
+                            # just in case the setup does not work correctly, drop this testcase
+                            logging.error('Setup does not work correctly')
+                            field_node.discard_testcase(self.discarded_testcases)
+                            continue
 
-            if len(ready_testcases) == 0:
-                logging.info('All setups failed')
-                continue
-            logging.info('Running bundled testcases')
-            for field_node, testcase in ready_testcases:
-                field_curr_value = curr_input_with_schema.get_value_by_path(
-                    list(field_node.get_path()))
-                if testcase.test_precondition(field_curr_value):
-                    apply_testcase(curr_input_with_schema, field_node.get_path(),
-                                   testcase.mutator(field_curr_value))
-                    field_node.get_testcases().pop()  # finish testcase
+                        result = TrialRunner.run_and_check(runner, checker,
+                                                        curr_input_with_schema.raw_value(),
+                                                        self.snapshots, generation, self.dryrun)
+
+                        if isinstance(result, InvalidInputResult):
+                            self.snapshots.pop()
+                            field_node.discard_testcase(self.discarded_testcases)
+                        elif isinstance(result, UnchangedInputResult):
+                            field_node.discard_testcase(self.discarded_testcases)
+                        elif isinstance(result, ErrorResult):
+                            field_node.discard_testcase(self.discarded_testcases)
+                            return result, generation
+                        elif isinstance(result, PassResult):
+                            ready_testcases.append((field_node, testcase))
+                        else:
+                            logging.error('Unknown return value, abort')
+                            quit()
+
+                        generation += 1
+
+                if len(ready_testcases) == 0:
+                    logging.info('All setups failed')
+                    continue
+                logging.info('Running bundled testcases')
+                for field_node, testcase in ready_testcases:
+                    field_curr_value = curr_input_with_schema.get_value_by_path(
+                        list(field_node.get_path()))
+                    if testcase.test_precondition(field_curr_value):
+                        apply_testcase(curr_input_with_schema, field_node.get_path(),
+                                    testcase.mutator(field_curr_value))
+                        field_node.get_testcases().pop()  # finish testcase
 
             result = TrialRunner.run_and_check(runner, checker, curr_input_with_schema.raw_value(),
                                                self.snapshots, generation, self.dryrun)
