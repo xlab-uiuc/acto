@@ -30,6 +30,9 @@ class Checker(object):
         Returns:
             RunResult of the checking
         '''
+        if snapshot.system_state == {}:
+            return InvalidInputResult()
+            
         self.delta_log_path = "%s/delta-%d.log" % (self.trial_dir, generation)
 
         input_result = self.check_input(snapshot)
