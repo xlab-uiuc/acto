@@ -33,16 +33,16 @@
 |                                  | [https://github.com/cockroachdb/cockroach-operator/issues/919](https://github.com/cockroachdb/cockroach-operator/issues/919)     |
 |                                  | [https://github.com/cockroachdb/cockroach-operator/issues/920](https://github.com/cockroachdb/cockroach-operator/issues/920)     | confirmed |
 | pingcap/tidb-operator            | [https://github.com/pingcap/tidb-operator/pull/4608](https://github.com/pingcap/tidb-operator/pull/4608)                         | confirmed |
-|                                  | [https://github.com/pingcap/tidb-operator/issues/4613](https://github.com/pingcap/tidb-operator/issues/4613)                     |           |
-|                                  | [https://github.com/pingcap/tidb-operator/issues/4632](https://github.com/pingcap/tidb-operator/issues/4632)                     |           | 
+|                                  | [https://github.com/pingcap/tidb-operator/issues/4613](https://github.com/pingcap/tidb-operator/issues/4613)                     | fixed |
+|                                  | [https://github.com/pingcap/tidb-operator/issues/4632](https://github.com/pingcap/tidb-operator/issues/4632)                     | fixed | 
 |                                  | [https://github.com/pingcap/tidb-operator/issues/4634](https://github.com/pingcap/tidb-operator/issues/4634)                     |           |
-|                                  | [https://github.com/pingcap/tidb-operator/issues/4637](https://github.com/pingcap/tidb-operator/issues/4637)                     |           |
+|                                  | [https://github.com/pingcap/tidb-operator/issues/4637](https://github.com/pingcap/tidb-operator/issues/4637)                     | fixed |
 | percona-xtradb-cluster-operator  | [https://jira.percona.com/browse/K8SPXC-1060](https://jira.percona.com/browse/K8SPXC-1060)                                       |           |
 |                                  | [https://jira.percona.com/browse/K8SPXC-1061](https://jira.percona.com/browse/K8SPXC-1061)                                       | confirmed |
 |                                  | [https://jira.percona.com/browse/K8SPXC-1067](https://jira.percona.com/browse/K8SPXC-1067)                                       |           |
 |                                  | [https://jira.percona.com/browse/K8SPXC-1068](https://jira.percona.com/browse/K8SPXC-1068)                                       |           |
 |                                  | [https://jira.percona.com/browse/K8SPXC-1069](https://jira.percona.com/browse/K8SPXC-1069)                                       |           |
-| runtime/cgo                      | [https://github.com/golang/go/issues/53958](https://github.com/golang/go/issues/53958)                                           | confirmed |
+| runtime/cgo                      | [https://github.com/golang/go/issues/53958](https://github.com/golang/go/issues/53958)                                           | fixed |
 
 # Byproduct bugs
 
