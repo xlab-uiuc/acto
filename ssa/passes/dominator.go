@@ -37,14 +37,14 @@ func Dominators(context *Context, frontierSet map[ssa.Value]bool) {
 		FindBranches(context, value, value, backCallStack)
 	}
 
-	for ifStmt := range context.BranchStmts {
+	for ifStmt, controlValues := range context.BranchStmts {
 		trueDominees := BlockDominees(context, ifStmt.Block(), true)
 		log.Printf("Branch at %s [TRUE] has the block dominees: ", context.Program.Fset.Position(ifStmt.(*ssa.If).Cond.Pos()))
 		for _, trueDominee := range trueDominees {
 			log.Printf("%d ", trueDominee.Index)
 		}
 		falseDominees := BlockDominees(context, ifStmt.Block(), false)
-		log.Printf("\nBranch at %s [FALSE] has the block dominees: ", context.Program.Fset.Position(ifStmt.(*ssa.If).Cond.Pos()))
+		log.Printf("Branch at %s [FALSE] has the block dominees: ", context.Program.Fset.Position(ifStmt.(*ssa.If).Cond.Pos()))
 		for _, falseDominee := range falseDominees {
 			log.Printf("%d ", falseDominee.Index)
 		}
@@ -104,6 +104,30 @@ func Dominators(context *Context, frontierSet map[ssa.Value]bool) {
 			context.BranchValueDominees[ifStmt] = &UsesInBranch{
 				TrueBranch:  &fieldDomineesInTrueBranch,
 				FalseBranch: &fieldDomineesInFalseBranch,
+			}
+
+			for _, controlValue := range *controlValues {
+				fieldSet := context.ValueFieldMap[controlValue]
+
+				for _, field := range fieldSet.Fields() {
+					if fs, ok := context.FieldToFieldDominees[field.String()]; ok {
+						for _, item := range fieldDomineesInTrueBranch {
+							fs.Extend(context.ValueFieldMap[item])
+						}
+						for _, item := range fieldDomineesInFalseBranch {
+							fs.Extend(context.ValueFieldMap[item])
+						}
+					} else {
+						newFieldSet := util.NewFieldSet()
+						for _, item := range fieldDomineesInTrueBranch {
+							newFieldSet.Extend(context.ValueFieldMap[item])
+						}
+						for _, item := range fieldDomineesInFalseBranch {
+							newFieldSet.Extend(context.ValueFieldMap[item])
+						}
+						context.FieldToFieldDominees[field.String()] = newFieldSet
+					}
+				}
 			}
 		}
 	}

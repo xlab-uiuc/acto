@@ -78,6 +78,13 @@ func (fs *FieldSet) Add(f *Field) bool {
 	return true
 }
 
+// merge otherFs into this FieldSet
+func (fs *FieldSet) Extend(otherFs *FieldSet) {
+	for _, item := range otherFs.Fields() {
+		fs.Add(&item)
+	}
+}
+
 func (fs *FieldSet) Delete(f *Field) {
 	newFields := []Field{}
 	for _, field := range fs.fields {
@@ -97,11 +104,11 @@ func (fs *FieldSet) Contain(f Field) bool {
 	return false
 }
 
-func (fs FieldSet) Fields() []Field {
+func (fs *FieldSet) Fields() []Field {
 	return fs.fields
 }
 
-func (fs FieldSet) IsMetadata() bool {
+func (fs *FieldSet) IsMetadata() bool {
 	if len(fs.fields) == 1 {
 		if fs.fields[0].Equal(Field{Path: []string{"root", "metadata"}}) {
 			return true
@@ -110,7 +117,7 @@ func (fs FieldSet) IsMetadata() bool {
 	return false
 }
 
-func (fs FieldSet) IsStatus() bool {
+func (fs *FieldSet) IsStatus() bool {
 	if len(fs.fields) == 1 {
 		if fs.fields[0].Equal(Field{Path: []string{"root", "status"}}) {
 			return true
@@ -119,7 +126,7 @@ func (fs FieldSet) IsStatus() bool {
 	return false
 }
 
-func (fs FieldSet) IsTypeMeta() bool {
+func (fs *FieldSet) IsTypeMeta() bool {
 	if len(fs.fields) == 1 {
 		if fs.fields[0].Equal(Field{Path: []string{"root", ""}}) {
 			return true
@@ -128,7 +135,7 @@ func (fs FieldSet) IsTypeMeta() bool {
 	return false
 }
 
-func (fs FieldSet) String() string {
+func (fs *FieldSet) String() string {
 	var buf bytes.Buffer
 	buf.WriteString("[")
 	for _, field := range fs.fields {

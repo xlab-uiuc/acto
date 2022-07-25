@@ -55,14 +55,15 @@ func analyze(projectPath string, seedType string, seedPkgPath string) string {
 	log.Printf("%s\n", initial[0])
 
 	context := &analysis.Context{
-		Program:             prog,
-		MainPackages:        ssautil.MainPackages(prog.AllPackages()),
-		RootModule:          initial[0].Module,
-		CallGraph:           nil,
-		PostDominators:      map[*ssa.Function]*analysis.PostDominator{},
-		DefaultValueMap:     map[ssa.Value]*ssa.Const{},
-		BranchStmts:         map[ssa.Instruction]*[]ssa.Value{},
-		BranchValueDominees: map[ssa.Instruction]*analysis.UsesInBranch{},
+		Program:              prog,
+		MainPackages:         ssautil.MainPackages(prog.AllPackages()),
+		RootModule:           initial[0].Module,
+		CallGraph:            nil,
+		PostDominators:       map[*ssa.Function]*analysis.PostDominator{},
+		DefaultValueMap:      map[ssa.Value]*ssa.Const{},
+		BranchStmts:          map[ssa.Instruction]*[]ssa.Value{},
+		BranchValueDominees:  map[ssa.Instruction]*analysis.UsesInBranch{},
+		FieldToFieldDominees: map[string]*util.FieldSet{},
 	}
 
 	log.Println("Running initial pass...")
