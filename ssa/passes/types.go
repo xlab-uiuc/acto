@@ -66,10 +66,11 @@ type Context struct {
 	CallGraph      *callgraph.Graph
 	PostDominators map[*ssa.Function]*PostDominator
 
-	ValueFieldMap       map[ssa.Value]*util.FieldSet
-	DefaultValueMap     map[ssa.Value]*ssa.Const
-	BranchStmts         map[ssa.Instruction]*[]ssa.Value
-	BranchValueDominees map[ssa.Instruction]*UsesInBranch
+	ValueFieldMap        map[ssa.Value]*util.FieldSet
+	DefaultValueMap      map[ssa.Value]*ssa.Const
+	BranchStmts          map[ssa.Instruction]*[]ssa.Value
+	BranchValueDominees  map[ssa.Instruction]*UsesInBranch
+	FieldToFieldDominees map[string]*util.FieldSet
 }
 
 type UsesInBranch struct {
@@ -80,6 +81,8 @@ type UsesInBranch struct {
 func (c *Context) String() string {
 	var b bytes.Buffer
 	b.WriteString(fmt.Sprintf("Root module: %s\n", c.RootModule.Path))
+	b.WriteString("ValueFieldMap:\n")
+
 	b.WriteString("Post Dominators:\n")
 
 	for fn, pd := range c.PostDominators {
@@ -105,6 +108,12 @@ func (c *Context) String() string {
 		for _, v := range *usesInBranch.FalseBranch {
 			b.WriteString(fmt.Sprintf("%s is dominated by %s's false branch at %s\n", c.ValueFieldMap[v], v, c.Program.Fset.Position(ifInst.(*ssa.If).Cond.Pos())))
 		}
+	}
+
+	for dominator, dominees := range c.FieldToFieldDominees {
+		b.WriteString(fmt.Sprintf("%s has the following dominees:\n", dominator))
+		b.WriteString(dominees.String())
+		b.WriteString("\n\n")
 	}
 	return b.String()
 }

@@ -8,6 +8,7 @@ import copy
 from common import *
 from compare import CompareMethods
 from snapshot import EmptySnapshot, Snapshot
+from parse_log import parse_log
 
 
 class Checker(object):
@@ -29,6 +30,9 @@ class Checker(object):
         Returns:
             RunResult of the checking
         '''
+        if snapshot.system_state == {}:
+            return InvalidInputResult()
+            
         self.delta_log_path = "%s/delta-%d.log" % (self.trial_dir, generation)
 
         input_result = self.check_input(snapshot)
@@ -152,7 +156,8 @@ class Checker(object):
             if len(input_delta.path) == len(control_flow_field):
                 not_match = False
                 for i in range(len(input_delta.path)):
-                    if control_flow_field[i] == 'INDEX' and re.match(r"^\d$", str(input_delta.path[i])):
+                    if control_flow_field[i] == 'INDEX' and re.match(r"^\d$",
+                                                                     str(input_delta.path[i])):
                         continue
                     elif input_delta.path[i] != control_flow_field[i]:
                         not_match = True
@@ -172,24 +177,33 @@ class Checker(object):
         Returns:
             RunResult of the checking
         '''
+        input_delta, _ = self.get_deltas(snapshot, prev_snapshot)
         log = snapshot.operator_log
         log = log[len(prev_snapshot.operator_log):]
+        logging.debug('Checking log messages from line %d to %d', len(prev_snapshot.operator_log), len(log))
 
         for line in log:
-            if invalid_input_message(line):
-                return InvalidInputResult()
-            elif 'error' in line.lower():
-                skip = False
-                for regex in EXCLUDE_ERROR_REGEX:
-                    if re.search(regex, line, re.IGNORECASE):
-                        # logging.debug('Skipped error msg: %s' % line)
-                        skip = True
-                if skip:
-                    continue
-                logging.error('Found error in operator log')
-                return ErrorResult(Oracle.ERROR_LOG, line)
-            else:
+            # We do not check the log line if it is not an error/fatal message
+
+            parsed_log = parse_log(line)
+            if parsed_log == {} or parsed_log['level'] != 'error' and parsed_log['level'] != 'fatal':
                 continue
+            msg = parse_log(line)['msg']
+
+            if invalid_input_message(msg, input_delta):
+                return InvalidInputResult()
+
+            skip = False
+            for regex in EXCLUDE_ERROR_REGEX:
+                if re.search(regex, line, re.IGNORECASE):
+                    # logging.debug('Skipped error msg: %s' % line)
+                    skip = True
+                    break
+            if skip:
+                continue
+
+            logging.error('Found error in operator log')
+            return ErrorResult(Oracle.ERROR_LOG, line)
         return PassResult()
 
     def check_health(self) -> RunResult:
@@ -314,10 +328,10 @@ if __name__ == "__main__":
         context = json.load(context_fin)
         context['preload_images'] = set(context['preload_images'])
 
-    for path in context['analysis_result']['control_flow_fields']:
-        path.pop(0)
+    # for path in context['analysis_result']['control_flow_fields']:
+    #     path.pop(0)
 
-    context['enable_analysis'] = True
+    context['enable_analysis'] = False
 
     with open(args.seed, 'r') as seed_file:
         seed = yaml.load(seed_file, Loader=yaml.FullLoader)
@@ -337,6 +351,7 @@ if __name__ == "__main__":
             system_state_path = "%s/system-state-%03d.json" % (trial_dir, generation)
             events_log_path = "%s/events.log" % (trial_dir)
             cli_output_path = "%s/cli-output-%d.log" % (trial_dir, generation)
+            field_val_dict_path = "%s/field-val-dict-%d.json" % (trial_dir, generation)
 
             if not os.path.exists(operator_log_path):
                 break

@@ -29,14 +29,24 @@
 | kubernetes/kubernetes            | [https://github.com/kubernetes/kubernetes/issues/109839](https://github.com/kubernetes/kubernetes/issues/109839)                 | confirmed |
 |                                  | [https://github.com/kubernetes/kubernetes/issues/110653](https://github.com/kubernetes/kubernetes/issues/110653)                 | confirmed |
 |                                  | [https://github.com/kubernetes/kubernetes/issues/110654](https://github.com/kubernetes/kubernetes/issues/110654)                 | confirmed |
-| cockroachdb/cockroach-operator               | [https://github.com/cockroachdb/cockroach-operator/issues/918](https://github.com/cockroachdb/cockroach-operator/issues/918)     | confirmed |
+| cockroachdb/cockroach-operator   | [https://github.com/cockroachdb/cockroach-operator/issues/918](https://github.com/cockroachdb/cockroach-operator/issues/918)     | confirmed |
 |                                  | [https://github.com/cockroachdb/cockroach-operator/issues/919](https://github.com/cockroachdb/cockroach-operator/issues/919)     |
-|                                  | [https://github.com/cockroachdb/cockroach-operator/issues/920](https://github.com/cockroachdb/cockroach-operator/issues/920)     |
-| pingcap/tidb-operator | https://github.com/pingcap/tidb-operator/pull/4608 | confirmed |
-|  | https://github.com/pingcap/tidb-operator/pull/4614 | confirmed |
+|                                  | [https://github.com/cockroachdb/cockroach-operator/issues/920](https://github.com/cockroachdb/cockroach-operator/issues/920)     | confirmed |
+| pingcap/tidb-operator            | [https://github.com/pingcap/tidb-operator/pull/4608](https://github.com/pingcap/tidb-operator/pull/4608)                         | confirmed |
+|                                  | [https://github.com/pingcap/tidb-operator/issues/4613](https://github.com/pingcap/tidb-operator/issues/4613)                     | fixed |
+|                                  | [https://github.com/pingcap/tidb-operator/issues/4632](https://github.com/pingcap/tidb-operator/issues/4632)                     | fixed | 
+|                                  | [https://github.com/pingcap/tidb-operator/issues/4634](https://github.com/pingcap/tidb-operator/issues/4634)                     |           |
+|                                  | [https://github.com/pingcap/tidb-operator/issues/4637](https://github.com/pingcap/tidb-operator/issues/4637)                     | fixed |
+| percona-xtradb-cluster-operator  | [https://jira.percona.com/browse/K8SPXC-1060](https://jira.percona.com/browse/K8SPXC-1060)                                       |           |
+|                                  | [https://jira.percona.com/browse/K8SPXC-1061](https://jira.percona.com/browse/K8SPXC-1061)                                       | confirmed |
+|                                  | [https://jira.percona.com/browse/K8SPXC-1067](https://jira.percona.com/browse/K8SPXC-1067)                                       |           |
+|                                  | [https://jira.percona.com/browse/K8SPXC-1068](https://jira.percona.com/browse/K8SPXC-1068)                                       |           |
+|                                  | [https://jira.percona.com/browse/K8SPXC-1069](https://jira.percona.com/browse/K8SPXC-1069)                                       |           |
+| runtime/cgo                      | [https://github.com/golang/go/issues/53958](https://github.com/golang/go/issues/53958)                                           | fixed |
 
 # Byproduct bugs
 
 | Operator                         | Link                                                                                                                             | Status    |
 | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | --------- |
 | mongodb/mongodb-kubernetes-operator | [https://github.com/mongodb/helm-charts/pull/123](https://github.com/mongodb/helm-charts/pull/123)                            | fixed     |
+| pingcap/tidb-operator | https://github.com/pingcap/tidb-operator/issues/4614 | confirmed |

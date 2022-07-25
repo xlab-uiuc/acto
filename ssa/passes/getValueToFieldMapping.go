@@ -155,7 +155,7 @@ func GetValueToFieldMappingPass(context *Context, prog *ssa.Program, seedType *s
 				case *ssa.Field:
 					changed := false
 					for _, parentField := range parentFieldSet.Fields() {
-						newField := NewSubField(typedValue.X.Type().(*types.Struct), parentField, typedValue.Field)
+						newField := NewSubField(typedValue.X.Type().Underlying().(*types.Struct), parentField, typedValue.Field)
 						ok := AddFieldToValueFieldSetMap(valueFieldSetMap, typedValue, newField)
 						if ok {
 							changed = true

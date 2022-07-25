@@ -25,11 +25,10 @@ def update_preload_images(context: dict):
             items = line.split()
             if "none" not in items[1]:
                 image = '%s:%s' % (items[0], items[1])
-            elif "none" not in items[2]:
-                image = '%s@%s' % (items[0], items[2])
             else:
-                logging.error(
-                    "image %s has neither tag nor sha256, acto will not preload images for this run" % (items[0]))
+                logging.warning(
+                    "image %s has no tag, acto will not preload this image for this run" % (items[0]))
+                continue
 
             context['preload_images'].add(image)
 

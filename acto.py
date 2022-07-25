@@ -41,58 +41,60 @@ def construct_kind_cluster(cluster_name: str, k8s_version: str):
         name: name of the k8s cluster
         k8s_version: version of k8s to use
     '''
-    logging.info('Deleting kind cluster...')
-    kind_delete_cluster(cluster_name)
-    time.sleep(5)
+    retry_count = 2
 
-    kind_config_dir = 'kind_config'
-    os.makedirs(kind_config_dir, exist_ok=True)
-    kind_config_path = os.path.join(kind_config_dir, 'kind.yaml')
-
-    if not os.path.exists(kind_config_path):
-        with open(kind_config_path, 'w') as kind_config_file:
-            kind_config_dict = {}
-            kind_config_dict['kind'] = 'Cluster'
-            kind_config_dict['apiVersion'] = 'kind.x-k8s.io/v1alpha4'
-            kind_config_dict['nodes'] = []
-            extra_mounts = []
-            extra_mounts.append({'hostPath': 'profile/data', 'containerPath': '/tmp/profile'})
-            for _ in range(3):
-                kind_config_dict['nodes'].append({
-                    'role': 'worker',
-                    'extraMounts': [{
-                        'hostPath': 'profile/data',
-                        'containerPath': '/tmp/profile'
-                    }]
-                })
-            for _ in range(1):
-                kind_config_dict['nodes'].append({
-                    'role': 'control-plane',
-                    'extraMounts': [{
-                        'hostPath': 'profile/data',
-                        'containerPath': '/tmp/profile'
-                    }]
-                })
-            yaml.dump(kind_config_dict, kind_config_file)
-
-    p = kind_create_cluster(cluster_name, kind_config_path, k8s_version)
-    if p.returncode != 0:
-        logging.error('Failed to create kind cluster, retrying')
+    for i in range(retry_count):
+        logging.info('Deleting kind cluster...')
         kind_delete_cluster(cluster_name)
-        time.sleep(5)
+        time.sleep(2)
+
+        kind_config_dir = 'kind_config'
+        os.makedirs(kind_config_dir, exist_ok=True)
+        kind_config_path = os.path.join(kind_config_dir, 'kind.yaml')
+
+        if not os.path.exists(kind_config_path):
+            with open(kind_config_path, 'w') as kind_config_file:
+                kind_config_dict = {}
+                kind_config_dict['kind'] = 'Cluster'
+                kind_config_dict['apiVersion'] = 'kind.x-k8s.io/v1alpha4'
+                kind_config_dict['nodes'] = []
+                extra_mounts = []
+                extra_mounts.append({
+                    'hostPath': 'profile/data',
+                    'containerPath': '/tmp/profile'
+                })
+                for _ in range(3):
+                    kind_config_dict['nodes'].append({'role': 'worker', 'extraMounts': [{
+                        'hostPath': 'profile/data',
+                        'containerPath': '/tmp/profile'
+                    }]})
+                for _ in range(1):
+                    kind_config_dict['nodes'].append({'role': 'control-plane', 'extraMounts': [{
+                        'hostPath': 'profile/data',
+                        'containerPath': '/tmp/profile'
+                    }]})
+                yaml.dump(kind_config_dict, kind_config_file)
+
         p = kind_create_cluster(cluster_name, kind_config_path, k8s_version)
         if p.returncode != 0:
-            logging.critical("Cannot create kind cluster, aborting")
-            raise RuntimeError
+            logging.error('Failed to create kind cluster, retrying')
+            kind_delete_cluster(cluster_name)
+            time.sleep(5)
+            p = kind_create_cluster(cluster_name, kind_config_path, k8s_version)
+            if p.returncode != 0:
+                logging.critical("Cannot create kind cluster, aborting")
+                raise RuntimeError
 
-    logging.info('Created kind cluster')
-    try:
-        kubernetes.config.load_kube_config(context=kind_kubecontext(cluster_name))
-    except:
-        logging.debug("Incorrect kube config file:")
-        with open(f"{os.getenv('HOME')}/.kube/config") as f:
-            logging.debug(f.read())
-        raise ValueError
+        time.sleep(2)
+        logging.info('Created kind cluster')
+        try:
+            kubernetes.config.load_kube_config(
+                context=kind_kubecontext(cluster_name))
+            return
+        except Exception as e:
+            logging.debug("Incorrect kube config file:")
+            with open(f"{os.getenv('HOME')}/.kube/config") as f:
+                logging.debug(f.read())
 
 
 def construct_candidate_helper(node, node_path, result: dict):
@@ -107,15 +109,16 @@ def construct_candidate_helper(node, node_path, result: dict):
         result[node_path] = node['candidates']
     else:
         for child_key, child_value in node.items():
-            construct_candidate_helper(child_value, '%s.%s' % (node_path, child_key), result)
+            construct_candidate_helper(
+                child_value, '%s.%s' % (node_path, child_key), result)
 
 
 def construct_candidate_from_yaml(yaml_path: str) -> dict:
     '''Constructs candidate dict from a yaml file
-    
+
     Args:
         yaml_path: path of the input yaml file
-        
+
     Returns:
         dict[JSON-like path]: list of candidate values
     '''
@@ -176,21 +179,25 @@ class TrialRunner:
             construct_kind_cluster(self.cluster_name, CONST.K8S_VERSION)
             apiclient = kubernetes_client(self.cluster_name)
             kind_load_images(self.images_archive, self.cluster_name)
-            deployed = self.deploy.deploy_with_retry(self.context, self.cluster_name)
+            deployed = self.deploy.deploy_with_retry(
+                self.context, self.cluster_name)
             if not deployed:
                 logging.info('Not deployed. Try again!')
                 continue
 
             add_acto_label(apiclient, self.context)
 
-            trial_dir = os.path.join(self.workdir, 'trial-%02d-%04d' % (self.worker_id, curr_trial))
+            trial_dir = os.path.join(
+                self.workdir, 'trial-%02d-%04d' % (self.worker_id, curr_trial))
             os.makedirs(trial_dir, exist_ok=True)
 
             trial_err, num_tests = self.run_trial(trial_dir=trial_dir)
             self.snapshots = []
 
-            trial_elapsed = time.strftime("%H:%M:%S", time.gmtime(time.time() - trial_start_time))
-            logging.info('Trial %d finished, completed in %s' % (curr_trial, trial_elapsed))
+            trial_elapsed = time.strftime(
+                "%H:%M:%S", time.gmtime(time.time() - trial_start_time))
+            logging.info('Trial %d finished, completed in %s' %
+                         (curr_trial, trial_elapsed))
             logging.info('---------------------------------------\n')
 
             delete_operator_pod(apiclient, self.context['namespace'])
@@ -206,7 +213,7 @@ class TrialRunner:
 
     def run_trial(self, trial_dir: str, num_mutation: int = 10) -> Tuple[ErrorResult, int]:
         '''Run a trial starting with the initial input, mutate with the candidate_dict, and mutate for num_mutation times
-        
+
         Args:
             initial_input: the initial input without mutation
             candidate_dict: guides the mutation
@@ -383,7 +390,8 @@ class Acto:
             self.context['preload_images'].update(preload_images_)
 
         # Apply custom fields
-        self.input_model = InputModel(self.context['crd']['body'], num_workers, mount)
+        self.input_model = InputModel(
+            self.context['crd']['body'], num_workers, mount)
         self.input_model.initialize(self.seed)
         if operator_config.custom_fields != None:
             module = importlib.import_module(operator_config.custom_fields)
@@ -408,11 +416,13 @@ class Acto:
         if os.path.exists(context_file):
             with open(context_file, 'r') as context_fin:
                 self.context = json.load(context_fin)
-                self.context['preload_images'] = set(self.context['preload_images'])
+                self.context['preload_images'] = set(
+                    self.context['preload_images'])
         else:
             # Run learning run to collect some information from runtime
             logging.info('Starting learning run to collect information')
-            self.context = {'namespace': '', 'crd': None, 'preload_images': set()}
+            self.context = {'namespace': '',
+                            'crd': None, 'preload_images': set()}
 
             while True:
                 construct_kind_cluster('learn', CONST.K8S_VERSION)
@@ -421,10 +431,12 @@ class Acto:
                     break
             apiclient = kubernetes_client('learn')
             runner = Runner(self.context, 'learn', 'learn')
-            runner.run_without_collect(self.operator_config.seed_custom_resource)
+            runner.run_without_collect(
+                self.operator_config.seed_custom_resource)
 
             update_preload_images(self.context)
-            process_crd(self.context, apiclient, 'learn', self.crd_name, helper_crd)
+            process_crd(self.context, apiclient, 'learn',
+                        self.crd_name, helper_crd)
             kind_delete_cluster('learn')
 
             if self.operator_config.analysis != None:
@@ -436,8 +448,8 @@ class Acto:
                     ])
 
                     if self.operator_config.analysis.entrypoint != None:
-                        entrypoint_path = os.path.join(project_src,
-                                                       self.operator_config.analysis.entrypoint)
+                        entrypoint_path = os.path.join(
+                            project_src, self.operator_config.analysis.entrypoint)
                     else:
                         entrypoint_path = project_src
                     self.context['analysis_result'] = analyze(entrypoint_path,
@@ -461,7 +473,7 @@ class Acto:
 
 def handle_excepthook(type, message, stack):
     '''Custom exception handler
-    
+
     Print detailed stack information with local variables
     '''
     if issubclass(type, KeyboardInterrupt):
@@ -507,7 +519,8 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(
         description='Automatic, Continuous Testing for k8s/openshift Operators')
-    parser.add_argument('--config', '-c', dest='config', help='Operator port config path')
+    parser.add_argument('--config', '-c', dest='config',
+                        help='Operator port config path')
     parser.add_argument('--enable-analysis',
                         dest='enable_analysis',
                         action='store_true',
@@ -525,7 +538,8 @@ if __name__ == '__main__':
     parser.add_argument('--helper-crd',
                         dest='helper_crd',
                         help='generated CRD file that helps with the input generation')
-    parser.add_argument('--context', dest='context', help='Cached context data')
+    parser.add_argument('--context', dest='context',
+                        help='Cached context data')
     parser.add_argument('--num-workers',
                         dest='num_workers',
                         type=int,
@@ -548,8 +562,7 @@ if __name__ == '__main__':
         filename=os.path.join(workdir_path, 'test.log'),
         level=logging.DEBUG,
         filemode='w',
-        format=
-        '%(asctime)s %(threadName)-11s %(levelname)-7s, %(name)s, %(filename)-9s:%(lineno)d, %(message)s'
+        format='%(asctime)s %(threadName)-11s %(levelname)-7s, %(name)s, %(filename)-9s:%(lineno)d, %(message)s'
     )
     logging.getLogger("kubernetes").setLevel(logging.ERROR)
     logging.getLogger("sh").setLevel(logging.ERROR)
@@ -562,13 +575,15 @@ if __name__ == '__main__':
         notify_crash_ = True
 
     with open(args.config, 'r') as config_file:
-        config = json.load(config_file, object_hook=lambda d: SimpleNamespace(**d))
+        config = json.load(
+            config_file, object_hook=lambda d: SimpleNamespace(**d))
     logging.info('Acto started with [%s]' % sys.argv)
     logging.info('Operator config: %s', config)
 
     # Preload frequently used images to amid ImagePullBackOff
     if args.preload_images:
-        logging.info('%s will be preloaded into Kind cluster', args.preload_images)
+        logging.info('%s will be preloaded into Kind cluster',
+                     args.preload_images)
 
     # register timeout to automatically stop after # hours
     if args.duration != None:
@@ -576,7 +591,8 @@ if __name__ == '__main__':
         signal.alarm(int(args.duration) * 60 * 60)
 
     if args.context == None:
-        context_cache = os.path.join(os.path.dirname(config.seed_custom_resource), 'context.json')
+        context_cache = os.path.join(os.path.dirname(
+            config.seed_custom_resource), 'context.json')
     else:
         context_cache = args.context
 

@@ -66,11 +66,11 @@ class Runner(object):
         logging.debug('STDOUT: ' + cli_result.stdout)
         logging.debug('STDERR: ' + cli_result.stderr)
 
-        # if connection refused occurs, we cannot collect the system state since it is empty
+        # when client API raise an exception, catch it and write to log instead of crashing Acto
         try:
             system_state = self.collect_system_state()
             operator_log = self.collect_operator_log()
-            events_log = self.collect_events()
+            # events_log = self.collect_events()
         except (KeyError, ValueError) as e:
             logging.warn(e)
             system_state = {}
