@@ -238,7 +238,6 @@ class InputModel:
             next_value = test_case.run_setup(curr)
             logging.info('Precondition not satisfied, try setup')
         logging.debug('Next value: %s' % next_value)
-        logging.debug(json.loads(field))
 
         # Save previous input
         self.thread_vars.previous_input = attach_schema_to_value(

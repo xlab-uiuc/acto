@@ -276,7 +276,7 @@ spec:
       serviceAccount: tidb-controller-manager
       containers:
       - name: tidb-operator
-        image: unw9527/tidb-operator:latest
+        image: pingcap/tidb-operator:v1.3.2
         imagePullPolicy: IfNotPresent
         resources:
             requests:
@@ -290,8 +290,8 @@ spec:
           failureThreshold: 10
         command:
           - /usr/local/bin/tidb-controller-manager
-          - -tidb-backup-manager-image=unw9527/tidb-backup-manager:latest
-          - -tidb-discovery-image=unw9527/tidb-operator:latest
+          - -tidb-backup-manager-image=pingcap/tidb-backup-manager:v1.3.2
+          - -tidb-discovery-image=pingcap/tidb-operator:v1.3.2
           - -cluster-scoped=true
           - -cluster-permission-node=true
           - -cluster-permission-pv=true
@@ -341,7 +341,7 @@ spec:
       serviceAccount: tidb-scheduler
       containers:
       - name: tidb-scheduler
-        image: unw9527/tidb-operator:latest
+        image: pingcap/tidb-operator:v1.3.2
         imagePullPolicy: IfNotPresent
         resources:
             limits:

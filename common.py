@@ -13,6 +13,7 @@ import requests
 
 from constant import CONST
 from test_case import TestCase
+from parse_log import parse_log
 
 
 def notify_crash(exception: str):
@@ -208,12 +209,27 @@ def postprocess_diff(diff):
     return diff_dict
 
 
-def invalid_input_message(log_line: str) -> bool:
+def invalid_input_message(log_msg: str, input_delta: dict) -> bool:
     '''Returns if the log shows the input is invalid'''
-    for regex in INVALID_INPUT_LOG_REGEX:
-        if re.search(regex, log_line):
-            logging.info('recognized invalid input: %s' % log_line)
-            return True
+    # for regex in INVALID_INPUT_LOG_REGEX:
+    #     if re.search(regex, log_line):
+    #         logging.info('recognized invalid input: %s' % log_line)
+    #         return True
+
+    # Check if the log line contains the field or value
+    # If so, also return True
+
+    for delta_category in input_delta.values():
+        for delta in delta_category.values():
+            if isinstance(delta.path[-1], str) and delta.path[-1] in log_msg:
+                logging.info("Recognized invalid input through field in error message: %s" %
+                             log_msg)
+                return True
+            elif str(delta.curr) in log_msg:
+                logging.info("Recognized invalid input through value in error message: %s" %
+                             log_msg)
+                return True
+
     return False
 
 
@@ -296,6 +312,7 @@ EXCLUDE_ERROR_REGEX = [
     r"Secret (.)* not found",
     r"failed to get proxySQL db",
     r"{\"severity\":\"INFO\"",
+    r"PD failover replicas \(0\) reaches the limit \(0\)",
 ]
 
 INVALID_INPUT_LOG_REGEX = [
@@ -352,8 +369,7 @@ def kind_load_images(images_archive: str, name: str):
     logging.info('Loading preload images')
     cmd = ['kind', 'load', 'image-archive']
     if images_archive == None:
-        logging.warning(
-            'No image to preload, we at least should have operator image')
+        logging.warning('No image to preload, we at least should have operator image')
 
     if name != None:
         cmd.extend(['--name', name])
@@ -406,3 +422,26 @@ def helm(args: list, cluster_name: str) -> subprocess.CompletedProcess:
 def kubernetes_client(cluster_name: str) -> kubernetes.client.ApiClient:
     return kubernetes.config.kube_config.new_client_from_config(
         context=kind_kubecontext(cluster_name))
+
+
+if __name__ == '__main__':
+    line = 'E0624 08:02:40.303209       1 tidb_cluster_control.go:129] tidb cluster acto-namespace/test-cluster is not valid and must be fixed first, aggregated error: [spec.tikv.env[0].valueFrom.fieldRef: Invalid value: "": fieldRef is not supported, spec.tikv.env[0].valueFrom: Invalid value: "": may not have more than one field specified at a time]'
+
+    field_val_dict = {
+        'valueFrom': {
+            'configMapKeyRef': {
+                'key': 'ltzbphvbqz',
+                'name': 'fmtfbuyrwg',
+                'optional': True
+            },
+            'fieldRef': {
+                'apiVersion': 'cyunlsgtrz',
+                'fieldPath': 'xihwjoiwit'
+            },
+            'resourceFieldRef': None,
+            'secretKeyRef': None
+        }
+    }
+
+    print(invalid_input_message(
+        line, field_val_dict))  # Tested on 7.14. Expected True, got True. Test passed.

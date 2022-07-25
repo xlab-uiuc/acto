@@ -40,56 +40,60 @@ def construct_kind_cluster(cluster_name: str, k8s_version: str):
         name: name of the k8s cluster
         k8s_version: version of k8s to use
     '''
-    logging.info('Deleting kind cluster...')
-    kind_delete_cluster(cluster_name)
-    time.sleep(5)
+    retry_count = 2
 
-    kind_config_dir = 'kind_config'
-    os.makedirs(kind_config_dir, exist_ok=True)
-    kind_config_path = os.path.join(kind_config_dir, 'kind.yaml')
-
-    if not os.path.exists(kind_config_path):
-        with open(kind_config_path, 'w') as kind_config_file:
-            kind_config_dict = {}
-            kind_config_dict['kind'] = 'Cluster'
-            kind_config_dict['apiVersion'] = 'kind.x-k8s.io/v1alpha4'
-            kind_config_dict['nodes'] = []
-            extra_mounts = []
-            extra_mounts.append({
-                'hostPath': 'profile/data',
-                'containerPath': '/tmp/profile'
-            })
-            for _ in range(3):
-                kind_config_dict['nodes'].append({'role': 'worker', 'extraMounts': [{
-                    'hostPath': 'profile/data',
-                    'containerPath': '/tmp/profile'
-                }]})
-            for _ in range(1):
-                kind_config_dict['nodes'].append({'role': 'control-plane', 'extraMounts': [{
-                    'hostPath': 'profile/data',
-                    'containerPath': '/tmp/profile'
-                }]})
-            yaml.dump(kind_config_dict, kind_config_file)
-
-    p = kind_create_cluster(cluster_name, kind_config_path, k8s_version)
-    if p.returncode != 0:
-        logging.error('Failed to create kind cluster, retrying')
+    for i in range(retry_count):
+        logging.info('Deleting kind cluster...')
         kind_delete_cluster(cluster_name)
-        time.sleep(5)
+        time.sleep(2)
+
+        kind_config_dir = 'kind_config'
+        os.makedirs(kind_config_dir, exist_ok=True)
+        kind_config_path = os.path.join(kind_config_dir, 'kind.yaml')
+
+        if not os.path.exists(kind_config_path):
+            with open(kind_config_path, 'w') as kind_config_file:
+                kind_config_dict = {}
+                kind_config_dict['kind'] = 'Cluster'
+                kind_config_dict['apiVersion'] = 'kind.x-k8s.io/v1alpha4'
+                kind_config_dict['nodes'] = []
+                extra_mounts = []
+                extra_mounts.append({
+                    'hostPath': 'profile/data',
+                    'containerPath': '/tmp/profile'
+                })
+                for _ in range(3):
+                    kind_config_dict['nodes'].append({'role': 'worker', 'extraMounts': [{
+                        'hostPath': 'profile/data',
+                        'containerPath': '/tmp/profile'
+                    }]})
+                for _ in range(1):
+                    kind_config_dict['nodes'].append({'role': 'control-plane', 'extraMounts': [{
+                        'hostPath': 'profile/data',
+                        'containerPath': '/tmp/profile'
+                    }]})
+                yaml.dump(kind_config_dict, kind_config_file)
+
         p = kind_create_cluster(cluster_name, kind_config_path, k8s_version)
         if p.returncode != 0:
-            logging.critical("Cannot create kind cluster, aborting")
-            raise RuntimeError
+            logging.error('Failed to create kind cluster, retrying')
+            kind_delete_cluster(cluster_name)
+            time.sleep(5)
+            p = kind_create_cluster(cluster_name, kind_config_path, k8s_version)
+            if p.returncode != 0:
+                logging.critical("Cannot create kind cluster, aborting")
+                raise RuntimeError
 
-    logging.info('Created kind cluster')
-    try:
-        kubernetes.config.load_kube_config(
-            context=kind_kubecontext(cluster_name))
-    except Exception as e:
-        logging.debug("Incorrect kube config file:")
-        with open(f"{os.getenv('HOME')}/.kube/config") as f:
-            logging.debug(f.read())
-        raise e
+        time.sleep(2)
+        logging.info('Created kind cluster')
+        try:
+            kubernetes.config.load_kube_config(
+                context=kind_kubecontext(cluster_name))
+            return
+        except Exception as e:
+            logging.debug("Incorrect kube config file:")
+            with open(f"{os.getenv('HOME')}/.kube/config") as f:
+                logging.debug(f.read())
 
 
 def construct_candidate_helper(node, node_path, result: dict):
