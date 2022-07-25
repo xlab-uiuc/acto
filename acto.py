@@ -224,7 +224,7 @@ class TrialRunner:
         while generation < num_mutation:
             curr_input_with_schema = attach_schema_to_value(self.snapshots[-1].input,
                                                             self.input_model.root_schema)
-            
+
             if generation > 0:
                 next_tests = self.input_model.next_test()
 
@@ -239,24 +239,28 @@ class TrialRunner:
                         ready_testcases.append((field_node, testcase))
                     else:
                         # precondition fails, first run setup
-                        logging.info('Precondition of %s fails, try setup first', field_node.get_path())
+                        logging.info('Precondition of %s fails, try setup first',
+                                     field_node.get_path())
                         apply_testcase(curr_input_with_schema, field_node.get_path(),
-                                    testcase.run_setup(field_curr_value))
+                                       testcase.run_setup(field_curr_value))
 
                         if not testcase.test_precondition(
-                                curr_input_with_schema.get_value_by_path(list(field_node.get_path()))):
+                                curr_input_with_schema.get_value_by_path(list(
+                                    field_node.get_path()))):
                             # just in case the setup does not work correctly, drop this testcase
                             logging.error('Setup does not work correctly')
                             field_node.discard_testcase(self.discarded_testcases)
                             continue
 
                         result = TrialRunner.run_and_check(runner, checker,
-                                                        curr_input_with_schema.raw_value(),
-                                                        self.snapshots, generation, self.dryrun)
+                                                           curr_input_with_schema.raw_value(),
+                                                           self.snapshots, generation, self.dryrun)
+                        generation += 1
 
                         if isinstance(result, InvalidInputResult):
                             self.snapshots.pop()
                             field_node.discard_testcase(self.discarded_testcases)
+                            self.revert(runner, checker, generation)
                         elif isinstance(result, UnchangedInputResult):
                             field_node.discard_testcase(self.discarded_testcases)
                         elif isinstance(result, ErrorResult):
@@ -268,8 +272,6 @@ class TrialRunner:
                             logging.error('Unknown return value, abort')
                             quit()
 
-                        generation += 1
-
                 if len(ready_testcases) == 0:
                     logging.info('All setups failed')
                     continue
@@ -279,24 +281,26 @@ class TrialRunner:
                         list(field_node.get_path()))
                     if testcase.test_precondition(field_curr_value):
                         apply_testcase(curr_input_with_schema, field_node.get_path(),
-                                    testcase.mutator(field_curr_value))
+                                       testcase.mutator(field_curr_value))
                         field_node.get_testcases().pop()  # finish testcase
 
             result = TrialRunner.run_and_check(runner, checker, curr_input_with_schema.raw_value(),
                                                self.snapshots, generation, self.dryrun)
 
+            generation += 1
             if isinstance(result, InvalidInputResult):
                 self.snapshots.pop()
+                self.revert(runner, checker, generation)
             elif isinstance(result, UnchangedInputResult):
                 pass
             elif isinstance(result, ErrorResult):
+                # Delta debugging
                 return result, generation
             elif isinstance(result, PassResult):
                 pass
             else:
                 logging.error('Unknown return value, abort')
                 quit()
-            generation += 1
 
             if self.input_model.is_empty():
                 break
@@ -320,6 +324,14 @@ class TrialRunner:
             else:
                 break
         return result
+
+    def revert(self, runner, checker, generation):
+        curr_input_with_schema = attach_schema_to_value(self.snapshots[-1].input,
+                                                        self.input_model.root_schema)
+
+        result = TrialRunner.run_and_check(runner, checker, curr_input_with_schema.raw_value(), self.snapshots,
+                           generation, self.dryrun)
+        return
 
 
 class Acto:
