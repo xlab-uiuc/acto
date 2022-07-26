@@ -186,7 +186,7 @@ class Checker(object):
             parsed_log = parse_log(line)
             if parsed_log == {} or parsed_log['level'] != 'error' and parsed_log['level'] != 'fatal':
                 continue
-            msg = parse_log(line)['msg']
+            msg = parse_log['msg']
 
             if invalid_input_message(msg, input_delta):
                 return InvalidInputResult()

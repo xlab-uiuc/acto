@@ -71,7 +71,7 @@ class Runner(object):
         try:
             system_state = self.collect_system_state()
             operator_log = self.collect_operator_log()
-            events_log = self.collect_events()
+            self.collect_events()
         except (KeyError, ValueError) as e:
             logging.warn(e)
             system_state = {}

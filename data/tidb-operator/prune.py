@@ -4,6 +4,7 @@ sys.path.append('../..')
 import input
 
 custom_fields = [
+    input.CopiedOverField(['spec', 'affinity']),
     input.CopiedOverField(['spec', 'discovery', 'additionalContainers'], True),
     input.CopiedOverField(['spec', 'discovery', 'additionalVolumes'], True),
     input.CopiedOverField(['spec', 'discovery', 'initContainers'], True),
