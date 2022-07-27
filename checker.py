@@ -186,7 +186,7 @@ class Checker(object):
             parsed_log = parse_log(line)
             if parsed_log == {} or parsed_log['level'] != 'error' and parsed_log['level'] != 'fatal':
                 continue
-            msg = parse_log['msg']
+            msg = parsed_log['msg']
 
             if invalid_input_message(msg, input_delta):
                 return InvalidInputResult()
@@ -200,8 +200,8 @@ class Checker(object):
             if skip:
                 continue
 
-            logging.error('Found error in operator log')
-            return ErrorResult(Oracle.ERROR_LOG, line)
+            # logging.error('Found error in operator log')
+            # return ErrorResult(Oracle.ERROR_LOG, line)
         return PassResult()
 
     def check_health(self) -> RunResult:
