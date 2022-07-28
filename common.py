@@ -312,6 +312,7 @@ EXCLUDE_ERROR_REGEX = [
     r"Secret (.)* not found",
     r"failed to get proxySQL db",
     r"{\"severity\":\"INFO\"",
+    r"{\"level\":\"info\"",
     r"PD failover replicas \(0\) reaches the limit \(0\)",
 ]
 
