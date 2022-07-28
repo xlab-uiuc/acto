@@ -1,13 +1,15 @@
 package analysis
 
 import (
-	"fmt"
+	"go/token"
 	"log"
 
 	"github.com/xlab-uiuc/acto/ssa/util"
 	"golang.org/x/tools/go/ssa"
 )
 
+// Dominators finds the dominees of the fields, and store the relationship into
+// the context.FieldToFieldDominees map
 func Dominators(context *Context, frontierSet map[ssa.Value]bool) {
 	frontierValuesByBlock := map[*ssa.BasicBlock]*[]ssa.Value{}
 	fieldToValueMap := map[string]*[]ssa.Value{}
@@ -33,11 +35,10 @@ func Dominators(context *Context, frontierSet map[ssa.Value]bool) {
 			}
 		}
 
-		backCallStack := NewCallStack()
-		FindBranches(context, value, value, backCallStack)
+		FindDirectBranches(context, value)
 	}
 
-	for ifStmt, controlValues := range context.BranchStmts {
+	for ifStmt, condition := range context.IfToCondition {
 		trueDominees := BlockDominees(context, ifStmt.Block(), true)
 		log.Printf("Branch at %s [TRUE] has the block dominees: ", context.Program.Fset.Position(ifStmt.(*ssa.If).Cond.Pos()))
 		for _, trueDominee := range trueDominees {
@@ -50,7 +51,15 @@ func Dominators(context *Context, frontierSet map[ssa.Value]bool) {
 		}
 
 		usesInTrueBranch := FindUsesInBlocks(context, trueDominees, frontierValuesByBlock)
+		log.Printf("[TRUE] branch has the following uses:\n")
+		for use := range usesInTrueBranch {
+			log.Printf("%s\n", use)
+		}
 		usesInFalseBranch := FindUsesInBlocks(context, falseDominees, frontierValuesByBlock)
+		log.Printf("[FALSE] branch has the following uses:\n")
+		for use := range usesInFalseBranch {
+			log.Printf("%s\n", use)
+		}
 
 		fieldDomineesInTrueBranch := []ssa.Value{}
 		for use := range usesInTrueBranch {
@@ -67,6 +76,11 @@ func Dominators(context *Context, frontierSet map[ssa.Value]bool) {
 					if _, ok := usesInTrueBranch[value]; ok {
 						continue
 					}
+					if condition.Source == value {
+						continue
+					}
+					log.Printf("Field %s used in other places\n", field.String())
+					log.Printf("Used in %s\n", context.Program.Fset.Position(value.Pos()))
 					otherUse = true
 					break
 				}
@@ -106,26 +120,59 @@ func Dominators(context *Context, frontierSet map[ssa.Value]bool) {
 				FalseBranch: &fieldDomineesInFalseBranch,
 			}
 
-			for _, controlValue := range *controlValues {
-				fieldSet := context.ValueFieldMap[controlValue]
+			controlValue := condition.Source
+			fieldSet := context.ValueFieldMap[controlValue]
 
-				for _, field := range fieldSet.Fields() {
-					if fs, ok := context.FieldToFieldDominees[field.String()]; ok {
-						for _, item := range fieldDomineesInTrueBranch {
-							fs.Extend(context.ValueFieldMap[item])
-						}
-						for _, item := range fieldDomineesInFalseBranch {
-							fs.Extend(context.ValueFieldMap[item])
-						}
+			trueConditions := []ConcreteCondition{}
+			for _, field := range fieldSet.Fields() {
+				trueConditions = append(trueConditions, ConcreteCondition{
+					Field: field.String(),
+					Op:    condition.Op,
+					Value: condition.Value,
+				})
+			}
+
+			falseConditions := []ConcreteCondition{}
+			for _, field := range fieldSet.Fields() {
+				falseConditions = append(falseConditions, ConcreteCondition{
+					Field: field.String(),
+					Op:    Negation(condition.Op),
+					Value: condition.Value,
+				})
+			}
+
+			for _, field := range fieldSet.Fields() {
+				trueConditions = append(trueConditions, ConcreteCondition{
+					Field: field.String(),
+					Op:    condition.Op,
+					Value: condition.Value,
+				})
+			}
+
+			for _, dominee := range fieldDomineesInTrueBranch {
+				domineeFs := context.ValueFieldMap[dominee]
+				for _, field := range domineeFs.Fields() {
+					if _, ok := context.DomineeToConditions[field.String()]; ok {
+						context.DomineeToConditions[field.String()].Extend(trueConditions...)
 					} else {
-						newFieldSet := util.NewFieldSet()
-						for _, item := range fieldDomineesInTrueBranch {
-							newFieldSet.Extend(context.ValueFieldMap[item])
+						context.DomineeToConditions[field.String()] = &ConcreteConditionSet{
+							ConcreteConditions: make(map[string]ConcreteCondition),
 						}
-						for _, item := range fieldDomineesInFalseBranch {
-							newFieldSet.Extend(context.ValueFieldMap[item])
+						context.DomineeToConditions[field.String()].Extend(trueConditions...)
+					}
+				}
+			}
+
+			for _, dominee := range fieldDomineesInFalseBranch {
+				domineeFs := context.ValueFieldMap[dominee]
+				for _, field := range domineeFs.Fields() {
+					if _, ok := context.DomineeToConditions[field.String()]; ok {
+						context.DomineeToConditions[field.String()].Extend(falseConditions...)
+					} else {
+						context.DomineeToConditions[field.String()] = &ConcreteConditionSet{
+							ConcreteConditions: make(map[string]ConcreteCondition),
 						}
-						context.FieldToFieldDominees[field.String()] = newFieldSet
+						context.DomineeToConditions[field.String()].Extend(falseConditions...)
 					}
 				}
 			}
@@ -145,22 +192,90 @@ func FindUsesInBlocks(context *Context, blocks []*ssa.BasicBlock, frontierValues
 	return uses
 }
 
-func FindBranches(context *Context, source ssa.Value, localSource ssa.Value, backCallStack *CallStack) {
-	// Maintain backCallStack
-	functionCall := FunctionCall{
-		FunctionName: source.Parent().String(),
-		TaintSource:  fmt.Sprint(source),
-	}
-	if backCallStack.Contain(functionCall) {
-		log.Printf("Recursive taint detected, directly return %s\n", functionCall)
-		return
-	} else {
-		backCallStack.Push(functionCall)
-		defer backCallStack.Pop()
-	}
+func FindDirectBranches(context *Context, source ssa.Value) {
+	equivalentValues := findEquivalentValues(context, source)
 
+	for _, equivalentValue := range equivalentValues {
+		for _, instruction := range *equivalentValue.Referrers() {
+			switch typedInst := instruction.(type) {
+			case ssa.Value:
+				switch typedValue := typedInst.(type) {
+				case *ssa.BinOp:
+					if len(*typedValue.Referrers()) == 1 {
+						switch typedBinOpReferrer := (*typedValue.Referrers())[0].(type) {
+						case *ssa.If:
+							if typedValue.X == equivalentValue {
+								log.Printf("%s used directly in a BinOp at %s\n", source, context.Program.Fset.Position(typedBinOpReferrer.Cond.Pos()))
+								if resolved := TryResolveValue(typedValue.Y); resolved != nil {
+									context.IfToCondition[typedBinOpReferrer] = &BranchCondition{
+										Source: source,
+										Op:     typedValue.Op,
+										Value:  resolved,
+									}
+								}
+							}
+						case *ssa.Return:
+							taintedReturnSet := util.GetReturnIndices(typedValue, typedBinOpReferrer)
+							node, ok := context.CallGraph.Nodes[typedBinOpReferrer.Parent()]
+							if !ok {
+								log.Printf("Failed to retrieve call graph node for %s %T\n", typedBinOpReferrer, typedBinOpReferrer)
+							}
+							if node == nil {
+								log.Printf("No caller for %s %T at %s\n", typedBinOpReferrer, typedBinOpReferrer, typedBinOpReferrer.Parent().Pkg.Prog.Fset.Position(typedBinOpReferrer.Pos()))
+							} else {
+								for _, inEdge := range node.In {
+
+									if callSiteReturnValue := inEdge.Site.Value(); callSiteReturnValue != nil {
+										if typedInst.Parent().Signature.Results().Len() > 1 {
+											// if return value is a tuple
+											// propogate to the callsite recursively
+											for _, tainted := range getExtractTaint(callSiteReturnValue, taintedReturnSet) {
+												FindDirectBranchesHelper(context, tainted, typedValue, source)
+											}
+										} else {
+											log.Printf("Propogate to the callsites %s from function %s\n", inEdge.Site.Parent().String(), typedInst.Parent())
+											FindDirectBranchesHelper(context, callSiteReturnValue, typedValue, source)
+										}
+									} else {
+										log.Fatalf("return to a non-call callsite\n")
+									}
+								}
+							}
+						}
+					}
+				}
+			case *ssa.If:
+				context.IfToCondition[typedInst] = &BranchCondition{
+					Source: source,
+					Op:     token.EQL,
+					Value:  nil,
+				}
+			}
+		}
+	}
+}
+
+func FindDirectBranchesHelper(context *Context, conditionValue ssa.Value, binopValue *ssa.BinOp, source ssa.Value) {
+	if len(*conditionValue.Referrers()) == 1 {
+		switch typedBinOpReferrer := (*conditionValue.Referrers())[0].(type) {
+		case *ssa.If:
+			if binopValue.X == source {
+				log.Printf("%s used directly in a BinOp at %s\n", source, context.Program.Fset.Position(typedBinOpReferrer.Cond.Pos()))
+				if resolved := TryResolveValue(binopValue.Y); resolved != nil {
+					context.IfToCondition[typedBinOpReferrer] = &BranchCondition{
+						Source: source,
+						Op:     binopValue.Op,
+						Value:  resolved,
+					}
+				}
+			}
+		}
+	}
+}
+
+func findEquivalentValues(context *Context, source ssa.Value) (equivalentValues []ssa.Value) {
 	worklist := []ssa.Value{source}
-	phiSet := map[ssa.Value]bool{}
+	equivalentValues = append(equivalentValues, source)
 
 	for len(worklist) > 0 {
 		workitem := worklist[len(worklist)-1]
@@ -171,113 +286,39 @@ func FindBranches(context *Context, source ssa.Value, localSource ssa.Value, bac
 			switch typedInst := instruction.(type) {
 			case ssa.Value:
 				switch typedValue := typedInst.(type) {
-				case *ssa.Alloc:
-					// skip
-				case *ssa.BinOp:
-					worklist = append(worklist, typedValue)
-				case *ssa.Call:
-					// XXX: let's try if this works
-					// worklist = append(worklist, typedValue)
 				case *ssa.ChangeInterface:
 					worklist = append(worklist, typedValue)
+					equivalentValues = append(equivalentValues, typedValue)
 				case *ssa.ChangeType:
 					worklist = append(worklist, typedValue)
+					equivalentValues = append(equivalentValues, typedValue)
 				case *ssa.Convert:
 					worklist = append(worklist, typedValue)
-				case *ssa.Extract:
-					// skip
-				case *ssa.Field:
-					// skip
-				case *ssa.FieldAddr:
-					// skip
-				case *ssa.Index:
-					// skip
-				case *ssa.IndexAddr:
-					// skip
-				case *ssa.Lookup:
-					// skip
-				case *ssa.MakeChan:
-					// skip
-				case *ssa.MakeClosure:
-					// skip
+					equivalentValues = append(equivalentValues, typedValue)
 				case *ssa.MakeInterface:
 					worklist = append(worklist, typedValue)
-				case *ssa.MakeMap:
-					// skip
-				case *ssa.MakeSlice:
-					// skip
-				case *ssa.Next:
-					// skip
-				case *ssa.Phi:
-					if _, ok := phiSet[typedValue]; !ok {
-						// avoid circular dependency
-						worklist = append(worklist, typedValue)
-						phiSet[typedValue] = true
-					}
-				case *ssa.Range:
-					// skip
-				case *ssa.Select:
-					// skip
-				case *ssa.Slice:
-					// skip
-				case *ssa.SliceToArrayPointer:
-					// skip
-				case *ssa.TypeAssert:
-					worklist = append(worklist, typedValue)
-				case *ssa.UnOp:
-					worklist = append(worklist, typedValue)
+					equivalentValues = append(equivalentValues, typedValue)
 				}
-			case *ssa.Defer:
-				// skip
-			case *ssa.Go:
-				// skip
-			case *ssa.If:
-				// TODO
-				if valueList, ok := context.BranchStmts[typedInst]; ok {
-					*valueList = append(*valueList, source)
-				} else {
-					context.BranchStmts[typedInst] = &[]ssa.Value{source}
-				}
-			case *ssa.Jump:
-				// skip
-			case *ssa.MapUpdate:
-				// skip
-			case *ssa.Panic:
-				// skip
-			case *ssa.Return:
-				taintedReturnSet := util.GetReturnIndices(workitem, typedInst)
-				node, ok := context.CallGraph.Nodes[workitem.Parent()]
-				if !ok {
-					log.Printf("Failed to retrieve call graph node for %s %T\n", workitem, workitem)
-				}
-				if node == nil {
-					log.Printf("No caller for %s %T at %s\n", workitem, workitem, workitem.Parent().Pkg.Prog.Fset.Position(workitem.Pos()))
-				} else {
-					for _, inEdge := range node.In {
-
-						if callSiteReturnValue := inEdge.Site.Value(); callSiteReturnValue != nil {
-							if typedInst.Parent().Signature.Results().Len() > 1 {
-								// if return value is a tuple
-								// propogate to the callsite recursively
-								for _, tainted := range getExtractTaint(callSiteReturnValue, taintedReturnSet) {
-									FindBranches(context, source, tainted, backCallStack)
-								}
-							} else {
-								log.Printf("Propogate to the callsites %s from function %s\n", inEdge.Site.Parent().String(), typedInst.Parent())
-								FindBranches(context, source, callSiteReturnValue, backCallStack)
-							}
-						} else {
-							log.Fatalf("return to a non-call callsite\n")
-						}
-					}
-				}
-			case *ssa.RunDefers:
-				// skip
-			case *ssa.Send:
-				// skip
-			case *ssa.Store:
-				// skip
 			}
 		}
 	}
+	return
+}
+
+func Negation(op token.Token) token.Token {
+	switch op {
+	case token.EQL:
+		return token.NEQ
+	case token.LSS:
+		return token.GEQ
+	case token.GTR:
+		return token.LEQ
+	case token.NEQ:
+		return token.EQL
+	case token.LEQ:
+		return token.GTR
+	case token.GEQ:
+		return token.LSS
+	}
+	return token.ILLEGAL
 }

@@ -3,6 +3,7 @@ package analysis
 import (
 	"bytes"
 	"fmt"
+	"go/token"
 
 	"github.com/xlab-uiuc/acto/ssa/util"
 	"golang.org/x/tools/go/callgraph"
@@ -66,11 +67,11 @@ type Context struct {
 	CallGraph      *callgraph.Graph
 	PostDominators map[*ssa.Function]*PostDominator
 
-	ValueFieldMap        map[ssa.Value]*util.FieldSet
-	DefaultValueMap      map[ssa.Value]*ssa.Const
-	BranchStmts          map[ssa.Instruction]*[]ssa.Value
-	BranchValueDominees  map[ssa.Instruction]*UsesInBranch
-	FieldToFieldDominees map[string]*util.FieldSet
+	ValueFieldMap       map[ssa.Value]*util.FieldSet
+	DefaultValueMap     map[ssa.Value]*ssa.Const
+	IfToCondition       map[ssa.Instruction]*BranchCondition
+	BranchValueDominees map[ssa.Instruction]*UsesInBranch
+	DomineeToConditions map[string]*ConcreteConditionSet
 }
 
 type UsesInBranch struct {
@@ -96,7 +97,7 @@ func (c *Context) String() string {
 	}
 
 	b.WriteString("Dominators:\n")
-	for inst := range c.BranchStmts {
+	for inst := range c.IfToCondition {
 		b.WriteString(fmt.Sprintf("%s at %s\n", inst, c.Program.Fset.Position(inst.(*ssa.If).Cond.Pos())))
 	}
 
@@ -110,10 +111,65 @@ func (c *Context) String() string {
 		}
 	}
 
-	for dominator, dominees := range c.FieldToFieldDominees {
-		b.WriteString(fmt.Sprintf("%s has the following dominees:\n", dominator))
-		b.WriteString(dominees.String())
-		b.WriteString("\n\n")
+	for dominee, ccs := range c.DomineeToConditions {
+		b.WriteString(fmt.Sprintf("%s needs the following conditions:\n", dominee))
+		b.WriteString("\n")
+		for _, cc := range ccs.ConcreteConditions {
+			b.WriteString(cc.String())
+		}
+		b.WriteString("\n")
+	}
+	b.WriteString("\n")
+	return b.String()
+}
+
+type BranchCondition struct {
+	Source ssa.Value
+	Op     token.Token
+	Value  *ssa.Const
+}
+
+type ConcreteCondition struct {
+	Field string
+	Op    token.Token
+	Value *ssa.Const
+}
+
+func (c *ConcreteCondition) String() string {
+	var b bytes.Buffer
+	b.WriteString(c.Field)
+	b.WriteString(fmt.Sprintf("\n%s\n", c.Op.String()))
+	if c.Value == nil {
+		b.WriteString("true")
+	} else {
+		b.WriteString(c.Value.String())
+	}
+	b.WriteString("\n")
+	return b.String()
+}
+
+func (c *ConcreteCondition) Encode() string {
+	var b bytes.Buffer
+	b.WriteString(c.Field)
+	b.WriteString(fmt.Sprintf(" %s ", c.Op.String()))
+	if c.Value == nil {
+		b.WriteString("true")
+	} else {
+		b.WriteString(c.Value.String())
 	}
 	return b.String()
+}
+
+type ConcreteConditionSet struct {
+	ConcreteConditions map[string]ConcreteCondition
+}
+
+func (ccs *ConcreteConditionSet) Add(cc ConcreteCondition) {
+	ccs.ConcreteConditions[cc.Encode()] = cc
+}
+
+func (ccs *ConcreteConditionSet) Extend(ccList ...ConcreteCondition) {
+	for _, cc := range ccList {
+		ccs.ConcreteConditions[cc.Encode()] = cc
+	}
 }

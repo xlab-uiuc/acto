@@ -8,16 +8,14 @@ import (
 )
 
 type PostDominator struct {
-	FN        *ssa.Function
-	mapBefore map[*ssa.BasicBlock]map[*ssa.BasicBlock]bool
-	mapAfter  map[*ssa.BasicBlock]map[*ssa.BasicBlock]bool
+	FN      *ssa.Function
+	pdomSet map[*ssa.BasicBlock]map[*ssa.BasicBlock]bool
 }
 
 func NewPostDominator(fn *ssa.Function) *PostDominator {
 	pd := new(PostDominator)
 	pd.FN = fn
-	pd.mapBefore = make(map[*ssa.BasicBlock]map[*ssa.BasicBlock]bool)
-	pd.mapAfter = make(map[*ssa.BasicBlock]map[*ssa.BasicBlock]bool)
+	pd.pdomSet = make(map[*ssa.BasicBlock]map[*ssa.BasicBlock]bool)
 
 	pd.initBeforeAfterMap()
 	pd.conductAnalysis()
@@ -27,8 +25,7 @@ func NewPostDominator(fn *ssa.Function) *PostDominator {
 
 func (pd *PostDominator) initBeforeAfterMap() {
 	for _, bb := range pd.FN.Blocks {
-		pd.mapBefore[bb] = make(map[*ssa.BasicBlock]bool)
-		pd.mapAfter[bb] = make(map[*ssa.BasicBlock]bool)
+		pd.pdomSet[bb] = make(map[*ssa.BasicBlock]bool)
 	}
 }
 
@@ -59,39 +56,40 @@ func compareMap(m1 map[*ssa.BasicBlock]bool, m2 map[*ssa.BasicBlock]bool) bool {
 }
 
 func (pd *PostDominator) conductAnalysis() {
-	vecWorkList := []*ssa.BasicBlock{}
+	worklist := []*ssa.BasicBlock{}
 	for _, bb := range pd.FN.Blocks {
-		vecWorkList = append(vecWorkList, bb)
+		if len(bb.Succs) > 0 {
+			worklist = append(worklist, bb)
+			for _, bb_ := range pd.FN.Blocks {
+				pd.pdomSet[bb][bb_] = true
+			}
+		} else {
+			pd.pdomSet[bb][bb] = true
+		}
 	}
 
-	for len(vecWorkList) > 0 {
-		bb := vecWorkList[len(vecWorkList)-1]
-		vecWorkList = vecWorkList[:len(vecWorkList)-1]
+	for len(worklist) > 0 {
+		bb := worklist[len(worklist)-1]
+		worklist = worklist[:len(worklist)-1]
 
-		newAfter := make(map[*ssa.BasicBlock]bool)
+		newPdomSet := make(map[*ssa.BasicBlock]bool)
 
+		// compute intersection of Succs' post-dominators
 		if len(bb.Succs) > 0 {
-			for b, _ := range pd.mapBefore[bb.Succs[0]] {
-				newAfter[b] = true
+			for b, _ := range pd.pdomSet[bb.Succs[0]] {
+				newPdomSet[b] = true
 			}
 			for _, succ := range bb.Succs[1:] {
-				newAfter = intersectMap(newAfter, pd.mapBefore[succ])
+				newPdomSet = intersectMap(newPdomSet, pd.pdomSet[succ])
 			}
 		}
 
-		pd.mapAfter[bb] = make(map[*ssa.BasicBlock]bool)
-		for b, _ := range newAfter {
-			pd.mapAfter[bb][b] = true
-		}
+		newPdomSet[bb] = true // mapBefore contains the bb itself
 
-		newAfter[bb] = true
+		if !compareMap(pd.pdomSet[bb], newPdomSet) {
+			pd.pdomSet[bb] = newPdomSet
 
-		if !compareMap(pd.mapBefore[bb], newAfter) {
-			pd.mapBefore[bb] = newAfter
-
-			for _, pred := range bb.Preds {
-				vecWorkList = append(vecWorkList, pred)
-			}
+			worklist = append(worklist, bb.Preds...)
 		}
 	}
 }
@@ -100,7 +98,7 @@ func (pd *PostDominator) Print() {
 	for _, bb := range pd.FN.Blocks {
 		fmt.Printf("%d: ", bb.Index)
 
-		for b, _ := range pd.mapAfter[bb] {
+		for b, _ := range pd.pdomSet[bb] {
 			fmt.Printf("%d ", b.Index)
 		}
 		fmt.Println()
@@ -112,7 +110,7 @@ func (pd *PostDominator) String() string {
 	for _, bb := range pd.FN.Blocks {
 		buf.WriteString(fmt.Sprintf("%d: ", bb.Index))
 
-		for b, _ := range pd.mapAfter[bb] {
+		for b, _ := range pd.pdomSet[bb] {
 			buf.WriteString(fmt.Sprintf("%d ", b.Index))
 		}
 		buf.WriteString("\n")
@@ -121,7 +119,7 @@ func (pd *PostDominator) String() string {
 }
 
 func (pd *PostDominator) Dominate(b1 *ssa.BasicBlock, b2 *ssa.BasicBlock) bool {
-	if _, ok := pd.mapAfter[b2][b1]; ok {
+	if _, ok := pd.pdomSet[b2][b1]; ok {
 		return true
 	}
 
