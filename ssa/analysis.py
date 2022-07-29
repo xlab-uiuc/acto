@@ -1,5 +1,6 @@
 import ctypes
 import json
+import operator
 
 def analyze(project_path: str, seed_type: str, seed_pkg: str) -> dict:
     analysis_lib = ctypes.cdll.LoadLibrary('ssa/libanalysis.so')
@@ -13,6 +14,7 @@ def analyze(project_path: str, seed_type: str, seed_pkg: str) -> dict:
     all_fields = taint_analysis_result['usedPaths']
     tainted_fields = taint_analysis_result['taintedPaths']
     default_value_map = taint_analysis_result['defaultValues']
+    field_conditions_list = taint_analysis_result['fieldConditions']
 
     for tainted_field in tainted_fields:
         try:
@@ -26,10 +28,29 @@ def analyze(project_path: str, seed_type: str, seed_pkg: str) -> dict:
         except ValueError:
             continue
 
+    field_conditions_map = {}
+    for field_conditions in field_conditions_list:
+        new_conditions = []
+        for condition in field_conditions['conditions']:
+
+            if condition['value'] == 'null':
+                value = None
+            else:
+                value = condition['value']
+
+            new_condition = {
+                'field': condition['field'],
+                'op': condition['op'],
+                'value': value
+            }
+            new_conditions.append(new_condition)
+
+        field_conditions_map[json.dumps(field_conditions['path'])] = new_conditions
 
     analysis_result = {
         'control_flow_fields': all_fields,
-        'default_value_map': default_value_map
+        'default_value_map': default_value_map,
+        'field_conditions_map': field_conditions_map,
     }
     return analysis_result
 
@@ -46,9 +67,9 @@ def is_subfield(path: list, subpath: list) -> bool:
 
 
 if __name__ == '__main__':
-    # print(analyze('/home/tyler/cluster-operator', 'RabbitmqCluster', 'github.com/rabbitmq/cluster-operator/api/v1beta1'))
+    print(analyze('/home/tyler/cluster-operator', 'RabbitmqCluster', 'github.com/rabbitmq/cluster-operator/api/v1beta1'))
     # print(analyze('/home/tyler/redis-operator/cmd/redisoperator', 'RedisFailover', 'github.com/spotahome/redis-operator/api/redisfailover/v1'))
-    print(analyze('/home/tyler/cass-operator', 'CassandraDatacenter', 'github.com/k8ssandra/cass-operator/apis/cassandra/v1beta1'))
+    # print(analyze('/home/tyler/cass-operator', 'CassandraDatacenter', 'github.com/k8ssandra/cass-operator/apis/cassandra/v1beta1'))
     # print(analyze('/home/tyler/percona-server-mongodb-operator/cmd/manager', 'PerconaServerMongoDB', 'github.com/percona/percona-server-mongodb-operator/pkg/apis/psmdb/v1'))
     # print(analyze('/home/tyler/zookeeper-operator', 'ZookeeperCluster', 'github.com/pravega/zookeeper-operator/api/v1beta1'))
 

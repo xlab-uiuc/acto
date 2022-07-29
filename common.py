@@ -286,6 +286,24 @@ class ActoEncoder(json.JSONEncoder):
             return list(obj)
         return json.JSONEncoder.default(self, obj)
 
+def translate_op(input_op: str):
+    if input_op == '!=':
+        op = operator.ne
+    elif input_op == '==':
+        op = operator.eq
+    elif input_op == '<=':
+        op = operator.le 
+    elif input_op == '<':
+        op = operator.lt
+    elif input_op == '>=':
+        op = operator.ge
+    elif input_op == '>':
+        op = operator.gt
+    else:
+        raise ValueError('Unknown operator: %s' % input_op)
+
+    return op
+
 
 EXCLUDE_PATH_REGEX = [
     r"managed_fields",

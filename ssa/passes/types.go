@@ -2,6 +2,7 @@ package analysis
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"go/token"
 
@@ -160,16 +161,63 @@ func (c *ConcreteCondition) Encode() string {
 	return b.String()
 }
 
+func (c *ConcreteCondition) ToPlainCondition() PlainCondition {
+	var field []string
+	json.Unmarshal([]byte(c.Field), &field)
+
+	var value string
+	if c.Value == nil {
+		value = "true"
+	} else if c.Value.Value == nil {
+		value = "null"
+	} else {
+		value = c.Value.Value.String()
+	}
+	return PlainCondition{
+		Field: field,
+		Op:    c.Op.String(),
+		Value: value,
+	}
+}
+
+// same as ConcreteCondition, but json friendly
+type PlainCondition struct {
+	Field []string `json:"field"`
+	Op    string   `json:"op"`
+	Value string   `json:"value"`
+}
+
 type ConcreteConditionSet struct {
 	ConcreteConditions map[string]ConcreteCondition
+}
+
+func NewConcreteConditionSet() *ConcreteConditionSet {
+	return &ConcreteConditionSet{
+		ConcreteConditions: make(map[string]ConcreteCondition),
+	}
 }
 
 func (ccs *ConcreteConditionSet) Add(cc ConcreteCondition) {
 	ccs.ConcreteConditions[cc.Encode()] = cc
 }
 
+func (ccs *ConcreteConditionSet) Contain(cc string) bool {
+	_, ok := ccs.ConcreteConditions[cc]
+	return ok
+}
+
 func (ccs *ConcreteConditionSet) Extend(ccList ...ConcreteCondition) {
 	for _, cc := range ccList {
 		ccs.ConcreteConditions[cc.Encode()] = cc
 	}
+}
+
+func (ccs *ConcreteConditionSet) Intersect(ccs_ *ConcreteConditionSet) *ConcreteConditionSet {
+	newSet := NewConcreteConditionSet()
+	for cc_str, cc := range ccs.ConcreteConditions {
+		if ccs_.Contain(cc_str) {
+			newSet.Add(cc)
+		}
+	}
+	return newSet
 }

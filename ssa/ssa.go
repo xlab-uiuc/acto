@@ -123,6 +123,20 @@ func analyze(projectPath string, seedType string, seedPkgPath string) string {
 	analysis.Dominators(context, frontierSet)
 	log.Printf("%s\n", context.String())
 
+	for field, conditionSet := range context.DomineeToConditions {
+		var path []string
+		json.Unmarshal([]byte(field), &path)
+
+		conditions := []analysis.PlainCondition{}
+		for _, condition := range conditionSet.ConcreteConditions {
+			conditions = append(conditions, condition.ToPlainCondition())
+		}
+		analysisResult.FieldConditions = append(analysisResult.FieldConditions, FieldCondition{
+			Path:      path,
+			Condition: conditions,
+		})
+	}
+
 	marshalled, _ := json.MarshalIndent(analysisResult, "", "\t")
 	return string(marshalled[:])
 }
@@ -150,7 +164,13 @@ func main() {
 }
 
 type AnalysisResult struct {
-	UsedPaths     [][]string        `json:"usedPaths"`
-	TaintedPaths  [][]string        `json:"taintedPaths"`
-	DefaultValues map[string]string `json:"defaultValues"`
+	UsedPaths       [][]string        `json:"usedPaths"`
+	TaintedPaths    [][]string        `json:"taintedPaths"`
+	DefaultValues   map[string]string `json:"defaultValues"`
+	FieldConditions []FieldCondition  `json:"fieldConditions"`
+}
+
+type FieldCondition struct {
+	Path      []string                  `json:"path"`
+	Condition []analysis.PlainCondition `json:"conditions"`
 }
