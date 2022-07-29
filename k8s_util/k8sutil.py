@@ -3,7 +3,7 @@ import re
 import logging
 
 def canonicalizeQuantity(value):
-    if not isinstance(value, str) or not bool(re.match('^[-+]?((\.[0-9]+)|([0-9]+(\.[0-9]+)?)|([0-9]+\.))(([KMGTPE]i)|([eE][-+]?((\.[0-9]+)|([0-9]+(\.[0-9]+)?)|([0-9]+\.)))|([mkMGTPE]|))$', value)):
+    if not isinstance(value, str) or not bool(re.match('^[-+]?((\.[0-9]+)|([0-9]+(\.[0-9]+)?)|([0-9]+\.))(([KMGTPE]i)|([eE][-+]?((\.[0-9]+)|([0-9]+(\.[0-9]+)?)|([0-9]+\.)))|([mnkMGTPE]|))$', value)):
         return value
     k8sutil = ctypes.cdll.LoadLibrary('k8s_util/lib/k8sutil.so')
     parse = k8sutil.parse
