@@ -10,6 +10,7 @@ import random
 import subprocess
 import kubernetes
 import requests
+import operator
 
 from constant import CONST
 from test_case import TestCase
