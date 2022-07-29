@@ -268,6 +268,7 @@ class TrialRunner:
                             self.snapshots.pop()
                             field_node.discard_testcase(self.discarded_testcases)
                             self.revert(runner, checker, generation)
+                            generation += 1
                         elif isinstance(result, UnchangedInputResult):
                             field_node.discard_testcase(self.discarded_testcases)
                         elif isinstance(result, ErrorResult):
@@ -298,6 +299,7 @@ class TrialRunner:
             if isinstance(result, InvalidInputResult):
                 self.snapshots.pop()
                 self.revert(runner, checker, generation)
+                generation += 1
             elif isinstance(result, UnchangedInputResult):
                 pass
             elif isinstance(result, ErrorResult):
