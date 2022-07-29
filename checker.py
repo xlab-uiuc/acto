@@ -4,6 +4,7 @@ import logging
 from deepdiff import DeepDiff
 import re
 import copy
+import operator
 
 from common import *
 from compare import CompareMethods
@@ -104,7 +105,7 @@ class Checker(object):
                     # if the input delta is considered as equivalent, skip
                     continue
 
-                if self.context['enable_analysis'] and self.should_skip_input_delta(delta):
+                if self.context['enable_analysis'] and self.should_skip_input_delta(delta, snapshot):
                     continue
 
                 # Find the longest matching field, compare the delta change
@@ -141,7 +142,7 @@ class Checker(object):
                                        delta)
         return PassResult()
 
-    def should_skip_input_delta(self, input_delta: Diff) -> bool:
+    def should_skip_input_delta(self, input_delta: Diff, snapshot: Snapshot) -> bool:
         '''Determines if the input delta should be skipped or not
         
         Args:
@@ -150,6 +151,9 @@ class Checker(object):
         Returns:
             if the arg input_delta should be skipped in oracle
         '''
+
+        if 'analysis_result' not in self.context:
+            return False
 
         control_flow_fields = self.context['analysis_result']['control_flow_fields']
         for control_flow_field in control_flow_fields:
@@ -166,7 +170,31 @@ class Checker(object):
                     continue
                 else:
                     return True
+
+        # dependency checking
+        field_conditions_map = self.context['analysis_result']['field_conditions_map']
+        encoded_path = json.dumps(input_delta.path)
+        if encoded_path in field_conditions_map:
+            conditions = field_conditions_map[encoded_path]
+            for condition in conditions:
+                if not self.check_condition(snapshot.input, condition):
+                    # if one condition does not satisfy, skip this testcase
+                    return True
+
         return False
+
+    def check_condition(self, input: dict, condition: dict) -> bool:
+        path = condition['field']
+
+        try:
+            value = reduce(operator.getitem, path, input)
+        except KeyError as e:
+            if translate_op(condition['op']) == operator.eq and condition['value'] == None:
+                return True
+            else:
+                return False
+
+        return translate_op(condition['op'])(value, condition['value'])
 
     def check_operator_log(self, snapshot: Snapshot, prev_snapshot: Snapshot) -> RunResult:
         '''Check the operator log for error msg
@@ -179,8 +207,6 @@ class Checker(object):
         '''
         input_delta, _ = self.get_deltas(snapshot, prev_snapshot)
         log = snapshot.operator_log
-        log = log[len(prev_snapshot.operator_log):]
-        logging.debug('Checking log messages from line %d to %d', len(prev_snapshot.operator_log), len(log))
 
         for line in log:
             # We do not check the log line if it is not an error/fatal message
@@ -188,7 +214,7 @@ class Checker(object):
             parsed_log = parse_log(line)
             if parsed_log == {} or parsed_log['level'] != 'error' and parsed_log['level'] != 'fatal':
                 continue
-            msg = parse_log(line)['msg']
+            msg = parsed_log['msg']
 
             if invalid_input_message(msg, input_delta):
                 return InvalidInputResult()
@@ -202,8 +228,8 @@ class Checker(object):
             if skip:
                 continue
 
-            logging.error('Found error in operator log')
-            return ErrorResult(Oracle.ERROR_LOG, line)
+            # logging.error('Found error in operator log')
+            # return ErrorResult(Oracle.ERROR_LOG, line)
         return PassResult()
 
     def check_health(self) -> RunResult:
@@ -393,7 +419,7 @@ if __name__ == "__main__":
                     quit()
 
         if not alarm:
-            logging.info('%s deos not report an alarm' % system_state_path)
+            logging.info('%s does not report an alarm' % system_state_path)
 
     logging.info('Number of alarms: %d', num_alarms)
 

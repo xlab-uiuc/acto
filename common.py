@@ -10,6 +10,7 @@ import random
 import subprocess
 import kubernetes
 import requests
+import operator
 
 from constant import CONST
 from test_case import TestCase
@@ -211,10 +212,10 @@ def postprocess_diff(diff):
 
 def invalid_input_message(log_msg: str, input_delta: dict) -> bool:
     '''Returns if the log shows the input is invalid'''
-    # for regex in INVALID_INPUT_LOG_REGEX:
-    #     if re.search(regex, log_line):
-    #         logging.info('recognized invalid input: %s' % log_line)
-    #         return True
+    for regex in INVALID_INPUT_LOG_REGEX:
+        if re.search(regex, log_msg):
+            logging.info('recognized invalid input: %s' % log_msg)
+            return True
 
     # Check if the log line contains the field or value
     # If so, also return True
@@ -286,6 +287,24 @@ class ActoEncoder(json.JSONEncoder):
             return list(obj)
         return json.JSONEncoder.default(self, obj)
 
+def translate_op(input_op: str):
+    if input_op == '!=':
+        op = operator.ne
+    elif input_op == '==':
+        op = operator.eq
+    elif input_op == '<=':
+        op = operator.le 
+    elif input_op == '<':
+        op = operator.lt
+    elif input_op == '>=':
+        op = operator.ge
+    elif input_op == '>':
+        op = operator.gt
+    else:
+        raise ValueError('Unknown operator: %s' % input_op)
+
+    return op
+
 
 EXCLUDE_PATH_REGEX = [
     r"managed_fields",
@@ -312,6 +331,7 @@ EXCLUDE_ERROR_REGEX = [
     r"Secret (.)* not found",
     r"failed to get proxySQL db",
     r"{\"severity\":\"INFO\"",
+    r"{\"level\":\"info\"",
     r"PD failover replicas \(0\) reaches the limit \(0\)",
 ]
 

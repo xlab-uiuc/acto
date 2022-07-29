@@ -19,6 +19,7 @@ class Runner(object):
         self.crd_metainfo: dict = context['crd']
         self.trial_dir = trial_dir
         self.cluster_name = cluster_name
+        self.log_length = 0
 
         apiclient = kubernetes_client(cluster_name)
         self.coreV1Api = kubernetes.client.CoreV1Api(apiclient)
@@ -70,7 +71,7 @@ class Runner(object):
         try:
             system_state = self.collect_system_state()
             operator_log = self.collect_operator_log()
-            # events_log = self.collect_events()
+            self.collect_events()
         except (KeyError, ValueError) as e:
             logging.warn(e)
             system_state = {}
@@ -132,6 +133,8 @@ class Runner(object):
 
         # only get the new log since previous result
         new_log = log.split('\n')
+        new_log = new_log[self.log_length:]
+        self.log_length = len(new_log)
 
         with open(self.operator_log_path, 'a') as f:
             for line in new_log:

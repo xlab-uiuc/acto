@@ -28,6 +28,8 @@ func BlockDominees(context *Context, bb *ssa.BasicBlock, branch bool) (dominees 
 
 	if pd.Dominate(worklist[0], bb) {
 		return
+	} else {
+		dominees = append(dominees, worklist[0])
 	}
 
 	for len(worklist) > 0 {
