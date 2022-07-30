@@ -9,6 +9,12 @@ c220g5-110417.wisc.cloudlab.us ansible_connection=ssh ansible_user=tylergu ansib
 c220g5-110418.wisc.cloudlab.us ansible_connection=ssh ansible_user=tylergu ansible_port=22
 ```
 
+If you haven't installed `ansible playbook` on your control node, run
+```sh
+sudo apt install ansible
+ansible-galaxy collection install ansible.posix
+``` 
+
 Then just run 
 ```
 bash configure.sh
