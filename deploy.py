@@ -4,8 +4,9 @@ import json
 import exception
 import time
 import logging
-from k8s_helper import get_yaml_existing_namespace, create_namespace
 from time import sleep
+
+import k8s_helper
 from common import *
 
 CONST = CONST()
@@ -41,7 +42,7 @@ class Deploy:
                 retry_count -= 1
         return False
 
-    def check_status(self, cluster_name):
+    def check_status(self, context, cluster_name):
         time.sleep(10)
 
     def new(self):
@@ -68,7 +69,7 @@ class Helm(Deploy):
         ], cluster_name)
 
         counter = 0  # use a counter to wait for 2 min (thus 24 below, since each wait is 5s)
-        while not self.check_status(cluster_name):
+        while not self.check_status(context, cluster_name):
             if counter > 24:
                 logging.fatal('Helm chart deployment failed to be ready within timeout')
                 return False
@@ -77,7 +78,7 @@ class Helm(Deploy):
         # TODO: Return True if deploy successfully
         return True
 
-    def check_status(self, cluster_name: str) -> bool:
+    def check_status(self, context, cluster_name: str) -> bool:
         helm_ls_result = helm(['list', '-o', 'json', '--all-namespaces', '--all'], cluster_name)
         try:
             helm_release = json.loads(helm_ls_result.stdout)[0]
@@ -100,9 +101,9 @@ class Yaml(Deploy):
            the namespace from the provided object "rabbitmq-system" does not 
            match the namespace "acto-namespace". You must pass '--namespace=rabbitmq-system' to perform this operation.
         '''
-        namespace = get_yaml_existing_namespace(self.path) or CONST.ACTO_NAMESPACE
+        namespace = k8s_helper.get_yaml_existing_namespace(self.path) or CONST.ACTO_NAMESPACE
         context['namespace'] = namespace
-        ret = create_namespace(kubernetes_client(cluster_name), namespace)
+        ret = k8s_helper.create_namespace(kubernetes_client(cluster_name), namespace)
         if ret == None:
             logging.error('Failed to create namespace')
         if self.init_yaml:
@@ -111,46 +112,46 @@ class Yaml(Deploy):
         sleep(self.wait)
         kubectl(['apply', '--server-side', '-f', self.path, '-n', context['namespace']],
                 cluster_name)
-        super().check_status(cluster_name)
+        self.check_status(context, cluster_name)
 
         # TODO: Return True if deploy successfully
         return True
 
-    # TODO: Do we need to check operator's status?
-    # Even if the operator gets ready after the custom resource is created,
-    # the custom resource event will not be lost.
+    def check_status(self, context: dict, cluster_name: str):
+        '''
+        
+        We need to make sure operator to be ready before applying test cases, because Acto would
+        crash later when running oracle if operator hasn't been ready
+        '''
+        apiclient = kubernetes_client(cluster_name)
 
-    # If we actually need to check operator's status, we have other solutions.
-    # Ex: Wait for 30 seconds, and then wait until every Pod is running.
-
-    # def check_status(self):
-    #     logging.debug('Deploying the operator, waiting for it to be ready')
-    #     pod_ready = False
-    #     operator_stateful_states = []
-    #     for tick in range(90):
-    #         # get all deployment and stateful set.
-    #         operator_deployments = self.appv1Api.list_namespaced_deployment(
-    #             context['namespace'],
-    #             watch=False).items
-    #         operator_stateful_states = self.appv1Api.list_namespaced_stateful_set(
-    #             context['namespace'],
-    #             watch=False).items
-    #         # TODO: we should check all deployment and stateful set are ready
-    #         operator_deployments_is_ready = len(operator_deployments) >= 1 \
-    #                 and get_deployment_available_status(operator_deployments[0])
-    #         operator_stateful_states_is_ready = len(operator_stateful_states) >= 1 \
-    #                 and get_stateful_set_available_status(operator_stateful_states[0])
-    #         if operator_deployments_is_ready or operator_stateful_states_is_ready:
-    #             logging.debug('Operator ready')
-    #             pod_ready = True
-    #             break
-    #         time.sleep(1)
-    #     logging.info('Operator took %d seconds to get ready' % tick)
-    #     if not pod_ready:
-    #         logging.error("operator deployment failed to be ready within timeout")
-    #         return False
-    #     else:
-    #         return True
+        logging.debug('Deploying the operator, waiting for it to be ready')
+        pod_ready = False
+        operator_stateful_states = []
+        for tick in range(90):
+            # get all deployment and stateful set.
+            operator_deployments = kubernetes.client.AppsV1Api(apiclient).list_namespaced_deployment(
+                context['namespace'],
+                watch=False).items
+            operator_stateful_states = kubernetes.client.AppsV1Api(apiclient).list_namespaced_stateful_set(
+                context['namespace'],
+                watch=False).items
+            # TODO: we should check all deployment and stateful set are ready
+            operator_deployments_is_ready = len(operator_deployments) >= 1 \
+                    and k8s_helper.get_deployment_available_status(operator_deployments[0])
+            operator_stateful_states_is_ready = len(operator_stateful_states) >= 1 \
+                    and k8s_helper.get_stateful_set_available_status(operator_stateful_states[0])
+            if operator_deployments_is_ready or operator_stateful_states_is_ready:
+                logging.info('Operator ready')
+                pod_ready = True
+                break
+            time.sleep(1)
+        logging.info('Operator took %d seconds to get ready' % tick)
+        if not pod_ready:
+            logging.error("operator deployment failed to be ready within timeout")
+            return False
+        else:
+            return True
 
 
 class Kustomize(Deploy):
@@ -165,7 +166,7 @@ class Kustomize(Deploy):
         sleep(self.wait)
         kubectl(['apply', '--server-side', '-k', self.path, '-n', context['namespace']],
                 cluster_name)
-        super().check_status(cluster_name)
+        super().check_status(context, cluster_name)
         return True
 
 
