@@ -1,7 +1,5 @@
 from enum import Enum, auto, unique
-from rich.console import Console
 from constant import CONST
-import sh
 import json
 import exception
 import time
@@ -25,7 +23,6 @@ class Deploy:
     def __init__(self, deploy_method: DeployMethod, path: str, init_yaml=None):
         self.path = path
         self.init_yaml = init_yaml
-        self.console = Console()
         self.deploy_method = deploy_method
         self.wait = 20  # sec
 
@@ -111,6 +108,7 @@ class Yaml(Deploy):
         if self.init_yaml:
             kubectl(['apply', '--server-side', '-f', self.init_yaml],
                     cluster_name)
+        sleep(self.wait)
         kubectl(['apply', '--server-side', '-f', self.path, '-n', context['namespace']],
                 cluster_name)
         super().check_status(cluster_name)
