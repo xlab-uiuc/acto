@@ -13,7 +13,7 @@ import requests
 
 from constant import CONST
 from test_case import TestCase
-from parse_log import parse_log
+from parse_log.parse_log import parse_log
 
 
 def notify_crash(exception: str):

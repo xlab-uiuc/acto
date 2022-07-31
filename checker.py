@@ -8,7 +8,7 @@ import copy
 from common import *
 from compare import CompareMethods
 from snapshot import EmptySnapshot, Snapshot
-from parse_log import parse_log
+from parse_log.parse_log import parse_log
 
 
 class Checker(object):

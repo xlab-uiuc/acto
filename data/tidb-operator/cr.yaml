@@ -9,7 +9,6 @@ spec:
   helper:
     image: busybox:1.34.1
   pvReclaimPolicy: Retain
-  # recoverFailover: false # should be enabled
   enableDynamicConfiguration: true
   pd:
     baseImage: pingcap/pd
@@ -37,13 +36,13 @@ spec:
       log-level = "info"
     replicas: 3
     maxFailoverCount: 0
-    # separateRaftLog: true # should be enabled
-    # shouldSeparateRocksDBLog: true # should be enabled
+    separateRaftLog: true # should be enabled
     requests:
       storage: 100Gi
     mountClusterClientSecret: true
-  # tlsCluster:
-  #   enabled: true # should be enabled
+    recoverFailover: false # should be enabled
+  tlsCluster:
+    enabled: true # should be enabled
   # cluster:
   #   clusterDomain: asdasd # this is a bug of tidb
   #   name: obsakkicls # this is a bug of tidb
