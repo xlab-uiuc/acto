@@ -55,15 +55,15 @@ func analyze(projectPath string, seedType string, seedPkgPath string) string {
 	log.Printf("%s\n", initial[0])
 
 	context := &analysis.Context{
-		Program:              prog,
-		MainPackages:         ssautil.MainPackages(prog.AllPackages()),
-		RootModule:           initial[0].Module,
-		CallGraph:            nil,
-		PostDominators:       map[*ssa.Function]*analysis.PostDominator{},
-		DefaultValueMap:      map[ssa.Value]*ssa.Const{},
-		BranchStmts:          map[ssa.Instruction]*[]ssa.Value{},
-		BranchValueDominees:  map[ssa.Instruction]*analysis.UsesInBranch{},
-		FieldToFieldDominees: map[string]*util.FieldSet{},
+		Program:             prog,
+		MainPackages:        ssautil.MainPackages(prog.AllPackages()),
+		RootModule:          initial[0].Module,
+		CallGraph:           nil,
+		PostDominators:      map[*ssa.Function]*analysis.PostDominator{},
+		DefaultValueMap:     map[ssa.Value]*ssa.Const{},
+		IfToCondition:       map[ssa.Instruction]*analysis.BranchCondition{},
+		BranchValueDominees: map[ssa.Instruction]*analysis.UsesInBranch{},
+		DomineeToConditions: map[string]*analysis.ConcreteConditionSet{},
 	}
 
 	log.Println("Running initial pass...")
@@ -123,6 +123,20 @@ func analyze(projectPath string, seedType string, seedPkgPath string) string {
 	analysis.Dominators(context, frontierSet)
 	log.Printf("%s\n", context.String())
 
+	for field, conditionSet := range context.DomineeToConditions {
+		var path []string
+		json.Unmarshal([]byte(field), &path)
+
+		conditions := []analysis.PlainCondition{}
+		for _, condition := range conditionSet.ConcreteConditions {
+			conditions = append(conditions, condition.ToPlainCondition())
+		}
+		analysisResult.FieldConditions = append(analysisResult.FieldConditions, FieldCondition{
+			Path:      path,
+			Condition: conditions,
+		})
+	}
+
 	marshalled, _ := json.MarshalIndent(analysisResult, "", "\t")
 	return string(marshalled[:])
 }
@@ -150,7 +164,13 @@ func main() {
 }
 
 type AnalysisResult struct {
-	UsedPaths     [][]string        `json:"usedPaths"`
-	TaintedPaths  [][]string        `json:"taintedPaths"`
-	DefaultValues map[string]string `json:"defaultValues"`
+	UsedPaths       [][]string        `json:"usedPaths"`
+	TaintedPaths    [][]string        `json:"taintedPaths"`
+	DefaultValues   map[string]string `json:"defaultValues"`
+	FieldConditions []FieldCondition  `json:"fieldConditions"`
+}
+
+type FieldCondition struct {
+	Path      []string                  `json:"path"`
+	Condition []analysis.PlainCondition `json:"conditions"`
 }

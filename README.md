@@ -169,3 +169,27 @@ Currently, porting operators still requires some manual effort, we need:
 
 ## Next Steps 
 * https://github.com/xlab-uiuc/acto/issues/131
+
+
+## Running Acto on good machines
+Acto supports multi-cluster parallelism, which in theory makes Acto scale perfectly.
+However, it turns out to be not that perfect when I tried to run Acto on a CloudLab 220-g5 machine.
+
+The machine has 40 cores, 192 GB RAM, and a 500 GB SSD. I tried to run Acto with 8 clusters, and all
+of them failed, because it takes the operators more than 5 minutes to get ready. Every cluster becomes
+extremely slow, liveness probe fails very often causing pods being recreated all the time. I found
+out that Acto is IO-bound, meaning the performance is bottled-necked by the speed of disk READ/WRITE.
+
+We usually have 2 GB of images to preload into each cluster node, and we have 4 nodes for each cluster.
+With 8 clusters, it means the machine needs to preload ~20GB * 8 content to the disk, and then read
+some of them into memory to start running 4 * 8 Kubernetes. During all this time, CPU and memory are
+moslty idle and SSD is at full-load all the time.
+
+To mitigate this issue, there are two directions:
+1. Reduce the size of the preload images
+  - There are some redundent images in the image archive, we can remove them
+  - Reduce the number of nodes in the cluster
+  - Switch to k3s, which is a lightweight version of k8s
+2. Mount docker's workdir in tmpfs on the RAM
+  - Since we have 192 GB RAM on the machine, we can put docker's workdir in RAM to avoid the IO
+  bottleneck

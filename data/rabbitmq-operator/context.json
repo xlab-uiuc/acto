@@ -11,7 +11,7 @@
                 "annotations": {
                     "controller-gen.kubebuilder.io/version": "v0.6.2"
                 },
-                "creationTimestamp": "2022-06-24T19:13:31Z",
+                "creationTimestamp": "2022-07-29T22:04:53Z",
                 "generation": 1,
                 "labels": {
                     "app.kubernetes.io/component": "rabbitmq-operator",
@@ -19,8 +19,8 @@
                     "app.kubernetes.io/part-of": "rabbitmq"
                 },
                 "name": "rabbitmqclusters.rabbitmq.com",
-                "resourceVersion": "718",
-                "uid": "b1d76b14-a104-47af-8e7f-0506c0d8fa00"
+                "resourceVersion": "696",
+                "uid": "0b108b0a-280d-4fba-bc6a-cb22aeea7ed8"
             },
             "spec": {
                 "conversion": {
@@ -6125,14 +6125,14 @@
                 },
                 "conditions": [
                     {
-                        "lastTransitionTime": "2022-06-24T19:13:31Z",
+                        "lastTransitionTime": "2022-07-29T22:04:53Z",
                         "message": "no conflicts found",
                         "reason": "NoConflicts",
                         "status": "True",
                         "type": "NamesAccepted"
                     },
                     {
-                        "lastTransitionTime": "2022-06-24T19:13:31Z",
+                        "lastTransitionTime": "2022-07-29T22:04:53Z",
                         "message": "the initial names have been accepted",
                         "reason": "InitialNamesAccepted",
                         "status": "True",
@@ -6146,54 +6146,733 @@
         }
     },
     "preload_images": [
-        "docker.io/rabbitmqoperator/cluster-operator:1.10.0",
-        "k8s.gcr.io/kube-proxy:v1.22.9",
-        "k8s.gcr.io/etcd:3.5.0-0",
-        "k8s.gcr.io/kube-apiserver:v1.22.9",
+        "k8s.gcr.io/pause:3.6",
         "docker.io/kindest/kindnetd:v20211122-a2c10462",
-        "k8s.gcr.io/coredns/coredns:v1.8.4",
-        "docker.io/rancher/local-path-provisioner:v0.0.14",
         "docker.io/library/rabbitmq:3.8.21-management",
         "k8s.gcr.io/kube-scheduler:v1.22.9",
+        "k8s.gcr.io/etcd:3.5.0-0",
+        "k8s.gcr.io/kube-proxy:v1.22.9",
         "k8s.gcr.io/kube-controller-manager:v1.22.9",
-        "k8s.gcr.io/pause:3.6",
-        "k8s.gcr.io/build-image/debian-base:buster-v1.7.2"
+        "k8s.gcr.io/coredns/coredns:v1.8.4",
+        "docker.io/rabbitmqoperator/cluster-operator:1.10.0",
+        "k8s.gcr.io/kube-apiserver:v1.22.9",
+        "k8s.gcr.io/build-image/debian-base:buster-v1.7.2",
+        "docker.io/rancher/local-path-provisioner:v0.0.14"
     ],
-    "analysis_result": [
-        [
-            "root",
-            "spec",
-            "skipPostDeploySteps"
+    "analysis_result": {
+        "control_flow_fields": [
+            [
+                "root",
+                "spec",
+                "override",
+                "service"
+            ],
+            [
+                "root",
+                "spec",
+                "override",
+                "statefulSet",
+                "spec",
+                "template",
+                "spec",
+                "securityContext"
+            ],
+            [
+                "root",
+                "spec",
+                "override",
+                "service",
+                "spec"
+            ],
+            [
+                "root",
+                "spec"
+            ],
+            [
+                "root",
+                "spec",
+                "override",
+                "statefulSet",
+                "spec",
+                "template"
+            ],
+            [
+                "root",
+                "spec",
+                "override",
+                "statefulSet",
+                "spec",
+                "template",
+                "spec",
+                "containers",
+                "INDEX",
+                "volumeMounts"
+            ],
+            [
+                "root",
+                "spec",
+                "secretBackend",
+                "vault"
+            ],
+            [
+                "root",
+                "spec",
+                "override",
+                "statefulSet",
+                "spec",
+                "template",
+                "spec",
+                "initContainers",
+                "INDEX",
+                "securityContext"
+            ],
+            [
+                "root",
+                "spec",
+                "skipPostDeploySteps"
+            ]
         ],
-        [
-            "root",
-            "spec",
-            "override",
-            "service",
-            "spec"
-        ],
-        [
-            "root",
-            "spec"
-        ],
-        [
-            "root",
-            "spec",
-            "override",
-            "statefulSet",
-            "spec"
-        ],
-        [
-            "root",
-            "spec",
-            "tls",
-            "disableNonTLSListeners"
-        ],
-        [
-            "root",
-            "spec",
-            "secretBackend",
-            "vault"
-        ]
-    ]
+        "default_value_map": {},
+        "field_conditions_map": {
+            "[\"root\", \"spec\", \"override\", \"statefulSet\", \"spec\", \"volumeClaimTemplates\", \"INDEX\", \"metadata\", \"name\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet",
+                        "spec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"root\", \"spec\", \"override\", \"statefulSet\", \"spec\", \"serviceName\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet"
+                    ],
+                    "op": "!=",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet",
+                        "spec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"root\", \"spec\", \"override\", \"statefulSet\", \"spec\", \"template\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet",
+                        "spec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"root\", \"spec\", \"override\", \"statefulSet\", \"spec\", \"volumeClaimTemplates\", \"INDEX\", \"metadata\", \"annotations\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet",
+                        "spec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"root\", \"spec\", \"override\", \"statefulSet\", \"spec\", \"template\", \"spec\", \"containers\", \"INDEX\", \"env\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet",
+                        "spec",
+                        "template"
+                    ],
+                    "op": "!=",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet",
+                        "spec",
+                        "template",
+                        "spec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet",
+                        "spec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"root\", \"spec\", \"override\", \"statefulSet\", \"spec\", \"template\", \"metadata\", \"name\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet",
+                        "spec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"root\", \"spec\", \"override\", \"statefulSet\", \"spec\", \"volumeClaimTemplates\", \"INDEX\", \"metadata\", \"labels\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet",
+                        "spec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"root\", \"spec\", \"override\", \"statefulSet\", \"spec\", \"selector\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet",
+                        "spec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"root\", \"spec\", \"override\", \"statefulSet\", \"spec\", \"volumeClaimTemplates\", \"INDEX\", \"spec\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet"
+                    ],
+                    "op": "!=",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet",
+                        "spec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"root\", \"spec\", \"override\", \"statefulSet\", \"spec\", \"template\", \"metadata\", \"labels\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet",
+                        "spec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"root\", \"spec\", \"override\", \"statefulSet\", \"spec\", \"template\", \"metadata\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet",
+                        "spec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"root\", \"spec\", \"secretBackend\", \"vault\", \"annotations\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "secretBackend",
+                        "vault"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"root\", \"spec\", \"rabbitmq\", \"additionalConfig\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "tls",
+                        "disableNonTLSListeners"
+                    ],
+                    "op": "!=",
+                    "value": "true"
+                }
+            ],
+            "[\"root\", \"spec\", \"override\", \"statefulSet\", \"spec\", \"podManagementPolicy\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet"
+                    ],
+                    "op": "!=",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet",
+                        "spec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"root\", \"spec\", \"override\", \"service\", \"spec\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "service"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"root\", \"spec\", \"override\", \"statefulSet\", \"spec\", \"volumeClaimTemplates\", \"INDEX\", \"metadata\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet",
+                        "spec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"root\", \"spec\", \"secretBackend\", \"vault\", \"tls\", \"ipSans\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "secretBackend",
+                        "vault",
+                        "tls",
+                        "pkiIssuerPath"
+                    ],
+                    "op": "!=",
+                    "value": "\"\""
+                }
+            ],
+            "[\"root\", \"spec\", \"override\", \"statefulSet\", \"spec\", \"template\", \"metadata\", \"annotations\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet",
+                        "spec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"root\", \"spec\", \"override\", \"statefulSet\", \"spec\", \"updateStrategy\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet",
+                        "spec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"root\", \"spec\", \"secretBackend\", \"vault\", \"tls\", \"commonName\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "secretBackend",
+                        "vault",
+                        "tls",
+                        "pkiIssuerPath"
+                    ],
+                    "op": "!=",
+                    "value": "\"\""
+                }
+            ],
+            "[\"root\", \"spec\", \"override\", \"statefulSet\", \"spec\", \"template\", \"spec\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet",
+                        "spec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet",
+                        "spec",
+                        "template"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"root\", \"spec\", \"secretBackend\", \"vault\", \"role\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "secretBackend",
+                        "vault"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"root\", \"spec\", \"override\", \"statefulSet\", \"spec\", \"template\", \"spec\", \"securityContext\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet",
+                        "spec",
+                        "template"
+                    ],
+                    "op": "!=",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet",
+                        "spec",
+                        "template",
+                        "spec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet",
+                        "spec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"root\", \"spec\", \"override\", \"statefulSet\", \"spec\", \"template\", \"spec\", \"initContainers\", \"INDEX\", \"securityContext\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet",
+                        "spec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet",
+                        "spec",
+                        "template"
+                    ],
+                    "op": "!=",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet",
+                        "spec",
+                        "template",
+                        "spec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"root\", \"spec\", \"override\", \"statefulSet\", \"spec\", \"volumeClaimTemplates\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet"
+                    ],
+                    "op": "!=",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet",
+                        "spec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"root\", \"spec\", \"resources\", \"limits\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "tls",
+                        "disableNonTLSListeners"
+                    ],
+                    "op": "!=",
+                    "value": "true"
+                }
+            ],
+            "[\"root\", \"spec\", \"override\", \"statefulSet\", \"spec\", \"replicas\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet",
+                        "spec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"root\", \"spec\", \"rabbitmq\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "tls",
+                        "disableNonTLSListeners"
+                    ],
+                    "op": "!=",
+                    "value": "true"
+                }
+            ],
+            "[\"root\", \"spec\", \"override\", \"statefulSet\", \"spec\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"root\", \"spec\", \"override\", \"statefulSet\", \"spec\", \"template\", \"spec\", \"initContainers\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet",
+                        "spec",
+                        "template",
+                        "spec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet",
+                        "spec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet",
+                        "spec",
+                        "template"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"root\", \"spec\", \"override\", \"statefulSet\", \"spec\", \"template\", \"spec\", \"containers\", \"INDEX\", \"volumeMounts\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet",
+                        "spec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet",
+                        "spec",
+                        "template"
+                    ],
+                    "op": "!=",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet",
+                        "spec",
+                        "template",
+                        "spec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"root\", \"spec\", \"secretBackend\", \"vault\", \"tls\", \"altNames\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "secretBackend",
+                        "vault",
+                        "tls",
+                        "pkiIssuerPath"
+                    ],
+                    "op": "!=",
+                    "value": "\"\""
+                },
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "secretBackend",
+                        "vault"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ]
+        }
+    }
 }
