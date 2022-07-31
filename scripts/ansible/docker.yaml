@@ -17,10 +17,21 @@
         state: present
         update_cache: yes
 
-    - name: Add Docker GPG apt Key
-      apt_key:
+    - name: Creates keyrings dir
+      file:
+        path: /etc/apt/keyrings
+        state: directory
+
+    - name: Download Docker GPG apt Key
+      get_url:
         url: https://download.docker.com/linux/ubuntu/gpg
-        state: present
+        dest: /usr/share/keyrings/docker-archive-keyring.gpg_armored
+
+    - name: De-Armor Docker GPG key
+      command: gpg --dearmor < /usr/share/keyrings/docker-archive-keyring.gpg_armored -o /etc/apt/keyrings/docker.gpg
+      no_log: 
+      args:
+        creates: /etc/apt/keyrings/docker.gpg
 
     - name: Save the current Ubuntu release version into a variable
       shell: lsb_release -cs
@@ -30,13 +41,12 @@
       command: dpkg --print-architecture
       register: arch
 
-    
-
     - name: Add Docker Repository
       apt_repository:
         repo: "deb [arch={{ arch.stdout }} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu {{ ubuntu_version.stdout }} stable"
         state: present
         filename: "docker"
+        update_cache: no
 
     - name: Update apt packages
       apt:
