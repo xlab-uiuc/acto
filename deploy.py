@@ -128,7 +128,7 @@ class Yaml(Deploy):
         logging.debug('Deploying the operator, waiting for it to be ready')
         pod_ready = False
         operator_stateful_states = []
-        for tick in range(90):
+        for tick in range(600):
             # get all deployment and stateful set.
             operator_deployments = kubernetes.client.AppsV1Api(apiclient).list_namespaced_deployment(
                 context['namespace'],
@@ -145,8 +145,8 @@ class Yaml(Deploy):
                 logging.info('Operator ready')
                 pod_ready = True
                 break
-            time.sleep(1)
-        logging.info('Operator took %d seconds to get ready' % tick)
+            time.sleep(5)
+        logging.info('Operator took %d seconds to get ready' % tick*5)
         if not pod_ready:
             logging.error("operator deployment failed to be ready within timeout")
             return False
