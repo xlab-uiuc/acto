@@ -1,4 +1,5 @@
 #!/bin/bash
+ansible-playbook tmpfs.yaml -i ansible_hosts
 ansible-playbook go.yaml -i ansible_hosts
 ansible-playbook docker.yaml -i ansible_hosts
 ansible-playbook python.yaml -i ansible_hosts

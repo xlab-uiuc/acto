@@ -1,0 +1,12 @@
+---
+- name: Install kubectl
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Mount tmpfs on docker path /var/lib/docker
+      ansible.posix.mount:
+        fstype: tmpfs
+        path: /var/lib/docker
+        src: tmpfs
+        state: mounted
