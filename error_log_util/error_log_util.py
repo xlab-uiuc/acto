@@ -2,6 +2,7 @@
 # in one testrun, and then parse error logs using Drain to group them.
 
 import os
+import glob
 from logparser import Drain
 import sys
 sys.path.append('../')
@@ -11,15 +12,12 @@ if __name__ == '__main__':
     testrun_dir = sys.argv[1]
 
     error_list = []
-    for dirpath, _, filenames in os.walk(testrun_dir):
-        for filename in filenames:
-            if filename.startswith('operator-'):
-                with open(os.path.join(dirpath, filename), 'r') as f:
-                    for line in f.readlines():
-                        log_line = parse_log(line)
-                        if 'level' in log_line:
-                            if log_line['level'] == 'error' or log_line['level'] == 'fatal':
-                                error_list.append(log_line['msg'])
+    for dirpath in glob.glob(os.path.join(testrun_dir, '*/operator-*.log')):
+        with open(dirpath, 'r') as f:
+            for line in f.readlines():
+                log_line = parse_log(line)
+                if 'level' in log_line and (log_line['level'] == 'error' or log_line['level'] == 'fatal'):
+                    error_list.append(log_line['msg'])
                         
     with open(os.path.join(testrun_dir, 'error_logs.txt'), 'w') as f:
         for line in error_list:
