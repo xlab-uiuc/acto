@@ -23,7 +23,7 @@ spec:
   allowUnsafeConfigurations: false
   updateStrategy: SmartUpdate
   multiCluster:
-    enabled: true
+    enabled: false
     DNSSuffix: svc.clusterset.local
   upgradeOptions:
     versionServiceEndpoint: https://check.percona.com
@@ -42,7 +42,7 @@ spec:
   replsets:
 
   - name: rs0
-    size: 3
+    size: 2
 #    externalNodes:
 #    - host: 34.124.76.90
 #    - host: 34.124.76.91
@@ -465,6 +465,14 @@ spec:
 #      oplogSpanMin: 10
       compressionType: gzip
       compressionLevel: 6
+    tasks:
+      - name: daily-s3-us-west
+        enabled: true
+        schedule: "0 0 * * *"
+        keep: 3
+        storageName: s3-us-west
+        compressionType: gzip
+        compressionLevel: 6
 #      - name: daily-s3-us-west
 #        enabled: true
 #        schedule: "0 0 * * *"

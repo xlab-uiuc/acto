@@ -12,14 +12,14 @@
                     "meta.helm.sh/release-name": "acto-test-operator",
                     "meta.helm.sh/release-namespace": "acto-namespace"
                 },
-                "creationTimestamp": "2022-07-01T21:10:32Z",
+                "creationTimestamp": "2022-08-02T00:32:39Z",
                 "generation": 1,
                 "labels": {
                     "app.kubernetes.io/managed-by": "Helm"
                 },
                 "name": "zookeeperclusters.zookeeper.pravega.io",
-                "resourceVersion": "640",
-                "uid": "d8adc748-700f-478f-bc8b-e55e6a0936e4"
+                "resourceVersion": "658",
+                "uid": "aa389925-4fb7-42b5-8c21-1fc9d75dc969"
             },
             "spec": {
                 "conversion": {
@@ -4891,14 +4891,14 @@
                 },
                 "conditions": [
                     {
-                        "lastTransitionTime": "2022-07-01T21:10:32Z",
+                        "lastTransitionTime": "2022-08-02T00:32:39Z",
                         "message": "no conflicts found",
                         "reason": "NoConflicts",
                         "status": "True",
                         "type": "NamesAccepted"
                     },
                     {
-                        "lastTransitionTime": "2022-07-01T21:10:32Z",
+                        "lastTransitionTime": "2022-08-02T00:32:39Z",
                         "message": "the initial names have been accepted",
                         "reason": "InitialNamesAccepted",
                         "status": "True",
@@ -4912,22 +4912,25 @@
         }
     },
     "preload_images": [
-        "k8s.gcr.io/kube-apiserver:v1.22.9",
-        "k8s.gcr.io/coredns/coredns:v1.8.4",
-        "docker.io/kindest/kindnetd:v20211122-a2c10462",
-        "k8s.gcr.io/kube-scheduler:v1.22.9",
-        "k8s.gcr.io/kube-controller-manager:v1.22.9",
-        "k8s.gcr.io/pause:3.6",
-        "k8s.gcr.io/etcd:3.5.0-0",
-        "k8s.gcr.io/kube-proxy:v1.22.9",
         "docker.io/pravega/zookeeper:0.2.14",
-        "k8s.gcr.io/build-image/debian-base:buster-v1.7.2",
         "docker.io/pravega/zookeeper-operator:0.2.13",
-        "docker.io/rancher/local-path-provisioner:v0.0.14",
         "docker.io/lachlanevenson/k8s-kubectl:v1.23.2"
     ],
     "analysis_result": {
         "control_flow_fields": [
+            [
+                "root",
+                "spec",
+                "ports",
+                "INDEX",
+                "name"
+            ],
+            [
+                "root",
+                "spec",
+                "pod",
+                "labels"
+            ],
             [
                 "root",
                 "spec",
@@ -4936,30 +4939,8 @@
             [
                 "root",
                 "spec",
-                "persistence"
-            ],
-            [
-                "root",
-                "spec",
-                "probes"
-            ],
-            [
-                "root",
-                "spec",
-                "adminServerService",
-                "external"
-            ],
-            [
-                "root",
-                "spec",
                 "persistence",
                 "reclaimPolicy"
-            ],
-            [
-                "root",
-                "spec",
-                "pod",
-                "labels"
             ],
             [
                 "root",
@@ -4977,19 +4958,29 @@
             [
                 "root",
                 "spec",
-                "probes",
-                "livenessProbe"
+                "pod",
+                "resources",
+                "requests"
             ],
             [
                 "root",
                 "spec",
-                "ephemeral"
+                "persistence",
+                "spec",
+                "accessModes"
             ],
             [
                 "root",
                 "spec",
-                "probes",
-                "readinessProbe"
+                "adminServerService",
+                "external"
+            ],
+            [
+                "root",
+                "spec",
+                "pod",
+                "resources",
+                "limits"
             ]
         ],
         "default_value_map": {
@@ -5020,6 +5011,57 @@
             "[\"root\",\"spec\",\"probes\",\"readinessProbe\",\"timeoutSeconds\"]": "10",
             "[\"root\",\"spec\",\"replicas\"]": "3",
             "[\"root\",\"spec\",\"storageType\"]": "\"persistence\""
+        },
+        "field_conditions_map": {
+            "[\"root\", \"spec\", \"pod\", \"resources\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "pod",
+                        "resources",
+                        "limits"
+                    ],
+                    "op": "!=",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "pod",
+                        "resources",
+                        "requests"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"root\", \"spec\", \"pod\", \"resources\", \"requests\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "pod",
+                        "resources",
+                        "limits"
+                    ],
+                    "op": "==",
+                    "value": null
+                }
+            ],
+            "[\"root\", \"spec\", \"pod\", \"imagePullSecrets\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "pod",
+                        "serviceAccountName"
+                    ],
+                    "op": "!=",
+                    "value": "\"default\""
+                }
+            ]
         }
     }
 }

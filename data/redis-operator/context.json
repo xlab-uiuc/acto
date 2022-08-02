@@ -11,11 +11,11 @@
                 "annotations": {
                     "controller-gen.kubebuilder.io/version": "(devel)"
                 },
-                "creationTimestamp": "2022-06-29T19:24:40Z",
+                "creationTimestamp": "2022-08-02T01:51:25Z",
                 "generation": 1,
                 "name": "redisfailovers.databases.spotahome.com",
-                "resourceVersion": "580",
-                "uid": "80f2a820-7359-4e1b-83b7-654aa01fbc3f"
+                "resourceVersion": "653",
+                "uid": "a6f0f555-cfba-4d36-97fc-ab0d393c7b3f"
             },
             "spec": {
                 "conversion": {
@@ -2610,14 +2610,14 @@
                 },
                 "conditions": [
                     {
-                        "lastTransitionTime": "2022-06-29T19:24:40Z",
+                        "lastTransitionTime": "2022-08-02T01:51:25Z",
                         "message": "no conflicts found",
                         "reason": "NoConflicts",
                         "status": "True",
                         "type": "NamesAccepted"
                     },
                     {
-                        "lastTransitionTime": "2022-06-29T19:24:40Z",
+                        "lastTransitionTime": "2022-08-02T01:51:25Z",
                         "message": "the initial names have been accepted",
                         "reason": "InitialNamesAccepted",
                         "status": "True",
@@ -2631,60 +2631,12 @@
         }
     },
     "preload_images": [
-        "k8s.gcr.io/coredns/coredns:v1.8.4",
-        "k8s.gcr.io/etcd:3.5.0-0",
-        "k8s.gcr.io/kube-proxy:v1.22.9",
-        "k8s.gcr.io/kube-scheduler:v1.22.9",
-        "quay.io/oliver006/redis_exporter:v1.33.0-alpine",
-        "k8s.gcr.io/pause:3.6",
-        "docker.io/kindest/kindnetd:v20211122-a2c10462",
         "quay.io/spotahome/redis-operator:v1.1.0",
-        "k8s.gcr.io/build-image/debian-base:buster-v1.7.2",
-        "docker.io/rancher/local-path-provisioner:v0.0.14",
-        "k8s.gcr.io/kube-apiserver:v1.22.9",
-        "k8s.gcr.io/kube-controller-manager:v1.22.9",
+        "quay.io/oliver006/redis_exporter:v1.33.0-alpine",
         "docker.io/library/redis:6.2.6-alpine"
     ],
     "analysis_result": {
         "control_flow_fields": [
-            [
-                "root",
-                "spec",
-                "sentinel",
-                "customConfig"
-            ],
-            [
-                "root",
-                "spec",
-                "redis",
-                "exporter",
-                "enabled"
-            ],
-            [
-                "root",
-                "spec",
-                "labelWhitelist",
-                "INDEX"
-            ],
-            [
-                "root",
-                "spec",
-                "redis",
-                "storage",
-                "persistentVolumeClaim"
-            ],
-            [
-                "root",
-                "spec",
-                "bootstrapNode",
-                "allowSentinels"
-            ],
-            [
-                "root",
-                "spec",
-                "bootstrapNode",
-                "port"
-            ],
             [
                 "root",
                 "spec",
@@ -2700,14 +2652,44 @@
             [
                 "root",
                 "spec",
-                "redis",
-                "storage",
-                "keepAfterDeletion"
+                "bootstrapNode",
+                "port"
+            ],
+            [
+                "root",
+                "spec",
+                "sentinel",
+                "customConfig"
             ],
             [
                 "root",
                 "spec",
                 "labelWhitelist"
+            ],
+            [
+                "root",
+                "spec",
+                "bootstrapNode",
+                "host"
+            ],
+            [
+                "root",
+                "spec",
+                "labelWhitelist",
+                "INDEX"
+            ],
+            [
+                "root",
+                "spec",
+                "bootstrapNode",
+                "allowSentinels"
+            ],
+            [
+                "root",
+                "spec",
+                "redis",
+                "storage",
+                "keepAfterDeletion"
             ],
             [
                 "root",
@@ -2719,8 +2701,16 @@
             [
                 "root",
                 "spec",
-                "bootstrapNode",
-                "host"
+                "redis",
+                "customConfig",
+                "INDEX"
+            ],
+            [
+                "root",
+                "spec",
+                "redis",
+                "exporter",
+                "enabled"
             ]
         ],
         "default_value_map": {
@@ -2731,6 +2721,197 @@
             "[\"root\",\"spec\",\"sentinel\",\"exporter\",\"image\"]": "\"quay.io/oliver006/redis_exporter:v1.33.0-alpine\"",
             "[\"root\",\"spec\",\"sentinel\",\"image\"]": "\"redis:6.2.6-alpine\"",
             "[\"root\",\"spec\",\"sentinel\",\"replicas\"]": "3"
+        },
+        "field_conditions_map": {
+            "[\"root\", \"spec\", \"sentinel\", \"exporter\", \"env\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "sentinel",
+                        "exporter",
+                        "enabled"
+                    ],
+                    "op": "==",
+                    "value": "true"
+                }
+            ],
+            "[\"root\", \"spec\", \"sentinel\", \"customConfig\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "bootstrapNode"
+                    ],
+                    "op": "==",
+                    "value": null
+                }
+            ],
+            "[\"root\", \"spec\", \"labelWhitelist\", \"INDEX\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "labelWhitelist"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"root\", \"spec\", \"redis\", \"storage\", \"keepAfterDeletion\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "redis",
+                        "storage",
+                        "persistentVolumeClaim"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"root\", \"spec\", \"redis\", \"storage\", \"persistentVolumeClaim\", \"metadata\", \"labels\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "redis",
+                        "storage",
+                        "persistentVolumeClaim"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"root\", \"spec\", \"sentinel\", \"exporter\", \"args\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "sentinel",
+                        "exporter",
+                        "enabled"
+                    ],
+                    "op": "==",
+                    "value": "true"
+                }
+            ],
+            "[\"root\", \"spec\", \"redis\", \"exporter\", \"env\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "redis",
+                        "exporter",
+                        "enabled"
+                    ],
+                    "op": "==",
+                    "value": "true"
+                }
+            ],
+            "[\"root\", \"spec\", \"redis\", \"customConfig\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "bootstrapNode"
+                    ],
+                    "op": "==",
+                    "value": null
+                }
+            ],
+            "[\"root\", \"spec\", \"redis\", \"storage\", \"persistentVolumeClaim\", \"spec\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "redis",
+                        "storage",
+                        "persistentVolumeClaim"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"root\", \"spec\", \"redis\", \"storage\", \"persistentVolumeClaim\", \"metadata\", \"annotations\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "redis",
+                        "storage",
+                        "persistentVolumeClaim"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"root\", \"spec\", \"redis\", \"storage\", \"emptyDir\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "redis",
+                        "storage",
+                        "persistentVolumeClaim"
+                    ],
+                    "op": "==",
+                    "value": null
+                }
+            ],
+            "[\"root\", \"spec\", \"redis\", \"storage\", \"persistentVolumeClaim\", \"status\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "redis",
+                        "storage",
+                        "persistentVolumeClaim"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"root\", \"spec\", \"sentinel\", \"exporter\", \"resources\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "sentinel",
+                        "exporter",
+                        "enabled"
+                    ],
+                    "op": "==",
+                    "value": "true"
+                }
+            ],
+            "[\"root\", \"spec\", \"redis\", \"exporter\", \"args\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "redis",
+                        "exporter",
+                        "enabled"
+                    ],
+                    "op": "==",
+                    "value": "true"
+                }
+            ],
+            "[\"root\", \"spec\", \"redis\", \"exporter\", \"resources\"]": [
+                {
+                    "field": [
+                        "root",
+                        "spec",
+                        "redis",
+                        "exporter",
+                        "enabled"
+                    ],
+                    "op": "==",
+                    "value": "true"
+                }
+            ]
         }
     }
 }
