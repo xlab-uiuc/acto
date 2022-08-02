@@ -1,10 +1,10 @@
-import subprocess
 import sys
 import logging
 from deepdiff import DeepDiff
 import re
 import copy
 import operator
+from functools import reduce
 
 from common import *
 from compare import CompareMethods
