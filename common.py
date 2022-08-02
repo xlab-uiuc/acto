@@ -372,7 +372,7 @@ def kind_create_cluster(name: str, config: str, version: str):
     if name:
         cmd.extend(['--name', name])
     else:
-        cmd.extend(['--name', CONST.KIND_CLUSTER])
+        cmd.extend(['--name', CONST.CLUSTER_NAME])
 
     if config:
         cmd.extend(['--config', config])
