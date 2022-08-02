@@ -1,6 +1,5 @@
 import ctypes
 import json
-import operator
 
 def analyze(project_path: str, seed_type: str, seed_pkg: str) -> dict:
     analysis_lib = ctypes.cdll.LoadLibrary('ssa/libanalysis.so')
@@ -55,7 +54,7 @@ def analyze(project_path: str, seed_type: str, seed_pkg: str) -> dict:
     return analysis_result
 
 
-def is_subfield(path: list, subpath: list) -> bool:
+def is_subfield(subpath: list, path: list) -> bool:
     '''Checks if subpath is a subfield of path
     '''
     if len(path) > len(subpath):
@@ -67,10 +66,10 @@ def is_subfield(path: list, subpath: list) -> bool:
 
 
 if __name__ == '__main__':
-    print(analyze('/home/tyler/cluster-operator', 'RabbitmqCluster', 'github.com/rabbitmq/cluster-operator/api/v1beta1'))
+    # print(analyze('/home/tyler/cluster-operator', 'RabbitmqCluster', 'github.com/rabbitmq/cluster-operator/api/v1beta1'))
     # print(analyze('/home/tyler/redis-operator/cmd/redisoperator', 'RedisFailover', 'github.com/spotahome/redis-operator/api/redisfailover/v1'))
     # print(analyze('/home/tyler/cass-operator', 'CassandraDatacenter', 'github.com/k8ssandra/cass-operator/apis/cassandra/v1beta1'))
     # print(analyze('/home/tyler/percona-server-mongodb-operator/cmd/manager', 'PerconaServerMongoDB', 'github.com/percona/percona-server-mongodb-operator/pkg/apis/psmdb/v1'))
-    # print(analyze('/home/tyler/zookeeper-operator', 'ZookeeperCluster', 'github.com/pravega/zookeeper-operator/api/v1beta1'))
+    print(analyze('/home/tyler/zookeeper-operator', 'ZookeeperCluster', 'github.com/pravega/zookeeper-operator/api/v1beta1'))
 
     # print(analyze('/home/tyler/cockroach-operator/cmd/cockroach-operator', 'CrdbCluster', 'github.com/cockroachdb/cockroach-operator/apis/v1alpha1'))

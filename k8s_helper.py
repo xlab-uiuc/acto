@@ -1,5 +1,5 @@
 import logging
-from kubernetes.client.models import V1Deployment, V1StatefulSet, V1Namespace, V1ObjectMeta
+from kubernetes.client.models import V1Deployment, V1StatefulSet, V1Namespace, V1ObjectMeta, V1Pod
 import kubernetes
 from typing import List, Optional, Tuple
 import yaml
@@ -7,6 +7,24 @@ from constant import CONST
 import time
 
 CONST = CONST()
+
+
+def is_pod_ready(pod: V1Pod) -> bool:
+    '''Check if the pod is ready
+    
+    Args:
+        pod: Pod object in kubernetes
+
+    Returns:
+        if the pod is ready
+    '''
+    if pod.status is None or pod.status.conditions is None:
+        return False
+
+    for condition in pod.status.conditions:
+        if condition.type == 'Ready' and condition.status == 'True':
+            return True
+    return False
 
 
 def get_deployment_available_status(deployment: V1Deployment) -> bool:

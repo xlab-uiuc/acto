@@ -42,8 +42,37 @@ class Deploy:
                 retry_count -= 1
         return False
 
-    def check_status(self, context, cluster_name):
-        time.sleep(10)
+    def check_status(self, context: dict, cluster_name: str):
+        '''
+        
+        We need to make sure operator to be ready before applying test cases, because Acto would
+        crash later when running oracle if operator hasn't been ready
+        '''
+        apiclient = kubernetes_client(cluster_name)
+
+        logging.debug('Deploying the operator, waiting for it to be ready')
+        pod_ready = False
+        for tick in range(600):
+            # check if all pods are ready
+            pods = kubernetes.client.CoreV1Api(apiclient).list_pod_for_all_namespaces().items
+
+            all_pods_ready = True
+            for pod in pods:
+                if not k8s_helper.is_pod_ready(pod):
+                    all_pods_ready = False
+
+            if all_pods_ready:
+                logging.info('Operator ready')
+                pod_ready = True
+                break
+
+            time.sleep(5)
+        logging.info('Operator took %d seconds to get ready' % (tick*5))
+        if not pod_ready:
+            logging.error("operator deployment failed to be ready within timeout")
+            return False
+        else:
+            return True
 
     def new(self):
         if self.deploy_method is DeployMethod.HELM:
@@ -109,49 +138,13 @@ class Yaml(Deploy):
         if self.init_yaml:
             kubectl(['apply', '--server-side', '-f', self.init_yaml],
                     cluster_name)
-        sleep(self.wait)
+        self.check_status(context, cluster_name)
         kubectl(['apply', '--server-side', '-f', self.path, '-n', context['namespace']],
                 cluster_name)
         self.check_status(context, cluster_name)
 
         # TODO: Return True if deploy successfully
         return True
-
-    def check_status(self, context: dict, cluster_name: str):
-        '''
-        
-        We need to make sure operator to be ready before applying test cases, because Acto would
-        crash later when running oracle if operator hasn't been ready
-        '''
-        apiclient = kubernetes_client(cluster_name)
-
-        logging.debug('Deploying the operator, waiting for it to be ready')
-        pod_ready = False
-        operator_stateful_states = []
-        for tick in range(600):
-            # get all deployment and stateful set.
-            operator_deployments = kubernetes.client.AppsV1Api(apiclient).list_namespaced_deployment(
-                context['namespace'],
-                watch=False).items
-            operator_stateful_states = kubernetes.client.AppsV1Api(apiclient).list_namespaced_stateful_set(
-                context['namespace'],
-                watch=False).items
-            # TODO: we should check all deployment and stateful set are ready
-            operator_deployments_is_ready = len(operator_deployments) >= 1 \
-                    and k8s_helper.get_deployment_available_status(operator_deployments[0])
-            operator_stateful_states_is_ready = len(operator_stateful_states) >= 1 \
-                    and k8s_helper.get_stateful_set_available_status(operator_stateful_states[0])
-            if operator_deployments_is_ready or operator_stateful_states_is_ready:
-                logging.info('Operator ready')
-                pod_ready = True
-                break
-            time.sleep(5)
-        logging.info('Operator took %d seconds to get ready' % tick*5)
-        if not pod_ready:
-            logging.error("operator deployment failed to be ready within timeout")
-            return False
-        else:
-            return True
 
 
 class Kustomize(Deploy):
@@ -163,10 +156,10 @@ class Kustomize(Deploy):
         if self.init_yaml:
             kubectl(['apply', '--server-side', '-f', self.init_yaml],
                     cluster_name)
-        sleep(self.wait)
+        self.check_status(context, cluster_name)
         kubectl(['apply', '--server-side', '-k', self.path, '-n', context['namespace']],
                 cluster_name)
-        super().check_status(context, cluster_name)
+        self.check_status(context, cluster_name)
         return True
 
 
