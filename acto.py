@@ -331,11 +331,13 @@ class Acto:
                     break
             apiclient = kubernetes_client(
                 self.cluster.get_context_name('learn'))
-            runner = Runner(self.context, 'learn', self.cluster.get_context_name('learn'))
+            runner = Runner(self.context, 'learn',
+                            self.cluster.get_context_name('learn'))
             runner.run_without_collect(
                 self.operator_config.seed_custom_resource)
 
-            update_preload_images(self.context)
+            update_preload_images(
+                self.context, self.cluster.get_node_list('learn'))
             process_crd(self.context, apiclient, self.cluster.get_context_name('learn'),
                         self.crd_name, helper_crd)
             self.cluster.delete_cluster('learn')

@@ -103,6 +103,27 @@ class K3D(base.KubernetesCluster):
         while subprocess.run(cmd).returncode != 0:
             continue
 
+    def get_node_list(self, name: str):
+        '''Get container list of a K3S cluster
+        Args:
+            1. Name of the cluster
+        '''
+        worker_name_template = 'k3d-%s-agent-'
+        control_plane_name_template = 'k3d-%s-server-'
+
+        if name == None:
+            name = CONST.CLUSTER_NAME
+
+        res = super().get_node_list(worker_name_template % name) + \
+            super().get_node_list(control_plane_name_template % name)
+
+        if len(res) == 0:
+            # no worker node can be found
+            logging.CRITICAL(f"No node for cluster {name} can be found")
+            raise RuntimeError
+
+        return res
+
 
 if __name__ == "__main__":
     k3d = K3D()
