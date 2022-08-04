@@ -216,8 +216,9 @@ class Checker(object):
                 continue
             msg = parsed_log['msg']
 
-            if invalid_input_message(msg, input_delta):
-                return InvalidInputResult()
+            is_invalid, reponsible_field_path = invalid_input_message(msg, input_delta)
+            if is_invalid:
+                return InvalidInputResult(reponsible_field_path)
 
             skip = False
             for regex in EXCLUDE_ERROR_REGEX:

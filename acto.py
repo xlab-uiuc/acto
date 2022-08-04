@@ -14,6 +14,7 @@ import logging
 import importlib
 import traceback
 import tempfile
+import jsonpatch
 
 from common import *
 from exception import UnknownDeployMethodError
@@ -143,10 +144,22 @@ def prune_noneffective_change(diff):
             del diff['dictionary_item_added']
 
 
-def apply_testcase(value_with_schema: ValueWithSchema, path: list, value):
-    logging.info('Applying [%s] to path [%s]', value, path)
-    value_with_schema.create_path(list(path))
-    value_with_schema.set_value_by_path(value, list(path))
+def apply_testcase(value_with_schema: ValueWithSchema, path: list, testcase: TestCase, setup: bool = False) -> jsonpatch.JsonPatch:
+    prev = value_with_schema.raw_value()
+    field_curr_value = value_with_schema.get_value_by_path(list(path))
+    if setup:
+        value_with_schema.create_path(list(path))
+        value_with_schema.set_value_by_path(testcase.setup(field_curr_value), list(path))
+        curr = value_with_schema.raw_value()
+    else:
+        if testcase.test_precondition(field_curr_value):
+            value_with_schema.create_path(list(path))
+            value_with_schema.set_value_by_path(testcase.mutator(field_curr_value), list(path))
+            curr = value_with_schema.raw_value()
+
+    patch = jsonpatch.make_patch(prev, curr)
+    logging.info('JSON patch: %s' % patch)
+    return patch
 
 
 def timeout_handler(sig, frame):
@@ -212,7 +225,8 @@ class TrialRunner:
                      json.dumps(self.discarded_testcases, cls=ActoEncoder, indent=4))
 
     def run_trial(self, trial_dir: str, num_mutation: int = 10) -> Tuple[ErrorResult, int]:
-        '''Run a trial starting with the initial input, mutate with the candidate_dict, and mutate for num_mutation times
+        '''Run a trial starting with the initial input, mutate with the candidate_dict, 
+        and mutate for num_mutation times
 
         Args:
             initial_input: the initial input without mutation
@@ -228,15 +242,16 @@ class TrialRunner:
         self.snapshots.append(EmptySnapshot(curr_input))
 
         generation = 0
-        while generation < num_mutation:
+        while generation < num_mutation:  # every iteration gets a new list of next tests
             curr_input_with_schema = attach_schema_to_value(self.snapshots[-1].input,
                                                             self.input_model.root_schema)
 
+            ready_testcases = []
+            testcase_patches = []
             if generation > 0:
                 next_tests = self.input_model.next_test()
 
-                ready_testcases = []
-                for (field_node, testcase) in next_tests:
+                for (field_node, testcase) in next_tests:  # iterate on list of next tests
                     field_curr_value = curr_input_with_schema.get_value_by_path(
                         list(field_node.get_path()))
 
@@ -249,7 +264,7 @@ class TrialRunner:
                         logging.info('Precondition of %s fails, try setup first',
                                      field_node.get_path())
                         apply_testcase(curr_input_with_schema, field_node.get_path(),
-                                       testcase.run_setup(field_curr_value))
+                                       testcase, setup=True)
 
                         if not testcase.test_precondition(
                                 curr_input_with_schema.get_value_by_path(list(
@@ -284,32 +299,60 @@ class TrialRunner:
                     logging.info('All setups failed')
                     continue
                 logging.info('Running bundled testcases')
+
+            while True:  # invalid input retry loop
                 for field_node, testcase in ready_testcases:
-                    field_curr_value = curr_input_with_schema.get_value_by_path(
-                        list(field_node.get_path()))
-                    if testcase.test_precondition(field_curr_value):
-                        apply_testcase(curr_input_with_schema, field_node.get_path(),
-                                       testcase.mutator(field_curr_value))
-                        field_node.get_testcases().pop()  # finish testcase
+                    patch = apply_testcase(curr_input_with_schema, field_node.get_path(), testcase)
+                    field_node.get_testcases().pop()  # finish testcase
+                    testcase_patches.append((field_node, testcase, patch))
 
-            result = TrialRunner.run_and_check(runner, checker, curr_input_with_schema.raw_value(),
-                                               self.snapshots, generation, self.dryrun)
+                result = TrialRunner.run_and_check(runner, checker, curr_input_with_schema.raw_value(),
+                                                self.snapshots, generation, self.dryrun)
 
-            generation += 1
-            if isinstance(result, InvalidInputResult):
-                self.snapshots.pop()
-                self.revert(runner, checker, generation)
                 generation += 1
-            elif isinstance(result, UnchangedInputResult):
-                pass
-            elif isinstance(result, ErrorResult):
-                # Delta debugging
-                return result, generation
-            elif isinstance(result, PassResult):
-                pass
-            else:
-                logging.error('Unknown return value, abort')
-                quit()
+                if isinstance(result, InvalidInputResult):
+                    # If the result indicates our input is invalid, we need to first run revert to
+                    # go back to previous system state, then construct a new input without the
+                    # responsible testcase and re-apply
+
+                    # 1. revert
+                    self.snapshots.pop()
+                    self.revert(runner, checker, generation)
+                    generation += 1
+
+                    # 2. Construct a new input and re-apply
+                    if len(testcase_patches) == 1:
+                        # if only one testcase, then no need to isolate
+                        break  # break out the invalid input retry loop
+                    else:
+                        responsible_field = result.responsible_field
+                        jsonpatch_path = ''.join('/' + item for item in responsible_field)
+                        # isolate the responsible invalid testcase and re-apply
+                        ready_testcases = []
+                        for field_node, testcase, patch in testcase_patches:
+                            responsible = False
+                            for op in patch:
+                                if op['path'] == jsonpatch_path:
+                                    logging.info('Determine the responsible field to be %s' % jsonpatch_path)
+                                    responsible = True
+                                    break
+                            if not responsible:
+                                ready_testcases.append((field_node, testcase))
+                        if len(ready_testcases) == 0:
+                            break
+                        testcase_patches = []
+                else:
+                    if isinstance(result, UnchangedInputResult):
+                        pass
+                    elif isinstance(result, ErrorResult):
+                        # Delta debugging
+                        return result, generation
+                    elif isinstance(result, PassResult):
+                        pass
+                    else:
+                        logging.error('Unknown return value, abort')
+                        quit()
+                    break  # break out the invalid input retry loop
 
             if self.input_model.is_empty():
                 break
