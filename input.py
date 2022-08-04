@@ -9,6 +9,7 @@ from typing import Tuple
 from deepdiff import DeepDiff
 
 from schema import extract_schema, BaseSchema, ObjectSchema, ArraySchema
+from testplan import TestPlan
 from value_with_schema import attach_schema_to_value
 from common import random_string
 
@@ -116,7 +117,6 @@ class InputModel:
         self.num_workers = num_workers
         self.seed_input = None
         self.test_plan_partitioned = None
-        self.discarded_tests = {}  # List of test cases failed to run
         self.thread_vars = threading.local()
 
 
@@ -130,27 +130,16 @@ class InputModel:
         '''Claim this thread's id, so that we can split the test plan among threads'''
         # Thread local variables
         self.thread_vars.id = id
-        self.thread_vars.curr_field = None  # Bookkeeping in case we are running setup
         # so that we can run the test case itself right after the setup
-        self.thread_vars.test_plan = dict(self.test_plan_partitioned[id])
-        self.thread_vars.current_input_setup = False
-
-        self.thread_vars.current_input = attach_schema_to_value(
-            self.initial_value, self.root_schema)
-        self.thread_vars.previous_input = attach_schema_to_value(
-            self.initial_value, self.root_schema)
+        self.thread_vars.test_plan = TestPlan(self.root_schema.to_tree())
+        
+        for key, value in dict(self.test_plan_partitioned[id]).items():
+            path = json.loads(key)
+            self.thread_vars.test_plan.add_testcases_by_path(value, path)
 
     def is_empty(self):
         '''if test plan is empty'''
         return len(self.thread_vars.test_plan) == 0
-
-    def reset_input(self):
-        '''Reset the current input back to seed'''
-        self.thread_vars.current_input = attach_schema_to_value(self.seed_input.raw_value(), self.root_schema)
-        self.thread_vars.current_input_setup = False
-        
-        self.thread_vars.previous_input = attach_schema_to_value(self.seed_input.raw_value(), self.root_schema)
-        
 
     def get_seed_input(self) -> dict:
         '''Get the raw value of the seed input'''
@@ -198,10 +187,7 @@ class InputModel:
 
         return ret
 
-    def curr_test(self) -> Tuple[dict, bool]:
-        return self.thread_vars.current_input.raw_value(), self.thread_vars.current_input_setup
-
-    def next_test(self) -> Tuple[dict, bool]:
+    def next_test(self) -> list:
         '''Selects next test case to run from the test plan
         
         Randomly select a test field, and fetch the tail of the test case list
@@ -212,42 +198,18 @@ class InputModel:
             Tuple of (new value, if this is a setup)
         '''
         logging.info('Progress [%d] cases left' %
-                     sum([len(i) for i in self.thread_vars.test_plan.values()]))
-        if self.thread_vars.curr_field != None:
-            field = self.thread_vars.curr_field
-        else:
-            field = random.choice(list(self.thread_vars.test_plan.keys()))
-        self.thread_vars.curr_field = field
-        test_case = self.thread_vars.test_plan[field][-1]
-        logging.debug('field: %s' % field)
-        curr = self.thread_vars.current_input.get_value_by_path(json.loads(field))
-        logging.info('Selected field %s Previous value %s' % (field, curr))
-        logging.info('Selected test [%s]' % test_case)
+                     len(self.thread_vars.test_plan))
 
-        # run test if precondition satisfies
-        # run setup if precondition fails
-        if test_case.test_precondition(curr):
-            setup = False
-            next_value = test_case.mutator(curr)
-            self.thread_vars.test_plan[field].pop()
-            if len(self.thread_vars.test_plan[field]) == 0:
-                del self.thread_vars.test_plan[field]
-            self.thread_vars.curr_field = None
-        else:
-            setup = True
-            next_value = test_case.run_setup(curr)
-            logging.info('Precondition not satisfied, try setup')
-        logging.debug('Next value: %s' % next_value)
+        ret = []
 
-        # Save previous input
-        self.thread_vars.previous_input = attach_schema_to_value(
-            self.thread_vars.current_input.raw_value(), self.root_schema)
+        # TODO: multi-testcase
+        selected_fields = self.thread_vars.test_plan.select_fields()
 
-        # Create the path if not exist, then change the value
-        self.thread_vars.current_input.create_path(json.loads(field))
-        self.thread_vars.current_input.set_value_by_path(next_value, json.loads(field))
-        self.thread_vars.current_input_setup = setup
-        return self.thread_vars.current_input.raw_value(), setup
+        for selected_field in selected_fields:
+            logging.info('Selected field [%s]', selected_field.get_path())
+            ret.append(tuple([selected_field, selected_field.get_next_testcase()]))
+
+        return ret
 
     def get_input_delta(self):
         '''Compare the current input with the previous input
@@ -276,14 +238,6 @@ class InputModel:
         if len(self.thread_vars.test_plan[self.thread_vars.curr_field]) == 0:
             del self.thread_vars.test_plan[self.thread_vars.curr_field]
         self.thread_vars.curr_field = None
-
-    def revert(self):
-        '''Revert back to previous input'''
-        # FIXME
-        if self.thread_vars.previous_input == None:
-            logging.error('No previous input to revert to')
-        self.thread_vars.current_input = self.thread_vars.previous_input
-        self.thread_vars.previous_input = None
 
     def apply_custom_field(self, custom_field: CustomField):
         '''Applies custom field to the input model
