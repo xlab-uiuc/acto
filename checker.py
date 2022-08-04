@@ -33,7 +33,7 @@ class Checker(object):
         '''
         if snapshot.system_state == {}:
             return InvalidInputResult()
-            
+
         self.delta_log_path = "%s/delta-%d.log" % (self.trial_dir, generation)
 
         input_result = self.check_input(snapshot)
@@ -42,6 +42,7 @@ class Checker(object):
 
         state_result = self.check_resources(snapshot, prev_snapshot)
         log_result = self.check_operator_log(snapshot, prev_snapshot)
+        health_result = self.check_health(snapshot)
 
         if isinstance(log_result, InvalidInputResult):
             logging.info('Invalid input, skip this case')
@@ -52,6 +53,9 @@ class Checker(object):
         elif isinstance(log_result, ErrorResult):
             logging.info('Report error from operator log oracle')
             return log_result
+        elif isinstance(health_result, ErrorResult):
+            logging.info('Report error from system health oracle')
+            return health_result
 
         return PassResult()
 
@@ -109,7 +113,8 @@ class Checker(object):
                     continue
 
                 # Find the longest matching field, compare the delta change
-                match_deltas = self._list_matched_fields(delta.path, system_delta_without_cr)
+                match_deltas = self._list_matched_fields(
+                    delta.path, system_delta_without_cr)
 
                 # TODO: should the delta match be inclusive?
                 for match_delta in match_deltas:
@@ -117,8 +122,10 @@ class Checker(object):
                                   (delta.path, match_delta.path))
                     if not self.compare_method.compare(delta.prev, delta.curr, match_delta.prev,
                                                        match_delta.curr):
-                        logging.error('Matched delta inconsistent with input delta')
-                        logging.error('Input delta: %s -> %s' % (delta.prev, delta.curr))
+                        logging.error(
+                            'Matched delta inconsistent with input delta')
+                        logging.error('Input delta: %s -> %s' %
+                                      (delta.prev, delta.curr))
                         logging.error('Matched delta: %s -> %s' %
                                       (match_delta.prev, match_delta.curr))
                         return ErrorResult(Oracle.SYSTEM_STATE,
@@ -144,10 +151,10 @@ class Checker(object):
 
     def should_skip_input_delta(self, input_delta: Diff, snapshot: Snapshot) -> bool:
         '''Determines if the input delta should be skipped or not
-        
+
         Args:
             input_delta
-            
+
         Returns:
             if the arg input_delta should be skipped in oracle
         '''
@@ -198,7 +205,7 @@ class Checker(object):
 
     def check_operator_log(self, snapshot: Snapshot, prev_snapshot: Snapshot) -> RunResult:
         '''Check the operator log for error msg
-        
+
         Args:
             result - includes the path to delta log files
 
@@ -232,20 +239,48 @@ class Checker(object):
             # return ErrorResult(Oracle.ERROR_LOG, line)
         return PassResult()
 
-    def check_health(self) -> RunResult:
+    def check_health(self, snapshot: Snapshot) -> RunResult:
         '''System health oracle'''
-        # TODO: Add other resources, e.g. deployment
-        for sts in self.resources['stateful_set'].values():
-            desired_replicas = sts['status']['replicas']
-            if 'ready_replicas' not in sts['status']:
-                logging.error('StatefulSet unhealthy ready replicas None')
-                return None  # TODO
-            available_replicas = sts['status']['ready_replicas']
-            if desired_replicas != available_replicas:
+
+        system_state = snapshot.system_state
+        unhealthy_resources = {}
+
+        # check Health of Statefulsets
+        unhealthy_resources['statefulset'] = []
+        for sfs in system_state['stateful_set'].values():
+            if sfs['spec']['replicas'] == sfs['status']['replicas'] and \
+                    sfs['status']['replicas'] == sfs['status']['ready_replicas'] and \
+                    sfs['status']['current_revision'] == sfs['status']['update_revision']:
+                continue
+            unhealthy_resources['statefulset'].append(sfs['metadata']['name'])
+
+        # check Health of Deployments
+        unhealthy_resources['deployment'] = []
+        for dp in system_state['deployment'].values():
+            if dp['spec']['replicas'] == dp['status']['replicas'] and \
+                    dp['status']['replicas'] == dp['status']['ready_replicas'] and \
+                    dp['status']['ready_replicas'] == dp['status']['updated_replicas']:
+                continue
+            unhealthy_resources['deployment'].append(dp['metadata']['name'])
+
+        # check Health of Pods
+        unhealthy_resources['pod'] = []
+        for pod in system_state['pod'].values():
+            if pod['status']['phase'] == 'Running' or \
+                    pod['status']['phase'] == 'Completed':
+                continue
+            unhealthy_resources['pod'].append(pod['metadata']['name'])
+
+        error_msg = ''
+        for kind, resources in unhealthy_resources.items():
+            if len(resources) != 0:
+                error_msg += f"{kind}: {', '.join(resources)}\n"
                 logging.error(
-                    'StatefulSet unhealthy desired replicas [%s] available replicas [%s]' %
-                    (desired_replicas, available_replicas))
-                return None  # TODO
+                    f"Found {kind}: {', '.join(resources)} with unhealthy status")
+
+        if error_msg == '':
+            return ErrorResult(Oracle.SYSTEM_HEALTH, error_msg)
+
         return PassResult()
 
     def check_events_log(self, snapshot: Snapshot) -> RunResult:
@@ -253,7 +288,7 @@ class Checker(object):
 
     def _list_matched_fields(self, path: list, delta_dict: dict) -> list:
         '''Search through the entire system delta to find longest matching field
-        
+
         Args:
             path: path of input delta as list
             delta_dict: dict of system delta
@@ -327,8 +362,7 @@ if __name__ == "__main__":
         filename=os.path.join('.', 'test.log'),
         level=logging.DEBUG,
         filemode='w',
-        format=
-        '%(asctime)s %(threadName)-11s %(levelname)-7s, %(name)s, %(filename)-9s:%(lineno)d, %(message)s'
+        format='%(asctime)s %(threadName)-11s %(levelname)-7s, %(name)s, %(filename)-9s:%(lineno)d, %(message)s'
     )
 
     def handle_excepthook(type, message, stack):
@@ -374,25 +408,28 @@ if __name__ == "__main__":
         for generation in range(0, 10):
             mutated_filename = '%s/mutated-%d.yaml' % (trial_dir, generation)
             operator_log_path = "%s/operator-%d.log" % (trial_dir, generation)
-            system_state_path = "%s/system-state-%03d.json" % (trial_dir, generation)
+            system_state_path = "%s/system-state-%03d.json" % (
+                trial_dir, generation)
             events_log_path = "%s/events.log" % (trial_dir)
             cli_output_path = "%s/cli-output-%d.log" % (trial_dir, generation)
-            field_val_dict_path = "%s/field-val-dict-%d.json" % (trial_dir, generation)
+            field_val_dict_path = "%s/field-val-dict-%d.json" % (
+                trial_dir, generation)
 
             if not os.path.exists(operator_log_path):
                 break
 
             with open(mutated_filename, 'r') as input_file, \
-                open(operator_log_path, 'r') as operator_log, \
-                open(system_state_path, 'r') as system_state, \
-                open(events_log_path, 'r') as events_log, \
-                open(cli_output_path, 'r') as cli_output:
+                    open(operator_log_path, 'r') as operator_log, \
+                    open(system_state_path, 'r') as system_state, \
+                    open(events_log_path, 'r') as events_log, \
+                    open(cli_output_path, 'r') as cli_output:
                 input = yaml.load(input_file, Loader=yaml.FullLoader)
                 cli_result = json.load(cli_output)
                 logging.info(cli_result)
                 system_state = json.load(system_state)
                 operator_log = operator_log.read().splitlines()
-                snapshot = Snapshot(input, cli_result, system_state, operator_log)
+                snapshot = Snapshot(input, cli_result,
+                                    system_state, operator_log)
 
                 result = checker.check(snapshot=snapshot,
                                        prev_snapshot=snapshots[-1],

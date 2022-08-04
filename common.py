@@ -88,6 +88,7 @@ class Diff:
 class Oracle(str, enum.Enum):
     ERROR_LOG = 'ErrorLog'
     SYSTEM_STATE = 'SystemState'
+    SYSTEM_HEALTH = 'SystemHealth'
 
 
 class RunResult():
@@ -287,13 +288,14 @@ class ActoEncoder(json.JSONEncoder):
             return list(obj)
         return json.JSONEncoder.default(self, obj)
 
+
 def translate_op(input_op: str):
     if input_op == '!=':
         op = operator.ne
     elif input_op == '==':
         op = operator.eq
     elif input_op == '<=':
-        op = operator.le 
+        op = operator.le
     elif input_op == '<':
         op = operator.lt
     elif input_op == '>=':
@@ -389,7 +391,8 @@ def kind_load_images(images_archive: str, name: str):
     logging.info('Loading preload images')
     cmd = ['kind', 'load', 'image-archive']
     if images_archive == None:
-        logging.warning('No image to preload, we at least should have operator image')
+        logging.warning(
+            'No image to preload, we at least should have operator image')
 
     if name != None:
         cmd.extend(['--name', name])
