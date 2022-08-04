@@ -214,15 +214,17 @@ class Checker(object):
             parsed_log = parse_log(line)
             if parsed_log == {} or parsed_log['level'] != 'error' and parsed_log['level'] != 'fatal':
                 continue
-            msg = parsed_log['msg']
-
-            if invalid_input_message(msg, input_delta):
-                return InvalidInputResult()
+            
+            # List all the values in parsed_log
+            for value in list(parsed_log.values()):
+                if type(value) != str or value == '':
+                    continue
+                if invalid_input_message(value, input_delta):
+                    return InvalidInputResult()
 
             skip = False
             for regex in EXCLUDE_ERROR_REGEX:
                 if re.search(regex, line, re.IGNORECASE):
-                    # logging.debug('Skipped error msg: %s' % line)
                     skip = True
                     break
             if skip:
