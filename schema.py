@@ -267,7 +267,7 @@ class IntegerSchema(NumberSchema):
         if self.multiple_of != None:
             return random.randrange(prev, self.maximum + 1, self.multiple_of)
         else:
-            return random.randint(prev, self.maximum)
+            return random.randint(prev + 1, self.maximum)
 
     def increase_setup(self, prev):
         return self.minimum
@@ -284,7 +284,7 @@ class IntegerSchema(NumberSchema):
         if self.multiple_of != None:
             return random.randrange(self.minimum, prev, self.multiple_of)
         else:
-            return random.randint(self.minimum, prev)
+            return random.randint(self.minimum, prev - 1)
 
     def decrease_setup(self, prev):
         return self.maximum

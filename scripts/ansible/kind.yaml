@@ -1,0 +1,23 @@
+
+
+---
+- name: Install Kind
+  hosts: all
+
+  tasks:
+    - name: Get home dir
+      command: echo $HOME
+      register: home
+
+    - name: install kind
+      shell: "/usr/local/go/bin/go install sigs.k8s.io/kind@v0.14.0"
+      environment:
+        GO111MODULE: "on"
+
+    - name: Test kind
+      shell: "{{ home.stdout }}/go/bin/kind version"
+      register: kind_version_output
+
+    - name: Show output of kind version
+      debug:
+        msg: "Kind Output: {{ kind_version_output.stdout }}"

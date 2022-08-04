@@ -15,6 +15,19 @@ def update_preload_images(context: dict):
     if not namespace:
         return
 
+    k8s_images = [
+        'docker.io/kindest/kindnetd',
+        'docker.io/rancher/local-path-provisioner',
+        'k8s.gcr.io/build-image/debian-base',
+        'k8s.gcr.io/coredns/coredns',
+        'k8s.gcr.io/etcd',
+        'k8s.gcr.io/kube-apiserver',
+        'k8s.gcr.io/kube-controller-manager',
+        'k8s.gcr.io/kube-proxy',
+        'k8s.gcr.io/kube-scheduler',
+        'k8s.gcr.io/pause',
+    ]
+
     worker_list = ['learn-worker', 'learn-worker2', 'learn-worker3']
     for worker in worker_list:
         p = subprocess.run(['docker', 'exec', worker, 'crictl', 'images', "--digests", "--no-trunc"],
@@ -23,6 +36,8 @@ def update_preload_images(context: dict):
         output = p.stdout.strip()
         for line in output.split('\n')[1:]:
             items = line.split()
+            if items[0] in k8s_images:
+                continue
             if "none" not in items[1]:
                 image = '%s:%s' % (items[0], items[1])
             else:

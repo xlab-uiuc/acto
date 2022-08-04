@@ -1,0 +1,61 @@
+---
+- name: Install Docker
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Remove old go
+      ansible.builtin.file:
+        path: /usr/local/go
+        state: absent
+
+    - name: Get the home directory
+      become: false
+      command: echo $HOME
+      register: home
+
+    - name: Print home dir to control node
+      debug:
+        msg: "Home dir is {{ home.stdout }}"
+
+    - name: Extract go1.18.2.linux-amd64.tar.gz into /usr/local/go
+      ansible.builtin.unarchive:
+        src: https://golang.org/dl/go1.18.2.linux-amd64.tar.gz
+        dest: /usr/local
+        remote_src: yes
+
+    - name: Add PATH init value to bashrc
+      ansible.builtin.lineinfile:
+        path: "{{ home.stdout }}/.bashrc"
+        line: export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+        state: present
+        insertafter: EOF
+
+    - name: Add go to bashrc
+      ansible.builtin.lineinfile:
+        path: "{{ home.stdout }}/.bashrc"
+        line: export PATH=$PATH:/usr/local/go/bin
+        state: present
+        insertafter: EOF
+
+    - name: Set GOPATH
+      ansible.builtin.lineinfile:
+        path: "{{ home.stdout }}/.bashrc"
+        line: "export GOPATH={{ home.stdout }}/go"
+        state: present
+        insertafter: EOF
+
+    - name: Add GOPATH/bin to bashrc
+      ansible.builtin.lineinfile:
+        path: "{{ home.stdout }}/.bashrc"
+        line: export PATH=$PATH:$GOPATH/bin
+        state: present
+        insertafter: EOF
+
+    - name: Test installed go version
+      shell: "/usr/local/go/bin/go version"
+      register: go_version_output
+
+    - name: Show output of go version
+      debug:
+        msg: "Go Version Output: {{ go_version_output.stdout }}"

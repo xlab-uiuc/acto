@@ -1,0 +1,27 @@
+---
+- name: Configure system inotify params
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Configure fs.inotify.max_user_watches
+      ansible.posix.sysctl:
+        name: fs.inotify.max_user_watches
+        value: "1048576"
+
+    - name: Configure fs.inotify.max_user_instances
+      ansible.posix.sysctl:
+        name: fs.inotify.max_user_instances
+        value: "1024"
+
+    - name: Read parameter fs.inotify.max_user_watches value
+      command: sysctl fs.inotify.max_user_watches
+      register: max_user_watches
+
+    - name: Read parameter fs.inotify.max_user_instances value
+      command: sysctl fs.inotify.max_user_instances
+      register: max_user_instances
+
+    - name: Print configuration parameters
+      debug:
+        msg: "{{ max_user_watches.stdout }} \n {{ max_user_instances.stdout }}"

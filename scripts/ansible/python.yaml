@@ -1,0 +1,18 @@
+---
+- name: Install Docker
+  hosts: all
+  become: true
+  vars_files:
+    - data.yaml
+
+  tasks:
+    - name: Install pip3
+      apt:
+        name: python3-pip
+        state: present
+        update_cache: yes
+
+    - name: Install python packages using pip
+      pip:
+        name: "{{ PYTHON_PKGS }}"
+        state: present
