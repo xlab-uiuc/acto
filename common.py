@@ -1,6 +1,7 @@
 import enum
 import json
 import os
+from typing import Tuple
 from deepdiff.helper import NotPresent
 from datetime import datetime, date
 import re
@@ -99,7 +100,9 @@ class PassResult(RunResult):
 
 
 class InvalidInputResult(RunResult):
-    pass
+
+    def __init__(self, responsible_field: list) -> None:
+        self.responsible_field = responsible_field
 
 
 class UnchangedInputResult(RunResult):
@@ -210,12 +213,22 @@ def postprocess_diff(diff):
     return diff_dict
 
 
-def invalid_input_message(log_msg: str, input_delta: dict) -> bool:
-    '''Returns if the log shows the input is invalid'''
+def invalid_input_message(log_msg: str, input_delta: dict) -> Tuple[bool, list]:
+    '''Returns if the log shows the input is invalid
+    
+    Args:
+        log_msg: message body of the log
+        input_delta: the input delta we applied to the CR
+
+    Returns:
+        Tuple(bool, list):
+            - if the log_msg indicates the input delta is invalid
+            - when log indicates invalid input: the responsible field path for the invalid input
+    '''
     for regex in INVALID_INPUT_LOG_REGEX:
         if re.search(regex, log_msg):
-            logging.info('recognized invalid input: %s' % log_msg)
-            return True
+            logging.info('Recognized invalid input through regex: %s' % log_msg)
+            return True, None
 
     # Check if the log line contains the field or value
     # If so, also return True
@@ -225,13 +238,13 @@ def invalid_input_message(log_msg: str, input_delta: dict) -> bool:
             if isinstance(delta.path[-1], str) and delta.path[-1] in log_msg:
                 logging.info("Recognized invalid input through field in error message: %s" %
                              log_msg)
-                return True
+                return True, delta.path
             elif str(delta.curr) in log_msg:
                 logging.info("Recognized invalid input through value in error message: %s" %
                              log_msg)
-                return True
+                return True, delta.path
 
-    return False
+    return False, None
 
 
 def canonicalize(s: str):
