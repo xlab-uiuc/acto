@@ -1,24 +1,29 @@
 import subprocess
 import logging
 import time
-import kubernetes
+from abc import ABC, abstractmethod
 
 from constant import CONST
 
 
-class KubernetesCluster(object):
+class KubernetesCluster(ABC):
+    @abstractmethod
     def configure_cluster(self, num_nodes: int, version: str):
         pass
 
+    @abstractmethod
     def get_context_name(self, cluster_name: str) -> str:
         pass
 
+    @abstractmethod
     def create_cluster(self, name: str, version: str):
         pass
 
+    @abstractmethod
     def load_images(self, images_archive_path: str, name: str):
         pass
 
+    @abstractmethod
     def delete_cluster(self, name: str):
         pass
 
