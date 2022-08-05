@@ -3,6 +3,8 @@ import logging
 import time
 from abc import ABC, abstractmethod
 
+from defer import return_value
+
 from constant import CONST
 
 
@@ -28,11 +30,23 @@ class KubernetesCluster(ABC):
         pass
 
     def restart_cluster(self, name: str, version: str):
-        self.delete_cluster(name)
-        time.sleep(1)
-        self.create_cluster(name, version)
-        time.sleep(1)
-        logging.info('Created cluster')
+        retry_count = 3
+
+        while (retry_count > 0):
+            try:
+                self.delete_cluster(name)
+                time.sleep(1)
+                self.create_cluster(name, version)
+                time.sleep(1)
+                logging.info('Created cluster')
+            except Exception as e:
+                logging.warning(
+                    e, "happened when restarting cluster, retrying...")
+                retry_count -= 1
+                if retry_count == 0:
+                    raise e
+                continue
+            break
 
     def get_node_list(self, name: str):
         '''Fetch the name of worker nodes inside a cluster
