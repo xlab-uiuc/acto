@@ -36,5 +36,7 @@ if __name__ == '__main__':
     # assert(canonicalizeQuantity("+838612.516637636") == canonicalizeQuantity("838612517m"))
     # print(canonicalizeQuantity('+099'))
     # print(canonicalizeQuantity('99'))
-    print(canonicalizeQuantity(".2316344e999842"))
+    # print(canonicalizeQuantity(".2316344e999842"))
     # print(canonicalizeQuantity("-92743e6047801799")) # crash
+    print(canonicalizeQuantity(".6064887"))
+    print(canonicalizeQuantity("607m")) # interesting case
