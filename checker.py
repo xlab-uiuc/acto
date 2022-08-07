@@ -47,15 +47,16 @@ class Checker(object):
         if isinstance(log_result, InvalidInputResult):
             logging.info('Invalid input, skip this case')
             return log_result
-        if isinstance(state_result, ErrorResult):
+
+        if isinstance(health_result, ErrorResult):
+            logging.info('Report error from system health oracle')
+            return health_result
+        elif isinstance(state_result, ErrorResult):
             logging.info('Report error from system state oracle')
             return state_result
         elif isinstance(log_result, ErrorResult):
             logging.info('Report error from operator log oracle')
             return log_result
-        elif isinstance(health_result, ErrorResult):
-            logging.info('Report error from system health oracle')
-            return health_result
 
         return PassResult()
 
