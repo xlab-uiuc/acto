@@ -38,6 +38,7 @@ class Runner(object):
             'cronjob': self.batchV1Api.list_namespaced_cron_job,
             'ingress': self.networkingV1Api.list_namespaced_ingress,
             'pod_disruption_budget': self.policyV1Api.list_namespaced_pod_disruption_budget,
+            'secret': self.coreV1Api.list_namespaced_secret,
         }
 
     def run(self, input: dict, generation: int) -> Snapshot:

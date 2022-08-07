@@ -1,3 +1,4 @@
+import base64
 from deepdiff.helper import NotPresent
 import configparser
 import logging
@@ -48,7 +49,7 @@ class CompareMethods:
 
                 outputparser = configparser.ConfigParser()
                 outputparser.read_string("[ACTO]\n" + output)
-                
+
                 for k, v in inputparser.items("ACTO"):
                     logging.debug(f"{k} - {v}")
                     if outputparser.get("ACTO", k) != v:
@@ -61,18 +62,17 @@ class CompareMethods:
 
     def compare(self, in_prev, in_curr, out_prev, out_curr) -> bool:
         # parse the argument: if a number, convert it to pure decimal format (i.e. 1e3 -> 1000); otherwise unchanged
-        in_prev = canonicalizeQuantity(in_prev)
-        in_curr = canonicalizeQuantity(in_curr)
-        out_prev = canonicalizeQuantity(out_prev)
-        out_curr = canonicalizeQuantity(out_curr)
+        in_prev, in_curr, out_prev, out_curr = self.transform_field_value(
+            in_prev, in_curr, out_prev, out_curr)
+
         # try every compare method possible
         if self.operator(in_prev, out_prev) and self.operator(in_curr, out_curr):
             return True
         elif self.none_notpresent_operator(in_prev, out_prev) \
-            and self.operator(in_curr, out_curr):
+                and self.operator(in_curr, out_curr):
             return True
         elif self.operator(in_prev, out_prev) \
-            and self.none_notpresent_operator(in_curr, out_curr):
+                and self.none_notpresent_operator(in_curr, out_curr):
             return True
         else:
             return False
@@ -86,6 +86,40 @@ class CompareMethods:
             return True
         else:
             return False
+
+    def transform_field_value(self, in_prev, in_curr, out_prev, out_curr):
+        '''transform the field value if necessary
+            only one transformer is allowed for each field
+        '''
+        # NOTE: the order of the transformers is important to ensure
+        # the base64 encoded fields are recognized and decoded
+
+        # transform method 1: attempt decoding base64-encoded strings
+        try:
+            # since acto does not generate base64-encoded strings, only output fields are base64-encoded
+            new_out_prev = base64.b64decode(out_prev).decode('utf-8')
+            new_out_curr = base64.b64decode(out_curr).decode('utf-8')
+        except:
+            # values cannot be parsed as base64-encoded strings, abort transformation
+            return in_prev, in_curr, out_prev, out_curr
+
+        if not (new_out_curr == out_curr and new_out_prev == out_prev):
+            # field values has been changed using base64 decoding
+            return in_prev, in_curr, new_out_prev, new_out_curr
+
+        # transform method 2: convert Quantity to unified unit
+        new_in_prev = canonicalizeQuantity(in_prev)
+        new_in_curr = canonicalizeQuantity(in_curr)
+        new_out_prev = canonicalizeQuantity(out_prev)
+        new_out_curr = canonicalizeQuantity(out_curr)
+
+        if not (new_in_curr == in_curr and new_in_prev == in_prev and
+                new_out_curr == out_curr and new_out_prev == out_prev):
+            # field values has been changed using canonicalizeQuantity
+            return new_in_prev, new_in_curr, new_out_prev, new_out_curr
+
+        # default: return original values
+        return in_prev, in_curr, out_prev, out_curr
 
 
 if __name__ == '__main__':
@@ -101,6 +135,11 @@ if __name__ == '__main__':
             'total_memory_available_override_value = 3435973837\ncluster_partition_handling            = pause_minority\nvm_memory_high_watermark_paging_ratio = 0.99\ndisk_free_limit.relative              = 1.0\ncollect_statistics_interval           = 10000\n',
             None
         ],
+        [
+            None, '<your-password-here-new>',
+            'PHlvdXItcGFzc3dvcmQtaGVyZT4K', 'PHlvdXItcGFzc3dvcmQtaGVyZS1uZXc+Cg=='
+
+        ]
     ]
     compare = CompareMethods()
 
