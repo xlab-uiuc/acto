@@ -8,7 +8,7 @@ import yaml
 from common import kubectl
 
 
-def update_preload_images(context: dict):
+def update_preload_images(context: dict, worker_list):
     """Get used images from pod
     """
     namespace = context.get('namespace', '')
@@ -26,9 +26,15 @@ def update_preload_images(context: dict):
         'k8s.gcr.io/kube-proxy',
         'k8s.gcr.io/kube-scheduler',
         'k8s.gcr.io/pause',
+        'docker.io/rancher/klipper-helm',
+        'docker.io/rancher/klipper-lb',
+        'docker.io/rancher/mirrored-coredns-coredns',
+        'docker.io/rancher/mirrored-library-busybox',
+        'docker.io/rancher/mirrored-library-traefik',
+        'docker.io/rancher/mirrored-metrics-server',
+        'docker.io/rancher/mirrored-paus',
     ]
 
-    worker_list = ['learn-worker', 'learn-worker2', 'learn-worker3']
     for worker in worker_list:
         p = subprocess.run(['docker', 'exec', worker, 'crictl', 'images', "--digests", "--no-trunc"],
                            capture_output=True,
@@ -50,7 +56,7 @@ def update_preload_images(context: dict):
 
 def process_crd(context: dict,
                 apiclient: kubernetes.client.ApiClient,
-                cluster_name: str,
+                context_name: str,
                 crd_name: Optional[str] = None,
                 helper_crd: Optional[str] = None):
     ''' Get crd from k8s and set context['crd']
@@ -83,7 +89,7 @@ def process_crd(context: dict,
         if crd:
             # there is openAPIV3Schema schema issue when using python k8s client, need to fetch data from cli
             crd_result = kubectl(['get', 'crd', crd.metadata.name, "-o", "json"],
-                                 cluster_name, True, True)
+                                 context_name, True, True)
             crd_obj = json.loads(crd_result.stdout)
             spec: kubernetes.client.models.V1CustomResourceDefinitionSpec = crd.spec
             crd_data = {

@@ -27,37 +27,41 @@ class Deploy:
         self.deploy_method = deploy_method
         self.wait = 20  # sec
 
-    def deploy(self, context: dict, cluster_name: str):
+    def deploy(self, context: dict, context_name: str):
         # XXX: context param is temporary, need to figure out why rabbitmq complains about namespace
         pass
 
-    def deploy_with_retry(self, context, cluster_name: str, retry_count=3):
+    def deploy_with_retry(self, context, context_name: str, retry_count=3):
         while retry_count > 0:
             try:
-                return self.deploy(context, cluster_name)
+                return self.deploy(context, context_name)
             except Exception as e:
                 logging.warn(e)
-                logging.info("deploy() failed. Double wait = " + str(self.wait))
+                logging.info(
+                    "deploy() failed. Double wait = " + str(self.wait))
                 self.wait = self.wait * 2
                 retry_count -= 1
         return False
 
-    def check_status(self, context: dict, cluster_name: str):
+    def check_status(self, context: dict, context_name: str):
         '''
-        
+
         We need to make sure operator to be ready before applying test cases, because Acto would
         crash later when running oracle if operator hasn't been ready
         '''
-        apiclient = kubernetes_client(cluster_name)
+        apiclient = kubernetes_client(context_name)
 
         logging.debug('Waiting for all pods to be ready')
         pod_ready = False
         for tick in range(600):
             # check if all pods are ready
-            pods = kubernetes.client.CoreV1Api(apiclient).list_pod_for_all_namespaces().items
+            pods = kubernetes.client.CoreV1Api(
+                apiclient).list_pod_for_all_namespaces().items
 
             all_pods_ready = True
             for pod in pods:
+                if pod.status.phase == 'Succeeded':
+                    continue
                 if not k8s_helper.is_pod_ready(pod):
                     all_pods_ready = False
 
@@ -87,28 +91,32 @@ class Deploy:
 
 class Helm(Deploy):
 
-    def deploy(self, context: dict, cluster_name: str) -> bool:
+    def deploy(self, context: dict, context_name: str) -> bool:
         context['namespace'] = CONST.ACTO_NAMESPACE
         if self.init_yaml:
-            kubectl(['apply', '--server-side', '-f', self.init_yaml], cluster_name)
-        helm(['dependency', 'build', self.path], cluster_name)
+            kubectl(['apply', '--server-side', '-f',
+                    self.init_yaml], context_name)
+        helm(['dependency', 'build', self.path], context_name)
         helm([
             'install', 'acto-test-operator', '--create-namespace', self.path, '--wait', '--timeout',
             '3m', '-n', context['namespace']
-        ], cluster_name)
+        ], context_name)
 
-        counter = 0  # use a counter to wait for 2 min (thus 24 below, since each wait is 5s)
-        while not self.check_status(context, cluster_name):
+        # use a counter to wait for 2 min (thus 24 below, since each wait is 5s)
+        counter = 0
+        while not self.check_status(context, context_name):
             if counter > 24:
-                logging.fatal('Helm chart deployment failed to be ready within timeout')
+                logging.fatal(
+                    'Helm chart deployment failed to be ready within timeout')
                 return False
             time.sleep(5)
 
         # TODO: Return True if deploy successfully
         return True
 
-    def check_status(self, context, cluster_name: str) -> bool:
-        helm_ls_result = helm(['list', '-o', 'json', '--all-namespaces', '--all'], cluster_name)
+    def check_status(self, context, context_name: str) -> bool:
+        helm_ls_result = helm(
+            ['list', '-o', 'json', '--all-namespaces', '--all'], context_name)
         try:
             helm_release = json.loads(helm_ls_result.stdout)[0]
         except Exception as e:
@@ -123,24 +131,27 @@ class Helm(Deploy):
 
 class Yaml(Deploy):
 
-    def deploy(self, context: dict, cluster_name: str):
+    def deploy(self, context: dict, context_name: str):
         # TODO: We cannot specify namespace ACTO_NAMESPACE here.
         # rabbitMQ operator will report the error message
         '''
            the namespace from the provided object "rabbitmq-system" does not 
            match the namespace "acto-namespace". You must pass '--namespace=rabbitmq-system' to perform this operation.
         '''
-        namespace = k8s_helper.get_yaml_existing_namespace(self.path) or CONST.ACTO_NAMESPACE
+        namespace = k8s_helper.get_yaml_existing_namespace(
+            self.path) or CONST.ACTO_NAMESPACE
         context['namespace'] = namespace
-        ret = k8s_helper.create_namespace(kubernetes_client(cluster_name), namespace)
+        ret = k8s_helper.create_namespace(
+            kubernetes_client(context_name), namespace)
         if ret == None:
             logging.error('Failed to create namespace')
         if self.init_yaml:
-            kubectl(['apply', '--server-side', '-f', self.init_yaml], cluster_name)
-        self.check_status(context, cluster_name)
+            kubectl(['apply', '--server-side', '-f', self.init_yaml],
+                    context_name)
+        self.check_status(context, context_name)
         kubectl(['apply', '--server-side', '-f', self.path, '-n', context['namespace']],
-                cluster_name)
-        self.check_status(context, cluster_name)
+                context_name)
+        self.check_status(context, context_name)
 
         # TODO: Return True if deploy successfully
         return True
@@ -148,16 +159,17 @@ class Yaml(Deploy):
 
 class Kustomize(Deploy):
 
-    def deploy(self, context, cluster_name):
+    def deploy(self, context, context_name):
         # TODO: We need to remove hardcoded namespace.
         namespace = "cass-operator"
         context['namespace'] = namespace
         if self.init_yaml:
-            kubectl(['apply', '--server-side', '-f', self.init_yaml], cluster_name)
-        self.check_status(context, cluster_name)
+            kubectl(['apply', '--server-side', '-f', self.init_yaml],
+                    context_name)
+        self.check_status(context, context_name)
         kubectl(['apply', '--server-side', '-k', self.path, '-n', context['namespace']],
-                cluster_name)
-        self.check_status(context, cluster_name)
+                context_name)
+        self.check_status(context, context_name)
         return True
 
 

@@ -22,6 +22,7 @@ from k8s_helper import delete_operator_pod
 from preprocess import add_acto_label, process_crd, update_preload_images
 from input import InputModel
 from deploy import Deploy, DeployMethod
+from k8s_cluster import base, k3d, kind
 from constant import CONST
 from runner import Runner
 from checker import Checker
@@ -33,73 +34,6 @@ CONST = CONST()
 random.seed(0)
 
 notify_crash_ = False
-
-
-def construct_kind_cluster(cluster_name: str, k8s_version: str):
-    '''Delete kind cluster then create a new one
-
-    Args:
-        name: name of the k8s cluster
-        k8s_version: version of k8s to use
-    '''
-    retry_count = 2
-
-    for i in range(retry_count):
-        logging.info('Deleting kind cluster...')
-        kind_delete_cluster(cluster_name)
-        time.sleep(2)
-
-        kind_config_dir = 'kind_config'
-        os.makedirs(kind_config_dir, exist_ok=True)
-        kind_config_path = os.path.join(kind_config_dir, 'kind.yaml')
-
-        if not os.path.exists(kind_config_path):
-            with open(kind_config_path, 'w') as kind_config_file:
-                kind_config_dict = {}
-                kind_config_dict['kind'] = 'Cluster'
-                kind_config_dict['apiVersion'] = 'kind.x-k8s.io/v1alpha4'
-                kind_config_dict['nodes'] = []
-                extra_mounts = []
-                extra_mounts.append({'hostPath': 'profile/data', 'containerPath': '/tmp/profile'})
-                for _ in range(3):
-                    kind_config_dict['nodes'].append({
-                        'role':
-                            'worker',
-                        'extraMounts': [{
-                            'hostPath': 'profile/data',
-                            'containerPath': '/tmp/profile'
-                        }]
-                    })
-                for _ in range(1):
-                    kind_config_dict['nodes'].append({
-                        'role':
-                            'control-plane',
-                        'extraMounts': [{
-                            'hostPath': 'profile/data',
-                            'containerPath': '/tmp/profile'
-                        }]
-                    })
-                yaml.dump(kind_config_dict, kind_config_file)
-
-        p = kind_create_cluster(cluster_name, kind_config_path, k8s_version)
-        if p.returncode != 0:
-            logging.error('Failed to create kind cluster, retrying')
-            kind_delete_cluster(cluster_name)
-            time.sleep(5)
-            p = kind_create_cluster(cluster_name, kind_config_path, k8s_version)
-            if p.returncode != 0:
-                logging.critical("Cannot create kind cluster, aborting")
-                raise RuntimeError
-
-        time.sleep(2)
-        logging.info('Created kind cluster')
-        try:
-            kubernetes.config.load_kube_config(context=kind_kubecontext(cluster_name))
-            return
-        except Exception as e:
-            logging.debug("Incorrect kube config file:")
-            with open(f"{os.getenv('HOME')}/.kube/config") as f:
-                logging.debug(f.read())
 
 
 def construct_candidate_helper(node, node_path, result: dict):
@@ -175,11 +109,14 @@ def timeout_handler(sig, frame):
 class TrialRunner:
 
     def __init__(self, context: dict, input_model: InputModel, deploy: Deploy, workdir: str,
-                 worker_id: int, dryrun: bool) -> None:
+                 cluster: base.KubernetesCluster, worker_id: int, dryrun: bool) -> None:
         self.context = context
         self.workdir = workdir
+        self.cluster = cluster
         self.images_archive = os.path.join(workdir, 'images.tar')
         self.worker_id = worker_id
+        self.context_name = cluster.get_context_name(
+            f"acto-cluster-{worker_id}")
         self.cluster_name = f"acto-cluster-{worker_id}"
         self.input_model = input_model
         self.deploy = deploy
@@ -195,10 +132,12 @@ class TrialRunner:
 
         while True:
             trial_start_time = time.time()
-            construct_kind_cluster(self.cluster_name, CONST.K8S_VERSION)
-            apiclient = kubernetes_client(self.cluster_name)
-            kind_load_images(self.images_archive, self.cluster_name)
-            deployed = self.deploy.deploy_with_retry(self.context, self.cluster_name)
+            self.cluster.configure_cluster(4, CONST.K8S_VERSION)
+            self.cluster.restart_cluster(self.cluster_name, CONST.K8S_VERSION)
+            apiclient = kubernetes_client(self.context_name)
+            self.cluster.load_images(self.images_archive, self.cluster_name)
+            deployed = self.deploy.deploy_with_retry(
+                self.context, self.context_name)
             if not deployed:
                 logging.info('Not deployed. Try again!')
                 continue
@@ -237,7 +176,7 @@ class TrialRunner:
             num_mutation: how many mutations to run at each trial
         '''
 
-        runner = Runner(self.context, trial_dir, self.cluster_name)
+        runner = Runner(self.context, trial_dir, self.context_name)
         checker = Checker(self.context, trial_dir)
 
         curr_input = self.input_model.get_seed_input()
@@ -424,6 +363,7 @@ class Acto:
     def __init__(self,
                  workdir_path: str,
                  operator_config: OperatorConfig,
+                 cluster_runtime: str,
                  enable_analysis: bool,
                  preload_images_: list,
                  context_file: str,
@@ -450,6 +390,16 @@ class Acto:
         else:
             raise UnknownDeployMethodError()
 
+        if cluster_runtime == "KIND":
+            cluster = kind.Kind()
+        elif cluster_runtime == "K3D":
+            cluster = k3d.K3D()
+        else:
+            logging.warning(
+                f"Cluster Runtime {cluster_runtime} is not supported, defaulted to use kind")
+            cluster = kind.Kind()
+
+        self.cluster = cluster
         self.deploy = deploy
         self.operator_config = operator_config
         self.crd_name = operator_config.crd_name
@@ -458,6 +408,9 @@ class Acto:
         self.num_workers = num_workers
         self.dryrun = dryrun
         self.snapshots = []
+
+        # generate configuration files for the cluster runtime
+        self.cluster.configure_cluster(4, CONST.K8S_VERSION)
 
         self.__learn(context_file=context_file, helper_crd=helper_crd)
 
@@ -501,17 +454,23 @@ class Acto:
             self.context = {'namespace': '', 'crd': None, 'preload_images': set()}
 
             while True:
-                construct_kind_cluster('learn', CONST.K8S_VERSION)
-                deployed = self.deploy.deploy_with_retry(self.context, 'learn')
+                self.cluster.restart_cluster('learn', CONST.K8S_VERSION)
+                deployed = self.deploy.deploy_with_retry(
+                    self.context, self.cluster.get_context_name('learn'))
                 if deployed:
                     break
-            apiclient = kubernetes_client('learn')
-            runner = Runner(self.context, 'learn', 'learn')
-            runner.run_without_collect(self.operator_config.seed_custom_resource)
+            apiclient = kubernetes_client(
+                self.cluster.get_context_name('learn'))
+            runner = Runner(self.context, 'learn',
+                            self.cluster.get_context_name('learn'))
+            runner.run_without_collect(
+                self.operator_config.seed_custom_resource)
 
-            update_preload_images(self.context)
-            process_crd(self.context, apiclient, 'learn', self.crd_name, helper_crd)
-            kind_delete_cluster('learn')
+            update_preload_images(
+                self.context, self.cluster.get_node_list('learn'))
+            process_crd(self.context, apiclient, self.cluster.get_context_name('learn'),
+                        self.crd_name, helper_crd)
+            self.cluster.delete_cluster('learn')
 
             if self.operator_config.analysis != None:
                 with tempfile.TemporaryDirectory() as project_src:
@@ -535,8 +494,8 @@ class Acto:
     def run(self):
         threads = []
         for i in range(self.num_workers):
-            runner = TrialRunner(self.context, self.input_model, self.deploy, self.workdir_path, i,
-                                 self.dryrun)
+            runner = TrialRunner(self.context, self.input_model, self.deploy, self.workdir_path, self.cluster,
+                                 i, self.dryrun)
             t = threading.Thread(target=runner.run, args=())
             t.start()
             threads.append(t)
@@ -593,7 +552,11 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(
         description='Automatic, Continuous Testing for k8s/openshift Operators')
-    parser.add_argument('--config', '-c', dest='config', help='Operator port config path')
+    parser.add_argument('--config', '-c', dest='config',
+                        help='Operator port config path')
+    parser.add_argument('--cluster-runtime', '-r', dest='cluster_runtime',
+                        default="KIND",
+                        help='Cluster runtime for kubernetes, can be KIND (Default), K3D or MINIKUBE')
     parser.add_argument('--enable-analysis',
                         dest='enable_analysis',
                         action='store_true',
@@ -666,6 +629,6 @@ if __name__ == '__main__':
     else:
         context_cache = args.context
 
-    acto = Acto(workdir_path, config, args.enable_analysis, args.preload_images, context_cache,
+    acto = Acto(workdir_path, config, args.cluster_runtime, args.enable_analysis, args.preload_images, context_cache,
                 args.helper_crd, args.num_workers, args.dryrun)
     acto.run()
