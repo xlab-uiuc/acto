@@ -70,8 +70,8 @@ spec:
 #            blockCompressor: snappy
 #          indexConfig:
 #            prefixCompression: true
-    affinity:
-      antiAffinityTopologyKey: "kubernetes.io/hostname"
+    # affinity:
+    #   antiAffinityTopologyKey: "kubernetes.io/hostname"
 #      advanced:
 #        nodeAffinity:
 #          requiredDuringSchedulingIgnoredDuringExecution:
@@ -169,7 +169,7 @@ spec:
 
     nonvoting:
       enabled: true
-      size: 3
+      size: 2
 #      # for more configuration fields refer to https://docs.mongodb.com/manual/reference/configuration-options/
       configuration: |
         operationProfiling:
@@ -223,7 +223,7 @@ spec:
               storage: 3Gi
     arbiter:
       enabled: true
-      size: 1
+      size: 2
       affinity:
         antiAffinityTopologyKey: "kubernetes.io/hostname"
 #        advanced:
@@ -253,7 +253,7 @@ spec:
     enabled: true
 
     configsvrReplSet:
-      size: 3
+      size: 2
 #      externalNodes:
 #      - host: 34.124.76.93
 #      - host: 34.124.76.94
@@ -349,7 +349,7 @@ spec:
               storage: 3Gi
 
     mongos:
-      size: 3
+      size: 2
 #      # for more configuration fields refer to https://docs.mongodb.com/manual/reference/configuration-options/
 #      configuration: |
 #        systemLog:

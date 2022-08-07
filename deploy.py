@@ -50,7 +50,7 @@ class Deploy:
         '''
         apiclient = kubernetes_client(cluster_name)
 
-        logging.debug('Deploying the operator, waiting for it to be ready')
+        logging.debug('Waiting for all pods to be ready')
         pod_ready = False
         for tick in range(600):
             # check if all pods are ready
@@ -67,9 +67,9 @@ class Deploy:
                 break
 
             time.sleep(5)
-        logging.info('Operator took %d seconds to get ready' % (tick*5))
+        logging.info('All pods took %d seconds to get ready' % (tick * 5))
         if not pod_ready:
-            logging.error("operator deployment failed to be ready within timeout")
+            logging.error("Some pods failed to be ready within timeout")
             return False
         else:
             return True
@@ -136,8 +136,7 @@ class Yaml(Deploy):
         if ret == None:
             logging.error('Failed to create namespace')
         if self.init_yaml:
-            kubectl(['apply', '--server-side', '-f', self.init_yaml],
-                    cluster_name)
+            kubectl(['apply', '--server-side', '-f', self.init_yaml], cluster_name)
         self.check_status(context, cluster_name)
         kubectl(['apply', '--server-side', '-f', self.path, '-n', context['namespace']],
                 cluster_name)
@@ -154,8 +153,7 @@ class Kustomize(Deploy):
         namespace = "cass-operator"
         context['namespace'] = namespace
         if self.init_yaml:
-            kubectl(['apply', '--server-side', '-f', self.init_yaml],
-                    cluster_name)
+            kubectl(['apply', '--server-side', '-f', self.init_yaml], cluster_name)
         self.check_status(context, cluster_name)
         kubectl(['apply', '--server-side', '-k', self.path, '-n', context['namespace']],
                 cluster_name)

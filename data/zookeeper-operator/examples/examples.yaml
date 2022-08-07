@@ -1,0 +1,56 @@
+apiVersion: zookeeper.pravega.io/v1beta1
+kind: ZookeeperCluster
+metadata:
+  name: zookeeper
+spec:
+  config:
+    commitLogCount: 100
+  replicas: 3
+---
+apiVersion: zookeeper.pravega.io/v1beta1
+kind: ZookeeperCluster
+metadata:
+  name: zookeeper
+spec:
+  image:
+    repository: pravega/zookeeper
+    tag: 0.2.13
+  persistence:
+    reclaimPolicy: Retain
+    spec:
+      resources:
+        requests:
+          storage: 20Gi
+      storageClassName: standard
+  replicas: 3
+  storageType: persistence
+---
+apiVersion: zookeeper.pravega.io/v1beta1
+kind: ZookeeperCluster
+metadata:
+  name: zookeeper
+spec:
+  image:
+    repository: pravega/zookeeper
+    tag: 0.2.13
+  persistence:
+    reclaimPolicy: Delete
+    spec:
+      resources:
+        requests:
+          storage: 20Gi
+      storageClassName: standard
+  replicas: 3
+  storageType: persistence
+---
+apiVersion: zookeeper.pravega.io/v1beta1
+kind: ZookeeperCluster
+metadata:
+  name: zk-with-istio
+spec:
+  replicas: 3
+  config:
+    initLimit: 10
+    tickTime: 2000
+    syncLimit: 5
+    quorumListenOnAllIPs: true

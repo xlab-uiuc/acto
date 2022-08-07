@@ -7,6 +7,8 @@ import random
 import threading
 from typing import Tuple
 from deepdiff import DeepDiff
+import glob
+import yaml
 
 from schema import extract_schema, BaseSchema, ObjectSchema, ArraySchema
 from testplan import TestPlan
@@ -64,7 +66,7 @@ class CopiedOverField(CustomField):
             super().__init__(path, self.PruneChildrenObjectSchema)
 
 
-class ProblemMaticField(CustomField):
+class ProblematicField(CustomField):
     '''For pruning the field that can not be simply generated using Acto's current generation mechanism.
     
     All the subfields of this field (including this field itself) will be pruned
@@ -107,24 +109,35 @@ class ProblemMaticField(CustomField):
 
 class InputModel:
 
-    def __init__(self, crd: dict, num_workers: int, mount: list = None) -> None:
+    def __init__(self, crd: dict, example_dir: str, num_workers: int, mount: list = None) -> None:
         if mount != None:
             self.mount = mount
         else:
             self.mount = ['spec']  # We model the cr.spec as the input
         self.root_schema = extract_schema([],
                                           crd['spec']['versions'][-1]['schema']['openAPIV3Schema'])
+
+        # Load all example documents
+        self.example_dir = example_dir
+        example_docs = []
+        for example_filepath in glob.glob(example_dir + '*.yaml'):
+            with open(example_filepath, 'r') as example_file:
+                docs = yaml.load_all(example_file, Loader=yaml.FullLoader)
+                for doc in docs:
+                    example_docs.append(doc)
+
+        for example_doc in example_docs:
+            self.root_schema.load_examples(example_doc)
+
         self.num_workers = num_workers
         self.seed_input = None
         self.test_plan_partitioned = None
         self.thread_vars = threading.local()
 
-
     def initialize(self, initial_value: dict):
         initial_value['metadata']['name'] = 'test-cluster'
         self.initial_value = initial_value
-        self.seed_input = attach_schema_to_value(initial_value,
-                                                 self.root_schema)
+        self.seed_input = attach_schema_to_value(initial_value, self.root_schema)
 
     def set_worker_id(self, id: int):
         '''Claim this thread's id, so that we can split the test plan among threads'''
@@ -132,7 +145,7 @@ class InputModel:
         self.thread_vars.id = id
         # so that we can run the test case itself right after the setup
         self.thread_vars.test_plan = TestPlan(self.root_schema.to_tree())
-        
+
         for key, value in dict(self.test_plan_partitioned[id]).items():
             path = json.loads(key)
             self.thread_vars.test_plan.add_testcases_by_path(value, path)
@@ -174,14 +187,14 @@ class InputModel:
         self.test_plan = ret
 
         test_plan_items = list(self.test_plan.items())
-        random.shuffle(test_plan_items)  # randomize to amid skewness among workers
+        random.shuffle(test_plan_items)  # randomize to reduce skewness among workers
         chunk_size = math.ceil(len(test_plan_items) / self.num_workers)
         self.test_plan_partitioned = []
         for i in range(0, len(test_plan_items), chunk_size):
             self.test_plan_partitioned.append(test_plan_items[i:i + chunk_size])
         # appending empty lists to avoid no test cases distributed to certain work nodes
         if len(test_plan_items) < self.num_workers:
-            for i in range(self.num_workers-len(test_plan_items)):
+            for i in range(self.num_workers - len(test_plan_items)):
                 self.test_plan_partitioned.append([])
         assert (self.num_workers == len(self.test_plan_partitioned))
 
@@ -197,8 +210,7 @@ class InputModel:
         Returns:
             Tuple of (new value, if this is a setup)
         '''
-        logging.info('Progress [%d] cases left' %
-                     len(self.thread_vars.test_plan))
+        logging.info('Progress [%d] cases left' % len(self.thread_vars.test_plan))
 
         ret = []
 

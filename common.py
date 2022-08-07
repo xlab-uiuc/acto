@@ -61,11 +61,13 @@ class AnalysisConfig:
 
 class OperatorConfig:
 
-    def __init__(self, deploy: DeployConfig, crd_name: str, custom_fields: str, context: str,
-                 seed_custom_resource: str, source_path: str, analysis: AnalysisConfig) -> None:
+    def __init__(self, deploy: DeployConfig, crd_name: str, custom_fields: str, example_dir: str,
+                 context: str, seed_custom_resource: str, source_path: str,
+                 analysis: AnalysisConfig) -> None:
         self.deploy = deploy
         self.crd_name = crd_name
         self.custom_fields = custom_fields
+        self.example_dir = example_dir
         self.context = context
         self.seed_custom_resource = seed_custom_resource
         self.source_path = source_path
@@ -300,13 +302,14 @@ class ActoEncoder(json.JSONEncoder):
             return list(obj)
         return json.JSONEncoder.default(self, obj)
 
+
 def translate_op(input_op: str):
     if input_op == '!=':
         op = operator.ne
     elif input_op == '==':
         op = operator.eq
     elif input_op == '<=':
-        op = operator.le 
+        op = operator.le
     elif input_op == '<':
         op = operator.lt
     elif input_op == '>=':
