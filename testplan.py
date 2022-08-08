@@ -49,7 +49,6 @@ class TreeNode():
             else:
                 self.children[key].add_testcases_by_path(testcases, path)
 
-
     def enable_subtree(self):
         self.node_disabled = False
         self.subtree_disabled = False
@@ -169,7 +168,7 @@ class TestPlan():
     def __init__(self, root: TreeNode) -> None:
         self.root = root
 
-    def select_fields(self, num_cases: int = 2):
+    def select_fields(self, num_cases: int = 1):
         ret = []
 
         for i in range(num_cases):

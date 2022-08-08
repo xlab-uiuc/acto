@@ -109,7 +109,7 @@ class ProblematicField(CustomField):
 
 class InputModel:
 
-    def __init__(self, crd: dict, example_dir: str, num_workers: int, mount: list = None) -> None:
+    def __init__(self, crd: dict, example_dir: str, num_workers: int, num_cases: int, mount: list = None) -> None:
         if mount != None:
             self.mount = mount
         else:
@@ -130,6 +130,7 @@ class InputModel:
             self.root_schema.load_examples(example_doc)
 
         self.num_workers = num_workers
+        self.num_cases = num_cases
         self.seed_input = None
         self.test_plan_partitioned = None
         self.thread_vars = threading.local()
@@ -215,7 +216,7 @@ class InputModel:
         ret = []
 
         # TODO: multi-testcase
-        selected_fields = self.thread_vars.test_plan.select_fields()
+        selected_fields = self.thread_vars.test_plan.select_fields(num_cases=self.num_cases)
 
         for selected_field in selected_fields:
             logging.info('Selected field [%s]', selected_field.get_path())

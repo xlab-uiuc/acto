@@ -333,6 +333,7 @@ class TrialRunner:
 
     def run_and_check(runner: Runner, checker: Checker, input: dict, snapshots: list,
                       generation: int, dryrun: bool) -> RunResult:
+        logging.debug('Run and check')
         while True:
             if not dryrun:
                 snapshot = runner.run(input, generation)
@@ -369,6 +370,7 @@ class Acto:
                  context_file: str,
                  helper_crd: str,
                  num_workers: int,
+                 num_cases: int,
                  dryrun: bool,
                  mount: list = None) -> None:
         try:
@@ -422,7 +424,7 @@ class Acto:
 
         # Apply custom fields
         self.input_model = InputModel(self.context['crd']['body'], operator_config.example_dir,
-                                      num_workers, mount)
+                                      num_workers, num_cases, mount)
         self.input_model.initialize(self.seed)
         if operator_config.custom_fields != None:
             module = importlib.import_module(operator_config.custom_fields)
@@ -580,6 +582,11 @@ if __name__ == '__main__':
                         type=int,
                         default=1,
                         help='Number of concurrent workers to run Acto with')
+    parser.add_argument('--num-cases',
+                        dest='num_cases',
+                        type=int,
+                        default=1,
+                        help='Number of testcases to bundle each time')
     parser.add_argument('--notify-crash',
                         dest='notify_crash',
                         action='store_true',
@@ -630,5 +637,5 @@ if __name__ == '__main__':
         context_cache = args.context
 
     acto = Acto(workdir_path, config, args.cluster_runtime, args.enable_analysis, args.preload_images, context_cache,
-                args.helper_crd, args.num_workers, args.dryrun)
+                args.helper_crd, args.num_workers, args.num_cases, args.dryrun)
     acto.run()
