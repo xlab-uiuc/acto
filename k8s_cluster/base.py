@@ -39,7 +39,7 @@ class KubernetesCluster(ABC):
                 logging.info('Created cluster')
             except Exception as e:
                 logging.warning(
-                    e, "happened when restarting cluster, retrying...")
+                    "%s happened when restarting cluster, retrying...", e)
                 retry_count -= 1
                 if retry_count == 0:
                     raise e
