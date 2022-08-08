@@ -20,6 +20,14 @@ logr_regex += r'\s+(\S+)'  # group 3: source
 logr_regex += r'\s+(.*?)'  # group 4: message
 logr_regex += r'\s*$'
 
+# 1.6599427639039357e+09	INFO	controllers.CassandraDatacenter	Reconcile loop completed	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "be419d0c-c7d0-4dfa-8596-af94ea15d4f6", "duration": 0.253729569}
+logr_special_regex = r'^\s*'
+logr_special_regex += r'(\d{1}\.\d+e\+\d{2})'  # group 1: timestamp
+logr_special_regex += r'\s+([A-Z]+)'  # group 2: level
+logr_special_regex += r'\s+(\S+)'  # group 3: source
+logr_special_regex += r'\s+(.*?)'  # group 4: message
+logr_special_regex += r'\s*$'
+
 
 def parse_log(line: str) -> dict:
     '''Try to parse the log line with some predefined format
@@ -51,6 +59,11 @@ def parse_log(line: str) -> dict:
         match = re.search(logr_regex, line)
         log_line['level'] = match.group(2).lower()
         log_line['msg'] = match.group(4)
+    elif re.search(logr_special_regex, line) != None:
+        # log is in logr special format
+        match = re.search(logr_special_regex, line)
+        log_line['level'] = match.group(2).lower()
+        log_line['msg'] = match.group(4)
     else:
         try:
             log_line = json.loads(line)
@@ -65,7 +78,7 @@ if __name__ == '__main__':
     # line = '  	Ports: []v1.ServicePort{'
     # line = 'E0714 23:11:19.386396       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover'
     # line = '{"level":"error","ts":1655678404.9488907,"logger":"controller-runtime.injectors-warning","msg":"Injectors are deprecated, and will be removed in v0.10.x"}'
-    with open ('testrun-2022-08-02-14-40/test-parse.log', 'r') as f:
+    with open ('testrun-2022-08-08-01-56-cass-operator/trial-00-0001/operator-0.log', 'r') as f:
         for line in f.readlines():
             if parse_log(line) == {} or parse_log(line)['level'] != 'error' and parse_log(line)['level'] != 'fatal':
                 print('Test passed')
