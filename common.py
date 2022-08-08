@@ -238,12 +238,12 @@ def invalid_input_message(log_msg: str, input_delta: dict) -> Tuple[bool, list]:
     for delta_category in input_delta.values():
         for delta in delta_category.values():
             if isinstance(delta.path[-1], str) and delta.path[-1] in log_msg:
-                logging.info("Recognized invalid input through field in error message: %s" %
-                             log_msg)
+                logging.info("Recognized invalid input through field [%s] in error message: %s" %
+                             (delta.path[-1], log_msg))
                 return True, delta.path
             elif str(delta.curr) in log_msg:
-                logging.info("Recognized invalid input through value in error message: %s" %
-                             log_msg)
+                logging.info("Recognized invalid input through value [%s] in error message: %s" %
+                             (str(delta.curr), log_msg))
                 return True, delta.path
 
     return False, None

@@ -298,6 +298,7 @@ class TrialRunner:
                     return result, generation
                 else:
                     jsonpatch_path = ''.join('/' + str(item) for item in responsible_field)
+                    logging.debug('Responsible patch path: %s', jsonpatch_path)
                     # isolate the responsible invalid testcase and re-apply
                     ready_testcases = []
                     for field_node, testcase, patch in testcase_patches:
