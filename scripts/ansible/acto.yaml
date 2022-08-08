@@ -1,0 +1,35 @@
+---
+- name: Install Docker
+  hosts: all
+
+  tasks:
+
+    - name: Download acto repo
+      local_action:
+        module: ansible.builtin.git
+        archive: /tmp/acto.tar.gz
+        clone: yes
+        dest: /tmp/acto
+        repo: git@github.com:xlab-uiuc/acto.git
+      run_once: true
+
+    - name: Get the home directory
+      become: false
+      command: echo $HOME
+      register: home
+
+    - name: Copy Acto archive to remote
+      ansible.builtin.copy:
+        src: /tmp/acto.tar.gz
+        dest: "{{ home.stdout }}"
+
+    - name: create Acto dir
+      ansible.builtin.file:
+        path: "{{ home.stdout }}/acto"
+        state: directory
+
+    - name: open archive
+      ansible.builtin.unarchive:
+        copy: true
+        dest: "{{ home.stdout }}/acto"
+        src: /tmp/acto.tar.gz
