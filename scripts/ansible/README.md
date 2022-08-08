@@ -11,7 +11,7 @@ c220g5-110418.wisc.cloudlab.us ansible_connection=ssh ansible_user=tylergu ansib
 
 If you haven't installed `ansible playbook` on your control node, run
 ```sh
-sudo apt install ansible
+pip3 install ansible
 ansible-galaxy collection install ansible.posix
 ``` 
 
