@@ -224,6 +224,7 @@ class TrialRunner:
                         generation += 1
 
                         if isinstance(result, InvalidInputResult):
+                            logging.info('Setup produced invalid input')
                             self.snapshots.pop()
                             field_node.discard_testcase(self.discarded_testcases)
                             curr_input_with_schema = self.revert(runner, checker, generation)
@@ -314,9 +315,20 @@ class TrialRunner:
                             ready_testcases.append((field_node, testcase))
                     if len(ready_testcases) == 0:
                         return result, generation
-                    logging.debug('Rerunning the remaining ready testcases')
-                    return self.run_testcases(curr_input_with_schema, ready_testcases, runner,
-                                              checker, generation)
+
+                    if len(ready_testcases) == len(testcase_patches):
+                        logging.error('Fail to determine the responsible patch, try one by one')
+                        for field_node, testcase, patch in testcase_patches:
+                            result, generation = self.run_testcases(curr_input_with_schema,
+                                                                    [(field_node, testcase)], runner,
+                                                                    checker, generation)
+                            if isinstance(result, ErrorResult):
+                                return result, generation
+                        return result, generation
+                    else:
+                        logging.debug('Rerunning the remaining ready testcases')
+                        return self.run_testcases(curr_input_with_schema, ready_testcases, runner,
+                                                checker, generation)
         else:
             for patch in testcase_patches:
                 patch[0].get_testcases().pop()  # finish testcase
