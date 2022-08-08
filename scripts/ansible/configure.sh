@@ -9,3 +9,4 @@ ansible-playbook helm.yaml -i ansible_hosts
 ansible-playbook sysctl.yaml -i ansible_hosts
 ansible-playbook k3d.yaml -i ansible_hosts
 ansible-playbook htop.yaml -i ansible_hosts
+ansible-playbook acto.yaml -i ansible_hosts
