@@ -44,7 +44,10 @@ func NewSubField(parentStruct *types.Struct, parentField Field, fieldIndex int) 
 	copy(newPath, parentField.Path)
 
 	tag := parentStruct.Tag(fieldIndex)
-	newPath = append(newPath, GetFieldNameFromJsonTag(tag))
+	fieldName := GetFieldNameFromJsonTag(tag)
+	if fieldName != "" {
+		newPath = append(newPath, fieldName)
+	}
 	return &Field{
 		Path: newPath,
 	}
