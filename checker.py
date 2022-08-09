@@ -32,7 +32,7 @@ class Checker(object):
             RunResult of the checking
         '''
         if snapshot.system_state == {}:
-            return InvalidInputResult()
+            return InvalidInputResult(None)
 
         self.delta_log_path = "%s/delta-%d.log" % (self.trial_dir, generation)
         input_delta, _ = self.get_deltas(snapshot, prev_snapshot)
@@ -359,10 +359,10 @@ if __name__ == "__main__":
         context = json.load(context_fin)
         context['preload_images'] = set(context['preload_images'])
 
-    # for path in context['analysis_result']['control_flow_fields']:
-    #     path.pop(0)
+    for path in context['analysis_result']['control_flow_fields']:
+        path.pop(0)
 
-    context['enable_analysis'] = False
+    context['enable_analysis'] = True
 
     with open(args.seed, 'r') as seed_file:
         seed = yaml.load(seed_file, Loader=yaml.FullLoader)
@@ -376,7 +376,7 @@ if __name__ == "__main__":
         snapshots.append(EmptySnapshot(seed))
 
         alarm = False
-        for generation in range(0, 10):
+        for generation in range(0, 20):
             mutated_filename = '%s/mutated-%d.yaml' % (trial_dir, generation)
             operator_log_path = "%s/operator-%d.log" % (trial_dir, generation)
             system_state_path = "%s/system-state-%03d.json" % (trial_dir, generation)
