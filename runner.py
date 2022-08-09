@@ -141,7 +141,7 @@ class Runner(object):
         # only get the new log since previous result
         new_log = log.split('\n')
         new_log = new_log[self.log_length:]
-        self.log_length = len(new_log)
+        self.log_length += len(new_log)
 
         with open(self.operator_log_path, 'a') as f:
             for line in new_log:
