@@ -734,7 +734,7 @@ class OpaqueSchema(BaseSchema):
         return []
 
     def to_tree(self) -> TreeNode:
-        pass
+        return TreeNode(self.path)
 
     def load_examples(self, example):
         pass

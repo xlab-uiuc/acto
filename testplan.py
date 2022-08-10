@@ -18,8 +18,6 @@ class TreeNode():
         self.subtree_disabled = False
 
     def add_child(self, key: str, child: 'TreeNode'):
-        if child == None:
-            child = TreeNode(self.path)
         self.children[key] = child
         child.set_parent(self)
         child.path = self.path + [key]
