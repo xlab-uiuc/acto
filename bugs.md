@@ -38,6 +38,7 @@
 |                                  | [https://github.com/pingcap/tidb-operator/issues/4632](https://github.com/pingcap/tidb-operator/issues/4632)                     | fixed     | 
 |                                  | [https://github.com/pingcap/tidb-operator/issues/4634](https://github.com/pingcap/tidb-operator/issues/4634)                     |           |
 |                                  | [https://github.com/pingcap/tidb-operator/issues/4637](https://github.com/pingcap/tidb-operator/issues/4637)                     | fixed     |
+|                                  | [https://github.com/pingcap/tidb-operator/issues/4649](https://github.com/pingcap/tidb-operator/issues/4649)                     | confirmed  |
 | percona-xtradb-cluster-operator  | [https://jira.percona.com/browse/K8SPXC-1060](https://jira.percona.com/browse/K8SPXC-1060)                                       |           |
 |                                  | [https://jira.percona.com/browse/K8SPXC-1061](https://jira.percona.com/browse/K8SPXC-1061)                                       | confirmed |
 |                                  | [https://jira.percona.com/browse/K8SPXC-1067](https://jira.percona.com/browse/K8SPXC-1067)                                       |           |
