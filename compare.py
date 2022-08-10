@@ -94,6 +94,8 @@ class CompareMethods:
         # NOTE: the order of the transformers is important to ensure
         # the base64 encoded fields are recognized and decoded
 
+        new_out_curr = None
+        new_out_prev = None
         # transform method 1: attempt decoding base64-encoded strings
         try:
             # since acto does not generate base64-encoded strings, only output fields are base64-encoded
@@ -101,9 +103,9 @@ class CompareMethods:
             new_out_curr = base64.b64decode(out_curr).decode('utf-8')
         except:
             # values cannot be parsed as base64-encoded strings, abort transformation
-            return in_prev, in_curr, out_prev, out_curr
+            pass
 
-        if not (new_out_curr == out_curr and new_out_prev == out_prev):
+        if new_out_prev and new_out_curr and not (new_out_curr == out_curr and new_out_prev == out_prev):
             # field values has been changed using base64 decoding
             return in_prev, in_curr, new_out_prev, new_out_curr
 
@@ -139,6 +141,10 @@ if __name__ == '__main__':
             None, '<your-password-here-new>',
             'PHlvdXItcGFzc3dvcmQtaGVyZT4K', 'PHlvdXItcGFzc3dvcmQtaGVyZS1uZXc+Cg=='
 
+        ],
+        [
+            None, "-.4272625998Mi",
+            None, "-448017308m"
         ]
     ]
     compare = CompareMethods()
