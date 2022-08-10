@@ -6,6 +6,7 @@ import time
 import queue
 import json
 import yaml
+import base64
 
 import acto_timer
 from snapshot import Snapshot
@@ -102,6 +103,8 @@ class Runner(object):
 
         for resource, method in self.resource_methods.items():
             resources[resource] = self.__get_all_objects(method)
+            if resource == 'secret':
+                resources[resource] = decode_secret_data(resources[resource]) 
 
         current_cr = self.__get_custom_resources(self.namespace, self.crd_metainfo['group'],
                                                  self.crd_metainfo['version'],
@@ -255,3 +258,13 @@ class Runner(object):
                 queue.put("event")
             except (ValueError, AssertionError):
                 pass
+
+
+def decode_secret_data(secrets: dict) -> dict:
+    '''Decodes secret's b64-encrypted data in the secret object
+    '''
+    for secret in secrets:
+        for key in secrets[secret]['data']:
+            secrets[secret]['data'][key] = base64.b64decode(
+                secrets[secret]['data'][key]).decode('utf-8')
+    return secrets
