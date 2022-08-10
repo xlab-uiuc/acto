@@ -13,9 +13,8 @@ import kubernetes
 import requests
 import operator
 
-from constant import CONST
 from test_case import TestCase
-from parse_log.parse_log import parse_log
+from deepdiff import DeepDiff
 
 
 def notify_crash(exception: str):
@@ -241,6 +240,13 @@ def invalid_input_message(log_msg: str, input_delta: dict) -> Tuple[bool, list]:
                 logging.info("Recognized invalid input through field [%s] in error message: %s" %
                              (delta.path[-1], log_msg))
                 return True, delta.path
+            # if delta.curr is an int, we do exact match to avoid matching a short 
+            # int (e.g. 1) to a log line and consider the int as invalid input
+            elif isinstance(delta.curr, int):
+                for item in log_msg.split(' '):
+                    if item == str(delta.curr):
+                        logging.info("Recognized invalid input through value [%s] in error message: %s" % (delta.curr, log_msg))
+                        return True, delta.path
             elif str(delta.curr) in log_msg:
                 logging.info("Recognized invalid input through value [%s] in error message: %s" %
                              (str(delta.curr), log_msg))
@@ -401,23 +407,21 @@ def kubernetes_client(context_name: str) -> kubernetes.client.ApiClient:
 
 
 if __name__ == '__main__':
-    line = 'E0624 08:02:40.303209       1 tidb_cluster_control.go:129] tidb cluster acto-namespace/test-cluster is not valid and must be fixed first, aggregated error: [spec.tikv.env[0].valueFrom.fieldRef: Invalid value: "": fieldRef is not supported, spec.tikv.env[0].valueFrom: Invalid value: "": may not have more than one field specified at a time]'
-
-    field_val_dict = {
-        'valueFrom': {
-            'configMapKeyRef': {
-                'key': 'ltzbphvbqz',
-                'name': 'fmtfbuyrwg',
-                'optional': True
-            },
-            'fieldRef': {
-                'apiVersion': 'cyunlsgtrz',
-                'fieldPath': 'xihwjoiwit'
-            },
-            'resourceFieldRef': None,
-            'secretKeyRef': None
+    line = "sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.9.6/pkg/internal/controller/controller.go:214"
+    prev_input = curr_input = {
+        'spec': {
+            'tolerations': {}
         }
     }
-
-    print(invalid_input_message(
-        line, field_val_dict))  # Tested on 7.14. Expected True, got True. Test passed.
+    curr_input = {
+        'spec': {
+            'tolerations': {
+                'tolerationSeconds': 1
+            }
+        }
+    }
+    input_delta = postprocess_diff(
+            DeepDiff(prev_input, curr_input, ignore_order=True, report_repetition=True,
+                     view='tree'))
+    print(invalid_input_message(line, input_delta))    
+    
