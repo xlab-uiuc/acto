@@ -1,0 +1,397 @@
+apiVersion: operator.knative.dev/v1beta1
+kind: KnativeEventing
+metadata:
+  name: knative-eventing
+  namespace: knative-eventing
+spec:
+  deployments:
+  - affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app: eventing-controller
+            topologyKey: kubernetes.io/hostname
+          weight: 100
+    env:
+    - container: eventing-controller
+      envVars:
+      - name: SYSTEM_NAMESPACE
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.namespace
+      - name: CONFIG_LOGGING_NAME
+        value: config-logging
+      - name: CONFIG_OBSERVABILITY_NAME
+        value: config-observability
+      - name: METRICS_DOMAIN
+        value: knative.dev/eventing
+      - name: APISERVER_RA_IMAGE
+        value: gcr.io/knative-releases/knative.dev/eventing/cmd/apiserver_receive_adapter@sha256:15c7910c9756d4c0acddd6640c39922d24da2aeabe01e4e7322ef4ca3bebaf99
+      - name: POD_NAME
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.name
+    name: eventing-controller
+    replicas: 1
+    resources:
+    - container: eventing-controller
+      requests:
+        cpu: 100m
+        memory: 100Mi
+  - affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app: eventing-webhook
+            topologyKey: kubernetes.io/hostname
+          weight: 100
+    env:
+    - container: eventing-webhook
+      envVars:
+      - name: SYSTEM_NAMESPACE
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.namespace
+      - name: CONFIG_LOGGING_NAME
+        value: config-logging
+      - name: METRICS_DOMAIN
+        value: knative.dev/eventing
+      - name: WEBHOOK_NAME
+        value: eventing-webhook
+      - name: WEBHOOK_PORT
+        value: '8443'
+      - name: SINK_BINDING_SELECTION_MODE
+        value: exclusion
+      - name: POD_NAME
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.name
+    name: eventing-webhook
+    replicas: 1
+    resources:
+    - container: eventing-webhook
+      limits:
+        cpu: 200m
+        memory: 200Mi
+      requests:
+        cpu: 100m
+        memory: 50Mi
+  - affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                messaging.knative.dev/channel: in-memory-channel
+                messaging.knative.dev/role: controller
+            topologyKey: kubernetes.io/hostname
+          weight: 100
+    env:
+    - container: controller
+      envVars:
+      - name: WEBHOOK_NAME
+        value: inmemorychannel-webhook
+      - name: WEBHOOK_PORT
+        value: '8443'
+      - name: CONFIG_LOGGING_NAME
+        value: config-logging
+      - name: CONFIG_OBSERVABILITY_NAME
+        value: config-observability
+      - name: METRICS_DOMAIN
+        value: knative.dev/inmemorychannel-controller
+      - name: SYSTEM_NAMESPACE
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.namespace
+      - name: DISPATCHER_IMAGE
+        value: gcr.io/knative-releases/knative.dev/eventing/cmd/in_memory/channel_dispatcher@sha256:3163f0a3b3ba5b81c36357df3dd2bff834056f2943c5b395adb497fb97476d20
+      - name: POD_NAME
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.name
+    name: imc-controller
+    replicas: 1
+  - affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                messaging.knative.dev/channel: in-memory-channel
+                messaging.knative.dev/role: dispatcher
+            topologyKey: kubernetes.io/hostname
+          weight: 100
+    env:
+    - container: dispatcher
+      envVars:
+      - name: CONFIG_LOGGING_NAME
+        value: config-logging
+      - name: CONFIG_OBSERVABILITY_NAME
+        value: config-observability
+      - name: METRICS_DOMAIN
+        value: knative.dev/inmemorychannel-dispatcher
+      - name: SYSTEM_NAMESPACE
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.namespace
+      - name: POD_NAME
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.name
+      - name: CONTAINER_NAME
+        value: dispatcher
+      - name: MAX_IDLE_CONNS
+        value: '1000'
+      - name: MAX_IDLE_CONNS_PER_HOST
+        value: '1000'
+    name: imc-dispatcher
+    replicas: 1
+  - env:
+    - container: knative-operator
+      envVars:
+      - name: POD_NAME
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.name
+      - name: SYSTEM_NAMESPACE
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.namespace
+      - name: METRICS_DOMAIN
+        value: knative.dev/operator
+      - name: CONFIG_LOGGING_NAME
+        value: config-logging
+      - name: CONFIG_OBSERVABILITY_NAME
+        value: config-observability
+    name: knative-operator
+    replicas: 1
+  - affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app: mt-broker-controller
+            topologyKey: kubernetes.io/hostname
+          weight: 100
+    env:
+    - container: mt-broker-controller
+      envVars:
+      - name: SYSTEM_NAMESPACE
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.namespace
+      - name: CONFIG_LOGGING_NAME
+        value: config-logging
+      - name: CONFIG_OBSERVABILITY_NAME
+        value: config-observability
+      - name: METRICS_DOMAIN
+        value: knative.dev/eventing
+      - name: POD_NAME
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.name
+    name: mt-broker-controller
+    replicas: 1
+    resources:
+    - container: mt-broker-controller
+      requests:
+        cpu: 100m
+        memory: 100Mi
+  - env:
+    - container: filter
+      envVars:
+      - name: SYSTEM_NAMESPACE
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.namespace
+      - name: NAMESPACE
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.namespace
+      - name: POD_NAME
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.name
+      - name: CONTAINER_NAME
+        value: filter
+      - name: CONFIG_LOGGING_NAME
+        value: config-logging
+      - name: CONFIG_OBSERVABILITY_NAME
+        value: config-observability
+      - name: METRICS_DOMAIN
+        value: knative.dev/internal/eventing
+      - name: FILTER_PORT
+        value: '8080'
+    name: mt-broker-filter
+    replicas: 1
+    resources:
+    - container: filter
+      requests:
+        cpu: 100m
+        memory: 100Mi
+  - env:
+    - container: ingress
+      envVars:
+      - name: SYSTEM_NAMESPACE
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.namespace
+      - name: NAMESPACE
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.namespace
+      - name: POD_NAME
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.name
+      - name: CONTAINER_NAME
+        value: ingress
+      - name: CONFIG_LOGGING_NAME
+        value: config-logging
+      - name: CONFIG_OBSERVABILITY_NAME
+        value: config-observability
+      - name: METRICS_DOMAIN
+        value: knative.dev/internal/eventing
+      - name: INGRESS_PORT
+        value: '8080'
+    name: mt-broker-ingress
+    replicas: 1
+    resources:
+    - container: ingress
+      requests:
+        cpu: 100m
+        memory: 100Mi
+  - affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app: webhook
+            topologyKey: kubernetes.io/hostname
+          weight: 100
+    env:
+    - container: operator-webhook
+      envVars:
+      - name: POD_NAME
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.name
+      - name: SYSTEM_NAMESPACE
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.namespace
+      - name: CONFIG_LOGGING_NAME
+        value: config-logging
+      - name: CONFIG_OBSERVABILITY_NAME
+        value: config-observability
+      - name: WEBHOOK_NAME
+        value: operator-webhook
+      - name: WEBHOOK_PORT
+        value: '8443'
+      - name: METRICS_DOMAIN
+        value: knative.dev/operator
+    name: operator-webhook
+    replicas: 0
+    resources:
+    - container: operator-webhook
+      limits:
+        cpu: 500m
+        memory: 500Mi
+      requests:
+        cpu: 100m
+        memory: 100Mi
+  - affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                eventing.knative.dev/source: ping-source-controller
+                sources.knative.dev/role: adapter
+            topologyKey: kubernetes.io/hostname
+          weight: 100
+    env:
+    - container: dispatcher
+      envVars:
+      - name: SYSTEM_NAMESPACE
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.namespace
+      - name: K_METRICS_CONFIG
+      - name: K_LOGGING_CONFIG
+      - name: K_LEADER_ELECTION_CONFIG
+      - name: K_NO_SHUTDOWN_AFTER
+      - name: K_SINK_TIMEOUT
+        value: '-1'
+      - name: NAMESPACE
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.namespace
+      - name: POD_NAME
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.name
+    name: pingsource-mt-adapter
+    replicas: 0
+    resources:
+    - container: dispatcher
+      limits:
+        cpu: '1'
+        memory: 2Gi
+      requests:
+        cpu: 125m
+        memory: 64Mi
+  podDisruptionBudgets:
+  - minAvailable: 80%
+    name: eventing-webhook
+  services:
+  - name: broker-filter
+    selector:
+      eventing.knative.dev/brokerRole: filter
+  - name: broker-ingress
+    selector:
+      eventing.knative.dev/brokerRole: ingress
+  - name: eventing-webhook
+    selector:
+      role: eventing-webhook
+  - name: imc-dispatcher
+    selector:
+      messaging.knative.dev/channel: in-memory-channel
+      messaging.knative.dev/role: dispatcher
+  - name: inmemorychannel-webhook
+    selector:
+      messaging.knative.dev/channel: in-memory-channel
+      messaging.knative.dev/role: controller
+  - name: operator-webhook
+    selector:
+      role: operator-webhook
+  version: 1.6.0
