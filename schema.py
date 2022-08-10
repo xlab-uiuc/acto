@@ -9,6 +9,7 @@ from jsonschema import validate
 
 from test_case import *
 from common import ActoEncoder, random_string
+from testplan import TreeNode
 
 
 class BaseSchema:
@@ -22,6 +23,7 @@ class BaseSchema:
         self.raw_schema = schema
         self.default = None if 'default' not in schema else schema['default']
         self.enum = None if 'enum' not in schema else schema['enum']
+        self.examples = []
 
     def get_path(self) -> list:
         return self.path
@@ -31,12 +33,21 @@ class BaseSchema:
         return None
 
     @abstractmethod
-    def test_cases(self):
+    def test_cases(self) -> list:
         return None
 
     @abstractmethod
     def get_all_schemas(self):
         return None
+
+    @abstractmethod
+    def to_tree(self) -> TreeNode:
+        '''Returns tree structure, used for input generation'''
+        return TreeNode(self.path)
+
+    @abstractmethod
+    def load_examples(self, example):
+        '''Load example into schema and subschemas'''
 
     def delete(self, prev):
         return None
@@ -45,7 +56,12 @@ class BaseSchema:
         return prev != None
 
     def delete_setup(self, prev):
-        return self.gen()
+        if len(self.examples) > 0:
+            logging.info('Using example for setting up field [%s]: [%s]' %
+                         (self.path, self.examples[0]))
+            return self.examples[0]
+        else:
+            return self.gen()
 
     def validate(self, instance) -> bool:
         try:
@@ -72,12 +88,6 @@ class StringSchema(BaseSchema):
             'maxLength']
         self.pattern = None if 'pattern' not in schema else schema['pattern']
 
-    def __str__(self) -> str:
-        return 'String'
-
-    def get_all_schemas(self) -> list:
-        return [self]
-
     def gen(self, **kwargs):
         # TODO: Use minLength: the exrex does not support minLength
         if self.enum != None:
@@ -85,12 +95,6 @@ class StringSchema(BaseSchema):
         if self.pattern != None:
             return exrex.getone(self.pattern, self.max_length)
         return random_string(10)
-
-    def num_cases(self):
-        return 3
-
-    def num_fields(self):
-        return 1
 
     def test_cases(self):
         '''String schema currently has two test cases, delete and change'''
@@ -102,6 +106,24 @@ class StringSchema(BaseSchema):
             change_testcase = TestCase(self.change_precondition, self.change, self.change_setup)
             ret.append(change_testcase)
         return ret
+
+    def get_all_schemas(self) -> list:
+        return [self]
+
+    def to_tree(self) -> TreeNode:
+        return TreeNode(self.path)
+
+    def load_examples(self, example: str):
+        self.examples.append(example)
+
+    def num_cases(self):
+        return 3
+
+    def num_fields(self):
+        return 1
+
+    def __str__(self) -> str:
+        return 'String'
 
     def change_precondition(self, prev):
         return prev != None
@@ -119,7 +141,12 @@ class StringSchema(BaseSchema):
         return new_string
 
     def change_setup(self, prev):
-        return self.gen()
+        if len(self.examples) > 0:
+            logging.info('Using example for setting up field [%s]: [%s]' %
+                         (self.path, self.examples[0]))
+            return self.examples[0]
+        else:
+            return self.gen()
 
 
 class NumberSchema(BaseSchema):
@@ -145,25 +172,13 @@ class NumberSchema(BaseSchema):
             'exclusiveMaximum']
         self.multiple_of = None if 'multipleOf' not in schema else schema['multipleOf']
 
-    def __str__(self) -> str:
-        return 'Number'
-
-    def get_all_schemas(self) -> list:
-        return [self]
-
-    def gen(self, **kwargs):
+    def gen(self, **kwargs) -> float:
         # TODO: Use exclusive_minimum, exclusive_maximum, multiple_of
         if self.enum != None:
             return random.choice(self.enum)
         return random.uniform(self.minimum, self.maximum)
 
-    def num_cases():
-        return 3
-
-    def num_fields(self):
-        return 1
-
-    def test_cases(self):
+    def test_cases(self) -> list:
         ret = [TestCase(self.delete_precondition, self.delete, self.delete_setup)]
         if self.enum != None:
             for case in self.enum:
@@ -172,6 +187,24 @@ class NumberSchema(BaseSchema):
             ret.append(TestCase(self.increase_precondition, self.increase, self.increase_setup))
             ret.append(TestCase(self.decrease_precondition, self.decrease, self.decrease_setup))
         return ret
+
+    def get_all_schemas(self) -> list:
+        return [self]
+
+    def to_tree(self) -> TreeNode:
+        return TreeNode(self.path)
+
+    def load_examples(self, example: float):
+        self.examples.append(example)
+
+    def num_cases() -> int:
+        return 3
+
+    def num_fields(self) -> int:
+        return 1
+
+    def __str__(self) -> str:
+        return 'Number'
 
     def increase_precondition(self, prev):
         if prev == None:
@@ -216,13 +249,7 @@ class IntegerSchema(NumberSchema):
         if self.default == None:
             self.default = 0
 
-    def __str__(self) -> str:
-        return 'Integer'
-
-    def get_all_schemas(self) -> list:
-        return [self]
-
-    def gen(self, **kwargs):
+    def gen(self, **kwargs) -> int:
         # TODO: Use exclusive_minimum, exclusive_maximum
         if self.enum != None:
             return random.choice(self.enum)
@@ -231,14 +258,26 @@ class IntegerSchema(NumberSchema):
         else:
             return random.randint(self.minimum, self.maximum)
 
-    def num_cases(self):
+    def test_cases(self) -> list:
+        return super().test_cases()
+
+    def get_all_schemas(self) -> list:
+        return [self]
+
+    def to_tree(self) -> TreeNode:
+        return TreeNode(self.path)
+
+    def load_examples(self, example: int):
+        self.examples.append(example)
+
+    def num_cases(self) -> int:
         return 3
 
-    def num_fields(self):
+    def num_fields(self) -> int:
         return 1
 
-    def test_cases(self):
-        return super().test_cases()
+    def __str__(self) -> str:
+        return 'Integer'
 
     def increase_precondition(self, prev):
         if prev == None:
@@ -312,34 +351,6 @@ class ObjectSchema(BaseSchema):
         if 'maxProperties' in schema:
             self.max_properties = schema['maxProperties']
 
-    def get_property_schema(self, key):
-        if key in self.properties:
-            return self.properties[key]
-        elif self.additional_properties != None:
-            return self.additional_properties
-        else:
-            logging.warning('Field [%s] does not have a schema, using opaque schema', key)
-            return OpaqueSchema(self.path + [key], {})
-
-    def get_properties(self) -> dict:
-        return self.properties
-
-    def get_additional_properties(self):
-        return self.additional_properties
-
-    def get_all_schemas(self) -> list:
-        '''Return all the subschemas as a list'''
-        ret = [self]
-        if self.properties != None:
-            for value in self.properties.values():
-                ret.extend(value.get_all_schemas())
-        if self.additional_properties != None:
-            ret.append(self.additional_properties)
-        # if len(ret) > 500:
-        #     # XXX: Temporary prune
-        #     return []
-        return ret
-
     def gen(self, minimum: bool = False, **kwargs) -> dict:
         # TODO: Use constraints: minProperties, maxProperties
         if self.enum != None:
@@ -369,6 +380,58 @@ class ObjectSchema(BaseSchema):
             result['enabled'] = True
         return result
 
+    def test_cases(self):
+        ret = [TestCase(self.delete_precondition, self.delete, self.delete_setup)]
+        if self.enum != None:
+            for case in self.enum:
+                ret.append(EnumTestCase(case))
+        return ret
+
+    def get_all_schemas(self) -> list:
+        '''Return all the subschemas as a list'''
+        ret = [self]
+        if self.properties != None:
+            for value in self.properties.values():
+                ret.extend(value.get_all_schemas())
+        if self.additional_properties != None:
+            ret.append(self.additional_properties)
+        # if len(ret) > 500:
+        #     # XXX: Temporary prune
+        #     return []
+        return ret
+
+    def to_tree(self) -> TreeNode:
+        node = TreeNode(self.path)
+        if self.properties != None:
+            for key, value in self.properties.items():
+                node.add_child(key, value.to_tree())
+
+        if self.additional_properties != None:
+            node.add_child('additional_properties', self.additional_properties.to_tree())
+
+        return node
+
+    def load_examples(self, example: dict):
+        self.examples.append(example)
+        for key, value in example.items():
+            if key in self.properties:
+                self.properties[key].load_examples(value)
+
+    def get_property_schema(self, key):
+        if key in self.properties:
+            return self.properties[key]
+        elif self.additional_properties != None:
+            return self.additional_properties
+        else:
+            logging.warning('Field [%s] does not have a schema, using opaque schema', key)
+            return OpaqueSchema(self.path + [key], {})
+
+    def get_properties(self) -> dict:
+        return self.properties
+
+    def get_additional_properties(self):
+        return self.additional_properties
+
     def num_cases(self) -> int:
         num = 0
         for i in self.properties.values():
@@ -380,13 +443,6 @@ class ObjectSchema(BaseSchema):
         for i in self.properties.values():
             num += i.num_fields()
         return num + 1
-
-    def test_cases(self):
-        ret = [TestCase(self.delete_precondition, self.delete, self.delete_setup)]
-        if self.enum != None:
-            for case in self.enum:
-                ret.append(EnumTestCase(case))
-        return ret
 
     def __str__(self) -> str:
         ret = '{'
@@ -427,12 +483,7 @@ class ArraySchema(BaseSchema):
     def get_item_schema(self):
         return self.item_schema
 
-    def get_all_schemas(self) -> list:
-        ret = [self]
-        ret.extend(self.item_schema.get_all_schemas())
-        return ret
-
-    def gen(self, minimum: bool = False, **kwargs):
+    def gen(self, minimum: bool = False, **kwargs) -> list:
         if self.enum != None:
             return random.choice(self.enum)
         else:
@@ -445,13 +496,7 @@ class ArraySchema(BaseSchema):
                 result.append(self.item_schema.gen(minimum=minimum))
             return result
 
-    def num_cases(self):
-        return self.item_schema.num_cases() + 3
-
-    def num_fields(self):
-        return self.item_schema.num_fields() + 1
-
-    def test_cases(self):
+    def test_cases(self) -> list:
         ret = [TestCase(self.delete_precondition, self.delete, self.delete_setup)]
         if self.enum != None:
             for case in self.enum:
@@ -460,6 +505,27 @@ class ArraySchema(BaseSchema):
             ret.append(TestCase(self.push_precondition, self.push_mutator, self.push_setup))
             ret.append(TestCase(self.pop_precondition, self.pop_mutator, self.pop_setup))
         return ret
+
+    def get_all_schemas(self) -> list:
+        ret = [self]
+        ret.extend(self.item_schema.get_all_schemas())
+        return ret
+
+    def to_tree(self) -> TreeNode:
+        node = TreeNode(self.path)
+        node.add_child('ITEM', self.item_schema.to_tree())
+        return node
+
+    def load_examples(self, example: list):
+        self.examples.append(example)
+        for item in example:
+            self.item_schema.load_examples(item)
+
+    def num_cases(self):
+        return self.item_schema.num_cases() + 3
+
+    def num_fields(self):
+        return self.item_schema.num_fields() + 1
 
     def push_precondition(self, prev):
         if prev == None:
@@ -473,6 +539,12 @@ class ArraySchema(BaseSchema):
         return prev + [new_item]
 
     def push_setup(self, prev):
+        if len(self.examples) > 0:
+            for example in self.examples:
+                if len(example) > 1:
+                    logging.info('Using example for setting up field [%s]: [%s]' %
+                                 (self.path, self.examples[0]))
+                    return example
         if prev == None:
             return self.gen()
         return self.gen(size=self.min_items)
@@ -491,6 +563,12 @@ class ArraySchema(BaseSchema):
         return prev
 
     def pop_setup(self, prev):
+        if len(self.examples) > 0:
+            for example in self.examples:
+                if len(example) > 1:
+                    logging.info('Using example for setting up field [%s]: [%s]' %
+                                 (self.path, self.examples[0]))
+                    return example
         if prev == None:
             return self.gen()
         return self.gen(size=self.max_items)
@@ -518,17 +596,6 @@ class AnyOfSchema(BaseSchema):
             base_schema.update(v)
             self.possibilities.append(extract_schema(self.path + ['%s' % str(index)], base_schema))
 
-    def __str__(self) -> str:
-        ret = '['
-        for i in self.possibilities:
-            ret += str(i)
-            ret += ', '
-        ret += ']'
-        return ret
-
-    def get_all_schemas(self) -> list:
-        return [self]
-
     def get_possibilities(self):
         return self.possibilities
 
@@ -536,19 +603,7 @@ class AnyOfSchema(BaseSchema):
         schema = random.choice(self.possibilities)
         return schema.gen(minimum=minimum)
 
-    def num_cases(self):
-        num = 0
-        for i in self.possibilities:
-            num += i.num_cases()
-        return num + 1
-
-    def num_fields(self):
-        num = 0
-        for i in self.possibilities:
-            num += i.num_fields()
-        return num
-
-    def test_cases(self):
+    def test_cases(self) -> list:
         ret = []
         if self.enum != None:
             for case in self.enum:
@@ -561,6 +616,37 @@ class AnyOfSchema(BaseSchema):
                 ret.extend(testcases)
         return ret
 
+    def get_all_schemas(self) -> list:
+        return [self]
+
+    def to_tree(self) -> TreeNode:
+        return TreeNode(self.path)
+
+    def load_examples(self, example: list):
+        for possibility in self.possibilities:
+            if possibility.validate(example):
+                possibility.load_examples(example)
+
+    def num_cases(self) -> int:
+        num = 0
+        for i in self.possibilities:
+            num += i.num_cases()
+        return num + 1
+
+    def num_fields(self) -> int:
+        num = 0
+        for i in self.possibilities:
+            num += i.num_fields()
+        return num
+
+    def __str__(self) -> str:
+        ret = '['
+        for i in self.possibilities:
+            ret += str(i)
+            ret += ', '
+        ret += ']'
+        return ret
+
 
 class BooleanSchema(BaseSchema):
 
@@ -570,20 +656,8 @@ class BooleanSchema(BaseSchema):
             self.default = False
         pass
 
-    def __str__(self) -> str:
-        return 'boolean'
-
-    def get_all_schemas(self) -> list:
-        return [self]
-
     def gen(self, **kwargs):
         return random.choice([True, False])
-
-    def num_cases(self):
-        return 3
-
-    def num_fields(self):
-        return 1
 
     def test_cases(self):
         ret = [TestCase(self.delete_precondition, self.delete, self.delete_setup)]
@@ -595,6 +669,24 @@ class BooleanSchema(BaseSchema):
                 TestCase(self.toggle_off_precondition, self.toggle_off, self.toggle_off_setup))
             ret.append(TestCase(self.toggle_on_precondition, self.toggle_on, self.toggle_on_setup))
         return ret
+
+    def get_all_schemas(self) -> list:
+        return [self]
+
+    def to_tree(self) -> TreeNode:
+        return TreeNode(self.path)
+
+    def load_examples(self, example: bool):
+        pass
+
+    def num_cases(self):
+        return 3
+
+    def num_fields(self):
+        return 1
+
+    def __str__(self) -> str:
+        return 'boolean'
 
     def toggle_on_precondition(self, prev):
         if prev == None and self.default == False:
@@ -632,17 +724,8 @@ class OpaqueSchema(BaseSchema):
         super().__init__(path, schema)
         pass
 
-    def __str__(self) -> str:
-        return 'any'
-
     def gen(self, **kwargs):
         return None
-
-    def num_cases(self):
-        return 1
-
-    def num_fields(self):
-        return 1
 
     def test_cases(self):
         return []
@@ -650,8 +733,23 @@ class OpaqueSchema(BaseSchema):
     def get_all_schemas(self):
         return []
 
+    def to_tree(self) -> TreeNode:
+        return TreeNode(self.path)
 
-def extract_schema(path: list, schema: dict) -> object:
+    def load_examples(self, example):
+        pass
+
+    def num_cases(self):
+        return 1
+
+    def num_fields(self):
+        return 1
+
+    def __str__(self) -> str:
+        return 'any'
+
+
+def extract_schema(path: list, schema: dict) -> BaseSchema:
     if 'anyOf' in schema:
         return AnyOfSchema(path, schema)
     if 'type' not in schema:

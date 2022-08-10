@@ -70,6 +70,8 @@ if __name__ == '__main__':
     # print(analyze('/home/tyler/redis-operator/cmd/redisoperator', 'RedisFailover', 'github.com/spotahome/redis-operator/api/redisfailover/v1'))
     # print(analyze('/home/tyler/cass-operator', 'CassandraDatacenter', 'github.com/k8ssandra/cass-operator/apis/cassandra/v1beta1'))
     # print(analyze('/home/tyler/percona-server-mongodb-operator/cmd/manager', 'PerconaServerMongoDB', 'github.com/percona/percona-server-mongodb-operator/pkg/apis/psmdb/v1'))
-    print(analyze('/home/tyler/zookeeper-operator', 'ZookeeperCluster', 'github.com/pravega/zookeeper-operator/api/v1beta1'))
+    # print(analyze('/home/tyler/zookeeper-operator', 'ZookeeperCluster', 'github.com/pravega/zookeeper-operator/api/v1beta1'))
 
     # print(analyze('/home/tyler/cockroach-operator/cmd/cockroach-operator', 'CrdbCluster', 'github.com/cockroachdb/cockroach-operator/apis/v1alpha1'))
+    print(analyze('/home/tyler/tidb-operator/cmd/controller-manager', 'TidbCluster', 'github.com/pingcap/tidb-operator/pkg/apis/pingcap/v1alpha1'))
+    # print(analyze('/home/tyler/redis-operator-2', 'RedisCluster', 'redis-operator/api/v1beta1'))

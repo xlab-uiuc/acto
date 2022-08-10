@@ -1,0 +1,508 @@
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: vault-tls
+spec:
+  replicas: 3
+  secretBackend:
+    vault:
+      role: rabbitmq
+      tls:
+        pkiIssuerPath: pki/issue/cert-issuer
+---
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: myrabbitmq
+spec:
+  rabbitmq:
+    additionalConfig: 'default_user=guest
+
+      default_pass=guest'
+---
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: mtls-inter-node
+spec:
+  override:
+    statefulSet:
+      spec:
+        template:
+          spec:
+            containers:
+            - name: rabbitmq
+              volumeMounts:
+              - mountPath: /etc/rabbitmq/certs
+                name: mtls-inter-node-nodes-tls
+              - mountPath: /etc/rabbitmq/inter-node-tls.config
+                name: inter-node-config
+                subPath: inter_node_tls.config
+            volumes:
+            - configMap:
+                defaultMode: 420
+                name: mtls-inter-node-tls-config
+              name: inter-node-config
+            - name: mtls-inter-node-nodes-tls
+              secret:
+                items:
+                - key: ca.crt
+                  mode: 416
+                  path: ca.crt
+                - key: tls.crt
+                  mode: 416
+                  path: tls.crt
+                - key: tls.key
+                  mode: 416
+                  path: tls.key
+                secretName: mtls-inter-node-nodes-tls
+  rabbitmq:
+    envConfig: 'SERVER_ADDITIONAL_ERL_ARGS="-proto_dist inet_tls -ssl_dist_optfile
+      /etc/rabbitmq/inter-node-tls.config"
+
+      RABBITMQ_CTL_ERL_ARGS="-proto_dist inet_tls -ssl_dist_optfile /etc/rabbitmq/inter-node-tls.config"
+
+      '
+  replicas: 3
+---
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: vault-default-user
+spec:
+  replicas: 3
+  secretBackend:
+    vault:
+      annotations:
+        vault.hashicorp.com/template-static-secret-render-interval: 15s
+      defaultUserPath: secret/data/rabbitmq/config
+      role: rabbitmq
+---
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: tolerations
+spec:
+  replicas: 1
+  tolerations:
+  - effect: NoSchedule
+    key: dedicated
+    operator: Equal
+    value: rabbitmq
+---
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: json
+spec:
+  image: rabbitmq:3.9.4-management
+  rabbitmq:
+    additionalConfig: 'log.console = true
+
+      log.console.level = debug
+
+      log.console.formatter = json
+
+      log.console.formatter.json.field_map = verbosity:v time msg domain file line
+      pid level:-
+
+      log.console.formatter.json.verbosity_map = debug:7 info:6 notice:5 warning:4
+      error:3 critical:2 alert:1 emergency:0
+
+      log.console.formatter.time_format = epoch_usecs
+
+      '
+    envConfig: 'RABBITMQ_LOGS=""
+
+      '
+---
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: network-policies
+spec:
+  image: rabbitmq:3.9.7-management
+  rabbitmq:
+    additionalPlugins:
+    - rabbitmq_mqtt
+    - rabbitmq_stomp
+    - rabbitmq_stream
+    - rabbitmq_web_mqtt
+    - rabbitmq_web_stomp
+  replicas: 3
+---
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: sidecar
+spec:
+  override:
+    statefulSet:
+      spec:
+        template:
+          spec:
+            containers:
+            - command:
+              - sh
+              - -c
+              - echo "Hello, Kubernetes!" && sleep 100
+              image: busybox
+              name: additional-container
+  replicas: 1
+---
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: federation
+spec:
+  rabbitmq:
+    additionalPlugins:
+    - rabbitmq_federation
+    - rabbitmq_federation_management
+  replicas: 1
+  tls:
+    secretName: tls-secret
+---
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: federation
+spec:
+  override:
+    statefulSet:
+      spec:
+        template:
+          spec:
+            containers:
+            - name: rabbitmq
+              volumeMounts:
+              - mountPath: /federation/
+                name: definitions
+            volumes:
+            - configMap:
+                name: definitions
+              name: definitions
+  rabbitmq:
+    additionalConfig: 'load_definitions = /federation/definitions.json # Path to the
+      mounted definitions file
+
+      '
+    additionalPlugins:
+    - rabbitmq_federation
+    - rabbitmq_federation_management
+  replicas: 1
+  tls:
+    secretName: tls-secret
+---
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: community-plugins
+spec:
+  override:
+    statefulSet:
+      spec:
+        template:
+          spec:
+            containers:
+            - name: rabbitmq
+              volumeMounts:
+              - mountPath: /opt/rabbitmq/community-plugins
+                name: community-plugins
+            initContainers:
+            - command:
+              - sh
+              - -c
+              - curl -L -v https://github.com/rabbitmq/rabbitmq-message-timestamp/releases/download/v3.8.0/rabbitmq_message_timestamp-3.8.0.ez
+                --output /community-plugins/rabbitmq_message_timestamp-3.8.0.ez
+              image: curlimages/curl
+              imagePullPolicy: IfNotPresent
+              name: copy-community-plugins
+              resources:
+                limits:
+                  cpu: 100m
+                  memory: 500Mi
+                requests:
+                  cpu: 100m
+                  memory: 500Mi
+              terminationMessagePolicy: FallbackToLogsOnError
+              volumeMounts:
+              - mountPath: /community-plugins/
+                name: community-plugins
+            volumes:
+            - emptyDir: {}
+              name: community-plugins
+  rabbitmq:
+    additionalPlugins:
+    - rabbitmq_message_timestamp
+    envConfig: 'PLUGINS_DIR=/opt/rabbitmq/plugins:/opt/rabbitmq/community-plugins
+
+      '
+  replicas: 1
+---
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: resource-limits
+spec:
+  replicas: 1
+  resources:
+    limits:
+      cpu: 800m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 1Gi
+---
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: pod-anti-affinity
+spec:
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/name
+              operator: In
+              values:
+              - pod-anti-affinity
+          topologyKey: kubernetes.io/hostname
+        weight: 100
+  replicas: 3
+---
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: production-ready
+spec:
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+          - key: app.kubernetes.io/name
+            operator: In
+            values:
+            - production-ready
+        topologyKey: kubernetes.io/hostname
+  override:
+    statefulSet:
+      spec:
+        template:
+          spec:
+            containers: []
+            topologySpreadConstraints:
+            - labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: production-ready
+              maxSkew: 1
+              topologyKey: topology.kubernetes.io/zone
+              whenUnsatisfiable: DoNotSchedule
+  persistence:
+    storage: 500Gi
+    storageClassName: ssd
+  rabbitmq:
+    additionalConfig: 'cluster_partition_handling = pause_minority
+
+      vm_memory_high_watermark_paging_ratio = 0.99
+
+      disk_free_limit.relative = 1.0
+
+      collect_statistics_interval = 10000
+
+      '
+  replicas: 3
+  resources:
+    limits:
+      cpu: 4
+      memory: 10Gi
+    requests:
+      cpu: 4
+      memory: 10Gi
+---
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: import-definitions
+spec:
+  override:
+    statefulSet:
+      spec:
+        template:
+          spec:
+            containers:
+            - name: rabbitmq
+              volumeMounts:
+              - mountPath: /path/to/exported/
+                name: definitions
+            volumes:
+            - configMap:
+                name: definitions
+              name: definitions
+  rabbitmq:
+    additionalConfig: 'load_definitions = /path/to/exported/definitions.json # Path
+      to the mounted definitions file
+
+      '
+  replicas: 1
+---
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: multiple-disks
+spec:
+  override:
+    statefulSet:
+      spec:
+        template:
+          spec:
+            containers:
+            - name: rabbitmq
+              volumeMounts:
+              - mountPath: /var/lib/rabbitmq/quorum-segments
+                name: quorum-segments
+              - mountPath: /var/lib/rabbitmq/quorum-wal
+                name: quorum-wal
+        volumeClaimTemplates:
+        - apiVersion: v1
+          kind: PersistentVolumeClaim
+          metadata:
+            name: persistence
+            namespace: default
+          spec:
+            accessModes:
+            - ReadWriteOnce
+            resources:
+              requests:
+                storage: 10Gi
+            volumeMode: Filesystem
+        - apiVersion: v1
+          kind: PersistentVolumeClaim
+          metadata:
+            name: quorum-wal
+            namespace: default
+          spec:
+            accessModes:
+            - ReadWriteOnce
+            resources:
+              requests:
+                storage: 10Gi
+            volumeMode: Filesystem
+        - apiVersion: v1
+          kind: PersistentVolumeClaim
+          metadata:
+            name: quorum-segments
+            namespace: default
+          spec:
+            accessModes:
+            - ReadWriteOnce
+            resources:
+              requests:
+                storage: 10Gi
+            volumeMode: Filesystem
+  rabbitmq:
+    advancedConfig: "[\n    {ra, [\n        {wal_data_dir, '/var/lib/rabbitmq/quorum-wal'}\n\
+      \    ]}\n].\n"
+    envConfig: 'RABBITMQ_QUORUM_DIR=/var/lib/rabbitmq/quorum-segments
+
+      '
+  replicas: 1
+---
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: custom-configuration
+spec:
+  rabbitmq:
+    additionalConfig: 'log.console.level = debug
+
+      '
+  replicas: 1
+---
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: rabbit
+spec:
+  override:
+    service:
+      spec:
+        ports:
+        - name: additional-port
+          port: 12345
+          protocol: TCP
+          targetPort: 12345
+    statefulSet:
+      spec:
+        template:
+          spec:
+            containers:
+            - name: rabbitmq
+              ports:
+              - containerPort: 12345
+                name: additional-port
+                protocol: TCP
+  replicas: 1
+---
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: tls
+spec:
+  replicas: 1
+  tls:
+    secretName: tls-secret
+---
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: default-security-context
+spec:
+  override:
+    statefulSet:
+      spec:
+        template:
+          spec:
+            containers: []
+            initContainers:
+            - name: setup-container
+              securityContext: {}
+            securityContext: {}
+---
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: mtls
+spec:
+  replicas: 1
+  tls:
+    caSecretName: ca-secret
+    secretName: tls-secret
+---
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: plugins
+spec:
+  rabbitmq:
+    additionalPlugins:
+    - rabbitmq_federation
+    - rabbitmq_federation_management
+  replicas: 1
+---
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: hello-world
+---
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: sample
+spec:
+  replicas: 1
+  service:
+    type: LoadBalancer

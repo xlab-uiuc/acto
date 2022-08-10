@@ -32,11 +32,12 @@ class Checker(object):
             RunResult of the checking
         '''
         if snapshot.system_state == {}:
-            return InvalidInputResult()
+            return InvalidInputResult(None)
 
         self.delta_log_path = "%s/delta-%d.log" % (self.trial_dir, generation)
+        input_delta, _ = self.get_deltas(snapshot, prev_snapshot)
 
-        input_result = self.check_input(snapshot)
+        input_result = self.check_input(snapshot, input_delta)
         if not isinstance(input_result, PassResult):
             return input_result
 
@@ -60,18 +61,18 @@ class Checker(object):
 
         return PassResult()
 
-    def check_input(self, snapshot: Snapshot) -> RunResult:
+    def check_input(self, snapshot: Snapshot, input_delta) -> RunResult:
         stdout, stderr = snapshot.cli_result['stdout'], snapshot.cli_result['stderr']
 
         if stderr.find('connection refused') != -1:
             return ConnectionRefusedResult()
 
-        elif stdout.find('error') != -1 or stderr.find('error') != -1 or stderr.find(
-                'invalid') != -1:
+        is_invalid, reponsible_field_path = invalid_input_message(stderr, input_delta)
+        if is_invalid:
             logging.info('Invalid input, reject mutation')
             logging.info('STDOUT: ' + stdout)
             logging.info('STDERR: ' + stderr)
-            return InvalidInputResult()
+            return InvalidInputResult(reponsible_field_path)
 
         if stdout.find('unchanged') != -1 or stderr.find('unchanged') != -1:
             logging.info('CR unchanged, continue')
@@ -110,7 +111,8 @@ class Checker(object):
                     # if the input delta is considered as equivalent, skip
                     continue
 
-                if self.context['enable_analysis'] and self.should_skip_input_delta(delta, snapshot):
+                if self.context['enable_analysis'] and self.should_skip_input_delta(
+                        delta, snapshot):
                     continue
 
                 # Find the longest matching field, compare the delta change
@@ -222,15 +224,18 @@ class Checker(object):
             parsed_log = parse_log(line)
             if parsed_log == {} or parsed_log['level'] != 'error' and parsed_log['level'] != 'fatal':
                 continue
-            msg = parsed_log['msg']
 
-            if invalid_input_message(msg, input_delta):
-                return InvalidInputResult()
+            # List all the values in parsed_log
+            for value in list(parsed_log.values()):
+                if type(value) != str or value == '':
+                    continue
+                is_invalid, reponsible_field_path = invalid_input_message(value, input_delta)
+                if is_invalid:
+                    return InvalidInputResult(reponsible_field_path)
 
             skip = False
             for regex in EXCLUDE_ERROR_REGEX:
                 if re.search(regex, line, re.IGNORECASE):
-                    # logging.debug('Skipped error msg: %s' % line)
                     skip = True
                     break
             if skip:
@@ -389,10 +394,10 @@ if __name__ == "__main__":
         context = json.load(context_fin)
         context['preload_images'] = set(context['preload_images'])
 
-    # for path in context['analysis_result']['control_flow_fields']:
-    #     path.pop(0)
+    for path in context['analysis_result']['control_flow_fields']:
+        path.pop(0)
 
-    context['enable_analysis'] = False
+    context['enable_analysis'] = True
 
     with open(args.seed, 'r') as seed_file:
         seed = yaml.load(seed_file, Loader=yaml.FullLoader)
@@ -406,7 +411,7 @@ if __name__ == "__main__":
         snapshots.append(EmptySnapshot(seed))
 
         alarm = False
-        for generation in range(0, 10):
+        for generation in range(0, 20):
             mutated_filename = '%s/mutated-%d.yaml' % (trial_dir, generation)
             operator_log_path = "%s/operator-%d.log" % (trial_dir, generation)
             system_state_path = "%s/system-state-%03d.json" % (

@@ -6,6 +6,7 @@ import time
 import queue
 import json
 import yaml
+import base64
 
 import acto_timer
 from snapshot import Snapshot
@@ -14,14 +15,14 @@ from common import *
 
 class Runner(object):
 
-    def __init__(self, context: dict, trial_dir: str, cluster_name: str):
+    def __init__(self, context: dict, trial_dir: str, context_name: str):
         self.namespace = context["namespace"]
         self.crd_metainfo: dict = context['crd']
         self.trial_dir = trial_dir
-        self.cluster_name = cluster_name
+        self.context_name = context_name
         self.log_length = 0
 
-        apiclient = kubernetes_client(cluster_name)
+        apiclient = kubernetes_client(context_name)
         self.coreV1Api = kubernetes.client.CoreV1Api(apiclient)
         self.appV1Api = kubernetes.client.AppsV1Api(apiclient)
         self.batchV1Api = kubernetes.client.BatchV1Api(apiclient)
@@ -38,6 +39,7 @@ class Runner(object):
             'cronjob': self.batchV1Api.list_namespaced_cron_job,
             'ingress': self.networkingV1Api.list_namespaced_ingress,
             'pod_disruption_budget': self.policyV1Api.list_namespaced_pod_disruption_budget,
+            'secret': self.coreV1Api.list_namespaced_secret,
         }
 
     def run(self, input: dict, generation: int) -> Snapshot:
@@ -50,10 +52,13 @@ class Runner(object):
         Returns:
             result 
         '''
-        self.operator_log_path = "%s/operator-%d.log" % (self.trial_dir, generation)
-        self.system_state_path = "%s/system-state-%03d.json" % (self.trial_dir, generation)
+        self.operator_log_path = "%s/operator-%d.log" % (
+            self.trial_dir, generation)
+        self.system_state_path = "%s/system-state-%03d.json" % (
+            self.trial_dir, generation)
         self.events_log_path = "%s/events.log" % (self.trial_dir)
-        self.cli_output_path = "%s/cli-output-%d.log" % (self.trial_dir, generation)
+        self.cli_output_path = "%s/cli-output-%d.log" % (
+            self.trial_dir, generation)
 
         mutated_filename = '%s/mutated-%d.yaml' % (self.trial_dir, generation)
         with open(mutated_filename, 'w') as mutated_cr_file:
@@ -61,7 +66,8 @@ class Runner(object):
 
         cmd = ['apply', '-f', mutated_filename, '-n', self.namespace]
 
-        cli_result = kubectl(cmd, cluster_name=self.cluster_name, capture_output=True, text=True)
+        cli_result = kubectl(
+            cmd, context_name=self.context_name, capture_output=True, text=True)
         self.wait_for_system_converge()
 
         logging.debug('STDOUT: ' + cli_result.stdout)
@@ -77,18 +83,19 @@ class Runner(object):
             system_state = {}
             operator_log = ''
 
-        snapshot = Snapshot(input, self.collect_cli_result(cli_result), system_state, operator_log)
+        snapshot = Snapshot(input, self.collect_cli_result(
+            cli_result), system_state, operator_log)
         return snapshot
 
     def run_without_collect(self, seed_file: str):
         cmd = ['apply', '-f', seed_file, '-n', self.namespace]
-        _ = kubectl(cmd, cluster_name=self.cluster_name)
+        _ = kubectl(cmd, context_name=self.context_name)
 
         self.wait_for_system_converge()
 
     def collect_system_state(self) -> dict:
         '''Queries resources in the test namespace, computes delta
-        
+
         Args:
             result: includes the path to the resource state file
         '''
@@ -96,6 +103,8 @@ class Runner(object):
 
         for resource, method in self.resource_methods.items():
             resources[resource] = self.__get_all_objects(method)
+            if resource == 'secret':
+                resources[resource] = decode_secret_data(resources[resource]) 
 
         current_cr = self.__get_custom_resources(self.namespace, self.crd_metainfo['group'],
                                                  self.crd_metainfo['version'],
@@ -115,7 +124,7 @@ class Runner(object):
 
     def collect_operator_log(self) -> list:
         '''Queries operator log in the test namespace
-        
+
         Args:
             result: includes the path to the operator log file
         '''
@@ -123,10 +132,11 @@ class Runner(object):
             namespace=self.namespace, watch=False, label_selector="acto/tag=operator-pod").items
 
         if len(operator_pod_list) >= 1:
-            logging.debug('Got operator pod: pod name:' + operator_pod_list[0].metadata.name)
+            logging.debug('Got operator pod: pod name:' +
+                          operator_pod_list[0].metadata.name)
         else:
             logging.error('Failed to find operator pod')
-            #TODO: refine what should be done if no operator pod can be found
+            # TODO: refine what should be done if no operator pod can be found
 
         log = self.coreV1Api.read_namespaced_pod_log(name=operator_pod_list[0].metadata.name,
                                                      namespace=self.namespace)
@@ -134,7 +144,7 @@ class Runner(object):
         # only get the new log since previous result
         new_log = log.split('\n')
         new_log = new_log[self.log_length:]
-        self.log_length = len(new_log)
+        self.log_length += len(new_log)
 
         with open(self.operator_log_path, 'a') as f:
             for line in new_log:
@@ -168,7 +178,7 @@ class Runner(object):
 
         Args:
             method: function pointer for getting the object
-        
+
         Returns
             resource in dict
         '''
@@ -187,7 +197,7 @@ class Runner(object):
             group: API group of the cr
             version: version of the cr
             plural: plural name of the cr
-        
+
         Returns:
             custom resouce object
         '''
@@ -202,7 +212,7 @@ class Runner(object):
         '''This function blocks until the system converges. It keeps 
            watching for incoming events. If there is no event within 
            60 seconds, the system is considered to have converged. 
-        
+
         Args:
             hard_timeout: the maximal wait time for system convergence
         '''
@@ -215,7 +225,8 @@ class Runner(object):
                                                             watch=True)
 
         combined_event_queue = Queue(maxsize=0)
-        timer_hard_timeout = acto_timer.ActoTimer(hard_timeout, combined_event_queue, "timeout")
+        timer_hard_timeout = acto_timer.ActoTimer(
+            hard_timeout, combined_event_queue, "timeout")
         watch_process = Process(target=self.watch_system_events,
                                 args=(event_stream, combined_event_queue))
 
@@ -235,7 +246,8 @@ class Runner(object):
         timer_hard_timeout.cancel()
         watch_process.terminate()
 
-        time_elapsed = time.strftime("%H:%M:%S", time.gmtime(time.time() - start_timestamp))
+        time_elapsed = time.strftime(
+            "%H:%M:%S", time.gmtime(time.time() - start_timestamp))
         logging.info('System took %s to converge' % time_elapsed)
 
     def watch_system_events(self, event_stream, queue: Queue):
@@ -246,3 +258,13 @@ class Runner(object):
                 queue.put("event")
             except (ValueError, AssertionError):
                 pass
+
+
+def decode_secret_data(secrets: dict) -> dict:
+    '''Decodes secret's b64-encrypted data in the secret object
+    '''
+    for secret in secrets:
+        for key in secrets[secret]['data']:
+            secrets[secret]['data'][key] = base64.b64decode(
+                secrets[secret]['data'][key]).decode('utf-8')
+    return secrets

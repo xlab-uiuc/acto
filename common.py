@@ -1,6 +1,7 @@
 import enum
 import json
 import os
+from typing import Tuple
 from deepdiff.helper import NotPresent
 from datetime import datetime, date
 import re
@@ -12,9 +13,8 @@ import kubernetes
 import requests
 import operator
 
-from constant import CONST
 from test_case import TestCase
-from parse_log.parse_log import parse_log
+from deepdiff import DeepDiff
 
 
 def notify_crash(exception: str):
@@ -60,11 +60,13 @@ class AnalysisConfig:
 
 class OperatorConfig:
 
-    def __init__(self, deploy: DeployConfig, crd_name: str, custom_fields: str, context: str,
-                 seed_custom_resource: str, source_path: str, analysis: AnalysisConfig) -> None:
+    def __init__(self, deploy: DeployConfig, crd_name: str, custom_fields: str, example_dir: str,
+                 context: str, seed_custom_resource: str, source_path: str,
+                 analysis: AnalysisConfig) -> None:
         self.deploy = deploy
         self.crd_name = crd_name
         self.custom_fields = custom_fields
+        self.example_dir = example_dir
         self.context = context
         self.seed_custom_resource = seed_custom_resource
         self.source_path = source_path
@@ -100,7 +102,9 @@ class PassResult(RunResult):
 
 
 class InvalidInputResult(RunResult):
-    pass
+
+    def __init__(self, responsible_field: list) -> None:
+        self.responsible_field = responsible_field
 
 
 class UnchangedInputResult(RunResult):
@@ -211,12 +215,22 @@ def postprocess_diff(diff):
     return diff_dict
 
 
-def invalid_input_message(log_msg: str, input_delta: dict) -> bool:
-    '''Returns if the log shows the input is invalid'''
+def invalid_input_message(log_msg: str, input_delta: dict) -> Tuple[bool, list]:
+    '''Returns if the log shows the input is invalid
+    
+    Args:
+        log_msg: message body of the log
+        input_delta: the input delta we applied to the CR
+
+    Returns:
+        Tuple(bool, list):
+            - if the log_msg indicates the input delta is invalid
+            - when log indicates invalid input: the responsible field path for the invalid input
+    '''
     for regex in INVALID_INPUT_LOG_REGEX:
         if re.search(regex, log_msg):
-            logging.info('recognized invalid input: %s' % log_msg)
-            return True
+            logging.info('Recognized invalid input through regex: %s' % log_msg)
+            return True, None
 
     # Check if the log line contains the field or value
     # If so, also return True
@@ -224,15 +238,22 @@ def invalid_input_message(log_msg: str, input_delta: dict) -> bool:
     for delta_category in input_delta.values():
         for delta in delta_category.values():
             if isinstance(delta.path[-1], str) and delta.path[-1] in log_msg:
-                logging.info("Recognized invalid input through field in error message: %s" %
-                             log_msg)
-                return True
+                logging.info("Recognized invalid input through field [%s] in error message: %s" %
+                             (delta.path[-1], log_msg))
+                return True, delta.path
+            # if delta.curr is an int, we do exact match to avoid matching a short 
+            # int (e.g. 1) to a log line and consider the int as invalid input
+            elif isinstance(delta.curr, int):
+                for item in log_msg.split(' '):
+                    if item == str(delta.curr):
+                        logging.info("Recognized invalid input through value [%s] in error message: %s" % (delta.curr, log_msg))
+                        return True, delta.path
             elif str(delta.curr) in log_msg:
-                logging.info("Recognized invalid input through value in error message: %s" %
-                             log_msg)
-                return True
+                logging.info("Recognized invalid input through value [%s] in error message: %s" %
+                             (str(delta.curr), log_msg))
+                return True, delta.path
 
-    return False
+    return False, None
 
 
 def canonicalize(s: str):
@@ -355,116 +376,53 @@ GENERIC_FIELDS = [
 ]
 
 
-def kind_kubecontext(cluster_name: str) -> str:
-    '''Returns the kubecontext based onthe cluster name
-    Kind always adds `kind` before the cluster name
-    '''
-    return f'kind-{cluster_name}'
-
-
-def kind_create_cluster(name: str, config: str, version: str):
-    '''Use subprocess to create kind cluster
-    Args:
-        name: name of the kind cluster
-        config: path of the config file for cluster
-        version: k8s version
-    '''
-    cmd = ['kind', 'create', 'cluster']
-
-    if name:
-        cmd.extend(['--name', name])
-    else:
-        cmd.extend(['--name', CONST.KIND_CLUSTER])
-
-    if config:
-        cmd.extend(['--config', config])
-
-    if version:
-        cmd.extend(['--image', f"kindest/node:v{version}"])
-
-    return subprocess.run(cmd)
-
-
-def kind_load_images(images_archive: str, name: str):
-    '''Preload some frequently used images into Kind cluster to avoid ImagePullBackOff
-    '''
-    logging.info('Loading preload images')
-    cmd = ['kind', 'load', 'image-archive']
-    if images_archive == None:
-        logging.warning(
-            'No image to preload, we at least should have operator image')
-
-    if name != None:
-        cmd.extend(['--name', name])
-    else:
-        logging.error('Missing cluster name for kind load')
-
-    p = subprocess.run(cmd + [images_archive])
-    if p.returncode != 0:
-        logging.error('Failed to preload images archive')
-
-
-def kind_delete_cluster(name: str):
-    cmd = ['kind', 'delete', 'cluster']
-
-    if name:
-        cmd.extend(['--name', name])
-    else:
-        logging.error('Missing cluster name for kind delete')
-
-    while subprocess.run(cmd).returncode != 0:
-        continue
-
-
 def kubectl(args: list,
-            cluster_name: str,
+            context_name: str,
             capture_output=False,
             text=False) -> subprocess.CompletedProcess:
     cmd = ['kubectl']
     cmd.extend(args)
 
-    if cluster_name == None:
-        logging.error('Missing cluster name for kubectl')
-    cmd.extend(['--context', kind_kubecontext(cluster_name)])
+    if context_name == None:
+        logging.error('Missing context name for kubectl')
+    cmd.extend(['--context', context_name])
 
     p = subprocess.run(cmd, capture_output=capture_output, text=text)
     return p
 
 
-def helm(args: list, cluster_name: str) -> subprocess.CompletedProcess:
+def helm(args: list, context_name: str) -> subprocess.CompletedProcess:
     cmd = ['helm']
     cmd.extend(args)
 
-    if cluster_name == None:
+    if context_name == None:
         logging.error('Missing cluster name for helm')
-    cmd.extend(['--kube-context', kind_kubecontext(cluster_name)])
+    cmd.extend(['--kube-context', context_name])
 
     return subprocess.run(cmd, capture_output=True, text=True)
 
 
-def kubernetes_client(cluster_name: str) -> kubernetes.client.ApiClient:
+def kubernetes_client(context_name: str) -> kubernetes.client.ApiClient:
     return kubernetes.config.kube_config.new_client_from_config(
-        context=kind_kubecontext(cluster_name))
+        context=context_name)
 
 
 if __name__ == '__main__':
-    line = 'E0624 08:02:40.303209       1 tidb_cluster_control.go:129] tidb cluster acto-namespace/test-cluster is not valid and must be fixed first, aggregated error: [spec.tikv.env[0].valueFrom.fieldRef: Invalid value: "": fieldRef is not supported, spec.tikv.env[0].valueFrom: Invalid value: "": may not have more than one field specified at a time]'
-
-    field_val_dict = {
-        'valueFrom': {
-            'configMapKeyRef': {
-                'key': 'ltzbphvbqz',
-                'name': 'fmtfbuyrwg',
-                'optional': True
-            },
-            'fieldRef': {
-                'apiVersion': 'cyunlsgtrz',
-                'fieldPath': 'xihwjoiwit'
-            },
-            'resourceFieldRef': None,
-            'secretKeyRef': None
+    line = "sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.9.6/pkg/internal/controller/controller.go:214"
+    prev_input = curr_input = {
+        'spec': {
+            'tolerations': {}
         }
     }
-
-    print(invalid_input_message(
-        line, field_val_dict))  # Tested on 7.14. Expected True, got True. Test passed.
+    curr_input = {
+        'spec': {
+            'tolerations': {
+                'tolerationSeconds': 1
+            }
+        }
+    }
+    input_delta = postprocess_diff(
+            DeepDiff(prev_input, curr_input, ignore_order=True, report_repetition=True,
+                     view='tree'))
+    print(invalid_input_message(line, input_delta))    
+    

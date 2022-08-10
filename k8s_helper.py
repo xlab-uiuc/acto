@@ -11,7 +11,7 @@ CONST = CONST()
 
 def is_pod_ready(pod: V1Pod) -> bool:
     '''Check if the pod is ready
-    
+
     Args:
         pod: Pod object in kubernetes
 
@@ -86,8 +86,9 @@ def create_namespace(apiclient, name: str) -> V1Namespace:
         namespace = corev1Api.create_namespace(
             V1Namespace(metadata=V1ObjectMeta(name=name)))
     except Exception as e:
-                logging.error(e)
+        logging.error(e)
     return namespace
+
 
 def delete_operator_pod(apiclient, namespace: str) -> bool:
     coreV1Api = kubernetes.client.CoreV1Api(apiclient)
@@ -96,14 +97,15 @@ def delete_operator_pod(apiclient, namespace: str) -> bool:
         namespace=namespace, watch=False, label_selector="acto/tag=operator-pod").items
 
     if len(operator_pod_list) >= 1:
-        logging.debug('Got operator pod: pod name:' + operator_pod_list[0].metadata.name)
+        logging.debug('Got operator pod: pod name:' +
+                      operator_pod_list[0].metadata.name)
     else:
         logging.error('Failed to find operator pod')
         return False
-        #TODO: refine what should be done if no operator pod can be found
+        # TODO: refine what should be done if no operator pod can be found
 
     pod = coreV1Api.delete_namespaced_pod(name=operator_pod_list[0].metadata.name,
-                                                     namespace=namespace)
+                                          namespace=namespace)
     if pod == None:
         return False
     else:
