@@ -54,6 +54,10 @@ func GetKnownInterfaceFunction(functionCall FunctionCall) *FunctionTaintResult {
 		return &knownFunctionResult
 	}
 
+	if knownFunctionResult, ok := KnownFunctionWithoutReceiver[functionCall.FunctionName]; ok {
+		return &knownFunctionResult
+	}
+
 	if knownFunctionResult, ok := KnownInterfaceFunction[functionCall]; ok {
 		log.Printf("%s is a known interface function\n", functionCall.FunctionName)
 		return &knownFunctionResult
@@ -105,13 +109,18 @@ var (
 	PackageSinks = map[string]bool{
 		"log":                           true,
 		"reflect":                       true,
+		"regexp":                        true,
 		"github.com/pkg/errors":         true,
 		"github.com/go-logr/logr":       true,
+		"go.uber.org/zap":               true,
 		"github.com/go-openapi/runtime": true,
 		"k8s.io/klog/v2":                true,
 		"github.com/Azure/azure-storage-blob-go/azblob": true,
 		"github.com/hashicorp/go-version":               true,
 		"database/sql":                                  true,
+		"k8s.io/client-go/testing":                      true,
+		"k8s.io/apimachinery/pkg/util/errors":           true,
+		"k8s.io/client-go/listers/core/v1":              true,
 	}
 
 	StructSinks = map[string]bool{
@@ -127,6 +136,8 @@ var (
 		"(github.com/go-logr/logr.Logger).Info":                                                           true,
 		"(k8s.io/client-go/tools/record.EventRecorder).Event":                                             true, // this gets into events
 		"(k8s.io/apimachinery/pkg/apis/meta/v1.Object).GetLabels":                                         true,
+		"(*k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta).GetNamespace":                                 true,
+		"(k8s.io/apimachinery/pkg/apis/meta/v1.Object).GetName":                                           true,
 		"(k8s.io/client-go/tools/record.EventRecorder).Eventf":                                            true,
 		"(sigs.k8s.io/controller-runtime/pkg/client.Reader).List":                                         true,
 		"(sigs.k8s.io/controller-runtime/pkg/client.StatusClient).Status":                                 true,
@@ -134,6 +145,13 @@ var (
 		"(k8s.io/apimachinery/pkg/apis/meta/v1.Object).GetOwnerReferences":                                true,
 		"k8s.io/apimachinery/pkg/apis/meta/v1.IsControlledBy":                                             true,
 		"(sigs.k8s.io/controller-runtime/pkg/controller.Controller).Watch":                                true,
+		"(k8s.io/apimachinery/pkg/runtime.Object).GetObjectKind":                                          true,
+		"(k8s.io/client-go/util/workqueue.Interface).Add":                                                 true,
+		"(k8s.io/client-go/listers/core/v1.PodLister).Pods":                                               true,
+		"(k8s.io/client-go/listers/core/v1.PersistentVolumeClaimLister).PersistentVolumeClaims":           true,
+		"(k8s.io/client-go/kubernetes/typed/core/v1.PodsGetter).Pods":                                     true,
+		"(k8s.io/client-go/kubernetes/typed/core/v1.SecretInterface).Get":                                 true,
+		"(k8s.io/apimachinery/pkg/runtime/schema.ObjectKind).GroupVersionKind":                            true,
 	}
 
 	StaticFunctionSinks = map[string]bool{
@@ -164,6 +182,9 @@ var (
 		"(*database/sql.DB).Exec":                                                        true,
 		"(*k8s.io/apimachinery/pkg/apis/meta/v1/unstructured.Unstructured).SetName":      true,
 		"(*k8s.io/apimachinery/pkg/apis/meta/v1/unstructured.Unstructured).SetNamespace": true,
+		"k8s.io/apimachinery/pkg/util/validation.IsConfigMapKey":                         true,
+		"go.etcd.io/etcd/clientv3.New":                                                   true,
+		"k8s.io/apimachinery/pkg/util/validation/field.Invalid":                          true,
 	}
 
 	KnownFunctionWithoutReceiver = map[string]FunctionTaintResult{
@@ -176,6 +197,11 @@ var (
 			End:         false,
 			TaintedArgs: []int{1},
 			TaintedRets: []int{},
+		},
+		"DeepCopyObject": {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{0},
 		},
 	}
 
@@ -340,6 +366,14 @@ var (
 			TaintedArgs: []int{1},
 			TaintedRets: []int{},
 		},
+		{
+			FunctionName: "sort.SliceStable",
+			TaintSource:  fmt.Sprint([]int{0}),
+		}: {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{},
+		},
 	}
 
 	KnownStaticFunctionWithoutParam = map[string]FunctionTaintResult{
@@ -458,6 +492,16 @@ var (
 			TaintedArgs: []int{},
 			TaintedRets: []int{0},
 		},
+		"path/filepath.Join": {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{0},
+		},
+		"path.Join": {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{0},
+		},
 		"k8s.io/apimachinery/pkg/api/meta.Accessor": {
 			End:         false,
 			TaintedArgs: []int{},
@@ -469,6 +513,16 @@ var (
 			TaintedRets: []int{0},
 		},
 		"k8s.io/apimachinery/pkg/util/intstr.FromInt": {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{0},
+		},
+		"k8s.io/apimachinery/pkg/api/resource.ParseQuantity": {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{0},
+		},
+		"(*k8s.io/apimachinery/pkg/api/resource.Quantity).String": {
 			End:         false,
 			TaintedArgs: []int{},
 			TaintedRets: []int{0},
@@ -633,6 +687,14 @@ var (
 			TaintedRets: []int{},
 		},
 		{
+			FunctionName: "(k8s.io/client-go/kubernetes/typed/policy/v1.PodDisruptionBudgetInterface).Create",
+			TaintSource:  fmt.Sprint([]int{1}),
+		}: {
+			End:         true,
+			TaintedArgs: []int{},
+			TaintedRets: []int{},
+		},
+		{
 			FunctionName: "(k8s.io/apimachinery/pkg/apis/meta/v1.Object).SetLabels",
 			TaintSource:  fmt.Sprint([]int{0}),
 		}: {
@@ -736,6 +798,11 @@ var (
 			TaintedRets: []int{0},
 		},
 		"(k8s.io/apimachinery/pkg/labels.Selector).Add": {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{0},
+		},
+		"(k8s.io/apimachinery/pkg/runtime.Object).DeepCopyObject": {
 			End:         false,
 			TaintedArgs: []int{},
 			TaintedRets: []int{0},

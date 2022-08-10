@@ -18,6 +18,8 @@ def update_preload_images(context: dict, worker_list):
     k8s_images = [
         'docker.io/kindest/kindnetd',
         'docker.io/rancher/local-path-provisioner',
+        'docker.io/kindest/local-path-provisioner',
+        'docker.io/kindest/local-path-helper',
         'k8s.gcr.io/build-image/debian-base',
         'k8s.gcr.io/coredns/coredns',
         'k8s.gcr.io/etcd',

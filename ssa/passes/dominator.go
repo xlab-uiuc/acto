@@ -316,7 +316,12 @@ func FindFunctionDominees(context *Context, bbs []*ssa.BasicBlock) (dominees []*
 		bbSet[bb] = true
 	}
 
-	outedges := context.CallGraph.Nodes[bbs[0].Parent()].Out
+	f := bbs[0].Parent()
+	log.Printf("Find function dominees for %s\n", f.Name())
+	if context.CallGraph.Nodes[f] == nil {
+		return
+	}
+	outedges := context.CallGraph.Nodes[f].Out
 	for _, outedge := range outedges {
 		callee := outedge.Callee
 		callers := callee.In
