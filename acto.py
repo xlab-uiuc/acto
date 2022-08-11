@@ -600,6 +600,7 @@ if __name__ == '__main__':
                         type=int,
                         default=1,
                         help='Number of testcases to bundle each time')
+    parser.add_argument('--learn', dest='learn', action='store_true', help='Learn mode')
     parser.add_argument('--notify-crash',
                         dest='notify_crash',
                         action='store_true',
@@ -651,4 +652,5 @@ if __name__ == '__main__':
 
     acto = Acto(workdir_path, config, args.cluster_runtime, args.enable_analysis, args.preload_images, context_cache,
                 args.helper_crd, args.num_workers, args.num_cases, args.dryrun)
-    acto.run()
+    if not args.learn:
+        acto.run()
