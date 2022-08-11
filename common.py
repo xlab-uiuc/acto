@@ -217,7 +217,7 @@ def postprocess_diff(diff):
 
 def invalid_input_message(log_msg: str, input_delta: dict) -> Tuple[bool, list]:
     '''Returns if the log shows the input is invalid
-    
+
     Args:
         log_msg: message body of the log
         input_delta: the input delta we applied to the CR
@@ -229,7 +229,8 @@ def invalid_input_message(log_msg: str, input_delta: dict) -> Tuple[bool, list]:
     '''
     for regex in INVALID_INPUT_LOG_REGEX:
         if re.search(regex, log_msg):
-            logging.info('Recognized invalid input through regex: %s' % log_msg)
+            logging.info(
+                'Recognized invalid input through regex: %s' % log_msg)
             return True, None
 
     # Check if the log line contains the field or value
@@ -241,12 +242,13 @@ def invalid_input_message(log_msg: str, input_delta: dict) -> Tuple[bool, list]:
                 logging.info("Recognized invalid input through field [%s] in error message: %s" %
                              (delta.path[-1], log_msg))
                 return True, delta.path
-            # if delta.curr is an int, we do exact match to avoid matching a short 
+            # if delta.curr is an int, we do exact match to avoid matching a short
             # int (e.g. 1) to a log line and consider the int as invalid input
             elif isinstance(delta.curr, int):
                 for item in log_msg.split(' '):
                     if item == str(delta.curr):
-                        logging.info("Recognized invalid input through value [%s] in error message: %s" % (delta.curr, log_msg))
+                        logging.info("Recognized invalid input through value [%s] in error message: %s" % (
+                            delta.curr, log_msg))
                         return True, delta.path
             elif str(delta.curr) in log_msg:
                 logging.info("Recognized invalid input through value [%s] in error message: %s" %
@@ -422,7 +424,6 @@ if __name__ == '__main__':
         }
     }
     input_delta = postprocess_diff(
-            DeepDiff(prev_input, curr_input, ignore_order=True, report_repetition=True,
-                     view='tree'))
-    print(invalid_input_message(line, input_delta))    
-    
+        DeepDiff(prev_input, curr_input, ignore_order=True, report_repetition=True,
+                 view='tree'))
+    print(invalid_input_message(line, input_delta))

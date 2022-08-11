@@ -67,7 +67,8 @@ class Checker(object):
         if stderr.find('connection refused') != -1:
             return ConnectionRefusedResult()
 
-        is_invalid, reponsible_field_path = invalid_input_message(stderr, input_delta)
+        is_invalid, reponsible_field_path = invalid_input_message(
+            stderr, input_delta)
         if is_invalid:
             logging.info('Invalid input, reject mutation')
             logging.info('STDOUT: ' + stdout)
@@ -222,14 +223,15 @@ class Checker(object):
             # We do not check the log line if it is not an error/fatal message
 
             parsed_log = parse_log(line)
-            if parsed_log == {} or parsed_log['level'] != 'error' and parsed_log['level'] != 'fatal':
+            if parsed_log == {} or parsed_log['level'].lower() != 'error' and parsed_log['level'].lower() != 'fatal':
                 continue
 
             # List all the values in parsed_log
             for value in list(parsed_log.values()):
                 if type(value) != str or value == '':
                     continue
-                is_invalid, reponsible_field_path = invalid_input_message(value, input_delta)
+                is_invalid, reponsible_field_path = invalid_input_message(
+                    value, input_delta)
                 if is_invalid:
                     return InvalidInputResult(reponsible_field_path)
 
@@ -263,6 +265,9 @@ class Checker(object):
         # check Health of Deployments
         unhealthy_resources['deployment'] = []
         for dp in system_state['deployment'].values():
+            if dp['spec']['replicas'] == 0:
+                continue
+
             if dp['spec']['replicas'] == dp['status']['replicas'] and \
                     dp['status']['replicas'] == dp['status']['ready_replicas'] and \
                     dp['status']['ready_replicas'] == dp['status']['updated_replicas']:
@@ -272,8 +277,7 @@ class Checker(object):
         # check Health of Pods
         unhealthy_resources['pod'] = []
         for pod in system_state['pod'].values():
-            if pod['status']['phase'] == 'Running' or \
-                    pod['status']['phase'] == 'Completed':
+            if pod['status']['phase'] in ['Running', 'Completed', 'Succeeded']:
                 continue
             unhealthy_resources['pod'].append(pod['metadata']['name'])
 
