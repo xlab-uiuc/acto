@@ -13,6 +13,7 @@ If you haven't installed `ansible playbook` on your control node, run
 ```sh
 pip3 install ansible
 ansible-galaxy collection install ansible.posix
+ansible-galaxy collection install community.general
 ``` 
 
 Then just run 

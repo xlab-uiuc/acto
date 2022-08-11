@@ -1,5 +1,5 @@
 ---
-- name: Install kubectl
+- name: Mount file systems
   hosts: all
   become: true
 
@@ -11,3 +11,21 @@
         src: tmpfs
         state: mounted
         opts: size=140G
+
+    - name: Format the spare partition
+      community.general.filesystem:
+        fstype: ext4
+        dev: /dev/sda4
+
+    - name: Mount the spare partition on acto dir
+      ansible.posix.mount:
+        path: "/acto"
+        fstype: ext4
+        src: /dev/sda4
+        state: mounted
+
+    - name: Change ownership of acto dir
+      ansible.builtin.file:
+        path: "/acto"
+        mode: "0777"
+        state: directory
