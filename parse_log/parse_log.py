@@ -1,4 +1,5 @@
 import json
+import logging
 import re
 
 klog_regex = r'^\s*'
@@ -91,9 +92,7 @@ def parse_log(line: str) -> dict:
 
                 del log_line['severity']
         except Exception as e:
-            print(f"Cannot parse line {line}")
-
-            pass
+            logging.warning(f"parse_log() cannot parse line {line} due to {e}")
 
     return log_line
 
