@@ -1,0 +1,404 @@
+apiVersion: operator.knative.dev/v1beta1
+kind: KnativeServing
+metadata:
+  name: knative-serving
+  namespace: knative-serving
+spec:
+  config:
+    network:
+      ingress-class: kourier.ingress.networking.knative.dev
+  deployments:
+  - name: 3scale-kourier-gateway
+    replicas: 1
+  - env:
+    - container: activator
+      envVars:
+      - name: GOGC
+        value: '500'
+      - name: POD_NAME
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.name
+      - name: POD_IP
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: status.podIP
+      - name: SYSTEM_NAMESPACE
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.namespace
+      - name: CONFIG_LOGGING_NAME
+        value: config-logging
+      - name: CONFIG_OBSERVABILITY_NAME
+        value: config-observability
+      - name: METRICS_DOMAIN
+        value: knative.dev/internal/serving
+    name: activator
+    replicas: 1
+    resources:
+    - container: activator
+      limits:
+        cpu: '1'
+        memory: 600Mi
+      requests:
+        cpu: 300m
+        memory: 60Mi
+  - affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app: autoscaler
+            topologyKey: kubernetes.io/hostname
+          weight: 100
+    env:
+    - container: autoscaler
+      envVars:
+      - name: POD_NAME
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.name
+      - name: POD_IP
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: status.podIP
+      - name: SYSTEM_NAMESPACE
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.namespace
+      - name: CONFIG_LOGGING_NAME
+        value: config-logging
+      - name: CONFIG_OBSERVABILITY_NAME
+        value: config-observability
+      - name: METRICS_DOMAIN
+        value: knative.dev/serving
+    name: autoscaler
+    replicas: 1
+    resources:
+    - container: autoscaler
+      limits:
+        cpu: '1'
+        memory: 1000Mi
+      requests:
+        cpu: 100m
+        memory: 100Mi
+  - affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app: autoscaler-hpa
+            topologyKey: kubernetes.io/hostname
+          weight: 100
+    env:
+    - container: autoscaler-hpa
+      envVars:
+      - name: SYSTEM_NAMESPACE
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.namespace
+      - name: CONFIG_LOGGING_NAME
+        value: config-logging
+      - name: CONFIG_OBSERVABILITY_NAME
+        value: config-observability
+      - name: METRICS_DOMAIN
+        value: knative.dev/serving
+    name: autoscaler-hpa
+    replicas: 1
+    resources:
+    - container: autoscaler-hpa
+      limits:
+        cpu: 300m
+        memory: 400Mi
+      requests:
+        cpu: 30m
+        memory: 40Mi
+  - affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app: controller
+            topologyKey: kubernetes.io/hostname
+          weight: 100
+    env:
+    - container: controller
+      envVars:
+      - name: POD_NAME
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.name
+      - name: SYSTEM_NAMESPACE
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.namespace
+      - name: CONFIG_LOGGING_NAME
+        value: config-logging
+      - name: CONFIG_OBSERVABILITY_NAME
+        value: config-observability
+      - name: METRICS_DOMAIN
+        value: knative.dev/internal/serving
+    name: controller
+    replicas: 1
+    resources:
+    - container: controller
+      limits:
+        cpu: '1'
+        memory: 1000Mi
+      requests:
+        cpu: 100m
+        memory: 100Mi
+  - affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app: domain-mapping
+            topologyKey: kubernetes.io/hostname
+          weight: 100
+    env:
+    - container: domain-mapping
+      envVars:
+      - name: SYSTEM_NAMESPACE
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.namespace
+      - name: CONFIG_LOGGING_NAME
+        value: config-logging
+      - name: CONFIG_OBSERVABILITY_NAME
+        value: config-observability
+      - name: METRICS_DOMAIN
+        value: knative.dev/serving
+    name: domain-mapping
+    replicas: 1
+    resources:
+    - container: domain-mapping
+      limits:
+        cpu: 300m
+        memory: 400Mi
+      requests:
+        cpu: 30m
+        memory: 40Mi
+  - affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app: domainmapping-webhook
+            topologyKey: kubernetes.io/hostname
+          weight: 100
+    env:
+    - container: domainmapping-webhook
+      envVars:
+      - name: POD_NAME
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.name
+      - name: SYSTEM_NAMESPACE
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.namespace
+      - name: CONFIG_LOGGING_NAME
+        value: config-logging
+      - name: CONFIG_OBSERVABILITY_NAME
+        value: config-observability
+      - name: WEBHOOK_PORT
+        value: '8443'
+      - name: METRICS_DOMAIN
+        value: knative.dev/serving
+    name: domainmapping-webhook
+    replicas: 1
+    resources:
+    - container: domainmapping-webhook
+      limits:
+        cpu: 500m
+        memory: 500Mi
+      requests:
+        cpu: 100m
+        memory: 100Mi
+  - env:
+    - container: knative-operator
+      envVars:
+      - name: POD_NAME
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.name
+      - name: SYSTEM_NAMESPACE
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.namespace
+      - name: METRICS_DOMAIN
+        value: knative.dev/operator
+      - name: CONFIG_LOGGING_NAME
+        value: config-logging
+      - name: CONFIG_OBSERVABILITY_NAME
+        value: config-observability
+    name: knative-operator
+    replicas: 1
+  - env:
+    - container: controller
+      envVars:
+      - name: CERTS_SECRET_NAMESPACE
+      - name: CERTS_SECRET_NAME
+      - name: SYSTEM_NAMESPACE
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.namespace
+      - name: METRICS_DOMAIN
+        value: knative.dev/samples
+      - name: KOURIER_GATEWAY_NAMESPACE
+        value: knative-serving
+      - name: ENABLE_SECRET_INFORMER_FILTERING_BY_CERT_UID
+        value: 'false'
+    name: net-kourier-controller
+    replicas: 1
+  - affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app: webhook
+            topologyKey: kubernetes.io/hostname
+          weight: 100
+    env:
+    - container: operator-webhook
+      envVars:
+      - name: POD_NAME
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.name
+      - name: SYSTEM_NAMESPACE
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.namespace
+      - name: CONFIG_LOGGING_NAME
+        value: config-logging
+      - name: CONFIG_OBSERVABILITY_NAME
+        value: config-observability
+      - name: WEBHOOK_NAME
+        value: operator-webhook
+      - name: WEBHOOK_PORT
+        value: '8443'
+      - name: METRICS_DOMAIN
+        value: knative.dev/operator
+    name: operator-webhook
+    resources:
+    - container: operator-webhook
+      limits:
+        cpu: 500m
+        memory: 500Mi
+      requests:
+        cpu: 100m
+        memory: 100Mi
+  - affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app: webhook
+            topologyKey: kubernetes.io/hostname
+          weight: 100
+    env:
+    - container: webhook
+      envVars:
+      - name: POD_NAME
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.name
+      - name: SYSTEM_NAMESPACE
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.namespace
+      - name: CONFIG_LOGGING_NAME
+        value: config-logging
+      - name: CONFIG_OBSERVABILITY_NAME
+        value: config-observability
+      - name: WEBHOOK_NAME
+        value: webhook
+      - name: WEBHOOK_PORT
+        value: '8443'
+      - name: METRICS_DOMAIN
+        value: knative.dev/internal/serving
+    name: webhook
+    replicas: 1
+    resources:
+    - container: webhook
+      limits:
+        cpu: 500m
+        memory: 500Mi
+      requests:
+        cpu: 100m
+        memory: 100Mi
+  ingress:
+    kourier:
+      enabled: true
+  podDisruptionBudgets:
+  - minAvailable: 80%
+    name: activator-pdb
+  - minAvailable: 80%
+    name: webhook-pdb
+  registry:
+    default: gcr.io/knative-releases/knative.dev/serving/cmd/${NAME}:v1.6.0
+    override:
+      kourier-gateway: docker.io/envoyproxy/envoy:v1.20-latest
+      migrate: gcr.io/knative-releases/knative.dev/pkg/apiextensions/storageversion/cmd/migrate:latest
+      net-kourier-controller/controller: gcr.io/knative-releases/knative.dev/net-kourier/cmd/kourier:v1.6.0
+  services:
+  - name: activator-service
+    selector:
+      app: activator
+  - name: autoscaler
+    selector:
+      app: autoscaler
+  - name: autoscaler-bucket-00-of-01
+  - name: autoscaler-hpa
+    selector:
+      app: autoscaler-hpa
+  - name: controller
+    selector:
+      app: controller
+  - name: domainmapping-webhook
+    selector:
+      role: domainmapping-webhook
+  - name: kourier
+    selector:
+      app: 3scale-kourier-gateway
+  - name: kourier-internal
+    selector:
+      app: 3scale-kourier-gateway
+  - name: net-kourier-controller
+    selector:
+      app: net-kourier-controller
+  - name: operator-webhook
+    selector:
+      role: operator-webhook
+  - name: webhook
+    selector:
+      role: webhook
+  version: 1.6.0

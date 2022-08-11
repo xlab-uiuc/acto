@@ -1,0 +1,48 @@
+apiVersion: v1
+items:
+- apiVersion: policy/v1
+  kind: PodDisruptionBudget
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"policy/v1","kind":"PodDisruptionBudget","metadata":{"labels":{"app.kubernetes.io/component":"eventing-webhook","app.kubernetes.io/name":"knative-eventing","app.kubernetes.io/version":"1.6.0","eventing.knative.dev/release":"v1.6.0"},"name":"eventing-webhook","namespace":"knative-eventing","ownerReferences":[{"apiVersion":"operator.knative.dev/v1beta1","blockOwnerDeletion":true,"controller":true,"kind":"KnativeEventing","name":"knative-eventing","uid":"a7158f42-437b-4aa4-9b85-4c9ae3c527ff"}]},"spec":{"minAvailable":"80%","selector":{"matchLabels":{"app":"eventing-webhook"}}}}
+      manifestival: new
+    creationTimestamp: "2022-08-10T05:38:38Z"
+    generation: 1
+    labels:
+      app.kubernetes.io/component: eventing-webhook
+      app.kubernetes.io/name: knative-eventing
+      app.kubernetes.io/version: 1.6.0
+      eventing.knative.dev/release: v1.6.0
+    name: eventing-webhook
+    namespace: knative-eventing
+    ownerReferences:
+    - apiVersion: operator.knative.dev/v1beta1
+      blockOwnerDeletion: true
+      controller: true
+      kind: KnativeEventing
+      name: knative-eventing
+      uid: a7158f42-437b-4aa4-9b85-4c9ae3c527ff
+    resourceVersion: "1373"
+    uid: b112b9c7-926c-49d7-8527-5447dc510ff4
+  spec:
+    minAvailable: 80%
+    selector:
+      matchLabels:
+        app: eventing-webhook
+  status:
+    conditions:
+    - lastTransitionTime: "2022-08-10T05:38:45Z"
+      message: ""
+      observedGeneration: 1
+      reason: InsufficientPods
+      status: "False"
+      type: DisruptionAllowed
+    currentHealthy: 1
+    desiredHealthy: 1
+    disruptionsAllowed: 0
+    expectedPods: 1
+    observedGeneration: 1
+kind: List
+metadata:
+  resourceVersion: ""

@@ -1,0 +1,1506 @@
+apiVersion: v1
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "1"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"labels":{"app.kubernetes.io/component":"net-kourier","app.kubernetes.io/name":"knative-serving","app.kubernetes.io/version":"1.6.0","networking.knative.dev/ingress-provider":"kourier"},"name":"3scale-kourier-gateway","namespace":"knative-serving","ownerReferences":[{"apiVersion":"operator.knative.dev/v1beta1","blockOwnerDeletion":true,"controller":true,"kind":"KnativeServing","name":"knative-serving","uid":"e2bb7c91-b5a7-4451-be1a-4cae8217ddb0"}]},"spec":{"selector":{"matchLabels":{"app":"3scale-kourier-gateway"}},"strategy":{"rollingUpdate":{"maxSurge":1,"maxUnavailable":0},"type":"RollingUpdate"},"template":{"metadata":{"annotations":{"networking.knative.dev/poke":"v0.26"},"creationTimestamp":null,"labels":{"app":"3scale-kourier-gateway"}},"spec":{"containers":[{"args":["--base-id 1","-c /tmp/config/envoy-bootstrap.yaml","--log-level info"],"command":["/usr/local/bin/envoy"],"image":"docker.io/envoyproxy/envoy:v1.20-latest","lifecycle":{"preStop":{"exec":{"command":["/bin/sh","-c","curl -X POST --unix /tmp/envoy.admin http://localhost/healthcheck/fail; sleep 15"]}}},"name":"kourier-gateway","ports":[{"containerPort":8080,"name":"http2-external","protocol":"TCP"},{"containerPort":8081,"name":"http2-internal","protocol":"TCP"},{"containerPort":8443,"name":"https-external","protocol":"TCP"},{"containerPort":8090,"name":"http-probe","protocol":"TCP"},{"containerPort":9443,"name":"https-probe","protocol":"TCP"}],"readinessProbe":{"httpGet":{"httpHeaders":[{"name":"Host","value":"internalkourier"}],"path":"/ready","port":8081,"scheme":"HTTP"},"initialDelaySeconds":10,"periodSeconds":5},"resources":{},"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["all"]},"readOnlyRootFilesystem":false,"runAsNonRoot":false},"volumeMounts":[{"mountPath":"/tmp/config","name":"config-volume"}]}],"restartPolicy":"Always","volumes":[{"configMap":{"name":"kourier-bootstrap"},"name":"config-volume"}]}}},"status":{}}
+      manifestival: new
+    creationTimestamp: "2022-08-10T05:53:34Z"
+    generation: 2
+    labels:
+      app.kubernetes.io/component: net-kourier
+      app.kubernetes.io/name: knative-serving
+      app.kubernetes.io/version: 1.6.0
+      networking.knative.dev/ingress-provider: kourier
+    name: 3scale-kourier-gateway
+    namespace: knative-serving
+    ownerReferences:
+    - apiVersion: operator.knative.dev/v1beta1
+      blockOwnerDeletion: true
+      controller: true
+      kind: KnativeServing
+      name: knative-serving
+      uid: e2bb7c91-b5a7-4451-be1a-4cae8217ddb0
+    resourceVersion: "1641"
+    uid: 5883b9b0-e7ef-4d74-ac21-d22c7c41f9ba
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: 3scale-kourier-gateway
+    strategy:
+      rollingUpdate:
+        maxSurge: 1
+        maxUnavailable: 0
+      type: RollingUpdate
+    template:
+      metadata:
+        annotations:
+          networking.knative.dev/poke: v0.26
+        creationTimestamp: null
+        labels:
+          app: 3scale-kourier-gateway
+      spec:
+        containers:
+        - args:
+          - --base-id 1
+          - -c /tmp/config/envoy-bootstrap.yaml
+          - --log-level info
+          command:
+          - /usr/local/bin/envoy
+          image: docker.io/envoyproxy/envoy:v1.20-latest
+          imagePullPolicy: IfNotPresent
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                - /bin/sh
+                - -c
+                - curl -X POST --unix /tmp/envoy.admin http://localhost/healthcheck/fail;
+                  sleep 15
+          name: kourier-gateway
+          ports:
+          - containerPort: 8080
+            name: http2-external
+            protocol: TCP
+          - containerPort: 8081
+            name: http2-internal
+            protocol: TCP
+          - containerPort: 8443
+            name: https-external
+            protocol: TCP
+          - containerPort: 8090
+            name: http-probe
+            protocol: TCP
+          - containerPort: 9443
+            name: https-probe
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              httpHeaders:
+              - name: Host
+                value: internalkourier
+              path: /ready
+              port: 8081
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - all
+            readOnlyRootFilesystem: false
+            runAsNonRoot: false
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /tmp/config
+            name: config-volume
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - configMap:
+            defaultMode: 420
+            name: kourier-bootstrap
+          name: config-volume
+  status:
+    availableReplicas: 1
+    conditions:
+    - lastTransitionTime: "2022-08-10T05:54:09Z"
+      lastUpdateTime: "2022-08-10T05:54:09Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    - lastTransitionTime: "2022-08-10T05:53:34Z"
+      lastUpdateTime: "2022-08-10T05:54:09Z"
+      message: ReplicaSet "3scale-kourier-gateway-6966cb4956" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    observedGeneration: 2
+    readyReplicas: 1
+    replicas: 1
+    updatedReplicas: 1
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "1"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"labels":{"app.kubernetes.io/component":"activator","app.kubernetes.io/name":"knative-serving","app.kubernetes.io/version":"1.6.0"},"name":"activator","namespace":"knative-serving","ownerReferences":[{"apiVersion":"operator.knative.dev/v1beta1","blockOwnerDeletion":true,"controller":true,"kind":"KnativeServing","name":"knative-serving","uid":"e2bb7c91-b5a7-4451-be1a-4cae8217ddb0"}]},"spec":{"selector":{"matchLabels":{"app":"activator","role":"activator"}},"strategy":{},"template":{"metadata":{"annotations":{"cluster-autoscaler.kubernetes.io/safe-to-evict":"false"},"creationTimestamp":null,"labels":{"app":"activator","app.kubernetes.io/component":"activator","app.kubernetes.io/name":"knative-serving","app.kubernetes.io/version":"1.6.0","role":"activator"}},"spec":{"containers":[{"env":[{"name":"GOGC","value":"500"},{"name":"POD_NAME","valueFrom":{"fieldRef":{"fieldPath":"metadata.name"}}},{"name":"POD_IP","valueFrom":{"fieldRef":{"fieldPath":"status.podIP"}}},{"name":"SYSTEM_NAMESPACE","valueFrom":{"fieldRef":{"fieldPath":"metadata.namespace"}}},{"name":"CONFIG_LOGGING_NAME","value":"config-logging"},{"name":"CONFIG_OBSERVABILITY_NAME","value":"config-observability"},{"name":"METRICS_DOMAIN","value":"knative.dev/internal/serving"}],"image":"gcr.io/knative-releases/knative.dev/serving/cmd/activator:v1.6.0","livenessProbe":{"failureThreshold":12,"httpGet":{"httpHeaders":[{"name":"k-kubelet-probe","value":"activator"}],"port":8012},"initialDelaySeconds":15,"periodSeconds":10},"name":"activator","ports":[{"containerPort":9090,"name":"metrics"},{"containerPort":8008,"name":"profiling"},{"containerPort":8012,"name":"http1"},{"containerPort":8013,"name":"h2c"}],"readinessProbe":{"failureThreshold":5,"httpGet":{"httpHeaders":[{"name":"k-kubelet-probe","value":"activator"}],"port":8012},"periodSeconds":5},"resources":{"limits":{"cpu":"1","memory":"600Mi"},"requests":{"cpu":"300m","memory":"60Mi"}},"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["all"]},"readOnlyRootFilesystem":true,"runAsNonRoot":true}}],"serviceAccountName":"controller","terminationGracePeriodSeconds":600}}},"status":{}}
+      manifestival: new
+    creationTimestamp: "2022-08-10T05:53:30Z"
+    generation: 2
+    labels:
+      app.kubernetes.io/component: activator
+      app.kubernetes.io/name: knative-serving
+      app.kubernetes.io/version: 1.6.0
+    name: activator
+    namespace: knative-serving
+    ownerReferences:
+    - apiVersion: operator.knative.dev/v1beta1
+      blockOwnerDeletion: true
+      controller: true
+      kind: KnativeServing
+      name: knative-serving
+      uid: e2bb7c91-b5a7-4451-be1a-4cae8217ddb0
+    resourceVersion: "1413"
+    uid: 2dd2ebe4-6d78-47bb-bca6-d50d9adaaa04
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: activator
+        role: activator
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        annotations:
+          cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
+        creationTimestamp: null
+        labels:
+          app: activator
+          app.kubernetes.io/component: activator
+          app.kubernetes.io/name: knative-serving
+          app.kubernetes.io/version: 1.6.0
+          role: activator
+      spec:
+        containers:
+        - env:
+          - name: GOGC
+            value: "500"
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.name
+          - name: POD_IP
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: status.podIP
+          - name: SYSTEM_NAMESPACE
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+          - name: CONFIG_LOGGING_NAME
+            value: config-logging
+          - name: CONFIG_OBSERVABILITY_NAME
+            value: config-observability
+          - name: METRICS_DOMAIN
+            value: knative.dev/internal/serving
+          image: gcr.io/knative-releases/knative.dev/serving/cmd/activator:v1.6.0
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 12
+            httpGet:
+              httpHeaders:
+              - name: k-kubelet-probe
+                value: activator
+              path: /
+              port: 8012
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          name: activator
+          ports:
+          - containerPort: 9090
+            name: metrics
+            protocol: TCP
+          - containerPort: 8008
+            name: profiling
+            protocol: TCP
+          - containerPort: 8012
+            name: http1
+            protocol: TCP
+          - containerPort: 8013
+            name: h2c
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 5
+            httpGet:
+              httpHeaders:
+              - name: k-kubelet-probe
+                value: activator
+              path: /
+              port: 8012
+              scheme: HTTP
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            limits:
+              cpu: "1"
+              memory: 600Mi
+            requests:
+              cpu: 300m
+              memory: 60Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - all
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        serviceAccount: controller
+        serviceAccountName: controller
+        terminationGracePeriodSeconds: 600
+  status:
+    availableReplicas: 1
+    conditions:
+    - lastTransitionTime: "2022-08-10T05:53:40Z"
+      lastUpdateTime: "2022-08-10T05:53:40Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    - lastTransitionTime: "2022-08-10T05:53:30Z"
+      lastUpdateTime: "2022-08-10T05:53:40Z"
+      message: ReplicaSet "activator-5cbfc86654" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    observedGeneration: 2
+    readyReplicas: 1
+    replicas: 1
+    updatedReplicas: 1
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "1"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"labels":{"app.kubernetes.io/component":"autoscaler","app.kubernetes.io/name":"knative-serving","app.kubernetes.io/version":"1.6.0"},"name":"autoscaler","namespace":"knative-serving","ownerReferences":[{"apiVersion":"operator.knative.dev/v1beta1","blockOwnerDeletion":true,"controller":true,"kind":"KnativeServing","name":"knative-serving","uid":"e2bb7c91-b5a7-4451-be1a-4cae8217ddb0"}]},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"autoscaler"}},"strategy":{"rollingUpdate":{"maxUnavailable":0},"type":"RollingUpdate"},"template":{"metadata":{"annotations":{"cluster-autoscaler.kubernetes.io/safe-to-evict":"false"},"creationTimestamp":null,"labels":{"app":"autoscaler","app.kubernetes.io/component":"autoscaler","app.kubernetes.io/name":"knative-serving","app.kubernetes.io/version":"1.6.0"}},"spec":{"affinity":{"podAntiAffinity":{"preferredDuringSchedulingIgnoredDuringExecution":[{"podAffinityTerm":{"labelSelector":{"matchLabels":{"app":"autoscaler"}},"topologyKey":"kubernetes.io/hostname"},"weight":100}]}},"containers":[{"env":[{"name":"POD_NAME","valueFrom":{"fieldRef":{"fieldPath":"metadata.name"}}},{"name":"POD_IP","valueFrom":{"fieldRef":{"fieldPath":"status.podIP"}}},{"name":"SYSTEM_NAMESPACE","valueFrom":{"fieldRef":{"fieldPath":"metadata.namespace"}}},{"name":"CONFIG_LOGGING_NAME","value":"config-logging"},{"name":"CONFIG_OBSERVABILITY_NAME","value":"config-observability"},{"name":"METRICS_DOMAIN","value":"knative.dev/serving"}],"image":"gcr.io/knative-releases/knative.dev/serving/cmd/autoscaler:v1.6.0","livenessProbe":{"failureThreshold":6,"httpGet":{"httpHeaders":[{"name":"k-kubelet-probe","value":"autoscaler"}],"port":8080}},"name":"autoscaler","ports":[{"containerPort":9090,"name":"metrics"},{"containerPort":8008,"name":"profiling"},{"containerPort":8080,"name":"websocket"}],"readinessProbe":{"httpGet":{"httpHeaders":[{"name":"k-kubelet-probe","value":"autoscaler"}],"port":8080}},"resources":{"limits":{"cpu":"1","memory":"1000Mi"},"requests":{"cpu":"100m","memory":"100Mi"}},"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["all"]},"readOnlyRootFilesystem":true,"runAsNonRoot":true}}],"serviceAccountName":"controller"}}},"status":{}}
+      manifestival: new
+    creationTimestamp: "2022-08-10T05:53:30Z"
+    generation: 2
+    labels:
+      app.kubernetes.io/component: autoscaler
+      app.kubernetes.io/name: knative-serving
+      app.kubernetes.io/version: 1.6.0
+    name: autoscaler
+    namespace: knative-serving
+    ownerReferences:
+    - apiVersion: operator.knative.dev/v1beta1
+      blockOwnerDeletion: true
+      controller: true
+      kind: KnativeServing
+      name: knative-serving
+      uid: e2bb7c91-b5a7-4451-be1a-4cae8217ddb0
+    resourceVersion: "1419"
+    uid: cade51aa-dfe0-48d3-b234-d81e0b23f350
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: autoscaler
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 0
+      type: RollingUpdate
+    template:
+      metadata:
+        annotations:
+          cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
+        creationTimestamp: null
+        labels:
+          app: autoscaler
+          app.kubernetes.io/component: autoscaler
+          app.kubernetes.io/name: knative-serving
+          app.kubernetes.io/version: 1.6.0
+      spec:
+        affinity:
+          podAntiAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: autoscaler
+                topologyKey: kubernetes.io/hostname
+              weight: 100
+        containers:
+        - env:
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.name
+          - name: POD_IP
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: status.podIP
+          - name: SYSTEM_NAMESPACE
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+          - name: CONFIG_LOGGING_NAME
+            value: config-logging
+          - name: CONFIG_OBSERVABILITY_NAME
+            value: config-observability
+          - name: METRICS_DOMAIN
+            value: knative.dev/serving
+          image: gcr.io/knative-releases/knative.dev/serving/cmd/autoscaler:v1.6.0
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 6
+            httpGet:
+              httpHeaders:
+              - name: k-kubelet-probe
+                value: autoscaler
+              path: /
+              port: 8080
+              scheme: HTTP
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          name: autoscaler
+          ports:
+          - containerPort: 9090
+            name: metrics
+            protocol: TCP
+          - containerPort: 8008
+            name: profiling
+            protocol: TCP
+          - containerPort: 8080
+            name: websocket
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              httpHeaders:
+              - name: k-kubelet-probe
+                value: autoscaler
+              path: /
+              port: 8080
+              scheme: HTTP
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            limits:
+              cpu: "1"
+              memory: 1000Mi
+            requests:
+              cpu: 100m
+              memory: 100Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - all
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        serviceAccount: controller
+        serviceAccountName: controller
+        terminationGracePeriodSeconds: 30
+  status:
+    availableReplicas: 1
+    conditions:
+    - lastTransitionTime: "2022-08-10T05:53:35Z"
+      lastUpdateTime: "2022-08-10T05:53:35Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    - lastTransitionTime: "2022-08-10T05:53:30Z"
+      lastUpdateTime: "2022-08-10T05:53:35Z"
+      message: ReplicaSet "autoscaler-575ffcc8b6" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    observedGeneration: 2
+    readyReplicas: 1
+    replicas: 1
+    updatedReplicas: 1
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "1"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"labels":{"app.kubernetes.io/component":"autoscaler-hpa","app.kubernetes.io/name":"knative-serving","app.kubernetes.io/version":"1.6.0","autoscaling.knative.dev/autoscaler-provider":"hpa"},"name":"autoscaler-hpa","namespace":"knative-serving","ownerReferences":[{"apiVersion":"operator.knative.dev/v1beta1","blockOwnerDeletion":true,"controller":true,"kind":"KnativeServing","name":"knative-serving","uid":"e2bb7c91-b5a7-4451-be1a-4cae8217ddb0"}]},"spec":{"selector":{"matchLabels":{"app":"autoscaler-hpa"}},"strategy":{},"template":{"metadata":{"annotations":{"cluster-autoscaler.kubernetes.io/safe-to-evict":"true"},"creationTimestamp":null,"labels":{"app":"autoscaler-hpa","app.kubernetes.io/component":"autoscaler-hpa","app.kubernetes.io/name":"knative-serving","app.kubernetes.io/version":"1.6.0"}},"spec":{"affinity":{"podAntiAffinity":{"preferredDuringSchedulingIgnoredDuringExecution":[{"podAffinityTerm":{"labelSelector":{"matchLabels":{"app":"autoscaler-hpa"}},"topologyKey":"kubernetes.io/hostname"},"weight":100}]}},"containers":[{"env":[{"name":"SYSTEM_NAMESPACE","valueFrom":{"fieldRef":{"fieldPath":"metadata.namespace"}}},{"name":"CONFIG_LOGGING_NAME","value":"config-logging"},{"name":"CONFIG_OBSERVABILITY_NAME","value":"config-observability"},{"name":"METRICS_DOMAIN","value":"knative.dev/serving"}],"image":"gcr.io/knative-releases/knative.dev/serving/cmd/autoscaler-hpa:v1.6.0","name":"autoscaler-hpa","ports":[{"containerPort":9090,"name":"metrics"},{"containerPort":8008,"name":"profiling"}],"resources":{"limits":{"cpu":"300m","memory":"400Mi"},"requests":{"cpu":"30m","memory":"40Mi"}},"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["all"]},"readOnlyRootFilesystem":true,"runAsNonRoot":true}}],"serviceAccountName":"controller"}}},"status":{}}
+      manifestival: new
+    creationTimestamp: "2022-08-10T05:53:33Z"
+    generation: 2
+    labels:
+      app.kubernetes.io/component: autoscaler-hpa
+      app.kubernetes.io/name: knative-serving
+      app.kubernetes.io/version: 1.6.0
+      autoscaling.knative.dev/autoscaler-provider: hpa
+    name: autoscaler-hpa
+    namespace: knative-serving
+    ownerReferences:
+    - apiVersion: operator.knative.dev/v1beta1
+      blockOwnerDeletion: true
+      controller: true
+      kind: KnativeServing
+      name: knative-serving
+      uid: e2bb7c91-b5a7-4451-be1a-4cae8217ddb0
+    resourceVersion: "1500"
+    uid: 0d1d07bd-c4a5-4b97-b960-7fb84dcdb3e9
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: autoscaler-hpa
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        annotations:
+          cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+        creationTimestamp: null
+        labels:
+          app: autoscaler-hpa
+          app.kubernetes.io/component: autoscaler-hpa
+          app.kubernetes.io/name: knative-serving
+          app.kubernetes.io/version: 1.6.0
+      spec:
+        affinity:
+          podAntiAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: autoscaler-hpa
+                topologyKey: kubernetes.io/hostname
+              weight: 100
+        containers:
+        - env:
+          - name: SYSTEM_NAMESPACE
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+          - name: CONFIG_LOGGING_NAME
+            value: config-logging
+          - name: CONFIG_OBSERVABILITY_NAME
+            value: config-observability
+          - name: METRICS_DOMAIN
+            value: knative.dev/serving
+          image: gcr.io/knative-releases/knative.dev/serving/cmd/autoscaler-hpa:v1.6.0
+          imagePullPolicy: IfNotPresent
+          name: autoscaler-hpa
+          ports:
+          - containerPort: 9090
+            name: metrics
+            protocol: TCP
+          - containerPort: 8008
+            name: profiling
+            protocol: TCP
+          resources:
+            limits:
+              cpu: 300m
+              memory: 400Mi
+            requests:
+              cpu: 30m
+              memory: 40Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - all
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        serviceAccount: controller
+        serviceAccountName: controller
+        terminationGracePeriodSeconds: 30
+  status:
+    availableReplicas: 1
+    conditions:
+    - lastTransitionTime: "2022-08-10T05:53:49Z"
+      lastUpdateTime: "2022-08-10T05:53:49Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    - lastTransitionTime: "2022-08-10T05:53:33Z"
+      lastUpdateTime: "2022-08-10T05:53:49Z"
+      message: ReplicaSet "autoscaler-hpa-77f844b585" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    observedGeneration: 2
+    readyReplicas: 1
+    replicas: 1
+    updatedReplicas: 1
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "1"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"labels":{"app.kubernetes.io/component":"controller","app.kubernetes.io/name":"knative-serving","app.kubernetes.io/version":"1.6.0"},"name":"controller","namespace":"knative-serving","ownerReferences":[{"apiVersion":"operator.knative.dev/v1beta1","blockOwnerDeletion":true,"controller":true,"kind":"KnativeServing","name":"knative-serving","uid":"e2bb7c91-b5a7-4451-be1a-4cae8217ddb0"}]},"spec":{"selector":{"matchLabels":{"app":"controller"}},"strategy":{},"template":{"metadata":{"annotations":{"cluster-autoscaler.kubernetes.io/safe-to-evict":"true"},"creationTimestamp":null,"labels":{"app":"controller","app.kubernetes.io/component":"controller","app.kubernetes.io/name":"knative-serving","app.kubernetes.io/version":"1.6.0"}},"spec":{"affinity":{"podAntiAffinity":{"preferredDuringSchedulingIgnoredDuringExecution":[{"podAffinityTerm":{"labelSelector":{"matchLabels":{"app":"controller"}},"topologyKey":"kubernetes.io/hostname"},"weight":100}]}},"containers":[{"env":[{"name":"POD_NAME","valueFrom":{"fieldRef":{"fieldPath":"metadata.name"}}},{"name":"SYSTEM_NAMESPACE","valueFrom":{"fieldRef":{"fieldPath":"metadata.namespace"}}},{"name":"CONFIG_LOGGING_NAME","value":"config-logging"},{"name":"CONFIG_OBSERVABILITY_NAME","value":"config-observability"},{"name":"METRICS_DOMAIN","value":"knative.dev/internal/serving"}],"image":"gcr.io/knative-releases/knative.dev/serving/cmd/controller:v1.6.0","name":"controller","ports":[{"containerPort":9090,"name":"metrics"},{"containerPort":8008,"name":"profiling"}],"resources":{"limits":{"cpu":"1","memory":"1000Mi"},"requests":{"cpu":"100m","memory":"100Mi"}},"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["all"]},"readOnlyRootFilesystem":true,"runAsNonRoot":true}}],"serviceAccountName":"controller"}}},"status":{}}
+      manifestival: new
+    creationTimestamp: "2022-08-10T05:53:30Z"
+    generation: 2
+    labels:
+      app.kubernetes.io/component: controller
+      app.kubernetes.io/name: knative-serving
+      app.kubernetes.io/version: 1.6.0
+    name: controller
+    namespace: knative-serving
+    ownerReferences:
+    - apiVersion: operator.knative.dev/v1beta1
+      blockOwnerDeletion: true
+      controller: true
+      kind: KnativeServing
+      name: knative-serving
+      uid: e2bb7c91-b5a7-4451-be1a-4cae8217ddb0
+    resourceVersion: "1433"
+    uid: 85a9812f-8215-4237-ab00-b541171f3e1b
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: controller
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        annotations:
+          cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+        creationTimestamp: null
+        labels:
+          app: controller
+          app.kubernetes.io/component: controller
+          app.kubernetes.io/name: knative-serving
+          app.kubernetes.io/version: 1.6.0
+      spec:
+        affinity:
+          podAntiAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: controller
+                topologyKey: kubernetes.io/hostname
+              weight: 100
+        containers:
+        - env:
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.name
+          - name: SYSTEM_NAMESPACE
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+          - name: CONFIG_LOGGING_NAME
+            value: config-logging
+          - name: CONFIG_OBSERVABILITY_NAME
+            value: config-observability
+          - name: METRICS_DOMAIN
+            value: knative.dev/internal/serving
+          image: gcr.io/knative-releases/knative.dev/serving/cmd/controller:v1.6.0
+          imagePullPolicy: IfNotPresent
+          name: controller
+          ports:
+          - containerPort: 9090
+            name: metrics
+            protocol: TCP
+          - containerPort: 8008
+            name: profiling
+            protocol: TCP
+          resources:
+            limits:
+              cpu: "1"
+              memory: 1000Mi
+            requests:
+              cpu: 100m
+              memory: 100Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - all
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        serviceAccount: controller
+        serviceAccountName: controller
+        terminationGracePeriodSeconds: 30
+  status:
+    availableReplicas: 1
+    conditions:
+    - lastTransitionTime: "2022-08-10T05:53:38Z"
+      lastUpdateTime: "2022-08-10T05:53:38Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    - lastTransitionTime: "2022-08-10T05:53:30Z"
+      lastUpdateTime: "2022-08-10T05:53:38Z"
+      message: ReplicaSet "controller-86fd456bf" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    observedGeneration: 2
+    readyReplicas: 1
+    replicas: 1
+    updatedReplicas: 1
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "1"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"labels":{"app.kubernetes.io/component":"domain-mapping","app.kubernetes.io/name":"knative-serving","app.kubernetes.io/version":"1.6.0"},"name":"domain-mapping","namespace":"knative-serving","ownerReferences":[{"apiVersion":"operator.knative.dev/v1beta1","blockOwnerDeletion":true,"controller":true,"kind":"KnativeServing","name":"knative-serving","uid":"e2bb7c91-b5a7-4451-be1a-4cae8217ddb0"}]},"spec":{"selector":{"matchLabels":{"app":"domain-mapping"}},"strategy":{},"template":{"metadata":{"annotations":{"cluster-autoscaler.kubernetes.io/safe-to-evict":"true"},"creationTimestamp":null,"labels":{"app":"domain-mapping","app.kubernetes.io/component":"domain-mapping","app.kubernetes.io/name":"knative-serving","app.kubernetes.io/version":"1.6.0"}},"spec":{"affinity":{"podAntiAffinity":{"preferredDuringSchedulingIgnoredDuringExecution":[{"podAffinityTerm":{"labelSelector":{"matchLabels":{"app":"domain-mapping"}},"topologyKey":"kubernetes.io/hostname"},"weight":100}]}},"containers":[{"env":[{"name":"SYSTEM_NAMESPACE","valueFrom":{"fieldRef":{"fieldPath":"metadata.namespace"}}},{"name":"CONFIG_LOGGING_NAME","value":"config-logging"},{"name":"CONFIG_OBSERVABILITY_NAME","value":"config-observability"},{"name":"METRICS_DOMAIN","value":"knative.dev/serving"}],"image":"gcr.io/knative-releases/knative.dev/serving/cmd/domain-mapping:v1.6.0","name":"domain-mapping","ports":[{"containerPort":9090,"name":"metrics"},{"containerPort":8008,"name":"profiling"}],"resources":{"limits":{"cpu":"300m","memory":"400Mi"},"requests":{"cpu":"30m","memory":"40Mi"}},"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["all"]},"readOnlyRootFilesystem":true,"runAsNonRoot":true}}],"serviceAccountName":"controller"}}},"status":{}}
+      manifestival: new
+    creationTimestamp: "2022-08-10T05:53:31Z"
+    generation: 2
+    labels:
+      app.kubernetes.io/component: domain-mapping
+      app.kubernetes.io/name: knative-serving
+      app.kubernetes.io/version: 1.6.0
+    name: domain-mapping
+    namespace: knative-serving
+    ownerReferences:
+    - apiVersion: operator.knative.dev/v1beta1
+      blockOwnerDeletion: true
+      controller: true
+      kind: KnativeServing
+      name: knative-serving
+      uid: e2bb7c91-b5a7-4451-be1a-4cae8217ddb0
+    resourceVersion: "1455"
+    uid: 3c81a4af-304b-450a-8299-7ca7ce511a62
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: domain-mapping
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        annotations:
+          cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+        creationTimestamp: null
+        labels:
+          app: domain-mapping
+          app.kubernetes.io/component: domain-mapping
+          app.kubernetes.io/name: knative-serving
+          app.kubernetes.io/version: 1.6.0
+      spec:
+        affinity:
+          podAntiAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: domain-mapping
+                topologyKey: kubernetes.io/hostname
+              weight: 100
+        containers:
+        - env:
+          - name: SYSTEM_NAMESPACE
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+          - name: CONFIG_LOGGING_NAME
+            value: config-logging
+          - name: CONFIG_OBSERVABILITY_NAME
+            value: config-observability
+          - name: METRICS_DOMAIN
+            value: knative.dev/serving
+          image: gcr.io/knative-releases/knative.dev/serving/cmd/domain-mapping:v1.6.0
+          imagePullPolicy: IfNotPresent
+          name: domain-mapping
+          ports:
+          - containerPort: 9090
+            name: metrics
+            protocol: TCP
+          - containerPort: 8008
+            name: profiling
+            protocol: TCP
+          resources:
+            limits:
+              cpu: 300m
+              memory: 400Mi
+            requests:
+              cpu: 30m
+              memory: 40Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - all
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        serviceAccount: controller
+        serviceAccountName: controller
+        terminationGracePeriodSeconds: 30
+  status:
+    availableReplicas: 1
+    conditions:
+    - lastTransitionTime: "2022-08-10T05:53:41Z"
+      lastUpdateTime: "2022-08-10T05:53:41Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    - lastTransitionTime: "2022-08-10T05:53:31Z"
+      lastUpdateTime: "2022-08-10T05:53:41Z"
+      message: ReplicaSet "domain-mapping-594c9b6787" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    observedGeneration: 2
+    readyReplicas: 1
+    replicas: 1
+    updatedReplicas: 1
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "1"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"labels":{"app.kubernetes.io/component":"domain-mapping","app.kubernetes.io/name":"knative-serving","app.kubernetes.io/version":"1.6.0"},"name":"domainmapping-webhook","namespace":"knative-serving","ownerReferences":[{"apiVersion":"operator.knative.dev/v1beta1","blockOwnerDeletion":true,"controller":true,"kind":"KnativeServing","name":"knative-serving","uid":"e2bb7c91-b5a7-4451-be1a-4cae8217ddb0"}]},"spec":{"selector":{"matchLabels":{"app":"domainmapping-webhook","role":"domainmapping-webhook"}},"strategy":{},"template":{"metadata":{"annotations":{"cluster-autoscaler.kubernetes.io/safe-to-evict":"false"},"creationTimestamp":null,"labels":{"app":"domainmapping-webhook","app.kubernetes.io/component":"domain-mapping","app.kubernetes.io/name":"knative-serving","app.kubernetes.io/version":"1.6.0","role":"domainmapping-webhook"}},"spec":{"affinity":{"podAntiAffinity":{"preferredDuringSchedulingIgnoredDuringExecution":[{"podAffinityTerm":{"labelSelector":{"matchLabels":{"app":"domainmapping-webhook"}},"topologyKey":"kubernetes.io/hostname"},"weight":100}]}},"containers":[{"env":[{"name":"POD_NAME","valueFrom":{"fieldRef":{"fieldPath":"metadata.name"}}},{"name":"SYSTEM_NAMESPACE","valueFrom":{"fieldRef":{"fieldPath":"metadata.namespace"}}},{"name":"CONFIG_LOGGING_NAME","value":"config-logging"},{"name":"CONFIG_OBSERVABILITY_NAME","value":"config-observability"},{"name":"WEBHOOK_PORT","value":"8443"},{"name":"METRICS_DOMAIN","value":"knative.dev/serving"}],"image":"gcr.io/knative-releases/knative.dev/serving/cmd/domain-mapping-webhook:v1.6.0","livenessProbe":{"failureThreshold":6,"httpGet":{"httpHeaders":[{"name":"k-kubelet-probe","value":"webhook"}],"port":8443,"scheme":"HTTPS"},"initialDelaySeconds":20,"periodSeconds":1},"name":"domainmapping-webhook","ports":[{"containerPort":9090,"name":"metrics"},{"containerPort":8008,"name":"profiling"},{"containerPort":8443,"name":"https-webhook"}],"readinessProbe":{"httpGet":{"httpHeaders":[{"name":"k-kubelet-probe","value":"webhook"}],"port":8443,"scheme":"HTTPS"},"periodSeconds":1},"resources":{"limits":{"cpu":"500m","memory":"500Mi"},"requests":{"cpu":"100m","memory":"100Mi"}},"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["all"]},"readOnlyRootFilesystem":true,"runAsNonRoot":true}}],"serviceAccountName":"controller","terminationGracePeriodSeconds":300}}},"status":{}}
+      manifestival: new
+    creationTimestamp: "2022-08-10T05:53:31Z"
+    generation: 2
+    labels:
+      app.kubernetes.io/component: domain-mapping
+      app.kubernetes.io/name: knative-serving
+      app.kubernetes.io/version: 1.6.0
+    name: domainmapping-webhook
+    namespace: knative-serving
+    ownerReferences:
+    - apiVersion: operator.knative.dev/v1beta1
+      blockOwnerDeletion: true
+      controller: true
+      kind: KnativeServing
+      name: knative-serving
+      uid: e2bb7c91-b5a7-4451-be1a-4cae8217ddb0
+    resourceVersion: "1460"
+    uid: 8a2cda35-d801-4982-9ba8-4f230fbb7424
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: domainmapping-webhook
+        role: domainmapping-webhook
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        annotations:
+          cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
+        creationTimestamp: null
+        labels:
+          app: domainmapping-webhook
+          app.kubernetes.io/component: domain-mapping
+          app.kubernetes.io/name: knative-serving
+          app.kubernetes.io/version: 1.6.0
+          role: domainmapping-webhook
+      spec:
+        affinity:
+          podAntiAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: domainmapping-webhook
+                topologyKey: kubernetes.io/hostname
+              weight: 100
+        containers:
+        - env:
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.name
+          - name: SYSTEM_NAMESPACE
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+          - name: CONFIG_LOGGING_NAME
+            value: config-logging
+          - name: CONFIG_OBSERVABILITY_NAME
+            value: config-observability
+          - name: WEBHOOK_PORT
+            value: "8443"
+          - name: METRICS_DOMAIN
+            value: knative.dev/serving
+          image: gcr.io/knative-releases/knative.dev/serving/cmd/domain-mapping-webhook:v1.6.0
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 6
+            httpGet:
+              httpHeaders:
+              - name: k-kubelet-probe
+                value: webhook
+              path: /
+              port: 8443
+              scheme: HTTPS
+            initialDelaySeconds: 20
+            periodSeconds: 1
+            successThreshold: 1
+            timeoutSeconds: 1
+          name: domainmapping-webhook
+          ports:
+          - containerPort: 9090
+            name: metrics
+            protocol: TCP
+          - containerPort: 8008
+            name: profiling
+            protocol: TCP
+          - containerPort: 8443
+            name: https-webhook
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              httpHeaders:
+              - name: k-kubelet-probe
+                value: webhook
+              path: /
+              port: 8443
+              scheme: HTTPS
+            periodSeconds: 1
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            limits:
+              cpu: 500m
+              memory: 500Mi
+            requests:
+              cpu: 100m
+              memory: 100Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - all
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        serviceAccount: controller
+        serviceAccountName: controller
+        terminationGracePeriodSeconds: 300
+  status:
+    availableReplicas: 1
+    conditions:
+    - lastTransitionTime: "2022-08-10T05:53:43Z"
+      lastUpdateTime: "2022-08-10T05:53:43Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    - lastTransitionTime: "2022-08-10T05:53:31Z"
+      lastUpdateTime: "2022-08-10T05:53:43Z"
+      message: ReplicaSet "domainmapping-webhook-6bd9b5f874" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    observedGeneration: 2
+    readyReplicas: 1
+    replicas: 1
+    updatedReplicas: 1
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "1"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"labels":{"app.kubernetes.io/name":"knative-operator","app.kubernetes.io/part-of":"knative-operator","app.kubernetes.io/version":"1.6.0","operator.knative.dev/release":"v1.6.0"},"name":"knative-operator","namespace":"knative-serving"},"spec":{"replicas":1,"selector":{"matchLabels":{"name":"knative-operator"}},"template":{"metadata":{"annotations":{"sidecar.istio.io/inject":"false"},"labels":{"app.kubernetes.io/name":"knative-operator","app.kubernetes.io/part-of":"knative-operator","app.kubernetes.io/version":"1.6.0","name":"knative-operator"}},"spec":{"containers":[{"env":[{"name":"POD_NAME","valueFrom":{"fieldRef":{"fieldPath":"metadata.name"}}},{"name":"SYSTEM_NAMESPACE","valueFrom":{"fieldRef":{"fieldPath":"metadata.namespace"}}},{"name":"METRICS_DOMAIN","value":"knative.dev/operator"},{"name":"CONFIG_LOGGING_NAME","value":"config-logging"},{"name":"CONFIG_OBSERVABILITY_NAME","value":"config-observability"}],"image":"gcr.io/knative-releases/knative.dev/operator/cmd/operator:v1.6.0","imagePullPolicy":"IfNotPresent","name":"knative-operator","ports":[{"containerPort":9090,"name":"metrics"}]}],"serviceAccountName":"knative-operator"}}}}
+    creationTimestamp: "2022-08-10T05:49:30Z"
+    generation: 1
+    labels:
+      app.kubernetes.io/name: knative-operator
+      app.kubernetes.io/part-of: knative-operator
+      app.kubernetes.io/version: 1.6.0
+      operator.knative.dev/release: v1.6.0
+    name: knative-operator
+    namespace: knative-serving
+    resourceVersion: "627"
+    uid: b9e7a68b-7951-45a1-aded-85b9b094bce8
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        name: knative-operator
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        annotations:
+          sidecar.istio.io/inject: "false"
+        creationTimestamp: null
+        labels:
+          app.kubernetes.io/name: knative-operator
+          app.kubernetes.io/part-of: knative-operator
+          app.kubernetes.io/version: 1.6.0
+          name: knative-operator
+      spec:
+        containers:
+        - env:
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.name
+          - name: SYSTEM_NAMESPACE
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+          - name: METRICS_DOMAIN
+            value: knative.dev/operator
+          - name: CONFIG_LOGGING_NAME
+            value: config-logging
+          - name: CONFIG_OBSERVABILITY_NAME
+            value: config-observability
+          image: gcr.io/knative-releases/knative.dev/operator/cmd/operator:v1.6.0
+          imagePullPolicy: IfNotPresent
+          name: knative-operator
+          ports:
+          - containerPort: 9090
+            name: metrics
+            protocol: TCP
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        serviceAccount: knative-operator
+        serviceAccountName: knative-operator
+        terminationGracePeriodSeconds: 30
+  status:
+    availableReplicas: 1
+    conditions:
+    - lastTransitionTime: "2022-08-10T05:49:34Z"
+      lastUpdateTime: "2022-08-10T05:49:34Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    - lastTransitionTime: "2022-08-10T05:49:30Z"
+      lastUpdateTime: "2022-08-10T05:49:34Z"
+      message: ReplicaSet "knative-operator-79bf74d66d" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    observedGeneration: 1
+    readyReplicas: 1
+    replicas: 1
+    updatedReplicas: 1
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "1"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"creationTimestamp":null,"labels":{"app.kubernetes.io/component":"net-kourier","app.kubernetes.io/name":"knative-serving","app.kubernetes.io/version":"1.6.0","networking.knative.dev/ingress-provider":"kourier"},"name":"net-kourier-controller","namespace":"knative-serving","ownerReferences":[{"apiVersion":"operator.knative.dev/v1beta1","blockOwnerDeletion":true,"controller":true,"kind":"KnativeServing","name":"knative-serving","uid":"e2bb7c91-b5a7-4451-be1a-4cae8217ddb0"}]},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"net-kourier-controller"}},"strategy":{},"template":{"metadata":{"creationTimestamp":null,"labels":{"app":"net-kourier-controller"}},"spec":{"containers":[{"env":[{"name":"CERTS_SECRET_NAMESPACE"},{"name":"CERTS_SECRET_NAME"},{"name":"SYSTEM_NAMESPACE","valueFrom":{"fieldRef":{"fieldPath":"metadata.namespace"}}},{"name":"METRICS_DOMAIN","value":"knative.dev/samples"},{"name":"KOURIER_GATEWAY_NAMESPACE","value":"knative-serving"},{"name":"ENABLE_SECRET_INFORMER_FILTERING_BY_CERT_UID","value":"false"}],"image":"gcr.io/knative-releases/knative.dev/net-kourier/cmd/kourier:v1.6.0","name":"controller","ports":[{"containerPort":18000,"name":"http2-xds","protocol":"TCP"}],"readinessProbe":{"exec":{"command":["/ko-app/kourier","-probe-addr=:18000"]}},"resources":{},"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["all"]},"readOnlyRootFilesystem":true,"runAsNonRoot":true}}],"restartPolicy":"Always","serviceAccountName":"net-kourier"}}},"status":{}}
+      manifestival: new
+    creationTimestamp: "2022-08-10T05:53:34Z"
+    generation: 2
+    labels:
+      app.kubernetes.io/component: net-kourier
+      app.kubernetes.io/name: knative-serving
+      app.kubernetes.io/version: 1.6.0
+      networking.knative.dev/ingress-provider: kourier
+    name: net-kourier-controller
+    namespace: knative-serving
+    ownerReferences:
+    - apiVersion: operator.knative.dev/v1beta1
+      blockOwnerDeletion: true
+      controller: true
+      kind: KnativeServing
+      name: knative-serving
+      uid: e2bb7c91-b5a7-4451-be1a-4cae8217ddb0
+    resourceVersion: "1549"
+    uid: d1b049b4-cc03-436a-84fd-f0fe69199175
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: net-kourier-controller
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app: net-kourier-controller
+      spec:
+        containers:
+        - env:
+          - name: CERTS_SECRET_NAMESPACE
+          - name: CERTS_SECRET_NAME
+          - name: SYSTEM_NAMESPACE
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+          - name: METRICS_DOMAIN
+            value: knative.dev/samples
+          - name: KOURIER_GATEWAY_NAMESPACE
+            value: knative-serving
+          - name: ENABLE_SECRET_INFORMER_FILTERING_BY_CERT_UID
+            value: "false"
+          image: gcr.io/knative-releases/knative.dev/net-kourier/cmd/kourier:v1.6.0
+          imagePullPolicy: IfNotPresent
+          name: controller
+          ports:
+          - containerPort: 18000
+            name: http2-xds
+            protocol: TCP
+          readinessProbe:
+            exec:
+              command:
+              - /ko-app/kourier
+              - -probe-addr=:18000
+            failureThreshold: 3
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - all
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        serviceAccount: net-kourier
+        serviceAccountName: net-kourier
+        terminationGracePeriodSeconds: 30
+  status:
+    availableReplicas: 1
+    conditions:
+    - lastTransitionTime: "2022-08-10T05:53:54Z"
+      lastUpdateTime: "2022-08-10T05:53:54Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    - lastTransitionTime: "2022-08-10T05:53:34Z"
+      lastUpdateTime: "2022-08-10T05:53:54Z"
+      message: ReplicaSet "net-kourier-controller-64cb75974d" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    observedGeneration: 2
+    readyReplicas: 1
+    replicas: 1
+    updatedReplicas: 1
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "1"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"labels":{"app.kubernetes.io/component":"operator-webhook","app.kubernetes.io/name":"knative-operator","app.kubernetes.io/version":"1.6.0","operator.knative.dev/release":"v1.6.0"},"name":"operator-webhook","namespace":"knative-serving"},"spec":{"replicas":0,"selector":{"matchLabels":{"app":"operator-webhook","role":"operator-webhook"}},"template":{"metadata":{"annotations":{"cluster-autoscaler.kubernetes.io/safe-to-evict":"false","sidecar.istio.io/inject":"false"},"labels":{"app":"operator-webhook","app.kubernetes.io/component":"operator-webhook","app.kubernetes.io/name":"knative-operator","app.kubernetes.io/version":"1.6.0","operator.knative.dev/release":"v1.6.0","role":"operator-webhook"}},"spec":{"affinity":{"podAntiAffinity":{"preferredDuringSchedulingIgnoredDuringExecution":[{"podAffinityTerm":{"labelSelector":{"matchLabels":{"app":"webhook"}},"topologyKey":"kubernetes.io/hostname"},"weight":100}]}},"containers":[{"env":[{"name":"POD_NAME","valueFrom":{"fieldRef":{"fieldPath":"metadata.name"}}},{"name":"SYSTEM_NAMESPACE","valueFrom":{"fieldRef":{"fieldPath":"metadata.namespace"}}},{"name":"CONFIG_LOGGING_NAME","value":"config-logging"},{"name":"CONFIG_OBSERVABILITY_NAME","value":"config-observability"},{"name":"WEBHOOK_NAME","value":"operator-webhook"},{"name":"WEBHOOK_PORT","value":"8443"},{"name":"METRICS_DOMAIN","value":"knative.dev/operator"}],"image":"gcr.io/knative-releases/knative.dev/operator/cmd/webhook:v1.6.0","imagePullPolicy":"IfNotPresent","livenessProbe":{"failureThreshold":6,"httpGet":{"httpHeaders":[{"name":"k-kubelet-probe","value":"webhook"}],"port":8443,"scheme":"HTTPS"},"initialDelaySeconds":120,"periodSeconds":1},"name":"operator-webhook","ports":[{"containerPort":9090,"name":"metrics"},{"containerPort":8008,"name":"profiling"},{"containerPort":8443,"name":"https-webhook"}],"readinessProbe":{"httpGet":{"httpHeaders":[{"name":"k-kubelet-probe","value":"webhook"}],"port":8443,"scheme":"HTTPS"},"periodSeconds":1},"resources":{"limits":{"cpu":"500m","memory":"500Mi"},"requests":{"cpu":"100m","memory":"100Mi"}},"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["all"]},"readOnlyRootFilesystem":true,"runAsNonRoot":true}}],"serviceAccountName":"operator-webhook","terminationGracePeriodSeconds":300}}}}
+    creationTimestamp: "2022-08-10T05:49:30Z"
+    generation: 1
+    labels:
+      app.kubernetes.io/component: operator-webhook
+      app.kubernetes.io/name: knative-operator
+      app.kubernetes.io/version: 1.6.0
+      operator.knative.dev/release: v1.6.0
+    name: operator-webhook
+    namespace: knative-serving
+    resourceVersion: "599"
+    uid: 0d2b2789-0751-4b9f-85c1-a51dbb3f858a
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 0
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: operator-webhook
+        role: operator-webhook
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        annotations:
+          cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
+          sidecar.istio.io/inject: "false"
+        creationTimestamp: null
+        labels:
+          app: operator-webhook
+          app.kubernetes.io/component: operator-webhook
+          app.kubernetes.io/name: knative-operator
+          app.kubernetes.io/version: 1.6.0
+          operator.knative.dev/release: v1.6.0
+          role: operator-webhook
+      spec:
+        affinity:
+          podAntiAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: webhook
+                topologyKey: kubernetes.io/hostname
+              weight: 100
+        containers:
+        - env:
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.name
+          - name: SYSTEM_NAMESPACE
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+          - name: CONFIG_LOGGING_NAME
+            value: config-logging
+          - name: CONFIG_OBSERVABILITY_NAME
+            value: config-observability
+          - name: WEBHOOK_NAME
+            value: operator-webhook
+          - name: WEBHOOK_PORT
+            value: "8443"
+          - name: METRICS_DOMAIN
+            value: knative.dev/operator
+          image: gcr.io/knative-releases/knative.dev/operator/cmd/webhook:v1.6.0
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 6
+            httpGet:
+              httpHeaders:
+              - name: k-kubelet-probe
+                value: webhook
+              path: /
+              port: 8443
+              scheme: HTTPS
+            initialDelaySeconds: 120
+            periodSeconds: 1
+            successThreshold: 1
+            timeoutSeconds: 1
+          name: operator-webhook
+          ports:
+          - containerPort: 9090
+            name: metrics
+            protocol: TCP
+          - containerPort: 8008
+            name: profiling
+            protocol: TCP
+          - containerPort: 8443
+            name: https-webhook
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              httpHeaders:
+              - name: k-kubelet-probe
+                value: webhook
+              path: /
+              port: 8443
+              scheme: HTTPS
+            periodSeconds: 1
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            limits:
+              cpu: 500m
+              memory: 500Mi
+            requests:
+              cpu: 100m
+              memory: 100Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - all
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        serviceAccount: operator-webhook
+        serviceAccountName: operator-webhook
+        terminationGracePeriodSeconds: 300
+  status:
+    conditions:
+    - lastTransitionTime: "2022-08-10T05:49:30Z"
+      lastUpdateTime: "2022-08-10T05:49:30Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    - lastTransitionTime: "2022-08-10T05:49:30Z"
+      lastUpdateTime: "2022-08-10T05:49:30Z"
+      message: ReplicaSet "operator-webhook-77f658b885" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    observedGeneration: 1
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "1"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"labels":{"app.kubernetes.io/component":"webhook","app.kubernetes.io/name":"knative-serving","app.kubernetes.io/version":"1.6.0"},"name":"webhook","namespace":"knative-serving","ownerReferences":[{"apiVersion":"operator.knative.dev/v1beta1","blockOwnerDeletion":true,"controller":true,"kind":"KnativeServing","name":"knative-serving","uid":"e2bb7c91-b5a7-4451-be1a-4cae8217ddb0"}]},"spec":{"selector":{"matchLabels":{"app":"webhook","role":"webhook"}},"strategy":{},"template":{"metadata":{"annotations":{"cluster-autoscaler.kubernetes.io/safe-to-evict":"false"},"creationTimestamp":null,"labels":{"app":"webhook","app.kubernetes.io/name":"knative-serving","app.kubernetes.io/version":"1.6.0","role":"webhook"}},"spec":{"affinity":{"podAntiAffinity":{"preferredDuringSchedulingIgnoredDuringExecution":[{"podAffinityTerm":{"labelSelector":{"matchLabels":{"app":"webhook"}},"topologyKey":"kubernetes.io/hostname"},"weight":100}]}},"containers":[{"env":[{"name":"POD_NAME","valueFrom":{"fieldRef":{"fieldPath":"metadata.name"}}},{"name":"SYSTEM_NAMESPACE","valueFrom":{"fieldRef":{"fieldPath":"metadata.namespace"}}},{"name":"CONFIG_LOGGING_NAME","value":"config-logging"},{"name":"CONFIG_OBSERVABILITY_NAME","value":"config-observability"},{"name":"WEBHOOK_NAME","value":"webhook"},{"name":"WEBHOOK_PORT","value":"8443"},{"name":"METRICS_DOMAIN","value":"knative.dev/internal/serving"}],"image":"gcr.io/knative-releases/knative.dev/serving/cmd/webhook:v1.6.0","livenessProbe":{"failureThreshold":6,"httpGet":{"httpHeaders":[{"name":"k-kubelet-probe","value":"webhook"}],"port":8443,"scheme":"HTTPS"},"initialDelaySeconds":20,"periodSeconds":1},"name":"webhook","ports":[{"containerPort":9090,"name":"metrics"},{"containerPort":8008,"name":"profiling"},{"containerPort":8443,"name":"https-webhook"}],"readinessProbe":{"httpGet":{"httpHeaders":[{"name":"k-kubelet-probe","value":"webhook"}],"port":8443,"scheme":"HTTPS"},"periodSeconds":1},"resources":{"limits":{"cpu":"500m","memory":"500Mi"},"requests":{"cpu":"100m","memory":"100Mi"}},"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["all"]},"readOnlyRootFilesystem":true,"runAsNonRoot":true}}],"serviceAccountName":"controller","terminationGracePeriodSeconds":300}}},"status":{}}
+      manifestival: new
+    creationTimestamp: "2022-08-10T05:53:32Z"
+    generation: 2
+    labels:
+      app.kubernetes.io/component: webhook
+      app.kubernetes.io/name: knative-serving
+      app.kubernetes.io/version: 1.6.0
+    name: webhook
+    namespace: knative-serving
+    ownerReferences:
+    - apiVersion: operator.knative.dev/v1beta1
+      blockOwnerDeletion: true
+      controller: true
+      kind: KnativeServing
+      name: knative-serving
+      uid: e2bb7c91-b5a7-4451-be1a-4cae8217ddb0
+    resourceVersion: "1467"
+    uid: ec705371-832a-4bcd-91e5-79f78cfa745b
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: webhook
+        role: webhook
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        annotations:
+          cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
+        creationTimestamp: null
+        labels:
+          app: webhook
+          app.kubernetes.io/name: knative-serving
+          app.kubernetes.io/version: 1.6.0
+          role: webhook
+      spec:
+        affinity:
+          podAntiAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: webhook
+                topologyKey: kubernetes.io/hostname
+              weight: 100
+        containers:
+        - env:
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.name
+          - name: SYSTEM_NAMESPACE
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+          - name: CONFIG_LOGGING_NAME
+            value: config-logging
+          - name: CONFIG_OBSERVABILITY_NAME
+            value: config-observability
+          - name: WEBHOOK_NAME
+            value: webhook
+          - name: WEBHOOK_PORT
+            value: "8443"
+          - name: METRICS_DOMAIN
+            value: knative.dev/internal/serving
+          image: gcr.io/knative-releases/knative.dev/serving/cmd/webhook:v1.6.0
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 6
+            httpGet:
+              httpHeaders:
+              - name: k-kubelet-probe
+                value: webhook
+              path: /
+              port: 8443
+              scheme: HTTPS
+            initialDelaySeconds: 20
+            periodSeconds: 1
+            successThreshold: 1
+            timeoutSeconds: 1
+          name: webhook
+          ports:
+          - containerPort: 9090
+            name: metrics
+            protocol: TCP
+          - containerPort: 8008
+            name: profiling
+            protocol: TCP
+          - containerPort: 8443
+            name: https-webhook
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              httpHeaders:
+              - name: k-kubelet-probe
+                value: webhook
+              path: /
+              port: 8443
+              scheme: HTTPS
+            periodSeconds: 1
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            limits:
+              cpu: 500m
+              memory: 500Mi
+            requests:
+              cpu: 100m
+              memory: 100Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - all
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        serviceAccount: controller
+        serviceAccountName: controller
+        terminationGracePeriodSeconds: 300
+  status:
+    availableReplicas: 1
+    conditions:
+    - lastTransitionTime: "2022-08-10T05:53:46Z"
+      lastUpdateTime: "2022-08-10T05:53:46Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    - lastTransitionTime: "2022-08-10T05:53:32Z"
+      lastUpdateTime: "2022-08-10T05:53:46Z"
+      message: ReplicaSet "webhook-669dbd554c" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    observedGeneration: 2
+    readyReplicas: 1
+    replicas: 1
+    updatedReplicas: 1
+kind: List
+metadata:
+  resourceVersion: ""

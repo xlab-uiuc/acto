@@ -1,0 +1,89 @@
+apiVersion: v1
+items:
+- apiVersion: policy/v1
+  kind: PodDisruptionBudget
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"policy/v1","kind":"PodDisruptionBudget","metadata":{"labels":{"app.kubernetes.io/component":"activator","app.kubernetes.io/name":"knative-serving","app.kubernetes.io/version":"1.6.0"},"name":"activator-pdb","namespace":"knative-serving","ownerReferences":[{"apiVersion":"operator.knative.dev/v1beta1","blockOwnerDeletion":true,"controller":true,"kind":"KnativeServing","name":"knative-serving","uid":"e2bb7c91-b5a7-4451-be1a-4cae8217ddb0"}]},"spec":{"minAvailable":"80%","selector":{"matchLabels":{"app":"activator"}}}}
+      manifestival: new
+    creationTimestamp: "2022-08-10T05:53:29Z"
+    generation: 1
+    labels:
+      app.kubernetes.io/component: activator
+      app.kubernetes.io/name: knative-serving
+      app.kubernetes.io/version: 1.6.0
+    name: activator-pdb
+    namespace: knative-serving
+    ownerReferences:
+    - apiVersion: operator.knative.dev/v1beta1
+      blockOwnerDeletion: true
+      controller: true
+      kind: KnativeServing
+      name: knative-serving
+      uid: e2bb7c91-b5a7-4451-be1a-4cae8217ddb0
+    resourceVersion: "1409"
+    uid: 87adb468-21e0-4b61-8c1f-13feb12ff03c
+  spec:
+    minAvailable: 80%
+    selector:
+      matchLabels:
+        app: activator
+  status:
+    conditions:
+    - lastTransitionTime: "2022-08-10T05:53:40Z"
+      message: ""
+      observedGeneration: 1
+      reason: InsufficientPods
+      status: "False"
+      type: DisruptionAllowed
+    currentHealthy: 1
+    desiredHealthy: 1
+    disruptionsAllowed: 0
+    expectedPods: 1
+    observedGeneration: 1
+- apiVersion: policy/v1
+  kind: PodDisruptionBudget
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"policy/v1","kind":"PodDisruptionBudget","metadata":{"labels":{"app.kubernetes.io/component":"webhook","app.kubernetes.io/name":"knative-serving","app.kubernetes.io/version":"1.6.0"},"name":"webhook-pdb","namespace":"knative-serving","ownerReferences":[{"apiVersion":"operator.knative.dev/v1beta1","blockOwnerDeletion":true,"controller":true,"kind":"KnativeServing","name":"knative-serving","uid":"e2bb7c91-b5a7-4451-be1a-4cae8217ddb0"}]},"spec":{"minAvailable":"80%","selector":{"matchLabels":{"app":"webhook"}}}}
+      manifestival: new
+    creationTimestamp: "2022-08-10T05:53:32Z"
+    generation: 1
+    labels:
+      app.kubernetes.io/component: webhook
+      app.kubernetes.io/name: knative-serving
+      app.kubernetes.io/version: 1.6.0
+    name: webhook-pdb
+    namespace: knative-serving
+    ownerReferences:
+    - apiVersion: operator.knative.dev/v1beta1
+      blockOwnerDeletion: true
+      controller: true
+      kind: KnativeServing
+      name: knative-serving
+      uid: e2bb7c91-b5a7-4451-be1a-4cae8217ddb0
+    resourceVersion: "1464"
+    uid: 00eb6fc2-f922-4564-866c-1cec9a37a3b1
+  spec:
+    minAvailable: 80%
+    selector:
+      matchLabels:
+        app: webhook
+  status:
+    conditions:
+    - lastTransitionTime: "2022-08-10T05:53:46Z"
+      message: ""
+      observedGeneration: 1
+      reason: InsufficientPods
+      status: "False"
+      type: DisruptionAllowed
+    currentHealthy: 1
+    desiredHealthy: 1
+    disruptionsAllowed: 0
+    expectedPods: 1
+    observedGeneration: 1
+kind: List
+metadata:
+  resourceVersion: ""
