@@ -1,5 +1,3 @@
-from tkinter.messagebox import NO
-from webbrowser import get
 import yaml
 
 
@@ -38,7 +36,8 @@ def get_env(manifest: dict):
 
 def get_replicas(manifest: dict):
     if 'replicas' in manifest['spec']:
-        return manifest['spec']['replicas']
+        if manifest['spec']['replicas'] > 0:
+            return manifest['spec']['replicas']
 
     return None
 

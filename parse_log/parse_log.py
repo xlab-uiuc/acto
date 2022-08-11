@@ -3,7 +3,8 @@ import re
 
 klog_regex = r'^\s*'
 klog_regex += r'(\w)'  # group 1: level
-klog_regex += r'(\d{2})(\d{2})\s(\d{2}):(\d{2}):(\d{2})\.(\d{6})' # group 2-7: timestamp
+# group 2-7: timestamp
+klog_regex += r'(\d{2})(\d{2})\s(\d{2}):(\d{2}):(\d{2})\.(\d{6})'
 klog_regex += r'\s+'
 klog_regex += r'(\d+)'  # group 8
 klog_regex += r'\s'
@@ -14,7 +15,8 @@ klog_regex += r'(.*?)'  # group 11: message
 klog_regex += r'\s*$'
 
 logr_regex = r'^\s*'
-logr_regex += r'(\d{4}\-\d{2}\-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)'  # group 1: timestamp
+# group 1: timestamp
+logr_regex += r'(\d{4}\-\d{2}\-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)'
 logr_regex += r'\s+([A-Z]+)'  # group 2: level
 logr_regex += r'\s+(\S+)'  # group 3: source
 logr_regex += r'\s+(.*?)'  # group 4: message
@@ -31,7 +33,8 @@ logr_special_regex += r'\s*$'
 # time="2022-08-08T03:21:28Z" level=debug msg="Sentinel is not monitoring the correct master, changing..." src="checker.go:175"
 # time="2022-08-08T03:21:56Z" level=info msg="deployment updated" deployment=rfs-test-cluster namespace=acto-namespace service=k8s.deployment src="deployment.go:102"
 logrus_regex = r'^\s*'
-logrus_regex += r'time="(\d{4}\-\d{2}\-\d{2}T\d{2}:\d{2}:\d{2}Z)"'  # group 1: timestamp
+# group 1: timestamp
+logrus_regex += r'time="(\d{4}\-\d{2}\-\d{2}T\d{2}:\d{2}:\d{2}Z)"'
 logrus_regex += r'\s+level=([a-z]+)'  # group 2: level
 logrus_regex += r'\s+msg="(.*?[^\\])"'  # group 3: message
 logrus_regex += r'.*'
@@ -47,7 +50,7 @@ def parse_log(line: str) -> dict:
     - klog
     - logr
     - json
-    
+
     Returns:
         a dict containing 'level' and 'message'
     '''
@@ -63,7 +66,7 @@ def parse_log(line: str) -> dict:
             log_line['level'] = 'warn'
         elif match.group(1) == 'F':
             log_line['level'] = 'fatal'
-        
+
         log_line['msg'] = match.group(11)
     elif re.search(logr_regex, line) != None:
         # log is in logr format
@@ -83,10 +86,15 @@ def parse_log(line: str) -> dict:
     else:
         try:
             log_line = json.loads(line)
+            if 'level' not in log_line:
+                log_line['level'] = log_line['severity']
+
+                del log_line['severity']
         except Exception as e:
-            print(e)
+            print(f"Cannot parse line {line}")
+
             pass
-    
+
     return log_line
 
 
@@ -94,18 +102,17 @@ if __name__ == '__main__':
     # line = '  	Ports: []v1.ServicePort{'
     # line = 'E0714 23:11:19.386396       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover'
     # line = '{"level":"error","ts":1655678404.9488907,"logger":"controller-runtime.injectors-warning","msg":"Injectors are deprecated, and will be removed in v0.10.x"}'
-    
-    line = 'time="2022-08-08T03:21:56Z" level=info msg="deployment updated" deployment=rfs-test-cluster namespace=acto-namespace service=k8s.deployment src="deployment.go:102"'
-    print(logrus_regex)
-    print(parse_log(line)['msg'])
 
-    with open ('testrun-2022-08-07-21-51-redis-operator/trial-06-0002/operator-7.log', 'r') as f:
+    # line = 'time="2022-08-08T03:21:56Z" level=info msg="deployment updated" deployment=rfs-test-cluster namespace=acto-namespace service=k8s.deployment src="deployment.go:102"'
+    # print(logrus_regex)
+    # print(parse_log(line)['msg'])
+
+    with open('testrun-2022-08-10-15-59/trial-01-0000/operator-0.log', 'r') as f:
         for line in f.readlines():
-            if parse_log(line) == {} or parse_log(line)['level'] != 'error' and parse_log(line)['level'] != 'fatal':
-                print('Test passed')
-                print(parse_log(line))
+            print(f"Parsing log: {line}")
+
+            if parse_log(line) == {} or parse_log(line)['level'].lower() != 'error' and parse_log(line)['level'].lower() != 'fatal':
+                print(f'Test passed: {line} {parse_log(line)}')
             else:
-                print("level:", parse_log(line)['level'])
-                print("msg:", parse_log(line)['msg'])
-                if 'error' in parse_log(line):
-                    print('error:', parse_log(line)['error'])
+                print(f"Message Raw: {line}, Parsed {parse_log(line)}")
+                break

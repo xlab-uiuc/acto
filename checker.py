@@ -62,7 +62,8 @@ class Checker(object):
         if stderr.find('connection refused') != -1:
             return ConnectionRefusedResult()
 
-        is_invalid, reponsible_field_path = invalid_input_message(stderr, input_delta)
+        is_invalid, reponsible_field_path = invalid_input_message(
+            stderr, input_delta)
         if is_invalid:
             logging.info('Invalid input, reject mutation')
             logging.info('STDOUT: ' + stdout)
@@ -111,7 +112,8 @@ class Checker(object):
                     continue
 
                 # Find the longest matching field, compare the delta change
-                match_deltas = self._list_matched_fields(delta.path, system_delta_without_cr)
+                match_deltas = self._list_matched_fields(
+                    delta.path, system_delta_without_cr)
 
                 # TODO: should the delta match be inclusive?
                 for match_delta in match_deltas:
@@ -119,8 +121,10 @@ class Checker(object):
                                   (delta.path, match_delta.path))
                     if not self.compare_method.compare(delta.prev, delta.curr, match_delta.prev,
                                                        match_delta.curr):
-                        logging.error('Matched delta inconsistent with input delta')
-                        logging.error('Input delta: %s -> %s' % (delta.prev, delta.curr))
+                        logging.error(
+                            'Matched delta inconsistent with input delta')
+                        logging.error('Input delta: %s -> %s' %
+                                      (delta.prev, delta.curr))
                         logging.error('Matched delta: %s -> %s' %
                                       (match_delta.prev, match_delta.curr))
                         return ErrorResult(Oracle.SYSTEM_STATE,
@@ -146,10 +150,10 @@ class Checker(object):
 
     def should_skip_input_delta(self, input_delta: Diff, snapshot: Snapshot) -> bool:
         '''Determines if the input delta should be skipped or not
-        
+
         Args:
             input_delta
-            
+
         Returns:
             if the arg input_delta should be skipped in oracle
         '''
@@ -200,7 +204,7 @@ class Checker(object):
 
     def check_operator_log(self, snapshot: Snapshot, prev_snapshot: Snapshot) -> RunResult:
         '''Check the operator log for error msg
-        
+
         Args:
             result - includes the path to delta log files
 
@@ -214,14 +218,15 @@ class Checker(object):
             # We do not check the log line if it is not an error/fatal message
 
             parsed_log = parse_log(line)
-            if parsed_log == {} or parsed_log['level'] != 'error' and parsed_log['level'] != 'fatal':
+            if parsed_log == {} or parsed_log['level'].lower() != 'error' and parsed_log['level'].lower() != 'fatal':
                 continue
 
             # List all the values in parsed_log
             for value in list(parsed_log.values()):
                 if type(value) != str or value == '':
                     continue
-                is_invalid, reponsible_field_path = invalid_input_message(value, input_delta)
+                is_invalid, reponsible_field_path = invalid_input_message(
+                    value, input_delta)
                 if is_invalid:
                     return InvalidInputResult(reponsible_field_path)
 
@@ -258,7 +263,7 @@ class Checker(object):
 
     def _list_matched_fields(self, path: list, delta_dict: dict) -> list:
         '''Search through the entire system delta to find longest matching field
-        
+
         Args:
             path: path of input delta as list
             delta_dict: dict of system delta
@@ -332,8 +337,7 @@ if __name__ == "__main__":
         filename=os.path.join('.', 'test.log'),
         level=logging.DEBUG,
         filemode='w',
-        format=
-        '%(asctime)s %(threadName)-11s %(levelname)-7s, %(name)s, %(filename)-9s:%(lineno)d, %(message)s'
+        format='%(asctime)s %(threadName)-11s %(levelname)-7s, %(name)s, %(filename)-9s:%(lineno)d, %(message)s'
     )
 
     def handle_excepthook(type, message, stack):
@@ -379,25 +383,28 @@ if __name__ == "__main__":
         for generation in range(0, 20):
             mutated_filename = '%s/mutated-%d.yaml' % (trial_dir, generation)
             operator_log_path = "%s/operator-%d.log" % (trial_dir, generation)
-            system_state_path = "%s/system-state-%03d.json" % (trial_dir, generation)
+            system_state_path = "%s/system-state-%03d.json" % (
+                trial_dir, generation)
             events_log_path = "%s/events.log" % (trial_dir)
             cli_output_path = "%s/cli-output-%d.log" % (trial_dir, generation)
-            field_val_dict_path = "%s/field-val-dict-%d.json" % (trial_dir, generation)
+            field_val_dict_path = "%s/field-val-dict-%d.json" % (
+                trial_dir, generation)
 
             if not os.path.exists(operator_log_path):
                 break
 
             with open(mutated_filename, 'r') as input_file, \
-                open(operator_log_path, 'r') as operator_log, \
-                open(system_state_path, 'r') as system_state, \
-                open(events_log_path, 'r') as events_log, \
-                open(cli_output_path, 'r') as cli_output:
+                    open(operator_log_path, 'r') as operator_log, \
+                    open(system_state_path, 'r') as system_state, \
+                    open(events_log_path, 'r') as events_log, \
+                    open(cli_output_path, 'r') as cli_output:
                 input = yaml.load(input_file, Loader=yaml.FullLoader)
                 cli_result = json.load(cli_output)
                 logging.info(cli_result)
                 system_state = json.load(system_state)
                 operator_log = operator_log.read().splitlines()
-                snapshot = Snapshot(input, cli_result, system_state, operator_log)
+                snapshot = Snapshot(input, cli_result,
+                                    system_state, operator_log)
 
                 result = checker.check(snapshot=snapshot,
                                        prev_snapshot=snapshots[-1],

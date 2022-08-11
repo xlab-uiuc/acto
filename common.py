@@ -15,7 +15,6 @@ import operator
 
 from constant import CONST
 from test_case import TestCase
-from parse_log.parse_log import parse_log
 
 
 def notify_crash(exception: str):
@@ -217,7 +216,7 @@ def postprocess_diff(diff):
 
 def invalid_input_message(log_msg: str, input_delta: dict) -> Tuple[bool, list]:
     '''Returns if the log shows the input is invalid
-    
+
     Args:
         log_msg: message body of the log
         input_delta: the input delta we applied to the CR
@@ -229,7 +228,8 @@ def invalid_input_message(log_msg: str, input_delta: dict) -> Tuple[bool, list]:
     '''
     for regex in INVALID_INPUT_LOG_REGEX:
         if re.search(regex, log_msg):
-            logging.info('Recognized invalid input through regex: %s' % log_msg)
+            logging.info(
+                'Recognized invalid input through regex: %s' % log_msg)
             return True, None
 
     # Check if the log line contains the field or value
