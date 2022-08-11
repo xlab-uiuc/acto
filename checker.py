@@ -284,7 +284,7 @@ class Checker(object):
                 logging.error(
                     f"Found {kind}: {', '.join(resources)} with unhealthy status")
 
-        if error_msg == '':
+        if error_msg != '':
             return ErrorResult(Oracle.SYSTEM_HEALTH, error_msg)
 
         return PassResult()
