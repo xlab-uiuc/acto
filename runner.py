@@ -263,9 +263,14 @@ class Runner(object):
 def decode_secret_data(secrets: dict) -> dict:
     '''Decodes secret's b64-encrypted data in the secret object
     '''
+
     for secret in secrets:
-        if 'data' in secrets[secret] and secrets[secret]['data'] != None:
-            for key in secrets[secret]['data']:
-                secrets[secret]['data'][key] = base64.b64decode(
-                    secrets[secret]['data'][key]).decode('utf-8')
+        try:
+            if 'data' in secrets[secret] and secrets[secret]['data'] != None:
+                for key in secrets[secret]['data']:
+                    secrets[secret]['data'][key] = base64.b64decode(
+                        secrets[secret]['data'][key]).decode('utf-8')
+        except Exception as e:
+            # skip secret if decoding fails
+            logging.error(e)
     return secrets
