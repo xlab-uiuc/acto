@@ -359,13 +359,18 @@ if __name__ == "__main__":
     import yaml
     import traceback
     import argparse
+    from types import SimpleNamespace
 
     parser = argparse.ArgumentParser(description='Standalone checker for Acto')
-
-    parser.add_argument('--context', dest='context', required=True)
-    parser.add_argument('--testrun-dir', dest='testrun_dir', required=True)
-    parser.add_argument('--seed', dest='seed', required=True)
+    parser.add_argument('--testrun-dir', help='Directory to check', required=True)
+    parser.add_argument('--config', help='Path to config file', required=True)
+    
     args = parser.parse_args()
+
+    with open(args.config, 'r') as config_file:
+        config = json.load(config_file, object_hook=lambda d: SimpleNamespace(**d))
+    testrun_dir = args.testrun_dir
+    context_cache = os.path.join(os.path.dirname(config.seed_custom_resource), 'context.json')
 
     logging.basicConfig(
         filename=os.path.join('.', 'test.log'),
@@ -392,8 +397,8 @@ if __name__ == "__main__":
 
     sys.excepthook = handle_excepthook
 
-    trial_dirs = glob.glob(args.testrun_dir + '/*')
-    with open(args.context, 'r') as context_fin:
+    trial_dirs = glob.glob(testrun_dir + '/*')
+    with open(context_cache, 'r') as context_fin:
         context = json.load(context_fin)
         context['preload_images'] = set(context['preload_images'])
 
@@ -402,7 +407,7 @@ if __name__ == "__main__":
 
     context['enable_analysis'] = True
 
-    with open(args.seed, 'r') as seed_file:
+    with open(config.seed_custom_resource, 'r') as seed_file:
         seed = yaml.load(seed_file, Loader=yaml.FullLoader)
 
     num_alarms = 0
@@ -468,84 +473,3 @@ if __name__ == "__main__":
             logging.info('%s does not report an alarm' % system_state_path)
 
     logging.info('Number of alarms: %d', num_alarms)
-
-# check file testing
-# if __name__ == "__main__":
-#     import subprocess
-#     import kubernetes
-
-#     testrun_folder = "../testrun-2022-06-02-14-13/"
-#     not_present_trial = testrun_folder + "trial-0013"
-#     context = {"namespace": "default", \
-#         "crd": {"group": "redis.redis.opstreelabs.in", "plural": "redisclusters", "version": "v1beta1"}}
-#     cmd = ["ls", "trial-0005"]
-
-#     # Populate the Result, Runner and Checker classes
-#     runner = Runner(context)
-#     checker = Checker(context)
-#     result_0 = Result(context, None, subprocess.run(cmd, capture_output=True, text=True))
-#     result_0.setup_path_by_generation(not_present_trial, 0)
-
-#     print("cli functionality test")
-#     result_0.collect_cli_output()
-#     assert(result_0.get_cli_result()[0] == subprocess.run(cmd, capture_output=True, text=True).stdout)
-#     assert(result_0.get_cli_result()[1] == subprocess.run(cmd, capture_output=True, text=True).stderr)
-#     # test operator log retrieval
-#     print(result_0.get_operator_log())
-#     print("cli functionality test passed\n")
-
-#     # test delta retrieval for result without previous result
-#     print("delta retrieval test")
-#     input_delta, sys_delta = result_0.get_deltas()
-#     assert(input_delta == {})
-
-#     result_0.collect_delta()
-#     delta_generated = ""
-#     delta_original = ""
-#     with open("%s/delta-%d.log" % (not_present_trial, 0), 'r') as f:
-#         delta_generated = f.readlines()
-#     with open("%s/delta-%d-original.log" % (not_present_trial, 0), 'r') as f:
-#         delta_original = f.readlines()
-#     print(DeepDiff(delta_generated, delta_original))
-#     print("delta retrieval test passed\n")
-
-#     print("checker test")
-#     # result without previous result should always pass check
-#     assert(isinstance(checker.check_resources(result_0), PassResult))
-#     assert(isinstance(checker.check_operator_log(result_0), PassResult))
-#     assert(isinstance(checker.check_input(result_0), PassResult))
-#     assert(isinstance(checker.check(result_0), PassResult))
-
-#     result_1 = Result(context, result_0, subprocess.run(cmd, capture_output=True, text=True))
-#     result_1.setup_path_by_generation(not_present_trial, 1)
-#     result_1.collect_cli_output()
-
-#     # result for the last trial should pass as well
-#     assert(isinstance(checker.check_resources(result_1), PassResult))
-#     assert(isinstance(checker.check_operator_log(result_1), PassResult))
-#     assert(isinstance(checker.check_input(result_1), PassResult))
-#     assert(isinstance(checker.check(result_1), PassResult))
-
-#     print("checker test passed, not present works")
-
-#     # print(result_1.get_deltas())
-#     result_1.collect_delta()
-
-#     print("Mimicking Acto run")
-
-#     subprocess.run(["kind", "delete", "cluster"])
-#     subprocess.run(["kind", "create", "cluster", "--image", "kindest/node:v1.22.9"])
-#     time.sleep(5)
-#     subprocess.run(["kubectl", "apply", "-f", "data/redis-ot-container-kit-operator/bundle_f1c547e.yaml"])
-#     kubernetes.config.load_kube_config()
-#     # time.sleep(25)
-
-#     result_run = Result(context, result_0, runner.run(["kubectl", "apply", "-f", "mutated-1.yaml"]))
-#     result_run.setup_path_by_generation(not_present_trial, 1)
-#     result_run.collect_cli_output()
-#     result_run.collect_events()
-#     result_run.collect_system_state()
-#     result_run.collect_delta()
-#     # result_run.collect_all_result()
-#     assert(isinstance(checker.check(result_run), PassResult))
-#     print("Mimicking Acto run Passed")
