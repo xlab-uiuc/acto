@@ -43,7 +43,8 @@ class Checker(object):
 
         state_result = self.check_resources(snapshot, prev_snapshot)
         log_result = self.check_operator_log(snapshot, prev_snapshot)
-        health_result = self.check_health(snapshot)
+        # health_result = self.check_health(snapshot)
+        health_result = None
 
         if isinstance(log_result, InvalidInputResult):
             logging.info('Invalid input, skip this case')
