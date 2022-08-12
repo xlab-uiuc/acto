@@ -6,7 +6,7 @@
 |                                  | [https://github.com/rabbitmq/cluster-operator/issues/968](https://github.com/rabbitmq/cluster-operator/issues/968)               |           |
 |                                  | [https://github.com/rabbitmq/cluster-operator/issues/992](https://github.com/rabbitmq/cluster-operator/issues/992)               | confirmed |
 | pravega/zookeeper-operator       | [https://github.com/pravega/zookeeper-operator/issues/454](https://github.com/pravega/zookeeper-operator/issues/454)             | confirmed |
-|                                  | [https://github.com/pravega/zookeeper-operator/issues/474](https://github.com/pravega/zookeeper-operator/issues/474)             |           |
+|                                  | [https://github.com/pravega/zookeeper-operator/issues/474](https://github.com/pravega/zookeeper-operator/issues/474)             | fixed     |
 | k8ssandra/cass-operator          | [https://github.com/k8ssandra/cass-operator/issues/315](https://github.com/k8ssandra/cass-operator/issues/315)                   | fixed     |
 |                                  | [https://github.com/k8ssandra/cass-operator/issues/324](https://github.com/k8ssandra/cass-operator/issues/324)                   |           |
 |                                  | [https://github.com/k8ssandra/cass-operator/issues/330](https://github.com/k8ssandra/cass-operator/issues/330)                   | fixed     |
