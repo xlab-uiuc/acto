@@ -1,3 +1,4 @@
+from builtins import TypeError
 import sys
 import logging
 from deepdiff import DeepDiff
@@ -201,9 +202,14 @@ class Checker(object):
     def check_condition(self, input: dict, condition: dict) -> bool:
         path = condition['field']
 
+        # hack: convert 'INDEX' to int 0
+        for i in range(len(path)):
+            if path[i] == 'INDEX':
+                path[i] = 0
+
         try:
             value = reduce(operator.getitem, path, input)
-        except KeyError as e:
+        except (KeyError, TypeError) as e:
             if translate_op(condition['op']) == operator.eq and condition['value'] == None:
                 return True
             else:
