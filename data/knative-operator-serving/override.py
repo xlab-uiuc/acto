@@ -23,10 +23,8 @@ def get_env(manifest: dict):
     # get env from every container in the manifest
     env_entries = []
     for container in manifest['spec']['template']['spec']['containers']:
-        if not ('env' in container):
-            continue
-
-        env = {"container": container['name'], "envVars": container['env']}
+        env = {"container": container['name'],
+               "envVars": container['env'] if 'env' in container else []}
         env_entries.append(env)
     if len(env_entries) > 0:
         return env_entries

@@ -8,7 +8,10 @@ spec:
     network:
       ingress-class: kourier.ingress.networking.knative.dev
   deployments:
-  - name: 3scale-kourier-gateway
+  - env:
+    - container: kourier-gateway
+      envVars: []
+    name: 3scale-kourier-gateway
     replicas: 1
   - env:
     - container: activator
