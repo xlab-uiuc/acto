@@ -1,0 +1,234 @@
+apiVersion: mongodb.com/v1
+kind: MongoDBCommunity
+metadata:
+  name: volume-claim-templates-mdb
+spec:
+  members: 3
+  security:
+    authentication:
+      modes:
+      - SCRAM
+  statefulSet:
+    spec:
+      volumeClaimTemplates:
+      - metadata:
+          name: volume-claim-templates
+        spec:
+          accessModes:
+          - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
+  type: ReplicaSet
+  version: 4.2.6
+---
+apiVersion: mongodb.com/v1
+kind: MongoDBCommunity
+metadata:
+  name: custom-storage-class-mdb
+spec:
+  members: 3
+  security:
+    authentication:
+      modes:
+      - SCRAM
+  statefulSet:
+    spec:
+      volumeClaimTemplates:
+      - metadata:
+          name: data-volume
+        spec:
+          accessModes:
+          - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
+          storageClassName: my-storage-class
+  type: ReplicaSet
+  version: 4.2.6
+---
+apiVersion: mongodb.com/v1
+kind: MongoDBCommunity
+metadata:
+  name: example-openshift-mongodb
+spec:
+  members: 3
+  security:
+    authentication:
+      modes:
+      - SCRAM
+  type: ReplicaSet
+  users:
+  - db: admin
+    name: my-user
+    passwordSecretRef:
+      name: my-user-password
+    roles:
+    - db: admin
+      name: clusterAdmin
+    - db: admin
+      name: userAdminAnyDatabase
+  version: 4.2.6
+---
+apiVersion: mongodb.com/v1
+kind: MongoDBCommunity
+metadata:
+  name: tolerations-mdb
+spec:
+  members: 3
+  security:
+    authentication:
+      modes:
+      - SCRAM
+  statefulSet:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: mongodb-agent
+          tolerations:
+          - effect: NoSchedule
+            key: example-key
+            operator: Exists
+          - effect: NoExecute
+            key: example-key-2
+            operator: Equal
+  type: ReplicaSet
+  version: 4.2.6
+---
+apiVersion: mongodbcommunity.mongodb.com/v1
+kind: MongoDBCommunity
+metadata:
+  name: example-mongodb
+  namespace: test-ns
+spec:
+  additionalMongodConfig:
+    net.port: 40333
+  members: 3
+  security:
+    authentication:
+      modes:
+      - SCRAM
+  type: ReplicaSet
+  users:
+  - db: admin
+    name: my-user
+    passwordSecretRef:
+      name: my-user-password
+    roles:
+    - db: admin
+      name: clusterAdmin
+    - db: admin
+      name: userAdminAnyDatabase
+    scramCredentialsSecretName: my-scram
+  version: 4.2.6
+---
+apiVersion: mongodb.com/v1
+kind: MongoDBCommunity
+metadata:
+  name: change-data-volume-mdb
+spec:
+  members: 3
+  security:
+    authentication:
+      modes:
+      - SCRAM
+  statefulSet:
+    spec:
+      volumeClaimTemplates:
+      - metadata:
+          name: data-volume
+        spec:
+          accessModes:
+          - ReadWriteOnce
+          - ReadWriteMany
+          resources:
+            requests:
+              storage: 50Gi
+  type: ReplicaSet
+  users:
+  - db: admin
+    name: my-user
+    passwordSecretRef:
+      name: my-user-password
+    roles:
+    - db: admin
+      name: clusterAdmin
+    - db: admin
+      name: userAdminAnyDatabase
+  version: 4.2.6
+---
+apiVersion: mongodbcommunity.mongodb.com/v1
+kind: MongoDBCommunity
+metadata:
+  name: example-mongodb
+  namespace: test-ns
+spec:
+  additionalMongodConfig:
+    storage.dbPath: /some/path/db
+  members: 3
+  security:
+    authentication:
+      modes:
+      - SCRAM
+  type: ReplicaSet
+  users:
+  - db: admin
+    name: my-user
+    passwordSecretRef:
+      name: my-user-password
+    roles:
+    - db: admin
+      name: clusterAdmin
+    - db: admin
+      name: userAdminAnyDatabase
+    scramCredentialsSecretName: my-scram
+  version: 4.2.6
+---
+apiVersion: mongodbcommunity.mongodb.com/v1
+kind: MongoDBCommunity
+metadata:
+  name: example-mongodb
+spec:
+  members: 3
+  security:
+    authentication:
+      modes:
+      - SCRAM
+  statefulSet:
+    spec:
+      selector: {}
+      serviceName: example-openshift-mongodb-svc
+      template:
+        spec:
+          containers:
+          - name: mongodb-agent
+            volumeMounts:
+            - mountPath: /my-custom-version/mount-path
+              name: custom-volume
+          volumes:
+          - emptyDir: {}
+            name: custom-volume
+      volumeClaimTemplates:
+      - metadata:
+          name: data-volume
+        spec:
+          accessModes:
+          - ReadWriteOnce
+          - ReadWriteMany
+          resources:
+            requests:
+              storage: 50Gi
+  type: ReplicaSet
+  users:
+  - db: admin
+    name: my-user
+    passwordSecretRef:
+      name: my-user-password
+    roles:
+    - db: admin
+      name: clusterAdmin
+    - db: admin
+      name: userAdminAnyDatabase
+    scramCredentialsSecretName: my-scram
+  version: 4.2.6
