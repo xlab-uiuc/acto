@@ -4913,11 +4913,21 @@
     },
     "preload_images": [
         "docker.io/pravega/zookeeper:0.2.14",
-        "docker.io/pravega/zookeeper-operator:0.2.13",
-        "docker.io/lachlanevenson/k8s-kubectl:v1.23.2"
+        "docker.io/lachlanevenson/k8s-kubectl:v1.23.2",
+        "docker.io/pravega/zookeeper-operator:0.2.13"
     ],
     "analysis_result": {
         "control_flow_fields": [
+            [
+                "root",
+                "spec",
+                "triggerRollingRestart"
+            ],
+            [
+                "root",
+                "spec",
+                "storageType"
+            ],
             [
                 "root",
                 "spec",
@@ -4928,39 +4938,14 @@
             [
                 "root",
                 "spec",
-                "pod",
-                "labels"
-            ],
-            [
-                "root",
-                "spec",
-                "storageType"
+                "adminServerService",
+                "external"
             ],
             [
                 "root",
                 "spec",
                 "persistence",
                 "reclaimPolicy"
-            ],
-            [
-                "root",
-                "spec",
-                "triggerRollingRestart"
-            ],
-            [
-                "root",
-                "spec",
-                "persistence",
-                "spec",
-                "resources",
-                "requests"
-            ],
-            [
-                "root",
-                "spec",
-                "pod",
-                "resources",
-                "requests"
             ],
             [
                 "root",
@@ -4972,8 +4957,16 @@
             [
                 "root",
                 "spec",
-                "adminServerService",
-                "external"
+                "pod",
+                "labels"
+            ],
+            [
+                "root",
+                "spec",
+                "persistence",
+                "spec",
+                "resources",
+                "requests"
             ],
             [
                 "root",
@@ -4981,6 +4974,13 @@
                 "pod",
                 "resources",
                 "limits"
+            ],
+            [
+                "root",
+                "spec",
+                "pod",
+                "resources",
+                "requests"
             ]
         ],
         "default_value_map": {
@@ -5013,34 +5013,9 @@
             "[\"root\",\"spec\",\"storageType\"]": "\"persistence\""
         },
         "field_conditions_map": {
-            "[\"root\", \"spec\", \"pod\", \"resources\"]": [
+            "[\"spec\", \"pod\", \"resources\", \"requests\"]": [
                 {
                     "field": [
-                        "root",
-                        "spec",
-                        "pod",
-                        "resources",
-                        "limits"
-                    ],
-                    "op": "!=",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "pod",
-                        "resources",
-                        "requests"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"pod\", \"resources\", \"requests\"]": [
-                {
-                    "field": [
-                        "root",
                         "spec",
                         "pod",
                         "resources",
@@ -5050,16 +5025,37 @@
                     "value": null
                 }
             ],
-            "[\"root\", \"spec\", \"pod\", \"imagePullSecrets\"]": [
+            "[\"spec\", \"pod\", \"imagePullSecrets\"]": [
                 {
                     "field": [
-                        "root",
                         "spec",
                         "pod",
                         "serviceAccountName"
                     ],
                     "op": "!=",
                     "value": "\"default\""
+                }
+            ],
+            "[\"spec\", \"pod\", \"resources\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "pod",
+                        "resources",
+                        "requests"
+                    ],
+                    "op": "!=",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "pod",
+                        "resources",
+                        "limits"
+                    ],
+                    "op": "!=",
+                    "value": null
                 }
             ]
         }

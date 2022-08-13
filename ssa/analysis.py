@@ -38,13 +38,13 @@ def analyze(project_path: str, seed_type: str, seed_pkg: str) -> dict:
                 value = condition['value']
 
             new_condition = {
-                'field': condition['field'],
+                'field': condition['field'][1:],  # remove the leading 'root'
                 'op': condition['op'],
                 'value': value
             }
             new_conditions.append(new_condition)
 
-        field_conditions_map[json.dumps(field_conditions['path'])] = new_conditions
+        field_conditions_map[json.dumps(field_conditions['path'][1:])] = new_conditions
 
     analysis_result = {
         'control_flow_fields': all_fields,

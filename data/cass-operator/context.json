@@ -6836,13 +6836,13 @@
         }
     },
     "preload_images": [
-        "quay.io/jetstack/cert-manager-controller:v1.7.1",
-        "docker.io/k8ssandra/cass-operator:v1.10.3",
-        "docker.io/k8ssandra/cass-management-api:3.11.7",
-        "quay.io/jetstack/cert-manager-webhook:v1.7.1",
-        "docker.io/datastax/cass-config-builder:1.0.4-ubi7",
         "docker.io/k8ssandra/system-logger:v1.10.3",
-        "quay.io/jetstack/cert-manager-cainjector:v1.7.1"
+        "quay.io/jetstack/cert-manager-webhook:v1.7.1",
+        "docker.io/k8ssandra/cass-management-api:3.11.7",
+        "quay.io/jetstack/cert-manager-controller:v1.7.1",
+        "docker.io/datastax/cass-config-builder:1.0.4-ubi7",
+        "quay.io/jetstack/cert-manager-cainjector:v1.7.1",
+        "docker.io/k8ssandra/cass-operator:v1.10.3"
     ],
     "analysis_result": {
         "control_flow_fields": [
@@ -6851,16 +6851,101 @@
                 "spec",
                 "podTemplateSpec",
                 "spec",
+                "terminationGracePeriodSeconds"
+            ],
+            [
+                "root",
+                "spec",
+                "podTemplateSpec",
+                "spec",
+                "initContainers",
+                "INDEX",
+                "name"
+            ],
+            [
+                "root",
+                "spec",
+                "podTemplateSpec",
+                "spec",
                 "containers",
                 "INDEX",
-                "readinessProbe",
+                "name"
+            ],
+            [
+                "root",
+                "spec",
+                "forceUpgradeRacks"
+            ],
+            [
+                "root",
+                "spec",
+                "podTemplateSpec",
+                "spec",
+                "containers",
+                "INDEX",
+                "livenessProbe",
                 "exec"
             ],
             [
                 "root",
                 "spec",
+                "podTemplateSpec",
+                "spec",
+                "containers",
+                "INDEX",
+                "image"
+            ],
+            [
+                "root",
+                "spec",
+                "allowMultipleNodesPerWorker"
+            ],
+            [
+                "root",
+                "spec",
                 "users",
-                "INDEX"
+                "INDEX",
+                "secretName"
+            ],
+            [
+                "root",
+                "spec",
+                "dseWorkloads",
+                "searchEnabled"
+            ],
+            [
+                "root",
+                "spec",
+                "podTemplateSpec",
+                "spec",
+                "containers",
+                "INDEX",
+                "resources"
+            ],
+            [
+                "root",
+                "spec",
+                "dseWorkloads",
+                "analyticsEnabled"
+            ],
+            [
+                "root",
+                "spec",
+                "dseWorkloads"
+            ],
+            [
+                "root",
+                "spec",
+                "stopped"
+            ],
+            [
+                "root",
+                "spec",
+                "podTemplateSpec",
+                "spec",
+                "initContainers",
+                "INDEX",
+                "image"
             ],
             [
                 "root",
@@ -6876,127 +6961,8 @@
                 "spec",
                 "podTemplateSpec",
                 "spec",
-                "containers",
-                "INDEX",
-                "env",
-                "INDEX"
-            ],
-            [
-                "root",
-                "spec",
-                "podTemplateSpec",
-                "spec",
-                "initContainers",
-                "INDEX",
-                "env",
-                "INDEX"
-            ],
-            [
-                "root",
-                "spec",
-                "dockerImageRunsAsCassandra"
-            ],
-            [
-                "root",
-                "spec",
-                "podTemplateSpec",
-                "spec",
-                "containers",
-                "INDEX",
-                "livenessProbe",
-                "tcpSocket"
-            ],
-            [
-                "root",
-                "spec",
-                "podTemplateSpec",
-                "spec",
-                "initContainers",
-                "INDEX",
-                "imagePullPolicy"
-            ],
-            [
-                "root",
-                "spec",
-                "podTemplateSpec",
-                "spec",
                 "volumes",
                 "INDEX"
-            ],
-            [
-                "root",
-                "spec",
-                "resources",
-                "limits"
-            ],
-            [
-                "root",
-                "spec",
-                "stopped"
-            ],
-            [
-                "root",
-                "spec",
-                "podTemplateSpec",
-                "spec",
-                "containers",
-                "INDEX",
-                "volumeMounts",
-                "INDEX"
-            ],
-            [
-                "root",
-                "spec",
-                "podTemplateSpec",
-                "spec",
-                "initContainers",
-                "INDEX",
-                "volumeMounts",
-                "INDEX"
-            ],
-            [
-                "root",
-                "spec",
-                "config"
-            ],
-            [
-                "root",
-                "spec",
-                "configBuilderResources",
-                "requests"
-            ],
-            [
-                "root",
-                "spec",
-                "systemLoggerResources",
-                "requests"
-            ],
-            [
-                "root",
-                "spec",
-                "dseWorkloads",
-                "analyticsEnabled"
-            ],
-            [
-                "root",
-                "spec",
-                "podTemplateSpec",
-                "spec",
-                "nodeSelector"
-            ],
-            [
-                "root",
-                "spec",
-                "allowMultipleNodesPerWorker"
-            ],
-            [
-                "root",
-                "spec",
-                "podTemplateSpec",
-                "spec",
-                "containers",
-                "INDEX",
-                "name"
             ],
             [
                 "root",
@@ -7011,46 +6977,56 @@
             [
                 "root",
                 "spec",
-                "podTemplateSpec",
-                "spec",
-                "initContainers",
-                "INDEX",
-                "name"
+                "dseWorkloads",
+                "graphEnabled"
             ],
             [
                 "root",
                 "spec",
-                "networking",
+                "podTemplateSpec",
+                "spec",
+                "nodeSelector"
+            ],
+            [
+                "root",
+                "spec",
+                "podTemplateSpec",
+                "spec",
                 "hostNetwork"
             ],
             [
                 "root",
                 "spec",
-                "dseWorkloads"
+                "podTemplateSpec",
+                "spec",
+                "serviceAccountName"
             ],
             [
                 "root",
                 "spec",
-                "dseWorkloads",
-                "searchEnabled"
+                "config"
             ],
             [
                 "root",
                 "spec",
                 "podTemplateSpec",
                 "spec",
-                "terminationGracePeriodSeconds"
+                "initContainers",
+                "INDEX",
+                "imagePullPolicy"
             ],
             [
                 "root",
                 "spec",
-                "managementApiAuth",
-                "insecure"
+                "storageConfig",
+                "cassandraDataVolumeClaimSpec",
+                "accessModes"
             ],
             [
                 "root",
                 "spec",
-                "forceUpgradeRacks"
+                "resources",
+                "requests"
             ],
             [
                 "root",
@@ -7066,20 +7042,38 @@
                 "spec",
                 "containers",
                 "INDEX",
-                "resources"
+                "lifecycle"
             ],
             [
                 "root",
                 "spec",
-                "resources",
-                "requests"
+                "disableSystemLoggerSidecar"
+            ],
+            [
+                "root",
+                "spec",
+                "managementApiAuth",
+                "insecure"
             ],
             [
                 "root",
                 "spec",
                 "podTemplateSpec",
                 "spec",
-                "securityContext"
+                "initContainers",
+                "INDEX",
+                "resources"
+            ],
+            [
+                "root",
+                "spec",
+                "resources",
+                "limits"
+            ],
+            [
+                "root",
+                "spec",
+                "dockerImageRunsAsCassandra"
             ],
             [
                 "root",
@@ -7088,13 +7082,14 @@
                 "spec",
                 "containers",
                 "INDEX",
-                "lifecycle"
+                "livenessProbe"
             ],
             [
                 "root",
                 "spec",
-                "dseWorkloads",
-                "graphEnabled"
+                "podTemplateSpec",
+                "spec",
+                "securityContext"
             ],
             [
                 "root",
@@ -7108,8 +7103,144 @@
                 "spec",
                 "containers",
                 "INDEX",
-                "ports",
+                "volumeMounts",
                 "INDEX"
+            ],
+            [
+                "root",
+                "spec",
+                "podTemplateSpec",
+                "spec",
+                "initContainers",
+                "INDEX",
+                "volumeMounts",
+                "INDEX"
+            ],
+            [
+                "root",
+                "spec",
+                "systemLoggerResources",
+                "limits"
+            ],
+            [
+                "root",
+                "spec",
+                "configBuilderResources",
+                "limits"
+            ],
+            [
+                "root",
+                "spec",
+                "users",
+                "INDEX"
+            ],
+            [
+                "root",
+                "spec",
+                "podTemplateSpec",
+                "spec",
+                "containers",
+                "INDEX",
+                "ports",
+                "INDEX",
+                "name"
+            ],
+            [
+                "root",
+                "spec",
+                "podTemplateSpec",
+                "spec",
+                "affinity"
+            ],
+            [
+                "root",
+                "spec",
+                "networking",
+                "hostNetwork"
+            ],
+            [
+                "root",
+                "spec",
+                "podTemplateSpec",
+                "spec",
+                "containers",
+                "INDEX",
+                "imagePullPolicy"
+            ],
+            [
+                "root",
+                "spec",
+                "podTemplateSpec",
+                "spec",
+                "dnsPolicy"
+            ],
+            [
+                "root",
+                "spec",
+                "users"
+            ],
+            [
+                "root",
+                "spec",
+                "podTemplateSpec",
+                "spec",
+                "volumes",
+                "INDEX",
+                "name"
+            ],
+            [
+                "root",
+                "spec",
+                "podTemplateSpec",
+                "spec",
+                "containers",
+                "INDEX",
+                "volumeMounts",
+                "INDEX",
+                "name"
+            ],
+            [
+                "root",
+                "spec",
+                "podTemplateSpec",
+                "spec",
+                "initContainers",
+                "INDEX",
+                "volumeMounts",
+                "INDEX",
+                "name"
+            ],
+            [
+                "root",
+                "spec",
+                "rollingRestartRequested"
+            ],
+            [
+                "root",
+                "spec",
+                "podTemplateSpec",
+                "spec",
+                "containers",
+                "INDEX",
+                "readinessProbe",
+                "httpGet"
+            ],
+            [
+                "root",
+                "spec",
+                "podTemplateSpec",
+                "spec",
+                "tolerations"
+            ],
+            [
+                "root",
+                "spec",
+                "podTemplateSpec",
+                "spec",
+                "containers",
+                "INDEX",
+                "readinessProbe",
+                "exec"
             ],
             [
                 "root",
@@ -7128,7 +7259,18 @@
                 "spec",
                 "containers",
                 "INDEX",
-                "livenessProbe"
+                "env",
+                "INDEX"
+            ],
+            [
+                "root",
+                "spec",
+                "podTemplateSpec",
+                "spec",
+                "initContainers",
+                "INDEX",
+                "env",
+                "INDEX"
             ],
             [
                 "root",
@@ -7137,31 +7279,8 @@
                 "spec",
                 "containers",
                 "INDEX",
-                "imagePullPolicy"
-            ],
-            [
-                "root",
-                "spec",
-                "podTemplateSpec",
-                "spec",
-                "containers",
-                "INDEX",
-                "image"
-            ],
-            [
-                "root",
-                "spec",
-                "podTemplateSpec",
-                "spec",
-                "containers",
-                "INDEX",
-                "readinessProbe",
+                "livenessProbe",
                 "httpGet"
-            ],
-            [
-                "root",
-                "spec",
-                "users"
             ],
             [
                 "root",
@@ -7171,178 +7290,142 @@
                 "containers",
                 "INDEX",
                 "ports",
+                "INDEX"
+            ],
+            [
+                "root",
+                "spec",
+                "podTemplateSpec",
+                "spec",
+                "containers",
+                "INDEX",
+                "livenessProbe",
+                "tcpSocket"
+            ],
+            [
+                "root",
+                "spec",
+                "podTemplateSpec",
+                "spec",
+                "containers",
+                "INDEX",
+                "env",
                 "INDEX",
                 "name"
             ],
             [
                 "root",
                 "spec",
-                "configBuilderResources",
-                "limits"
+                "podTemplateSpec",
+                "spec",
+                "initContainers",
+                "INDEX",
+                "env",
+                "INDEX",
+                "name"
             ],
             [
                 "root",
                 "spec",
                 "systemLoggerResources",
-                "limits"
+                "requests"
             ],
             [
                 "root",
                 "spec",
-                "users",
-                "INDEX",
-                "secretName"
-            ],
-            [
-                "root",
-                "spec",
-                "podTemplateSpec",
-                "spec",
-                "containers",
-                "INDEX",
-                "livenessProbe",
-                "httpGet"
-            ],
-            [
-                "root",
-                "spec",
-                "rollingRestartRequested"
-            ],
-            [
-                "root",
-                "spec",
-                "storageConfig",
-                "cassandraDataVolumeClaimSpec",
-                "accessModes"
-            ],
-            [
-                "root",
-                "spec",
-                "podTemplateSpec",
-                "spec",
-                "containers",
-                "INDEX",
-                "env",
-                "INDEX",
-                "name"
-            ],
-            [
-                "root",
-                "spec",
-                "podTemplateSpec",
-                "spec",
-                "initContainers",
-                "INDEX",
-                "env",
-                "INDEX",
-                "name"
-            ],
-            [
-                "root",
-                "spec",
-                "podTemplateSpec",
-                "spec",
-                "tolerations"
-            ],
-            [
-                "root",
-                "spec",
-                "podTemplateSpec",
-                "spec",
-                "containers",
-                "INDEX",
-                "livenessProbe",
-                "exec"
-            ],
-            [
-                "root",
-                "spec",
-                "podTemplateSpec",
-                "spec",
-                "initContainers",
-                "INDEX",
-                "resources"
-            ],
-            [
-                "root",
-                "spec",
-                "podTemplateSpec",
-                "spec",
-                "volumes",
-                "INDEX",
-                "name"
-            ],
-            [
-                "root",
-                "spec",
-                "podTemplateSpec",
-                "spec",
-                "initContainers",
-                "INDEX",
-                "image"
-            ],
-            [
-                "root",
-                "spec",
-                "podTemplateSpec",
-                "spec",
-                "serviceAccountName"
-            ],
-            [
-                "root",
-                "spec",
-                "disableSystemLoggerSidecar"
-            ],
-            [
-                "root",
-                "spec",
-                "podTemplateSpec",
-                "spec",
-                "dnsPolicy"
-            ],
-            [
-                "root",
-                "spec",
-                "podTemplateSpec",
-                "spec",
-                "affinity"
-            ],
-            [
-                "root",
-                "spec",
-                "podTemplateSpec",
-                "spec",
-                "hostNetwork"
-            ],
-            [
-                "root",
-                "spec",
-                "podTemplateSpec",
-                "spec",
-                "containers",
-                "INDEX",
-                "volumeMounts",
-                "INDEX",
-                "name"
-            ],
-            [
-                "root",
-                "spec",
-                "podTemplateSpec",
-                "spec",
-                "initContainers",
-                "INDEX",
-                "volumeMounts",
-                "INDEX",
-                "name"
+                "configBuilderResources",
+                "requests"
             ]
         ],
         "default_value_map": {},
         "field_conditions_map": {
-            "[\"root\", \"spec\", \"podTemplateSpec\", \"spec\", \"initContainers\", \"INDEX\", \"imagePullPolicy\"]": [
+            "[\"spec\", \"systemLoggerResources\", \"requests\"]": [
                 {
                     "field": [
-                        "root",
+                        "spec",
+                        "configBuilderResources",
+                        "limits"
+                    ],
+                    "op": "==",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "systemLoggerResources",
+                        "limits"
+                    ],
+                    "op": "==",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"podTemplateSpec\", \"spec\", \"containers\", \"INDEX\", \"ports\", \"INDEX\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "image"
+                    ],
+                    "op": "!=",
+                    "value": "\"\""
+                },
+                {
+                    "field": [
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "lifecycle",
+                        "preStop"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"podTemplateSpec\", \"spec\", \"containers\", \"INDEX\", \"ports\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "lifecycle",
+                        "preStop"
+                    ],
+                    "op": "!=",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "image"
+                    ],
+                    "op": "!=",
+                    "value": "\"\""
+                }
+            ],
+            "[\"spec\", \"dseWorkloads\", \"searchEnabled\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "dseWorkloads"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"configBuilderImage\"]": [
+                {
+                    "field": [
                         "spec",
                         "podTemplateSpec",
                         "spec",
@@ -7354,21 +7437,9 @@
                     "value": "\"\""
                 }
             ],
-            "[\"root\", \"spec\", \"dseWorkloads\", \"analyticsEnabled\"]": [
+            "[\"spec\", \"storageConfig\", \"additionalVolumes\", \"INDEX\", \"pvcSpec\"]": [
                 {
                     "field": [
-                        "root",
-                        "spec",
-                        "dseWorkloads"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"nodeSelector\"]": [
-                {
-                    "field": [
-                        "root",
                         "spec",
                         "storageConfig",
                         "cassandraDataVolumeClaimSpec"
@@ -7377,10 +7448,9 @@
                     "value": null
                 }
             ],
-            "[\"root\", \"spec\", \"tolerations\"]": [
+            "[\"spec\", \"podTemplateSpec\", \"spec\", \"terminationGracePeriodSeconds\"]": [
                 {
                     "field": [
-                        "root",
                         "spec",
                         "storageConfig",
                         "cassandraDataVolumeClaimSpec"
@@ -7389,10 +7459,9 @@
                     "value": null
                 }
             ],
-            "[\"root\", \"spec\", \"podTemplateSpec\", \"spec\", \"containers\", \"INDEX\", \"readinessProbe\", \"exec\"]": [
+            "[\"spec\", \"podTemplateSpec\", \"spec\", \"containers\", \"INDEX\", \"readinessProbe\", \"exec\"]": [
                 {
                     "field": [
-                        "root",
                         "spec",
                         "podTemplateSpec",
                         "spec",
@@ -7403,58 +7472,22 @@
                     "value": null
                 }
             ],
-            "[\"root\", \"spec\", \"resources\", \"requests\"]": [
+            "[\"spec\", \"podTemplateSpec\", \"spec\", \"containers\", \"INDEX\", \"ports\", \"INDEX\", \"name\"]": [
                 {
                     "field": [
-                        "root",
                         "spec",
-                        "serverType"
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "lifecycle",
+                        "preStop"
                     ],
                     "op": "!=",
-                    "value": "\"dse\""
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "serverType"
-                    ],
-                    "op": "!=",
-                    "value": "\"cassandra\""
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "allowMultipleNodesPerWorker"
-                    ],
-                    "op": "==",
-                    "value": "true"
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "dseWorkloads",
-                        "searchEnabled"
-                    ],
-                    "op": "!=",
-                    "value": "true"
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "dseWorkloads"
-                    ],
-                    "op": "==",
                     "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"podTemplateSpec\", \"spec\", \"containers\", \"INDEX\", \"resources\"]": [
+                },
                 {
                     "field": [
-                        "root",
                         "spec",
                         "podTemplateSpec",
                         "spec",
@@ -7466,10 +7499,378 @@
                     "value": "\"\""
                 }
             ],
-            "[\"root\", \"spec\", \"dockerImageRunsAsCassandra\"]": [
+            "[\"spec\", \"podTemplateSpec\", \"spec\", \"securityContext\"]": [
                 {
                     "field": [
-                        "root",
+                        "spec",
+                        "storageConfig",
+                        "cassandraDataVolumeClaimSpec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"podTemplateSpec\", \"spec\", \"dnsPolicy\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "networking",
+                        "hostNetwork"
+                    ],
+                    "op": "==",
+                    "value": "true"
+                },
+                {
+                    "field": [
+                        "spec",
+                        "storageConfig",
+                        "cassandraDataVolumeClaimSpec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"networking\", \"nodePort\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "networking"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"dseWorkloads\", \"analyticsEnabled\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "dseWorkloads"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"podTemplateSpec\", \"spec\", \"containers\", \"INDEX\", \"readinessProbe\", \"tcpSocket\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"podTemplateSpec\", \"spec\", \"tolerations\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "storageConfig",
+                        "cassandraDataVolumeClaimSpec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"resources\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "image"
+                    ],
+                    "op": "!=",
+                    "value": "\"\""
+                }
+            ],
+            "[\"spec\", \"podTemplateSpec\", \"spec\", \"containers\", \"INDEX\", \"lifecycle\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "image"
+                    ],
+                    "op": "!=",
+                    "value": "\"\""
+                }
+            ],
+            "[\"spec\", \"podTemplateSpec\", \"spec\", \"containers\", \"INDEX\", \"imagePullPolicy\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "image"
+                    ],
+                    "op": "==",
+                    "value": "\"\""
+                }
+            ],
+            "[\"spec\", \"podTemplateSpec\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "storageConfig",
+                        "cassandraDataVolumeClaimSpec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"podTemplateSpec\", \"spec\", \"serviceAccountName\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "storageConfig",
+                        "cassandraDataVolumeClaimSpec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"storageConfig\", \"cassandraDataVolumeClaimSpec\", \"storageClassName\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "storageConfig",
+                        "cassandraDataVolumeClaimSpec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"podTemplateSpec\", \"spec\", \"initContainers\", \"INDEX\", \"imagePullPolicy\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "initContainers",
+                        "INDEX",
+                        "image"
+                    ],
+                    "op": "==",
+                    "value": "\"\""
+                }
+            ],
+            "[\"spec\", \"podTemplateSpec\", \"spec\", \"containers\", \"INDEX\", \"readinessProbe\", \"httpGet\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"resources\", \"limits\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "serverType"
+                    ],
+                    "op": "!=",
+                    "value": "\"cassandra\""
+                },
+                {
+                    "field": [
+                        "spec",
+                        "dseWorkloads"
+                    ],
+                    "op": "==",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "dseWorkloads",
+                        "searchEnabled"
+                    ],
+                    "op": "!=",
+                    "value": "true"
+                },
+                {
+                    "field": [
+                        "spec",
+                        "serverType"
+                    ],
+                    "op": "!=",
+                    "value": "\"dse\""
+                },
+                {
+                    "field": [
+                        "spec",
+                        "allowMultipleNodesPerWorker"
+                    ],
+                    "op": "==",
+                    "value": "true"
+                }
+            ],
+            "[\"spec\", \"configBuilderResources\", \"requests\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "systemLoggerResources",
+                        "limits"
+                    ],
+                    "op": "==",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "configBuilderResources",
+                        "limits"
+                    ],
+                    "op": "==",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"podTemplateSpec\", \"spec\", \"hostNetwork\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "storageConfig",
+                        "cassandraDataVolumeClaimSpec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "networking",
+                        "hostNetwork"
+                    ],
+                    "op": "==",
+                    "value": "true"
+                }
+            ],
+            "[\"spec\", \"podTemplateSpec\", \"spec\", \"containers\", \"INDEX\", \"lifecycle\", \"preStop\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "image"
+                    ],
+                    "op": "!=",
+                    "value": "\"\""
+                }
+            ],
+            "[\"spec\", \"canaryUpgradeCount\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "canaryUpgrade"
+                    ],
+                    "op": "!=",
+                    "value": "true"
+                },
+                {
+                    "field": [
+                        "spec",
+                        "canaryUpgrade"
+                    ],
+                    "op": "==",
+                    "value": "true"
+                }
+            ],
+            "[\"spec\", \"nodeSelector\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "storageConfig",
+                        "cassandraDataVolumeClaimSpec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"disableSystemLoggerSidecar\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "lifecycle",
+                        "preStop"
+                    ],
+                    "op": "!=",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "image"
+                    ],
+                    "op": "!=",
+                    "value": "\"\""
+                }
+            ],
+            "[\"spec\", \"systemLoggerImage\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "image"
+                    ],
+                    "op": "==",
+                    "value": "\"\""
+                },
+                {
+                    "field": [
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "lifecycle",
+                        "preStop"
+                    ],
+                    "op": "!=",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "image"
+                    ],
+                    "op": "!=",
+                    "value": "\"\""
+                }
+            ],
+            "[\"spec\", \"dockerImageRunsAsCassandra\"]": [
+                {
+                    "field": [
                         "spec",
                         "podTemplateSpec",
                         "spec",
@@ -7479,241 +7880,9 @@
                     "value": null
                 }
             ],
-            "[\"root\", \"spec\", \"podTemplateSpec\", \"spec\", \"hostNetwork\"]": [
+            "[\"spec\", \"dseWorkloads\", \"graphEnabled\"]": [
                 {
                     "field": [
-                        "root",
-                        "spec",
-                        "networking",
-                        "hostNetwork"
-                    ],
-                    "op": "==",
-                    "value": "true"
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "storageConfig",
-                        "cassandraDataVolumeClaimSpec"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"podTemplateSpec\", \"spec\", \"securityContext\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "storageConfig",
-                        "cassandraDataVolumeClaimSpec"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"podTemplateSpec\", \"spec\", \"containers\", \"INDEX\", \"livenessProbe\", \"httpGet\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "podTemplateSpec",
-                        "spec",
-                        "containers",
-                        "INDEX"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"podTemplateSpec\", \"spec\", \"containers\", \"INDEX\", \"ports\", \"INDEX\", \"name\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "podTemplateSpec",
-                        "spec",
-                        "containers",
-                        "INDEX",
-                        "image"
-                    ],
-                    "op": "!=",
-                    "value": "\"\""
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "podTemplateSpec",
-                        "spec",
-                        "containers",
-                        "INDEX",
-                        "lifecycle",
-                        "preStop"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"podTemplateSpec\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "storageConfig",
-                        "cassandraDataVolumeClaimSpec"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"podTemplateSpec\", \"spec\", \"affinity\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "storageConfig",
-                        "cassandraDataVolumeClaimSpec"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"podTemplateSpec\", \"spec\", \"containers\", \"INDEX\", \"ports\", \"INDEX\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "podTemplateSpec",
-                        "spec",
-                        "containers",
-                        "INDEX",
-                        "image"
-                    ],
-                    "op": "!=",
-                    "value": "\"\""
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "podTemplateSpec",
-                        "spec",
-                        "containers",
-                        "INDEX",
-                        "lifecycle",
-                        "preStop"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"networking\", \"nodePort\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "networking"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"podTemplateSpec\", \"spec\", \"containers\", \"INDEX\", \"livenessProbe\", \"tcpSocket\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "podTemplateSpec",
-                        "spec",
-                        "containers",
-                        "INDEX"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"storageConfig\", \"cassandraDataVolumeClaimSpec\", \"storageClassName\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "storageConfig",
-                        "cassandraDataVolumeClaimSpec"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"podTemplateSpec\", \"spec\", \"containers\", \"INDEX\", \"imagePullPolicy\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "podTemplateSpec",
-                        "spec",
-                        "containers",
-                        "INDEX",
-                        "image"
-                    ],
-                    "op": "==",
-                    "value": "\"\""
-                }
-            ],
-            "[\"root\", \"spec\", \"configBuilderImage\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "podTemplateSpec",
-                        "spec",
-                        "initContainers",
-                        "INDEX",
-                        "image"
-                    ],
-                    "op": "==",
-                    "value": "\"\""
-                }
-            ],
-            "[\"root\", \"spec\", \"configBuilderResources\", \"requests\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "configBuilderResources",
-                        "limits"
-                    ],
-                    "op": "==",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "systemLoggerResources",
-                        "limits"
-                    ],
-                    "op": "==",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"podTemplateSpec\", \"spec\", \"tolerations\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "storageConfig",
-                        "cassandraDataVolumeClaimSpec"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"dseWorkloads\", \"graphEnabled\"]": [
-                {
-                    "field": [
-                        "root",
                         "spec",
                         "dseWorkloads"
                     ],
@@ -7721,71 +7890,22 @@
                     "value": null
                 }
             ],
-            "[\"root\", \"spec\", \"systemLoggerResources\", \"requests\"]": [
+            "[\"spec\", \"podTemplateSpec\", \"spec\", \"containers\", \"INDEX\", \"livenessProbe\", \"exec\"]": [
                 {
                     "field": [
-                        "root",
-                        "spec",
-                        "configBuilderResources",
-                        "limits"
-                    ],
-                    "op": "==",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "systemLoggerResources",
-                        "limits"
-                    ],
-                    "op": "==",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"storageConfig\", \"additionalVolumes\", \"INDEX\", \"mountPath\"]": [
-                {
-                    "field": [
-                        "root",
                         "spec",
                         "podTemplateSpec",
                         "spec",
                         "containers",
-                        "INDEX",
-                        "image"
-                    ],
-                    "op": "!=",
-                    "value": "\"\""
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "podTemplateSpec",
-                        "spec",
-                        "containers",
-                        "INDEX",
-                        "lifecycle",
-                        "preStop"
+                        "INDEX"
                     ],
                     "op": "!=",
                     "value": null
                 }
             ],
-            "[\"root\", \"spec\", \"podTemplateSpec\", \"spec\", \"dnsPolicy\"]": [
+            "[\"spec\", \"tolerations\"]": [
                 {
                     "field": [
-                        "root",
-                        "spec",
-                        "networking",
-                        "hostNetwork"
-                    ],
-                    "op": "==",
-                    "value": "true"
-                },
-                {
-                    "field": [
-                        "root",
                         "spec",
                         "storageConfig",
                         "cassandraDataVolumeClaimSpec"
@@ -7794,132 +7914,9 @@
                     "value": null
                 }
             ],
-            "[\"root\", \"spec\", \"podTemplateSpec\", \"spec\", \"containers\", \"INDEX\", \"lifecycle\", \"preStop\"]": [
+            "[\"spec\", \"resources\", \"requests\"]": [
                 {
                     "field": [
-                        "root",
-                        "spec",
-                        "podTemplateSpec",
-                        "spec",
-                        "containers",
-                        "INDEX",
-                        "image"
-                    ],
-                    "op": "!=",
-                    "value": "\"\""
-                }
-            ],
-            "[\"root\", \"spec\", \"systemLoggerImage\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "podTemplateSpec",
-                        "spec",
-                        "containers",
-                        "INDEX",
-                        "image"
-                    ],
-                    "op": "==",
-                    "value": "\"\""
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "podTemplateSpec",
-                        "spec",
-                        "containers",
-                        "INDEX",
-                        "image"
-                    ],
-                    "op": "!=",
-                    "value": "\"\""
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "podTemplateSpec",
-                        "spec",
-                        "containers",
-                        "INDEX",
-                        "lifecycle",
-                        "preStop"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"podTemplateSpec\", \"spec\", \"nodeSelector\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "storageConfig",
-                        "cassandraDataVolumeClaimSpec"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"podTemplateSpec\", \"spec\", \"serviceAccountName\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "storageConfig",
-                        "cassandraDataVolumeClaimSpec"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"storageConfig\", \"additionalVolumes\", \"INDEX\", \"pvcSpec\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "storageConfig",
-                        "cassandraDataVolumeClaimSpec"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"canaryUpgradeCount\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "canaryUpgrade"
-                    ],
-                    "op": "!=",
-                    "value": "true"
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "canaryUpgrade"
-                    ],
-                    "op": "==",
-                    "value": "true"
-                }
-            ],
-            "[\"root\", \"spec\", \"resources\", \"limits\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "allowMultipleNodesPerWorker"
-                    ],
-                    "op": "==",
-                    "value": "true"
-                },
-                {
-                    "field": [
-                        "root",
                         "spec",
                         "dseWorkloads",
                         "searchEnabled"
@@ -7929,16 +7926,6 @@
                 },
                 {
                     "field": [
-                        "root",
-                        "spec",
-                        "dseWorkloads"
-                    ],
-                    "op": "==",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
                         "spec",
                         "serverType"
                     ],
@@ -7947,126 +7934,45 @@
                 },
                 {
                     "field": [
-                        "root",
+                        "spec",
+                        "allowMultipleNodesPerWorker"
+                    ],
+                    "op": "==",
+                    "value": "true"
+                },
+                {
+                    "field": [
                         "spec",
                         "serverType"
                     ],
                     "op": "!=",
                     "value": "\"cassandra\""
-                }
-            ],
-            "[\"root\", \"spec\", \"podTemplateSpec\", \"spec\", \"containers\", \"INDEX\", \"readinessProbe\", \"tcpSocket\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "podTemplateSpec",
-                        "spec",
-                        "containers",
-                        "INDEX"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"podTemplateSpec\", \"spec\", \"terminationGracePeriodSeconds\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "storageConfig",
-                        "cassandraDataVolumeClaimSpec"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"podTemplateSpec\", \"spec\", \"containers\", \"INDEX\", \"readinessProbe\", \"httpGet\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "podTemplateSpec",
-                        "spec",
-                        "containers",
-                        "INDEX"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"disableSystemLoggerSidecar\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "podTemplateSpec",
-                        "spec",
-                        "containers",
-                        "INDEX",
-                        "image"
-                    ],
-                    "op": "!=",
-                    "value": "\"\""
                 },
                 {
                     "field": [
-                        "root",
-                        "spec",
-                        "podTemplateSpec",
-                        "spec",
-                        "containers",
-                        "INDEX",
-                        "lifecycle",
-                        "preStop"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"resources\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "podTemplateSpec",
-                        "spec",
-                        "containers",
-                        "INDEX",
-                        "image"
-                    ],
-                    "op": "!=",
-                    "value": "\"\""
-                }
-            ],
-            "[\"root\", \"spec\", \"dseWorkloads\", \"searchEnabled\"]": [
-                {
-                    "field": [
-                        "root",
                         "spec",
                         "dseWorkloads"
                     ],
-                    "op": "!=",
+                    "op": "==",
                     "value": null
                 }
             ],
-            "[\"root\", \"spec\", \"podTemplateSpec\", \"spec\", \"containers\", \"INDEX\", \"ports\"]": [
+            "[\"spec\", \"podTemplateSpec\", \"spec\", \"containers\", \"INDEX\", \"livenessProbe\", \"httpGet\"]": [
                 {
                     "field": [
-                        "root",
                         "spec",
                         "podTemplateSpec",
                         "spec",
                         "containers",
-                        "INDEX",
-                        "image"
+                        "INDEX"
                     ],
                     "op": "!=",
-                    "value": "\"\""
-                },
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"storageConfig\", \"additionalVolumes\", \"INDEX\", \"mountPath\"]": [
                 {
                     "field": [
-                        "root",
                         "spec",
                         "podTemplateSpec",
                         "spec",
@@ -8077,12 +7983,9 @@
                     ],
                     "op": "!=",
                     "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"podTemplateSpec\", \"spec\", \"containers\", \"INDEX\", \"lifecycle\"]": [
+                },
                 {
                     "field": [
-                        "root",
                         "spec",
                         "podTemplateSpec",
                         "spec",
@@ -8094,10 +7997,68 @@
                     "value": "\"\""
                 }
             ],
-            "[\"root\", \"spec\", \"storageConfig\", \"cassandraDataVolumeClaimSpec\", \"accessModes\"]": [
+            "[\"spec\", \"podTemplateSpec\", \"spec\", \"containers\", \"INDEX\", \"resources\"]": [
                 {
                     "field": [
-                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "image"
+                    ],
+                    "op": "!=",
+                    "value": "\"\""
+                }
+            ],
+            "[\"spec\", \"podTemplateSpec\", \"spec\", \"containers\", \"INDEX\", \"livenessProbe\", \"tcpSocket\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"podTemplateSpec\", \"spec\", \"affinity\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "storageConfig",
+                        "cassandraDataVolumeClaimSpec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"podTemplateSpec\", \"spec\", \"nodeSelector\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "storageConfig",
+                        "cassandraDataVolumeClaimSpec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"storageConfig\", \"cassandraDataVolumeClaimSpec\", \"accessModes\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "storageConfig",
+                        "cassandraDataVolumeClaimSpec",
+                        "storageClassName"
+                    ],
+                    "op": "!=",
+                    "value": null
+                },
+                {
+                    "field": [
                         "spec",
                         "storageConfig",
                         "cassandraDataVolumeClaimSpec",
@@ -8108,35 +8069,9 @@
                 },
                 {
                     "field": [
-                        "root",
                         "spec",
                         "storageConfig",
                         "cassandraDataVolumeClaimSpec"
-                    ],
-                    "op": "!=",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "storageConfig",
-                        "cassandraDataVolumeClaimSpec",
-                        "storageClassName"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"podTemplateSpec\", \"spec\", \"containers\", \"INDEX\", \"livenessProbe\", \"exec\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "podTemplateSpec",
-                        "spec",
-                        "containers",
-                        "INDEX"
                     ],
                     "op": "!=",
                     "value": null

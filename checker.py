@@ -193,6 +193,7 @@ class Checker(object):
             for condition in conditions:
                 if not self.check_condition(snapshot.input, condition):
                     # if one condition does not satisfy, skip this testcase
+                    logging.info('Field precondition does not satisfy, skip this testcase')
                     return True
 
         return False

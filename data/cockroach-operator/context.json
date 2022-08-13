@@ -1310,16 +1310,11 @@
         }
     },
     "preload_images": [
-        "docker.io/cockroachdb/cockroach:v21.2.10",
-        "docker.io/cockroachdb/cockroach-operator:v2.7.0"
+        "docker.io/cockroachdb/cockroach-operator:v2.7.0",
+        "docker.io/cockroachdb/cockroach:v21.2.10"
     ],
     "analysis_result": {
         "control_flow_fields": [
-            [
-                "root",
-                "spec",
-                "cockroachDBVersion"
-            ],
             [
                 "root",
                 "spec",
@@ -1331,24 +1326,28 @@
             [
                 "root",
                 "spec",
-                "dataStore",
-                "pvc",
-                "source",
-                "claimName"
+                "cockroachDBVersion"
             ],
             [
                 "root",
                 "spec",
                 "additionalArgs",
                 "INDEX"
+            ],
+            [
+                "root",
+                "spec",
+                "dataStore",
+                "pvc",
+                "source",
+                "claimName"
             ]
         ],
         "default_value_map": {},
         "field_conditions_map": {
-            "[\"root\", \"spec\", \"dataStore\", \"pvc\", \"spec\"]": [
+            "[\"spec\", \"dataStore\", \"pvc\", \"source\", \"claimName\"]": [
                 {
                     "field": [
-                        "root",
                         "spec",
                         "dataStore",
                         "pvc"
@@ -1357,10 +1356,9 @@
                     "value": null
                 }
             ],
-            "[\"root\", \"spec\", \"ingress\", \"ui\", \"tls\", \"INDEX\", \"hosts\"]": [
+            "[\"spec\", \"ingress\", \"ui\", \"tls\", \"INDEX\", \"hosts\"]": [
                 {
                     "field": [
-                        "root",
                         "spec",
                         "ingress"
                     ],
@@ -1368,10 +1366,40 @@
                     "value": null
                 }
             ],
-            "[\"root\", \"spec\", \"ingress\", \"ui\", \"host\"]": [
+            "[\"spec\", \"dataStore\", \"pvc\", \"spec\", \"resources\", \"requests\"]": [
                 {
                     "field": [
-                        "root",
+                        "spec",
+                        "dataStore",
+                        "pvc"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"dataStore\", \"pvc\", \"source\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "dataStore",
+                        "pvc"
+                    ],
+                    "op": "!=",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "dataStore",
+                        "hostPath"
+                    ],
+                    "op": "==",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"ingress\", \"ui\", \"host\"]": [
+                {
+                    "field": [
                         "spec",
                         "ingress",
                         "ui"
@@ -1380,10 +1408,9 @@
                     "value": null
                 }
             ],
-            "[\"root\", \"spec\", \"ingress\", \"ui\", \"ingressClassName\"]": [
+            "[\"spec\", \"ingress\", \"ui\", \"tls\"]": [
                 {
                     "field": [
-                        "root",
                         "spec",
                         "ingress"
                     ],
@@ -1391,10 +1418,19 @@
                     "value": null
                 }
             ],
-            "[\"root\", \"spec\", \"dataStore\", \"pvc\", \"spec\", \"resources\", \"requests\"]": [
+            "[\"spec\", \"ingress\", \"ui\", \"ingressClassName\"]": [
                 {
                     "field": [
-                        "root",
+                        "spec",
+                        "ingress"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"dataStore\", \"pvc\", \"spec\"]": [
+                {
+                    "field": [
                         "spec",
                         "dataStore",
                         "pvc"
@@ -1403,10 +1439,9 @@
                     "value": null
                 }
             ],
-            "[\"root\", \"spec\", \"ingress\", \"ui\", \"tls\"]": [
+            "[\"spec\", \"ingress\", \"sql\", \"ingressClassName\"]": [
                 {
                     "field": [
-                        "root",
                         "spec",
                         "ingress"
                     ],
@@ -1414,56 +1449,9 @@
                     "value": null
                 }
             ],
-            "[\"root\", \"spec\", \"dataStore\", \"pvc\", \"source\"]": [
+            "[\"spec\", \"ingress\", \"ui\", \"tls\", \"INDEX\", \"secretName\"]": [
                 {
                     "field": [
-                        "root",
-                        "spec",
-                        "dataStore",
-                        "hostPath"
-                    ],
-                    "op": "==",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "dataStore",
-                        "pvc"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"dataStore\", \"pvc\", \"spec\", \"volumeMode\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "dataStore",
-                        "pvc"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"dataStore\", \"pvc\", \"source\", \"claimName\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "dataStore",
-                        "pvc"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"ingress\", \"sql\", \"ingressClassName\"]": [
-                {
-                    "field": [
-                        "root",
                         "spec",
                         "ingress"
                     ],
@@ -1471,12 +1459,12 @@
                     "value": null
                 }
             ],
-            "[\"root\", \"spec\", \"ingress\", \"ui\", \"tls\", \"INDEX\", \"secretName\"]": [
+            "[\"spec\", \"dataStore\", \"pvc\", \"spec\", \"volumeMode\"]": [
                 {
                     "field": [
-                        "root",
                         "spec",
-                        "ingress"
+                        "dataStore",
+                        "pvc"
                     ],
                     "op": "!=",
                     "value": null

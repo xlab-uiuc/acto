@@ -13383,9 +13383,9 @@
         }
     },
     "preload_images": [
+        "docker.io/percona/percona-xtradb-cluster-operator:1.11.0-logcollector",
         "docker.io/percona/percona-xtradb-cluster-operator:1.11.0-haproxy",
         "docker.io/percona/percona-xtradb-cluster:8.0.27-18.1",
-        "docker.io/percona/percona-xtradb-cluster-operator:1.11.0-logcollector",
         "docker.io/percona/percona-xtradb-cluster-operator:1.11.0"
     ],
     "analysis_result": {
@@ -13393,58 +13393,10 @@
             [
                 "root",
                 "spec",
-                "proxysql",
-                "enabled"
-            ],
-            [
-                "root",
-                "spec",
                 "pxc",
                 "replicationChannels",
                 "INDEX",
                 "sourcesList"
-            ],
-            [
-                "root",
-                "spec",
-                "pause"
-            ],
-            [
-                "root",
-                "spec",
-                "backup",
-                "pitr",
-                "storageName"
-            ],
-            [
-                "root",
-                "spec",
-                "pxc",
-                "livenessProbes",
-                "successThreshold"
-            ],
-            [
-                "root",
-                "spec",
-                "backup",
-                "storages"
-            ],
-            [
-                "root",
-                "spec",
-                "enableCRValidationWebhook"
-            ],
-            [
-                "root",
-                "spec",
-                "haproxy",
-                "enabled"
-            ],
-            [
-                "root",
-                "spec",
-                "pmm",
-                "enabled"
             ],
             [
                 "root",
@@ -13459,23 +13411,36 @@
                 "root",
                 "spec",
                 "pxc",
+                "readinessProbes",
+                "periodSeconds"
+            ],
+            [
+                "root",
+                "spec",
+                "proxysql",
+                "enabled"
+            ],
+            [
+                "root",
+                "spec",
+                "pmm",
+                "enabled"
+            ],
+            [
+                "root",
+                "spec",
+                "backup",
+                "schedule",
+                "INDEX",
+                "storageName"
+            ],
+            [
+                "root",
+                "spec",
+                "pxc",
                 "replicationChannels",
                 "INDEX",
-                "sourcesList",
-                "INDEX",
-                "weight"
-            ],
-            [
-                "root",
-                "spec",
-                "haproxy",
-                "readinessProbes",
-                "initialDelaySeconds"
-            ],
-            [
-                "root",
-                "spec",
-                "updateStrategy"
+                "isSource"
             ],
             [
                 "root",
@@ -13483,6 +13448,53 @@
                 "haproxy",
                 "livenessProbes",
                 "periodSeconds"
+            ],
+            [
+                "root",
+                "spec",
+                "backup",
+                "pitr",
+                "storageName"
+            ],
+            [
+                "root",
+                "spec",
+                "haproxy",
+                "livenessProbes",
+                "failureThreshold"
+            ],
+            [
+                "root",
+                "spec",
+                "pause"
+            ],
+            [
+                "root",
+                "spec",
+                "upgradeOptions",
+                "apply"
+            ],
+            [
+                "root",
+                "spec",
+                "backup",
+                "pitr",
+                "enabled"
+            ],
+            [
+                "root",
+                "spec",
+                "backup",
+                "pitr",
+                "resources",
+                "limits"
+            ],
+            [
+                "root",
+                "spec",
+                "pxc",
+                "livenessProbes",
+                "initialDelaySeconds"
             ],
             [
                 "root",
@@ -13498,38 +13510,12 @@
                 "root",
                 "spec",
                 "haproxy",
-                "replicasServiceEnabled"
+                "enabled"
             ],
             [
                 "root",
                 "spec",
-                "pxc",
-                "readinessProbes",
-                "failureThreshold"
-            ],
-            [
-                "root",
-                "spec",
-                "proxysql",
-                "sidecars",
-                "INDEX",
-                "name"
-            ],
-            [
-                "root",
-                "spec",
-                "pxc",
-                "sidecars",
-                "INDEX",
-                "name"
-            ],
-            [
-                "root",
-                "spec",
-                "haproxy",
-                "sidecars",
-                "INDEX",
-                "name"
+                "updateStrategy"
             ],
             [
                 "root",
@@ -13540,72 +13526,10 @@
                 "root",
                 "spec",
                 "pxc",
-                "expose",
-                "type"
-            ],
-            [
-                "root",
-                "spec",
-                "backup",
-                "pitr",
-                "enabled"
-            ],
-            [
-                "root",
-                "spec",
-                "pxc",
-                "readinessProbes",
-                "periodSeconds"
-            ],
-            [
-                "root",
-                "spec",
-                "backup",
-                "schedule",
-                "INDEX",
-                "storageName"
-            ],
-            [
-                "root",
-                "spec",
-                "logcollector",
-                "enabled"
-            ],
-            [
-                "root",
-                "spec",
-                "pxc",
-                "readinessProbes",
-                "initialDelaySeconds"
-            ],
-            [
-                "root",
-                "spec",
-                "haproxy",
-                "livenessProbes",
-                "failureThreshold"
-            ],
-            [
-                "root",
-                "spec",
-                "pxc",
                 "replicationChannels",
                 "INDEX",
-                "sourcesList",
-                "INDEX",
-                "host"
-            ],
-            [
-                "root",
-                "spec",
-                "pxc",
-                "autoRecovery"
-            ],
-            [
-                "root",
-                "spec",
-                "upgradeOptions",
-                "apply"
+                "configuration",
+                "sourceConnectRetry"
             ],
             [
                 "root",
@@ -13618,50 +13542,8 @@
             [
                 "root",
                 "spec",
-                "pxc",
-                "livenessProbes",
-                "initialDelaySeconds"
-            ],
-            [
-                "root",
-                "spec",
-                "proxysql",
-                "forceUnsafeBootstrap"
-            ],
-            [
-                "root",
-                "spec",
-                "pxc",
-                "forceUnsafeBootstrap"
-            ],
-            [
-                "root",
-                "spec",
-                "haproxy",
-                "forceUnsafeBootstrap"
-            ],
-            [
-                "root",
-                "spec",
-                "pxc",
-                "replicationChannels",
-                "INDEX",
-                "isSource"
-            ],
-            [
-                "root",
-                "spec",
-                "haproxy",
-                "readinessProbes",
-                "periodSeconds"
-            ],
-            [
-                "root",
-                "spec",
                 "backup",
-                "pitr",
-                "resources",
-                "requests"
+                "storages"
             ],
             [
                 "root",
@@ -13681,9 +13563,144 @@
             [
                 "root",
                 "spec",
+                "pxc",
+                "expose",
+                "type"
+            ],
+            [
+                "root",
+                "spec",
+                "pxc",
+                "replicationChannels",
+                "INDEX",
+                "sourcesList",
+                "INDEX",
+                "weight"
+            ],
+            [
+                "root",
+                "spec",
+                "pxc",
+                "autoRecovery"
+            ],
+            [
+                "root",
+                "spec",
+                "proxysql",
+                "sidecars",
+                "INDEX",
+                "name"
+            ],
+            [
+                "root",
+                "spec",
+                "haproxy",
+                "sidecars",
+                "INDEX",
+                "name"
+            ],
+            [
+                "root",
+                "spec",
+                "pxc",
+                "sidecars",
+                "INDEX",
+                "name"
+            ],
+            [
+                "root",
+                "spec",
                 "haproxy",
                 "livenessProbes",
                 "successThreshold"
+            ],
+            [
+                "root",
+                "spec",
+                "logcollector",
+                "enabled"
+            ],
+            [
+                "root",
+                "spec",
+                "pxc",
+                "readinessProbes",
+                "initialDelaySeconds"
+            ],
+            [
+                "root",
+                "spec",
+                "haproxy",
+                "readinessProbes",
+                "periodSeconds"
+            ],
+            [
+                "root",
+                "spec",
+                "pxc",
+                "livenessProbes",
+                "successThreshold"
+            ],
+            [
+                "root",
+                "spec",
+                "enableCRValidationWebhook"
+            ],
+            [
+                "root",
+                "spec",
+                "haproxy",
+                "readinessProbes",
+                "initialDelaySeconds"
+            ],
+            [
+                "root",
+                "spec",
+                "pxc",
+                "readinessProbes",
+                "failureThreshold"
+            ],
+            [
+                "root",
+                "spec",
+                "pxc",
+                "replicationChannels",
+                "INDEX",
+                "sourcesList",
+                "INDEX",
+                "host"
+            ],
+            [
+                "root",
+                "spec",
+                "haproxy",
+                "replicasServiceEnabled"
+            ],
+            [
+                "root",
+                "spec",
+                "backup",
+                "pitr",
+                "resources",
+                "requests"
+            ],
+            [
+                "root",
+                "spec",
+                "proxysql",
+                "forceUnsafeBootstrap"
+            ],
+            [
+                "root",
+                "spec",
+                "haproxy",
+                "forceUnsafeBootstrap"
+            ],
+            [
+                "root",
+                "spec",
+                "pxc",
+                "forceUnsafeBootstrap"
             ],
             [
                 "root",
@@ -13703,6 +13720,14 @@
             [
                 "root",
                 "spec",
+                "haproxy",
+                "sidecarVolumes",
+                "INDEX",
+                "name"
+            ],
+            [
+                "root",
+                "spec",
                 "pxc",
                 "sidecarVolumes",
                 "INDEX",
@@ -13711,10 +13736,9 @@
             [
                 "root",
                 "spec",
-                "haproxy",
-                "sidecarVolumes",
-                "INDEX",
-                "name"
+                "pxc",
+                "expose",
+                "enabled"
             ],
             [
                 "root",
@@ -13742,30 +13766,6 @@
                 "INDEX",
                 "metadata",
                 "name"
-            ],
-            [
-                "root",
-                "spec",
-                "pxc",
-                "replicationChannels",
-                "INDEX",
-                "configuration",
-                "sourceConnectRetry"
-            ],
-            [
-                "root",
-                "spec",
-                "backup",
-                "pitr",
-                "resources",
-                "limits"
-            ],
-            [
-                "root",
-                "spec",
-                "pxc",
-                "expose",
-                "enabled"
             ]
         ],
         "default_value_map": {
@@ -13787,21 +13787,48 @@
             "[\"root\",\"spec\",\"pxc\",\"replicationChannels\",\"INDEX\",\"sourcesList\",\"INDEX\",\"weight\"]": "100"
         },
         "field_conditions_map": {
-            "[\"root\", \"spec\", \"pxc\", \"expose\", \"trafficPolicy\"]": [
+            "[\"spec\", \"backup\", \"pitr\", \"enabled\"]": [
                 {
                     "field": [
-                        "root",
                         "spec",
-                        "pxc",
-                        "expose",
-                        "type"
+                        "backup"
                     ],
-                    "op": "==",
-                    "value": "\"LoadBalancer\""
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"backup\", \"serviceAccountName\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "backup"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"proxysql\", \"sslSecretName\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "proxysql"
+                    ],
+                    "op": "!=",
+                    "value": null
                 },
                 {
                     "field": [
-                        "root",
+                        "spec",
+                        "proxysql",
+                        "enabled"
+                    ],
+                    "op": "==",
+                    "value": "true"
+                }
+            ],
+            "[\"spec\", \"pxc\", \"expose\", \"trafficPolicy\"]": [
+                {
+                    "field": [
                         "spec",
                         "pxc",
                         "expose",
@@ -13809,293 +13836,21 @@
                     ],
                     "op": "==",
                     "value": "\"NodePort\""
-                }
-            ],
-            "[\"root\", \"spec\", \"vaultSecretName\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "pxc"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"haproxy\", \"sidecarPVCs\", \"INDEX\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "pmm"
-                    ],
-                    "op": "==",
-                    "value": null
                 },
                 {
                     "field": [
-                        "root",
-                        "spec",
-                        "logcollector"
-                    ],
-                    "op": "==",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "logcollector",
-                        "enabled"
-                    ],
-                    "op": "!=",
-                    "value": "true"
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "pmm",
-                        "enabled"
-                    ],
-                    "op": "!=",
-                    "value": "true"
-                }
-            ],
-            "[\"root\", \"spec\", \"logcollector\", \"enabled\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "logcollector"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"pmm\", \"enabled\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "pmm"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"proxysql\", \"podDisruptionBudget\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "proxysql"
-                    ],
-                    "op": "!=",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "proxysql",
-                        "enabled"
-                    ],
-                    "op": "==",
-                    "value": "true"
-                }
-            ],
-            "[\"root\", \"spec\", \"tls\", \"SANs\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "tls",
-                        "issuerConf"
-                    ],
-                    "op": "!=",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "allowUnsafeConfigurations"
-                    ],
-                    "op": "!=",
-                    "value": "true"
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "tls"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"proxysql\", \"sslInternalSecretName\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "proxysql"
-                    ],
-                    "op": "!=",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "proxysql",
-                        "enabled"
-                    ],
-                    "op": "==",
-                    "value": "true"
-                }
-            ],
-            "[\"root\", \"spec\", \"haproxy\", \"hookScript\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "haproxy"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"haproxy\", \"livenessProbes\", \"failureThreshold\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "haproxy",
-                        "enabled"
-                    ],
-                    "op": "==",
-                    "value": "true"
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "haproxy"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"haproxy\", \"volumeSpec\", \"hostPath\"]": [
-                {
-                    "field": [
-                        "root",
                         "spec",
                         "pxc",
-                        "volumeSpec"
-                    ],
-                    "op": "!=",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "proxysql",
-                        "volumeSpec",
-                        "persistentVolumeClaim"
+                        "expose",
+                        "type"
                     ],
                     "op": "==",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "haproxy",
-                        "volumeSpec"
-                    ],
-                    "op": "!=",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "haproxy",
-                        "volumeSpec"
-                    ],
-                    "op": "==",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "proxysql",
-                        "volumeSpec"
-                    ],
-                    "op": "!=",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "pxc",
-                        "volumeSpec",
-                        "persistentVolumeClaim"
-                    ],
-                    "op": "==",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "haproxy",
-                        "volumeSpec",
-                        "persistentVolumeClaim"
-                    ],
-                    "op": "==",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "proxysql",
-                        "volumeSpec"
-                    ],
-                    "op": "==",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "pxc",
-                        "volumeSpec"
-                    ],
-                    "op": "==",
-                    "value": null
+                    "value": "\"LoadBalancer\""
                 }
             ],
-            "[\"root\", \"spec\", \"haproxy\", \"podDisruptionBudget\"]": [
+            "[\"spec\", \"haproxy\", \"configuration\"]": [
                 {
                     "field": [
-                        "root",
-                        "spec",
-                        "haproxy"
-                    ],
-                    "op": "!=",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
                         "spec",
                         "haproxy",
                         "enabled"
@@ -14104,10 +13859,45 @@
                     "value": "true"
                 }
             ],
-            "[\"root\", \"spec\", \"pxc\", \"replicationChannels\", \"INDEX\", \"configuration\"]": [
+            "[\"spec\", \"backup\", \"schedule\", \"INDEX\", \"schedule\"]": [
                 {
                     "field": [
-                        "root",
+                        "spec",
+                        "pause"
+                    ],
+                    "op": "!=",
+                    "value": "true"
+                },
+                {
+                    "field": [
+                        "spec",
+                        "backup"
+                    ],
+                    "op": "!=",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "backup",
+                        "pitr",
+                        "enabled"
+                    ],
+                    "op": "!=",
+                    "value": "true"
+                },
+                {
+                    "field": [
+                        "spec",
+                        "pause"
+                    ],
+                    "op": "==",
+                    "value": "true"
+                }
+            ],
+            "[\"spec\", \"pxc\", \"replicationChannels\", \"INDEX\", \"configuration\", \"sourceRetryCount\"]": [
+                {
+                    "field": [
                         "spec",
                         "pxc",
                         "replicationChannels",
@@ -14116,147 +13906,280 @@
                     ],
                     "op": "!=",
                     "value": "true"
-                }
-            ],
-            "[\"root\", \"spec\", \"backup\", \"schedule\", \"INDEX\", \"schedule\"]": [
+                },
                 {
                     "field": [
-                        "root",
                         "spec",
                         "pause"
                     ],
                     "op": "!=",
                     "value": "true"
-                },
+                }
+            ],
+            "[\"spec\", \"tls\", \"issuerConf\", \"kind\"]": [
                 {
                     "field": [
-                        "root",
                         "spec",
-                        "pause"
+                        "allowUnsafeConfigurations"
                     ],
-                    "op": "==",
+                    "op": "!=",
                     "value": "true"
                 },
                 {
                     "field": [
-                        "root",
+                        "spec",
+                        "tls",
+                        "issuerConf"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"pmm\", \"enabled\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "pmm"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"backup\", \"schedule\", \"INDEX\", \"storageName\"]": [
+                {
+                    "field": [
                         "spec",
                         "backup"
                     ],
                     "op": "!=",
                     "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "backup",
-                        "pitr",
-                        "enabled"
-                    ],
-                    "op": "!=",
-                    "value": "true"
                 }
             ],
-            "[\"root\", \"spec\", \"haproxy\", \"livenessProbes\", \"initialDelaySeconds\"]": [
+            "[\"spec\", \"haproxy\", \"podDisruptionBudget\"]": [
                 {
                     "field": [
-                        "root",
-                        "spec",
-                        "haproxy"
-                    ],
-                    "op": "!=",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
                         "spec",
                         "haproxy",
                         "enabled"
                     ],
                     "op": "==",
                     "value": "true"
-                }
-            ],
-            "[\"root\", \"spec\", \"proxysql\", \"sslSecretName\"]": [
+                },
                 {
                     "field": [
-                        "root",
+                        "spec",
+                        "haproxy"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"haproxy\", \"volumeSpec\", \"persistentVolumeClaim\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "proxysql",
+                        "volumeSpec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "haproxy",
+                        "volumeSpec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "pxc",
+                        "volumeSpec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"haproxy\", \"forceUnsafeBootstrap\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "pmm",
+                        "enabled"
+                    ],
+                    "op": "!=",
+                    "value": "true"
+                },
+                {
+                    "field": [
+                        "spec",
+                        "logcollector",
+                        "enabled"
+                    ],
+                    "op": "!=",
+                    "value": "true"
+                },
+                {
+                    "field": [
+                        "spec",
+                        "pmm"
+                    ],
+                    "op": "==",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "logcollector"
+                    ],
+                    "op": "==",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"haproxy\", \"annotations\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "pmm"
+                    ],
+                    "op": "==",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "logcollector",
+                        "enabled"
+                    ],
+                    "op": "!=",
+                    "value": "true"
+                },
+                {
+                    "field": [
+                        "spec",
+                        "logcollector"
+                    ],
+                    "op": "==",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "pmm",
+                        "enabled"
+                    ],
+                    "op": "!=",
+                    "value": "true"
+                }
+            ],
+            "[\"spec\", \"pxc\", \"forceUnsafeBootstrap\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "pmm",
+                        "enabled"
+                    ],
+                    "op": "!=",
+                    "value": "true"
+                },
+                {
+                    "field": [
+                        "spec",
+                        "logcollector",
+                        "enabled"
+                    ],
+                    "op": "!=",
+                    "value": "true"
+                },
+                {
+                    "field": [
+                        "spec",
+                        "pmm"
+                    ],
+                    "op": "==",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "logcollector"
+                    ],
+                    "op": "==",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"logcollector\", \"hookScript\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "logcollector"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"vaultSecretName\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "pxc"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"tls\", \"SANs\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "tls"
+                    ],
+                    "op": "!=",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "allowUnsafeConfigurations"
+                    ],
+                    "op": "!=",
+                    "value": "true"
+                },
+                {
+                    "field": [
+                        "spec",
+                        "tls",
+                        "issuerConf"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"proxysql\", \"podDisruptionBudget\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "proxysql",
+                        "enabled"
+                    ],
+                    "op": "==",
+                    "value": "true"
+                },
+                {
+                    "field": [
                         "spec",
                         "proxysql"
                     ],
                     "op": "!=",
                     "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "proxysql",
-                        "enabled"
-                    ],
-                    "op": "==",
-                    "value": "true"
                 }
             ],
-            "[\"root\", \"spec\", \"haproxy\", \"volumeSpec\", \"persistentVolumeClaim\"]": [
+            "[\"spec\", \"backup\", \"schedule\"]": [
                 {
                     "field": [
-                        "root",
-                        "spec",
-                        "proxysql",
-                        "volumeSpec"
-                    ],
-                    "op": "!=",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "pxc",
-                        "volumeSpec"
-                    ],
-                    "op": "!=",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "haproxy",
-                        "volumeSpec"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"haproxy\", \"readinessProbes\", \"initialDelaySeconds\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "haproxy",
-                        "enabled"
-                    ],
-                    "op": "==",
-                    "value": "true"
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "haproxy"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"backup\", \"pitr\", \"enabled\"]": [
-                {
-                    "field": [
-                        "root",
                         "spec",
                         "backup"
                     ],
@@ -14264,377 +14187,9 @@
                     "value": null
                 }
             ],
-            "[\"root\", \"spec\", \"pxc\", \"sidecarPVCs\", \"INDEX\", \"metadata\", \"name\"]": [
+            "[\"spec\", \"tls\", \"issuerConf\"]": [
                 {
                     "field": [
-                        "root",
-                        "spec",
-                        "pmm",
-                        "enabled"
-                    ],
-                    "op": "!=",
-                    "value": "true"
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "pmm"
-                    ],
-                    "op": "==",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "logcollector"
-                    ],
-                    "op": "==",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "logcollector",
-                        "enabled"
-                    ],
-                    "op": "!=",
-                    "value": "true"
-                }
-            ],
-            "[\"root\", \"spec\", \"proxysql\", \"annotations\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "pmm",
-                        "enabled"
-                    ],
-                    "op": "!=",
-                    "value": "true"
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "pmm"
-                    ],
-                    "op": "==",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "logcollector"
-                    ],
-                    "op": "==",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "logcollector",
-                        "enabled"
-                    ],
-                    "op": "!=",
-                    "value": "true"
-                }
-            ],
-            "[\"root\", \"spec\", \"haproxy\", \"externalTrafficPolicy\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "haproxy",
-                        "serviceType"
-                    ],
-                    "op": "==",
-                    "value": "\"LoadBalancer\""
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "haproxy",
-                        "serviceType"
-                    ],
-                    "op": "==",
-                    "value": "\"NodePort\""
-                }
-            ],
-            "[\"root\", \"spec\", \"haproxy\", \"livenessProbes\", \"periodSeconds\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "haproxy",
-                        "enabled"
-                    ],
-                    "op": "==",
-                    "value": "true"
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "haproxy"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"haproxy\", \"volumeSpec\", \"emptyDir\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "pxc",
-                        "volumeSpec",
-                        "persistentVolumeClaim"
-                    ],
-                    "op": "==",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "haproxy",
-                        "volumeSpec",
-                        "persistentVolumeClaim"
-                    ],
-                    "op": "==",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "proxysql",
-                        "volumeSpec"
-                    ],
-                    "op": "!=",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "pxc",
-                        "volumeSpec"
-                    ],
-                    "op": "!=",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "proxysql",
-                        "volumeSpec"
-                    ],
-                    "op": "==",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "haproxy",
-                        "volumeSpec"
-                    ],
-                    "op": "==",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "haproxy",
-                        "volumeSpec"
-                    ],
-                    "op": "!=",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "proxysql",
-                        "volumeSpec",
-                        "persistentVolumeClaim"
-                    ],
-                    "op": "==",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "pxc",
-                        "volumeSpec"
-                    ],
-                    "op": "==",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"proxysql\", \"sidecarPVCs\", \"INDEX\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "pmm",
-                        "enabled"
-                    ],
-                    "op": "!=",
-                    "value": "true"
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "pmm"
-                    ],
-                    "op": "==",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "logcollector"
-                    ],
-                    "op": "==",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "logcollector",
-                        "enabled"
-                    ],
-                    "op": "!=",
-                    "value": "true"
-                }
-            ],
-            "[\"root\", \"spec\", \"proxysql\", \"configuration\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "proxysql"
-                    ],
-                    "op": "!=",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "proxysql",
-                        "enabled"
-                    ],
-                    "op": "==",
-                    "value": "true"
-                }
-            ],
-            "[\"root\", \"spec\", \"backup\", \"serviceAccountName\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "backup"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"backup\", \"pitr\", \"storageName\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "backup"
-                    ],
-                    "op": "!=",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "backup",
-                        "pitr",
-                        "enabled"
-                    ],
-                    "op": "==",
-                    "value": "true"
-                }
-            ],
-            "[\"root\", \"spec\", \"backup\", \"backoffLimit\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "backup"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"backup\", \"schedule\", \"INDEX\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "backup"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"backup\", \"schedule\", \"INDEX\", \"storageName\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "backup"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"backup\", \"pitr\", \"timeBetweenUploads\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "backup"
-                    ],
-                    "op": "!=",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "backup",
-                        "pitr",
-                        "enabled"
-                    ],
-                    "op": "==",
-                    "value": "true"
-                }
-            ],
-            "[\"root\", \"spec\", \"tls\", \"issuerConf\"]": [
-                {
-                    "field": [
-                        "root",
                         "spec",
                         "tls"
                     ],
@@ -14642,329 +14197,28 @@
                     "value": null
                 }
             ],
-            "[\"root\", \"spec\", \"tls\", \"issuerConf\", \"kind\"]": [
+            "[\"spec\", \"haproxy\", \"livenessProbes\", \"initialDelaySeconds\"]": [
                 {
                     "field": [
-                        "root",
                         "spec",
-                        "tls",
-                        "issuerConf"
+                        "haproxy",
+                        "enabled"
                     ],
-                    "op": "!=",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "allowUnsafeConfigurations"
-                    ],
-                    "op": "!=",
+                    "op": "==",
                     "value": "true"
-                }
-            ],
-            "[\"root\", \"spec\", \"haproxy\", \"replicasExternalTrafficPolicy\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "haproxy",
-                        "replicasServiceType"
-                    ],
-                    "op": "==",
-                    "value": "\"NodePort\""
                 },
                 {
                     "field": [
-                        "root",
-                        "spec",
-                        "haproxy",
-                        "replicasServiceType"
-                    ],
-                    "op": "==",
-                    "value": "\"LoadBalancer\""
-                }
-            ],
-            "[\"root\", \"spec\", \"pxc\", \"podDisruptionBudget\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "pxc"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"proxysql\", \"hookScript\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "proxysql"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"logCollectorSecretName\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "pxc"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"haproxy\", \"livenessProbes\", \"successThreshold\"]": [
-                {
-                    "field": [
-                        "root",
                         "spec",
                         "haproxy"
                     ],
                     "op": "!=",
                     "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "haproxy",
-                        "enabled"
-                    ],
-                    "op": "==",
-                    "value": "true"
                 }
             ],
-            "[\"root\", \"spec\", \"pxc\", \"forceUnsafeBootstrap\"]": [
+            "[\"spec\", \"backup\", \"schedule\", \"INDEX\"]": [
                 {
                     "field": [
-                        "root",
-                        "spec",
-                        "pmm",
-                        "enabled"
-                    ],
-                    "op": "!=",
-                    "value": "true"
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "pmm"
-                    ],
-                    "op": "==",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "logcollector"
-                    ],
-                    "op": "==",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "logcollector",
-                        "enabled"
-                    ],
-                    "op": "!=",
-                    "value": "true"
-                }
-            ],
-            "[\"root\", \"spec\", \"proxysql\", \"forceUnsafeBootstrap\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "pmm",
-                        "enabled"
-                    ],
-                    "op": "!=",
-                    "value": "true"
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "pmm"
-                    ],
-                    "op": "==",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "logcollector"
-                    ],
-                    "op": "==",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "logcollector",
-                        "enabled"
-                    ],
-                    "op": "!=",
-                    "value": "true"
-                }
-            ],
-            "[\"root\", \"spec\", \"haproxy\", \"sidecarPVCs\", \"INDEX\", \"metadata\", \"name\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "pmm"
-                    ],
-                    "op": "==",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "logcollector"
-                    ],
-                    "op": "==",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "logcollector",
-                        "enabled"
-                    ],
-                    "op": "!=",
-                    "value": "true"
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "pmm",
-                        "enabled"
-                    ],
-                    "op": "!=",
-                    "value": "true"
-                }
-            ],
-            "[\"root\", \"spec\", \"upgradeOptions\", \"schedule\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "updateStrategy"
-                    ],
-                    "op": "==",
-                    "value": "\"SmartUpdate\""
-                }
-            ],
-            "[\"root\", \"spec\", \"logcollector\", \"configuration\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "logcollector"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"haproxy\", \"annotations\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "pmm"
-                    ],
-                    "op": "==",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "logcollector"
-                    ],
-                    "op": "==",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "logcollector",
-                        "enabled"
-                    ],
-                    "op": "!=",
-                    "value": "true"
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "pmm",
-                        "enabled"
-                    ],
-                    "op": "!=",
-                    "value": "true"
-                }
-            ],
-            "[\"root\", \"spec\", \"pxc\", \"sidecarPVCs\", \"INDEX\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "logcollector",
-                        "enabled"
-                    ],
-                    "op": "!=",
-                    "value": "true"
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "pmm",
-                        "enabled"
-                    ],
-                    "op": "!=",
-                    "value": "true"
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "pmm"
-                    ],
-                    "op": "==",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "logcollector"
-                    ],
-                    "op": "==",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"backup\", \"schedule\"]": [
-                {
-                    "field": [
-                        "root",
                         "spec",
                         "backup"
                     ],
@@ -14972,62 +14226,9 @@
                     "value": null
                 }
             ],
-            "[\"root\", \"spec\", \"tls\", \"issuerConf\", \"group\"]": [
+            "[\"spec\", \"haproxy\", \"hookScript\"]": [
                 {
                     "field": [
-                        "root",
-                        "spec",
-                        "allowUnsafeConfigurations"
-                    ],
-                    "op": "!=",
-                    "value": "true"
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "tls",
-                        "issuerConf"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"tls\", \"issuerConf\", \"name\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "allowUnsafeConfigurations"
-                    ],
-                    "op": "!=",
-                    "value": "true"
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "tls",
-                        "issuerConf"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"haproxy\", \"readinessProbes\", \"periodSeconds\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "haproxy",
-                        "enabled"
-                    ],
-                    "op": "==",
-                    "value": "true"
-                },
-                {
-                    "field": [
-                        "root",
                         "spec",
                         "haproxy"
                     ],
@@ -15035,10 +14236,120 @@
                     "value": null
                 }
             ],
-            "[\"root\", \"spec\", \"upgradeOptions\", \"apply\"]": [
+            "[\"spec\", \"haproxy\", \"externalTrafficPolicy\"]": [
                 {
                     "field": [
-                        "root",
+                        "spec",
+                        "haproxy",
+                        "serviceType"
+                    ],
+                    "op": "==",
+                    "value": "\"NodePort\""
+                },
+                {
+                    "field": [
+                        "spec",
+                        "haproxy",
+                        "serviceType"
+                    ],
+                    "op": "==",
+                    "value": "\"LoadBalancer\""
+                }
+            ],
+            "[\"spec\", \"haproxy\", \"sidecarPVCs\", \"INDEX\", \"metadata\", \"name\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "logcollector",
+                        "enabled"
+                    ],
+                    "op": "!=",
+                    "value": "true"
+                },
+                {
+                    "field": [
+                        "spec",
+                        "logcollector"
+                    ],
+                    "op": "==",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "pmm",
+                        "enabled"
+                    ],
+                    "op": "!=",
+                    "value": "true"
+                },
+                {
+                    "field": [
+                        "spec",
+                        "pmm"
+                    ],
+                    "op": "==",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"pxc\", \"sidecarPVCs\", \"INDEX\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "logcollector"
+                    ],
+                    "op": "==",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "pmm",
+                        "enabled"
+                    ],
+                    "op": "!=",
+                    "value": "true"
+                },
+                {
+                    "field": [
+                        "spec",
+                        "pmm"
+                    ],
+                    "op": "==",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "logcollector",
+                        "enabled"
+                    ],
+                    "op": "!=",
+                    "value": "true"
+                }
+            ],
+            "[\"spec\", \"haproxy\", \"livenessProbes\", \"successThreshold\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "haproxy"
+                    ],
+                    "op": "!=",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "haproxy",
+                        "enabled"
+                    ],
+                    "op": "==",
+                    "value": "true"
+                }
+            ],
+            "[\"spec\", \"upgradeOptions\", \"apply\"]": [
+                {
+                    "field": [
                         "spec",
                         "upgradeOptions",
                         "schedule"
@@ -15048,7 +14359,6 @@
                 },
                 {
                     "field": [
-                        "root",
                         "spec",
                         "updateStrategy"
                     ],
@@ -15056,73 +14366,67 @@
                     "value": "\"SmartUpdate\""
                 }
             ],
-            "[\"root\", \"spec\", \"pxc\", \"replicationChannels\", \"INDEX\", \"configuration\", \"sourceConnectRetry\"]": [
+            "[\"spec\", \"haproxy\", \"livenessProbes\", \"periodSeconds\"]": [
                 {
                     "field": [
-                        "root",
                         "spec",
-                        "pxc",
-                        "replicationChannels",
-                        "INDEX",
-                        "isSource"
-                    ],
-                    "op": "!=",
-                    "value": "true"
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "pause"
-                    ],
-                    "op": "!=",
-                    "value": "true"
-                }
-            ],
-            "[\"root\", \"spec\", \"haproxy\", \"forceUnsafeBootstrap\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "pmm",
+                        "haproxy",
                         "enabled"
                     ],
-                    "op": "!=",
+                    "op": "==",
                     "value": "true"
                 },
                 {
                     "field": [
-                        "root",
                         "spec",
-                        "pmm"
+                        "haproxy"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"backup\", \"backoffLimit\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "backup"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"haproxy\", \"readinessProbes\", \"initialDelaySeconds\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "haproxy",
+                        "enabled"
                     ],
                     "op": "==",
-                    "value": null
+                    "value": "true"
                 },
                 {
                     "field": [
-                        "root",
+                        "spec",
+                        "haproxy"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"logcollector\", \"enabled\"]": [
+                {
+                    "field": [
                         "spec",
                         "logcollector"
                     ],
-                    "op": "==",
-                    "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "logcollector",
-                        "enabled"
-                    ],
                     "op": "!=",
-                    "value": "true"
+                    "value": null
                 }
             ],
-            "[\"root\", \"spec\", \"proxysql\", \"sidecarPVCs\", \"INDEX\", \"metadata\", \"name\"]": [
+            "[\"spec\", \"haproxy\", \"sidecarPVCs\", \"INDEX\"]": [
                 {
                     "field": [
-                        "root",
                         "spec",
                         "logcollector",
                         "enabled"
@@ -15132,7 +14436,14 @@
                 },
                 {
                     "field": [
-                        "root",
+                        "spec",
+                        "logcollector"
+                    ],
+                    "op": "==",
+                    "value": null
+                },
+                {
+                    "field": [
                         "spec",
                         "pmm",
                         "enabled"
@@ -15142,61 +14453,16 @@
                 },
                 {
                     "field": [
-                        "root",
                         "spec",
                         "pmm"
                     ],
                     "op": "==",
                     "value": null
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "logcollector"
-                    ],
-                    "op": "==",
-                    "value": null
                 }
             ],
-            "[\"root\", \"spec\", \"logcollector\", \"hookScript\"]": [
+            "[\"spec\", \"pxc\", \"podDisruptionBudget\"]": [
                 {
                     "field": [
-                        "root",
-                        "spec",
-                        "logcollector"
-                    ],
-                    "op": "!=",
-                    "value": null
-                }
-            ],
-            "[\"root\", \"spec\", \"pxc\", \"replicationChannels\", \"INDEX\", \"configuration\", \"sourceRetryCount\"]": [
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "pxc",
-                        "replicationChannels",
-                        "INDEX",
-                        "isSource"
-                    ],
-                    "op": "!=",
-                    "value": "true"
-                },
-                {
-                    "field": [
-                        "root",
-                        "spec",
-                        "pause"
-                    ],
-                    "op": "!=",
-                    "value": "true"
-                }
-            ],
-            "[\"root\", \"spec\", \"pxc\", \"hookScript\"]": [
-                {
-                    "field": [
-                        "root",
                         "spec",
                         "pxc"
                     ],
@@ -15204,16 +14470,614 @@
                     "value": null
                 }
             ],
-            "[\"root\", \"spec\", \"haproxy\", \"configuration\"]": [
+            "[\"spec\", \"proxysql\", \"sidecarPVCs\", \"INDEX\"]": [
                 {
                     "field": [
-                        "root",
+                        "spec",
+                        "logcollector"
+                    ],
+                    "op": "==",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "pmm",
+                        "enabled"
+                    ],
+                    "op": "!=",
+                    "value": "true"
+                },
+                {
+                    "field": [
+                        "spec",
+                        "pmm"
+                    ],
+                    "op": "==",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "logcollector",
+                        "enabled"
+                    ],
+                    "op": "!=",
+                    "value": "true"
+                }
+            ],
+            "[\"spec\", \"backup\", \"pitr\", \"timeBetweenUploads\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "backup",
+                        "pitr",
+                        "enabled"
+                    ],
+                    "op": "==",
+                    "value": "true"
+                },
+                {
+                    "field": [
+                        "spec",
+                        "backup"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"backup\", \"pitr\", \"storageName\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "backup"
+                    ],
+                    "op": "!=",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "backup",
+                        "pitr",
+                        "enabled"
+                    ],
+                    "op": "==",
+                    "value": "true"
+                }
+            ],
+            "[\"spec\", \"logcollector\", \"configuration\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "logcollector"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"pxc\", \"hookScript\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "pxc"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"haproxy\", \"volumeSpec\", \"hostPath\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "proxysql",
+                        "volumeSpec"
+                    ],
+                    "op": "==",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "pxc",
+                        "volumeSpec"
+                    ],
+                    "op": "==",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "proxysql",
+                        "volumeSpec",
+                        "persistentVolumeClaim"
+                    ],
+                    "op": "==",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "haproxy",
+                        "volumeSpec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "proxysql",
+                        "volumeSpec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "pxc",
+                        "volumeSpec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "haproxy",
+                        "volumeSpec"
+                    ],
+                    "op": "==",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "haproxy",
+                        "volumeSpec",
+                        "persistentVolumeClaim"
+                    ],
+                    "op": "==",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "pxc",
+                        "volumeSpec",
+                        "persistentVolumeClaim"
+                    ],
+                    "op": "==",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"upgradeOptions\", \"schedule\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "updateStrategy"
+                    ],
+                    "op": "==",
+                    "value": "\"SmartUpdate\""
+                }
+            ],
+            "[\"spec\", \"tls\", \"issuerConf\", \"name\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "allowUnsafeConfigurations"
+                    ],
+                    "op": "!=",
+                    "value": "true"
+                },
+                {
+                    "field": [
+                        "spec",
+                        "tls",
+                        "issuerConf"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"haproxy\", \"volumeSpec\", \"emptyDir\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "haproxy",
+                        "volumeSpec"
+                    ],
+                    "op": "==",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "proxysql",
+                        "volumeSpec",
+                        "persistentVolumeClaim"
+                    ],
+                    "op": "==",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "pxc",
+                        "volumeSpec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "pxc",
+                        "volumeSpec"
+                    ],
+                    "op": "==",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "pxc",
+                        "volumeSpec",
+                        "persistentVolumeClaim"
+                    ],
+                    "op": "==",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "proxysql",
+                        "volumeSpec"
+                    ],
+                    "op": "==",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "proxysql",
+                        "volumeSpec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "haproxy",
+                        "volumeSpec",
+                        "persistentVolumeClaim"
+                    ],
+                    "op": "==",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "haproxy",
+                        "volumeSpec"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"pxc\", \"replicationChannels\", \"INDEX\", \"configuration\", \"sourceConnectRetry\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "pause"
+                    ],
+                    "op": "!=",
+                    "value": "true"
+                },
+                {
+                    "field": [
+                        "spec",
+                        "pxc",
+                        "replicationChannels",
+                        "INDEX",
+                        "isSource"
+                    ],
+                    "op": "!=",
+                    "value": "true"
+                }
+            ],
+            "[\"spec\", \"pxc\", \"sidecarPVCs\", \"INDEX\", \"metadata\", \"name\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "logcollector",
+                        "enabled"
+                    ],
+                    "op": "!=",
+                    "value": "true"
+                },
+                {
+                    "field": [
+                        "spec",
+                        "logcollector"
+                    ],
+                    "op": "==",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "pmm",
+                        "enabled"
+                    ],
+                    "op": "!=",
+                    "value": "true"
+                },
+                {
+                    "field": [
+                        "spec",
+                        "pmm"
+                    ],
+                    "op": "==",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"tls\", \"issuerConf\", \"group\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "allowUnsafeConfigurations"
+                    ],
+                    "op": "!=",
+                    "value": "true"
+                },
+                {
+                    "field": [
+                        "spec",
+                        "tls",
+                        "issuerConf"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"proxysql\", \"configuration\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "proxysql",
+                        "enabled"
+                    ],
+                    "op": "==",
+                    "value": "true"
+                },
+                {
+                    "field": [
+                        "spec",
+                        "proxysql"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"haproxy\", \"readinessProbes\", \"periodSeconds\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "haproxy"
+                    ],
+                    "op": "!=",
+                    "value": null
+                },
+                {
+                    "field": [
                         "spec",
                         "haproxy",
                         "enabled"
                     ],
                     "op": "==",
                     "value": "true"
+                }
+            ],
+            "[\"spec\", \"proxysql\", \"hookScript\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "proxysql"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"proxysql\", \"forceUnsafeBootstrap\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "pmm",
+                        "enabled"
+                    ],
+                    "op": "!=",
+                    "value": "true"
+                },
+                {
+                    "field": [
+                        "spec",
+                        "logcollector",
+                        "enabled"
+                    ],
+                    "op": "!=",
+                    "value": "true"
+                },
+                {
+                    "field": [
+                        "spec",
+                        "pmm"
+                    ],
+                    "op": "==",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "logcollector"
+                    ],
+                    "op": "==",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"pxc\", \"replicationChannels\", \"INDEX\", \"configuration\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "pxc",
+                        "replicationChannels",
+                        "INDEX",
+                        "isSource"
+                    ],
+                    "op": "!=",
+                    "value": "true"
+                }
+            ],
+            "[\"spec\", \"haproxy\", \"livenessProbes\", \"failureThreshold\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "haproxy"
+                    ],
+                    "op": "!=",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "haproxy",
+                        "enabled"
+                    ],
+                    "op": "==",
+                    "value": "true"
+                }
+            ],
+            "[\"spec\", \"proxysql\", \"annotations\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "logcollector",
+                        "enabled"
+                    ],
+                    "op": "!=",
+                    "value": "true"
+                },
+                {
+                    "field": [
+                        "spec",
+                        "logcollector"
+                    ],
+                    "op": "==",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "pmm",
+                        "enabled"
+                    ],
+                    "op": "!=",
+                    "value": "true"
+                },
+                {
+                    "field": [
+                        "spec",
+                        "pmm"
+                    ],
+                    "op": "==",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"proxysql\", \"sslInternalSecretName\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "proxysql",
+                        "enabled"
+                    ],
+                    "op": "==",
+                    "value": "true"
+                },
+                {
+                    "field": [
+                        "spec",
+                        "proxysql"
+                    ],
+                    "op": "!=",
+                    "value": null
+                }
+            ],
+            "[\"spec\", \"haproxy\", \"replicasExternalTrafficPolicy\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "haproxy",
+                        "replicasServiceType"
+                    ],
+                    "op": "==",
+                    "value": "\"NodePort\""
+                },
+                {
+                    "field": [
+                        "spec",
+                        "haproxy",
+                        "replicasServiceType"
+                    ],
+                    "op": "==",
+                    "value": "\"LoadBalancer\""
+                }
+            ],
+            "[\"spec\", \"proxysql\", \"sidecarPVCs\", \"INDEX\", \"metadata\", \"name\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "pmm"
+                    ],
+                    "op": "==",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "logcollector",
+                        "enabled"
+                    ],
+                    "op": "!=",
+                    "value": "true"
+                },
+                {
+                    "field": [
+                        "spec",
+                        "logcollector"
+                    ],
+                    "op": "==",
+                    "value": null
+                },
+                {
+                    "field": [
+                        "spec",
+                        "pmm",
+                        "enabled"
+                    ],
+                    "op": "!=",
+                    "value": "true"
+                }
+            ],
+            "[\"spec\", \"logCollectorSecretName\"]": [
+                {
+                    "field": [
+                        "spec",
+                        "pxc"
+                    ],
+                    "op": "!=",
+                    "value": null
                 }
             ]
         }
