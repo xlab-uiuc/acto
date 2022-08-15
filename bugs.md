@@ -46,7 +46,7 @@
 |                                     | [https://jira.percona.com/browse/K8SPXC-1069](https://jira.percona.com/browse/K8SPXC-1069)                                       |           |
 | runtime/cgo                         | [https://github.com/golang/go/issues/53958](https://github.com/golang/go/issues/53958)                                           | fixed     |
 | knative-operator                    | [https://github.com/knative/operator/issues/1157](https://github.com/knative/operator/issues/1157)                               |           |
-|                                     | [https://github.com/knative/operator/issues/1158](https://github.com/knative/operator/issues/1158)                               |           |
+|                                     | [https://github.com/knative/operator/issues/1158](https://github.com/knative/operator/issues/1158)                               | fixed     |
 | mongodb/mongodb-kubernetes-operator | [mongodb/mongodb-kubernetes-operator#1054](mongodb/mongodb-kubernetes-operator#1054)                                             |           |
 |                                     | [mongodb/mongodb-kubernetes-operator#1055](mongodb/mongodb-kubernetes-operator#1055)                                             |           |
 |                                     | [mongodb/mongodb-kubernetes-operator#1072](mongodb/mongodb-kubernetes-operator#1072)                                             |           |
