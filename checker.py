@@ -36,7 +36,16 @@ class Checker(object):
             return InvalidInputResult(None)
 
         self.delta_log_path = "%s/delta-%d.log" % (self.trial_dir, generation)
-        input_delta, _ = self.get_deltas(snapshot, prev_snapshot)
+        input_delta, system_delta = self.get_deltas(snapshot, prev_snapshot)
+        flattened_system_state = flatten_dict(snapshot.system_state, [])
+
+        num_delta = 0
+        for resource_delta_list in system_delta.values():
+            for type_delta_list in resource_delta_list.values():
+                for state_delta in type_delta_list.values():
+                    num_delta += 1
+        logging.info('Number of system state fields: [%d] Number of delta: [%d]' % 
+                    (len(flattened_system_state), num_delta))
 
         input_result = self.check_input(snapshot, input_delta)
         if not isinstance(input_result, PassResult):
@@ -73,6 +82,11 @@ class Checker(object):
 
         is_invalid, reponsible_field_path = invalid_input_message(
             stderr, input_delta)
+
+        # the stderr should indicate the invalid input
+        if len(stderr) > 0:
+            is_invalid = True
+
         if is_invalid:
             logging.info('Invalid input, reject mutation')
             logging.info('STDOUT: ' + stdout)

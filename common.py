@@ -128,7 +128,7 @@ class ErrorResult(RunResult):
         self.matched_system_delta = matched_system_delta
 
 
-def flatten_list(l: list, curr_path: list):
+def flatten_list(l: list, curr_path: list) -> list:
     '''Convert list into list of tuples (path, value)
 
     Args:
@@ -150,7 +150,7 @@ def flatten_list(l: list, curr_path: list):
     return result
 
 
-def flatten_dict(d: dict, curr_path: list):
+def flatten_dict(d: dict, curr_path: list) -> list:
     '''Convert dict into list of tuples (path, value)
 
     Args:
