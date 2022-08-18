@@ -29,7 +29,7 @@ class BaseSchema:
         return self.path
 
     @abstractmethod
-    def gen(self, **kwargs):
+    def gen(self, exclude_value=None, **kwargs):
         return None
 
     @abstractmethod
@@ -53,15 +53,19 @@ class BaseSchema:
         return None
 
     def delete_precondition(self, prev):
-        return prev != None
+        return prev != None and prev != self.default
 
     def delete_setup(self, prev):
         if len(self.examples) > 0:
             logging.info('Using example for setting up field [%s]: [%s]' %
                          (self.path, self.examples[0]))
-            return self.examples[0]
+            example_without_default = [x for x in self.enum if x != self.default]
+            if len(example_without_default) > 0:
+                return random.choice(example_without_default)
+            else:
+                return self.gen(exclude_value=self.default)
         else:
-            return self.gen()
+            return self.gen(exclude_value=self.default)
 
     def validate(self, instance) -> bool:
         try:
@@ -88,11 +92,15 @@ class StringSchema(BaseSchema):
             'maxLength']
         self.pattern = None if 'pattern' not in schema else schema['pattern']
 
-    def gen(self, **kwargs):
+    def gen(self, exclude_value=None, **kwargs):
         # TODO: Use minLength: the exrex does not support minLength
         if self.enum != None:
-            return random.choice(self.enum)
+            if exclude_value != None:
+                return random.choice([x for x in self.enum if x != exclude_value])
+            else:
+                return random.choice(self.enum)
         if self.pattern != None:
+            # XXX: since it's random, we don't need to exclude the value
             return exrex.getone(self.pattern, self.max_length)
         return random_string(10)
 
@@ -172,10 +180,13 @@ class NumberSchema(BaseSchema):
             'exclusiveMaximum']
         self.multiple_of = None if 'multipleOf' not in schema else schema['multipleOf']
 
-    def gen(self, **kwargs) -> float:
+    def gen(self, exclude_value=None, **kwargs) -> float:
         # TODO: Use exclusive_minimum, exclusive_maximum, multiple_of
         if self.enum != None:
-            return random.choice(self.enum)
+            if exclude_value != None:
+                return random.choice([x for x in self.enum if x != exclude_value])
+            else:
+                return random.choice(self.enum)
         return random.uniform(self.minimum, self.maximum)
 
     def test_cases(self) -> list:
@@ -249,14 +260,20 @@ class IntegerSchema(NumberSchema):
         if self.default == None:
             self.default = 0
 
-    def gen(self, **kwargs) -> int:
+    def gen(self, exclude_value = None, **kwargs) -> int:
         # TODO: Use exclusive_minimum, exclusive_maximum
         if self.enum != None:
-            return random.choice(self.enum)
+            if exclude_value != None:
+                return random.choice([x for x in self.enum if x != exclude_value])
+            else:
+                return random.choice(self.enum)
         elif self.multiple_of != None:
             return random.randrange(self.minimum, self.maximum + 1, self.multiple_of)
         else:
-            return random.randint(self.minimum, self.maximum)
+            if exclude_value != None:
+                return random.choice([x for x in range(self.minimum, self.maximum + 1) if x != exclude_value])
+            else:
+                return random.randrange(self.minimum, self.maximum + 1)
 
     def test_cases(self) -> list:
         return super().test_cases()
@@ -351,10 +368,15 @@ class ObjectSchema(BaseSchema):
         if 'maxProperties' in schema:
             self.max_properties = schema['maxProperties']
 
-    def gen(self, minimum: bool = False, **kwargs) -> dict:
+    def gen(self, exclude_value = None, minimum: bool = False, **kwargs) -> dict:
         # TODO: Use constraints: minProperties, maxProperties
         if self.enum != None:
-            return random.choice(self.enum)
+            if exclude_value != None:
+                return random.choice([x for x in self.enum if x != exclude_value])
+            else:
+                return random.choice(self.enum)
+
+        # XXX: need to handle exclude_value, but not important for now for object types
         result = {}
         if len(self.properties) == 0:
             if self.additional_properties == None:
@@ -483,10 +505,14 @@ class ArraySchema(BaseSchema):
     def get_item_schema(self):
         return self.item_schema
 
-    def gen(self, minimum: bool = False, **kwargs) -> list:
+    def gen(self, exclude_value = None, minimum: bool = False, **kwargs) -> list:
         if self.enum != None:
-            return random.choice(self.enum)
+            if exclude_value != None:
+                return random.choice([x for x in self.enum if x != exclude_value])
+            else:
+                return random.choice(self.enum)
         else:
+            # XXX: need to handle exclude_value, but not important for now for array types
             result = []
             if 'size' in kwargs and kwargs['size'] != None:
                 num = kwargs['size']
@@ -599,9 +625,9 @@ class AnyOfSchema(BaseSchema):
     def get_possibilities(self):
         return self.possibilities
 
-    def gen(self, minimum: bool = False, **kwargs):
+    def gen(self, exclude_value = None, minimum: bool = False, **kwargs):
         schema = random.choice(self.possibilities)
-        return schema.gen(minimum=minimum)
+        return schema.gen(exclude_value=exclude_value, minimum=minimum)
 
     def test_cases(self) -> list:
         ret = []
@@ -656,8 +682,11 @@ class BooleanSchema(BaseSchema):
             self.default = False
         pass
 
-    def gen(self, **kwargs):
-        return random.choice([True, False])
+    def gen(self, exclude_value = None, **kwargs):
+        if exclude_value != None:
+            return not exclude_value
+        else:
+            return random.choice([True, False])
 
     def test_cases(self):
         ret = [TestCase(self.delete_precondition, self.delete, self.delete_setup)]
