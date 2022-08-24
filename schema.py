@@ -477,6 +477,10 @@ class ObjectSchema(BaseSchema):
         return ret
 
     def __getitem__(self, key):
+        if self.additional_properties != None and key not in self.properties:
+            # if the object schema has additionalProperties, and the key is not in the properties, 
+            # return the additionalProperties schema
+            return self.additional_properties
         return self.properties[key]
 
     def __setitem__(self, key, value):
