@@ -32,4 +32,5 @@ custom_fields = [
     input.CopiedOverField(['spec', 'sharding', 'mongos', 'sidecarVolumes'], True),
     input.CopiedOverField(['spec', 'sharding', 'mongos', 'sidecars'], True),
     input.CopiedOverField(['spec', 'sharding', 'mongos', 'tolerations'], True),
+    input.ProblematicField(['spec', 'pmm']),  # ignore external dependency
 ]
