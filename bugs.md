@@ -63,6 +63,6 @@
 | Operator                            | Link                                                                                                                 | Status    |
 | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------- | --------- |
 | mongodb/mongodb-kubernetes-operator | [https://github.com/mongodb/helm-charts/pull/123](https://github.com/mongodb/helm-charts/pull/123)                   | fixed     |
-| pingcap/tidb-operator               | https://github.com/pingcap/tidb-operator/issues/4614                                                                 | fixed     |
+| pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/issues/4614](https://github.com/pingcap/tidb-operator/issues/4614)                                                                 | fixed     |
 | k8ssandra/cass-operator             | [https://github.com/k8ssandra/k8ssandra/issues/1380](https://github.com/k8ssandra/k8ssandra/issues/1380)             | fixed     |
 | pravega/zookeeper-operator          | [https://github.com/pravega/zookeeper-operator/issues/454](https://github.com/pravega/zookeeper-operator/issues/454) | confirmed |
