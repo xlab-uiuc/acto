@@ -1,3 +1,8 @@
+# Number of bugs
+(Byproduct bugs included) Total bugs: **54**, confirmed: **41** , fixed: **25**.<br/>
+
+(Byproduct bugs excluded) Total bugs: **51**, confirmed: **37** , fixed: **22**.<br/>
+
 # Bugs found
 
 | Operator                            | Link                                                                                                                             | Status    |
