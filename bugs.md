@@ -39,13 +39,13 @@
 |                                     | [https://github.com/cockroachdb/cockroach-operator/issues/919](https://github.com/cockroachdb/cockroach-operator/issues/919)     |
 |                                     | [https://github.com/cockroachdb/cockroach-operator/issues/920](https://github.com/cockroachdb/cockroach-operator/issues/920)     | confirmed |
 |                                     | [https://github.com/cockroachdb/cockroach-operator/issues/927](https://github.com/cockroachdb/cockroach-operator/issues/927)     |           |
-| pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/pull/4608](https://github.com/pingcap/tidb-operator/pull/4608)                         | confirmed |
+| pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/pull/4608](https://github.com/pingcap/tidb-operator/pull/4608)                         | fixed     |
 |                                     | [https://github.com/pingcap/tidb-operator/issues/4613](https://github.com/pingcap/tidb-operator/issues/4613)                     | fixed     |
 |                                     | [https://github.com/pingcap/tidb-operator/issues/4632](https://github.com/pingcap/tidb-operator/issues/4632)                     | fixed     |
 |                                     | [https://github.com/pingcap/tidb-operator/issues/4634](https://github.com/pingcap/tidb-operator/issues/4634)                     |           |
 |                                     | [https://github.com/pingcap/tidb-operator/issues/4637](https://github.com/pingcap/tidb-operator/issues/4637)                     | fixed     |
 |                                     | [https://github.com/pingcap/tidb-operator/issues/4649](https://github.com/pingcap/tidb-operator/issues/4649)                     | confirmed |
-|                                     | [https://github.com/pingcap/tidb-operator/issues/4684](https://github.com/pingcap/tidb-operator/issues/4684)                     |  |
+|                                     | [https://github.com/pingcap/tidb-operator/issues/4684](https://github.com/pingcap/tidb-operator/issues/4684)                     |           |
 | percona-xtradb-cluster-operator     | [https://jira.percona.com/browse/K8SPXC-1060](https://jira.percona.com/browse/K8SPXC-1060)                                       |           |
 |                                     | [https://jira.percona.com/browse/K8SPXC-1061](https://jira.percona.com/browse/K8SPXC-1061)                                       | confirmed |
 |                                     | [https://jira.percona.com/browse/K8SPXC-1067](https://jira.percona.com/browse/K8SPXC-1067)                                       |           |
@@ -63,6 +63,6 @@
 | Operator                            | Link                                                                                                                 | Status    |
 | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------- | --------- |
 | mongodb/mongodb-kubernetes-operator | [https://github.com/mongodb/helm-charts/pull/123](https://github.com/mongodb/helm-charts/pull/123)                   | fixed     |
-| pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/issues/4614](https://github.com/pingcap/tidb-operator/issues/4614)                                                                 | fixed     |
+| pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/issues/4614](https://github.com/pingcap/tidb-operator/issues/4614)         | fixed     |
 | k8ssandra/cass-operator             | [https://github.com/k8ssandra/k8ssandra/issues/1380](https://github.com/k8ssandra/k8ssandra/issues/1380)             | fixed     |
 | pravega/zookeeper-operator          | [https://github.com/pravega/zookeeper-operator/issues/454](https://github.com/pravega/zookeeper-operator/issues/454) | confirmed |
