@@ -1,0 +1,54 @@
+name: counter
+on:
+  # Triggers the workflow on push or pull request events but only for the "main" branch
+  push:
+    branches: [ "main" ]
+
+jobs:
+  conditional_job_check_files:
+    runs-on: 'ubuntu-20.04'
+    # Declare outputs for next jobs
+    outputs:
+      docs_changed: ${{ steps.check_file_changed.outputs.docs_changed }}
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        # Checkout as many commits as needed for the diff
+        fetch-depth: 2
+    - shell: pwsh
+      id: check_file_changed
+      run: |
+        # Diff HEAD with the previous commit
+        $diff = git diff --name-only HEAD^ HEAD
+
+        # Check if a file under docs/ or with the .md extension has changed (added, modified, deleted)
+        $SourceDiff = $diff | Where-Object { $_ -match 'bugs.md$' }
+        $HasDiff = $SourceDiff.Length -gt 0
+
+        # Set the output named "docs_changed"
+        Write-Host "::set-output name=docs_changed::$HasDiff"
+
+  # Run the job only with "docs_changed" equals "True"
+  conditional_job:
+    runs-on: 'ubuntu-20.04'
+    needs: [ conditional_job_check_files ]
+    if: needs.conditional_job_check_files.outputs.docs_changed == 'True'
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: 'Set up Python'
+      uses: actions/setup-python@v1
+      with:
+          python-version: 3.8
+    - name: 'Changing bugs.md'
+      shell: bash
+      run: python3 ./bug_counter.py
+    - name: Commit files
+      run: |
+        git config --local user.name github-actions[bot]
+        git config --local user.email github-actions[bot]@users.noreply.github.com
+        git status
+        git add bugs.md
+        git commit -m "update: bug number"
+        git log
+        git push
