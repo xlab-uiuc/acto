@@ -41,20 +41,21 @@ class Checker(object):
         input_delta, system_delta = self.get_deltas(snapshot, prev_snapshot)
         flattened_system_state = flatten_dict(snapshot.system_state, [])
 
-        num_delta = 0
-        for resource_delta_list in system_delta.values():
-            for type_delta_list in resource_delta_list.values():
-                for state_delta in type_delta_list.values():
-                    num_delta += 1
-        logging.info('Number of system state fields: [%d] Number of delta: [%d]' %
-                     (len(flattened_system_state), num_delta))
-
         input_result = self.check_input(snapshot, input_delta)
         if not isinstance(input_result, PassResult):
             return input_result
 
         state_result = self.check_resources(snapshot, prev_snapshot)
         log_result = self.check_operator_log(snapshot, prev_snapshot)
+
+        if len(input_delta) > 0:
+            num_delta = 0
+            for resource_delta_list in system_delta.values():
+                for type_delta_list in resource_delta_list.values():
+                    for state_delta in type_delta_list.values():
+                        num_delta += 1
+            logging.info('Number of system state fields: [%d] Number of delta: [%d]' %
+                        (len(flattened_system_state), num_delta))
 
         # XXX: disable health check for now
         # health_result = self.check_health(snapshot)
@@ -190,7 +191,7 @@ class Checker(object):
                 return True
         except Exception as e:
             # print error message
-            logging.warn(f"{e} happened when trying to fetch default value")
+            logging.warning(f"{e} happened when trying to fetch default value")
 
         if not self.context['enable_analysis']:
             return False
@@ -259,10 +260,10 @@ class Checker(object):
         log = snapshot.operator_log
 
         for line in log:
-            # We do not check the log line if it is not an error/fatal message
+            # We do not check the log line if it is not an warn/error/fatal message
 
             parsed_log = parse_log(line)
-            if parsed_log == {} or parsed_log['level'].lower() != 'error' and parsed_log['level'].lower() != 'fatal':
+            if parsed_log == {} or parsed_log['level'].lower() != 'warn' and parsed_log['level'].lower() != 'error' and parsed_log['level'].lower() != 'fatal':
                 continue
 
             # List all the values in parsed_log
@@ -416,7 +417,7 @@ if __name__ == "__main__":
         config.seed_custom_resource), 'context.json')
 
     logging.basicConfig(
-        filename=os.path.join('.', 'test.log'),
+        filename=os.path.join('.', testrun_dir, 'checker_test.log'),
         level=logging.DEBUG,
         filemode='w',
         format='%(asctime)s %(threadName)-11s %(levelname)-7s, %(name)s, %(filename)-9s:%(lineno)d, %(message)s'
@@ -457,7 +458,9 @@ if __name__ == "__main__":
 
     for trial_dir in sorted(trial_dirs):
         print(trial_dir)
-        checker = Checker(context=context, trial_dir=trial_dir)
+        input_model = InputModel(context['crd']['body'], config.example_dir,
+                                      1, 1, [])
+        checker = Checker(context=context, trial_dir=trial_dir, input_model=input_model)
         snapshots = []
         snapshots.append(EmptySnapshot(seed))
 
