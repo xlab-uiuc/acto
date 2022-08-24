@@ -9,7 +9,7 @@ from functools import reduce
 
 from common import *
 from compare import CompareMethods
-from .input import InputModel
+from input import InputModel
 from snapshot import EmptySnapshot, Snapshot
 from parse_log.parse_log import parse_log
 
