@@ -257,7 +257,7 @@ if __name__ == "__main__":
     }
 
     all_manifests = yaml.load_all(
-        open('data/knative-operator-serving/kodata/2-serving-core.yaml', 'r'), Loader=yaml.FullLoader)
+        open(args.input, 'r'), Loader=yaml.FullLoader)
 
     for manifest in all_manifests:
         if manifest == None:

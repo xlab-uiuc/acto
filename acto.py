@@ -177,7 +177,7 @@ class TrialRunner:
         '''
 
         runner = Runner(self.context, trial_dir, self.context_name)
-        checker = Checker(self.context, trial_dir)
+        checker = Checker(self.context, trial_dir, self.input_model)
 
         curr_input = self.input_model.get_seed_input()
         self.snapshots.append(EmptySnapshot(curr_input))

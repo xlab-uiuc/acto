@@ -1,3 +1,8 @@
+# Number of bugs
+(Byproduct bugs included) Total bugs: **55**, confirmed: **41**, fixed: **25**.<br/>
+
+(Byproduct bugs excluded) Total bugs: **51**, confirmed: **37**, fixed: **22**.<br/>
+
 # Bugs found
 
 | Operator                            | Link                                                                                                                             | Status    |
@@ -40,6 +45,7 @@
 |                                     | [https://github.com/pingcap/tidb-operator/issues/4634](https://github.com/pingcap/tidb-operator/issues/4634)                     |           |
 |                                     | [https://github.com/pingcap/tidb-operator/issues/4637](https://github.com/pingcap/tidb-operator/issues/4637)                     | fixed     |
 |                                     | [https://github.com/pingcap/tidb-operator/issues/4649](https://github.com/pingcap/tidb-operator/issues/4649)                     | confirmed |
+|                                     | [https://github.com/pingcap/tidb-operator/issues/4684](https://github.com/pingcap/tidb-operator/issues/4684)                     |  |
 | percona-xtradb-cluster-operator     | [https://jira.percona.com/browse/K8SPXC-1060](https://jira.percona.com/browse/K8SPXC-1060)                                       |           |
 |                                     | [https://jira.percona.com/browse/K8SPXC-1061](https://jira.percona.com/browse/K8SPXC-1061)                                       | confirmed |
 |                                     | [https://jira.percona.com/browse/K8SPXC-1067](https://jira.percona.com/browse/K8SPXC-1067)                                       |           |
@@ -57,6 +63,6 @@
 | Operator                            | Link                                                                                                                 | Status    |
 | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------- | --------- |
 | mongodb/mongodb-kubernetes-operator | [https://github.com/mongodb/helm-charts/pull/123](https://github.com/mongodb/helm-charts/pull/123)                   | fixed     |
-| pingcap/tidb-operator               | https://github.com/pingcap/tidb-operator/issues/4614                                                                 | fixed     |
+| pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/issues/4614](https://github.com/pingcap/tidb-operator/issues/4614)                                                                 | fixed     |
 | k8ssandra/cass-operator             | [https://github.com/k8ssandra/k8ssandra/issues/1380](https://github.com/k8ssandra/k8ssandra/issues/1380)             | fixed     |
 | pravega/zookeeper-operator          | [https://github.com/pravega/zookeeper-operator/issues/454](https://github.com/pravega/zookeeper-operator/issues/454) | confirmed |

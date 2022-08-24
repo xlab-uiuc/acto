@@ -5,3 +5,32 @@ metadata:
   namespace: knative-eventing
 spec:
   version: 1.6.0
+  config:
+    config-features:
+      key1: value1
+  deployments:
+  - name: eventing-controller
+    resources:
+    - container: eventing-controller
+      requests:
+        cpu: 300m
+        memory: 100M
+      limits:
+        cpu: 1000m
+        memory: 250M
+    env:
+    - container: eventing-controller
+      envVars:
+      - name: ENVAR_1
+        value: VALUE_1
+  services:
+  - name: eventing-webhook
+    labels:
+      mylabel: foo
+    annotations:
+      myannotations: bar
+    selector:
+      myselector: bar
+  podDisruptionBudgets:
+  - minAvailable: 50%
+    name: eventing-webhook
