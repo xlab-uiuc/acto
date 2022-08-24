@@ -24,8 +24,10 @@ for line in data:
         
 num_confirmed += num_fixed
 num_by_confirmed += num_by_fixed
-data[1] = '(Byproduct bugs included) Total bugs: **{}**, confirmed: **{}** , fixed: **{}**.<br/>\n'.format(num_bugs + num_by_bugs, num_confirmed + num_by_confirmed, num_fixed + num_by_fixed)
-data[3] = '(Byproduct bugs excluded) Total bugs: **{}**, confirmed: **{}** , fixed: **{}**.<br/>\n'.format(num_bugs, num_confirmed, num_fixed)
+if '(Byproduct bugs included)' not in data[1]:
+    raise Exception("The first line of bugs.md should start with '(Byproduct bugs included)'")
+data[1] = '(Byproduct bugs included) Total bugs: **{}**, confirmed: **{}**, fixed: **{}**.<br/>\n'.format(num_bugs + num_by_bugs, num_confirmed + num_by_confirmed, num_fixed + num_by_fixed)
+data[3] = '(Byproduct bugs excluded) Total bugs: **{}**, confirmed: **{}**, fixed: **{}**.<br/>\n'.format(num_bugs, num_confirmed, num_fixed)
 
 with open ('./bugs.md', 'w') as f:
     f.writelines(data)
