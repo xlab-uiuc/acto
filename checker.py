@@ -46,8 +46,8 @@ class Checker(object):
             for type_delta_list in resource_delta_list.values():
                 for state_delta in type_delta_list.values():
                     num_delta += 1
-        logging.info('Number of system state fields: [%d] Number of delta: [%d]' % 
-                    (len(flattened_system_state), num_delta))
+        logging.info('Number of system state fields: [%d] Number of delta: [%d]' %
+                     (len(flattened_system_state), num_delta))
 
         input_result = self.check_input(snapshot, input_delta)
         if not isinstance(input_result, PassResult):
@@ -181,12 +181,16 @@ class Checker(object):
         Returns:
             if the arg input_delta should be skipped in oracle
         '''
-
-        default_value = self.input_model.get_schema_by_path(input_delta.path).default
-        if input_delta.prev == default_value and (input_delta.curr == None or isinstance(input_delta.curr, NotPresent)):
-            return True
-        elif input_delta.curr == default_value and (input_delta.prev == None or isinstance(input_delta.prev, NotPresent)):
-            return True
+        try:
+            default_value = self.input_model.get_schema_by_path(
+                input_delta.path).default
+            if input_delta.prev == default_value and (input_delta.curr == None or isinstance(input_delta.curr, NotPresent)):
+                return True
+            elif input_delta.curr == default_value and (input_delta.prev == None or isinstance(input_delta.prev, NotPresent)):
+                return True
+        except Exception as e:
+            # print error message
+            logging.warn(f"{e} happened when trying to fetch default value")
 
         if not self.context['enable_analysis']:
             return False
@@ -218,7 +222,8 @@ class Checker(object):
             for condition in conditions:
                 if not self.check_condition(snapshot.input, condition):
                     # if one condition does not satisfy, skip this testcase
-                    logging.info('Field precondition does not satisfy, skip this testcase')
+                    logging.info(
+                        'Field precondition does not satisfy, skip this testcase')
                     return True
 
         return False
@@ -397,15 +402,18 @@ if __name__ == "__main__":
     from types import SimpleNamespace
 
     parser = argparse.ArgumentParser(description='Standalone checker for Acto')
-    parser.add_argument('--testrun-dir', help='Directory to check', required=True)
+    parser.add_argument(
+        '--testrun-dir', help='Directory to check', required=True)
     parser.add_argument('--config', help='Path to config file', required=True)
-    
+
     args = parser.parse_args()
 
     with open(args.config, 'r') as config_file:
-        config = json.load(config_file, object_hook=lambda d: SimpleNamespace(**d))
+        config = json.load(
+            config_file, object_hook=lambda d: SimpleNamespace(**d))
     testrun_dir = args.testrun_dir
-    context_cache = os.path.join(os.path.dirname(config.seed_custom_resource), 'context.json')
+    context_cache = os.path.join(os.path.dirname(
+        config.seed_custom_resource), 'context.json')
 
     logging.basicConfig(
         filename=os.path.join('.', 'test.log'),
