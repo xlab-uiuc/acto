@@ -9,17 +9,19 @@ from functools import reduce
 
 from common import *
 from compare import CompareMethods
+from .input import InputModel
 from snapshot import EmptySnapshot, Snapshot
 from parse_log.parse_log import parse_log
 
 
 class Checker(object):
 
-    def __init__(self, context: dict, trial_dir: str) -> None:
+    def __init__(self, context: dict, trial_dir: str, input_model: InputModel) -> None:
         self.context = context
         self.namespace = context['namespace']
         self.compare_method = CompareMethods()
         self.trial_dir = trial_dir
+        self.input_model = input_model
 
         # logging.debug(self.context['analysis_result']['paths'])
 
@@ -130,8 +132,7 @@ class Checker(object):
                     # if the input delta is considered as equivalent, skip
                     continue
 
-                if self.context['enable_analysis'] and self.should_skip_input_delta(
-                        delta, snapshot):
+                if self.should_skip_input_delta(delta, snapshot):
                     continue
 
                 # Find the longest matching field, compare the delta change
@@ -180,6 +181,15 @@ class Checker(object):
         Returns:
             if the arg input_delta should be skipped in oracle
         '''
+
+        default_value = self.input_model.get_schema_by_path(input_delta.path).default
+        if input_delta.prev == default_value and (input_delta.curr == None or isinstance(input_delta.curr, NotPresent)):
+            return True
+        elif input_delta.curr == default_value and (input_delta.prev == None or isinstance(input_delta.prev, NotPresent)):
+            return True
+
+        if not self.context['enable_analysis']:
+            return False
 
         if 'analysis_result' not in self.context:
             return False
@@ -454,8 +464,11 @@ if __name__ == "__main__":
             field_val_dict_path = "%s/field-val-dict-%d.json" % (
                 trial_dir, generation)
 
-            if not os.path.exists(operator_log_path):
+            if not os.path.exists(mutated_filename):
                 break
+
+            if not os.path.exists(operator_log_path):
+                continue
 
             with open(mutated_filename, 'r') as input_file, \
                     open(operator_log_path, 'r') as operator_log, \
