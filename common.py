@@ -268,6 +268,17 @@ def get_diff_stat():
     return None
 
 
+def is_subfield(subpath: list, path: list) -> bool:
+    '''Checks if subpath is a subfield of path
+    '''
+    if len(path) > len(subpath):
+        return False
+    for i in range(len(path)):
+        if path[i] != subpath[i]:
+            return False
+    return True
+
+
 def random_string(n: int):
     '''Generate random string with length n'''
     letters = string.ascii_lowercase

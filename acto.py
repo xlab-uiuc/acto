@@ -26,6 +26,7 @@ from k8s_cluster import base, k3d, kind
 from constant import CONST
 from runner import Runner
 from checker import Checker
+from schema import BaseSchema, ObjectSchema, ArraySchema
 from snapshot import EmptySnapshot
 from ssa.analysis import analyze
 from value_with_schema import ValueWithSchema, attach_schema_to_value
@@ -457,6 +458,46 @@ class Acto:
         self.test_plan = self.input_model.generate_test_plan()
         with open(os.path.join(self.workdir_path, 'test_plan.json'), 'w') as plan_file:
             json.dump(self.test_plan, plan_file, cls=ActoEncoder, indent=6)
+
+        # Use CRD to generate dependency info
+        schema = self.input_model.get_root_schema()
+        self.helper(schema)
+        logging.info('Dependency info: %s' % json.dumps(self.context['analysis_result']['field_conditions_map']))
+    
+    def helper(self, schema: ObjectSchema):
+        if not isinstance(schema, ObjectSchema):
+            return
+        for key, value in schema.get_properties().items():
+            if key == 'enabled':
+                parent_path = schema.path[:-1]
+                self.encode_dependency(schema.path, schema.path+[key])
+            if isinstance(value, ObjectSchema):
+                self.helper(value)
+            elif isinstance(value, ArraySchema):
+                self.helper(value.get_item_schema())
+
+    def encode_dependency(self, depender: list, dependee: list):
+        '''Encode dependency of dependant on dependee
+
+        Args:
+            depender: path of the depender
+            dependee: path of the dependee
+        '''
+        logging.info('Encode dependency of %s on %s' % (depender, dependee))
+        field_condition_map = self.context['analysis_result']['field_conditions_map']
+        encoded_path = json.dumps(depender)
+        if encoded_path not in field_condition_map:
+            field_condition_map[encoded_path] = []
+
+        # Add dependency to the subfields, idealy we should have a B tree for this
+        for key, value in field_condition_map.items():
+            path = json.loads(key)
+            if is_subfield(path, depender):
+                value.append({
+                    'path': dependee,
+                    'op': '==',
+                    'value': 'true'
+                })
 
     def __learn(self, context_file, helper_crd):
         if os.path.exists(context_file):

@@ -226,8 +226,34 @@ class Checker(object):
                     logging.info(
                         'Field precondition does not satisfy, skip this testcase')
                     return True
+        else:
+            # if no exact match, try find parent field
+            parent = Checker.find_nearest_parent(input_delta.path, field_conditions_map.keys())
+            if parent is not None:
+                conditions = field_conditions_map[json.dumps(parent)]
+                for condition in conditions:
+                    if not self.check_condition(snapshot.input, condition):
+                        # if one condition does not satisfy, skip this testcase
+                        logging.info(
+                            'Field precondition does not satisfy, skip this testcase')
+                        return True
 
         return False
+
+    def find_nearest_parent(path: list, encoded_path_list: list) -> list:
+        length = 0
+        ret = None
+        for encoded_path in encoded_path_list:
+            p = json.loads(encoded_path)
+            if len(p) > len(path):
+                continue
+            for i in range(len(p)):
+                if p[i] != path[i]:
+                    if i > length:
+                        length = i
+                        ret = p
+                        break
+        return ret
 
     def check_condition(self, input: dict, condition: dict) -> bool:
         path = condition['field']

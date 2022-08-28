@@ -166,6 +166,9 @@ class InputModel:
         '''Get all the schemas as a list'''
         return self.root_schema.get_all_schemas()
 
+    def get_root_schema(self) -> BaseSchema:
+        return self.root_schema
+
     def get_discarded_tests(self) -> dict:
         return self.discarded_tests
 
