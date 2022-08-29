@@ -10,6 +10,7 @@ from functools import reduce
 from common import *
 from compare import CompareMethods
 from input import InputModel
+from schema import ArraySchema, ObjectSchema
 from snapshot import EmptySnapshot, Snapshot
 from parse_log.parse_log import parse_log
 
@@ -23,7 +24,45 @@ class Checker(object):
         self.trial_dir = trial_dir
         self.input_model = input_model
 
+        self.field_conditions_map = {}
+        if self.context['enable_analysis']:
+            self.field_conditions_map = self.context['analysis_result']['field_conditions_map']
+        self.helper(self.input_model.get_root_schema())
+        logging.info('Field condition map: %s' % json.dumps(self.field_conditions_map, indent=6))
         # logging.debug(self.context['analysis_result']['paths'])
+
+    def helper(self, schema: ObjectSchema):
+        if not isinstance(schema, ObjectSchema):
+            return
+        for key, value in schema.get_properties().items():
+            if key == 'enabled':
+                self.encode_dependency(schema.path, schema.path+[key])
+            if isinstance(value, ObjectSchema):
+                self.helper(value)
+            elif isinstance(value, ArraySchema):
+                self.helper(value.get_item_schema())
+
+    def encode_dependency(self, depender: list, dependee: list):
+        '''Encode dependency of dependant on dependee
+
+        Args:
+            depender: path of the depender
+            dependee: path of the dependee
+        '''
+        logging.info('Encode dependency of %s on %s' % (depender, dependee))
+        encoded_path = json.dumps(depender)
+        if encoded_path not in self.field_conditions_map:
+            self.field_conditions_map[encoded_path] = []
+
+        # Add dependency to the subfields, idealy we should have a B tree for this
+        for key, value in self.field_conditions_map.items():
+            path = json.loads(key)
+            if is_subfield(path, depender):
+                value.append({
+                    'path': dependee,
+                    'op': '==',
+                    'value': 'true'
+                })
 
     def check(self, snapshot: Snapshot, prev_snapshot: Snapshot, generation: int) -> RunResult:
         '''Use acto oracles against the results to check for any errors
@@ -193,6 +232,29 @@ class Checker(object):
             # print error message
             logging.warning(f"{e} happened when trying to fetch default value")
 
+        # dependency checking
+        field_conditions_map = self.field_conditions_map
+        encoded_path = json.dumps(input_delta.path)
+        if encoded_path in field_conditions_map:
+            conditions = field_conditions_map[encoded_path]
+            for condition in conditions:
+                if not self.check_condition(snapshot.input, condition):
+                    # if one condition does not satisfy, skip this testcase
+                    logging.info(
+                        'Field precondition %s does not satisfy, skip this testcase' % condition)
+                    return True
+        else:
+            # if no exact match, try find parent field
+            parent = Checker.find_nearest_parent(input_delta.path, field_conditions_map.keys())
+            if parent is not None:
+                conditions = field_conditions_map[json.dumps(parent)]
+                for condition in conditions:
+                    if not self.check_condition(snapshot.input, condition):
+                        # if one condition does not satisfy, skip this testcase
+                        logging.info(
+                            'Field precondition %s does not satisfy, skip this testcase' % condition)
+                        return True
+
         if not self.context['enable_analysis']:
             return False
 
@@ -215,29 +277,6 @@ class Checker(object):
                 else:
                     return True
 
-        # dependency checking
-        field_conditions_map = self.context['analysis_result']['field_conditions_map']
-        encoded_path = json.dumps(input_delta.path)
-        if encoded_path in field_conditions_map:
-            conditions = field_conditions_map[encoded_path]
-            for condition in conditions:
-                if not self.check_condition(snapshot.input, condition):
-                    # if one condition does not satisfy, skip this testcase
-                    logging.info(
-                        'Field precondition does not satisfy, skip this testcase')
-                    return True
-        else:
-            # if no exact match, try find parent field
-            parent = Checker.find_nearest_parent(input_delta.path, field_conditions_map.keys())
-            if parent is not None:
-                conditions = field_conditions_map[json.dumps(parent)]
-                for condition in conditions:
-                    if not self.check_condition(snapshot.input, condition):
-                        # if one condition does not satisfy, skip this testcase
-                        logging.info(
-                            'Field precondition does not satisfy, skip this testcase')
-                        return True
-
         return False
 
     def find_nearest_parent(path: list, encoded_path_list: list) -> list:
@@ -247,12 +286,17 @@ class Checker(object):
             p = json.loads(encoded_path)
             if len(p) > len(path):
                 continue
+
+            different = False
             for i in range(len(p)):
                 if p[i] != path[i]:
-                    if i > length:
-                        length = i
-                        ret = p
-                        break
+                    different = True
+                    break
+
+            if different:
+                continue
+            elif len(p) > length:
+                ret = p
         return ret
 
     def check_condition(self, input: dict, condition: dict) -> bool:
