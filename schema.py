@@ -113,6 +113,7 @@ class StringSchema(BaseSchema):
         else:
             change_testcase = TestCase(self.change_precondition, self.change, self.change_setup)
             ret.append(change_testcase)
+            ret.append(TestCase(self.empty_precondition, self.empty_mutator, self.empty_setup))
         return ret
 
     def get_all_schemas(self) -> list:
@@ -156,6 +157,15 @@ class StringSchema(BaseSchema):
         else:
             return self.gen()
 
+    def empty_precondition(self, prev):
+        return prev != ""
+
+    def empty_mutator(self, prev):
+        return ""
+
+    def empty_setup(self, prev):
+        return prev
+
 
 class NumberSchema(BaseSchema):
     '''Representation of a number node
@@ -197,6 +207,7 @@ class NumberSchema(BaseSchema):
         else:
             ret.append(TestCase(self.increase_precondition, self.increase, self.increase_setup))
             ret.append(TestCase(self.decrease_precondition, self.decrease, self.decrease_setup))
+            ret.append(TestCase(self.empty_precondition, self.empty_mutator, self.empty_setup))
         return ret
 
     def get_all_schemas(self) -> list:
@@ -250,6 +261,15 @@ class NumberSchema(BaseSchema):
 
     def decrease_setup(self, prev):
         return self.maximum
+
+    def empty_precondition(self, prev):
+        return prev != 0
+
+    def empty_mutator(self, prev):
+        return 0
+
+    def empty_setup(self, prev):
+        return 1
 
 
 class IntegerSchema(NumberSchema):
@@ -407,6 +427,8 @@ class ObjectSchema(BaseSchema):
         if self.enum != None:
             for case in self.enum:
                 ret.append(EnumTestCase(case))
+        else:
+            ret.append(TestCase(self.empty_precondition, self.empty_mutator, self.empty_setup))
         return ret
 
     def get_all_schemas(self) -> list:
@@ -465,6 +487,15 @@ class ObjectSchema(BaseSchema):
         for i in self.properties.values():
             num += i.num_fields()
         return num + 1
+
+    def empty_precondition(self, prev):
+        return prev != {}
+
+    def empty_mutator(self, prev):
+        return {}
+
+    def empty_setup(self, prev):
+        return prev
 
     def __str__(self) -> str:
         ret = '{'
@@ -534,6 +565,7 @@ class ArraySchema(BaseSchema):
         else:
             ret.append(TestCase(self.push_precondition, self.push_mutator, self.push_setup))
             ret.append(TestCase(self.pop_precondition, self.pop_mutator, self.pop_setup))
+            ret.append(TestCase(self.empty_precondition, self.empty_mutator, self.empty_setup))
         return ret
 
     def get_all_schemas(self) -> list:
@@ -602,6 +634,15 @@ class ArraySchema(BaseSchema):
         if prev == None:
             return self.gen()
         return self.gen(size=self.max_items)
+
+    def empty_precondition(self, prev):
+        return prev != []
+
+    def empty_mutator(self, prev):
+        return []
+
+    def empty_setup(self, prev):
+        return prev
 
     def __str__(self) -> str:
         return 'Array'
