@@ -59,7 +59,7 @@ class Checker(object):
             path = json.loads(key)
             if is_subfield(path, depender):
                 value.append({
-                    'path': dependee,
+                    'field': dependee,
                     'op': '==',
                     'value': 'true'
                 })
