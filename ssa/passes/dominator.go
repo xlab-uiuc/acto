@@ -271,7 +271,7 @@ func FindDirectBranches(context *Context, source ssa.Value) {
 									}
 								}
 							}
-						} else if typedValue.Call.Value.String() == "strings.EqualFold"
+						}
 					}
 				}
 			case *ssa.If:
