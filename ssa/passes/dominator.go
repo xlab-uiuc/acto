@@ -105,10 +105,10 @@ func Dominators(context *Context, frontierSet map[ssa.Value]bool) {
 
 			for _, field := range fieldSet.Fields() {
 				if _, ok := fieldToValueConditionMap[field.String()]; !ok {
-					log.Printf("Constructing value condition map for field %s\n", field.String())
+					log.Printf("Constructing value condition map for field %s\n", field.String()) //
 					fieldToValueConditionMap[field.String()] = make(map[ssa.Value]*ConcreteConditionSet)
 					for _, value := range *fieldToValueMap[field.String()] {
-						log.Printf("Field %s map to %s:%s", field.String(), value.Name(), value)
+						log.Printf("Field %s map to %s:%s at %s", field.String(), value.Name(), value, context.Program.Fset.Position(value.Pos()))
 						fieldToValueConditionMap[field.String()][value] = NewConcreteConditionSet()
 					}
 				}
@@ -128,7 +128,7 @@ func Dominators(context *Context, frontierSet map[ssa.Value]bool) {
 				if _, ok := fieldToValueConditionMap[field.String()]; !ok {
 					fieldToValueConditionMap[field.String()] = make(map[ssa.Value]*ConcreteConditionSet)
 					for _, value := range *fieldToValueMap[field.String()] {
-						log.Printf("Field %s map to %s:%s", field.String(), value.Name(), value)
+						log.Printf("Field %s map to %s:%s at %s", field.String(), value.Name(), value, context.Program.Fset.Position(value.Pos()))
 						fieldToValueConditionMap[field.String()][value] = NewConcreteConditionSet()
 					}
 				}
@@ -143,18 +143,32 @@ func Dominators(context *Context, frontierSet map[ssa.Value]bool) {
 
 	// then take intersection of the conditions of the same field
 	for field, valueToConditionMap := range fieldToValueConditionMap {
+		log.Printf("Intersecting conditions for Field %s\n", field)
 		var intersection *ConcreteConditionSet = nil
-		for _, concreteConditionSet := range valueToConditionMap {
+		for value, concreteConditionSet := range valueToConditionMap {
+			// if value is only used in BinOp, then it is not a use
+			referrers := value.Referrers()
+			if len(*referrers) == 1 {
+				if _, ok := (*referrers)[0].(*ssa.BinOp); ok {
+					continue
+				} else if s, ok := (*referrers)[0].(*ssa.Store); ok && value == s.Addr {
+					continue
+				}
+			}
+
 			if intersection == nil {
 				intersection = NewConcreteConditionSet()
 				for _, cc := range concreteConditionSet.ConcreteConditions {
 					intersection.Add(cc)
 				}
 			} else {
+				log.Printf("Intersecting with %s from value %s\n", concreteConditionSet, value)
 				intersection = intersection.Intersect(concreteConditionSet)
+				log.Printf("Intersection is %s\n", intersection)
 			}
 		}
-		if len(intersection.ConcreteConditions) > 0 {
+		log.Printf("Intersection is %s\n", intersection)
+		if intersection != nil && len(intersection.ConcreteConditions) > 0 {
 			context.DomineeToConditions[field] = intersection
 		}
 	}
@@ -165,6 +179,15 @@ func FindUsesInBlocks(context *Context, blocks []*ssa.BasicBlock, frontierValues
 	for _, bb := range blocks {
 		if _, ok := frontierValuesByBlock[bb]; ok {
 			for _, value := range *frontierValuesByBlock[bb] {
+
+				// if value is only used in BinOp, then it is not a use
+				referrers := value.Referrers()
+				if len(*referrers) == 1 {
+					if _, ok := (*referrers)[0].(*ssa.BinOp); ok {
+						continue
+					}
+				}
+
 				uses[value] = true
 			}
 		}
@@ -222,6 +245,33 @@ func FindDirectBranches(context *Context, source ssa.Value) {
 								}
 							}
 						}
+					}
+				case *ssa.Call:
+					if typedValue.Call.IsInvoke() {
+						// invoke
+					} else {
+						if typedValue.Call.Value.String() == "strings.EqualFold" {
+							if len(*typedValue.Referrers()) == 1 {
+								switch typedBinOpReferrer := (*typedValue.Referrers())[0].(type) {
+								case *ssa.If:
+									log.Printf("%s used in EqualFold at %s", source, context.Program.Fset.Position(typedBinOpReferrer.Cond.Pos()))
+
+									var compareValue ssa.Value
+									if typedValue.Call.Args[0] == equivalentValue {
+										compareValue = typedValue.Call.Args[1]
+									} else {
+										compareValue = typedValue.Call.Args[0]
+									}
+									if resolved := TryResolveValue(compareValue); resolved != nil {
+										context.IfToCondition[typedBinOpReferrer] = &BranchCondition{
+											Source: source,
+											Op:     token.EQL,
+											Value:  resolved,
+										}
+									}
+								}
+							}
+						} else if typedValue.Call.Value.String() == "strings.EqualFold"
 					}
 				}
 			case *ssa.If:

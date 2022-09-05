@@ -155,12 +155,15 @@ var (
 	}
 
 	StaticFunctionSinks = map[string]bool{
-		"context.WithTimeout":                    true,
-		"fmt.Errorf":                             true,
-		"fmt.Printf":                             true,
-		"strings.Contains":                       true,
-		"strings.Index":                          true,
-		"(*k8s.io/client-go/rest.Request).Watch": true,
+		"context.WithTimeout":                      true,
+		"fmt.Errorf":                               true,
+		"fmt.Printf":                               true,
+		"strings.Contains":                         true,
+		"strings.Index":                            true,
+		"(*k8s.io/client-go/rest.Request).Watch":   true,
+		"(*k8s.io/client-go/rest.Request).Stream":  true,
+		"(*encoding/json.Decoder).Decode":          true,
+		"k8s.io/client-go/kubernetes.NewForConfig": true,
 		"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil.SetControllerReference": true,
 		"(*sigs.k8s.io/controller-runtime/pkg/builder.WebhookBuilder).For":                    true,
 		"(*sigs.k8s.io/controller-runtime/pkg/builder.WebhookBuilder).registerWebhooks":       true,

@@ -136,6 +136,7 @@ func GetValueToFieldMappingPass(context *Context, prog *ssa.Program, seedType *s
 							}
 						}
 					}
+					frontierValues[variable] = true
 				case *ssa.ChangeInterface:
 					for _, parentField := range parentFieldSet.Fields() {
 						newField := parentField.Clone()
