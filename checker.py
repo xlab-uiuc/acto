@@ -216,7 +216,8 @@ class Checker(object):
         '''Determines if the input delta should be skipped or not
 
         Args:
-            input_delta
+            input_delta: Diff
+            snapshot: current snapshot of the system state
 
         Returns:
             if the arg input_delta should be skipped in oracle
@@ -406,6 +407,25 @@ class Checker(object):
     def check_events_log(self, snapshot: Snapshot) -> RunResult:
         pass
 
+    def count_num_fields(self, snapshot: Snapshot, prev_snapshot: Snapshot):
+        input_delta, system_delta = self.get_deltas(snapshot, prev_snapshot)
+        flattened_system_state = flatten_dict(snapshot.system_state, [])
+
+        input_result = self.check_input(snapshot, input_delta)
+        if not isinstance(input_result, PassResult):
+            return None
+
+        if len(input_delta) > 0:
+            num_delta = 0
+            for resource_delta_list in system_delta.values():
+                for type_delta_list in resource_delta_list.values():
+                    for state_delta in type_delta_list.values():
+                        num_delta += 1
+            return len(flattened_system_state), num_delta
+
+        return None
+
+
     def _list_matched_fields(self, path: list, delta_dict: dict) -> list:
         '''Search through the entire system delta to find longest matching field
 
@@ -471,6 +491,7 @@ if __name__ == "__main__":
     import traceback
     import argparse
     from types import SimpleNamespace
+    import pandas
 
     parser = argparse.ArgumentParser(description='Standalone checker for Acto')
     parser.add_argument(
@@ -525,11 +546,16 @@ if __name__ == "__main__":
         seed = yaml.load(seed_file, Loader=yaml.FullLoader)
 
     num_alarms = 0
-
+    num_system_fields_list = []
+    num_delta_fields_list = []
     for trial_dir in sorted(trial_dirs):
         print(trial_dir)
         input_model = InputModel(context['crd']['body'], config.example_dir,
                                       1, 1, [])
+        
+        if context['enable_analysis']:
+            input_model.apply_default_value(context['analysis_result']['default_value_map'])
+            
         checker = Checker(context=context, trial_dir=trial_dir, input_model=input_model)
         snapshots = []
         snapshots.append(EmptySnapshot(seed))
@@ -564,8 +590,9 @@ if __name__ == "__main__":
                 snapshot = Snapshot(input, cli_result,
                                     system_state, operator_log)
 
+                prev_snapshot = snapshots[-1]
                 result = checker.check(snapshot=snapshot,
-                                       prev_snapshot=snapshots[-1],
+                                       prev_snapshot=prev_snapshot,
                                        generation=generation)
                 snapshots.append(snapshot)
 
@@ -588,7 +615,20 @@ if __name__ == "__main__":
                     logging.error('Unknown return value, abort')
                     quit()
 
+                num_fields_tuple = checker.count_num_fields(snapshot=snapshot, 
+                                                            prev_snapshot=prev_snapshot)
+                if num_fields_tuple != None:
+                    num_system_fields, num_delta_fields = num_fields_tuple
+                    num_system_fields_list.append(num_system_fields)
+                    num_delta_fields_list.append(num_delta_fields)
+
         if not alarm:
             logging.info('%s does not report an alarm' % system_state_path)
 
     logging.info('Number of alarms: %d', num_alarms)
+    num_system_fields_df = pandas.Series(num_system_fields_list)
+    num_delta_fields_df = pandas.Series(num_delta_fields_list)
+    logging.info('Number of system fields: max[%s] min[%s] mean[%s]' % 
+                    (num_system_fields_df.max(), num_system_fields_df.min(), num_system_fields_df.mean()))
+    logging.info('Number of delta fields: max[%s] min[%s] mean[%s]' % 
+                    (num_delta_fields_df.max(), num_delta_fields_df.min(), num_delta_fields_df.mean()))
