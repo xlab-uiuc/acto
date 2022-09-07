@@ -280,6 +280,16 @@ class InputModel:
         # TODO
         candidates_list = self.candidates_dict_to_list(candidates, path)
 
+    def apply_default_value(self, default_value_result: dict):
+        '''Takes default value result from static analysis and apply to schema
+        
+        Args:
+            default_value_result: default_value_map in static analysis result
+        '''
+        for key, value in default_value_result.items():
+            path = json.loads(key)[1:]  # get rid of leading "root"
+            self.get_schema_by_path(path).default = value
+
     def candidates_dict_to_list(self, candidates: dict, path: list) -> list:
         if 'candidates' in candidates:
             return [(path, candidates['candidates'])]
