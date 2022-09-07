@@ -2,6 +2,8 @@
 - name: Mount file systems
   hosts: all
   become: true
+  vars_files:
+    - data.yaml
 
   tasks:
     - name: Mount tmpfs on docker path /var/lib/docker
@@ -10,7 +12,7 @@
         path: /var/lib/docker
         src: tmpfs
         state: mounted
-        opts: size=140G
+        opts: "size={{ TMPFS_SIZE }}"
 
     - name: Format the spare partition
       community.general.filesystem:
