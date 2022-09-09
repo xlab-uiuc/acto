@@ -52,13 +52,10 @@ class Runner(object):
         Returns:
             result 
         '''
-        self.operator_log_path = "%s/operator-%d.log" % (
-            self.trial_dir, generation)
-        self.system_state_path = "%s/system-state-%03d.json" % (
-            self.trial_dir, generation)
+        self.operator_log_path = "%s/operator-%d.log" % (self.trial_dir, generation)
+        self.system_state_path = "%s/system-state-%03d.json" % (self.trial_dir, generation)
         self.events_log_path = "%s/events.log" % (self.trial_dir)
-        self.cli_output_path = "%s/cli-output-%d.log" % (
-            self.trial_dir, generation)
+        self.cli_output_path = "%s/cli-output-%d.log" % (self.trial_dir, generation)
 
         mutated_filename = '%s/mutated-%d.yaml' % (self.trial_dir, generation)
         with open(mutated_filename, 'w') as mutated_cr_file:
@@ -66,8 +63,7 @@ class Runner(object):
 
         cmd = ['apply', '-f', mutated_filename, '-n', self.namespace]
 
-        cli_result = kubectl(
-            cmd, context_name=self.context_name, capture_output=True, text=True)
+        cli_result = kubectl(cmd, context_name=self.context_name, capture_output=True, text=True)
         self.wait_for_system_converge()
 
         logging.debug('STDOUT: ' + cli_result.stdout)
@@ -83,8 +79,7 @@ class Runner(object):
             system_state = {}
             operator_log = ''
 
-        snapshot = Snapshot(input, self.collect_cli_result(
-            cli_result), system_state, operator_log)
+        snapshot = Snapshot(input, self.collect_cli_result(cli_result), system_state, operator_log)
         return snapshot
 
     def run_without_collect(self, seed_file: str):
@@ -105,9 +100,9 @@ class Runner(object):
             resources[resource] = self.__get_all_objects(method)
             if resource == 'pod':
                 # put pods managed by deployment / replicasets into an array
-                resources[resource] = transform_deployment_pods_to_array(
-                    resources[resource])
-            if resource == 'secret':
+                all_pods = self.__get_all_objects(method)
+                resources['deployment_pods'], resources['pod'] = group_pods(all_pods)
+            elif resource == 'secret':
                 resources[resource] = decode_secret_data(resources[resource])
 
         current_cr = self.__get_custom_resources(self.namespace, self.crd_metainfo['group'],
@@ -136,8 +131,7 @@ class Runner(object):
             namespace=self.namespace, watch=False, label_selector="acto/tag=operator-pod").items
 
         if len(operator_pod_list) >= 1:
-            logging.debug('Got operator pod: pod name:' +
-                          operator_pod_list[0].metadata.name)
+            logging.debug('Got operator pod: pod name:' + operator_pod_list[0].metadata.name)
         else:
             logging.error('Failed to find operator pod')
             # TODO: refine what should be done if no operator pod can be found
@@ -229,8 +223,7 @@ class Runner(object):
                                                             watch=True)
 
         combined_event_queue = Queue(maxsize=0)
-        timer_hard_timeout = acto_timer.ActoTimer(
-            hard_timeout, combined_event_queue, "timeout")
+        timer_hard_timeout = acto_timer.ActoTimer(hard_timeout, combined_event_queue, "timeout")
         watch_process = Process(target=self.watch_system_events,
                                 args=(event_stream, combined_event_queue))
 
@@ -250,8 +243,7 @@ class Runner(object):
         timer_hard_timeout.cancel()
         watch_process.terminate()
 
-        time_elapsed = time.strftime(
-            "%H:%M:%S", time.gmtime(time.time() - start_timestamp))
+        time_elapsed = time.strftime("%H:%M:%S", time.gmtime(time.time() - start_timestamp))
         logging.info('System took %s to converge' % time_elapsed)
 
     def watch_system_events(self, event_stream, queue: Queue):
@@ -306,10 +298,37 @@ def transform_deployment_pods_to_array(pods: dict) -> dict:
     deployment_pods = []
 
     for pod in pods:
-        if get_pod_owner_kind(pods[pod]).lower() == 'deployment' or get_pod_owner_kind(pods[pod]).lower() == 'replicaset':
+        if get_pod_owner_kind(pods[pod]).lower() == 'deployment' or get_pod_owner_kind(
+                pods[pod]).lower() == 'replicaset':
             deployment_pods.append(pods[pod])
             # delete the pod from the original dict
             del pods[pod]
 
     pods['deployment_pods'] = deployment_pods
     return pods
+
+
+def group_pods(all_pods: dict) -> Tuple[dict, dict]:
+    '''Groups pods into deployment pods and other pods
+    
+    For deployment pods, they are further grouped by their owner reference
+    
+    Return:
+        Tuple of (deployment_pods, other_pods)
+    '''
+    deployment_pods = {}
+    other_pods = {}
+    for name, pod in all_pods.items():
+        if pod['metadata']['owner_references'] != None:
+            owner_reference = pod['metadata']['owner_references'][0]
+            if owner_reference['kind'] == 'ReplicaSet' or owner_reference['kind'] == 'Deployment':
+                if owner_reference['name'] not in deployment_pods:
+                    deployment_pods[owner_reference['name']] = [pod]
+                else:
+                    deployment_pods[owner_reference['name']].append(pod)
+            else:
+                other_pods[name] = pod
+        else:
+            other_pods[name] = pod
+
+    return deployment_pods, other_pods
