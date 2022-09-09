@@ -323,6 +323,17 @@ class ActoEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
+class ContextEncoder(json.JSONEncoder):
+
+    def default(self, obj):
+        if isinstance(obj, set):
+            return list(obj)
+        elif isinstance(obj, str) and obj == 'true':
+            return True
+        elif isinstance(obj, str) and obj == 'false':
+            return False
+        return json.JSONEncoder.default(self, obj)
+
 def translate_op(input_op: str):
     if input_op == '!=':
         op = operator.ne

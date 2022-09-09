@@ -64,9 +64,6 @@ func GetValueToFieldMappingPass(context *Context, prog *ssa.Program, seedType *s
 			continue
 		}
 		referrers := variable.Referrers()
-		if variable.String() == "*t256" {
-			log.Printf("&t227.AdvancedConfig [#2] has %d referrers\n", len(*referrers))
-		}
 		for _, instruction := range *referrers {
 			switch typedInst := instruction.(type) {
 			case ssa.Value:
@@ -85,8 +82,8 @@ func GetValueToFieldMappingPass(context *Context, prog *ssa.Program, seedType *s
 							// propogate to the function parameter
 							// propogate to return value if it is DeepCopy
 							// stop propogate if external library call
-							if callValue.Name() == "DeepCopy" {
-								log.Printf("Propogate through DeepCopy\n")
+							if callValue.Name() == "DeepCopy" || callValue.Name() == "String" || callValue.Name() == "Float64" {
+								log.Printf("Propogate through %s\n", callValue.Name())
 								for _, parentField := range parentFieldSet.Fields() {
 									newField := parentField.Clone()
 									ok := AddFieldToValueFieldSetMap(valueFieldSetMap, typedValue, newField)

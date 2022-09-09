@@ -505,7 +505,7 @@ class Acto:
                                                               self.operator_config.analysis.type,
                                                               self.operator_config.analysis.package)
             with open(context_file, 'w') as context_fout:
-                json.dump(self.context, context_fout, cls=ActoEncoder)
+                json.dump(self.context, context_fout, cls=ContextEncoder)
 
     def run(self):
         threads = []
