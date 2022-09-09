@@ -94,7 +94,7 @@ class Checker(object):
                     for state_delta in type_delta_list.values():
                         num_delta += 1
             logging.info('Number of system state fields: [%d] Number of delta: [%d]' %
-                        (len(flattened_system_state), num_delta))
+                         (len(flattened_system_state), num_delta))
 
         # XXX: disable health check for now
         # health_result = self.check_health(snapshot)
@@ -316,7 +316,12 @@ class Checker(object):
             else:
                 return False
 
-        return translate_op(condition['op'])(value, condition['value'])
+        if translate_op(condition['op'])(value, condition['value']):
+            return True
+        else:
+            if type(value) == bool:
+                condition['value'] = True if condition['value'] == 'true' else False
+                return translate_op(condition['op'])(value, condition['value'])
 
     def check_operator_log(self, snapshot: Snapshot, prev_snapshot: Snapshot) -> RunResult:
         '''Check the operator log for error msg
@@ -424,7 +429,6 @@ class Checker(object):
             return len(flattened_system_state), num_delta
 
         return None
-
 
     def _list_matched_fields(self, path: list, delta_dict: dict) -> list:
         '''Search through the entire system delta to find longest matching field
@@ -551,11 +555,11 @@ if __name__ == "__main__":
     for trial_dir in sorted(trial_dirs):
         print(trial_dir)
         input_model = InputModel(context['crd']['body'], config.example_dir,
-                                      1, 1, [])
-        
+                                 1, 1, [])
+
         if context['enable_analysis']:
             input_model.apply_default_value(context['analysis_result']['default_value_map'])
-            
+
         checker = Checker(context=context, trial_dir=trial_dir, input_model=input_model)
         snapshots = []
         snapshots.append(EmptySnapshot(seed))
@@ -615,7 +619,7 @@ if __name__ == "__main__":
                     logging.error('Unknown return value, abort')
                     quit()
 
-                num_fields_tuple = checker.count_num_fields(snapshot=snapshot, 
+                num_fields_tuple = checker.count_num_fields(snapshot=snapshot,
                                                             prev_snapshot=prev_snapshot)
                 if num_fields_tuple != None:
                     num_system_fields, num_delta_fields = num_fields_tuple
@@ -628,7 +632,7 @@ if __name__ == "__main__":
     logging.info('Number of alarms: %d', num_alarms)
     num_system_fields_df = pandas.Series(num_system_fields_list)
     num_delta_fields_df = pandas.Series(num_delta_fields_list)
-    logging.info('Number of system fields: max[%s] min[%s] mean[%s]' % 
-                    (num_system_fields_df.max(), num_system_fields_df.min(), num_system_fields_df.mean()))
-    logging.info('Number of delta fields: max[%s] min[%s] mean[%s]' % 
-                    (num_delta_fields_df.max(), num_delta_fields_df.min(), num_delta_fields_df.mean()))
+    logging.info('Number of system fields: max[%s] min[%s] mean[%s]' %
+                 (num_system_fields_df.max(), num_system_fields_df.min(), num_system_fields_df.mean()))
+    logging.info('Number of delta fields: max[%s] min[%s] mean[%s]' %
+                 (num_delta_fields_df.max(), num_delta_fields_df.min(), num_delta_fields_df.mean()))
