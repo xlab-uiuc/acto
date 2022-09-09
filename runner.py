@@ -272,42 +272,6 @@ def decode_secret_data(secrets: dict) -> dict:
     return secrets
 
 
-def get_pod_owner_kind(pod: dict) -> str:
-    '''Get pod owner kind
-    Args:
-        pod: pod object in dict
-    Returns:
-        owner of the pod
-    '''
-    if pod['kind'].lower() != 'pod':
-        raise ValueError('Input is not a pod object')
-
-    if pod['metadata']['owner_references'] != None:
-        return pod['metadata']['owner_references'][0]['name']
-    else:
-        return ""
-
-
-def transform_deployment_pods_to_array(pods: dict) -> dict:
-    '''Transform deployment pods to array
-    Args:
-        pods: pods object in dict
-    Returns:
-        pods in array
-    '''
-    deployment_pods = []
-
-    for pod in pods:
-        if get_pod_owner_kind(pods[pod]).lower() == 'deployment' or get_pod_owner_kind(
-                pods[pod]).lower() == 'replicaset':
-            deployment_pods.append(pods[pod])
-            # delete the pod from the original dict
-            del pods[pod]
-
-    pods['deployment_pods'] = deployment_pods
-    return pods
-
-
 def group_pods(all_pods: dict) -> Tuple[dict, dict]:
     '''Groups pods into deployment pods and other pods
     
