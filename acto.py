@@ -457,7 +457,7 @@ class Acto:
         # Generate test cases
         self.test_plan = self.input_model.generate_test_plan()
         with open(os.path.join(self.workdir_path, 'test_plan.json'), 'w') as plan_file:
-            json.dump(self.test_plan, plan_file, cls=ActoEncoder, indent=6)
+            json.dump(self.test_plan, plan_file, cls=ActoEncoder, indent=4)
 
     def __learn(self, context_file, helper_crd):
         if os.path.exists(context_file):
@@ -505,7 +505,7 @@ class Acto:
                                                               self.operator_config.analysis.type,
                                                               self.operator_config.analysis.package)
             with open(context_file, 'w') as context_fout:
-                json.dump(self.context, context_fout, cls=ContextEncoder)
+                json.dump(self.context, context_fout, cls=ContextEncoder, indent=6)
 
     def run(self):
         threads = []

@@ -28,7 +28,8 @@ class Checker(object):
         if self.context['enable_analysis']:
             self.field_conditions_map = self.context['analysis_result']['field_conditions_map']
         self.helper(self.input_model.get_root_schema())
-        logging.info('Field condition map: %s' % json.dumps(self.field_conditions_map, indent=6))
+        logging.info('Field condition map: %s' %
+                     json.dumps(self.field_conditions_map, indent=6))
         # logging.debug(self.context['analysis_result']['paths'])
 
     def helper(self, schema: ObjectSchema):
@@ -246,7 +247,8 @@ class Checker(object):
                     return True
         else:
             # if no exact match, try find parent field
-            parent = Checker.find_nearest_parent(input_delta.path, field_conditions_map.keys())
+            parent = Checker.find_nearest_parent(
+                input_delta.path, field_conditions_map.keys())
             if parent is not None:
                 conditions = field_conditions_map[json.dumps(parent)]
                 for condition in conditions:
@@ -319,9 +321,10 @@ class Checker(object):
         if translate_op(condition['op'])(value, condition['value']):
             return True
         else:
-            if type(value) == bool:
+            if isinstance(value, bool):
                 condition['value'] = True if condition['value'] == 'true' else False
                 return translate_op(condition['op'])(value, condition['value'])
+            return False
 
     def check_operator_log(self, snapshot: Snapshot, prev_snapshot: Snapshot) -> RunResult:
         '''Check the operator log for error msg
@@ -558,9 +561,11 @@ if __name__ == "__main__":
                                  1, 1, [])
 
         if context['enable_analysis']:
-            input_model.apply_default_value(context['analysis_result']['default_value_map'])
+            input_model.apply_default_value(
+                context['analysis_result']['default_value_map'])
 
-        checker = Checker(context=context, trial_dir=trial_dir, input_model=input_model)
+        checker = Checker(context=context, trial_dir=trial_dir,
+                          input_model=input_model)
         snapshots = []
         snapshots.append(EmptySnapshot(seed))
 
