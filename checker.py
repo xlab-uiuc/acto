@@ -62,7 +62,7 @@ class Checker(object):
                 value.append({
                     'field': dependee,
                     'op': '==',
-                    'value': 'true'
+                    'value': True
                 })
 
     def check(self, snapshot: Snapshot, prev_snapshot: Snapshot, generation: int) -> RunResult:
