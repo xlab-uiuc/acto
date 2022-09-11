@@ -320,11 +320,6 @@ class Checker(object):
 
         if translate_op(condition['op'])(value, condition['value']):
             return True
-        else:
-            if isinstance(value, bool):
-                condition['value'] = True if condition['value'] == 'true' else False
-                return translate_op(condition['op'])(value, condition['value'])
-            return False
 
     def check_operator_log(self, snapshot: Snapshot, prev_snapshot: Snapshot) -> RunResult:
         '''Check the operator log for error msg

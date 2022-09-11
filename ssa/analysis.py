@@ -34,6 +34,10 @@ def analyze(project_path: str, seed_type: str, seed_pkg: str) -> dict:
 
             if condition['value'] == 'null':
                 value = None
+            elif condition['value'] == 'true':
+                value = True
+            elif condition['value'] == 'false':
+                value = False
             else:
                 value = condition['value']
 
