@@ -19,7 +19,7 @@
 |                                     | [https://github.com/spotahome/redis-operator/issues/407](https://github.com/spotahome/redis-operator/issues/407)                 |           |
 | percona-server-mongodb-operator     | [https://jira.percona.com/browse/K8SPSMDB-696](https://jira.percona.com/browse/K8SPSMDB-696)                                     | fixed     |
 |                                     | [https://jira.percona.com/browse/K8SPSMDB-697](https://jira.percona.com/browse/K8SPSMDB-697)                                     | fixed     |
-|                                     | [https://jira.percona.com/browse/K8SPSMDB-738](https://jira.percona.com/browse/K8SPSMDB-738)                                     |           |
+|                                     | [https://jira.percona.com/browse/K8SPSMDB-738](https://jira.percona.com/browse/K8SPSMDB-738)                                     | confirmed |
 |                                     | [https://jira.percona.com/browse/K8SPSMDB-742](https://jira.percona.com/browse/K8SPSMDB-742)                                     |           |
 | OT-CONTAINER-KIT/redis-operator     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/279](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/279)   | fixed     |
 |                                     | [https://github.com/OT-CONTAINER-KIT/redis-operator/pull/280](https://github.com/OT-CONTAINER-KIT/redis-operator/pull/280)       | fixed     |
