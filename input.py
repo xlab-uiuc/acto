@@ -288,7 +288,7 @@ class InputModel:
         '''
         for key, value in default_value_result.items():
             path = json.loads(key)[1:]  # get rid of leading "root"
-            self.get_schema_by_path(path).default = value
+            self.get_schema_by_path(path).set_default(value)
 
     def candidates_dict_to_list(self, candidates: dict, path: list) -> list:
         if 'candidates' in candidates:

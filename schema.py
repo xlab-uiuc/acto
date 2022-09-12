@@ -49,6 +49,10 @@ class BaseSchema:
     def load_examples(self, example):
         '''Load example into schema and subschemas'''
 
+    @abstractmethod
+    def set_default(self, instance):
+        pass
+
     def delete(self, prev):
         return None
 
@@ -124,6 +128,9 @@ class StringSchema(BaseSchema):
 
     def load_examples(self, example: str):
         self.examples.append(example)
+
+    def set_default(self, instance):
+        self.default = str(instance)
 
     def num_cases(self):
         return 3
@@ -219,6 +226,9 @@ class NumberSchema(BaseSchema):
     def load_examples(self, example: float):
         self.examples.append(example)
 
+    def set_default(self, instance):
+        self.default = float(instance)
+
     def num_cases() -> int:
         return 3
 
@@ -306,6 +316,9 @@ class IntegerSchema(NumberSchema):
 
     def load_examples(self, example: int):
         self.examples.append(example)
+
+    def set_default(self, instance):
+        self.default = int(instance)
 
     def num_cases(self) -> int:
         return 3
@@ -461,6 +474,9 @@ class ObjectSchema(BaseSchema):
             if key in self.properties:
                 self.properties[key].load_examples(value)
 
+    def set_default(self, instance):
+        self.default = instance
+
     def get_property_schema(self, key):
         if key in self.properties:
             return self.properties[key]
@@ -583,6 +599,9 @@ class ArraySchema(BaseSchema):
         for item in example:
             self.item_schema.load_examples(item)
 
+    def set_default(self, instance):
+        self.default = instance
+
     def num_cases(self):
         return self.item_schema.num_cases() + 3
 
@@ -698,6 +717,9 @@ class AnyOfSchema(BaseSchema):
             if possibility.validate(example):
                 possibility.load_examples(example)
 
+    def set_default(self, instance):
+        self.default = instance
+
     def num_cases(self) -> int:
         num = 0
         for i in self.possibilities:
@@ -752,6 +774,12 @@ class BooleanSchema(BaseSchema):
 
     def load_examples(self, example: bool):
         pass
+
+    def set_default(self, instance):
+        if isinstance(instance, bool):
+            self.default = instance
+        elif isinstance(instance, str):
+            self.default = instance.lower() in ['true', 'True']
 
     def num_cases(self):
         return 3
