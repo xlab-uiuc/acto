@@ -450,7 +450,7 @@ class Checker(object):
                 for delta in type_delta_list.values():
                     position = 0
                     while canonicalize(path[-position - 1]) == canonicalize(delta.path[-position -
-                                                                                       1]):
+                                                                                        1]):
                         position += 1
                         if position == min(len(path), len(delta.path)):
                             break
@@ -481,6 +481,7 @@ class Checker(object):
                          curr_system_state[resource],
                          exclude_regex_paths=EXCLUDE_PATH_REGEX,
                          report_repetition=True,
+                         ignore_order=True,
                          view='tree'))
 
         return input_delta, system_state_delta
@@ -539,10 +540,12 @@ if __name__ == "__main__":
         context = json.load(context_fin)
         context['preload_images'] = set(context['preload_images'])
 
-    for path in context['analysis_result']['control_flow_fields']:
-        path.pop(0)
-
-    context['enable_analysis'] = True
+    if 'enable_analysis' in context and context['enable_analysis'] == True:
+        logging.info('Analysis is enabled')
+        for path in context['analysis_result']['control_flow_fields']:
+            path.pop(0)
+    else:
+        context['enable_analysis'] = False
 
     with open(config.seed_custom_resource, 'r') as seed_file:
         seed = yaml.load(seed_file, Loader=yaml.FullLoader)
