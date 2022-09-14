@@ -274,9 +274,9 @@ def decode_secret_data(secrets: dict) -> dict:
 
 def group_pods(all_pods: dict) -> Tuple[dict, dict]:
     '''Groups pods into deployment pods and other pods
-    
+
     For deployment pods, they are further grouped by their owner reference
-    
+
     Return:
         Tuple of (deployment_pods, other_pods)
     '''
@@ -286,10 +286,14 @@ def group_pods(all_pods: dict) -> Tuple[dict, dict]:
         if pod['metadata']['owner_references'] != None:
             owner_reference = pod['metadata']['owner_references'][0]
             if owner_reference['kind'] == 'ReplicaSet' or owner_reference['kind'] == 'Deployment':
-                if owner_reference['name'] not in deployment_pods:
-                    deployment_pods[owner_reference['name']] = [pod]
+                owner_name = owner_reference['name'] 
+                if owner_reference['kind'] == 'ReplicaSet':
+                    # chop off the suffix of the ReplicaSet name to get the deployment name
+                    owner_name = '-'.join(owner_name.split('-')[:-1])
+                if owner_name not in deployment_pods:
+                    deployment_pods[owner_name] = [pod]
                 else:
-                    deployment_pods[owner_reference['name']].append(pod)
+                    deployment_pods[owner_name].append(pod)
             else:
                 other_pods[name] = pod
         else:
