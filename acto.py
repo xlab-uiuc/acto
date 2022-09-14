@@ -518,7 +518,7 @@ class Acto:
 
         for t in threads:
             t.join()
-
+        logging.info('All tests finished')
 
 def handle_excepthook(type, message, stack):
     '''Custom exception handler
@@ -651,7 +651,10 @@ if __name__ == '__main__':
     else:
         context_cache = args.context
 
+    start_time = datetime.now()
     acto = Acto(workdir_path, config, args.cluster_runtime, args.enable_analysis, args.preload_images, context_cache,
                 args.helper_crd, args.num_workers, args.num_cases, args.dryrun)
     if not args.learn:
         acto.run()
+    end_time = datetime.now()
+    logging.info('Acto finished in %s', end_time - start_time)

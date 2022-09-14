@@ -28,8 +28,8 @@ class Checker(object):
         if self.context['enable_analysis']:
             self.field_conditions_map = self.context['analysis_result']['field_conditions_map']
         self.helper(self.input_model.get_root_schema())
-        logging.info('Field condition map: %s' %
-                     json.dumps(self.field_conditions_map, indent=6))
+        # logging.info('Field condition map: %s' %
+        #              json.dumps(self.field_conditions_map, indent=6))
         # logging.debug(self.context['analysis_result']['paths'])
 
     def helper(self, schema: ObjectSchema):
@@ -59,6 +59,7 @@ class Checker(object):
         for key, value in self.field_conditions_map.items():
             path = json.loads(key)
             if is_subfield(path, depender):
+                logging.debug('Add dependency of %s on %s' % (path, dependee))
                 value.append({
                     'field': dependee,
                     'op': '==',
@@ -312,14 +313,23 @@ class Checker(object):
 
         try:
             value = reduce(operator.getitem, path, input)
-        except (KeyError, TypeError) as e:
+        except (KeyError, TypeError, IndexError) as e:
             if translate_op(condition['op']) == operator.eq and condition['value'] == None:
                 return True
             else:
                 return False
 
-        if translate_op(condition['op'])(value, condition['value']):
-            return True
+        # the condition_value is stored as string in the json file
+        condition_value = condition['value']
+        if isinstance(value, int):
+            condition_value = int(condition_value)
+        elif isinstance(value, float):
+            condition_value = float(condition_value)
+        try:
+            if translate_op(condition['op'])(value, condition_value):
+                return True
+        except TypeError as e:
+            return False
 
     def check_operator_log(self, snapshot: Snapshot, prev_snapshot: Snapshot) -> RunResult:
         '''Check the operator log for error msg
