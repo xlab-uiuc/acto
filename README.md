@@ -154,7 +154,7 @@ python3 acto.py \
 ## Example:   
 **rabbitmq-operator**:  
 ```console
-python3 acto.py --seed data/rabbitmq-operator/config.json
+python3 acto.py --config data/rabbitmq-operator/config.json
                 --num-workers 4
 ```
 
