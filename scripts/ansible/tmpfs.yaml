@@ -19,15 +19,26 @@
         fstype: ext4
         dev: /dev/sda4
 
+    - name: Get the home directory
+      become: false
+      command: echo $HOME
+      register: home
+
+    - name: create Acto dir
+      become: false
+      ansible.builtin.file:
+        path: "{{ home.stdout }}/acto"
+        state: directory
+
     - name: Mount the spare partition on acto dir
       ansible.posix.mount:
-        path: "/acto"
+        path: "{{ home.stdout }}/acto"
         fstype: ext4
         src: /dev/sda4
         state: mounted
 
     - name: Change ownership of acto dir
       ansible.builtin.file:
-        path: "/acto"
-        mode: "0777"
+        path: "{{ home.stdout }}/acto"
+        mode: "u=rwx,g=rwx,o=rwx"
         state: directory
