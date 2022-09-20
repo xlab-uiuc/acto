@@ -1,7 +1,7 @@
 # Number of bugs
-(Byproduct bugs included) Total bugs: **56**, confirmed: **42**, fixed: **26**.<br/>
+(Byproduct bugs included) Total bugs: **55**, confirmed: **41**, fixed: **25**.<br/>
 
-(Byproduct bugs excluded) Total bugs: **52**, confirmed: **38**, fixed: **23**.<br/>
+(Byproduct bugs excluded) Total bugs: **51**, confirmed: **37**, fixed: **22**.<br/>
 
 # Bugs found
 
@@ -29,7 +29,6 @@
 |                                     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/289](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/289)   | fixed     |
 |                                     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/290](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/290)   | fixed     |
 |                                     | [https://github.com/OT-CONTAINER-KIT/redis-operator/pull/292](https://github.com/OT-CONTAINER-KIT/redis-operator/pull/292)       | fixed     |
-|                                     | [https://github.com/OT-CONTAINER-KIT/redis-operator/pull/293](https://github.com/OT-CONTAINER-KIT/redis-operator/pull/293)       | fixed     |
 |                                     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/310](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/310)   |           |
 | kubernetes-sigs/controller-tools    | [https://github.com/kubernetes-sigs/controller-tools/issues/665](https://github.com/kubernetes-sigs/controller-tools/issues/665) | confirmed |
 | kubernetes/kubernetes               | [https://github.com/kubernetes/kubernetes/issues/109839](https://github.com/kubernetes/kubernetes/issues/109839)                 | confirmed |
