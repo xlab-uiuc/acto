@@ -49,7 +49,7 @@ s# Number of bugs
 |                                     | [https://github.com/pingcap/tidb-operator/issues/4684](https://github.com/pingcap/tidb-operator/issues/4684)                     |           |
 |                                     | [https://github.com/pingcap/tidb-operator/issues/4705](https://github.com/pingcap/tidb-operator/issues/4705)                     |           |
 | percona-xtradb-cluster-operator     | [https://jira.percona.com/browse/K8SPXC-1060](https://jira.percona.com/browse/K8SPXC-1060)                                       | fixed     |
-|                                     | [https://jira.percona.com/browse/K8SPXC-1061](https://jira.percona.com/browse/K8SPXC-1061)                                       | confirmed |
+|                                     | [https://jira.percona.com/browse/K8SPXC-1061](https://jira.percona.com/browse/K8SPXC-1061)                                       | fixed     |
 |                                     | [https://jira.percona.com/browse/K8SPXC-1067](https://jira.percona.com/browse/K8SPXC-1067)                                       |           |
 |                                     | [https://jira.percona.com/browse/K8SPXC-1068](https://jira.percona.com/browse/K8SPXC-1068)                                       |           |
 |                                     | [https://jira.percona.com/browse/K8SPXC-1069](https://jira.percona.com/browse/K8SPXC-1069)                                       |           |
