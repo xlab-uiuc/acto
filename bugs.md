@@ -1,4 +1,4 @@
-# Number of bugs
+s# Number of bugs
 (Byproduct bugs included) Total bugs: **57**, confirmed: **42**, fixed: **26**.<br/>
 
 (Byproduct bugs excluded) Total bugs: **53**, confirmed: **38**, fixed: **23**.<br/>
@@ -48,7 +48,7 @@
 |                                     | [https://github.com/pingcap/tidb-operator/issues/4649](https://github.com/pingcap/tidb-operator/issues/4649)                     | confirmed |
 |                                     | [https://github.com/pingcap/tidb-operator/issues/4684](https://github.com/pingcap/tidb-operator/issues/4684)                     |           |
 |                                     | [https://github.com/pingcap/tidb-operator/issues/4705](https://github.com/pingcap/tidb-operator/issues/4705)                     |           |
-| percona-xtradb-cluster-operator     | [https://jira.percona.com/browse/K8SPXC-1060](https://jira.percona.com/browse/K8SPXC-1060)                                       |           |
+| percona-xtradb-cluster-operator     | [https://jira.percona.com/browse/K8SPXC-1060](https://jira.percona.com/browse/K8SPXC-1060)                                       | fixed     |
 |                                     | [https://jira.percona.com/browse/K8SPXC-1061](https://jira.percona.com/browse/K8SPXC-1061)                                       | confirmed |
 |                                     | [https://jira.percona.com/browse/K8SPXC-1067](https://jira.percona.com/browse/K8SPXC-1067)                                       |           |
 |                                     | [https://jira.percona.com/browse/K8SPXC-1068](https://jira.percona.com/browse/K8SPXC-1068)                                       |           |
