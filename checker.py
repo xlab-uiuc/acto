@@ -1,4 +1,5 @@
 from builtins import TypeError
+from copy import deepcopy
 import sys
 import logging
 from deepdiff import DeepDiff
@@ -506,7 +507,54 @@ class Checker(object):
                          view='tree'))
 
         return input_delta, system_state_delta
+    
+    def check_state_equality(self, snapshot: Snapshot, prev_snapshot: Snapshot) -> dict:
+        '''Check whether two system state are semantically equivalent
 
+        Args:
+            - snapshot: a reference to a system state
+            - prev_snapshot: a reference to another system state
+
+        Return value:
+            - a dict of diff results, empty if no diff found
+        '''
+
+        curr_system_state = deepcopy(snapshot.system_state)
+        prev_system_state = deepcopy(prev_snapshot.system_state)
+
+        # remove pods that belong to jobs from both states to avoid observability problem
+        curr_pods = curr_system_state['pod']
+        prev_pods = prev_system_state['pod']
+        curr_system_state['pod'] = {k: v for k, v in curr_pods.items() if v['metadata']['owner_references'][0]['kind'] != 'Job'}
+        prev_system_state['pod'] = {k: v for k, v in prev_pods.items() if v['metadata']['owner_references'][0]['kind'] != 'Job'}
+
+        # remove custom resource from both states
+        curr_system_state.pop('custom_resource_spec', None)
+        prev_system_state.pop('custom_resource_spec', None)
+        curr_system_state.pop('custom_resource_status', None)
+        prev_system_state.pop('custom_resource_status', None)
+
+        # remove fields that are not deterministic
+        exclude_paths = [
+            r".*\['metadata'\]\['managed_fields'\]",
+            r".*\['metadata'\]\['creation_timestamp'\]",
+            r".*\['metadata'\]\['resource_version'\]",
+            r".*\['metadata'\]\['uid'\]",
+            r".*\['metadata'\]\['generation'\]",
+            r".*\['metadata'\]\['annotations'\]\['.*last-applied.*'\]",
+            r".*\['metadata'\]\['annotations'\]\['.*\.kubernetes\.io.*'\]",
+            r".*\['metadata'\]\['labels'\]\['.*revision*'\]",
+          
+            r".*\['status'\]",
+
+            r".*\['spec'\]\['containers'\]\[.*\]\['volume_mounts'\]\[.*\]\['name'\]",
+            r".*\['spec'\]\['volumes'\]\[.*\]\['name'\]",
+            ]
+
+        return DeepDiff(prev_system_state, curr_system_state, 
+                            exclude_regex_paths=exclude_paths, 
+                            ignore_order=True)
+        
 
 if __name__ == "__main__":
     import glob
