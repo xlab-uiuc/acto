@@ -125,7 +125,7 @@ class TrialRunner:
 
         self.snapshots = []
         self.discarded_testcases = {}  # List of test cases failed to run
-
+        
     def run(self):
         self.input_model.set_worker_id(self.worker_id)
         curr_trial = 0
@@ -185,6 +185,10 @@ class TrialRunner:
 
         generation = 0
         while generation < num_mutation:  # every iteration gets a new list of next tests
+            # update the thread logger
+            set_thread_logger_prefix(f'trial: {trial_dir}, gen: {generation}')
+            logger = get_thread_logger(with_prefix=True)
+
             curr_input_with_schema = attach_schema_to_value(self.snapshots[-1].input,
                                                             self.input_model.root_schema)
 
@@ -200,11 +204,11 @@ class TrialRunner:
 
                     if testcase.test_precondition(field_curr_value):
                         # precondition of this testcase satisfies
-                        logging.info('Precondition of %s satisfies', field_node.get_path())
+                        logger.info('Precondition of %s satisfies', field_node.get_path())
                         ready_testcases.append((field_node, testcase))
                     else:
                         # precondition fails, first run setup
-                        logging.info('Precondition of %s fails, try setup first',
+                        logger.info('Precondition of %s fails, try setup first',
                                      field_node.get_path())
                         apply_testcase(curr_input_with_schema,
                                        field_node.get_path(),
@@ -215,7 +219,7 @@ class TrialRunner:
                                 curr_input_with_schema.get_value_by_path(list(
                                     field_node.get_path()))):
                             # just in case the setup does not work correctly, drop this testcase
-                            logging.error('Setup does not work correctly')
+                            logger.error('Setup does not work correctly')
                             field_node.discard_testcase(self.discarded_testcases)
                             continue
 
@@ -225,7 +229,7 @@ class TrialRunner:
                         generation += 1
 
                         if isinstance(result, InvalidInputResult):
-                            logging.info('Setup produced invalid input')
+                            logger.info('Setup produced invalid input')
                             self.snapshots.pop()
                             field_node.discard_testcase(self.discarded_testcases)
                             curr_input_with_schema = self.revert(runner, checker, generation)
@@ -238,17 +242,17 @@ class TrialRunner:
                         elif isinstance(result, PassResult):
                             ready_testcases.append((field_node, testcase))
                         else:
-                            logging.error('Unknown return value, abort')
+                            logger.error('Unknown return value, abort')
                             quit()
 
                 if len(ready_testcases) == 0:
-                    logging.info('All setups failed')
+                    logger.info('All setups failed')
                     continue
-                logging.info('Running bundled testcases')
+                logger.info('Running bundled testcases')
 
             t = self.run_testcases(curr_input_with_schema, ready_testcases, runner, checker,
                                    generation)
-            logging.debug(t)
+            logger.debug(t)
             result, generation = t
             if isinstance(result, ErrorResult):
                 return result, generation
@@ -260,6 +264,8 @@ class TrialRunner:
 
     def run_testcases(self, curr_input_with_schema, testcases, runner, checker,
                       generation) -> Tuple[RunResult, int]:
+        logger = get_thread_logger(with_prefix=True)
+        
         testcase_patches = []
         for field_node, testcase in testcases:
             patch = apply_testcase(curr_input_with_schema, field_node.get_path(), testcase)
@@ -275,7 +281,7 @@ class TrialRunner:
             # responsible testcase and re-apply
 
             # 1. revert
-            logging.debug('Invalid input, revert')
+            logger.debug('Invalid input, revert')
             self.snapshots.pop()
             curr_input_with_schema = self.revert(runner, checker, generation)
             generation += 1
@@ -284,13 +290,13 @@ class TrialRunner:
             if len(testcase_patches) == 1:
                 # if only one testcase, then no need to isolate
                 testcase_patches[0][0].get_testcases().pop()  # finish testcase
-                logging.debug('Only one patch, no need to isolate')
+                logger.debug('Only one patch, no need to isolate')
                 return result, generation
             else:
                 responsible_field = result.responsible_field
                 if responsible_field == None:
                     # Unable to pinpoint the exact responsible testcase, try one by one
-                    logging.debug('Unable to pinpoint the exact responsible field, try one by one')
+                    logger.debug('Unable to pinpoint the exact responsible field, try one by one')
                     for field_node, testcase, patch in testcase_patches:
                         result, generation = self.run_testcases(curr_input_with_schema,
                                                                 [(field_node, testcase)], runner,
@@ -300,14 +306,14 @@ class TrialRunner:
                     return result, generation
                 else:
                     jsonpatch_path = ''.join('/' + str(item) for item in responsible_field)
-                    logging.debug('Responsible patch path: %s', jsonpatch_path)
+                    logger.debug('Responsible patch path: %s', jsonpatch_path)
                     # isolate the responsible invalid testcase and re-apply
                     ready_testcases = []
                     for field_node, testcase, patch in testcase_patches:
                         responsible = False
                         for op in patch:
                             if op['path'] == jsonpatch_path:
-                                logging.info('Determine the responsible field to be %s' %
+                                logger.info('Determine the responsible field to be %s' %
                                              jsonpatch_path)
                                 responsible = True
                                 field_node.get_testcases().pop()  # finish testcase
@@ -318,7 +324,7 @@ class TrialRunner:
                         return result, generation
 
                     if len(ready_testcases) == len(testcase_patches):
-                        logging.error('Fail to determine the responsible patch, try one by one')
+                        logger.error('Fail to determine the responsible patch, try one by one')
                         for field_node, testcase, patch in testcase_patches:
                             result, generation = self.run_testcases(curr_input_with_schema,
                                                                     [(field_node, testcase)], runner,
@@ -327,7 +333,7 @@ class TrialRunner:
                                 return result, generation
                         return result, generation
                     else:
-                        logging.debug('Rerunning the remaining ready testcases')
+                        logger.debug('Rerunning the remaining ready testcases')
                         return self.run_testcases(curr_input_with_schema, ready_testcases, runner,
                                                 checker, generation)
         else:
@@ -341,13 +347,14 @@ class TrialRunner:
             elif isinstance(result, PassResult):
                 pass
             else:
-                logging.error('Unknown return value, abort')
+                logger.error('Unknown return value, abort')
                 quit()
             return result, generation
 
     def run_and_check(runner: Runner, checker: Checker, input: dict, snapshots: list,
                       generation: int, dryrun: bool) -> RunResult:
-        logging.debug('Run and check')
+        logger = get_thread_logger(with_prefix=True)
+        logger.debug('Run and check')
         while True:
             if not dryrun:
                 snapshot = runner.run(input, generation)
@@ -358,7 +365,7 @@ class TrialRunner:
 
             if isinstance(result, ConnectionRefusedResult):
                 # Connection refused due to webhook not ready, let's wait for a bit
-                logging.info('Connection failed. Retry the test after 20 seconds')
+                logger.info('Connection failed. Retry the test after 20 seconds')
                 time.sleep(20)
             else:
                 break

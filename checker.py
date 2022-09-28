@@ -50,7 +50,9 @@ class Checker(object):
             depender: path of the depender
             dependee: path of the dependee
         '''
-        logging.info('Encode dependency of %s on %s' % (depender, dependee))
+        logger = get_thread_logger(with_prefix=True)
+
+        logger.info('Encode dependency of %s on %s' % (depender, dependee))
         encoded_path = json.dumps(depender)
         if encoded_path not in self.field_conditions_map:
             self.field_conditions_map[encoded_path] = []
@@ -59,7 +61,7 @@ class Checker(object):
         for key, value in self.field_conditions_map.items():
             path = json.loads(key)
             if is_subfield(path, depender):
-                logging.debug('Add dependency of %s on %s' % (path, dependee))
+                logger.debug('Add dependency of %s on %s' % (path, dependee))
                 value.append({
                     'field': dependee,
                     'op': '==',
@@ -75,6 +77,8 @@ class Checker(object):
         Returns:
             RunResult of the checking
         '''
+        logger = get_thread_logger(with_prefix=True)
+
         if snapshot.system_state == {}:
             return InvalidInputResult(None)
 
@@ -95,7 +99,7 @@ class Checker(object):
                 for type_delta_list in resource_delta_list.values():
                     for state_delta in type_delta_list.values():
                         num_delta += 1
-            logging.info('Number of system state fields: [%d] Number of delta: [%d]' %
+            logger.info('Number of system state fields: [%d] Number of delta: [%d]' %
                          (len(flattened_system_state), num_delta))
 
         # XXX: disable health check for now
@@ -103,22 +107,24 @@ class Checker(object):
         health_result = PassResult()
 
         if isinstance(log_result, InvalidInputResult):
-            logging.info('Invalid input, skip this case')
+            logger.info('Invalid input, skip this case')
             return log_result
 
         if isinstance(health_result, ErrorResult):
-            logging.info('Report error from system health oracle')
+            logger.info('Report error from system health oracle')
             return health_result
         elif isinstance(state_result, ErrorResult):
-            logging.info('Report error from system state oracle')
+            logger.info('Report error from system state oracle')
             return state_result
         elif isinstance(log_result, ErrorResult):
-            logging.info('Report error from operator log oracle')
+            logger.info('Report error from operator log oracle')
             return log_result
 
         return PassResult()
 
     def check_input(self, snapshot: Snapshot, input_delta) -> RunResult:
+        logger = get_thread_logger(with_prefix=True)
+
         stdout, stderr = snapshot.cli_result['stdout'], snapshot.cli_result['stderr']
 
         if stderr.find('connection refused') != -1:
@@ -132,13 +138,13 @@ class Checker(object):
             is_invalid = True
 
         if is_invalid:
-            logging.info('Invalid input, reject mutation')
-            logging.info('STDOUT: ' + stdout)
-            logging.info('STDERR: ' + stderr)
+            logger.info('Invalid input, reject mutation')
+            logger.info('STDOUT: ' + stdout)
+            logger.info('STDERR: ' + stderr)
             return InvalidInputResult(reponsible_field_path)
 
         if stdout.find('unchanged') != -1 or stderr.find('unchanged') != -1:
-            logging.info('CR unchanged, continue')
+            logger.info('CR unchanged, continue')
             return UnchangedInputResult()
 
         return PassResult()
@@ -156,6 +162,8 @@ class Checker(object):
         Returns:
             RunResult of the checking
         '''
+        logger = get_thread_logger(with_prefix=True)
+
         input_delta, system_delta = self.get_deltas(snapshot, prev_snapshot)
 
         with open(self.delta_log_path, 'w') as f:
@@ -183,15 +191,15 @@ class Checker(object):
 
                 # TODO: should the delta match be inclusive?
                 for match_delta in match_deltas:
-                    logging.debug('Input delta [%s] matched with [%s]' %
+                    logger.debug('Input delta [%s] matched with [%s]' %
                                   (delta.path, match_delta.path))
                     if not self.compare_method.compare(delta.prev, delta.curr, match_delta.prev,
                                                        match_delta.curr):
-                        logging.error(
+                        logger.error(
                             'Matched delta inconsistent with input delta')
-                        logging.error('Input delta: %s -> %s' %
+                        logger.error('Input delta: %s -> %s' %
                                       (delta.prev, delta.curr))
-                        logging.error('Matched delta: %s -> %s' %
+                        logger.error('Matched delta: %s -> %s' %
                                       (match_delta.prev, match_delta.curr))
                         return ErrorResult(Oracle.SYSTEM_STATE,
                                            'Matched delta inconsistent with input delta', delta,
@@ -208,8 +216,8 @@ class Checker(object):
                                     found = True
                     if found:
                         continue
-                    logging.error('Found no matching fields for input delta')
-                    logging.error('Input delta [%s]' % delta.path)
+                    logger.error('Found no matching fields for input delta')
+                    logger.error('Input delta [%s]' % delta.path)
                     return ErrorResult(Oracle.SYSTEM_STATE, 'Found no matching fields for input',
                                        delta)
         return PassResult()
@@ -224,6 +232,7 @@ class Checker(object):
         Returns:
             if the arg input_delta should be skipped in oracle
         '''
+        logger = get_thread_logger(with_prefix=True)
         try:
             default_value = self.input_model.get_schema_by_path(
                 input_delta.path).default
@@ -233,7 +242,7 @@ class Checker(object):
                 return True
         except Exception as e:
             # print error message
-            logging.warning(f"{e} happened when trying to fetch default value")
+            logger.warning(f"{e} happened when trying to fetch default value")
 
         # dependency checking
         field_conditions_map = self.field_conditions_map
@@ -243,7 +252,7 @@ class Checker(object):
             for condition in conditions:
                 if not self.check_condition(snapshot.input, condition):
                     # if one condition does not satisfy, skip this testcase
-                    logging.info(
+                    logger.info(
                         'Field precondition %s does not satisfy, skip this testcase' % condition)
                     return True
         else:
@@ -255,7 +264,7 @@ class Checker(object):
                 for condition in conditions:
                     if not self.check_condition(snapshot.input, condition):
                         # if one condition does not satisfy, skip this testcase
-                        logging.info(
+                        logger.info(
                             'Field precondition %s does not satisfy, skip this testcase' % condition)
                         return True
 
@@ -373,6 +382,7 @@ class Checker(object):
 
     def check_health(self, snapshot: Snapshot) -> RunResult:
         '''System health oracle'''
+        logger = get_thread_logger(with_prefix=True)
 
         system_state = snapshot.system_state
         unhealthy_resources = {}
@@ -409,7 +419,7 @@ class Checker(object):
         for kind, resources in unhealthy_resources.items():
             if len(resources) != 0:
                 error_msg += f"{kind}: {', '.join(resources)}\n"
-                logging.error(
+                logger.error(
                     f"Found {kind}: {', '.join(resources)} with unhealthy status")
 
         if error_msg != '':

@@ -12,6 +12,8 @@ import subprocess
 import kubernetes
 import requests
 import operator
+import contextvars
+import threading
 
 from test_case import TestCase
 from deepdiff import DeepDiff
@@ -175,6 +177,7 @@ def flatten_dict(d: dict, curr_path: list) -> list:
 def postprocess_diff(diff):
     '''Postprocess diff from DeepDiff tree view
     '''
+    logger = get_thread_logger(with_prefix=True)
 
     diff_dict = {}
     for category, changes in diff.items():
@@ -186,7 +189,7 @@ def postprocess_diff(diff):
             '''
             if (isinstance(change.t1, dict) or isinstance(change.t1, list)) \
                     and (change.t2 == None or isinstance(change.t2, NotPresent)):
-                logging.debug('dict deleted')
+                logger.debug('dict deleted')
                 if isinstance(change.t1, dict):
                     flattened_changes = flatten_dict(change.t1, [])
                 else:
@@ -227,9 +230,11 @@ def invalid_input_message(log_msg: str, input_delta: dict) -> Tuple[bool, list]:
             - if the log_msg indicates the input delta is invalid
             - when log indicates invalid input: the responsible field path for the invalid input
     '''
+    logger = get_thread_logger(with_prefix=True)
+
     for regex in INVALID_INPUT_LOG_REGEX:
         if re.search(regex, log_msg):
-            logging.info(
+            logger.info(
                 'Recognized invalid input through regex: %s' % log_msg)
             return True, None
 
@@ -239,7 +244,7 @@ def invalid_input_message(log_msg: str, input_delta: dict) -> Tuple[bool, list]:
     for delta_category in input_delta.values():
         for delta in delta_category.values():
             if isinstance(delta.path[-1], str) and delta.path[-1] in log_msg:
-                logging.info("Recognized invalid input through field [%s] in error message: %s" %
+                logger.info("Recognized invalid input through field [%s] in error message: %s" %
                              (delta.path[-1], log_msg))
                 return True, delta.path
             # if delta.curr is an int, we do exact match to avoid matching a short
@@ -247,11 +252,11 @@ def invalid_input_message(log_msg: str, input_delta: dict) -> Tuple[bool, list]:
             elif isinstance(delta.curr, int):
                 for item in log_msg.split(' '):
                     if item == str(delta.curr):
-                        logging.info("Recognized invalid input through value [%s] in error message: %s" % (
+                        logger.info("Recognized invalid input through value [%s] in error message: %s" % (
                             delta.curr, log_msg))
                         return True, delta.path
             elif str(delta.curr) in log_msg:
-                logging.info("Recognized invalid input through value [%s] in error message: %s" %
+                logger.info("Recognized invalid input through value [%s] in error message: %s" %
                              (str(delta.curr), log_msg))
                 return True, delta.path
 
@@ -429,6 +434,30 @@ def helm(args: list, context_name: str) -> subprocess.CompletedProcess:
 def kubernetes_client(context_name: str) -> kubernetes.client.ApiClient:
     return kubernetes.config.kube_config.new_client_from_config(
         context=context_name)
+
+class PrefixLoggerAdapter(logging.LoggerAdapter):
+    """ A logger adapter that adds a prefix to every message """
+    def process(self, msg: str, kwargs: dict) -> Tuple[str, dict]:
+        return (f'[{self.extra["prefix"]}] ' + msg, kwargs)
+
+def set_thread_logger_prefix(prefix: str) -> None:
+    '''
+    Store the prefix in the thread local storag, 
+    invoke get_thread_logger_with_prefix to get the updated logger
+    '''
+    thread_local = threading.local()
+    thread_local.prefix = prefix
+
+def get_thread_logger(with_prefix: bool) -> logging.LoggerAdapter:
+    '''Get the logger with the prefix from the thread local storage'''
+    logger = logging.getLogger(threading.current_thread().name)
+    logger.setLevel(logging.DEBUG)
+    # if the prefix is not set, return the original logger
+    thread_local = threading.local()    
+    if not with_prefix or not hasattr(thread_local, 'prefix'):
+        return logger
+
+    return PrefixLoggerAdapter(logger, extra={'prefix': thread_local.prefix})
 
 
 if __name__ == '__main__':

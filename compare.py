@@ -1,7 +1,7 @@
 import base64
 from deepdiff.helper import NotPresent
 import configparser
-import logging
+from common import get_thread_logger
 
 from k8s_util.k8sutil import canonicalizeQuantity
 
@@ -43,6 +43,8 @@ class CompareMethods:
             return True
 
     def config_operator(self, input, output) -> bool:
+        logger = get_thread_logger(with_prefix=True)
+
         if isinstance(input, str) and isinstance(output, str):
             try:
                 inputparser = configparser.ConfigParser()
@@ -54,7 +56,7 @@ class CompareMethods:
                 outputparser.read_string("[ACTO]\n" + output)
 
                 for k, v in inputparser.items("ACTO"):
-                    logging.debug(f"{k} - {v}")
+                    logger.debug(f"{k} - {v}")
                     if outputparser.get("ACTO", k) != v:
                         return False
                 return True

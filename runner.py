@@ -1,6 +1,5 @@
 import kubernetes
 import subprocess
-import logging
 from multiprocessing import Process, Queue
 import time
 import queue
@@ -52,6 +51,8 @@ class Runner(object):
         Returns:
             result 
         '''
+        logger = get_thread_logger(with_prefix=True)
+
         self.operator_log_path = "%s/operator-%d.log" % (self.trial_dir, generation)
         self.system_state_path = "%s/system-state-%03d.json" % (self.trial_dir, generation)
         self.events_log_path = "%s/events.log" % (self.trial_dir)
@@ -66,8 +67,8 @@ class Runner(object):
         cli_result = kubectl(cmd, context_name=self.context_name, capture_output=True, text=True)
         self.wait_for_system_converge()
 
-        logging.debug('STDOUT: ' + cli_result.stdout)
-        logging.debug('STDERR: ' + cli_result.stderr)
+        logger.debug('STDOUT: ' + cli_result.stdout)
+        logger.debug('STDERR: ' + cli_result.stderr)
 
         # when client API raise an exception, catch it and write to log instead of crashing Acto
         try:
@@ -75,7 +76,7 @@ class Runner(object):
             operator_log = self.collect_operator_log()
             self.collect_events()
         except (KeyError, ValueError) as e:
-            logging.warn(e)
+            logger.warn(e)
             system_state = {}
             operator_log = ''
 
@@ -94,6 +95,8 @@ class Runner(object):
         Args:
             result: includes the path to the resource state file
         '''
+        logger = get_thread_logger(with_prefix=True)
+
         resources = {}
 
         for resource, method in self.resource_methods.items():
@@ -108,7 +111,7 @@ class Runner(object):
         current_cr = self.__get_custom_resources(self.namespace, self.crd_metainfo['group'],
                                                  self.crd_metainfo['version'],
                                                  self.crd_metainfo['plural'])
-        logging.debug(current_cr)
+        logger.debug(current_cr)
 
         resources['custom_resource_spec'] = current_cr['test-cluster']['spec'] \
             if 'spec' in current_cr['test-cluster'] else None
@@ -127,13 +130,15 @@ class Runner(object):
         Args:
             result: includes the path to the operator log file
         '''
+        logger = get_thread_logger(with_prefix=True)
+
         operator_pod_list = self.coreV1Api.list_namespaced_pod(
             namespace=self.namespace, watch=False, label_selector="acto/tag=operator-pod").items
 
         if len(operator_pod_list) >= 1:
-            logging.debug('Got operator pod: pod name:' + operator_pod_list[0].metadata.name)
+            logger.debug('Got operator pod: pod name:' + operator_pod_list[0].metadata.name)
         else:
-            logging.error('Failed to find operator pod')
+            logger.error('Failed to find operator pod')
             # TODO: refine what should be done if no operator pod can be found
 
         log = self.coreV1Api.read_namespaced_pod_log(name=operator_pod_list[0].metadata.name,
@@ -214,9 +219,10 @@ class Runner(object):
         Args:
             hard_timeout: the maximal wait time for system convergence
         '''
+        logger = get_thread_logger(with_prefix=True)
 
         start_timestamp = time.time()
-        logging.info("Waiting for system to converge... ")
+        logger.info("Waiting for system to converge... ")
 
         event_stream = self.coreV1Api.list_namespaced_event(self.namespace,
                                                             _preload_content=False,
@@ -234,7 +240,7 @@ class Runner(object):
             try:
                 event = combined_event_queue.get(timeout=60)
                 if event == "timeout":
-                    logging.debug('Hard timeout %d triggered', hard_timeout)
+                    logger.debug('Hard timeout %d triggered', hard_timeout)
                     break
             except queue.Empty:
                 break
@@ -244,7 +250,7 @@ class Runner(object):
         watch_process.terminate()
 
         time_elapsed = time.strftime("%H:%M:%S", time.gmtime(time.time() - start_timestamp))
-        logging.info('System took %s to converge' % time_elapsed)
+        logger.info('System took %s to converge' % time_elapsed)
 
     def watch_system_events(self, event_stream, queue: Queue):
         '''A process that watches namespaced events
@@ -259,7 +265,7 @@ class Runner(object):
 def decode_secret_data(secrets: dict) -> dict:
     '''Decodes secret's b64-encrypted data in the secret object
     '''
-
+    logger = get_thread_logger(with_prefix=True)
     for secret in secrets:
         try:
             if 'data' in secrets[secret] and secrets[secret]['data'] != None:
@@ -268,7 +274,7 @@ def decode_secret_data(secrets: dict) -> dict:
                         secrets[secret]['data'][key]).decode('utf-8')
         except Exception as e:
             # skip secret if decoding fails
-            logging.error(e)
+            logger.error(e)
     return secrets
 
 

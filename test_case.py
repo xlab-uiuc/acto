@@ -1,5 +1,6 @@
 from typing import Callable
-import logging
+
+from common import get_thread_logger
 
 
 class TestCase:
@@ -26,12 +27,13 @@ class TestCase:
         self.additional_preconditions = []
 
     def test_precondition(self, prev) -> bool:
+        logger = get_thread_logger(with_prefix=True)
         ret = True
         for additional_precondition in self.additional_preconditions:
             ret = ret and additional_precondition(prev)
-            logging.debug('Precondition [%s] Result [%s]' % (additional_precondition.__name__, ret))
+            logger.debug('Precondition [%s] Result [%s]' % (additional_precondition.__name__, ret))
         ret = ret and self.precondition(prev)
-        logging.debug('Precondition [%s] Result [%s]' % (self.precondition.__name__, ret))
+        logger.debug('Precondition [%s] Result [%s]' % (self.precondition.__name__, ret))
         return ret
 
     def run_setup(self, prev):
