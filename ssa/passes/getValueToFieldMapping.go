@@ -100,6 +100,9 @@ func GetValueToFieldMappingPass(context *Context, prog *ssa.Program, seedType *s
 							frontierValues[variable] = true
 						case *ssa.Builtin:
 							// Stop propogation?
+							if callValue.Name() == "append" {
+								context.AppendCalls = append(context.AppendCalls, typedValue)
+							}
 							frontierValues[variable] = true
 						default:
 							callValueSet[callValue.Name()] = true
@@ -133,7 +136,6 @@ func GetValueToFieldMappingPass(context *Context, prog *ssa.Program, seedType *s
 							}
 						}
 					}
-					frontierValues[variable] = true
 				case *ssa.ChangeInterface:
 					for _, parentField := range parentFieldSet.Fields() {
 						newField := parentField.Clone()
@@ -273,6 +275,37 @@ func GetValueToFieldMappingPass(context *Context, prog *ssa.Program, seedType *s
 						}
 					} else {
 						frontierValues[variable] = true
+						context.StoreInsts = append(context.StoreInsts, typedInst)
+					}
+					// field sensitive
+					source, path := StructBackwardPropagation(typedInst.Addr, []int{})
+					if source != nil {
+						if _, ok := source.Type().Underlying().(*types.Struct); ok {
+							originalTaintedStructValue := TaintedStructValue{
+								Value: source,
+								Path:  path,
+							}
+							taintedSet := HandleStructField(context, &originalTaintedStructValue)
+							for value := range taintedSet {
+								if UpdateValueInValueFieldSetMap(value, parentFieldSet, valueFieldSetMap) {
+									worklist = append(worklist, value)
+								}
+							}
+						} else if pointer, ok := source.Type().Underlying().(*types.Pointer); ok {
+							if _, ok := pointer.Elem().Underlying().(*types.Struct); ok {
+								log.Printf("Value %s stored in struct %s at %s", variable, source, source.Parent().Pkg.Prog.Fset.Position(source.Pos()))
+								originalTaintedStructValue := TaintedStructValue{
+									Value: source,
+									Path:  path,
+								}
+								taintedSet := HandleStructField(context, &originalTaintedStructValue)
+								for value := range taintedSet {
+									if UpdateValueInValueFieldSetMap(value, parentFieldSet, valueFieldSetMap) {
+										worklist = append(worklist, value)
+									}
+								}
+							}
+						}
 					}
 				}
 			case *ssa.Return:
@@ -297,6 +330,8 @@ func GetValueToFieldMappingPass(context *Context, prog *ssa.Program, seedType *s
 							}
 							continue
 						}
+
+						log.Printf("Return to caller %s", inEdge.Caller.Func)
 
 						if callSiteReturnValue := inEdge.Site.Value(); callSiteReturnValue != nil {
 							if typedInst.Parent().Signature.Results().Len() > 1 {
@@ -361,4 +396,237 @@ func UpdateValueInValueFieldSetMap(value ssa.Value, parentFieldSet *FieldSet, va
 		}
 	}
 	return
+}
+
+func StructBackwardPropagation(value ssa.Value, path []int) (ssa.Value, []int) {
+	switch typedValue := value.(type) {
+	case *ssa.Alloc:
+		return typedValue, path
+	case *ssa.Call:
+		// returned from a Call
+		return typedValue, path
+	case *ssa.ChangeType:
+		return StructBackwardPropagation(typedValue.X, path)
+	case *ssa.Convert:
+		return StructBackwardPropagation(typedValue.X, path)
+	case *ssa.Extract:
+		return typedValue, path
+	case *ssa.FieldAddr:
+		src, p := StructBackwardPropagation(typedValue.X, path)
+		return src, append(p, typedValue.Field)
+	case *ssa.FreeVar:
+		return typedValue, path
+	case *ssa.IndexAddr:
+		return typedValue, path
+	case *ssa.Lookup:
+		return typedValue, path
+	case *ssa.Parameter:
+		return typedValue, path
+	case *ssa.Phi:
+		// XXX
+		return typedValue, path
+	case *ssa.MakeInterface:
+		return StructBackwardPropagation(typedValue.X, path)
+	case *ssa.MakeMap:
+		return typedValue, path
+	case *ssa.MakeSlice:
+		return typedValue, path
+	case *ssa.Slice:
+		return StructBackwardPropagation(typedValue.X, path)
+	case *ssa.TypeAssert:
+		return StructBackwardPropagation(typedValue.X, path)
+	case *ssa.UnOp:
+		return StructBackwardPropagation(typedValue.X, path)
+	default:
+		log.Fatalf("Backward propogation: not handle %T: %s\n", typedValue, typedValue)
+		return nil, nil
+	}
+}
+
+func HandleStructField(context *Context, originalTaintedStructValue *TaintedStructValue) (ret map[ssa.Value]bool) {
+	ret = make(map[ssa.Value]bool)
+
+	handledPhiMap := make(map[*ssa.Phi]map[ssa.Value]bool) // phi -> set of handled edges
+	worklist := []*TaintedStructValue{originalTaintedStructValue}
+	for len(worklist) > 0 {
+		taintedStructValue := worklist[len(worklist)-1]
+		worklist = worklist[:len(worklist)-1]
+
+		if len(taintedStructValue.Path) == 0 {
+			ret[taintedStructValue.Value] = true
+			continue
+		}
+
+		referrers := taintedStructValue.Value.Referrers()
+		for _, instruction := range *referrers {
+			log.Printf("HandleStructField: %s", instruction)
+			switch typedInst := instruction.(type) {
+			case ssa.Value:
+				switch typedValue := typedInst.(type) {
+				case *ssa.Call:
+					// Inter-procedural
+					// Two possibilities for Call: function call or interface invocation
+					if !typedValue.Call.IsInvoke() {
+						// ordinary function call
+						callSiteTaintedParamIndexSet := GetCallsiteArgIndices(taintedStructValue.Value, typedValue.Common())
+						if len(callSiteTaintedParamIndexSet) == 0 {
+							log.Println("Error, unable to find the param index")
+						}
+						switch callValue := typedValue.Call.Value.(type) {
+						case *ssa.Function:
+							// propogate to the function parameter
+							// propogate to return value if it is DeepCopy
+							// stop propogate if external library call
+							if callValue.Name() == "DeepCopy" || callValue.Name() == "String" || callValue.Name() == "Float64" {
+								newTaintedStructValue := TaintedStructValue{
+									Value: typedValue,
+									Path:  taintedStructValue.Path,
+								}
+								worklist = append(worklist, &newTaintedStructValue)
+							} else {
+								StructFieldPropagateToCallee(context, &worklist, callValue, taintedStructValue, callSiteTaintedParamIndexSet)
+							}
+						case *ssa.Builtin:
+							// Stop propogation?
+						}
+					} else {
+						if typedValue.Call.Method.Name() == "DeepCopy" {
+							log.Printf("Propogate through DeepCopy\n")
+							newTaintedStructValue := TaintedStructValue{
+								Value: typedValue,
+								Path:  taintedStructValue.Path,
+							}
+							worklist = append(worklist, &newTaintedStructValue)
+						} else {
+							// interface invocation
+							callGraph := context.CallGraph
+							calleeSet := CalleeSet(callGraph, typedValue)
+
+							callSiteTaintedArgIndexSet := GetCallsiteArgIndices(taintedStructValue.Value, typedValue.Common())
+
+							// Interface invocation's receiver is not in arg list
+							// but the concrete callee's parameter has the receiver as the first item
+							for i := range callSiteTaintedArgIndexSet {
+								callSiteTaintedArgIndexSet[i] += 1
+							}
+
+							for _, callee := range calleeSet {
+								StructFieldPropagateToCallee(context, &worklist, callee, taintedStructValue, callSiteTaintedArgIndexSet)
+							}
+						}
+					}
+				case *ssa.Field:
+					if typedValue.Field == taintedStructValue.Path[0] {
+						newTaintedStructValue := TaintedStructValue{
+							Value: typedValue,
+							Path:  taintedStructValue.Path[1:],
+						}
+						worklist = append(worklist, &newTaintedStructValue)
+					}
+				case *ssa.FieldAddr:
+					if typedValue.Field == taintedStructValue.Path[0] {
+						newTaintedStructValue := TaintedStructValue{
+							Value: typedValue,
+							Path:  taintedStructValue.Path[1:],
+						}
+						worklist = append(worklist, &newTaintedStructValue)
+					}
+				case *ssa.Phi:
+					// TODO: handle phi
+					if edgeMap, ok := handledPhiMap[typedValue]; !ok {
+						handledPhiMap[typedValue] = make(map[ssa.Value]bool)
+						handledPhiMap[typedValue][taintedStructValue.Value] = true
+						newTaintedStructValue := TaintedStructValue{
+							Value: typedValue,
+							Path:  taintedStructValue.Path,
+						}
+						worklist = append(worklist, &newTaintedStructValue)
+					} else {
+						if _, ok := edgeMap[taintedStructValue.Value]; !ok {
+							handledPhiMap[typedValue][taintedStructValue.Value] = true
+							newTaintedStructValue := TaintedStructValue{
+								Value: typedValue,
+								Path:  taintedStructValue.Path,
+							}
+							worklist = append(worklist, &newTaintedStructValue)
+						}
+					}
+				case *ssa.UnOp:
+					switch typedValue.Op {
+					case token.MUL:
+						// If dereferenced, propogate
+						newTaintedStructValue := TaintedStructValue{
+							Value: typedValue,
+							Path:  taintedStructValue.Path,
+						}
+						worklist = append(worklist, &newTaintedStructValue)
+					}
+				case *ssa.MakeInterface:
+					// If variable is casted into another interface, propogate
+					newTaintedStructValue := TaintedStructValue{
+						Value: typedValue,
+						Path:  taintedStructValue.Path,
+					}
+					worklist = append(worklist, &newTaintedStructValue)
+				}
+			case *ssa.Return:
+				log.Printf("CR fields propogated to return instructions in function %s\n", taintedStructValue.Value.Parent())
+
+				returnSet := GetReturnIndices(taintedStructValue.Value, typedInst)
+				node, ok := context.CallGraph.Nodes[taintedStructValue.Value.Parent()]
+				if !ok {
+					log.Printf("Failed to retrieve call graph node for %s %T\n", taintedStructValue.Value, taintedStructValue.Value)
+				}
+				if node == nil {
+					log.Printf("No caller for %s %T at %s\n", taintedStructValue.Value, taintedStructValue.Value, taintedStructValue.Value.Parent().Pkg.Prog.Fset.Position(taintedStructValue.Value.Pos()))
+				} else {
+					for _, inEdge := range node.In {
+						// if it returns to a K8s client function, skip
+						if ExternalLibrary(context, inEdge.Caller.Func) {
+							if inEdge.Caller.Func.Pkg != nil {
+								log.Printf("Called by external function [%s], skip", inEdge.Caller.Func.Pkg.Pkg.Path())
+							}
+							continue
+						}
+
+						log.Printf("Return to caller %s", inEdge.Caller.Func)
+
+						if callSiteReturnValue := inEdge.Site.Value(); callSiteReturnValue != nil {
+							if typedInst.Parent().Signature.Results().Len() > 1 {
+								for _, tainted := range getExtractTaint(callSiteReturnValue, returnSet) {
+									newTaintedStructValue := TaintedStructValue{
+										Value: tainted,
+										Path:  taintedStructValue.Path,
+									}
+									worklist = append(worklist, &newTaintedStructValue)
+								}
+							} else {
+								newTaintedStructValue := TaintedStructValue{
+									Value: callSiteReturnValue,
+									Path:  taintedStructValue.Path,
+								}
+								worklist = append(worklist, &newTaintedStructValue)
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return
+}
+
+func StructFieldPropagateToCallee(context *Context, worklist *[]*TaintedStructValue,
+	callee *ssa.Function, taintedStructValue *TaintedStructValue, callSiteTaintedArgIndexSet []int) {
+	if callee.Pkg != nil && strings.Contains(callee.Pkg.Pkg.Path(), context.RootModule.Path) {
+		for _, paramIndex := range callSiteTaintedArgIndexSet {
+
+			param := callee.Params[paramIndex]
+			newTaintedStructValue := TaintedStructValue{
+				Value: param,
+				Path:  taintedStructValue.Path,
+			}
+			*worklist = append(*worklist, &newTaintedStructValue)
+		}
+	}
 }

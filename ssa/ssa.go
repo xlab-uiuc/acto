@@ -60,6 +60,7 @@ func analyze(projectPath string, seedType string, seedPkgPath string) string {
 		RootModule:          initial[0].Module,
 		CallGraph:           nil,
 		PostDominators:      map[*ssa.Function]*analysis.PostDominator{},
+		FieldToValueMap:     map[string]*[]ssa.Value{},
 		DefaultValueMap:     map[ssa.Value]*ssa.Const{},
 		IfToCondition:       map[ssa.Instruction]*analysis.BranchCondition{},
 		BranchValueDominees: map[ssa.Instruction]*analysis.UsesInBranch{},
@@ -137,6 +138,13 @@ func analyze(projectPath string, seedType string, seedPkgPath string) string {
 		})
 	}
 
+	copiedOverFieldSet := analysis.GetCopyOverFields(context)
+
+	for _, field := range copiedOverFieldSet.Fields() {
+		analysisResult.CopiedOverPaths = append(analysisResult.CopiedOverPaths, field.Path)
+		log.Printf("Copied over path %s", field.Path)
+	}
+
 	marshalled, _ := json.MarshalIndent(analysisResult, "", "\t")
 	return string(marshalled[:])
 }
@@ -168,6 +176,7 @@ type AnalysisResult struct {
 	TaintedPaths    [][]string        `json:"taintedPaths"`
 	DefaultValues   map[string]string `json:"defaultValues"`
 	FieldConditions []FieldCondition  `json:"fieldConditions"`
+	CopiedOverPaths [][]string        `json:"copiedOverPaths"`
 }
 
 type FieldCondition struct {

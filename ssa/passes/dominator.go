@@ -12,7 +12,7 @@ import (
 // the context.FieldToFieldDominees map
 func Dominators(context *Context, frontierSet map[ssa.Value]bool) {
 	frontierValuesByBlock := map[*ssa.BasicBlock]*[]ssa.Value{}
-	fieldToValueMap := map[string]*[]ssa.Value{}
+	fieldToValueMap := context.FieldToValueMap
 	fieldToValueConditionMap := map[string]map[ssa.Value]*ConcreteConditionSet{}
 
 	for value := range frontierSet {

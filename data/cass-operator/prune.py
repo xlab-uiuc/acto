@@ -17,5 +17,10 @@ class PodTemplateSpecSchema(schema.ObjectSchema):
         return 'override'
 
 custom_fields = [
-    input.CustomField(['spec', 'podTemplateSpec'], PodTemplateSpecSchema)
+    input.CustomField(['spec', 'podTemplateSpec'], PodTemplateSpecSchema),
+    input.CopiedOverField(['spec', 'systemLoggerResources']),
+    input.CopiedOverField(['spec', 'configBuilderResources']),
+    input.CopiedOverField(['spec', 'resources']),
+    input.CopiedOverField(['spec', 'tolerations'], True),
+    input.CopiedOverField(['spec', 'storageConfig', 'additionalVolumes', 'INDEX', 'pvcSpec']),
 ]

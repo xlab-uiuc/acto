@@ -69,6 +69,9 @@ type Context struct {
 	PostDominators map[*ssa.Function]*PostDominator
 
 	ValueFieldMap       map[ssa.Value]*util.FieldSet
+	FieldToValueMap     map[string]*[]ssa.Value
+	StoreInsts          []ssa.Instruction
+	AppendCalls         []ssa.Instruction
 	DefaultValueMap     map[ssa.Value]*ssa.Const
 	IfToCondition       map[ssa.Instruction]*BranchCondition
 	BranchValueDominees map[ssa.Instruction]*UsesInBranch
@@ -220,4 +223,9 @@ func (ccs *ConcreteConditionSet) Intersect(ccs_ *ConcreteConditionSet) *Concrete
 		}
 	}
 	return newSet
+}
+
+type TaintedStructValue struct {
+	Value ssa.Value
+	Path  []int
 }
