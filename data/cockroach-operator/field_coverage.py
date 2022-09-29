@@ -7,7 +7,7 @@ class crdb_field_counter():
         with open('data/cockroach-operator/all_field_func.csv', 'r') as f:
             self.funcs = {}
             for line in f.readlines():
-                self.funcs[line.split(',')[0]] = line.split(',')[1]
+                self.funcs[line.split(',')[0]] = int(line.split(',')[1])
         
     def count(self) -> list:
         if not os.path.exists(self.e2e_path):
@@ -16,7 +16,7 @@ class crdb_field_counter():
         for root, _, files in os.walk(self.e2e_path):
             for file in files:
                 if file.endswith('_test.go'):
-                    print(os.path.join(root, file))
+                    # print(os.path.join(root, file))
                     with open(os.path.join(root, file), 'r') as f:
                         for line in f:
                             for func in self.funcs:
@@ -28,7 +28,10 @@ class crdb_field_counter():
                     
         with open('data/cockroach-operator/fields.json', 'w') as f:
             json.dump(fields, f, indent=2)
-        print('The number of fields covered is: ', len(fields))
+        num_fields = 0
+        for field in fields:
+            num_fields += self.funcs[field]
+        print('The number of fields covered is: ', num_fields)      
         return fields
 
 if __name__ == '__main__':
