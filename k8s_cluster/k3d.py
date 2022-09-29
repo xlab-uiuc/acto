@@ -1,5 +1,4 @@
 import subprocess
-import logging
 import os
 import yaml
 import time
@@ -7,6 +6,7 @@ import kubernetes
 
 import k8s_cluster.base as base
 from constant import CONST
+from thread_logger import get_thread_logger
 
 
 class K3D(base.KubernetesCluster):
@@ -49,6 +49,8 @@ class K3D(base.KubernetesCluster):
             config: path of the config file for cluster
             version: k8s version
         '''
+        logger = get_thread_logger(with_prefix=False)
+
         cmd = ['k3d', 'cluster', 'create']
 
         if name:
@@ -60,7 +62,7 @@ class K3D(base.KubernetesCluster):
 
         p = subprocess.run(cmd)
         while p.returncode != 0:
-            logging.error('Failed to create k3d cluster, retrying')
+            logger.error('Failed to create k3d cluster, retrying')
             self.delete_cluster(name)
             time.sleep(5)
             p = subprocess.run(cmd)
@@ -69,17 +71,19 @@ class K3D(base.KubernetesCluster):
             kubernetes.config.load_kube_config(
                 context=self.get_context_name(name))
         except Exception as e:
-            logging.debug("Incorrect kube config file:")
+            logger.debug("Incorrect kube config file:")
             with open(f"{os.getenv('HOME')}/.kube/config") as f:
-                logging.debug(f.read())
+                logger.debug(f.read())
             raise e
 
     def load_images(self, images_archive_path: str, name: str):
-        logging.info('Loading preload images')
+        logger = get_thread_logger(with_prefix=False)
+
+        logger.info('Loading preload images')
         cmd = ['k3d', 'image', 'import']
 
         if images_archive_path == None:
-            logging.warning(
+            logger.warning(
                 'No image to preload, we at least should have operator image')
 
         cmd.extend([images_archive_path])
@@ -90,15 +94,17 @@ class K3D(base.KubernetesCluster):
             cmd.extend(['-c', CONST.CLUSTER_NAME])
 
         if subprocess.run(cmd).returncode != 0:
-            logging.error('Failed to preload images archive')
+            logger.error('Failed to preload images archive')
 
     def delete_cluster(self, name: str):
+        logger = get_thread_logger(with_prefix=False)
+
         cmd = ['k3d', 'cluster', 'delete']
 
         if name:
             cmd.extend([name])
         else:
-            logging.error('Missing cluster name for k3d delete')
+            logger.error('Missing cluster name for k3d delete')
 
         while subprocess.run(cmd).returncode != 0:
             continue
@@ -108,6 +114,8 @@ class K3D(base.KubernetesCluster):
         Args:
             1. Name of the cluster
         '''
+        logger = get_thread_logger(with_prefix=False)
+
         worker_name_template = 'k3d-%s-agent-'
         control_plane_name_template = 'k3d-%s-server-'
 
@@ -119,7 +127,7 @@ class K3D(base.KubernetesCluster):
 
         if len(res) == 0:
             # no worker node can be found
-            logging.CRITICAL(f"No node for cluster {name} can be found")
+            logger.CRITICAL(f"No node for cluster {name} can be found")
             raise RuntimeError
 
         return res

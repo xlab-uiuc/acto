@@ -7,8 +7,9 @@ import json
 from jsonschema import validate
 
 from test_case import *
-from common import ActoEncoder, get_thread_logger, random_string
+from common import ActoEncoder, random_string
 from testplan import TreeNode
+from thread_logger import get_thread_logger
 
 
 class BaseSchema:

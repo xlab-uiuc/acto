@@ -1,6 +1,6 @@
 from typing import Callable
 
-from common import get_thread_logger
+from thread_logger import get_thread_logger
 
 
 class TestCase:
@@ -28,6 +28,7 @@ class TestCase:
 
     def test_precondition(self, prev) -> bool:
         logger = get_thread_logger(with_prefix=True)
+
         ret = True
         for additional_precondition in self.additional_preconditions:
             ret = ret and additional_precondition(prev)

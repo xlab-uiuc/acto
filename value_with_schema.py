@@ -2,10 +2,9 @@ from abc import abstractmethod
 import yaml
 import random
 import string
-from common import get_thread_logger
 
+from thread_logger import get_thread_logger
 from schema import AnyOfSchema, ObjectSchema, ArraySchema, StringSchema, NumberSchema, IntegerSchema, BooleanSchema, OpaqueSchema
-
 
 class ValueWithSchema():
 

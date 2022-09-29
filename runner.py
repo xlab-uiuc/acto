@@ -10,6 +10,7 @@ import base64
 import acto_timer
 from snapshot import Snapshot
 from common import *
+from thread_logger import get_thread_logger
 
 
 class Runner(object):

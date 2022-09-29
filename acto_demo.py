@@ -6,6 +6,7 @@ from datetime import datetime
 import logging
 import signal
 import random
+from common import get_thread_logger
 
 from deploy import Deploy, DeployMethod
 from acto import handle_excepthook, Acto, timeout_handler
@@ -90,12 +91,13 @@ if __name__ == '__main__':
     # We don't need this now, but it would be nice to support this in the future
     # candidate_dict = construct_candidate_from_yaml(args.candidates)
     # logging.debug(candidate_dict)
+    logger = get_thread_logger(with_prefix=False)
 
-    logging.info('Acto started with [%s]' % sys.argv)
+    logger.info('Acto started with [%s]' % sys.argv)
 
     # Preload frequently used images to amid ImagePullBackOff
     if args.preload_images:
-        logging.info('%s will be preloaded into Kind cluster',
+        logger.info('%s will be preloaded into Kind cluster',
                      args.preload_images)
 
     # register timeout to automatically stop after # hours

@@ -1,10 +1,11 @@
-import logging
 from kubernetes.client.models import V1Deployment, V1StatefulSet, V1Namespace, V1ObjectMeta, V1Pod
 import kubernetes
-from typing import List, Optional, Tuple
+from typing import Optional
 import yaml
-from constant import CONST
 import time
+
+from constant import CONST
+from thread_logger import get_thread_logger
 
 CONST = CONST()
 
@@ -80,27 +81,30 @@ def get_yaml_existing_namespace(fn: str) -> Optional[str]:
 
 
 def create_namespace(apiclient, name: str) -> V1Namespace:
+    logger = get_thread_logger(with_prefix=False)
     corev1Api = kubernetes.client.CoreV1Api(apiclient)
     namespace = None
     try:
         namespace = corev1Api.create_namespace(
             V1Namespace(metadata=V1ObjectMeta(name=name)))
     except Exception as e:
-        logging.error(e)
+        logger.error(e)
     return namespace
 
 
 def delete_operator_pod(apiclient, namespace: str) -> bool:
+    logger = get_thread_logger(with_prefix=False)
+
     coreV1Api = kubernetes.client.CoreV1Api(apiclient)
 
     operator_pod_list = coreV1Api.list_namespaced_pod(
         namespace=namespace, watch=False, label_selector="acto/tag=operator-pod").items
 
     if len(operator_pod_list) >= 1:
-        logging.debug('Got operator pod: pod name:' +
+        logger.debug('Got operator pod: pod name:' +
                       operator_pod_list[0].metadata.name)
     else:
-        logging.error('Failed to find operator pod')
+        logger.error('Failed to find operator pod')
         return False
         # TODO: refine what should be done if no operator pod can be found
 

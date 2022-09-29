@@ -12,8 +12,8 @@ import yaml
 from schema import extract_schema, BaseSchema, ObjectSchema, ArraySchema
 from testplan import TestPlan
 from value_with_schema import attach_schema_to_value
-from common import get_thread_logger, random_string
-
+from common import random_string
+from thread_logger import get_thread_logger
 
 class CustomField:
 

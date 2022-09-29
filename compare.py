@@ -1,9 +1,9 @@
 import base64
 from deepdiff.helper import NotPresent
 import configparser
-from common import get_thread_logger
 
 from k8s_util.k8sutil import canonicalizeQuantity
+from thread_logger import get_thread_logger
 
 
 class CompareMethods:

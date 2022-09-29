@@ -1,16 +1,17 @@
 import kubernetes
 import subprocess
-import logging
 from typing import List, Optional
 import json
 import yaml
 
 from common import kubectl
-
+from thread_logger import get_thread_logger
 
 def update_preload_images(context: dict, worker_list):
     """Get used images from pod
     """
+    logger = get_thread_logger(with_prefix=False)
+
     namespace = context.get('namespace', '')
     if not namespace:
         return
@@ -49,7 +50,7 @@ def update_preload_images(context: dict, worker_list):
             if "none" not in items[1]:
                 image = '%s:%s' % (items[0], items[1])
             else:
-                logging.warning(
+                logger.warning(
                     "image %s has no tag, acto will not preload this image for this run" % (items[0]))
                 continue
 
@@ -65,6 +66,8 @@ def process_crd(context: dict,
 
     When there are more than one crd in the cluster, user should set crd_name
     '''
+    logger = get_thread_logger(with_prefix=False)
+
     if helper_crd == None:
         apiextensionsV1Api = kubernetes.client.ApiextensionsV1Api(apiclient)
         crds: List[
@@ -72,7 +75,7 @@ def process_crd(context: dict,
             V1CustomResourceDefinition] = apiextensionsV1Api.list_custom_resource_definition().items
         crd: Optional[kubernetes.client.models.V1CustomResourceDefinition] = None
         if len(crds) == 0:
-            logging.error('No crd is found')
+            logger.error('No crd is found')
             quit()
         elif len(crds) == 1:
             crd = crds[0]
@@ -82,10 +85,10 @@ def process_crd(context: dict,
                     crd = c
                     break
             if not crd:
-                logging.error('Cannot find crd %s' % crd_name)
+                logger.error('Cannot find crd %s' % crd_name)
                 quit()
         else:
-            logging.error(
+            logger.error(
                 'There are multiple crds, please specify parameter [crd_name]')
             quit()
         if crd:
@@ -113,7 +116,7 @@ def process_crd(context: dict,
             'body': helper_crd_doc
         }
         context['crd'] = crd_data
-    logging.debug('CRD data: %s' % crd_data)
+    logger.debug('CRD data: %s' % crd_data)
 
 
 def add_acto_label(apiclient: kubernetes.client.ApiClient, context: dict):

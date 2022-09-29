@@ -1,3 +1,4 @@
+from asyncio.log import logger
 import enum
 import json
 import os
@@ -5,16 +6,14 @@ from typing import Tuple
 from deepdiff.helper import NotPresent
 from datetime import datetime, date
 import re
-import logging
 import string
 import random
 import subprocess
 import kubernetes
 import requests
 import operator
-import contextvars
-import threading
 
+from thread_logger import get_thread_logger
 from test_case import TestCase
 from deepdiff import DeepDiff
 
@@ -22,6 +21,7 @@ from deepdiff import DeepDiff
 def notify_crash(exception: str):
     import socket
     import sys
+    logger = get_thread_logger(with_prefix=True)
 
     hostname = socket.gethostname()
 
@@ -38,7 +38,7 @@ def notify_crash(exception: str):
             "Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/28.0.1500.52 Safari/537.36"
     }
     r = requests.post(url, data=form_data, headers=user_agent)
-    logging.info('Send notify to google form')
+    logger.info('Send notify to google form')
 
 
 class DeployConfig:
@@ -291,6 +291,8 @@ def random_string(n: int):
 
 
 def save_result(trial_dir: str, trial_err: ErrorResult, num_tests: int, trial_elapsed):
+    logger = get_thread_logger(with_prefix=False)
+
     result_dict = {}
     try:
         trial_num = '-'.join(trial_dir.split('-')[-2:])
@@ -300,7 +302,7 @@ def save_result(trial_dir: str, trial_err: ErrorResult, num_tests: int, trial_el
     result_dict['duration'] = trial_elapsed
     result_dict['num_tests'] = num_tests
     if trial_err == None:
-        logging.info('Trial %s completed without error', trial_dir)
+        logger.info('Trial %s completed without error', trial_dir)
     else:
         result_dict['oracle'] = trial_err.oracle
         result_dict['message'] = trial_err.message
@@ -409,11 +411,13 @@ def kubectl(args: list,
             context_name: str,
             capture_output=False,
             text=False) -> subprocess.CompletedProcess:
+    logger = get_thread_logger(with_prefix=True)
+            
     cmd = ['kubectl']
     cmd.extend(args)
 
     if context_name == None:
-        logging.error('Missing context name for kubectl')
+        logger.error('Missing context name for kubectl')
     cmd.extend(['--context', context_name])
 
     p = subprocess.run(cmd, capture_output=capture_output, text=text)
@@ -421,11 +425,13 @@ def kubectl(args: list,
 
 
 def helm(args: list, context_name: str) -> subprocess.CompletedProcess:
+    logger = get_thread_logger(with_prefix=False)
+    
     cmd = ['helm']
     cmd.extend(args)
 
     if context_name == None:
-        logging.error('Missing cluster name for helm')
+        logger.error('Missing cluster name for helm')
     cmd.extend(['--kube-context', context_name])
 
     return subprocess.run(cmd, capture_output=True, text=True)
@@ -434,31 +440,6 @@ def helm(args: list, context_name: str) -> subprocess.CompletedProcess:
 def kubernetes_client(context_name: str) -> kubernetes.client.ApiClient:
     return kubernetes.config.kube_config.new_client_from_config(
         context=context_name)
-
-class PrefixLoggerAdapter(logging.LoggerAdapter):
-    """ A logger adapter that adds a prefix to every message """
-    def process(self, msg: str, kwargs: dict) -> Tuple[str, dict]:
-        return (f'[{self.extra["prefix"]}] ' + msg, kwargs)
-
-def set_thread_logger_prefix(prefix: str) -> None:
-    '''
-    Store the prefix in the thread local storag, 
-    invoke get_thread_logger_with_prefix to get the updated logger
-    '''
-    thread_local = threading.local()
-    thread_local.prefix = prefix
-
-def get_thread_logger(with_prefix: bool) -> logging.LoggerAdapter:
-    '''Get the logger with the prefix from the thread local storage'''
-    logger = logging.getLogger(threading.current_thread().name)
-    logger.setLevel(logging.DEBUG)
-    # if the prefix is not set, return the original logger
-    thread_local = threading.local()    
-    if not with_prefix or not hasattr(thread_local, 'prefix'):
-        return logger
-
-    return PrefixLoggerAdapter(logger, extra={'prefix': thread_local.prefix})
-
 
 if __name__ == '__main__':
     line = "sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.9.6/pkg/internal/controller/controller.go:214"

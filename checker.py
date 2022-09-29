@@ -12,6 +12,7 @@ from compare import CompareMethods
 from input import InputModel
 from schema import ArraySchema, ObjectSchema
 from snapshot import EmptySnapshot, Snapshot
+from thread_logger import get_thread_logger
 from parse_log.parse_log import parse_log
 
 
@@ -331,9 +332,9 @@ class Checker(object):
         # the condition_value is stored as string in the json file
         condition_value = condition['value']
         if isinstance(value, int):
-            condition_value = int(condition_value)
+            condition_value = int(condition_value) if condition_value != None else None
         elif isinstance(value, float):
-            condition_value = float(condition_value)
+            condition_value = float(condition_value) if condition_value != None else None
         try:
             if translate_op(condition['op'])(value, condition_value):
                 return True

@@ -1,9 +1,8 @@
 import random
 import json
-from common import get_thread_logger
 
 from test_case import TestCase
-
+from thread_logger import get_thread_logger
 
 class TreeNode():
 
