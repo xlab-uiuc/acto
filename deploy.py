@@ -3,11 +3,10 @@ from constant import CONST
 import json
 import exception
 import time
-import logging
-from time import sleep
 
 import k8s_helper
 from common import *
+from thread_logger import get_thread_logger
 
 CONST = CONST()
 
@@ -32,12 +31,13 @@ class Deploy:
         pass
 
     def deploy_with_retry(self, context, context_name: str, retry_count=3):
+        logger = get_thread_logger(with_prefix=False)
         while retry_count > 0:
             try:
                 return self.deploy(context, context_name)
             except Exception as e:
-                logging.warn(e)
-                logging.info(
+                logger.warn(e)
+                logger.info(
                     "deploy() failed. Double wait = " + str(self.wait))
                 self.wait = self.wait * 2
                 retry_count -= 1
@@ -49,9 +49,11 @@ class Deploy:
         We need to make sure operator to be ready before applying test cases, because Acto would
         crash later when running oracle if operator hasn't been ready
         '''
+        logger = get_thread_logger(with_prefix=False)
+
         apiclient = kubernetes_client(context_name)
 
-        logging.debug('Waiting for all pods to be ready')
+        logger.debug('Waiting for all pods to be ready')
         pod_ready = False
         for tick in range(600):
             # check if all pods are ready
@@ -66,14 +68,14 @@ class Deploy:
                     all_pods_ready = False
 
             if all_pods_ready:
-                logging.info('Operator ready')
+                logger.info('Operator ready')
                 pod_ready = True
                 break
 
             time.sleep(5)
-        logging.info('All pods took %d seconds to get ready' % (tick * 5))
+        logger.info('All pods took %d seconds to get ready' % (tick * 5))
         if not pod_ready:
-            logging.error("Some pods failed to be ready within timeout")
+            logger.error("Some pods failed to be ready within timeout")
             return False
         else:
             return True
@@ -92,6 +94,8 @@ class Deploy:
 class Helm(Deploy):
 
     def deploy(self, context: dict, context_name: str) -> bool:
+        logger = get_thread_logger(with_prefix=False)
+
         context['namespace'] = CONST.ACTO_NAMESPACE
         if self.init_yaml:
             kubectl(['apply', '--server-side', '-f',
@@ -106,7 +110,7 @@ class Helm(Deploy):
         counter = 0
         while not self.check_status(context, context_name):
             if counter > 24:
-                logging.fatal(
+                logger.fatal(
                     'Helm chart deployment failed to be ready within timeout')
                 return False
             time.sleep(5)
@@ -115,12 +119,14 @@ class Helm(Deploy):
         return True
 
     def check_status(self, context, context_name: str) -> bool:
+        logger = get_thread_logger(with_prefix=False)
+
         helm_ls_result = helm(
             ['list', '-o', 'json', '--all-namespaces', '--all'], context_name)
         try:
             helm_release = json.loads(helm_ls_result.stdout)[0]
         except Exception as e:
-            logging.error('Failed to get helm chart\'s status: %s' % e)
+            logger.error('Failed to get helm chart\'s status: %s' % e)
             quit()
 
         if helm_release["status"] != "deployed":
@@ -138,13 +144,15 @@ class Yaml(Deploy):
            the namespace from the provided object "rabbitmq-system" does not 
            match the namespace "acto-namespace". You must pass '--namespace=rabbitmq-system' to perform this operation.
         '''
+        logger = get_thread_logger(with_prefix=True)
+
         namespace = k8s_helper.get_yaml_existing_namespace(
             self.path) or CONST.ACTO_NAMESPACE
         context['namespace'] = namespace
         ret = k8s_helper.create_namespace(
             kubernetes_client(context_name), namespace)
         if ret == None:
-            logging.error('Failed to create namespace')
+            logger.error('Failed to create namespace')
         if self.init_yaml:
             kubectl(['apply', '--server-side', '-f', self.init_yaml],
                     context_name)

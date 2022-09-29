@@ -1,6 +1,5 @@
 from functools import reduce
 import json
-import logging
 import math
 import operator
 import random
@@ -14,7 +13,7 @@ from schema import extract_schema, BaseSchema, ObjectSchema, ArraySchema
 from testplan import TestPlan
 from value_with_schema import attach_schema_to_value
 from common import random_string
-
+from thread_logger import get_thread_logger
 
 class CustomField:
 
@@ -174,6 +173,8 @@ class InputModel:
 
     def generate_test_plan(self):
         '''Generate test plan based on CRD'''
+        logger = get_thread_logger(with_prefix=False)
+
         ret = {}
         mounted_schema = self.get_schema_by_path(self.mount)
         schema_list = mounted_schema.get_all_schemas()
@@ -186,8 +187,8 @@ class InputModel:
                                                                 random_string(5))
             ret[path] = testcases
             num_testcases += len(testcases)
-        logging.info('Parsed [%d] fields from schema', num_fields)
-        logging.info('Generated [%d] test cases in total', num_testcases)
+        logger.info('Parsed [%d] fields from schema', num_fields)
+        logger.info('Generated [%d] test cases in total', num_testcases)
         self.test_plan = ret
 
         test_plan_items = list(self.test_plan.items())
@@ -214,7 +215,9 @@ class InputModel:
         Returns:
             Tuple of (new value, if this is a setup)
         '''
-        logging.info('Progress [%d] cases left' % len(self.thread_vars.test_plan))
+        logger = get_thread_logger(with_prefix=True)
+
+        logger.info('Progress [%d] cases left' % len(self.thread_vars.test_plan))
 
         ret = []
 
@@ -222,7 +225,7 @@ class InputModel:
         selected_fields = self.thread_vars.test_plan.select_fields(num_cases=self.num_cases)
 
         for selected_field in selected_fields:
-            logging.info('Selected field [%s]', selected_field.get_path())
+            logger.info('Selected field [%s]', selected_field.get_path())
             ret.append(tuple([selected_field, selected_field.get_next_testcase()]))
 
         return ret
@@ -242,6 +245,8 @@ class InputModel:
 
     def discard_test_case(self):
         '''Discard the test case that was selected'''
+        logger = get_thread_logger(with_prefix=True)
+
         discarded_case = self.thread_vars.test_plan[self.thread_vars.curr_field].pop()
 
         # Log it to discarded_tests
@@ -249,7 +254,7 @@ class InputModel:
             self.discarded_tests[self.thread_vars.curr_field].append(discarded_case)
         else:
             self.discarded_tests[self.thread_vars.curr_field] = [discarded_case]
-        logging.info('Setup failed due to invalid, discard this testcase %s' % discarded_case)
+        logger.info('Setup failed due to invalid, discard this testcase %s' % discarded_case)
 
         if len(self.thread_vars.test_plan[self.thread_vars.curr_field]) == 0:
             del self.thread_vars.test_plan[self.thread_vars.curr_field]

@@ -1,9 +1,9 @@
 import subprocess
-import logging
 import time
 from abc import ABC, abstractmethod
 
 from constant import CONST
+from thread_logger import get_thread_logger
 
 
 class KubernetesCluster(ABC):
@@ -28,6 +28,8 @@ class KubernetesCluster(ABC):
         pass
 
     def restart_cluster(self, name: str, version: str):
+        logger = get_thread_logger(with_prefix=False)
+        
         retry_count = 3
 
         while (retry_count > 0):
@@ -36,9 +38,9 @@ class KubernetesCluster(ABC):
                 time.sleep(1)
                 self.create_cluster(name, version)
                 time.sleep(1)
-                logging.info('Created cluster')
+                logger.info('Created cluster')
             except Exception as e:
-                logging.warning(
+                logger.warning(
                     "%s happened when restarting cluster, retrying...", e)
                 retry_count -= 1
                 if retry_count == 0:
@@ -51,6 +53,8 @@ class KubernetesCluster(ABC):
         Args:
             1. name: name of the cluster name
         '''
+        logger = get_thread_logger(with_prefix=False)
+
         cmd = ['docker', 'ps', '--format', '{{.Names}}', '-f']
 
         if name == None:
@@ -63,5 +67,5 @@ class KubernetesCluster(ABC):
         if p.stdout == None or p.stdout == '':
             # no nodes can be found, returning an empty array
             return []
-        print("Container found:", p.stdout.strip().split('\n'))
+        logger.debug("Container found:", p.stdout.strip().split('\n'))
         return p.stdout.strip().split('\n')

@@ -1,9 +1,8 @@
 import random
 import json
-import logging
 
 from test_case import TestCase
-
+from thread_logger import get_thread_logger
 
 class TreeNode():
 
@@ -87,6 +86,8 @@ class TreeNode():
             discarded_testcases[encoded_path] = [discarded_testcase]
 
     def get_node_by_path(self, path: list) -> 'TreeNode':
+        logger = get_thread_logger(with_prefix=True)
+
         if len(path) == 0:
             return self
         
@@ -94,8 +95,8 @@ class TreeNode():
         if key in self:
             return self[key].get_node_by_path(path)
         else:
-            logging.error('%s not in children', key)
-            logging.error('%s', self.children)
+            logger.error('%s not in children', key)
+            logger.error('%s', self.children)
             return None
 
     def get_children(self) -> dict:
@@ -169,6 +170,7 @@ class TestPlan():
         self.root = root
 
     def select_fields(self, num_cases: int = 1):
+        logger = get_thread_logger(with_prefix=True)
         ret = []
 
         for i in range(num_cases):
@@ -180,7 +182,7 @@ class TestPlan():
             field.disable_subtree()
             field.disable_ancestors()
             ret.append(field)
-            logging.info('TestPlan: selected %s', field.get_path())
+            logger.info('TestPlan: selected %s', field.get_path())
 
         self.root.enable_subtree()
 

@@ -2,10 +2,9 @@ from abc import abstractmethod
 import yaml
 import random
 import string
-import logging
 
+from thread_logger import get_thread_logger
 from schema import AnyOfSchema, ObjectSchema, ArraySchema, StringSchema, NumberSchema, IntegerSchema, BooleanSchema, OpaqueSchema
-
 
 class ValueWithSchema():
 
@@ -81,6 +80,8 @@ class ValueWithObjectSchema(ValueWithSchema):
         - mutate a child
         TODO: generate a property that didn't exist before
         '''
+        logger = get_thread_logger(with_prefix=True)
+
         if self.store == None:
             value = self.schema.gen()
             self.update(value)
@@ -96,7 +97,7 @@ class ValueWithObjectSchema(ValueWithSchema):
                 if len(properties) == 0:
                     # XXX: Handle additional properties better
                     if self.schema.get_additional_properties() == None:
-                        logging.warning('Object schema is opaque %s',
+                        logger.warning('Object schema is opaque %s',
                                         self.schema.get_path())
                         return
                     else:

@@ -1,6 +1,7 @@
 import json
 import logging
 import re
+from common import get_thread_logger
 
 klog_regex = r'^\s*'
 klog_regex += r'(\w)'  # group 1: level
@@ -55,6 +56,8 @@ def parse_log(line: str) -> dict:
     Returns:
         a dict containing 'level' and 'message'
     '''
+    logger = get_thread_logger(with_prefix=True)
+
     log_line = {}
     if re.search(klog_regex, line) != None:
         # log is in klog format
@@ -92,7 +95,7 @@ def parse_log(line: str) -> dict:
 
                 del log_line['severity']
         except Exception as e:
-            logging.warning(f"parse_log() cannot parse line {line} due to {e}")
+            logger.warning(f"parse_log() cannot parse line {line} due to {e}")
 
     return log_line
 

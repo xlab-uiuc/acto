@@ -6,7 +6,7 @@ from types import SimpleNamespace
 import kubernetes
 import yaml
 import time
-from typing import Callable, Tuple
+from typing import Tuple
 import random
 from datetime import datetime
 import signal
@@ -29,6 +29,7 @@ from checker import Checker
 from schema import BaseSchema, ObjectSchema, ArraySchema
 from snapshot import EmptySnapshot
 from ssa.analysis import analyze
+from thread_logger import set_thread_logger_prefix, get_thread_logger
 from value_with_schema import ValueWithSchema, attach_schema_to_value
 
 CONST = CONST()
@@ -86,6 +87,8 @@ def apply_testcase(value_with_schema: ValueWithSchema,
                    path: list,
                    testcase: TestCase,
                    setup: bool = False) -> jsonpatch.JsonPatch:
+    logger = get_thread_logger(with_prefix=True)
+
     prev = value_with_schema.raw_value()
     field_curr_value = value_with_schema.get_value_by_path(list(path))
     if setup:
@@ -99,7 +102,7 @@ def apply_testcase(value_with_schema: ValueWithSchema,
             curr = value_with_schema.raw_value()
 
     patch = jsonpatch.make_patch(prev, curr)
-    logging.info('JSON patch: %s' % patch)
+    logger.info('JSON patch: %s' % patch)
     return patch
 
 
@@ -125,8 +128,10 @@ class TrialRunner:
 
         self.snapshots = []
         self.discarded_testcases = {}  # List of test cases failed to run
-
+        
     def run(self):
+        logger = get_thread_logger(with_prefix=False)
+        
         self.input_model.set_worker_id(self.worker_id)
         curr_trial = 0
         apiclient = None
@@ -140,7 +145,7 @@ class TrialRunner:
             deployed = self.deploy.deploy_with_retry(
                 self.context, self.context_name)
             if not deployed:
-                logging.info('Not deployed. Try again!')
+                logger.info('Not deployed. Try again!')
                 continue
 
             add_acto_label(apiclient, self.context)
@@ -148,25 +153,25 @@ class TrialRunner:
             trial_dir = os.path.join(self.workdir, 'trial-%02d-%04d' % (self.worker_id, curr_trial))
             os.makedirs(trial_dir, exist_ok=True)
 
-            trial_err, num_tests = self.run_trial(trial_dir=trial_dir)
+            trial_err, num_tests = self.run_trial(trial_dir=trial_dir, curr_trial=curr_trial)
             self.snapshots = []
 
             trial_elapsed = time.strftime("%H:%M:%S", time.gmtime(time.time() - trial_start_time))
-            logging.info('Trial %d finished, completed in %s' % (curr_trial, trial_elapsed))
-            logging.info('---------------------------------------\n')
+            logger.info('Trial %d finished, completed in %s' % (curr_trial, trial_elapsed))
+            logger.info('---------------------------------------\n')
 
             delete_operator_pod(apiclient, self.context['namespace'])
             save_result(trial_dir, trial_err, num_tests, trial_elapsed)
             curr_trial = curr_trial + 1
 
             if self.input_model.is_empty():
-                logging.info('Test finished')
+                logger.info('Test finished')
                 break
 
-        logging.info('Failed test cases: %s' %
+        logger.info('Failed test cases: %s' %
                      json.dumps(self.discarded_testcases, cls=ActoEncoder, indent=4))
 
-    def run_trial(self, trial_dir: str, num_mutation: int = 10) -> Tuple[ErrorResult, int]:
+    def run_trial(self, trial_dir: str, curr_trial: int, num_mutation: int = 10) -> Tuple[ErrorResult, int]:
         '''Run a trial starting with the initial input, mutate with the candidate_dict, 
         and mutate for num_mutation times
 
@@ -185,6 +190,10 @@ class TrialRunner:
 
         generation = 0
         while generation < num_mutation:  # every iteration gets a new list of next tests
+            # update the thread logger
+            set_thread_logger_prefix(f'trial: {curr_trial}, gen: {generation}')
+            logger = get_thread_logger(with_prefix=True)
+
             curr_input_with_schema = attach_schema_to_value(self.snapshots[-1].input,
                                                             self.input_model.root_schema)
 
@@ -200,11 +209,11 @@ class TrialRunner:
 
                     if testcase.test_precondition(field_curr_value):
                         # precondition of this testcase satisfies
-                        logging.info('Precondition of %s satisfies', field_node.get_path())
+                        logger.info('Precondition of %s satisfies', field_node.get_path())
                         ready_testcases.append((field_node, testcase))
                     else:
                         # precondition fails, first run setup
-                        logging.info('Precondition of %s fails, try setup first',
+                        logger.info('Precondition of %s fails, try setup first',
                                      field_node.get_path())
                         apply_testcase(curr_input_with_schema,
                                        field_node.get_path(),
@@ -215,7 +224,7 @@ class TrialRunner:
                                 curr_input_with_schema.get_value_by_path(list(
                                     field_node.get_path()))):
                             # just in case the setup does not work correctly, drop this testcase
-                            logging.error('Setup does not work correctly')
+                            logger.error('Setup does not work correctly')
                             field_node.discard_testcase(self.discarded_testcases)
                             continue
 
@@ -225,7 +234,7 @@ class TrialRunner:
                         generation += 1
 
                         if isinstance(result, InvalidInputResult):
-                            logging.info('Setup produced invalid input')
+                            logger.info('Setup produced invalid input')
                             self.snapshots.pop()
                             field_node.discard_testcase(self.discarded_testcases)
                             curr_input_with_schema = self.revert(runner, checker, generation)
@@ -238,17 +247,17 @@ class TrialRunner:
                         elif isinstance(result, PassResult):
                             ready_testcases.append((field_node, testcase))
                         else:
-                            logging.error('Unknown return value, abort')
+                            logger.error('Unknown return value, abort')
                             quit()
 
                 if len(ready_testcases) == 0:
-                    logging.info('All setups failed')
+                    logger.info('All setups failed')
                     continue
-                logging.info('Running bundled testcases')
+                logger.info('Running bundled testcases')
 
             t = self.run_testcases(curr_input_with_schema, ready_testcases, runner, checker,
                                    generation)
-            logging.debug(t)
+            logger.debug(t)
             result, generation = t
             if isinstance(result, ErrorResult):
                 return result, generation
@@ -260,6 +269,8 @@ class TrialRunner:
 
     def run_testcases(self, curr_input_with_schema, testcases, runner, checker,
                       generation) -> Tuple[RunResult, int]:
+        logger = get_thread_logger(with_prefix=True)
+        
         testcase_patches = []
         for field_node, testcase in testcases:
             patch = apply_testcase(curr_input_with_schema, field_node.get_path(), testcase)
@@ -275,7 +286,7 @@ class TrialRunner:
             # responsible testcase and re-apply
 
             # 1. revert
-            logging.debug('Invalid input, revert')
+            logger.debug('Invalid input, revert')
             self.snapshots.pop()
             curr_input_with_schema = self.revert(runner, checker, generation)
             generation += 1
@@ -284,13 +295,13 @@ class TrialRunner:
             if len(testcase_patches) == 1:
                 # if only one testcase, then no need to isolate
                 testcase_patches[0][0].get_testcases().pop()  # finish testcase
-                logging.debug('Only one patch, no need to isolate')
+                logger.debug('Only one patch, no need to isolate')
                 return result, generation
             else:
                 responsible_field = result.responsible_field
                 if responsible_field == None:
                     # Unable to pinpoint the exact responsible testcase, try one by one
-                    logging.debug('Unable to pinpoint the exact responsible field, try one by one')
+                    logger.debug('Unable to pinpoint the exact responsible field, try one by one')
                     for field_node, testcase, patch in testcase_patches:
                         result, generation = self.run_testcases(curr_input_with_schema,
                                                                 [(field_node, testcase)], runner,
@@ -300,14 +311,14 @@ class TrialRunner:
                     return result, generation
                 else:
                     jsonpatch_path = ''.join('/' + str(item) for item in responsible_field)
-                    logging.debug('Responsible patch path: %s', jsonpatch_path)
+                    logger.debug('Responsible patch path: %s', jsonpatch_path)
                     # isolate the responsible invalid testcase and re-apply
                     ready_testcases = []
                     for field_node, testcase, patch in testcase_patches:
                         responsible = False
                         for op in patch:
                             if op['path'] == jsonpatch_path:
-                                logging.info('Determine the responsible field to be %s' %
+                                logger.info('Determine the responsible field to be %s' %
                                              jsonpatch_path)
                                 responsible = True
                                 field_node.get_testcases().pop()  # finish testcase
@@ -318,7 +329,7 @@ class TrialRunner:
                         return result, generation
 
                     if len(ready_testcases) == len(testcase_patches):
-                        logging.error('Fail to determine the responsible patch, try one by one')
+                        logger.error('Fail to determine the responsible patch, try one by one')
                         for field_node, testcase, patch in testcase_patches:
                             result, generation = self.run_testcases(curr_input_with_schema,
                                                                     [(field_node, testcase)], runner,
@@ -327,7 +338,7 @@ class TrialRunner:
                                 return result, generation
                         return result, generation
                     else:
-                        logging.debug('Rerunning the remaining ready testcases')
+                        logger.debug('Rerunning the remaining ready testcases')
                         return self.run_testcases(curr_input_with_schema, ready_testcases, runner,
                                                 checker, generation)
         else:
@@ -341,13 +352,14 @@ class TrialRunner:
             elif isinstance(result, PassResult):
                 pass
             else:
-                logging.error('Unknown return value, abort')
+                logger.error('Unknown return value, abort')
                 quit()
             return result, generation
 
     def run_and_check(runner: Runner, checker: Checker, input: dict, snapshots: list,
                       generation: int, dryrun: bool) -> RunResult:
-        logging.debug('Run and check')
+        logger = get_thread_logger(with_prefix=True)
+        logger.debug('Run and check')
         while True:
             if not dryrun:
                 snapshot = runner.run(input, generation)
@@ -358,7 +370,7 @@ class TrialRunner:
 
             if isinstance(result, ConnectionRefusedResult):
                 # Connection refused due to webhook not ready, let's wait for a bit
-                logging.info('Connection failed. Retry the test after 20 seconds')
+                logger.info('Connection failed. Retry the test after 20 seconds')
                 time.sleep(20)
             else:
                 break
@@ -387,11 +399,13 @@ class Acto:
                  num_cases: int,
                  dryrun: bool,
                  mount: list = None) -> None:
+        logger = get_thread_logger(with_prefix=False)
+
         try:
             with open(operator_config.seed_custom_resource, 'r') as cr_file:
                 self.seed = yaml.load(cr_file, Loader=yaml.FullLoader)
         except:
-            logging.error('Failed to read seed yaml, aborting')
+            logger.error('Failed to read seed yaml, aborting')
             quit()
 
         if operator_config.deploy.method == 'HELM':
@@ -411,7 +425,7 @@ class Acto:
         elif cluster_runtime == "K3D":
             cluster = k3d.K3D()
         else:
-            logging.warning(
+            logger.warning(
                 f"Cluster Runtime {cluster_runtime} is not supported, defaulted to use kind")
             cluster = kind.Kind()
 
@@ -447,7 +461,7 @@ class Acto:
 
         # Build an archive to be preloaded
         if len(self.context['preload_images']) > 0:
-            logging.info('Creating preload images archive')
+            logger.info('Creating preload images archive')
             # first make sure images are present locally
             for image in self.context['preload_images']:
                 subprocess.run(['docker', 'pull', image])
@@ -460,13 +474,15 @@ class Acto:
             json.dump(self.test_plan, plan_file, cls=ActoEncoder, indent=4)
 
     def __learn(self, context_file, helper_crd):
+        logger = get_thread_logger(with_prefix=False)
+
         if os.path.exists(context_file):
             with open(context_file, 'r') as context_fin:
                 self.context = json.load(context_fin)
                 self.context['preload_images'] = set(self.context['preload_images'])
         else:
             # Run learning run to collect some information from runtime
-            logging.info('Starting learning run to collect information')
+            logger.info('Starting learning run to collect information')
             self.context = {'namespace': '', 'crd': None, 'preload_images': set()}
 
             while True:
@@ -508,6 +524,8 @@ class Acto:
                 json.dump(self.context, context_fout, cls=ContextEncoder, indent=6)
 
     def run(self):
+        logger = get_thread_logger(with_prefix=False)
+
         threads = []
         for i in range(self.num_workers):
             runner = TrialRunner(self.context, self.input_model, self.deploy, self.workdir_path, self.cluster,
@@ -518,13 +536,15 @@ class Acto:
 
         for t in threads:
             t.join()
-        logging.info('All tests finished')
+        logger.info('All tests finished')
 
 def handle_excepthook(type, message, stack):
     '''Custom exception handler
 
     Print detailed stack information with local variables
     '''
+    logger = get_thread_logger(with_prefix=True)
+
     if issubclass(type, KeyboardInterrupt):
         sys.__excepthook__(type, message, stack)
         return
@@ -535,13 +555,15 @@ def handle_excepthook(type, message, stack):
 
     stack_info = traceback.StackSummary.extract(traceback.walk_tb(stack),
                                                 capture_locals=True).format()
-    logging.critical(f'An exception occured: {type}: {message}.')
+    logger.critical(f'An exception occured: {type}: {message}.')
     for i in stack_info:
-        logging.critical(i.encode().decode('unicode-escape'))
+        logger.critical(i.encode().decode('unicode-escape'))
     return
 
 
 def thread_excepthook(args):
+    logger = get_thread_logger(with_prefix=True)
+
     exc_type = args.exc_type
     exc_value = args.exc_value
     exc_traceback = args.exc_traceback
@@ -556,9 +578,9 @@ def thread_excepthook(args):
 
     stack_info = traceback.StackSummary.extract(traceback.walk_tb(exc_traceback),
                                                 capture_locals=True).format()
-    logging.critical(f'An exception occured: {exc_type}: {exc_value}.')
+    logger.critical(f'An exception occured: {exc_type}: {exc_value}.')
     for i in stack_info:
-        logging.critical(i.encode().decode('unicode-escape'))
+        logger.critical(i.encode().decode('unicode-escape'))
     return
 
 
@@ -620,10 +642,12 @@ if __name__ == '__main__':
         level=logging.DEBUG,
         filemode='w',
         format=
-        '%(asctime)s %(threadName)-11s %(levelname)-7s, %(name)s, %(filename)-9s:%(lineno)d, %(message)s'
+        '%(asctime)s %(levelname)-7s, %(name)s, %(filename)-9s:%(lineno)d, %(message)s'
     )
     logging.getLogger("kubernetes").setLevel(logging.ERROR)
     logging.getLogger("sh").setLevel(logging.ERROR)
+
+    logger = get_thread_logger(with_prefix=False)
 
     # Register custom exception hook
     sys.excepthook = handle_excepthook
@@ -634,12 +658,12 @@ if __name__ == '__main__':
 
     with open(args.config, 'r') as config_file:
         config = json.load(config_file, object_hook=lambda d: SimpleNamespace(**d))
-    logging.info('Acto started with [%s]' % sys.argv)
-    logging.info('Operator config: %s', config)
+    logger.info('Acto started with [%s]' % sys.argv)
+    logger.info('Operator config: %s', config)
 
     # Preload frequently used images to amid ImagePullBackOff
     if args.preload_images:
-        logging.info('%s will be preloaded into Kind cluster', args.preload_images)
+        logger.info('%s will be preloaded into Kind cluster', args.preload_images)
 
     # register timeout to automatically stop after # hours
     if args.duration != None:
@@ -657,4 +681,4 @@ if __name__ == '__main__':
     if not args.learn:
         acto.run()
     end_time = datetime.now()
-    logging.info('Acto finished in %s', end_time - start_time)
+    logger.info('Acto finished in %s', end_time - start_time)

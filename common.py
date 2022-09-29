@@ -1,3 +1,4 @@
+from asyncio.log import logger
 import enum
 import json
 import os
@@ -5,7 +6,6 @@ from typing import Tuple
 from deepdiff.helper import NotPresent
 from datetime import datetime, date
 import re
-import logging
 import string
 import random
 import subprocess
@@ -13,6 +13,7 @@ import kubernetes
 import requests
 import operator
 
+from thread_logger import get_thread_logger
 from test_case import TestCase
 from deepdiff import DeepDiff
 
@@ -20,6 +21,7 @@ from deepdiff import DeepDiff
 def notify_crash(exception: str):
     import socket
     import sys
+    logger = get_thread_logger(with_prefix=True)
 
     hostname = socket.gethostname()
 
@@ -36,7 +38,7 @@ def notify_crash(exception: str):
             "Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/28.0.1500.52 Safari/537.36"
     }
     r = requests.post(url, data=form_data, headers=user_agent)
-    logging.info('Send notify to google form')
+    logger.info('Send notify to google form')
 
 
 class DeployConfig:
@@ -175,6 +177,7 @@ def flatten_dict(d: dict, curr_path: list) -> list:
 def postprocess_diff(diff):
     '''Postprocess diff from DeepDiff tree view
     '''
+    logger = get_thread_logger(with_prefix=True)
 
     diff_dict = {}
     for category, changes in diff.items():
@@ -186,7 +189,7 @@ def postprocess_diff(diff):
             '''
             if (isinstance(change.t1, dict) or isinstance(change.t1, list)) \
                     and (change.t2 == None or isinstance(change.t2, NotPresent)):
-                logging.debug('dict deleted')
+                logger.debug('dict deleted')
                 if isinstance(change.t1, dict):
                     flattened_changes = flatten_dict(change.t1, [])
                 else:
@@ -227,9 +230,11 @@ def invalid_input_message(log_msg: str, input_delta: dict) -> Tuple[bool, list]:
             - if the log_msg indicates the input delta is invalid
             - when log indicates invalid input: the responsible field path for the invalid input
     '''
+    logger = get_thread_logger(with_prefix=True)
+
     for regex in INVALID_INPUT_LOG_REGEX:
         if re.search(regex, log_msg):
-            logging.info(
+            logger.info(
                 'Recognized invalid input through regex: %s' % log_msg)
             return True, None
 
@@ -239,7 +244,7 @@ def invalid_input_message(log_msg: str, input_delta: dict) -> Tuple[bool, list]:
     for delta_category in input_delta.values():
         for delta in delta_category.values():
             if isinstance(delta.path[-1], str) and delta.path[-1] in log_msg:
-                logging.info("Recognized invalid input through field [%s] in error message: %s" %
+                logger.info("Recognized invalid input through field [%s] in error message: %s" %
                              (delta.path[-1], log_msg))
                 return True, delta.path
             # if delta.curr is an int, we do exact match to avoid matching a short
@@ -247,11 +252,11 @@ def invalid_input_message(log_msg: str, input_delta: dict) -> Tuple[bool, list]:
             elif isinstance(delta.curr, int):
                 for item in log_msg.split(' '):
                     if item == str(delta.curr):
-                        logging.info("Recognized invalid input through value [%s] in error message: %s" % (
+                        logger.info("Recognized invalid input through value [%s] in error message: %s" % (
                             delta.curr, log_msg))
                         return True, delta.path
             elif str(delta.curr) in log_msg:
-                logging.info("Recognized invalid input through value [%s] in error message: %s" %
+                logger.info("Recognized invalid input through value [%s] in error message: %s" %
                              (str(delta.curr), log_msg))
                 return True, delta.path
 
@@ -286,6 +291,8 @@ def random_string(n: int):
 
 
 def save_result(trial_dir: str, trial_err: ErrorResult, num_tests: int, trial_elapsed):
+    logger = get_thread_logger(with_prefix=False)
+
     result_dict = {}
     try:
         trial_num = '-'.join(trial_dir.split('-')[-2:])
@@ -295,7 +302,7 @@ def save_result(trial_dir: str, trial_err: ErrorResult, num_tests: int, trial_el
     result_dict['duration'] = trial_elapsed
     result_dict['num_tests'] = num_tests
     if trial_err == None:
-        logging.info('Trial %s completed without error', trial_dir)
+        logger.info('Trial %s completed without error', trial_dir)
     else:
         result_dict['oracle'] = trial_err.oracle
         result_dict['message'] = trial_err.message
@@ -404,11 +411,13 @@ def kubectl(args: list,
             context_name: str,
             capture_output=False,
             text=False) -> subprocess.CompletedProcess:
+    logger = get_thread_logger(with_prefix=True)
+            
     cmd = ['kubectl']
     cmd.extend(args)
 
     if context_name == None:
-        logging.error('Missing context name for kubectl')
+        logger.error('Missing context name for kubectl')
     cmd.extend(['--context', context_name])
 
     p = subprocess.run(cmd, capture_output=capture_output, text=text)
@@ -416,11 +425,13 @@ def kubectl(args: list,
 
 
 def helm(args: list, context_name: str) -> subprocess.CompletedProcess:
+    logger = get_thread_logger(with_prefix=False)
+    
     cmd = ['helm']
     cmd.extend(args)
 
     if context_name == None:
-        logging.error('Missing cluster name for helm')
+        logger.error('Missing cluster name for helm')
     cmd.extend(['--kube-context', context_name])
 
     return subprocess.run(cmd, capture_output=True, text=True)
@@ -429,7 +440,6 @@ def helm(args: list, context_name: str) -> subprocess.CompletedProcess:
 def kubernetes_client(context_name: str) -> kubernetes.client.ApiClient:
     return kubernetes.config.kube_config.new_client_from_config(
         context=context_name)
-
 
 if __name__ == '__main__':
     line = "sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.9.6/pkg/internal/controller/controller.go:214"

@@ -1,4 +1,3 @@
-import logging
 import yaml
 from copy import deepcopy
 import random
@@ -10,6 +9,7 @@ from jsonschema import validate
 from test_case import *
 from common import ActoEncoder, random_string
 from testplan import TreeNode
+from thread_logger import get_thread_logger
 
 
 class BaseSchema:
@@ -60,8 +60,9 @@ class BaseSchema:
         return prev != None and prev != self.default
 
     def delete_setup(self, prev):
+        logger = get_thread_logger(with_prefix=True)
         if len(self.examples) > 0:
-            logging.info('Using example for setting up field [%s]: [%s]' %
+            logger.info('Using example for setting up field [%s]: [%s]' %
                          (self.path, self.examples[0]))
             example_without_default = [x for x in self.enum if x != self.default]
             if len(example_without_default) > 0:
@@ -146,19 +147,21 @@ class StringSchema(BaseSchema):
 
     def change(self, prev):
         '''Test case to change the value to another one'''
+        logger = get_thread_logger(with_prefix=True)
         if self.enum != None:
-            logging.fatal('String field with enum should not call change to mutate')
+            logger.fatal('String field with enum should not call change to mutate')
         if self.pattern != None:
             new_string = exrex.getone(self.pattern, self.max_length)
         else:
             new_string = random_string(10)
         if prev == new_string:
-            logging.error('Failed to change, generated the same string with previous one')
+            logger.error('Failed to change, generated the same string with previous one')
         return new_string
 
     def change_setup(self, prev):
+        logger = get_thread_logger(with_prefix=True)
         if len(self.examples) > 0:
-            logging.info('Using example for setting up field [%s]: [%s]' %
+            logger.info('Using example for setting up field [%s]: [%s]' %
                          (self.path, self.examples[0]))
             return self.examples[0]
         else:
@@ -384,8 +387,9 @@ class ObjectSchema(BaseSchema):
         self.properties = {}
         self.additional_properties = None
         self.required = []
+        logger = get_thread_logger(with_prefix=True)
         if 'properties' not in schema and 'additionalProperties' not in schema:
-            logging.warning('Object schema %s does not have properties nor additionalProperties' %
+            logger.warning('Object schema %s does not have properties nor additionalProperties' %
                             self.path)
         if 'properties' in schema:
             for property_key, property_schema in schema['properties'].items():
@@ -403,6 +407,8 @@ class ObjectSchema(BaseSchema):
 
     def gen(self, exclude_value = None, minimum: bool = False, **kwargs) -> dict:
         # TODO: Use constraints: minProperties, maxProperties
+        logger = get_thread_logger(with_prefix=True)
+
         if self.enum != None:
             if exclude_value != None:
                 return random.choice([x for x in self.enum if x != exclude_value])
@@ -414,7 +420,7 @@ class ObjectSchema(BaseSchema):
         if len(self.properties) == 0:
             if self.additional_properties == None:
                 # raise TypeError('[%s]: No properties and no additional properties' % self.path)
-                logging.warning('[%s]: No properties and no additional properties' % self.path)
+                logger.warning('[%s]: No properties and no additional properties' % self.path)
                 return None
             key = random_string(5)
             result[key] = self.additional_properties.gen(minimum=minimum)
@@ -478,12 +484,13 @@ class ObjectSchema(BaseSchema):
         self.default = instance
 
     def get_property_schema(self, key):
+        logger = get_thread_logger(with_prefix=True)
         if key in self.properties:
             return self.properties[key]
         elif self.additional_properties != None:
             return self.additional_properties
         else:
-            logging.warning('Field [%s] does not have a schema, using opaque schema', key)
+            logger.warning('Field [%s] does not have a schema, using opaque schema', key)
             return OpaqueSchema(self.path + [key], {})
 
     def get_properties(self) -> dict:
@@ -620,10 +627,11 @@ class ArraySchema(BaseSchema):
         return prev + [new_item]
 
     def push_setup(self, prev):
+        logger = get_thread_logger(with_prefix=True)
         if len(self.examples) > 0:
             for example in self.examples:
                 if len(example) > 1:
-                    logging.info('Using example for setting up field [%s]: [%s]' %
+                    logger.info('Using example for setting up field [%s]: [%s]' %
                                  (self.path, self.examples[0]))
                     return example
         if prev == None:
@@ -644,10 +652,12 @@ class ArraySchema(BaseSchema):
         return prev
 
     def pop_setup(self, prev):
+        logger = get_thread_logger(with_prefix=True)
+
         if len(self.examples) > 0:
             for example in self.examples:
                 if len(example) > 1:
-                    logging.info('Using example for setting up field [%s]: [%s]' %
+                    logger.info('Using example for setting up field [%s]: [%s]' %
                                  (self.path, self.examples[0]))
                     return example
         if prev == None:
@@ -852,6 +862,8 @@ class OpaqueSchema(BaseSchema):
 
 
 def extract_schema(path: list, schema: dict) -> BaseSchema:
+    logger = get_thread_logger(with_prefix=True)
+
     if 'anyOf' in schema:
         return AnyOfSchema(path, schema)
     if 'type' not in schema:
@@ -870,7 +882,7 @@ def extract_schema(path: list, schema: dict) -> BaseSchema:
     elif t == 'object':
         return ObjectSchema(path, schema)
     else:
-        logging.error('Unsupported type %s' % t)
+        logger.error('Unsupported type %s' % t)
         return None
 
 
