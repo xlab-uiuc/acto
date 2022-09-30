@@ -130,6 +130,19 @@ class ErrorResult(RunResult):
         self.matched_system_delta = matched_system_delta
 
 
+class RecoveryResult(RunResult):
+
+    def __init__(self, delta, from_, to_) -> None:
+        pass
+
+
+class CompoundErrorResult(ErrorResult):
+
+    def __init__(self, normal_err: ErrorResult, recovery_err: RecoveryResult) -> None:
+        self.normal_err = normal_err
+        self.recovery_err = recovery_err
+
+
 def flatten_list(l: list, curr_path: list) -> list:
     '''Convert list into list of tuples (path, value)
 
@@ -303,12 +316,28 @@ def save_result(trial_dir: str, trial_err: ErrorResult, num_tests: int, trial_el
     result_dict['num_tests'] = num_tests
     if trial_err == None:
         logger.info('Trial %s completed without error', trial_dir)
+    elif isinstance(trial_err, CompoundErrorResult):
+        normal_err = trial_err.normal_err
+        result_dict['oracle'] = normal_err.oracle
+        result_dict['message'] = normal_err.message
+        result_dict['input_delta'] = normal_err.input_delta
+        result_dict['matched_system_delta'] = normal_err.matched_system_delta
+
+        # Dump the recovery error in a separate file
+        recovery_err = trial_err.recovery_err
+        recovery_result_dict = {}
+        recovery_result_dict['oracle'] = recovery_err.oracle
+        recovery_result_dict['message'] = recovery_err.message
+        recovery_result_dict['input_delta'] = recovery_err.input_delta
+        recovery_result_dict['matched_system_delta'] = recovery_err.matched_system_delta
+        recovery_err_path = os.path.join(trial_dir, 'recovery_result.json')
+        with open(recovery_err_path, 'w') as f:
+            json.dump(recovery_result_dict, f, cls=ActoEncoder, indent=6)
     else:
         result_dict['oracle'] = trial_err.oracle
         result_dict['message'] = trial_err.message
         result_dict['input_delta'] = trial_err.input_delta
-        result_dict['matched_system_delta'] = \
-            trial_err.matched_system_delta
+        result_dict['matched_system_delta'] = trial_err.matched_system_delta
     result_path = os.path.join(trial_dir, 'result.json')
     with open(result_path, 'w') as result_file:
         json.dump(result_dict, result_file, cls=ActoEncoder, indent=6)

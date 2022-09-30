@@ -242,6 +242,7 @@ class TrialRunner:
                         elif isinstance(result, UnchangedInputResult):
                             field_node.discard_testcase(self.discarded_testcases)
                         elif isinstance(result, ErrorResult):
+                            # before return, run the recovery test case
                             field_node.discard_testcase(self.discarded_testcases)
                             return result, generation
                         elif isinstance(result, PassResult):
@@ -260,6 +261,7 @@ class TrialRunner:
             logger.debug(t)
             result, generation = t
             if isinstance(result, ErrorResult):
+                # before return, run the recovery test case
                 return result, generation
 
             if self.input_model.is_empty():
@@ -374,6 +376,14 @@ class TrialRunner:
                 time.sleep(20)
             else:
                 break
+        return result
+
+    def run_recovery(self, runner: Runner, checker: Checker, generation: int) -> RunResult:
+        '''Runs the recovery test case after an error is reported'''
+        recovery_input = self.snapshots[0].input
+        snapshot = runner.run(recovery_input, generation=generation)
+        result = checker.check_state_equality(snapshot, self.snapshots[0])
+
         return result
 
     def revert(self, runner, checker, generation) -> ValueWithSchema:
