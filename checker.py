@@ -1,3 +1,4 @@
+from ast import Pass
 from builtins import TypeError
 from copy import deepcopy
 import sys
@@ -508,7 +509,7 @@ class Checker(object):
 
         return input_delta, system_state_delta
     
-    def check_state_equality(self, snapshot: Snapshot, prev_snapshot: Snapshot) -> dict:
+    def check_state_equality(self, snapshot: Snapshot, prev_snapshot: Snapshot) -> RunResult:
         '''Check whether two system state are semantically equivalent
 
         Args:
@@ -518,6 +519,7 @@ class Checker(object):
         Return value:
             - a dict of diff results, empty if no diff found
         '''
+        logger = get_thread_logger(with_prefix=True)
 
         curr_system_state = deepcopy(snapshot.system_state)
         prev_system_state = deepcopy(prev_snapshot.system_state)
@@ -551,10 +553,16 @@ class Checker(object):
             r".*\['spec'\]\['volumes'\]\[.*\]\['name'\]",
             ]
 
-        return DeepDiff(prev_system_state, curr_system_state, 
+        diff = DeepDiff(prev_system_state, curr_system_state, 
                             exclude_regex_paths=exclude_paths, 
                             ignore_order=True)
         
+        if diff:
+            logger.debug(f"failed attempt recovering to seed state - system state diff: {diff}")
+            return RecoveryResult(delta=diff, from_=prev_system_state, to_=curr_system_state) 
+        
+        return PassResult()
+            
 
 if __name__ == "__main__":
     import glob
