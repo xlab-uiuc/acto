@@ -248,6 +248,7 @@ class TrialRunner:
                             generation += 1
 
                             if isinstance(recovery_result, ErrorResult):
+                                logger.debug('Recovery failed')
                                 return CompoundErrorResult(result, recovery_result), generation
                             else:
                                 return result, generation
@@ -272,6 +273,7 @@ class TrialRunner:
                 generation += 1
 
                 if isinstance(recovery_result, ErrorResult):
+                    logger.debug('Recovery failed')
                     return CompoundErrorResult(result, recovery_result), generation
                 else:
                     return result, generation
