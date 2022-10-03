@@ -242,9 +242,15 @@ class TrialRunner:
                         elif isinstance(result, UnchangedInputResult):
                             field_node.discard_testcase(self.discarded_testcases)
                         elif isinstance(result, ErrorResult):
-                            # before return, run the recovery test case
                             field_node.discard_testcase(self.discarded_testcases)
-                            return result, generation
+                            # before return, run the recovery test case
+                            recovery_result = self.run_recovery(runner, checker, generation)
+                            generation += 1
+
+                            if isinstance(recovery_result, ErrorResult):
+                                return CompoundErrorResult(result, recovery_result), generation
+                            else:
+                                return result, generation
                         elif isinstance(result, PassResult):
                             ready_testcases.append((field_node, testcase))
                         else:
@@ -262,7 +268,13 @@ class TrialRunner:
             result, generation = t
             if isinstance(result, ErrorResult):
                 # before return, run the recovery test case
-                return result, generation
+                recovery_result = self.run_recovery(runner, checker, generation)
+                generation += 1
+
+                if isinstance(recovery_result, ErrorResult):
+                    return CompoundErrorResult(result, recovery_result), generation
+                else:
+                    return result, generation
 
             if self.input_model.is_empty():
                 break
