@@ -4,6 +4,7 @@ import json
 import os
 from typing import Tuple
 from deepdiff.helper import NotPresent
+from deepdiff.model import PrettyOrderedSet
 from datetime import datetime, date
 import re
 import string
@@ -357,6 +358,8 @@ class ActoEncoder(json.JSONEncoder):
             return obj.__str__()
         elif isinstance(obj, set):
             return list(obj)
+        elif isinstance(obj, PrettyOrderedSet):
+            return obj.__repr__()
         return json.JSONEncoder.default(self, obj)
 
 
