@@ -133,7 +133,9 @@ class ErrorResult(RunResult):
 class RecoveryResult(RunResult):
 
     def __init__(self, delta, from_, to_) -> None:
-        pass
+        self.delta = delta
+        self.from_ = from_
+        self.to_ = to_
 
 
 class CompoundErrorResult(ErrorResult):
@@ -326,10 +328,9 @@ def save_result(trial_dir: str, trial_err: ErrorResult, num_tests: int, trial_el
         # Dump the recovery error in a separate file
         recovery_err = trial_err.recovery_err
         recovery_result_dict = {}
-        recovery_result_dict['oracle'] = recovery_err.oracle
-        recovery_result_dict['message'] = recovery_err.message
-        recovery_result_dict['input_delta'] = recovery_err.input_delta
-        recovery_result_dict['matched_system_delta'] = recovery_err.matched_system_delta
+        recovery_result_dict['delta'] = recovery_err.delta
+        recovery_result_dict['from'] = recovery_err.from_
+        recovery_result_dict['to'] = recovery_err.to_
         recovery_err_path = os.path.join(trial_dir, 'recovery_result.json')
         with open(recovery_err_path, 'w') as f:
             json.dump(recovery_result_dict, f, cls=ActoEncoder, indent=6)
