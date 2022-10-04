@@ -247,7 +247,7 @@ class TrialRunner:
                             recovery_result = self.run_recovery(runner, checker, generation)
                             generation += 1
 
-                            if isinstance(recovery_result, ErrorResult):
+                            if isinstance(recovery_result, RecoveryResult):
                                 logger.debug('Recovery failed')
                                 return CompoundErrorResult(result, recovery_result), generation
                             else:
@@ -272,7 +272,7 @@ class TrialRunner:
                 recovery_result = self.run_recovery(runner, checker, generation)
                 generation += 1
 
-                if isinstance(recovery_result, ErrorResult):
+                if isinstance(recovery_result, RecoveryResult):
                     logger.debug('Recovery failed')
                     return CompoundErrorResult(result, recovery_result), generation
                 else:
