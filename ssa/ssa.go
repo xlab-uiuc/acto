@@ -154,7 +154,7 @@ func main() {
 
 	projectPath := flag.String("project-path", "/home/tyler/zookeeper-operator", "the path to the operator's source dir")
 	seedType := flag.String("seed-type", "ZookeeperCluster", "The type of the root")
-	seedPkgPath := flag.String("seed-pkg", "ZookeeperCluster", "The package path of the root")
+	seedPkgPath := flag.String("seed-pkg", "github.com/pravega/zookeeper-operator/api/v1beta1", "The package path of the root")
 	flag.Parse()
 
 	logFile, err := os.Create("ssa.log")
