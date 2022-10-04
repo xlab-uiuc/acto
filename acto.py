@@ -394,6 +394,9 @@ class TrialRunner:
 
     def run_recovery(self, runner: Runner, checker: Checker, generation: int) -> RunResult:
         '''Runs the recovery test case after an error is reported'''
+        logger = get_thread_logger(with_prefix=True)
+
+        logger.debug('Running recovery')
         recovery_input = self.snapshots[0].input
         snapshot = runner.run(recovery_input, generation=generation)
         result = checker.check_state_equality(snapshot, self.snapshots[0])
