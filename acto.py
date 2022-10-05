@@ -398,7 +398,7 @@ class TrialRunner:
 
         logger.debug('Running recovery')
         recovery_input = self.snapshots[1].input
-        snapshot = runner.run(recovery_input, generation=generation)
+        snapshot = runner.run(recovery_input, generation=-1)
         result = checker.check_state_equality(snapshot, self.snapshots[1])
 
         return result
