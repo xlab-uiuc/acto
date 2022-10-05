@@ -543,12 +543,14 @@ class Checker(object):
             r".*\['metadata'\]\['resource_version'\]",
             r".*\['metadata'\]\['uid'\]",
             r".*\['metadata'\]\['generation'\]",
+            r".*\['metadata'\]\['annotations'\]",
             r".*\['metadata'\]\['annotations'\]\['.*last-applied.*'\]",
             r".*\['metadata'\]\['annotations'\]\['.*\.kubernetes\.io.*'\]",
             r".*\['metadata'\]\['labels'\]\['.*revision*'\]",
           
             r".*\['status'\]",
 
+            r".*\['spec'\]\['init_containers'\]\[.*\]\['volume_mounts'\]\[.*\]\['name'\]",
             r".*\['spec'\]\['containers'\]\[.*\]\['volume_mounts'\]\[.*\]\['name'\]",
             r".*\['spec'\]\['volumes'\]\[.*\]\['name'\]",
             ]

@@ -329,7 +329,7 @@ def save_result(trial_dir: str, trial_err: ErrorResult, num_tests: int, trial_el
         # Dump the recovery error in a separate file
         recovery_err = trial_err.recovery_err
         recovery_result_dict = {}
-        recovery_result_dict['delta'] = recovery_err.delta
+        recovery_result_dict['delta'] = recovery_err.delta.to_json()
         recovery_result_dict['from'] = recovery_err.from_
         recovery_result_dict['to'] = recovery_err.to_
         recovery_err_path = os.path.join(trial_dir, 'recovery_result.json')
@@ -358,8 +358,8 @@ class ActoEncoder(json.JSONEncoder):
             return obj.__str__()
         elif isinstance(obj, set):
             return list(obj)
-        elif isinstance(obj, PrettyOrderedSet):
-            return obj.__repr__()
+        elif isinstance(obj, DeepDiff):
+            return obj.to_json()
         return json.JSONEncoder.default(self, obj)
 
 

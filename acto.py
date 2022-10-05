@@ -397,9 +397,9 @@ class TrialRunner:
         logger = get_thread_logger(with_prefix=True)
 
         logger.debug('Running recovery')
-        recovery_input = self.snapshots[0].input
+        recovery_input = self.snapshots[1].input
         snapshot = runner.run(recovery_input, generation=generation)
-        result = checker.check_state_equality(snapshot, self.snapshots[0])
+        result = checker.check_state_equality(snapshot, self.snapshots[1])
 
         return result
 
@@ -704,7 +704,7 @@ if __name__ == '__main__':
 
     start_time = datetime.now()
     acto = Acto(workdir_path, config, args.cluster_runtime, args.enable_analysis, args.preload_images, context_cache,
-                args.helper_crd, args.num_workers, args.num_cases, args.dryrun)
+                args.helper_crd, args.num_workers, args.num_cases, args.dryrun, ['spec', 'persistence', 'storageClassName'])
     if not args.learn:
         acto.run()
     end_time = datetime.now()
