@@ -356,8 +356,9 @@ class TrialRunner:
                         return self.run_testcases(curr_input_with_schema, ready_testcases, runner,
                                                 checker, generation)
         else:
-            for patch in testcase_patches:
-                patch[0].get_testcases().pop()  # finish testcase
+            if not self.is_reproduce:
+                for patch in testcase_patches:
+                    patch[0].get_testcases().pop()  # finish testcase
             if isinstance(result, UnchangedInputResult):
                 pass
             elif isinstance(result, ErrorResult):
