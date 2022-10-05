@@ -650,12 +650,10 @@ if __name__ == '__main__':
                         dest='is_reproduce',
                         action='store_true',
                         required=False,
-                        default=False,
                         help='Reproduce mode')
     parser.add_argument('--reproduce_dir',
                         dest='reproduce_dir',
                         required=False,
-                        default=False,
                         help='The directory of the trial folder to reproduce')
 
     args = parser.parse_args()
@@ -702,7 +700,7 @@ if __name__ == '__main__':
 
     start_time = datetime.now()
     acto = Acto(workdir_path, config, args.cluster_runtime, args.enable_analysis, args.preload_images, context_cache,
-                args.helper_crd, args.num_workers, args.num_cases, args.dryrun, args.is_reproduce)
+                args.helper_crd, args.num_workers, args.num_cases, args.dryrun, args.is_reproduce, args.reproduce_dir)
     if not args.learn:
         acto.run()
     end_time = datetime.now()
