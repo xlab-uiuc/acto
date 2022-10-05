@@ -1,12 +1,54 @@
 import argparse
+from functools import partial
 import json
 import subprocess
+import jsonpatch
+from testplan import TreeNode
 
-from acto import construct_kind_cluster
-from constant import CONST
-from deploy import Deploy, DeployMethod
-from exception import UnknownDeployMethodError
-from common import kind_load_images, kubectl
+from value_with_schema import ValueWithSchema
+from test_case import TestCase
+from common import get_thread_logger
+import acto
+
+def apply_testcase(value_with_schema: ValueWithSchema,
+                   path: list,
+                   testcase: TestCase,
+                   setup: bool = False) -> jsonpatch.JsonPatch:
+    logger = get_thread_logger(with_prefix=True)
+    next_cr = testcase.mutator(None)  # next cr in yaml format
+
+    value_with_schema.update(next_cr)
+
+    patch = jsonpatch.make_patch(prev, curr)
+    logger.info('JSON patch: %s' % patch)
+    return patch
+
+class ReproInputModel:
+    def __init__(self, cr_list: list) -> None:
+        self.mount = ['spec']
+        self.testcases = []
+        for cr in cr_list:
+            cr_mutator = partial(repro_mutator, cr)
+            t = TestCase(repro_precondition, cr_mutator, repro_setup)
+            self.testcases.append(t)
+    
+    def next_test(self) -> list:
+        return [TreeNode(), self.testcases.pop(0)] # return the first test case
+
+    ## Some other methods of InputModel
+
+class ReproActo(acto.Acto):
+    def __init__()
+    pass
+
+def repro_precondition(v):
+    return True
+
+def repro_mutator(cr, v):
+    return cr
+
+def repro_setup(v):
+    return None
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(

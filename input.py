@@ -104,16 +104,7 @@ class ProblematicField(CustomField):
             super().__init__(path, self.PruneEntireArraySchema)
         else:
             super().__init__(path, self.PruneEntireObjectSchema)
-
-class ReproInputModel:
-    def __init__(self, cr_list: list) -> None:
-        self.mount = ['spec']
-        self.testcases = [None]
-        for i in range(len(cr_list)):
-            self.testcases.append(cr_list[i])
-    
-    def next_test(self) -> list:
-        return [self.testcases.pop(0)] # return the first test case
+            
 
 class InputModel:
 
