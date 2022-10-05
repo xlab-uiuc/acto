@@ -704,7 +704,7 @@ if __name__ == '__main__':
 
     start_time = datetime.now()
     acto = Acto(workdir_path, config, args.cluster_runtime, args.enable_analysis, args.preload_images, context_cache,
-                args.helper_crd, args.num_workers, args.num_cases, args.dryrun, ['spec', 'persistence', 'storageClassName'])
+                args.helper_crd, args.num_workers, args.num_cases, args.dryrun)
     if not args.learn:
         acto.run()
     end_time = datetime.now()
