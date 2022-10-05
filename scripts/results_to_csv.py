@@ -7,24 +7,40 @@ import pandas
 
 if __name__ == '__main__':
     result_folder = sys.argv[1]
-    json_paths = glob.glob(os.path.join(result_folder, '*', 'result.json'))
+    json_paths = glob.glob(os.path.join(result_folder, '*', 'post_result.json'))
 
     with open(os.path.join(result_folder, 'result.csv'), 'w') as result_file:
         writer = csv.writer(result_file, delimiter=',')
-        writer.writerow(
-            ['Trial number', 'Oracle type', 'Message', 'Input path', 'True/False alarm', 'Category', 'Comment'])
+        writer.writerow([
+            'Trial number', 'Original Oracle type', 'Original Message', 'Post Input path',
+            'Post Oracle type', 'Post Message', 'Post Input path', 'True/False alarm', 'Category',
+            'Comment'
+        ])
 
         for json_path in json_paths:
             with open(json_path, 'r') as json_file:
                 json_instance = json.load(json_file)
-                if 'input_delta' not in json_instance or json_instance['input_delta'] == None:
-                    path = None
+
+                original_result = json_instance['original_result']
+                post_result = json_instance['post_result']
+                if 'input_delta' not in original_result or original_result['input_delta'] == None:
+                    original_path = None
                 else:
-                    path = json_instance['input_delta']['path']
+                    original_path = original_result['input_delta']['path']
+
+                if 'input_delta' not in post_result or post_result['input_delta'] == None:
+                    post_path = None
+                else:
+                    post_path = post_result['input_delta']['path']
+
                 writer.writerow([
-                    '%s' % json_instance['trial_num'],
-                    None if 'oracle' not in json_instance else json_instance['oracle'],
-                    None if 'message' not in json_instance else json_instance['message'], path
+                    '%s' % original_result['trial_num'],
+                    None if 'oracle' not in original_result else original_result['oracle'],
+                    None if 'message' not in original_result else original_result['message'],
+                    original_path,
+                    None if 'oracle' not in post_result else post_result['oracle'],
+                    None if 'message' not in post_result else post_result['message'],
+                    post_path,
                 ])
 
     df = pandas.read_csv(os.path.join(result_folder, 'result.csv'))

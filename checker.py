@@ -517,6 +517,31 @@ if __name__ == "__main__":
     from types import SimpleNamespace
     import pandas
 
+    def checker_save_result(trial_dir: str, original_result: dict, trial_err: ErrorResult, num_tests: int, trial_elapsed):
+
+        result_dict = {}
+        result_dict['original_result'] = original_result
+        post_result = {}
+        result_dict['post_result'] = post_result
+        try:
+            trial_num = '-'.join(trial_dir.split('-')[-2:])
+            post_result['trial_num'] = trial_num
+        except:
+            post_result['trial_num'] = trial_dir
+        post_result['duration'] = original_result['duration']
+        post_result['num_tests'] = num_tests
+        if trial_err == None:
+            logging.info('Trial %s completed without error', trial_dir)
+        else:
+            post_result['oracle'] = trial_err.oracle
+            post_result['message'] = trial_err.message
+            post_result['input_delta'] = trial_err.input_delta
+            post_result['matched_system_delta'] = trial_err.matched_system_delta
+        result_path = os.path.join(trial_dir, 'post_result.json')
+        with open(result_path, 'w') as result_file:
+            json.dump(result_dict, result_file, cls=ActoEncoder, indent=6)
+
+
     parser = argparse.ArgumentParser(description='Standalone checker for Acto')
     parser.add_argument(
         '--testrun-dir', help='Directory to check', required=True)
@@ -576,6 +601,12 @@ if __name__ == "__main__":
     num_delta_fields_list = []
     for trial_dir in sorted(trial_dirs):
         print(trial_dir)
+        if not os.path.isdir(trial_dir):
+            continue
+        original_result_path = "%s/result.json" % (trial_dir)
+        with open(original_result_path, 'r') as original_result_file:
+            original_result = json.load(original_result_file)
+
         input_model = InputModel(context['crd']['body'], config.example_dir,
                                  1, 1, [])
 
@@ -634,7 +665,7 @@ if __name__ == "__main__":
                     continue
                 elif isinstance(result, ErrorResult):
                     logging.info('%s reports an alarm' % system_state_path)
-                    save_result(trial_dir, result, generation, None)
+                    checker_save_result(trial_dir, original_result, result, generation, None)
                     num_alarms += 1
                     alarm = True
                 elif isinstance(result, PassResult):
@@ -652,6 +683,7 @@ if __name__ == "__main__":
 
         if not alarm:
             logging.info('%s does not report an alarm' % system_state_path)
+            checker_save_result(trial_dir, original_result, None, generation, None)
 
     logging.info('Number of alarms: %d', num_alarms)
     num_system_fields_df = pandas.Series(num_system_fields_list)
