@@ -171,7 +171,7 @@ class InputModel:
     def get_discarded_tests(self) -> dict:
         return self.discarded_tests
 
-    def generate_test_plan(self):
+    def generate_test_plan(self) -> dict:
         '''Generate test plan based on CRD'''
         logger = get_thread_logger(with_prefix=False)
 
