@@ -115,7 +115,7 @@ def timeout_handler(sig, frame):
 class TrialRunner:
 
     def __init__(self, context: dict, input_model: InputModel, deploy: Deploy, workdir: str,
-                 cluster: base.KubernetesCluster, worker_id: int, dryrun: bool) -> None:
+                 cluster: base.KubernetesCluster, worker_id: int, dryrun: bool, is_reproduce: bool) -> None:
         self.context = context
         self.workdir = workdir
         self.cluster = cluster
@@ -127,6 +127,7 @@ class TrialRunner:
         self.input_model = input_model
         self.deploy = deploy
         self.dryrun = dryrun
+        self.is_reproduce = is_reproduce
 
         self.snapshots = []
         self.discarded_testcases = {}  # List of test cases failed to run
@@ -209,7 +210,7 @@ class TrialRunner:
                     field_curr_value = curr_input_with_schema.get_value_by_path(
                         list(field_node.get_path()))
 
-                    if testcase.test_precondition(field_curr_value):
+                    if testcase.test_precondition(field_curr_value) and not self.is_reproduce:
                         # precondition of this testcase satisfies
                         logger.info('Precondition of %s satisfies', field_node.get_path())
                         ready_testcases.append((field_node, testcase))
@@ -219,12 +220,15 @@ class TrialRunner:
                                      field_node.get_path())
                         
                         # Check whether Acto is in the reproduce mode
+                        logger.debug('is_reproduce in run_trial: %s', self.is_reproduce)
                         if not self.is_reproduce:
+                            logger.debug('Acto in the normal mode')
                             apply_testcase(curr_input_with_schema,
                                         field_node.get_path(),
                                         testcase,
                                         setup=True)
                         else:
+                            logger.debug('Acto is in the reproduce mode, skip setup')
                             apply_repro_testcase(curr_input_with_schema, testcase=testcase)
 
                         if not testcase.test_precondition(
@@ -280,7 +284,10 @@ class TrialRunner:
         
         testcase_patches = []
         for field_node, testcase in testcases:
-            patch = apply_testcase(curr_input_with_schema, field_node.get_path(), testcase)
+            if not self.is_reproduce:
+                patch = apply_testcase(curr_input_with_schema, field_node.get_path(), testcase)
+            else:
+                patch = apply_repro_testcase(curr_input_with_schema, testcase)
             # field_node.get_testcases().pop()  # finish testcase
             testcase_patches.append((field_node, testcase, patch))
 
@@ -543,7 +550,7 @@ class Acto:
         threads = []
         for i in range(self.num_workers):
             runner = TrialRunner(self.context, self.input_model, self.deploy, self.workdir_path, self.cluster,
-                                 i, self.dryrun)
+                                 i, self.dryrun, self.is_reproduce)
             t = threading.Thread(target=runner.run, args=())
             t.start()
             threads.append(t)

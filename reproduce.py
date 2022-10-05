@@ -1,6 +1,7 @@
 import argparse
 from functools import partial
 import json
+import logging
 import subprocess
 import jsonpatch
 import yaml
@@ -12,6 +13,7 @@ from testplan import TreeNode
 from value_with_schema import ValueWithSchema
 from test_case import TestCase
 from common import get_thread_logger
+from input import InputModel
 
 def apply_repro_testcase(value_with_schema: ValueWithSchema,
                    testcase: TestCase) -> jsonpatch.JsonPatch:
@@ -21,6 +23,7 @@ def apply_repro_testcase(value_with_schema: ValueWithSchema,
     prev = value_with_schema.raw_value()
     value_with_schema.update(next_cr)
     curr = value_with_schema.raw_value()
+    logging.debug('current cr: %s', curr)
 
     patch = jsonpatch.make_patch(prev, curr)
     logger.info('JSON patch: %s' % patch)
@@ -43,12 +46,13 @@ class CustomField:
         self.path = path
         self.custom_schema = schema
 
-class ReproInputModel:
+class ReproInputModel(InputModel):
     def __init__(self, trial_dir: str) -> None:
         self.root_schema = OpaqueSchema([], {})
         self.testcases = []
         cr_list = load_cr_from_trial(trial_dir)
-        for cr in cr_list:
+        self.seed_input = cr_list[0]
+        for cr in cr_list[1:]:
             cr_mutator = partial(repro_mutator, cr)
             t = TestCase(repro_precondition, cr_mutator, repro_setup)
             self.testcases.append(t)
@@ -64,7 +68,7 @@ class ReproInputModel:
         return len(self.testcases) == 0
     
     def get_seed_input(self) -> dict:
-        return {}  
+        return self.seed_input
     
     def next_test(self) -> list:
         '''
@@ -72,16 +76,16 @@ class ReproInputModel:
             - a list of tuples, containing
               an empty TreeNode and a test case
         '''
-        return [tuple(TreeNode(), self.testcases.pop(0))] # return the first test case
+        return [tuple([TreeNode([]), self.testcases.pop(0)])] # return the first test case
     
-    def get_schema_by_path(self, path: list) -> BaseSchema:
-        return BaseSchema()
+    # def get_schema_by_path(self, path: list) -> BaseSchema:
+    #     return BaseSchema()
     
-    def get_all_schemas(self):
-        return []
+    # def get_all_schemas(self):
+    #     return []
     
-    def get_root_schema(self) -> BaseSchema:
-        return BaseSchema()
+    # def get_root_schema(self) -> BaseSchema:
+    #     return self.root_schema
     
     def get_discarded_tests(self) -> dict:
         return {}
