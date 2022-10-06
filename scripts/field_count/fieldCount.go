@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"flag"
+	"go/token"
 	"go/types"
 	"os"
 	"strings"
@@ -51,21 +52,31 @@ func countField(projectPath *string, seedTypeStr *string, seedPkgPath *string) {
 	seedVariables := []ssa.Value{}
 	for f := range ssautil.AllFunctions(prog) {
 		if f.Package() != nil && strings.HasSuffix(f.Package().Pkg.Name(), "_test") {
-			logger.Infof("Function %s\n", f.String())
-			buffer := &bytes.Buffer{}
-			f.WriteTo(buffer)
-			logger.Info(buffer.String())
+			// logger.Infof("Function %s\n", f.String())
+			// buffer := &bytes.Buffer{}
+			// f.WriteTo(buffer)
+			// logger.Info(buffer.String())
 			seedVariables = append(seedVariables, util.GetSeedVariablesFromFunction(f, seedType.Type())...)
 		}
 	}
 
-	for _, v := range seedVariables {
-		logger.Infof("Found seed variable %s", v.String())
+	valueToTreeNodeMap := getCRFields(seedVariables)
+	treeNodeSet := map[ki.Ki]bool{}
+	for v, ki := range valueToTreeNodeMap {
+		if ifStoredInto(v) {
+			treeNodeSet[ki] = true
+		} else {
+			logger.Infof("Value %s is not stored into\n", ki.Path())
+		}
 	}
-	getCRFields(seedVariables)
+
+	for ki := range treeNodeSet {
+		logger.Infof("Found field %s", ki.Path())
+	}
+	logger.Infof("Found %d fields", len(treeNodeSet))
 }
 
-func getCRFields(seedValues []ssa.Value) {
+func getCRFields(seedValues []ssa.Value) map[ssa.Value]ki.Ki {
 	logger := zap.S()
 
 	root := ki.Node{}
@@ -137,6 +148,11 @@ func getCRFields(seedValues []ssa.Value) {
 					}
 					valueToTreeNodeMap[typedValue] = child
 					worklist = append(worklist, typedValue)
+				case *ssa.UnOp:
+					if typedValue.Op == token.MUL {
+						valueToTreeNodeMap[typedValue] = parentNode
+						worklist = append(worklist, typedValue)
+					}
 				}
 			}
 		}
@@ -153,6 +169,19 @@ func getCRFields(seedValues []ssa.Value) {
 		return true
 	})
 	logger.Infof("Number of fields %d", *count)
+	return valueToTreeNodeMap
+}
+
+func ifStoredInto(value ssa.Value) bool {
+	for _, inst := range *value.Referrers() {
+		switch typedInst := inst.(type) {
+		case *ssa.Store:
+			if typedInst.Addr == value {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func main() {
