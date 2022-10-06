@@ -482,8 +482,8 @@ var (
 		},
 		"encoding/json.Unmarshal": {
 			End:         false,
-			TaintedArgs: []int{},
-			TaintedRets: []int{0},
+			TaintedArgs: []int{1},
+			TaintedRets: []int{},
 		},
 		"encoding/pem.Decode": {
 			End:         false,
