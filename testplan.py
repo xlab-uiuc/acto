@@ -81,6 +81,8 @@ class TreeNode():
         encoded_path = json.dumps(self.path)
         if len(self.testcases) > 0:
             discarded_testcase = self.testcases.pop()
+        else:
+            discarded_testcase = {}
         if encoded_path in discarded_testcases:
             discarded_testcases[encoded_path].append(discarded_testcase)
         else:
