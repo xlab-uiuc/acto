@@ -210,7 +210,7 @@ class TrialRunner:
                     field_curr_value = curr_input_with_schema.get_value_by_path(
                         list(field_node.get_path()))
 
-                    if testcase.test_precondition(field_curr_value) and not self.is_reproduce:
+                    if testcase.test_precondition(field_curr_value):
                         # precondition of this testcase satisfies
                         logger.info('Precondition of %s satisfies', field_node.get_path())
                         ready_testcases.append((field_node, testcase))
@@ -222,13 +222,11 @@ class TrialRunner:
                         # Check whether Acto is in the reproduce mode
                         logger.debug('is_reproduce in run_trial: %s', self.is_reproduce)
                         if not self.is_reproduce:
-                            logger.debug('Acto in the normal mode')
                             apply_testcase(curr_input_with_schema,
                                         field_node.get_path(),
                                         testcase,
                                         setup=True)
                         else:
-                            logger.debug('Acto is in the reproduce mode, skip setup')
                             apply_repro_testcase(curr_input_with_schema, testcase=testcase)
 
                         if not testcase.test_precondition(
@@ -285,8 +283,10 @@ class TrialRunner:
         testcase_patches = []
         for field_node, testcase in testcases:
             if not self.is_reproduce:
+                logger.debug('Acto is in the normal mode')
                 patch = apply_testcase(curr_input_with_schema, field_node.get_path(), testcase)
             else:
+                logger.debug('Acto is in the reproduce mode')
                 patch = apply_repro_testcase(curr_input_with_schema, testcase)
             # field_node.get_testcases().pop()  # finish testcase
             testcase_patches.append((field_node, testcase, patch))
