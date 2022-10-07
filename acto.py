@@ -220,7 +220,6 @@ class TrialRunner:
                                      field_node.get_path())
                         
                         # Check whether Acto is in the reproduce mode
-                        logger.debug('is_reproduce in run_trial: %s', self.is_reproduce)
                         if not self.is_reproduce:
                             apply_testcase(curr_input_with_schema,
                                         field_node.get_path(),
