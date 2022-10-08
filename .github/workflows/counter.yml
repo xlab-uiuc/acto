@@ -40,10 +40,17 @@ jobs:
       uses: actions/setup-python@v1
       with:
           python-version: 3.8
-    - name: 'Changing bugs.md'
+    - name: Change bugs.md
       shell: bash
       run: python3 ./bug_counter.py
+
+    - name: Check if bugs.md is changed by the script
+      id: verify_diff
+      run: |
+        git diff --quiet bugs.md || echo "::set-output name=are_bugs_changed::true"
+
     - name: Commit files
+      if: steps.verify_diff.outputs.are_bugs_changed == 'true'
       run: |
         git config --local user.name github-actions[bot]
         git config --local user.email github-actions[bot]@users.noreply.github.com
