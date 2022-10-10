@@ -4,6 +4,7 @@ import json
 import os
 from typing import Tuple
 from deepdiff.helper import NotPresent
+from deepdiff.model import PrettyOrderedSet
 from datetime import datetime, date
 import re
 import string
@@ -128,6 +129,21 @@ class ErrorResult(RunResult):
         self.message = msg
         self.input_delta = input_delta
         self.matched_system_delta = matched_system_delta
+
+
+class RecoveryResult(RunResult):
+
+    def __init__(self, delta, from_, to_) -> None:
+        self.delta = delta
+        self.from_ = from_
+        self.to_ = to_
+
+
+class CompoundErrorResult(ErrorResult):
+
+    def __init__(self, normal_err: ErrorResult, recovery_err: RecoveryResult) -> None:
+        self.normal_err = normal_err
+        self.recovery_err = recovery_err
 
 
 def flatten_list(l: list, curr_path: list) -> list:
@@ -303,12 +319,27 @@ def save_result(trial_dir: str, trial_err: ErrorResult, num_tests: int, trial_el
     result_dict['num_tests'] = num_tests
     if trial_err == None:
         logger.info('Trial %s completed without error', trial_dir)
+    elif isinstance(trial_err, CompoundErrorResult):
+        normal_err = trial_err.normal_err
+        result_dict['oracle'] = normal_err.oracle
+        result_dict['message'] = normal_err.message
+        result_dict['input_delta'] = normal_err.input_delta
+        result_dict['matched_system_delta'] = normal_err.matched_system_delta
+
+        # Dump the recovery error in a separate file
+        recovery_err = trial_err.recovery_err
+        recovery_result_dict = {}
+        recovery_result_dict['delta'] = recovery_err.delta.to_json()
+        recovery_result_dict['from'] = recovery_err.from_
+        recovery_result_dict['to'] = recovery_err.to_
+        recovery_err_path = os.path.join(trial_dir, 'recovery_result.json')
+        with open(recovery_err_path, 'w') as f:
+            json.dump(recovery_result_dict, f, cls=ActoEncoder, indent=6)
     else:
         result_dict['oracle'] = trial_err.oracle
         result_dict['message'] = trial_err.message
         result_dict['input_delta'] = trial_err.input_delta
-        result_dict['matched_system_delta'] = \
-            trial_err.matched_system_delta
+        result_dict['matched_system_delta'] = trial_err.matched_system_delta
     result_path = os.path.join(trial_dir, 'result.json')
     with open(result_path, 'w') as result_file:
         json.dump(result_dict, result_file, cls=ActoEncoder, indent=6)
@@ -327,6 +358,8 @@ class ActoEncoder(json.JSONEncoder):
             return obj.__str__()
         elif isinstance(obj, set):
             return list(obj)
+        elif isinstance(obj, DeepDiff):
+            return obj.to_json()
         return json.JSONEncoder.default(self, obj)
 
 

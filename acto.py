@@ -243,7 +243,15 @@ class TrialRunner:
                             field_node.discard_testcase(self.discarded_testcases)
                         elif isinstance(result, ErrorResult):
                             field_node.discard_testcase(self.discarded_testcases)
-                            return result, generation
+                            # before return, run the recovery test case
+                            recovery_result = self.run_recovery(runner, checker, generation)
+                            generation += 1
+
+                            if isinstance(recovery_result, RecoveryResult):
+                                logger.debug('Recovery failed')
+                                return CompoundErrorResult(result, recovery_result), generation
+                            else:
+                                return result, generation
                         elif isinstance(result, PassResult):
                             ready_testcases.append((field_node, testcase))
                         else:
@@ -260,7 +268,15 @@ class TrialRunner:
             logger.debug(t)
             result, generation = t
             if isinstance(result, ErrorResult):
-                return result, generation
+                # before return, run the recovery test case
+                recovery_result = self.run_recovery(runner, checker, generation)
+                generation += 1
+
+                if isinstance(recovery_result, RecoveryResult):
+                    logger.debug('Recovery failed')
+                    return CompoundErrorResult(result, recovery_result), generation
+                else:
+                    return result, generation
 
             if self.input_model.is_empty():
                 break
@@ -374,6 +390,18 @@ class TrialRunner:
                 time.sleep(20)
             else:
                 break
+        return result
+
+    def run_recovery(self, runner: Runner, checker: Checker, generation: int) -> RunResult:
+        '''Runs the recovery test case after an error is reported'''
+        logger = get_thread_logger(with_prefix=True)
+        RECOVERY_SNAPSHOT = -2  # the immediate snapshot before the error
+
+        logger.debug('Running recovery')
+        recovery_input = self.snapshots[RECOVERY_SNAPSHOT].input
+        snapshot = runner.run(recovery_input, generation=-1)
+        result = checker.check_state_equality(snapshot, self.snapshots[RECOVERY_SNAPSHOT])
+
         return result
 
     def revert(self, runner, checker, generation) -> ValueWithSchema:

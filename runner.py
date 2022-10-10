@@ -233,10 +233,10 @@ class Runner(object):
         timer_hard_timeout = acto_timer.ActoTimer(hard_timeout, combined_event_queue, "timeout")
         watch_process = Process(target=self.watch_system_events,
                                 args=(event_stream, combined_event_queue))
-
+ 
         timer_hard_timeout.start()
         watch_process.start()
-
+        
         while (True):
             try:
                 event = combined_event_queue.get(timeout=60)
@@ -307,3 +307,29 @@ def group_pods(all_pods: dict) -> Tuple[dict, dict]:
             other_pods[name] = pod
 
     return deployment_pods, other_pods
+
+
+# standalone runner for acto
+if __name__ == "__main__":
+    import argparse
+    import sys
+
+    parser = argparse.ArgumentParser(description="Standalone runner for acto")
+    parser.add_argument('-m', '--manifest', type=str, help='path to the manifest file to be applied', required=True)
+    parser.add_argument('-c', '--context', type=str, help='path to the context file', required=True)
+    parser.add_argument('-t', '--trial-dir', type=str, help='path to the trial directory', required=True)
+    parser.add_argument('-g', '--generation', type=int, help='generation number', required=True) 
+    parser.add_argument('-k', '--cluster-context-name', type=str, help='name of the cluster context', required=True)
+    args = parser.parse_args()
+
+    # setting logging output to stdout
+    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+
+    manifest = yaml.load(open(args.manifest, 'r'), Loader=yaml.FullLoader)
+    context = json.load(open(args.context, 'r'))
+
+    runner = Runner(context, args.trial_dir, args.cluster_context_name)
+
+    runner.run(manifest, args.generation)
+    print("Done")
+    
