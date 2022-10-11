@@ -118,8 +118,8 @@ func (c *Context) String() string {
 	for dominee, ccs := range c.DomineeToConditions {
 		b.WriteString(fmt.Sprintf("%s needs the following conditions:\n", dominee))
 		b.WriteString("\n")
-		for _, cc := range ccs.ConcreteConditions {
-			b.WriteString(cc.String())
+		for _, cg := range ccs.ConcreteConditionGroups {
+			b.WriteString(cg.Encode())
 		}
 		b.WriteString("\n")
 	}
@@ -131,6 +131,50 @@ type BranchCondition struct {
 	Source ssa.Value
 	Op     token.Token
 	Value  *ssa.Const
+}
+
+type ConditionGroupType string
+
+const (
+	AndConditionGroup ConditionGroupType = "AND"
+	OrConditionGroup  ConditionGroupType = "OR"
+)
+
+type ConditionGroup struct {
+	Typ                ConditionGroupType
+	ConcreteConditions []*ConcreteCondition
+}
+
+func (cg *ConditionGroup) String() string {
+	var b bytes.Buffer
+	b.WriteString(string(cg.Typ))
+	for _, cc := range cg.ConcreteConditions {
+		b.WriteString(fmt.Sprintf("\n%s\n", cc.String()))
+	}
+	return b.String()
+}
+
+func (cg *ConditionGroup) Encode() string {
+	var b bytes.Buffer
+	b.WriteString(string(cg.Typ))
+	for _, cc := range cg.ConcreteConditions {
+		b.WriteString(cc.Encode())
+	}
+	return b.String()
+}
+
+func (cg *ConditionGroup) ToPlainCondition() *PlainConditionGroup {
+	var plainConditionGroup PlainConditionGroup
+	plainConditionGroup.Typ = cg.Typ
+	for _, cc := range cg.ConcreteConditions {
+		plainConditionGroup.ConcreteConditions = append(plainConditionGroup.ConcreteConditions, cc.ToPlainCondition())
+	}
+	return &plainConditionGroup
+}
+
+type PlainConditionGroup struct {
+	Typ                ConditionGroupType `json:"type"`
+	ConcreteConditions []*PlainCondition  `json:"conditions"`
 }
 
 type ConcreteCondition struct {
@@ -164,7 +208,7 @@ func (c *ConcreteCondition) Encode() string {
 	return b.String()
 }
 
-func (c *ConcreteCondition) ToPlainCondition() PlainCondition {
+func (c *ConcreteCondition) ToPlainCondition() *PlainCondition {
 	var field []string
 	json.Unmarshal([]byte(c.Field), &field)
 
@@ -176,7 +220,7 @@ func (c *ConcreteCondition) ToPlainCondition() PlainCondition {
 	} else {
 		value = c.Value.Value.String()
 	}
-	return PlainCondition{
+	return &PlainCondition{
 		Field: field,
 		Op:    c.Op.String(),
 		Value: value,
@@ -191,38 +235,54 @@ type PlainCondition struct {
 }
 
 type ConcreteConditionSet struct {
-	ConcreteConditions map[string]ConcreteCondition
+	ConcreteConditionGroups map[string]*ConditionGroup
 }
 
 func NewConcreteConditionSet() *ConcreteConditionSet {
 	return &ConcreteConditionSet{
-		ConcreteConditions: make(map[string]ConcreteCondition),
+		ConcreteConditionGroups: make(map[string]*ConditionGroup),
 	}
 }
 
-func (ccs *ConcreteConditionSet) Add(cc ConcreteCondition) {
-	ccs.ConcreteConditions[cc.Encode()] = cc
+func (ccs *ConcreteConditionSet) Add(cg *ConditionGroup) {
+	ccs.ConcreteConditionGroups[cg.Encode()] = cg
 }
 
 func (ccs *ConcreteConditionSet) Contain(cc string) bool {
-	_, ok := ccs.ConcreteConditions[cc]
+	_, ok := ccs.ConcreteConditionGroups[cc]
 	return ok
 }
 
-func (ccs *ConcreteConditionSet) Extend(ccList ...ConcreteCondition) {
-	for _, cc := range ccList {
-		ccs.ConcreteConditions[cc.Encode()] = cc
+func (ccs *ConcreteConditionSet) Extend(cgList ...*ConditionGroup) {
+	for _, cc := range cgList {
+		ccs.ConcreteConditionGroups[cc.Encode()] = cc
 	}
 }
 
 func (ccs *ConcreteConditionSet) Intersect(ccs_ *ConcreteConditionSet) *ConcreteConditionSet {
 	newSet := NewConcreteConditionSet()
-	for cc_str, cc := range ccs.ConcreteConditions {
+	for cc_str, cc := range ccs.ConcreteConditionGroups {
 		if ccs_.Contain(cc_str) {
 			newSet.Add(cc)
 		}
 	}
 	return newSet
+}
+
+func (ccs *ConcreteConditionSet) ToPlainConditionSet(path []string) *PlainConcreteConditionSet {
+	var plainConcreteConditionSet PlainConcreteConditionSet
+	plainConcreteConditionSet.Path = path
+	plainConcreteConditionSet.Typ = AndConditionGroup
+	for _, cg := range ccs.ConcreteConditionGroups {
+		plainConcreteConditionSet.PlainConditionGroups = append(plainConcreteConditionSet.PlainConditionGroups, cg.ToPlainCondition())
+	}
+	return &plainConcreteConditionSet
+}
+
+type PlainConcreteConditionSet struct {
+	Path                 []string               `json:"path"`
+	Typ                  ConditionGroupType     `json:"type"`
+	PlainConditionGroups []*PlainConditionGroup `json:"conditionGroups"`
 }
 
 type TaintedStructValue struct {

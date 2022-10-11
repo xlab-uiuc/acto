@@ -42,7 +42,7 @@ func Dominators(context *Context, frontierSet map[ssa.Value]bool) {
 	}
 
 	for ifStmt, condition := range context.IfToCondition {
-		trueDominees := BlockDominees(context, ifStmt.Block(), true)
+		trueDominees, falseDominees := BranchDominees(context, ifStmt.Block())
 		trueFunctionDominees := FindFunctionDominees(context, trueDominees)
 		if len(trueFunctionDominees) > 0 {
 			log.Printf("Branch at %s [TRUE] has function dominees: %s", context.Program.Fset.Position(ifStmt.(*ssa.If).Cond.Pos()), trueFunctionDominees)
@@ -54,7 +54,6 @@ func Dominators(context *Context, frontierSet map[ssa.Value]bool) {
 		for _, trueDominee := range trueDominees {
 			log.Printf("%d ", trueDominee.Index)
 		}
-		falseDominees := BlockDominees(context, ifStmt.Block(), false)
 		falseFunctionDominees := FindFunctionDominees(context, falseDominees)
 		if len(falseFunctionDominees) > 0 {
 			log.Printf("Branch at %s [FALSE] has function dominees: %s", context.Program.Fset.Position(ifStmt.(*ssa.If).Cond.Pos()), falseFunctionDominees)
@@ -70,18 +69,24 @@ func Dominators(context *Context, frontierSet map[ssa.Value]bool) {
 		controlValue := condition.Source
 		fieldSet := context.ValueFieldMap[controlValue]
 
-		trueConditions := []ConcreteCondition{}
+		trueOrGroup := &ConditionGroup{
+			ConcreteConditions: []*ConcreteCondition{},
+			Typ:                OrConditionGroup,
+		}
 		for _, field := range fieldSet.Fields() {
-			trueConditions = append(trueConditions, ConcreteCondition{
+			trueOrGroup.ConcreteConditions = append(trueOrGroup.ConcreteConditions, &ConcreteCondition{
 				Field: field.String(),
 				Op:    condition.Op,
 				Value: condition.Value,
 			})
 		}
 
-		falseConditions := []ConcreteCondition{}
+		falseOrGroup := &ConditionGroup{
+			ConcreteConditions: []*ConcreteCondition{},
+			Typ:                OrConditionGroup,
+		}
 		for _, field := range fieldSet.Fields() {
-			falseConditions = append(falseConditions, ConcreteCondition{
+			falseOrGroup.ConcreteConditions = append(falseOrGroup.ConcreteConditions, &ConcreteCondition{
 				Field: field.String(),
 				Op:    Negation(condition.Op),
 				Value: condition.Value,
@@ -117,7 +122,7 @@ func Dominators(context *Context, frontierSet map[ssa.Value]bool) {
 					log.Fatalf("Should not happen, value not in fieldToValueMap %s:%s", use.Name(), use)
 					fieldToValueConditionMap[field.String()][use] = NewConcreteConditionSet()
 				}
-				fieldToValueConditionMap[field.String()][use].Extend(trueConditions...)
+				fieldToValueConditionMap[field.String()][use].Extend(trueOrGroup)
 			}
 		}
 
@@ -136,7 +141,7 @@ func Dominators(context *Context, frontierSet map[ssa.Value]bool) {
 					log.Fatalf("Should not happen, value not in fieldToValueMap %s:%s", use.Name(), use)
 					fieldToValueConditionMap[field.String()][use] = NewConcreteConditionSet()
 				}
-				fieldToValueConditionMap[field.String()][use].Extend(falseConditions...)
+				fieldToValueConditionMap[field.String()][use].Extend(falseOrGroup)
 			}
 		}
 	}
@@ -158,7 +163,7 @@ func Dominators(context *Context, frontierSet map[ssa.Value]bool) {
 
 			if intersection == nil {
 				intersection = NewConcreteConditionSet()
-				for _, cc := range concreteConditionSet.ConcreteConditions {
+				for _, cc := range concreteConditionSet.ConcreteConditionGroups {
 					intersection.Add(cc)
 				}
 			} else {
@@ -168,10 +173,83 @@ func Dominators(context *Context, frontierSet map[ssa.Value]bool) {
 			}
 		}
 		log.Printf("Intersection is %s\n", intersection)
-		if intersection != nil && len(intersection.ConcreteConditions) > 0 {
+		if intersection != nil && len(intersection.ConcreteConditionGroups) > 0 {
 			context.DomineeToConditions[field] = intersection
 		}
 	}
+}
+
+func BranchDominees(context *Context, bb *ssa.BasicBlock) (trueDominees, falseDominees []*ssa.BasicBlock) {
+	fn := bb.Parent()
+	pd, ok := context.PostDominators[fn]
+	if !ok {
+		// lazy binding
+		pd = NewPostDominator(fn)
+		context.PostDominators[fn] = pd
+	}
+
+	trueBlock := bb.Succs[0]
+	falseBlock := bb.Succs[1]
+
+	trueWorklist := []*ssa.BasicBlock{trueBlock}
+	falseWorklist := []*ssa.BasicBlock{falseBlock}
+
+	trueReachSet := ReachableBlocks(context, trueBlock)
+	falseReachSet := ReachableBlocks(context, falseBlock)
+
+	if !pd.Dominate(trueBlock, bb) && !falseReachSet[trueBlock] {
+		trueDominees = append(trueDominees, trueBlock)
+	}
+	if !pd.Dominate(falseBlock, bb) && !trueReachSet[falseBlock] {
+		falseDominees = append(falseDominees, falseBlock)
+	}
+
+	for len(trueWorklist) > 0 {
+		workItem := trueWorklist[len(trueWorklist)-1]
+		trueWorklist = trueWorklist[:len(trueWorklist)-1]
+
+		iDominees := workItem.Dominees()
+		for _, dominee := range iDominees {
+			if !pd.Dominate(dominee, bb) && !falseReachSet[dominee] {
+				trueDominees = append(trueDominees, dominee)
+				trueWorklist = append(trueWorklist, dominee)
+			}
+		}
+	}
+
+	for len(falseWorklist) > 0 {
+		workItem := falseWorklist[len(falseWorklist)-1]
+		falseWorklist = falseWorklist[:len(falseWorklist)-1]
+
+		iDominees := workItem.Dominees()
+		for _, dominee := range iDominees {
+			if !pd.Dominate(dominee, bb) && !trueReachSet[dominee] {
+				falseDominees = append(falseDominees, dominee)
+				falseWorklist = append(falseWorklist, dominee)
+			}
+		}
+	}
+	return
+}
+
+func ReachableBlocks(context *Context, bb *ssa.BasicBlock) (reachSet map[*ssa.BasicBlock]bool) {
+	worklist := []*ssa.BasicBlock{bb}
+	reachSet = make(map[*ssa.BasicBlock]bool)
+
+	for len(worklist) > 0 {
+		workItem := worklist[len(worklist)-1]
+		worklist = worklist[:len(worklist)-1]
+
+		for _, succ := range workItem.Succs {
+			if succ != nil {
+				if _, ok := reachSet[succ]; !ok {
+					reachSet[succ] = true
+					worklist = append(worklist, succ)
+				}
+			}
+		}
+	}
+	return
 }
 
 func FindUsesInBlocks(context *Context, blocks []*ssa.BasicBlock, frontierValuesByBlock map[*ssa.BasicBlock]*[]ssa.Value) map[ssa.Value]bool {

@@ -128,14 +128,8 @@ func analyze(projectPath string, seedType string, seedPkgPath string) string {
 		var path []string
 		json.Unmarshal([]byte(field), &path)
 
-		conditions := []analysis.PlainCondition{}
-		for _, condition := range conditionSet.ConcreteConditions {
-			conditions = append(conditions, condition.ToPlainCondition())
-		}
-		analysisResult.FieldConditions = append(analysisResult.FieldConditions, FieldCondition{
-			Path:      path,
-			Condition: conditions,
-		})
+		analysisResult.FieldConditions = append(analysisResult.FieldConditions, conditionSet.ToPlainConditionSet(path))
+
 	}
 
 	copiedOverFieldSet := analysis.GetCopyOverFields(context)
@@ -172,11 +166,11 @@ func main() {
 }
 
 type AnalysisResult struct {
-	UsedPaths       [][]string        `json:"usedPaths"`
-	TaintedPaths    [][]string        `json:"taintedPaths"`
-	DefaultValues   map[string]string `json:"defaultValues"`
-	FieldConditions []FieldCondition  `json:"fieldConditions"`
-	CopiedOverPaths [][]string        `json:"copiedOverPaths"`
+	UsedPaths       [][]string                            `json:"usedPaths"`
+	TaintedPaths    [][]string                            `json:"taintedPaths"`
+	DefaultValues   map[string]string                     `json:"defaultValues"`
+	FieldConditions []*analysis.PlainConcreteConditionSet `json:"fieldConditions"`
+	CopiedOverPaths [][]string                            `json:"copiedOverPaths"`
 }
 
 type FieldCondition struct {

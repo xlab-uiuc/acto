@@ -557,54 +557,14 @@
             }
       },
       "preload_images": [
-            "quay.io/mongodb/mongodb-kubernetes-operator:0.7.4",
             "docker.io/library/mongo:4.4.0",
+            "quay.io/mongodb/mongodb-kubernetes-operator:0.7.4",
             "quay.io/mongodb/mongodb-agent:11.12.0.7388-1",
-            "quay.io/mongodb/mongodb-kubernetes-operator-version-upgrade-post-start-hook:1.0.4",
-            "quay.io/mongodb/mongodb-kubernetes-readinessprobe:1.0.9"
+            "quay.io/mongodb/mongodb-kubernetes-readinessprobe:1.0.9",
+            "quay.io/mongodb/mongodb-kubernetes-operator-version-upgrade-post-start-hook:1.0.4"
       ],
       "analysis_result": {
             "control_flow_fields": [
-                  [
-                        "root",
-                        "spec",
-                        "prometheus",
-                        "passwordSecretRef",
-                        "name"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "security",
-                        "roles"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "security",
-                        "tls",
-                        "enabled"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "security",
-                        "authentication",
-                        "modes"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "prometheus"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "security",
-                        "tls",
-                        "certificateKeySecretRef",
-                        "name"
-                  ],
                   [
                         "root",
                         "spec",
@@ -617,15 +577,67 @@
                         "spec",
                         "security",
                         "authentication",
-                        "modes",
-                        "INDEX"
+                        "modes"
                   ],
                   [
                         "root",
                         "spec",
                         "security",
                         "tls",
-                        "caConfigMapRef",
+                        "caCertificateSecretRef"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "prometheus",
+                        "port"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "security",
+                        "tls",
+                        "enabled"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "prometheus",
+                        "passwordSecretRef",
+                        "key"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "prometheus"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "security",
+                        "roles"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "security",
+                        "authentication",
+                        "ignoreUnknownUsers"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "security",
+                        "tls",
+                        "certificateKeySecretRef",
+                        "name"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "security",
+                        "tls",
+                        "caCertificateSecretRef",
                         "name"
                   ],
                   [
@@ -639,174 +651,158 @@
                         "root",
                         "spec",
                         "security",
-                        "tls",
-                        "caCertificateSecretRef"
+                        "authentication",
+                        "modes",
+                        "INDEX"
                   ],
                   [
                         "root",
                         "spec",
                         "prometheus",
                         "passwordSecretRef",
-                        "key"
+                        "name"
                   ],
                   [
                         "root",
                         "spec",
                         "security",
                         "tls",
-                        "caCertificateSecretRef",
+                        "caConfigMapRef",
                         "name"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "prometheus",
-                        "port"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "security",
-                        "authentication",
-                        "ignoreUnknownUsers"
                   ]
             ],
             "default_value_map": {
                   "[\"root\",\"spec\",\"users\",\"INDEX\",\"db\"]": "\"admin\""
             },
             "field_conditions_map": {
-                  "[\"spec\", \"automationConfig\", \"processes\", \"INDEX\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "prometheus"
-                              ],
-                              "op": "==",
-                              "value": null
-                        },
-                        {
-                              "field": [
-                                    "spec",
-                                    "automationConfig"
-                              ],
-                              "op": "!=",
-                              "value": null
-                        }
-                  ],
-                  "[\"spec\", \"security\", \"tls\", \"optional\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "security",
-                                    "tls",
-                                    "enabled"
-                              ],
-                              "op": "==",
-                              "value": true
-                        }
-                  ],
-                  "[\"spec\", \"prometheus\", \"passwordSecretRef\", \"name\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "prometheus"
-                              ],
-                              "op": "!=",
-                              "value": null
-                        }
-                  ],
-                  "[\"spec\", \"automationConfig\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "prometheus"
-                              ],
-                              "op": "==",
-                              "value": null
-                        },
-                        {
-                              "field": [
-                                    "spec",
-                                    "automationConfig"
-                              ],
-                              "op": "!=",
-                              "value": null
-                        }
-                  ],
-                  "[\"spec\", \"automationConfig\", \"processes\", \"INDEX\", \"disabled\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "prometheus"
-                              ],
-                              "op": "==",
-                              "value": null
-                        },
-                        {
-                              "field": [
-                                    "spec",
-                                    "automationConfig"
-                              ],
-                              "op": "!=",
-                              "value": null
-                        }
-                  ],
-                  "[\"spec\", \"automationConfig\", \"processes\", \"INDEX\", \"name\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "prometheus"
-                              ],
-                              "op": "==",
-                              "value": null
-                        },
-                        {
-                              "field": [
-                                    "spec",
-                                    "automationConfig"
-                              ],
-                              "op": "!=",
-                              "value": null
-                        }
-                  ],
-                  "[\"spec\", \"automationConfig\", \"processes\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "prometheus"
-                              ],
-                              "op": "==",
-                              "value": null
-                        },
-                        {
-                              "field": [
-                                    "spec",
-                                    "automationConfig"
-                              ],
-                              "op": "!=",
-                              "value": null
-                        }
-                  ],
-                  "[\"spec\", \"featureCompatibilityVersion\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "prometheus"
-                              ],
-                              "op": "==",
-                              "value": null
-                        }
-                  ],
-                  "[\"spec\", \"replicaSetHorizons\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "prometheus"
-                              ],
-                              "op": "==",
-                              "value": null
-                        }
-                  ]
+                  "[\"spec\", \"automationConfig\", \"processes\", \"INDEX\", \"disabled\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "automationConfig"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"prometheus\", \"passwordSecretRef\", \"name\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "prometheus"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"security\", \"tls\", \"optional\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "security",
+                                                      "tls",
+                                                      "enabled"
+                                                ],
+                                                "op": "==",
+                                                "value": true
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"automationConfig\", \"processes\", \"INDEX\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "automationConfig"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"automationConfig\", \"processes\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "automationConfig"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"automationConfig\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "automationConfig"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"automationConfig\", \"processes\", \"INDEX\", \"name\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "automationConfig"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  }
             }
       }
 }

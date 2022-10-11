@@ -24,31 +24,43 @@ def analyze(project_path: str, seed_type: str, seed_pkg: str) -> dict:
                 for field in all_fields:
                     if is_subfield(tainted_field, field):
                         all_fields.remove(field)
+                    elif is_subfield(field, tainted_field):
+                        all_fields.remove(field)
         except ValueError:
             continue
 
     field_conditions_map = {}
-    for field_conditions in field_conditions_list:
-        new_conditions = []
-        for condition in field_conditions['conditions']:
+    for field_condition_groups in field_conditions_list:
+        new_field_condition_group = {}
+        new_field_condition_group['type'] = field_condition_groups['type']
+        new_field_condition_group['conditions'] = []
+        for field_condition_group in field_condition_groups['conditionGroups']:
+            new_condition_group = {}
+            new_condition_group['type'] = field_condition_group['type']
 
-            if condition['value'] == 'null':
-                value = None
-            elif condition['value'] == 'true':
-                value = True
-            elif condition['value'] == 'false':
-                value = False
-            else:
-                value = condition['value']
+            new_conditions = []
+            for condition in field_condition_group['conditions']:
 
-            new_condition = {
-                'field': condition['field'][1:],  # remove the leading 'root'
-                'op': condition['op'],
-                'value': value
-            }
-            new_conditions.append(new_condition)
+                if condition['value'] == 'null':
+                    value = None
+                elif condition['value'] == 'true':
+                    value = True
+                elif condition['value'] == 'false':
+                    value = False
+                else:
+                    value = condition['value']
 
-        field_conditions_map[json.dumps(field_conditions['path'][1:])] = new_conditions
+                new_condition = {
+                    'field': condition['field'][1:],  # remove the leading 'root'
+                    'op': condition['op'],
+                    'value': value
+                }
+                new_conditions.append(new_condition)
+
+            new_condition_group['conditions'] = new_conditions
+            new_field_condition_group['conditions'].append(new_condition_group)
+
+        field_conditions_map[json.dumps(field_condition_groups['path'][1:])] = new_field_condition_group
 
     analysis_result = {
         'control_flow_fields': all_fields,
@@ -70,11 +82,11 @@ def is_subfield(subpath: list, path: list) -> bool:
 
 
 if __name__ == '__main__':
-    # print(analyze('/home/tyler/rabbitmq-operator', 'RabbitmqCluster', 'github.com/rabbitmq/cluster-operator/api/v1beta1'))
+    print(analyze('/home/tyler/rabbitmq-operator', 'RabbitmqCluster', 'github.com/rabbitmq/cluster-operator/api/v1beta1'))
     # print(analyze('/home/tyler/redis-operator/cmd/redisoperator', 'RedisFailover', 'github.com/spotahome/redis-operator/api/redisfailover/v1'))
     # print(analyze('/home/tyler/cass-operator', 'CassandraDatacenter', 'github.com/k8ssandra/cass-operator/apis/cassandra/v1beta1'))
     # print(analyze('/home/tyler/percona-server-mongodb-operator/cmd/manager', 'PerconaServerMongoDB', 'github.com/percona/percona-server-mongodb-operator/pkg/apis/psmdb/v1'))
     # print(analyze('/home/tyler/zookeeper-operator', 'ZookeeperCluster', 'github.com/pravega/zookeeper-operator/api/v1beta1'))
-    print(analyze('/home/tyler/cockroach-operator/cmd/cockroach-operator', 'CrdbCluster', 'github.com/cockroachdb/cockroach-operator/apis/v1alpha1'))
-    print(analyze('/home/tyler/tidb-operator/cmd/controller-manager', 'TidbCluster', 'github.com/pingcap/tidb-operator/pkg/apis/pingcap/v1alpha1'))
-    print(analyze('/home/tyler/redis-operator-2', 'RedisCluster', 'redis-operator/api/v1beta1'))
+    # print(analyze('/home/tyler/cockroach-operator/cmd/cockroach-operator', 'CrdbCluster', 'github.com/cockroachdb/cockroach-operator/apis/v1alpha1'))
+    # print(analyze('/home/tyler/tidb-operator/cmd/controller-manager', 'TidbCluster', 'github.com/pingcap/tidb-operator/pkg/apis/pingcap/v1alpha1'))
+    # print(analyze('/home/tyler/redis-operator-2', 'RedisCluster', 'redis-operator/api/v1beta1'))

@@ -225,6 +225,23 @@ class Checker(object):
                                        delta)
         return PassResult()
 
+    def check_condition_group(self, input: dict, condition_group: dict) -> bool:
+        if 'type' in condition_group:
+            typ = condition_group['type']
+            if typ == 'AND':
+                for condition in condition_group['conditions']:
+                    if not self.check_condition_group(input, condition):
+                        return False
+                return True
+            elif typ == 'OR':
+                for condition in condition_group['conditions']:
+                    if self.check_condition_group(input, condition):
+                        return True
+                return False
+        else:
+            return self.check_condition(input, condition_group)
+
+
     def should_skip_input_delta(self, input_delta: Diff, snapshot: Snapshot) -> bool:
         '''Determines if the input delta should be skipped or not
 
@@ -251,25 +268,23 @@ class Checker(object):
         field_conditions_map = self.field_conditions_map
         encoded_path = json.dumps(input_delta.path)
         if encoded_path in field_conditions_map:
-            conditions = field_conditions_map[encoded_path]
-            for condition in conditions:
-                if not self.check_condition(snapshot.input, condition):
-                    # if one condition does not satisfy, skip this testcase
-                    logger.info(
-                        'Field precondition %s does not satisfy, skip this testcase' % condition)
-                    return True
+            condition_group = field_conditions_map[encoded_path]
+            if not self.check_condition_group(snapshot.input, condition_group):
+                # if one condition does not satisfy, skip this testcase
+                logger.info(
+                    'Field precondition %s does not satisfy, skip this testcase' % condition_group)
+                return True
         else:
             # if no exact match, try find parent field
             parent = Checker.find_nearest_parent(
                 input_delta.path, field_conditions_map.keys())
             if parent is not None:
-                conditions = field_conditions_map[json.dumps(parent)]
-                for condition in conditions:
-                    if not self.check_condition(snapshot.input, condition):
-                        # if one condition does not satisfy, skip this testcase
-                        logger.info(
-                            'Field precondition %s does not satisfy, skip this testcase' % condition)
-                        return True
+                condition_group = field_conditions_map[json.dumps(parent)]
+                if not self.check_condition_group(snapshot.input, condition_group):
+                    # if one condition does not satisfy, skip this testcase
+                    logger.info(
+                        'Field precondition %s does not satisfy, skip this testcase' % condition_group)
+                    return True
 
         if not self.context['enable_analysis']:
             return False
@@ -643,6 +658,8 @@ if __name__ == "__main__":
     with open(context_cache, 'r') as context_fin:
         context = json.load(context_fin)
         context['preload_images'] = set(context['preload_images'])
+    
+    context['enable_analysis'] = True
 
     if 'enable_analysis' in context and context['enable_analysis'] == True:
         logging.info('Analysis is enabled')

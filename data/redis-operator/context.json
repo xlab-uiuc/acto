@@ -2631,8 +2631,8 @@
             }
       },
       "preload_images": [
-            "docker.io/library/redis:6.2.6-alpine",
             "quay.io/oliver006/redis_exporter:v1.33.0-alpine",
+            "docker.io/library/redis:6.2.6-alpine",
             "quay.io/spotahome/redis-operator:v1.1.0"
       ],
       "analysis_result": {
@@ -2647,21 +2647,19 @@
                         "root",
                         "spec",
                         "sentinel",
-                        "customConfig",
-                        "INDEX"
+                        "customConfig"
                   ],
                   [
                         "root",
                         "spec",
-                        "bootstrapNode",
-                        "port"
+                        "labelWhitelist"
                   ],
                   [
                         "root",
                         "spec",
                         "redis",
-                        "customConfig",
-                        "INDEX"
+                        "exporter",
+                        "enabled"
                   ],
                   [
                         "root",
@@ -2679,14 +2677,8 @@
                         "root",
                         "spec",
                         "sentinel",
-                        "customConfig"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "redis",
-                        "exporter",
-                        "enabled"
+                        "customConfig",
+                        "INDEX"
                   ],
                   [
                         "root",
@@ -2698,7 +2690,8 @@
                   [
                         "root",
                         "spec",
-                        "labelWhitelist"
+                        "bootstrapNode",
+                        "port"
                   ],
                   [
                         "root",
@@ -2723,215 +2716,356 @@
                   "[\"root\",\"spec\",\"sentinel\",\"replicas\"]": "3"
             },
             "field_conditions_map": {
-                  "[\"spec\", \"redis\", \"exporter\", \"resources\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "redis",
-                                    "exporter",
-                                    "enabled"
-                              ],
-                              "op": "==",
-                              "value": true
-                        }
-                  ],
-                  "[\"spec\", \"sentinel\", \"exporter\", \"env\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "sentinel",
-                                    "exporter",
-                                    "enabled"
-                              ],
-                              "op": "==",
-                              "value": true
-                        }
-                  ],
-                  "[\"spec\", \"redis\", \"exporter\", \"image\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "redis",
-                                    "exporter",
-                                    "enabled"
-                              ],
-                              "op": "==",
-                              "value": true
-                        }
-                  ],
-                  "[\"spec\", \"redis\", \"storage\", \"emptyDir\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "redis",
-                                    "storage",
-                                    "persistentVolumeClaim"
-                              ],
-                              "op": "==",
-                              "value": null
-                        },
-                        {
-                              "field": [
-                                    "spec",
-                                    "redis",
-                                    "storage",
-                                    "emptyDir"
-                              ],
-                              "op": "!=",
-                              "value": null
-                        }
-                  ],
-                  "[\"spec\", \"redis\", \"storage\", \"persistentVolumeClaim\", \"metadata\", \"annotations\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "redis",
-                                    "storage",
-                                    "persistentVolumeClaim"
-                              ],
-                              "op": "!=",
-                              "value": null
-                        }
-                  ],
-                  "[\"spec\", \"sentinel\", \"exporter\", \"image\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "sentinel",
-                                    "exporter",
-                                    "enabled"
-                              ],
-                              "op": "==",
-                              "value": true
-                        }
-                  ],
-                  "[\"spec\", \"redis\", \"storage\", \"keepAfterDeletion\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "redis",
-                                    "storage",
-                                    "persistentVolumeClaim"
-                              ],
-                              "op": "!=",
-                              "value": null
-                        }
-                  ],
-                  "[\"spec\", \"redis\", \"exporter\", \"args\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "redis",
-                                    "exporter",
-                                    "enabled"
-                              ],
-                              "op": "==",
-                              "value": true
-                        }
-                  ],
-                  "[\"spec\", \"redis\", \"storage\", \"persistentVolumeClaim\", \"status\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "redis",
-                                    "storage",
-                                    "persistentVolumeClaim"
-                              ],
-                              "op": "!=",
-                              "value": null
-                        }
-                  ],
-                  "[\"spec\", \"auth\", \"secretPath\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "auth",
-                                    "secretPath"
-                              ],
-                              "op": "!=",
-                              "value": "\"\""
-                        }
-                  ],
-                  "[\"spec\", \"labelWhitelist\", \"INDEX\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "labelWhitelist"
-                              ],
-                              "op": "!=",
-                              "value": null
-                        }
-                  ],
-                  "[\"spec\", \"sentinel\", \"exporter\", \"args\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "sentinel",
-                                    "exporter",
-                                    "enabled"
-                              ],
-                              "op": "==",
-                              "value": true
-                        }
-                  ],
-                  "[\"spec\", \"redis\", \"exporter\", \"env\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "redis",
-                                    "exporter",
-                                    "enabled"
-                              ],
-                              "op": "==",
-                              "value": true
-                        }
-                  ],
-                  "[\"spec\", \"redis\", \"storage\", \"persistentVolumeClaim\", \"spec\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "redis",
-                                    "storage",
-                                    "persistentVolumeClaim"
-                              ],
-                              "op": "!=",
-                              "value": null
-                        }
-                  ],
-                  "[\"spec\", \"sentinel\", \"exporter\", \"resources\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "sentinel",
-                                    "exporter",
-                                    "enabled"
-                              ],
-                              "op": "==",
-                              "value": true
-                        }
-                  ],
-                  "[\"spec\", \"labelWhitelist\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "labelWhitelist"
-                              ],
-                              "op": "!=",
-                              "value": null
-                        }
-                  ],
-                  "[\"spec\", \"redis\", \"storage\", \"persistentVolumeClaim\", \"metadata\", \"labels\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "redis",
-                                    "storage",
-                                    "persistentVolumeClaim"
-                              ],
-                              "op": "!=",
-                              "value": null
-                        }
-                  ]
+                  "[\"spec\", \"redis\", \"exporter\", \"args\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "redis",
+                                                      "exporter",
+                                                      "enabled"
+                                                ],
+                                                "op": "==",
+                                                "value": true
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"redis\", \"storage\", \"persistentVolumeClaim\", \"metadata\", \"labels\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "redis",
+                                                      "storage",
+                                                      "persistentVolumeClaim"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"redis\", \"storage\", \"persistentVolumeClaim\", \"metadata\", \"annotations\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "redis",
+                                                      "storage",
+                                                      "persistentVolumeClaim"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"redis\", \"storage\", \"persistentVolumeClaim\", \"status\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "redis",
+                                                      "storage",
+                                                      "persistentVolumeClaim"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"sentinel\", \"exporter\", \"resources\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "sentinel",
+                                                      "exporter",
+                                                      "enabled"
+                                                ],
+                                                "op": "==",
+                                                "value": true
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"redis\", \"storage\", \"keepAfterDeletion\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "redis",
+                                                      "storage",
+                                                      "persistentVolumeClaim"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"redis\", \"exporter\", \"resources\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "redis",
+                                                      "exporter",
+                                                      "enabled"
+                                                ],
+                                                "op": "==",
+                                                "value": true
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"labelWhitelist\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "labelWhitelist"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"redis\", \"exporter\", \"image\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "redis",
+                                                      "exporter",
+                                                      "enabled"
+                                                ],
+                                                "op": "==",
+                                                "value": true
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"sentinel\", \"exporter\", \"args\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "sentinel",
+                                                      "exporter",
+                                                      "enabled"
+                                                ],
+                                                "op": "==",
+                                                "value": true
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"sentinel\", \"exporter\", \"image\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "sentinel",
+                                                      "exporter",
+                                                      "enabled"
+                                                ],
+                                                "op": "==",
+                                                "value": true
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"redis\", \"storage\", \"persistentVolumeClaim\", \"spec\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "redis",
+                                                      "storage",
+                                                      "persistentVolumeClaim"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"sentinel\", \"exporter\", \"env\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "sentinel",
+                                                      "exporter",
+                                                      "enabled"
+                                                ],
+                                                "op": "==",
+                                                "value": true
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"redis\", \"exporter\", \"env\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "redis",
+                                                      "exporter",
+                                                      "enabled"
+                                                ],
+                                                "op": "==",
+                                                "value": true
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"auth\", \"secretPath\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "auth",
+                                                      "secretPath"
+                                                ],
+                                                "op": "!=",
+                                                "value": "\"\""
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"redis\", \"storage\", \"emptyDir\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "redis",
+                                                      "storage",
+                                                      "persistentVolumeClaim"
+                                                ],
+                                                "op": "==",
+                                                "value": null
+                                          }
+                                    ]
+                              },
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "redis",
+                                                      "storage",
+                                                      "emptyDir"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"labelWhitelist\", \"INDEX\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "labelWhitelist"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  }
             }
       }
 }

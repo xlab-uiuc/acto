@@ -9,6 +9,7 @@ import (
 )
 
 // Find the control flow dominees of a block
+// branch: true if the dominees are the blocks that are dominated by the true branch of the if statement
 func BlockDominees(context *Context, bb *ssa.BasicBlock, branch bool) (dominees []*ssa.BasicBlock) {
 	fn := bb.Parent()
 	pd, ok := context.PostDominators[fn]

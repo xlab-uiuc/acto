@@ -447,6 +447,7 @@ func HandleStructField(context *Context, originalTaintedStructValue *TaintedStru
 	ret = make(map[ssa.Value]bool)
 
 	handledPhiMap := make(map[*ssa.Phi]map[ssa.Value]bool) // phi -> set of handled edges
+	handledRetMap := make(map[ssa.Value]bool)
 	worklist := []*TaintedStructValue{originalTaintedStructValue}
 	for len(worklist) > 0 {
 		taintedStructValue := worklist[len(worklist)-1]
@@ -594,18 +595,22 @@ func HandleStructField(context *Context, originalTaintedStructValue *TaintedStru
 						if callSiteReturnValue := inEdge.Site.Value(); callSiteReturnValue != nil {
 							if typedInst.Parent().Signature.Results().Len() > 1 {
 								for _, tainted := range getExtractTaint(callSiteReturnValue, returnSet) {
+									if _, ok := handledRetMap[tainted]; ok {
+										newTaintedStructValue := TaintedStructValue{
+											Value: tainted,
+											Path:  taintedStructValue.Path,
+										}
+										worklist = append(worklist, &newTaintedStructValue)
+									}
+								}
+							} else {
+								if _, ok := handledRetMap[callSiteReturnValue]; ok {
 									newTaintedStructValue := TaintedStructValue{
-										Value: tainted,
+										Value: callSiteReturnValue,
 										Path:  taintedStructValue.Path,
 									}
 									worklist = append(worklist, &newTaintedStructValue)
 								}
-							} else {
-								newTaintedStructValue := TaintedStructValue{
-									Value: callSiteReturnValue,
-									Path:  taintedStructValue.Path,
-								}
-								worklist = append(worklist, &newTaintedStructValue)
 							}
 						}
 					}

@@ -426,6 +426,7 @@ class Acto:
                  num_workers: int,
                  num_cases: int,
                  dryrun: bool,
+                 analysis_only: bool,
                  mount: list = None) -> None:
         logger = get_thread_logger(with_prefix=False)
 
@@ -470,7 +471,7 @@ class Acto:
         # generate configuration files for the cluster runtime
         self.cluster.configure_cluster(4, CONST.K8S_VERSION)
 
-        self.__learn(context_file=context_file, helper_crd=helper_crd)
+        self.__learn(context_file=context_file, helper_crd=helper_crd, analysis_only=analysis_only)
 
         self.context['enable_analysis'] = enable_analysis
 
@@ -501,13 +502,34 @@ class Acto:
         with open(os.path.join(self.workdir_path, 'test_plan.json'), 'w') as plan_file:
             json.dump(self.test_plan, plan_file, cls=ActoEncoder, indent=4)
 
-    def __learn(self, context_file, helper_crd):
+    def __learn(self, context_file, helper_crd, analysis_only=False):
         logger = get_thread_logger(with_prefix=False)
 
         if os.path.exists(context_file):
+            logger.info('Loading context from file')
             with open(context_file, 'r') as context_fin:
                 self.context = json.load(context_fin)
                 self.context['preload_images'] = set(self.context['preload_images'])
+
+            if analysis_only and self.operator_config.analysis != None:
+                logger.info('Only run learning analysis')
+                with tempfile.TemporaryDirectory() as project_src:
+                    subprocess.run(
+                        ['git', 'clone', self.operator_config.analysis.github_link, project_src])
+                    subprocess.run([
+                        'git', '-C', project_src, 'checkout', self.operator_config.analysis.commit
+                    ])
+
+                    if self.operator_config.analysis.entrypoint != None:
+                        entrypoint_path = os.path.join(project_src,
+                                                    self.operator_config.analysis.entrypoint)
+                    else:
+                        entrypoint_path = project_src
+                    self.context['analysis_result'] = analyze(entrypoint_path,
+                                                            self.operator_config.analysis.type,
+                                                            self.operator_config.analysis.package)
+                with open(context_file, 'w') as context_fout:
+                    json.dump(self.context, context_fout, cls=ContextEncoder, indent=6)
         else:
             # Run learning run to collect some information from runtime
             logger.info('Starting learning run to collect information')
@@ -656,6 +678,8 @@ if __name__ == '__main__':
                         dest='notify_crash',
                         action='store_true',
                         help='Submit a google form response to notify')
+    parser.add_argument('--learn-analysis', dest='learn_analysis_only', action='store_true', 
+                        help='Only learn analysis')
     parser.add_argument('--dryrun',
                         dest='dryrun',
                         action='store_true',
@@ -705,7 +729,7 @@ if __name__ == '__main__':
 
     start_time = datetime.now()
     acto = Acto(workdir_path, config, args.cluster_runtime, args.enable_analysis, args.preload_images, context_cache,
-                args.helper_crd, args.num_workers, args.num_cases, args.dryrun)
+                args.helper_crd, args.num_workers, args.num_cases, args.dryrun, args.learn_analysis_only)
     if not args.learn:
         acto.run()
     end_time = datetime.now()
