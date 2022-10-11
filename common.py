@@ -330,7 +330,7 @@ def save_result(trial_dir: str, trial_err: ErrorResult, num_tests: int, trial_el
         recovery_err = trial_err.recovery_err
         recovery_result_dict = {}
         recovery_result_dict['trial_num'] = result_dict['trial_num']
-        recovery_result_dict['delta'] = json.loads(recovery_err.delta.to_json())
+        recovery_result_dict['delta'] = json.loads(recovery_err.delta.to_json(default_mapping={datetime.datetime: lambda x: x.isoformat()}))
         recovery_result_dict['from'] = recovery_err.from_
         recovery_result_dict['to'] = recovery_err.to_
         recovery_err_path = os.path.join(trial_dir, 'recovery_result.json')
