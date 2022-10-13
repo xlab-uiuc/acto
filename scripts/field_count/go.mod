@@ -10,6 +10,7 @@ require (
 require github.com/jinzhu/copier v0.3.2 // indirect
 
 require (
+	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/goki/ki v1.1.8
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
