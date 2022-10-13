@@ -8,14 +8,25 @@ import pandas
 if __name__ == '__main__':
     result_folder = sys.argv[1]
     json_paths = glob.glob(os.path.join(result_folder, '*', 'post_result.json'))
+    recovery_paths = glob.glob(os.path.join(result_folder, '*', 'recovery_result.json'))
 
     with open(os.path.join(result_folder, 'result.csv'), 'w') as result_file:
         writer = csv.writer(result_file, delimiter=',')
         writer.writerow([
-            'Trial number', 'Original Oracle type', 'Original Message', 'Post Input path',
+            'Trial number', 'Original Oracle type', 'Original Message', 'Original Input path',
             'Post Oracle type', 'Post Message', 'Post Input path', 'True/False alarm', 'Category',
             'Comment'
         ])
+
+        for recovery_path in recovery_paths:
+            with open(recovery_path, 'r') as recovery_file:
+                recovery_result = json.load(recovery_file)
+
+                writer.writerow([
+                    '%s' % recovery_path, 'Recovery',
+                    '%s' % recovery_result['delta'], '', 'Recovery',
+                    '%s' % recovery_result['delta'], ''
+                ])
 
         for json_path in json_paths:
             with open(json_path, 'r') as json_file:
