@@ -488,15 +488,6 @@ class Acto:
             for custom_field in module.custom_fields:
                 self.input_model.apply_custom_field(custom_field)
 
-        # Build an archive to be preloaded
-        if len(self.context['preload_images']) > 0:
-            logger.info('Creating preload images archive')
-            # first make sure images are present locally
-            for image in self.context['preload_images']:
-                subprocess.run(['docker', 'pull', image])
-            subprocess.run(['docker', 'image', 'save', '-o', self.images_archive] +
-                           list(self.context['preload_images']))
-
         # Generate test cases
         self.test_plan = self.input_model.generate_test_plan()
         with open(os.path.join(self.workdir_path, 'test_plan.json'), 'w') as plan_file:
@@ -571,10 +562,19 @@ class Acto:
                                                               self.operator_config.analysis.type,
                                                               self.operator_config.analysis.package)
             with open(context_file, 'w') as context_fout:
-                json.dump(self.context, context_fout, cls=ContextEncoder, indent=6)
+                json.dump(self.context, context_fout, cls=ContextEncoder, indent=6, sort_keys=True)
 
     def run(self):
         logger = get_thread_logger(with_prefix=False)
+
+        # Build an archive to be preloaded
+        if len(self.context['preload_images']) > 0:
+            logger.info('Creating preload images archive')
+            # first make sure images are present locally
+            for image in self.context['preload_images']:
+                subprocess.run(['docker', 'pull', image])
+            subprocess.run(['docker', 'image', 'save', '-o', self.images_archive] +
+                           list(self.context['preload_images']))
 
         threads = []
         for i in range(self.num_workers):

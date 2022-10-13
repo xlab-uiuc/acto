@@ -62,11 +62,12 @@ func NewCallStack() *CallStack {
 }
 
 type Context struct {
-	Program        *ssa.Program
-	MainPackages   []*ssa.Package
-	RootModule     *packages.Module
-	CallGraph      *callgraph.Graph
-	PostDominators map[*ssa.Function]*PostDominator
+	Program                *ssa.Program
+	MainPackages           []*ssa.Package
+	RootModule             *packages.Module
+	CallGraph              *callgraph.Graph
+	PostDominators         map[*ssa.Function]*PostDominator
+	FieldDataDependencyMap map[string]*util.FieldSet // map's key's value depends on value
 
 	ValueFieldMap       map[ssa.Value]*util.FieldSet
 	FieldToValueMap     map[string]*[]ssa.Value

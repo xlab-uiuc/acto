@@ -569,8 +569,121 @@
                         "root",
                         "spec",
                         "prometheus",
+                        "port"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "automationConfig"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "prometheus",
+                        "passwordSecretRef",
+                        "name"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "prometheus"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "security",
+                        "tls",
+                        "caConfigMapRef",
+                        "name"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "prometheus",
                         "tlsSecretKeyRef",
                         "name"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "security",
+                        "tls",
+                        "enabled"
+                  ],
+                  [
+                        "root",
+                        "kind"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "users",
+                        "INDEX",
+                        "roles",
+                        "INDEX",
+                        "db"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "security",
+                        "roles"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "prometheus",
+                        "passwordSecretRef",
+                        "key"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "security",
+                        "tls",
+                        "certificateKeySecretRef",
+                        "name"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "featureCompatibilityVersion"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "arbiters"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "security",
+                        "authentication",
+                        "modes",
+                        "INDEX"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "security",
+                        "tls",
+                        "caCertificateSecretRef",
+                        "name"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "automationConfig",
+                        "processes",
+                        "INDEX",
+                        "disabled"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "automationConfig",
+                        "processes",
+                        "INDEX"
                   ],
                   [
                         "root",
@@ -589,33 +702,9 @@
                   [
                         "root",
                         "spec",
-                        "prometheus",
-                        "port"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "security",
-                        "tls",
-                        "enabled"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "prometheus",
-                        "passwordSecretRef",
-                        "key"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "prometheus"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "security",
-                        "roles"
+                        "users",
+                        "INDEX",
+                        "name"
                   ],
                   [
                         "root",
@@ -627,18 +716,21 @@
                   [
                         "root",
                         "spec",
-                        "security",
-                        "tls",
-                        "certificateKeySecretRef",
+                        "automationConfig",
+                        "processes",
+                        "INDEX",
                         "name"
                   ],
                   [
                         "root",
                         "spec",
-                        "security",
-                        "tls",
-                        "caCertificateSecretRef",
-                        "name"
+                        "replicaSetHorizons"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "automationConfig",
+                        "processes"
                   ],
                   [
                         "root",
@@ -646,36 +738,13 @@
                         "security",
                         "tls",
                         "optional"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "security",
-                        "authentication",
-                        "modes",
-                        "INDEX"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "prometheus",
-                        "passwordSecretRef",
-                        "name"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "security",
-                        "tls",
-                        "caConfigMapRef",
-                        "name"
                   ]
             ],
             "default_value_map": {
                   "[\"root\",\"spec\",\"users\",\"INDEX\",\"db\"]": "\"admin\""
             },
             "field_conditions_map": {
-                  "[\"spec\", \"automationConfig\", \"processes\", \"INDEX\", \"disabled\"]": {
+                  "[\"spec\", \"automationConfig\", \"processes\", \"INDEX\", \"name\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -693,45 +762,7 @@
                               }
                         ]
                   },
-                  "[\"spec\", \"prometheus\", \"passwordSecretRef\", \"name\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "prometheus"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"security\", \"tls\", \"optional\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "security",
-                                                      "tls",
-                                                      "enabled"
-                                                ],
-                                                "op": "==",
-                                                "value": true
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"automationConfig\", \"processes\", \"INDEX\"]": {
+                  "[\"spec\", \"automationConfig\", \"processes\", \"INDEX\", \"disabled\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -767,7 +798,7 @@
                               }
                         ]
                   },
-                  "[\"spec\", \"automationConfig\"]": {
+                  "[\"spec\", \"automationConfig\", \"processes\", \"INDEX\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -785,7 +816,45 @@
                               }
                         ]
                   },
-                  "[\"spec\", \"automationConfig\", \"processes\", \"INDEX\", \"name\"]": {
+                  "[\"spec\", \"security\", \"tls\", \"optional\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "security",
+                                                      "tls",
+                                                      "enabled"
+                                                ],
+                                                "op": "==",
+                                                "value": true
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"prometheus\", \"passwordSecretRef\", \"name\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "prometheus"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"automationConfig\"]": {
                         "type": "AND",
                         "conditions": [
                               {

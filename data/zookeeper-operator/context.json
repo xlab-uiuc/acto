@@ -4913,13 +4913,51 @@
                   [
                         "root",
                         "spec",
-                        "storageType"
+                        "initContainers"
                   ],
                   [
                         "root",
                         "spec",
                         "pod",
-                        "labels"
+                        "resources",
+                        "limits"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "ports",
+                        "INDEX",
+                        "name"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "probes",
+                        "readinessProbe",
+                        "timeoutSeconds"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pod",
+                        "annotations"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pod",
+                        "serviceAccountName"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "ports"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pod",
+                        "tolerations"
                   ],
                   [
                         "root",
@@ -4930,13 +4968,202 @@
                   [
                         "root",
                         "spec",
+                        "probes",
+                        "readinessProbe"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pod",
+                        "nodeSelector"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "ports",
+                        "INDEX",
+                        "containerPort"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pod",
+                        "resources",
+                        "requests"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pod",
+                        "labels"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "probes",
+                        "livenessProbe",
+                        "initialDelaySeconds"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "persistence",
+                        "annotations"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pod",
+                        "affinity"
+                  ],
+                  [
+                        "root",
+                        "spec",
                         "triggerRollingRestart"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "probes",
+                        "readinessProbe",
+                        "periodSeconds"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "probes",
+                        "livenessProbe"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "probes",
+                        "livenessProbe",
+                        "failureThreshold"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "probes",
+                        "readinessProbe",
+                        "initialDelaySeconds"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pod",
+                        "securityContext"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "persistence"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "ports",
+                        "INDEX"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "ephemeral",
+                        "emptydirvolumesource"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "probes",
+                        "livenessProbe",
+                        "timeoutSeconds"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "persistence",
+                        "spec"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "storageType"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "probes",
+                        "livenessProbe",
+                        "periodSeconds"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "probes",
+                        "readinessProbe",
+                        "failureThreshold"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "ephemeral"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "probes",
+                        "readinessProbe",
+                        "successThreshold"
                   ],
                   [
                         "root",
                         "spec",
                         "adminServerService",
                         "external"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pod",
+                        "terminationGracePeriodSeconds"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "image",
+                        "pullPolicy"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "probes"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pod",
+                        "resources"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pod",
+                        "imagePullSecrets"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "persistence",
+                        "spec",
+                        "resources",
+                        "requests"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "persistence",
+                        "spec",
+                        "accessModes"
                   ]
             ],
             "default_value_map": {
@@ -4969,43 +5196,7 @@
                   "[\"root\",\"spec\",\"storageType\"]": "\"persistence\""
             },
             "field_conditions_map": {
-                  "[\"spec\", \"initContainers\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "initContainers"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"persistence\", \"spec\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "storageType"
-                                                ],
-                                                "op": "!=",
-                                                "value": "\"ephemeral\""
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"pod\", \"imagePullSecrets\"]": {
+                  "[\"spec\", \"pod\", \"resources\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -5015,10 +5206,11 @@
                                                 "field": [
                                                       "spec",
                                                       "pod",
-                                                      "serviceAccountName"
+                                                      "resources",
+                                                      "requests"
                                                 ],
                                                 "op": "!=",
-                                                "value": "\"default\""
+                                                "value": null
                                           }
                                     ]
                               }
@@ -5042,7 +5234,7 @@
                               }
                         ]
                   },
-                  "[\"spec\", \"pod\", \"resources\"]": {
+                  "[\"spec\", \"persistence\", \"annotations\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -5051,18 +5243,16 @@
                                           {
                                                 "field": [
                                                       "spec",
-                                                      "pod",
-                                                      "resources",
-                                                      "requests"
+                                                      "storageType"
                                                 ],
                                                 "op": "!=",
-                                                "value": null
+                                                "value": "\"ephemeral\""
                                           }
                                     ]
                               }
                         ]
                   },
-                  "[\"spec\", \"persistence\", \"annotations\"]": {
+                  "[\"spec\", \"persistence\", \"spec\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -5093,6 +5283,43 @@
                                                 ],
                                                 "op": "!=",
                                                 "value": "\"\""
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"pod\", \"imagePullSecrets\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "pod",
+                                                      "serviceAccountName"
+                                                ],
+                                                "op": "!=",
+                                                "value": "\"default\""
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"initContainers\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "initContainers"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
                                           }
                                     ]
                               }

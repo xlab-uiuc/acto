@@ -3043,15 +3043,194 @@
             }
       },
       "preload_images": [
-            "quay.io/opstree/redis:v6.2.5",
             "quay.io/opstree/redis-exporter:1.0",
+            "quay.io/opstree/redis:v6.2.5",
             "docker.io/matt12313/redis-operator:v0.10.0"
       ],
       "analysis_result": {
             "control_flow_fields": [
                   [
                         "root",
+                        "spec",
+                        "redisLeader",
+                        "livenessProbe"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "kubernetesConfig",
+                        "redisSecret",
+                        "name"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "sidecars",
+                        "INDEX",
+                        "name"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "kubernetesConfig",
+                        "resources"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "redisExporter",
+                        "resources"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "kubernetesConfig",
+                        "redisSecret"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "storage",
+                        "volumeClaimTemplate"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "redisExporter",
+                        "image"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "redisFollower",
+                        "affinity"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "redisLeader",
+                        "pdb",
+                        "minAvailable"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "redisExporter"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "TLS"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "redisExporter",
+                        "enabled"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "kubernetesConfig",
+                        "image"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "redisExporter",
+                        "env"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "priorityClassName"
+                  ],
+                  [
+                        "root",
                         "apiVersion"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "redisFollower",
+                        "readinessProbe"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "redisExporter",
+                        "imagePullPolicy"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "redisLeader",
+                        "redisConfig"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "kubernetesConfig",
+                        "redisSecret",
+                        "key"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "tolerations"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "redisLeader",
+                        "pdb"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "redisLeader",
+                        "affinity"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "redisLeader",
+                        "readinessProbe"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "TLS",
+                        "secret",
+                        "secretName"
+                  ],
+                  [
+                        "root",
+                        "kind"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "storage"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "kubernetesConfig",
+                        "imagePullPolicy"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "redisLeader",
+                        "pdb",
+                        "maxUnavailable"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "redisFollower",
+                        "redisConfig"
                   ],
                   [
                         "root",
@@ -3062,18 +3241,62 @@
                   ],
                   [
                         "root",
-                        "kind"
+                        "spec",
+                        "redisLeader",
+                        "redisConfig",
+                        "additionalRedisConfig"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "redisFollower",
+                        "redisConfig",
+                        "additionalRedisConfig"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "securityContext"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "nodeSelector"
                   ],
                   [
                         "root",
                         "spec",
                         "TLS",
                         "key"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "kubernetesConfig",
+                        "imagePullSecrets"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "TLS",
+                        "ca"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "TLS",
+                        "cert"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "redisFollower",
+                        "livenessProbe"
                   ]
             ],
             "default_value_map": {},
             "field_conditions_map": {
-                  "[\"spec\", \"redisExporter\", \"image\"]": {
+                  "[\"spec\", \"redisLeader\", \"pdb\", \"minAvailable\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -3082,7 +3305,57 @@
                                           {
                                                 "field": [
                                                       "spec",
-                                                      "redisExporter"
+                                                      "redisLeader",
+                                                      "pdb"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              },
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "redisLeader",
+                                                      "pdb",
+                                                      "enabled"
+                                                ],
+                                                "op": "==",
+                                                "value": true
+                                          }
+                                    ]
+                              },
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "redisLeader",
+                                                      "pdb",
+                                                      "minAvailable"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"redisLeader\", \"pdb\", \"enabled\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "redisLeader",
+                                                      "pdb"
                                                 ],
                                                 "op": "!=",
                                                 "value": null
@@ -3110,7 +3383,7 @@
                               }
                         ]
                   },
-                  "[\"spec\", \"kubernetesConfig\", \"imagePullSecrets\"]": {
+                  "[\"spec\", \"redisExporter\", \"env\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -3119,8 +3392,21 @@
                                           {
                                                 "field": [
                                                       "spec",
-                                                      "kubernetesConfig",
-                                                      "imagePullSecrets"
+                                                      "redisExporter",
+                                                      "env"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              },
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "redisExporter"
                                                 ],
                                                 "op": "!=",
                                                 "value": null
@@ -3129,7 +3415,7 @@
                               }
                         ]
                   },
-                  "[\"spec\", \"redisExporter\", \"enabled\"]": {
+                  "[\"spec\", \"redisExporter\", \"image\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -3166,42 +3452,9 @@
                               }
                         ]
                   },
-                  "[\"spec\", \"TLS\"]": {
+                  "[\"spec\", \"redisLeader\", \"pdb\", \"maxUnavailable\"]": {
                         "type": "AND",
                         "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "TLS"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"redisLeader\", \"pdb\", \"minAvailable\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "redisLeader",
-                                                      "pdb",
-                                                      "minAvailable"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              },
                               {
                                     "type": "OR",
                                     "conditions": [
@@ -3224,18 +3477,14 @@
                                                 "field": [
                                                       "spec",
                                                       "redisLeader",
-                                                      "pdb"
+                                                      "pdb",
+                                                      "maxUnavailable"
                                                 ],
                                                 "op": "!=",
                                                 "value": null
                                           }
                                     ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"redisLeader\", \"pdb\", \"enabled\"]": {
-                        "type": "AND",
-                        "conditions": [
+                              },
                               {
                                     "type": "OR",
                                     "conditions": [
@@ -3244,61 +3493,6 @@
                                                       "spec",
                                                       "redisLeader",
                                                       "pdb"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"storage\", \"volumeClaimTemplate\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "storage"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"TLS\", \"secret\", \"secretName\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "TLS"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"kubernetesConfig\", \"redisSecret\", \"key\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "kubernetesConfig",
-                                                      "redisSecret"
                                                 ],
                                                 "op": "!=",
                                                 "value": null
@@ -3339,6 +3533,42 @@
                               }
                         ]
                   },
+                  "[\"spec\", \"storage\", \"volumeClaimTemplate\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "storage"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"redisExporter\", \"enabled\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "redisExporter"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
                   "[\"spec\", \"redisExporter\", \"imagePullPolicy\"]": {
                         "type": "AND",
                         "conditions": [
@@ -3357,7 +3587,7 @@
                               }
                         ]
                   },
-                  "[\"spec\", \"redisLeader\", \"pdb\", \"maxUnavailable\"]": {
+                  "[\"spec\", \"kubernetesConfig\", \"redisSecret\", \"key\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -3366,38 +3596,8 @@
                                           {
                                                 "field": [
                                                       "spec",
-                                                      "redisLeader",
-                                                      "pdb",
-                                                      "enabled"
-                                                ],
-                                                "op": "==",
-                                                "value": true
-                                          }
-                                    ]
-                              },
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "redisLeader",
-                                                      "pdb"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              },
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "redisLeader",
-                                                      "pdb",
-                                                      "maxUnavailable"
+                                                      "kubernetesConfig",
+                                                      "redisSecret"
                                                 ],
                                                 "op": "!=",
                                                 "value": null
@@ -3406,7 +3606,7 @@
                               }
                         ]
                   },
-                  "[\"spec\", \"redisExporter\", \"env\"]": {
+                  "[\"spec\", \"kubernetesConfig\", \"imagePullSecrets\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -3415,21 +3615,44 @@
                                           {
                                                 "field": [
                                                       "spec",
-                                                      "redisExporter",
-                                                      "env"
+                                                      "kubernetesConfig",
+                                                      "imagePullSecrets"
                                                 ],
                                                 "op": "!=",
                                                 "value": null
                                           }
                                     ]
-                              },
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"TLS\"]": {
+                        "type": "AND",
+                        "conditions": [
                               {
                                     "type": "OR",
                                     "conditions": [
                                           {
                                                 "field": [
                                                       "spec",
-                                                      "redisExporter"
+                                                      "TLS"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"TLS\", \"secret\", \"secretName\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "TLS"
                                                 ],
                                                 "op": "!=",
                                                 "value": null

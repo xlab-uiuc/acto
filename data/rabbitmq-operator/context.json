@@ -6146,11 +6146,116 @@
             }
       },
       "preload_images": [
-            "docker.io/library/rabbitmq:3.8.21-management",
-            "docker.io/rabbitmqoperator/cluster-operator:1.10.0"
+            "docker.io/rabbitmqoperator/cluster-operator:1.10.0",
+            "docker.io/library/rabbitmq:3.8.21-management"
       ],
       "analysis_result": {
             "control_flow_fields": [
+                  [
+                        "root",
+                        "spec",
+                        "tls",
+                        "caSecretName"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet",
+                        "spec",
+                        "podManagementPolicy"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet",
+                        "spec",
+                        "updateStrategy"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "imagePullSecrets"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "image"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "tls",
+                        "secretName"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "affinity"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "resources",
+                        "limits"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "tls",
+                        "disableNonTLSListeners"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet",
+                        "spec",
+                        "serviceName"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet",
+                        "spec",
+                        "replicas"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "skipPostDeploySteps"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "tls"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "persistence",
+                        "storageClassName"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet",
+                        "spec",
+                        "selector"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet",
+                        "spec",
+                        "template",
+                        "metadata",
+                        "name"
+                  ],
                   [
                         "root",
                         "spec",
@@ -6160,7 +6265,29 @@
                   [
                         "root",
                         "spec",
-                        "skipPostDeploySteps"
+                        "resources"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "tolerations"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "override",
+                        "statefulSet",
+                        "spec",
+                        "template",
+                        "spec",
+                        "securityContext"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "secretBackend",
+                        "vault",
+                        "defaultUserUpdaterImage"
                   ],
                   [
                         "root",
@@ -6171,23 +6298,82 @@
                         "template",
                         "spec",
                         "initContainers"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "override",
-                        "statefulSet",
-                        "spec",
-                        "template",
-                        "spec",
-                        "containers",
-                        "INDEX",
-                        "name"
                   ]
             ],
             "default_value_map": {},
             "field_conditions_map": {
-                  "[\"spec\", \"override\", \"statefulSet\", \"spec\", \"template\", \"spec\", \"initContainers\", \"INDEX\", \"securityContext\"]": {
+                  "[\"spec\", \"secretBackend\", \"vault\", \"tls\", \"commonName\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "secretBackend",
+                                                      "vault",
+                                                      "tls",
+                                                      "pkiIssuerPath"
+                                                ],
+                                                "op": "!=",
+                                                "value": "\"\""
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"override\", \"statefulSet\", \"spec\", \"selector\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "override",
+                                                      "statefulSet",
+                                                      "spec"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              },
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "override",
+                                                      "statefulSet"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              },
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "override",
+                                                      "statefulSet",
+                                                      "spec",
+                                                      "selector"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"override\", \"statefulSet\", \"spec\", \"template\", \"spec\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -6240,7 +6426,61 @@
                               }
                         ]
                   },
-                  "[\"spec\", \"override\", \"statefulSet\", \"spec\", \"serviceName\"]": {
+                  "[\"spec\", \"secretBackend\", \"vault\", \"defaultUserUpdaterImage\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "secretBackend",
+                                                      "vault",
+                                                      "defaultUserUpdaterImage"
+                                                ],
+                                                "op": "!=",
+                                                "value": "\"\""
+                                          }
+                                    ]
+                              },
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "secretBackend",
+                                                      "vault",
+                                                      "defaultUserUpdaterImage"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"service\", \"annotations\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "service",
+                                                      "annotations"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"override\", \"statefulSet\", \"spec\", \"template\", \"spec\", \"initContainers\", \"INDEX\", \"securityContext\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -6250,7 +6490,9 @@
                                                 "field": [
                                                       "spec",
                                                       "override",
-                                                      "statefulSet"
+                                                      "statefulSet",
+                                                      "spec",
+                                                      "template"
                                                 ],
                                                 "op": "!=",
                                                 "value": null
@@ -6266,6 +6508,272 @@
                                                       "override",
                                                       "statefulSet",
                                                       "spec"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              },
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "override",
+                                                      "statefulSet",
+                                                      "spec",
+                                                      "template",
+                                                      "spec"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"secretBackend\", \"vault\", \"annotations\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "secretBackend",
+                                                      "vault"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"override\", \"statefulSet\", \"spec\", \"template\", \"metadata\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "override",
+                                                      "statefulSet",
+                                                      "spec"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"override\", \"statefulSet\", \"spec\", \"template\", \"metadata\", \"name\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "override",
+                                                      "statefulSet",
+                                                      "spec"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              },
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "override",
+                                                      "statefulSet",
+                                                      "spec",
+                                                      "template",
+                                                      "metadata",
+                                                      "name"
+                                                ],
+                                                "op": "!=",
+                                                "value": "\"\""
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "override",
+                                                      "statefulSet",
+                                                      "spec",
+                                                      "volumeClaimTemplates",
+                                                      "INDEX",
+                                                      "metadata",
+                                                      "name"
+                                                ],
+                                                "op": "!=",
+                                                "value": "\"\""
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"override\", \"statefulSet\", \"spec\", \"template\", \"spec\", \"initContainers\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "override",
+                                                      "statefulSet",
+                                                      "spec",
+                                                      "template",
+                                                      "spec"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              },
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "override",
+                                                      "statefulSet",
+                                                      "spec",
+                                                      "template"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              },
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "override",
+                                                      "statefulSet",
+                                                      "spec"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"secretBackend\", \"vault\", \"tls\", \"pkiIssuerPath\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "secretBackend",
+                                                      "vault",
+                                                      "tls",
+                                                      "pkiIssuerPath"
+                                                ],
+                                                "op": "!=",
+                                                "value": "\"\""
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"override\", \"statefulSet\", \"spec\", \"podManagementPolicy\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "override",
+                                                      "statefulSet",
+                                                      "spec"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              },
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "override",
+                                                      "statefulSet",
+                                                      "spec",
+                                                      "podManagementPolicy"
+                                                ],
+                                                "op": "!=",
+                                                "value": "\"\""
+                                          }
+                                    ]
+                              },
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "override",
+                                                      "statefulSet"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"override\", \"statefulSet\", \"spec\", \"serviceName\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "override",
+                                                      "statefulSet",
+                                                      "spec"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              },
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "override",
+                                                      "statefulSet"
                                                 ],
                                                 "op": "!=",
                                                 "value": null
@@ -6290,7 +6798,7 @@
                               }
                         ]
                   },
-                  "[\"spec\", \"override\", \"statefulSet\", \"spec\", \"volumeClaimTemplates\"]": {
+                  "[\"spec\", \"tls\", \"caSecretName\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -6299,23 +6807,27 @@
                                           {
                                                 "field": [
                                                       "spec",
-                                                      "override",
-                                                      "statefulSet"
+                                                      "tls",
+                                                      "secretName"
                                                 ],
                                                 "op": "!=",
-                                                "value": null
+                                                "value": "\"\""
                                           }
                                     ]
-                              },
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"secretBackend\", \"vault\", \"role\"]": {
+                        "type": "AND",
+                        "conditions": [
                               {
                                     "type": "OR",
                                     "conditions": [
                                           {
                                                 "field": [
                                                       "spec",
-                                                      "override",
-                                                      "statefulSet",
-                                                      "spec"
+                                                      "secretBackend",
+                                                      "vault"
                                                 ],
                                                 "op": "!=",
                                                 "value": null
@@ -6324,57 +6836,7 @@
                               }
                         ]
                   },
-                  "[\"spec\", \"override\", \"statefulSet\", \"spec\", \"updateStrategy\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "override",
-                                                      "statefulSet",
-                                                      "spec",
-                                                      "updateStrategy"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              },
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "override",
-                                                      "statefulSet"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              },
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "override",
-                                                      "statefulSet",
-                                                      "spec"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"override\", \"statefulSet\", \"spec\", \"selector\"]": {
+                  "[\"spec\", \"override\", \"statefulSet\", \"spec\", \"volumeClaimTemplates\", \"INDEX\", \"metadata\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -6386,36 +6848,6 @@
                                                       "override",
                                                       "statefulSet",
                                                       "spec"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              },
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "override",
-                                                      "statefulSet",
-                                                      "spec",
-                                                      "selector"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              },
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "override",
-                                                      "statefulSet"
                                                 ],
                                                 "op": "!=",
                                                 "value": null
@@ -6475,7 +6907,7 @@
                               }
                         ]
                   },
-                  "[\"spec\", \"service\", \"annotations\"]": {
+                  "[\"spec\", \"override\", \"statefulSet\", \"spec\", \"updateStrategy\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -6484,8 +6916,39 @@
                                           {
                                                 "field": [
                                                       "spec",
-                                                      "service",
-                                                      "annotations"
+                                                      "override",
+                                                      "statefulSet",
+                                                      "spec"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              },
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "override",
+                                                      "statefulSet"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              },
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "override",
+                                                      "statefulSet",
+                                                      "spec",
+                                                      "updateStrategy"
                                                 ],
                                                 "op": "!=",
                                                 "value": null
@@ -6494,7 +6957,7 @@
                               }
                         ]
                   },
-                  "[\"spec\", \"secretBackend\", \"vault\", \"tls\", \"ipSans\"]": {
+                  "[\"spec\", \"secretBackend\", \"vault\", \"defaultUserPath\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -6505,91 +6968,13 @@
                                                       "spec",
                                                       "secretBackend",
                                                       "vault",
-                                                      "tls",
-                                                      "pkiIssuerPath"
+                                                      "defaultUserPath"
                                                 ],
                                                 "op": "!=",
                                                 "value": "\"\""
                                           }
                                     ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"override\", \"statefulSet\", \"spec\", \"template\", \"spec\", \"initContainers\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "override",
-                                                      "statefulSet",
-                                                      "spec"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
                               },
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "override",
-                                                      "statefulSet",
-                                                      "spec",
-                                                      "template",
-                                                      "spec"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              },
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "override",
-                                                      "statefulSet",
-                                                      "spec",
-                                                      "template"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"tls\", \"secretName\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "tls",
-                                                      "secretName"
-                                                ],
-                                                "op": "!=",
-                                                "value": "\"\""
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"secretBackend\", \"vault\", \"role\"]": {
-                        "type": "AND",
-                        "conditions": [
                               {
                                     "type": "OR",
                                     "conditions": [
@@ -6606,7 +6991,7 @@
                               }
                         ]
                   },
-                  "[\"spec\", \"override\", \"statefulSet\", \"spec\", \"template\", \"spec\"]": {
+                  "[\"spec\", \"override\", \"statefulSet\", \"spec\", \"replicas\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -6617,22 +7002,6 @@
                                                       "spec",
                                                       "override",
                                                       "statefulSet",
-                                                      "spec",
-                                                      "template"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              },
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "override",
-                                                      "statefulSet",
                                                       "spec"
                                                 ],
                                                 "op": "!=",
@@ -6647,10 +7016,23 @@
                                                 "field": [
                                                       "spec",
                                                       "override",
+                                                      "statefulSet"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              },
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "override",
                                                       "statefulSet",
                                                       "spec",
-                                                      "template",
-                                                      "spec"
+                                                      "replicas"
                                                 ],
                                                 "op": "!=",
                                                 "value": null
@@ -6659,7 +7041,7 @@
                               }
                         ]
                   },
-                  "[\"spec\", \"override\", \"statefulSet\", \"spec\", \"volumeClaimTemplates\", \"INDEX\", \"metadata\"]": {
+                  "[\"spec\", \"override\", \"statefulSet\", \"spec\", \"volumeClaimTemplates\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -6669,27 +7051,7 @@
                                                 "field": [
                                                       "spec",
                                                       "override",
-                                                      "statefulSet",
-                                                      "spec"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"override\", \"service\", \"spec\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "override",
-                                                      "service"
+                                                      "statefulSet"
                                                 ],
                                                 "op": "!=",
                                                 "value": null
@@ -6703,7 +7065,7 @@
                                                 "field": [
                                                       "spec",
                                                       "override",
-                                                      "service",
+                                                      "statefulSet",
                                                       "spec"
                                                 ],
                                                 "op": "!=",
@@ -6765,7 +7127,7 @@
                               }
                         ]
                   },
-                  "[\"spec\", \"override\", \"statefulSet\", \"spec\", \"podManagementPolicy\"]": {
+                  "[\"spec\", \"override\", \"statefulSet\", \"spec\", \"volumeClaimTemplates\", \"INDEX\", \"spec\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -6775,7 +7137,8 @@
                                                 "field": [
                                                       "spec",
                                                       "override",
-                                                      "statefulSet"
+                                                      "statefulSet",
+                                                      "spec"
                                                 ],
                                                 "op": "!=",
                                                 "value": null
@@ -6789,24 +7152,7 @@
                                                 "field": [
                                                       "spec",
                                                       "override",
-                                                      "statefulSet",
-                                                      "spec",
-                                                      "podManagementPolicy"
-                                                ],
-                                                "op": "!=",
-                                                "value": "\"\""
-                                          }
-                                    ]
-                              },
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "override",
-                                                      "statefulSet",
-                                                      "spec"
+                                                      "statefulSet"
                                                 ],
                                                 "op": "!=",
                                                 "value": null
@@ -6826,8 +7172,7 @@
                                                       "spec",
                                                       "override",
                                                       "statefulSet",
-                                                      "spec",
-                                                      "template"
+                                                      "spec"
                                                 ],
                                                 "op": "!=",
                                                 "value": null
@@ -6860,6 +7205,8 @@
                                                       "spec",
                                                       "override",
                                                       "statefulSet",
+                                                      "spec",
+                                                      "template",
                                                       "spec"
                                                 ],
                                                 "op": "!=",
@@ -6876,8 +7223,7 @@
                                                       "override",
                                                       "statefulSet",
                                                       "spec",
-                                                      "template",
-                                                      "spec"
+                                                      "template"
                                                 ],
                                                 "op": "!=",
                                                 "value": null
@@ -6886,7 +7232,7 @@
                               }
                         ]
                   },
-                  "[\"spec\", \"override\", \"statefulSet\", \"spec\", \"volumeClaimTemplates\", \"INDEX\", \"spec\"]": {
+                  "[\"spec\", \"override\", \"service\", \"spec\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -6896,7 +7242,8 @@
                                                 "field": [
                                                       "spec",
                                                       "override",
-                                                      "statefulSet"
+                                                      "service",
+                                                      "spec"
                                                 ],
                                                 "op": "!=",
                                                 "value": null
@@ -6910,8 +7257,7 @@
                                                 "field": [
                                                       "spec",
                                                       "override",
-                                                      "statefulSet",
-                                                      "spec"
+                                                      "service"
                                                 ],
                                                 "op": "!=",
                                                 "value": null
@@ -6920,7 +7266,7 @@
                               }
                         ]
                   },
-                  "[\"spec\", \"secretBackend\", \"vault\", \"tls\", \"pkiIssuerPath\"]": {
+                  "[\"spec\", \"secretBackend\", \"vault\", \"tls\", \"ipSans\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -6941,238 +7287,7 @@
                               }
                         ]
                   },
-                  "[\"spec\", \"secretBackend\", \"vault\", \"defaultUserPath\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "secretBackend",
-                                                      "vault",
-                                                      "defaultUserPath"
-                                                ],
-                                                "op": "!=",
-                                                "value": "\"\""
-                                          }
-                                    ]
-                              },
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "secretBackend",
-                                                      "vault"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"secretBackend\", \"vault\", \"tls\", \"commonName\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "secretBackend",
-                                                      "vault",
-                                                      "tls",
-                                                      "pkiIssuerPath"
-                                                ],
-                                                "op": "!=",
-                                                "value": "\"\""
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"secretBackend\", \"vault\", \"defaultUserUpdaterImage\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "secretBackend",
-                                                      "vault",
-                                                      "defaultUserUpdaterImage"
-                                                ],
-                                                "op": "!=",
-                                                "value": "\"\""
-                                          }
-                                    ]
-                              },
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "secretBackend",
-                                                      "vault",
-                                                      "defaultUserUpdaterImage"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"override\", \"statefulSet\", \"spec\", \"template\", \"metadata\", \"name\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "override",
-                                                      "statefulSet",
-                                                      "spec",
-                                                      "template",
-                                                      "metadata",
-                                                      "name"
-                                                ],
-                                                "op": "!=",
-                                                "value": "\"\""
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "override",
-                                                      "statefulSet",
-                                                      "spec",
-                                                      "volumeClaimTemplates",
-                                                      "INDEX",
-                                                      "metadata",
-                                                      "name"
-                                                ],
-                                                "op": "!=",
-                                                "value": "\"\""
-                                          }
-                                    ]
-                              },
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "override",
-                                                      "statefulSet",
-                                                      "spec"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"override\", \"statefulSet\", \"spec\", \"template\", \"metadata\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "override",
-                                                      "statefulSet",
-                                                      "spec"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"override\", \"statefulSet\", \"spec\", \"replicas\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "override",
-                                                      "statefulSet"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              },
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "override",
-                                                      "statefulSet",
-                                                      "spec"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              },
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "override",
-                                                      "statefulSet",
-                                                      "spec",
-                                                      "replicas"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"secretBackend\", \"vault\", \"annotations\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "secretBackend",
-                                                      "vault"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"tls\", \"caSecretName\"]": {
+                  "[\"spec\", \"tls\", \"secretName\"]": {
                         "type": "AND",
                         "conditions": [
                               {

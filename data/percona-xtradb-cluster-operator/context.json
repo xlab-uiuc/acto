@@ -13383,13 +13383,18 @@
             }
       },
       "preload_images": [
-            "docker.io/percona/percona-xtradb-cluster-operator:1.11.0-logcollector",
-            "docker.io/percona/percona-xtradb-cluster-operator:1.11.0-haproxy",
             "docker.io/percona/percona-xtradb-cluster:8.0.27-18.1",
-            "docker.io/percona/percona-xtradb-cluster-operator:1.11.0"
+            "docker.io/percona/percona-xtradb-cluster-operator:1.11.0",
+            "docker.io/percona/percona-xtradb-cluster-operator:1.11.0-haproxy",
+            "docker.io/percona/percona-xtradb-cluster-operator:1.11.0-logcollector"
       ],
       "analysis_result": {
             "control_flow_fields": [
+                  [
+                        "root",
+                        "spec",
+                        "vaultSecretName"
+                  ],
                   [
                         "root",
                         "spec",
@@ -13400,70 +13405,46 @@
                   [
                         "root",
                         "spec",
-                        "pause"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "backup",
-                        "schedule",
-                        "INDEX",
-                        "schedule"
+                        "upgradeOptions",
+                        "apply"
                   ],
                   [
                         "root",
                         "spec",
                         "proxysql",
-                        "enabled"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "backup",
-                        "schedule",
-                        "INDEX",
-                        "storageName"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "logcollector",
-                        "enabled"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "platform"
+                        "size"
                   ],
                   [
                         "root",
                         "spec",
                         "haproxy",
-                        "enabled"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "updateStrategy"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "haproxy",
-                        "replicasServiceEnabled"
+                        "readinessProbes",
+                        "initialDelaySeconds"
                   ],
                   [
                         "root",
                         "spec",
                         "haproxy",
+                        "readinessDelaySec"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "externalTrafficPolicy"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
                         "livenessProbes",
-                        "periodSeconds"
+                        "initialDelaySeconds"
                   ],
                   [
                         "root",
                         "spec",
-                        "backup",
-                        "storages"
+                        "pxc",
+                        "livenessDelaySec"
                   ],
                   [
                         "root",
@@ -13473,35 +13454,51 @@
                   [
                         "root",
                         "spec",
-                        "pmm",
-                        "enabled"
+                        "pxc",
+                        "size"
                   ],
                   [
                         "root",
                         "spec",
                         "haproxy",
-                        "livenessProbes",
-                        "exec"
+                        "gracePeriod"
                   ],
                   [
                         "root",
                         "spec",
-                        "haproxy",
-                        "livenessProbes",
-                        "failureThreshold"
+                        "logcollector",
+                        "imagePullPolicy"
                   ],
                   [
                         "root",
                         "spec",
-                        "upgradeOptions",
-                        "versionServiceEndpoint"
+                        "pxc",
+                        "sslSecretName"
                   ],
                   [
                         "root",
                         "spec",
-                        "backup",
-                        "pitr",
-                        "enabled"
+                        "updateStrategy"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "containerSecurityContext"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "volumeSpec",
+                        "persistentVolumeClaim"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "volumeSpec",
+                        "persistentVolumeClaim"
                   ],
                   [
                         "root",
@@ -13513,39 +13510,383 @@
                   [
                         "root",
                         "spec",
-                        "haproxy",
-                        "livenessProbes",
-                        "initialDelaySeconds"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "upgradeOptions",
-                        "apply"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "haproxy",
-                        "livenessProbes",
-                        "exec",
-                        "command"
-                  ],
-                  [
-                        "root",
-                        "spec",
                         "proxysql",
-                        "livenessProbes",
-                        "exec",
-                        "command"
+                        "sidecarVolumes",
+                        "INDEX"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "sidecarVolumes",
+                        "INDEX"
                   ],
                   [
                         "root",
                         "spec",
                         "pxc",
+                        "sidecarVolumes",
+                        "INDEX"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "affinity"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "affinity"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "affinity"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pmm",
+                        "imagePullPolicy"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "imagePullPolicy"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "imagePullPolicy"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "imagePullPolicy"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "affinity",
+                        "advanced"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "affinity",
+                        "advanced"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "affinity",
+                        "advanced"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "sidecarPVCs",
+                        "INDEX"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "sidecarPVCs",
+                        "INDEX"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "sidecarPVCs",
+                        "INDEX"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
                         "livenessProbes",
-                        "exec",
-                        "command"
+                        "exec"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "tolerations"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "serviceAccountName"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "sidecars",
+                        "INDEX"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "sidecars",
+                        "INDEX"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "sidecars",
+                        "INDEX"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "serviceType"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "enabled"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "livenessProbes",
+                        "successThreshold"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "volumeSpec",
+                        "persistentVolumeClaim",
+                        "storageClassName"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "volumeSpec",
+                        "persistentVolumeClaim",
+                        "storageClassName"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "volumeSpec",
+                        "persistentVolumeClaim",
+                        "storageClassName"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pmm",
+                        "proxysqlParams"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "readinessProbes",
+                        "exec"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "readinessProbes",
+                        "exec"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "readinessProbes",
+                        "exec"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "envVarsSecret"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "sslInternalSecretName"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "backup",
+                        "image"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "podSecurityContext"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "readinessDelaySec"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "readinessDelaySec"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pmm",
+                        "enabled"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "logcollector",
+                        "enabled"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "volumeSpec",
+                        "persistentVolumeClaim"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "sslInternalSecretName"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "sslInternalSecretName"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "replicasServiceType"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pmm",
+                        "containerSecurityContext"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "affinity",
+                        "antiAffinityTopologyKey"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "affinity",
+                        "antiAffinityTopologyKey"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "affinity",
+                        "antiAffinityTopologyKey"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "nodeSelector"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "nodeSelector"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "nodeSelector"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "backup",
+                        "imagePullSecrets"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "expose",
+                        "enabled"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "sidecarPVCs",
+                        "INDEX",
+                        "metadata",
+                        "name"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "sidecarPVCs",
+                        "INDEX",
+                        "metadata",
+                        "name"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "sidecarPVCs",
+                        "INDEX",
+                        "metadata",
+                        "name"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "replicationChannels",
+                        "INDEX",
+                        "sourcesList",
+                        "INDEX"
                   ],
                   [
                         "root",
@@ -13556,9 +13897,138 @@
                   [
                         "root",
                         "spec",
+                        "proxysql",
+                        "loadBalancerSourceRanges"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "logcollector",
+                        "resources"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "enabled"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "tls",
+                        "issuerConf",
+                        "group"
+                  ],
+                  [
+                        "root",
+                        "spec",
                         "pxc",
-                        "livenessProbes",
-                        "initialDelaySeconds"
+                        "serviceAccountName"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "volumeSpec"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "volumeSpec"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "volumeSpec"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "serviceAnnotations"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "expose",
+                        "loadBalancerSourceRanges"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "replicasServiceEnabled"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "vaultSecretName"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "initImage"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pmm",
+                        "serverUser"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "loadBalancerSourceRanges"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "tls",
+                        "issuerConf"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "sslSecretName"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "serviceType"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "tolerations"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "tolerations"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "volumeSpec",
+                        "persistentVolumeClaim",
+                        "accessModes"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "volumeSpec",
+                        "persistentVolumeClaim",
+                        "accessModes"
                   ],
                   [
                         "root",
@@ -13570,48 +14040,666 @@
                   [
                         "root",
                         "spec",
-                        "proxysql",
-                        "livenessProbes",
-                        "exec"
+                        "pmm",
+                        "serverHost"
                   ],
                   [
                         "root",
                         "spec",
-                        "pxc",
-                        "livenessProbes",
-                        "exec"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "haproxy",
-                        "forceUnsafeBootstrap"
+                        "backup",
+                        "pitr",
+                        "resources"
                   ],
                   [
                         "root",
                         "spec",
                         "proxysql",
-                        "forceUnsafeBootstrap"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "pxc",
-                        "forceUnsafeBootstrap"
+                        "podSecurityContext"
                   ],
                   [
                         "root",
                         "spec",
                         "haproxy",
-                        "livenessProbes",
-                        "successThreshold"
+                        "podSecurityContext"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "allowUnsafeConfigurations"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "backup",
+                        "serviceAccountName"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "runtimeClassName"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "runtimeClassName"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "runtimeClassName"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "logcollector",
+                        "image"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pmm"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "envVarsSecret"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "upgradeOptions",
+                        "versionServiceEndpoint"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "schedulerName"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "replicasExternalTrafficPolicy"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "gracePeriod"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "gracePeriod"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "readinessProbes",
+                        "failureThreshold"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pmm",
+                        "image"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "envVarsSecret"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "serviceAccountName"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "tls",
+                        "issuerConf",
+                        "name"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "sidecarResources"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "sidecarResources"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "sidecarResources"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "backup",
+                        "storages"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "imagePullSecrets"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "imagePullSecrets"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "imagePullSecrets"
                   ],
                   [
                         "root",
                         "spec",
                         "pxc",
                         "expose",
+                        "trafficPolicy"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "volumeSpec",
+                        "hostPath"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "volumeSpec",
+                        "hostPath"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "volumeSpec",
+                        "hostPath"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "livenessDelaySec"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "livenessDelaySec"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "sslSecretName"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "livenessProbes",
+                        "initialDelaySeconds"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "containerSecurityContext"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "containerSecurityContext"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pmm",
+                        "pxcParams"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "serviceAnnotations"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "externalTrafficPolicy"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "backup",
+                        "imagePullPolicy"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "volumeSpec",
+                        "emptyDir"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "volumeSpec",
+                        "emptyDir"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "volumeSpec",
+                        "emptyDir"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "priorityClassName"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pmm",
+                        "resources"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "volumeSpec",
+                        "persistentVolumeClaim",
+                        "resources"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "volumeSpec",
+                        "persistentVolumeClaim",
+                        "resources"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "volumeSpec",
+                        "persistentVolumeClaim",
+                        "resources"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "livenessProbes",
+                        "failureThreshold"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "backup",
+                        "backoffLimit"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pause"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "logCollectorSecretName"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "size"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "livenessProbes",
+                        "periodSeconds"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "sidecars"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "sidecars"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "sidecars"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "platform"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "logcollector",
+                        "containerSecurityContext"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "backup",
+                        "pitr",
                         "enabled"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "forceUnsafeBootstrap"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "forceUnsafeBootstrap"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "forceUnsafeBootstrap"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "priorityClassName"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "priorityClassName"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "tls",
+                        "issuerConf",
+                        "kind"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "sidecarVolumes",
+                        "INDEX",
+                        "name"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "sidecarVolumes",
+                        "INDEX",
+                        "name"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "sidecarVolumes",
+                        "INDEX",
+                        "name"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "backup",
+                        "pitr",
+                        "resources",
+                        "limits"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "expose",
+                        "annotations"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "backup",
+                        "pitr",
+                        "resources",
+                        "requests"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "sidecarPVCs"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "sidecarPVCs"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "sidecarPVCs"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "sidecars",
+                        "INDEX",
+                        "name"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "sidecars",
+                        "INDEX",
+                        "name"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "sidecars",
+                        "INDEX",
+                        "name"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "readinessProbes",
+                        "exec",
+                        "command"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "readinessProbes",
+                        "exec",
+                        "command"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "readinessProbes",
+                        "exec",
+                        "command"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "volumeSpec",
+                        "persistentVolumeClaim",
+                        "accessModes"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "schedulerName"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "schedulerName"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "sidecarVolumes"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "sidecarVolumes"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "sidecarVolumes"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "readinessProbes",
+                        "initialDelaySeconds"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "vaultSecretName"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "sslSecretName"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "sslInternalSecretName"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "vaultSecretName"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "readinessProbes",
+                        "periodSeconds"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "readinessProbes",
+                        "periodSeconds"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "livenessProbes",
+                        "exec",
+                        "command"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "haproxy",
+                        "livenessProbes",
+                        "exec",
+                        "command"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "livenessProbes",
+                        "exec",
+                        "command"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "proxysql",
+                        "livenessProbes",
+                        "exec"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "pxc",
+                        "livenessProbes",
+                        "exec"
                   ]
             ],
             "default_value_map": {
@@ -13637,7 +14725,26 @@
                   "[\"root\",\"spec\",\"pxc\",\"replicationChannels\",\"INDEX\",\"sourcesList\",\"INDEX\",\"weight\"]": "100"
             },
             "field_conditions_map": {
-                  "[\"spec\", \"proxysql\"]": {
+                  "[\"spec\", \"haproxy\", \"replicasExternalTrafficPolicy\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "haproxy",
+                                                      "replicasServiceType"
+                                                ],
+                                                "op": "==",
+                                                "value": "\"NodePort\""
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"haproxy\", \"affinity\", \"antiAffinityTopologyKey\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -13647,10 +14754,66 @@
                                                 "field": [
                                                       "spec",
                                                       "proxysql",
-                                                      "enabled"
+                                                      "affinity",
+                                                      "advanced"
                                                 ],
                                                 "op": "==",
-                                                "value": true
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "haproxy",
+                                                      "affinity",
+                                                      "advanced"
+                                                ],
+                                                "op": "==",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "pxc",
+                                                      "affinity",
+                                                      "advanced"
+                                                ],
+                                                "op": "==",
+                                                "value": null
+                                          }
+                                    ]
+                              },
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "proxysql",
+                                                      "affinity",
+                                                      "antiAffinityTopologyKey"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "haproxy",
+                                                      "affinity",
+                                                      "antiAffinityTopologyKey"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "pxc",
+                                                      "affinity",
+                                                      "antiAffinityTopologyKey"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
                                           }
                                     ]
                               }
@@ -13665,7 +14828,7 @@
                                           {
                                                 "field": [
                                                       "spec",
-                                                      "haproxy",
+                                                      "proxysql",
                                                       "volumeSpec",
                                                       "persistentVolumeClaim"
                                                 ],
@@ -13675,7 +14838,7 @@
                                           {
                                                 "field": [
                                                       "spec",
-                                                      "proxysql",
+                                                      "haproxy",
                                                       "volumeSpec",
                                                       "persistentVolumeClaim"
                                                 ],
@@ -13700,7 +14863,7 @@
                                           {
                                                 "field": [
                                                       "spec",
-                                                      "haproxy",
+                                                      "proxysql",
                                                       "volumeSpec"
                                                 ],
                                                 "op": "!=",
@@ -13709,7 +14872,7 @@
                                           {
                                                 "field": [
                                                       "spec",
-                                                      "proxysql",
+                                                      "haproxy",
                                                       "volumeSpec"
                                                 ],
                                                 "op": "!=",
@@ -13720,78 +14883,6 @@
                                                       "spec",
                                                       "pxc",
                                                       "volumeSpec"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"backup\", \"schedule\", \"INDEX\", \"storageName\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "backup"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"enableCRValidationWebhook\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "enableCRValidationWebhook"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"pmm\", \"enabled\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "pmm"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"vaultSecretName\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "pxc"
                                                 ],
                                                 "op": "!=",
                                                 "value": null
@@ -13819,7 +14910,7 @@
                               }
                         ]
                   },
-                  "[\"spec\", \"haproxy\", \"volumeSpec\", \"emptyDir\"]": {
+                  "[\"spec\", \"proxysql\", \"affinity\", \"antiAffinityTopologyKey\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -13828,43 +14919,9 @@
                                           {
                                                 "field": [
                                                       "spec",
-                                                      "haproxy",
-                                                      "volumeSpec",
-                                                      "persistentVolumeClaim"
-                                                ],
-                                                "op": "==",
-                                                "value": null
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
                                                       "proxysql",
-                                                      "volumeSpec",
-                                                      "persistentVolumeClaim"
-                                                ],
-                                                "op": "==",
-                                                "value": null
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "pxc",
-                                                      "volumeSpec",
-                                                      "persistentVolumeClaim"
-                                                ],
-                                                "op": "==",
-                                                "value": null
-                                          }
-                                    ]
-                              },
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "haproxy",
-                                                      "volumeSpec"
+                                                      "affinity",
+                                                      "antiAffinityTopologyKey"
                                                 ],
                                                 "op": "!=",
                                                 "value": null
@@ -13872,8 +14929,9 @@
                                           {
                                                 "field": [
                                                       "spec",
-                                                      "proxysql",
-                                                      "volumeSpec"
+                                                      "haproxy",
+                                                      "affinity",
+                                                      "antiAffinityTopologyKey"
                                                 ],
                                                 "op": "!=",
                                                 "value": null
@@ -13882,25 +14940,8 @@
                                                 "field": [
                                                       "spec",
                                                       "pxc",
-                                                      "volumeSpec"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"backup\", \"pitr\", \"storageName\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "backup"
+                                                      "affinity",
+                                                      "antiAffinityTopologyKey"
                                                 ],
                                                 "op": "!=",
                                                 "value": null
@@ -13913,61 +14954,9 @@
                                           {
                                                 "field": [
                                                       "spec",
-                                                      "backup",
-                                                      "pitr",
-                                                      "enabled"
-                                                ],
-                                                "op": "==",
-                                                "value": true
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"upgradeOptions\", \"apply\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "upgradeOptions",
-                                                      "schedule"
-                                                ],
-                                                "op": "!=",
-                                                "value": "\"\""
-                                          }
-                                    ]
-                              },
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "updateStrategy"
-                                                ],
-                                                "op": "==",
-                                                "value": "\"SmartUpdate\""
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"proxysql\", \"volumeSpec\", \"hostPath\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "haproxy",
-                                                      "volumeSpec",
-                                                      "persistentVolumeClaim"
+                                                      "proxysql",
+                                                      "affinity",
+                                                      "advanced"
                                                 ],
                                                 "op": "==",
                                                 "value": null
@@ -13975,9 +14964,9 @@
                                           {
                                                 "field": [
                                                       "spec",
-                                                      "proxysql",
-                                                      "volumeSpec",
-                                                      "persistentVolumeClaim"
+                                                      "haproxy",
+                                                      "affinity",
+                                                      "advanced"
                                                 ],
                                                 "op": "==",
                                                 "value": null
@@ -13986,115 +14975,10 @@
                                                 "field": [
                                                       "spec",
                                                       "pxc",
-                                                      "volumeSpec",
-                                                      "persistentVolumeClaim"
+                                                      "affinity",
+                                                      "advanced"
                                                 ],
                                                 "op": "==",
-                                                "value": null
-                                          }
-                                    ]
-                              },
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "haproxy",
-                                                      "volumeSpec"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "proxysql",
-                                                      "volumeSpec"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "pxc",
-                                                      "volumeSpec"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"backup\", \"schedule\", \"INDEX\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "backup"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"haproxy\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "haproxy",
-                                                      "enabled"
-                                                ],
-                                                "op": "==",
-                                                "value": true
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"backup\", \"pitr\", \"enabled\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "backup"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"logCollectorSecretName\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "pxc"
-                                                ],
-                                                "op": "!=",
                                                 "value": null
                                           }
                                     ]
@@ -14102,6 +14986,40 @@
                         ]
                   },
                   "[\"spec\", \"pxc\", \"replicationChannels\", \"INDEX\", \"configuration\", \"sourceRetryCount\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "pxc",
+                                                      "replicationChannels",
+                                                      "INDEX",
+                                                      "isSource"
+                                                ],
+                                                "op": "!=",
+                                                "value": true
+                                          }
+                                    ]
+                              },
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "pause"
+                                                ],
+                                                "op": "!=",
+                                                "value": true
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"pxc\", \"replicationChannels\", \"INDEX\", \"configuration\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -14130,6 +15048,60 @@
                                                 ],
                                                 "op": "!=",
                                                 "value": true
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"backup\", \"schedule\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "backup"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"backup\", \"pitr\", \"enabled\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "backup"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"vaultSecretName\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "pxc"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
                                           }
                                     ]
                               }
@@ -14167,7 +15139,79 @@
                               }
                         ]
                   },
-                  "[\"spec\", \"tls\", \"issuerConf\", \"name\"]": {
+                  "[\"spec\", \"pxc\", \"volumeSpec\", \"hostPath\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "proxysql",
+                                                      "volumeSpec",
+                                                      "persistentVolumeClaim"
+                                                ],
+                                                "op": "==",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "haproxy",
+                                                      "volumeSpec",
+                                                      "persistentVolumeClaim"
+                                                ],
+                                                "op": "==",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "pxc",
+                                                      "volumeSpec",
+                                                      "persistentVolumeClaim"
+                                                ],
+                                                "op": "==",
+                                                "value": null
+                                          }
+                                    ]
+                              },
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "proxysql",
+                                                      "volumeSpec"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "haproxy",
+                                                      "volumeSpec"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "pxc",
+                                                      "volumeSpec"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"tls\", \"SANs\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -14183,19 +15227,14 @@
                                                 "value": null
                                           }
                                     ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"logcollector\", \"enabled\"]": {
-                        "type": "AND",
-                        "conditions": [
+                              },
                               {
                                     "type": "OR",
                                     "conditions": [
                                           {
                                                 "field": [
                                                       "spec",
-                                                      "logcollector"
+                                                      "tls"
                                                 ],
                                                 "op": "!=",
                                                 "value": null
@@ -14204,7 +15243,7 @@
                               }
                         ]
                   },
-                  "[\"spec\", \"haproxy\", \"replicasExternalTrafficPolicy\"]": {
+                  "[\"spec\", \"haproxy\", \"volumeSpec\", \"emptyDir\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -14213,17 +15252,121 @@
                                           {
                                                 "field": [
                                                       "spec",
-                                                      "haproxy",
-                                                      "replicasServiceType"
+                                                      "proxysql",
+                                                      "volumeSpec",
+                                                      "persistentVolumeClaim"
                                                 ],
                                                 "op": "==",
-                                                "value": "\"NodePort\""
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "haproxy",
+                                                      "volumeSpec",
+                                                      "persistentVolumeClaim"
+                                                ],
+                                                "op": "==",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "pxc",
+                                                      "volumeSpec",
+                                                      "persistentVolumeClaim"
+                                                ],
+                                                "op": "==",
+                                                "value": null
+                                          }
+                                    ]
+                              },
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "proxysql",
+                                                      "volumeSpec"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "haproxy",
+                                                      "volumeSpec"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "pxc",
+                                                      "volumeSpec"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
                                           }
                                     ]
                               }
                         ]
                   },
-                  "[\"spec\", \"pxc\", \"replicationChannels\", \"INDEX\", \"configuration\"]": {
+                  "[\"spec\", \"backup\", \"schedule\", \"INDEX\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "backup"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"backup\", \"pitr\", \"storageName\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "backup",
+                                                      "pitr",
+                                                      "enabled"
+                                                ],
+                                                "op": "==",
+                                                "value": true
+                                          }
+                                    ]
+                              },
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "backup"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"pxc\", \"replicationChannels\", \"INDEX\", \"configuration\", \"sourceConnectRetry\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -14275,7 +15418,180 @@
                               }
                         ]
                   },
-                  "[\"spec\", \"backup\", \"schedule\"]": {
+                  "[\"spec\", \"haproxy\", \"volumeSpec\", \"hostPath\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "proxysql",
+                                                      "volumeSpec",
+                                                      "persistentVolumeClaim"
+                                                ],
+                                                "op": "==",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "haproxy",
+                                                      "volumeSpec",
+                                                      "persistentVolumeClaim"
+                                                ],
+                                                "op": "==",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "pxc",
+                                                      "volumeSpec",
+                                                      "persistentVolumeClaim"
+                                                ],
+                                                "op": "==",
+                                                "value": null
+                                          }
+                                    ]
+                              },
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "proxysql",
+                                                      "volumeSpec"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "haproxy",
+                                                      "volumeSpec"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "pxc",
+                                                      "volumeSpec"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"logCollectorSecretName\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "pxc"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"backup\", \"pitr\", \"timeBetweenUploads\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "backup",
+                                                      "pitr",
+                                                      "enabled"
+                                                ],
+                                                "op": "==",
+                                                "value": true
+                                          }
+                                    ]
+                              },
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "pause"
+                                                ],
+                                                "op": "!=",
+                                                "value": true
+                                          }
+                                    ]
+                              },
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "backup"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"pmm\", \"enabled\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "pmm"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"haproxy\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "haproxy",
+                                                      "enabled"
+                                                ],
+                                                "op": "==",
+                                                "value": true
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"backup\", \"serviceAccountName\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -14285,6 +15601,78 @@
                                                 "field": [
                                                       "spec",
                                                       "backup"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"proxysql\", \"volumeSpec\", \"hostPath\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "proxysql",
+                                                      "volumeSpec",
+                                                      "persistentVolumeClaim"
+                                                ],
+                                                "op": "==",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "haproxy",
+                                                      "volumeSpec",
+                                                      "persistentVolumeClaim"
+                                                ],
+                                                "op": "==",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "pxc",
+                                                      "volumeSpec",
+                                                      "persistentVolumeClaim"
+                                                ],
+                                                "op": "==",
+                                                "value": null
+                                          }
+                                    ]
+                              },
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "proxysql",
+                                                      "volumeSpec"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "haproxy",
+                                                      "volumeSpec"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "pxc",
+                                                      "volumeSpec"
                                                 ],
                                                 "op": "!=",
                                                 "value": null
@@ -14312,7 +15700,7 @@
                               }
                         ]
                   },
-                  "[\"spec\", \"haproxy\", \"volumeSpec\", \"hostPath\"]": {
+                  "[\"spec\", \"tls\", \"issuerConf\", \"group\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -14321,32 +15709,48 @@
                                           {
                                                 "field": [
                                                       "spec",
-                                                      "haproxy",
-                                                      "volumeSpec",
-                                                      "persistentVolumeClaim"
+                                                      "tls",
+                                                      "issuerConf"
                                                 ],
-                                                "op": "==",
+                                                "op": "!=",
                                                 "value": null
-                                          },
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"enableCRValidationWebhook\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
                                           {
                                                 "field": [
                                                       "spec",
-                                                      "proxysql",
-                                                      "volumeSpec",
-                                                      "persistentVolumeClaim"
+                                                      "enableCRValidationWebhook"
                                                 ],
-                                                "op": "==",
+                                                "op": "!=",
                                                 "value": null
-                                          },
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"upgradeOptions\", \"apply\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
                                           {
                                                 "field": [
                                                       "spec",
-                                                      "pxc",
-                                                      "volumeSpec",
-                                                      "persistentVolumeClaim"
+                                                      "upgradeOptions",
+                                                      "schedule"
                                                 ],
-                                                "op": "==",
-                                                "value": null
+                                                "op": "!=",
+                                                "value": "\"\""
                                           }
                                     ]
                               },
@@ -14356,29 +15760,10 @@
                                           {
                                                 "field": [
                                                       "spec",
-                                                      "haproxy",
-                                                      "volumeSpec"
+                                                      "updateStrategy"
                                                 ],
-                                                "op": "!=",
-                                                "value": null
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "proxysql",
-                                                      "volumeSpec"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "pxc",
-                                                      "volumeSpec"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
+                                                "op": "==",
+                                                "value": "\"SmartUpdate\""
                                           }
                                     ]
                               }
@@ -14402,279 +15787,20 @@
                               }
                         ]
                   },
-                  "[\"spec\", \"backup\", \"serviceAccountName\"]": {
+                  "[\"spec\", \"proxysql\"]": {
                         "type": "AND",
                         "conditions": [
                               {
                                     "type": "OR",
                                     "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "backup"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"tls\", \"issuerConf\", \"kind\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "tls",
-                                                      "issuerConf"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"proxysql\", \"volumeSpec\", \"emptyDir\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "haproxy",
-                                                      "volumeSpec",
-                                                      "persistentVolumeClaim"
-                                                ],
-                                                "op": "==",
-                                                "value": null
-                                          },
                                           {
                                                 "field": [
                                                       "spec",
                                                       "proxysql",
-                                                      "volumeSpec",
-                                                      "persistentVolumeClaim"
-                                                ],
-                                                "op": "==",
-                                                "value": null
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "pxc",
-                                                      "volumeSpec",
-                                                      "persistentVolumeClaim"
-                                                ],
-                                                "op": "==",
-                                                "value": null
-                                          }
-                                    ]
-                              },
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "haproxy",
-                                                      "volumeSpec"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "proxysql",
-                                                      "volumeSpec"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "pxc",
-                                                      "volumeSpec"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"tls\", \"SANs\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "tls",
-                                                      "issuerConf"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              },
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "tls"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"backup\", \"pitr\", \"timeBetweenUploads\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "backup"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              },
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "pause"
-                                                ],
-                                                "op": "!=",
-                                                "value": true
-                                          }
-                                    ]
-                              },
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "backup",
-                                                      "pitr",
                                                       "enabled"
                                                 ],
                                                 "op": "==",
                                                 "value": true
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"pxc\", \"volumeSpec\", \"hostPath\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "haproxy",
-                                                      "volumeSpec",
-                                                      "persistentVolumeClaim"
-                                                ],
-                                                "op": "==",
-                                                "value": null
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "proxysql",
-                                                      "volumeSpec",
-                                                      "persistentVolumeClaim"
-                                                ],
-                                                "op": "==",
-                                                "value": null
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "pxc",
-                                                      "volumeSpec",
-                                                      "persistentVolumeClaim"
-                                                ],
-                                                "op": "==",
-                                                "value": null
-                                          }
-                                    ]
-                              },
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "haproxy",
-                                                      "volumeSpec"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "proxysql",
-                                                      "volumeSpec"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "pxc",
-                                                      "volumeSpec"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"tls\", \"issuerConf\", \"group\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "tls",
-                                                      "issuerConf"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
                                           }
                                     ]
                               }
@@ -14700,7 +15826,7 @@
                               }
                         ]
                   },
-                  "[\"spec\", \"pxc\", \"replicationChannels\", \"INDEX\", \"configuration\", \"sourceConnectRetry\"]": {
+                  "[\"spec\", \"logcollector\", \"enabled\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -14709,10 +15835,50 @@
                                           {
                                                 "field": [
                                                       "spec",
-                                                      "pause"
+                                                      "logcollector"
                                                 ],
                                                 "op": "!=",
-                                                "value": true
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"proxysql\", \"volumeSpec\", \"emptyDir\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "proxysql",
+                                                      "volumeSpec",
+                                                      "persistentVolumeClaim"
+                                                ],
+                                                "op": "==",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "haproxy",
+                                                      "volumeSpec",
+                                                      "persistentVolumeClaim"
+                                                ],
+                                                "op": "==",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "pxc",
+                                                      "volumeSpec",
+                                                      "persistentVolumeClaim"
+                                                ],
+                                                "op": "==",
+                                                "value": null
                                           }
                                     ]
                               },
@@ -14722,13 +15888,160 @@
                                           {
                                                 "field": [
                                                       "spec",
-                                                      "pxc",
-                                                      "replicationChannels",
-                                                      "INDEX",
-                                                      "isSource"
+                                                      "proxysql",
+                                                      "volumeSpec"
                                                 ],
                                                 "op": "!=",
-                                                "value": true
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "haproxy",
+                                                      "volumeSpec"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "pxc",
+                                                      "volumeSpec"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"pxc\", \"affinity\", \"antiAffinityTopologyKey\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "proxysql",
+                                                      "affinity",
+                                                      "antiAffinityTopologyKey"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "haproxy",
+                                                      "affinity",
+                                                      "antiAffinityTopologyKey"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "pxc",
+                                                      "affinity",
+                                                      "antiAffinityTopologyKey"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              },
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "proxysql",
+                                                      "affinity",
+                                                      "advanced"
+                                                ],
+                                                "op": "==",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "haproxy",
+                                                      "affinity",
+                                                      "advanced"
+                                                ],
+                                                "op": "==",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "pxc",
+                                                      "affinity",
+                                                      "advanced"
+                                                ],
+                                                "op": "==",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"tls\", \"issuerConf\", \"kind\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "tls",
+                                                      "issuerConf"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"tls\", \"issuerConf\", \"name\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "tls",
+                                                      "issuerConf"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"backup\", \"schedule\", \"INDEX\", \"storageName\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "backup"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
                                           }
                                     ]
                               }

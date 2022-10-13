@@ -39,6 +39,12 @@ func (f *Field) String() string {
 	return string(b[:])
 }
 
+func FieldFromString(s string) *Field {
+	var field Field
+	json.Unmarshal([]byte(s), &field.Path)
+	return &field
+}
+
 func NewSubField(parentStruct *types.Struct, parentField Field, fieldIndex int) *Field {
 	newPath := make([]string, len(parentField.Path))
 	copy(newPath, parentField.Path)

@@ -55,16 +55,17 @@ func analyze(projectPath string, seedType string, seedPkgPath string) string {
 	log.Printf("%s\n", initial[0])
 
 	context := &analysis.Context{
-		Program:             prog,
-		MainPackages:        ssautil.MainPackages(prog.AllPackages()),
-		RootModule:          initial[0].Module,
-		CallGraph:           nil,
-		PostDominators:      map[*ssa.Function]*analysis.PostDominator{},
-		FieldToValueMap:     map[string]*[]ssa.Value{},
-		DefaultValueMap:     map[ssa.Value]*ssa.Const{},
-		IfToCondition:       map[ssa.Instruction]*analysis.BranchCondition{},
-		BranchValueDominees: map[ssa.Instruction]*analysis.UsesInBranch{},
-		DomineeToConditions: map[string]*analysis.ConcreteConditionSet{},
+		Program:                prog,
+		MainPackages:           ssautil.MainPackages(prog.AllPackages()),
+		RootModule:             initial[0].Module,
+		CallGraph:              nil,
+		PostDominators:         map[*ssa.Function]*analysis.PostDominator{},
+		FieldDataDependencyMap: map[string]*util.FieldSet{},
+		FieldToValueMap:        map[string]*[]ssa.Value{},
+		DefaultValueMap:        map[ssa.Value]*ssa.Const{},
+		IfToCondition:          map[ssa.Instruction]*analysis.BranchCondition{},
+		BranchValueDominees:    map[ssa.Instruction]*analysis.UsesInBranch{},
+		DomineeToConditions:    map[string]*analysis.ConcreteConditionSet{},
 	}
 
 	log.Println("Running initial pass...")
@@ -100,16 +101,7 @@ func analyze(projectPath string, seedType string, seedPkgPath string) string {
 	for _, field := range mergedFieldSet.Fields() {
 		analysisResult.UsedPaths = append(analysisResult.UsedPaths, field.Path)
 	}
-	taintedFieldSet := util.FieldSet{}
-	taintedSet := analysis.TaintAnalysisPass(context, prog, frontierSet, valueFieldSetMap)
-	for tainted := range taintedSet {
-		for _, path := range valueFieldSetMap[tainted].Fields() {
-			log.Printf("Path [%s] taints\n", path.Path)
-			taintedFieldSet.Add(&path)
-		}
-		log.Printf("value %s with path %s\n", tainted, valueFieldSetMap[tainted])
-		// tainted.Parent().WriteTo(log.Writer())
-	}
+	taintedFieldSet := analysis.TaintAnalysisPass(context, prog, frontierSet, valueFieldSetMap)
 	for _, field := range taintedFieldSet.Fields() {
 		analysisResult.TaintedPaths = append(analysisResult.TaintedPaths, field.Path)
 	}
@@ -143,13 +135,37 @@ func analyze(projectPath string, seedType string, seedPkgPath string) string {
 	return string(marshalled[:])
 }
 
+type ProjectConfigMap map[string]ProjectConfig
+
+type ProjectConfig struct {
+	ProjectPath string `json:"projectPath"`
+	SeedType    string `json:"seedType"`
+	SeedPkg     string `json:"seedPkg"`
+}
+
 func main() {
 	// Load, parse, and type-check the whole program.
 
 	projectPath := flag.String("project-path", "/home/tyler/zookeeper-operator", "the path to the operator's source dir")
 	seedType := flag.String("seed-type", "ZookeeperCluster", "The type of the root")
 	seedPkgPath := flag.String("seed-pkg", "github.com/pravega/zookeeper-operator/api/v1beta1", "The package path of the root")
+	projectName := flag.String("project-name", "", "The name of the project")
 	flag.Parse()
+
+	if *projectName != "" {
+		projectConfigMap := ProjectConfigMap{}
+		data, err := ioutil.ReadFile("config.json")
+		if err != nil {
+			panic(err)
+		}
+		if err = json.Unmarshal(data, &projectConfigMap); err != nil {
+			panic(err)
+		}
+		projectConfig := projectConfigMap[*projectName]
+		*projectPath = projectConfig.ProjectPath
+		*seedType = projectConfig.SeedType
+		*seedPkgPath = projectConfig.SeedPkg
+	}
 
 	logFile, err := os.Create("ssa.log")
 	if err != nil {

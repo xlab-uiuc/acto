@@ -1318,7 +1318,101 @@
                   [
                         "root",
                         "spec",
+                        "dataStore",
+                        "pvc",
+                        "source",
+                        "claimName"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "nodes"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "additionalAnnotations"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "tlsEnabled"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "image",
+                        "pullPolicy"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "clientTLSSecret"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "dataStore",
+                        "hostPath"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "image",
+                        "name"
+                  ],
+                  [
+                        "root",
+                        "spec",
                         "cockroachDBVersion"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "tolerations"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "nodeTLSSecret"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "image"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "affinity"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "image",
+                        "pullSecret"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "topologySpreadConstraints"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "dataStore",
+                        "pvc",
+                        "source"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "nodeSelector"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "logConfigMap"
                   ],
                   [
                         "root",
@@ -1327,11 +1421,16 @@
                         "pvc",
                         "spec",
                         "volumeMode"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "resources"
                   ]
             ],
             "default_value_map": {},
             "field_conditions_map": {
-                  "[\"spec\", \"minAvailable\"]": {
+                  "[\"spec\", \"ingress\", \"sql\", \"host\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -1340,53 +1439,29 @@
                                           {
                                                 "field": [
                                                       "spec",
-                                                      "minAvailable"
+                                                      "tlsEnabled"
                                                 ],
-                                                "op": "!=",
-                                                "value": null
+                                                "op": "==",
+                                                "value": true
                                           }
                                     ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"dataStore\", \"hostPath\"]": {
-                        "type": "AND",
-                        "conditions": [
+                              },
                               {
                                     "type": "OR",
                                     "conditions": [
                                           {
                                                 "field": [
                                                       "spec",
-                                                      "dataStore",
-                                                      "hostPath"
+                                                      "nodeTLSSecret"
                                                 ],
-                                                "op": "!=",
-                                                "value": null
+                                                "op": "==",
+                                                "value": "\"\""
                                           }
                                     ]
                               }
                         ]
                   },
-                  "[\"spec\", \"ingress\", \"ui\", \"tls\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "ingress"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"ingress\", \"ui\", \"ingressClassName\"]": {
+                  "[\"spec\", \"ingress\", \"sql\", \"ingressClassName\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -1396,7 +1471,7 @@
                                                 "field": [
                                                       "spec",
                                                       "ingress",
-                                                      "ui",
+                                                      "sql",
                                                       "ingressClassName"
                                                 ],
                                                 "op": "!=",
@@ -1438,58 +1513,7 @@
                               }
                         ]
                   },
-                  "[\"spec\", \"nodeSelector\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "nodeSelector"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"ingress\", \"sql\", \"ingressClassName\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "ingress",
-                                                      "sql",
-                                                      "ingressClassName"
-                                                ],
-                                                "op": "!=",
-                                                "value": "\"\""
-                                          }
-                                    ]
-                              },
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "ingress"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"dataStore\", \"pvc\", \"spec\"]": {
+                  "[\"spec\", \"dataStore\", \"pvc\", \"spec\", \"resources\", \"requests\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -1503,37 +1527,6 @@
                                                 ],
                                                 "op": "!=",
                                                 "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"ingress\", \"sql\", \"host\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "tlsEnabled"
-                                                ],
-                                                "op": "==",
-                                                "value": true
-                                          }
-                                    ]
-                              },
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "nodeTLSSecret"
-                                                ],
-                                                "op": "==",
-                                                "value": "\"\""
                                           }
                                     ]
                               }
@@ -1572,7 +1565,7 @@
                               }
                         ]
                   },
-                  "[\"spec\", \"ingress\", \"ui\", \"tls\", \"INDEX\", \"hosts\"]": {
+                  "[\"spec\", \"dataStore\", \"hostPath\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -1581,28 +1574,11 @@
                                           {
                                                 "field": [
                                                       "spec",
-                                                      "ingress"
+                                                      "dataStore",
+                                                      "hostPath"
                                                 ],
                                                 "op": "!=",
                                                 "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"logConfigMap\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "logConfigMap"
-                                                ],
-                                                "op": "!=",
-                                                "value": "\"\""
                                           }
                                     ]
                               }
@@ -1644,7 +1620,130 @@
                               }
                         ]
                   },
-                  "[\"spec\", \"dataStore\", \"pvc\", \"spec\", \"resources\", \"requests\"]": {
+                  "[\"spec\", \"logConfigMap\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "logConfigMap"
+                                                ],
+                                                "op": "!=",
+                                                "value": "\"\""
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"ingress\", \"ui\", \"ingressClassName\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "ingress",
+                                                      "ui",
+                                                      "ingressClassName"
+                                                ],
+                                                "op": "!=",
+                                                "value": "\"\""
+                                          }
+                                    ]
+                              },
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "ingress"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"ingress\", \"ui\", \"tls\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "ingress"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"minAvailable\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "minAvailable"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"nodeSelector\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "nodeSelector"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"ingress\", \"ui\", \"tls\", \"INDEX\", \"hosts\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "ingress"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"dataStore\", \"pvc\", \"spec\"]": {
                         "type": "AND",
                         "conditions": [
                               {
