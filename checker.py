@@ -58,17 +58,23 @@ class Checker(object):
         logger.info('Encode dependency of %s on %s' % (depender, dependee))
         encoded_path = json.dumps(depender)
         if encoded_path not in self.field_conditions_map:
-            self.field_conditions_map[encoded_path] = []
+            self.field_conditions_map[encoded_path] = {
+                'conditions': [],
+                'type': 'AND'
+            }
 
         # Add dependency to the subfields, idealy we should have a B tree for this
         for key, value in self.field_conditions_map.items():
             path = json.loads(key)
             if is_subfield(path, depender):
                 logger.debug('Add dependency of %s on %s' % (path, dependee))
-                value.append({
-                    'field': dependee,
-                    'op': '==',
-                    'value': True
+                value['conditions'].append({
+                    'type': 'OR',
+                    'conditions': [{
+                        'field': dependee,
+                        'op': '==',
+                        'value': True
+                    }]
                 })
 
     def check(self, snapshot: Snapshot, prev_snapshot: Snapshot, generation: int) -> RunResult:
@@ -225,21 +231,21 @@ class Checker(object):
                                        delta)
         return PassResult()
 
-    def check_condition_group(self, input: dict, condition_group: dict) -> bool:
+    def check_condition_group(self, input: dict, condition_group: dict, input_delta_path: list) -> bool:
         if 'type' in condition_group:
             typ = condition_group['type']
             if typ == 'AND':
                 for condition in condition_group['conditions']:
-                    if not self.check_condition_group(input, condition):
+                    if not self.check_condition_group(input, condition, input_delta_path):
                         return False
                 return True
             elif typ == 'OR':
                 for condition in condition_group['conditions']:
-                    if self.check_condition_group(input, condition):
+                    if self.check_condition_group(input, condition, input_delta_path):
                         return True
                 return False
         else:
-            return self.check_condition(input, condition_group)
+            return self.check_condition(input, condition_group, input_delta_path)
 
 
     def should_skip_input_delta(self, input_delta: Diff, snapshot: Snapshot) -> bool:
@@ -269,7 +275,7 @@ class Checker(object):
         encoded_path = json.dumps(input_delta.path)
         if encoded_path in field_conditions_map:
             condition_group = field_conditions_map[encoded_path]
-            if not self.check_condition_group(snapshot.input, condition_group):
+            if not self.check_condition_group(snapshot.input, condition_group, input_delta.path):
                 # if one condition does not satisfy, skip this testcase
                 logger.info(
                     'Field precondition %s does not satisfy, skip this testcase' % condition_group)
@@ -280,7 +286,7 @@ class Checker(object):
                 input_delta.path, field_conditions_map.keys())
             if parent is not None:
                 condition_group = field_conditions_map[json.dumps(parent)]
-                if not self.check_condition_group(snapshot.input, condition_group):
+                if not self.check_condition_group(snapshot.input, condition_group, input_delta.path):
                     # if one condition does not satisfy, skip this testcase
                     logger.info(
                         'Field precondition %s does not satisfy, skip this testcase' % condition_group)
@@ -330,8 +336,12 @@ class Checker(object):
                 ret = p
         return ret
 
-    def check_condition(self, input: dict, condition: dict) -> bool:
+    def check_condition(self, input: dict, condition: dict, input_delta_path: list) -> bool:
         path = condition['field']
+
+        # corner case: skip if condition is simply checking if the path is not nil
+        if is_subfield(input_delta_path, path) and condition['op'] == '!=' and condition['value'] == None:
+            return True
 
         # hack: convert 'INDEX' to int 0
         for i in range(len(path)):
@@ -562,6 +572,7 @@ class Checker(object):
             r".*\['metadata'\]\['annotations'\]\['.*last-applied.*'\]",
             r".*\['metadata'\]\['annotations'\]\['.*\.kubernetes\.io.*'\]",
             r".*\['metadata'\]\['labels'\]\['.*revision.*'\]",
+            r".*\['metadata'\]\['labels'\]\['owner-rv\]",
           
             r".*\['status'\]",
 
