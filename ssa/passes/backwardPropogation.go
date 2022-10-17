@@ -14,7 +14,7 @@ func BackwardPropogation(addr ssa.Value, taintedSet map[ssa.Value]bool) (tainted
 		log.Printf("Doing backward propogation on the inst [%s] in function [%s]\n", addr.String(), addr.Parent().String())
 	}
 
-	addrSources := BackwardPropogationHelper(addr, []int{}, taintedSet)
+	addrSources := BackwardPropogationHelper(addr, []int{}, taintedSet, map[ssa.Value]bool{})
 
 	for _, source := range addrSources {
 		log.Printf("It is from %s\n", source)
@@ -36,7 +36,7 @@ func BackwardPropogation(addr ssa.Value, taintedSet map[ssa.Value]bool) (tainted
 }
 
 func BackwardPropogationHelper(value ssa.Value, path []int,
-	taintedSet map[ssa.Value]bool) (addrSources []ssa.Value) {
+	taintedSet map[ssa.Value]bool, phiSet map[ssa.Value]bool) (addrSources []ssa.Value) {
 
 	switch typedValue := value.(type) {
 	case *ssa.Alloc:
@@ -45,8 +45,10 @@ func BackwardPropogationHelper(value ssa.Value, path []int,
 		// returned from a Call
 		// XXX: assume the Call is just some New function
 		return []ssa.Value{value}
+	case *ssa.ChangeInterface:
+		return BackwardPropogationHelper(typedValue.X, path, taintedSet, phiSet)
 	case *ssa.ChangeType:
-		return BackwardPropogationHelper(typedValue.X, path, taintedSet)
+		return BackwardPropogationHelper(typedValue.X, path, taintedSet, phiSet)
 	case *ssa.Const:
 		if typedValue.Value == nil {
 			return []ssa.Value{}
@@ -54,43 +56,44 @@ func BackwardPropogationHelper(value ssa.Value, path []int,
 		log.Printf("Const: %s\n", typedValue.Value)
 		log.Fatalf("Backward propogation: not handle %T: %s\n", typedValue, typedValue)
 	case *ssa.Convert:
-		return BackwardPropogationHelper(typedValue.X, path, taintedSet)
+		return BackwardPropogationHelper(typedValue.X, path, taintedSet, phiSet)
 	case *ssa.Extract:
 		// extracted from a tuple
 		// XXX
 		switch typedTuple := typedValue.Tuple.(type) {
 		case *ssa.Lookup:
-			return BackwardPropogationHelper(typedTuple, path, taintedSet)
+			return BackwardPropogationHelper(typedTuple, path, taintedSet, phiSet)
 		case *ssa.TypeAssert:
-			return BackwardPropogationHelper(typedTuple, path, taintedSet)
+			return BackwardPropogationHelper(typedTuple, path, taintedSet, phiSet)
 		case *ssa.UnOp:
 			log.Fatal("Back propogated to UpOp\n")
 		}
 		return []ssa.Value{value}
 	case *ssa.FieldAddr:
 		path := append([]int{typedValue.Field}, path...)
-		return BackwardPropogationHelper(typedValue.X, path, taintedSet)
+		return BackwardPropogationHelper(typedValue.X, path, taintedSet, phiSet)
 	case *ssa.FreeVar:
 		return []ssa.Value{value}
 	case *ssa.IndexAddr:
 		path := append([]int{tryResolveIndex(typedValue.Index)}, path...)
-		return BackwardPropogationHelper(typedValue.X, path, taintedSet)
+		return BackwardPropogationHelper(typedValue.X, path, taintedSet, phiSet)
 	case *ssa.Lookup:
-		return BackwardPropogationHelper(typedValue.X, path, taintedSet)
+		return BackwardPropogationHelper(typedValue.X, path, taintedSet, phiSet)
 	case *ssa.Parameter:
 		return []ssa.Value{value}
 	case *ssa.Phi:
 		ret := []ssa.Value{}
 		for _, edge := range typedValue.Edges {
-			if edge != value {
+			if _, ok := phiSet[edge]; !ok {
 				// edge could be itself, avoid infinite loop
 				// XXX: still possibly circular dependency
-				ret = append(ret, BackwardPropogationHelper(edge, path, taintedSet)...)
+				phiSet[edge] = true
+				ret = append(ret, BackwardPropogationHelper(edge, path, taintedSet, phiSet)...)
 			}
 		}
 		return ret
 	case *ssa.MakeInterface:
-		return BackwardPropogationHelper(typedValue.X, path, taintedSet)
+		return BackwardPropogationHelper(typedValue.X, path, taintedSet, phiSet)
 	case *ssa.Global:
 		addrSources = append(addrSources, value)
 	case *ssa.MakeMap:
@@ -98,11 +101,11 @@ func BackwardPropogationHelper(value ssa.Value, path []int,
 	case *ssa.MakeSlice:
 		addrSources = append(addrSources, value)
 	case *ssa.Slice:
-		return BackwardPropogationHelper(typedValue.X, path, taintedSet)
+		return BackwardPropogationHelper(typedValue.X, path, taintedSet, phiSet)
 	case *ssa.TypeAssert:
-		return BackwardPropogationHelper(typedValue.X, path, taintedSet)
+		return BackwardPropogationHelper(typedValue.X, path, taintedSet, phiSet)
 	case *ssa.UnOp:
-		return BackwardPropogationHelper(typedValue.X, path, taintedSet)
+		return BackwardPropogationHelper(typedValue.X, path, taintedSet, phiSet)
 	default:
 		log.Fatalf("Backward propogation: not handle %T: %s\n", typedValue, typedValue)
 		return
