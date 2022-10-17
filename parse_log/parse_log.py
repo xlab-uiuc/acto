@@ -95,7 +95,8 @@ def parse_log(line: str) -> dict:
 
                 del log_line['severity']
         except Exception as e:
-            logger.warning(f"parse_log() cannot parse line {line} due to {e}")
+            # logger.warning(f"parse_log() cannot parse line {line} due to {e}")
+            pass
 
     return log_line
 

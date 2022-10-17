@@ -205,7 +205,6 @@ def postprocess_diff(diff):
             '''
             if (isinstance(change.t1, dict) or isinstance(change.t1, list)) \
                     and (change.t2 == None or isinstance(change.t2, NotPresent)):
-                logger.debug('dict deleted')
                 if isinstance(change.t1, dict):
                     flattened_changes = flatten_dict(change.t1, [])
                 else:
