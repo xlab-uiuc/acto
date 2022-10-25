@@ -193,15 +193,16 @@ class InputModel:
 
         test_plan_items = list(self.test_plan.items())
         random.shuffle(test_plan_items)  # randomize to reduce skewness among workers
-        chunk_size = math.ceil(len(test_plan_items) / self.num_workers)
         self.test_plan_partitioned = []
-        for i in range(0, len(test_plan_items), chunk_size):
-            self.test_plan_partitioned.append(test_plan_items[i:i + chunk_size])
+
+        for i in range(self.num_workers):
+            self.test_plan_partitioned.append([])
+
+        for i in range(0, len(test_plan_items)):
+            self.test_plan_partitioned[i % self.num_workers].append(test_plan_items[i])
         # appending empty lists to avoid no test cases distributed to certain work nodes
-        if len(test_plan_items) < self.num_workers:
-            for i in range(self.num_workers - len(test_plan_items)):
-                self.test_plan_partitioned.append([])
         assert (self.num_workers == len(self.test_plan_partitioned))
+        assert (sum(len(p) for p in self.test_plan_partitioned) == len(test_plan_items))
 
         return ret
 
