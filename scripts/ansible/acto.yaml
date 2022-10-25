@@ -4,6 +4,11 @@
 
   tasks:
 
+    - name: Clean up previous acto repo
+      file:
+        path: /tmp/acto
+        state: absent
+
     - name: Download acto repo
       local_action:
         module: ansible.builtin.git
