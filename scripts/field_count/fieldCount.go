@@ -92,7 +92,7 @@ func mapToTree(instance interface{}, node ki.Ki) {
 	}
 }
 
-func CountField(projectPath *string, seedTypeStr *string, seedPkgPath *string) (fieldSet StringSet) {
+func CountField(projectPath *string, testDir *string, seedTypeStr *string, seedPkgPath *string) (fieldSet StringSet) {
 	logger := zap.S()
 
 	fieldSet = make(StringSet)
@@ -103,12 +103,23 @@ func CountField(projectPath *string, seedTypeStr *string, seedPkgPath *string) (
 		Tests: true,
 	}
 	initial, err := packages.Load(&cfg, "./...")
+	if err != nil {
+		panic(err)
+	}
 
 	testPkgs := []*packages.Package{}
 	for _, pkg := range initial {
-		if strings.HasSuffix(pkg.PkgPath, "_test") {
+		// test packages can be either named as *_test or in the same package with the implementation
+		// in the case where the tests are in the same package with the implementation, the compiler
+		// would generate a package with xxx.test suffix
+		//
+		// Another tricky case here is that the test package can be in a totally different directory
+		// and using the ginkgo framework, where the package name may or may not have the "test"
+		// suffix. In this case, we handle it using the special flag -test-dir
+		if strings.HasSuffix(pkg.PkgPath, "test") || (*testDir != "" && strings.HasPrefix(pkg.PkgPath, *testDir)) {
+			// if true || *testDir != "" && strings.HasPrefix(pkg.PkgPath, *testDir) {
 			testPkgs = append(testPkgs, pkg)
-			logger.Info("Found test package %s", pkg.PkgPath)
+			logger.Infof("Found test package %s at %s", pkg.PkgPath, pkg.GoFiles)
 		}
 	}
 
@@ -131,7 +142,7 @@ func CountField(projectPath *string, seedTypeStr *string, seedPkgPath *string) (
 
 	seedVariables := []ssa.Value{}
 	for f := range ssautil.AllFunctions(prog) {
-		if f.Package() != nil && strings.HasSuffix(f.Package().Pkg.Name(), "_test") {
+		if f.Package() != nil {
 			// logger.Infof("Function %s\n", f.String())
 			// buffer := &bytes.Buffer{}
 			// f.WriteTo(buffer)
@@ -147,18 +158,33 @@ func CountField(projectPath *string, seedTypeStr *string, seedPkgPath *string) (
 		if root == nil {
 			root = ki.Root(ki_)
 		}
-		if ifStoredInto(v) {
+		if stored, val := ifStoredInto(v); stored {
 			if fieldNode, ok := ki_.(*FieldNode); ok {
 				fieldNode.Used = true
 			} else {
 				panic(err)
 			}
+
+			// The tests may assign an entire struct to a field in the CR
+			// to accurately count the fields for operators' test, we need to go through the struct
+			if val != nil {
+				switch valueType := val.Type().Underlying().(type) {
+				case *types.Struct:
+					handleStructStore(val, ki_)
+				case *types.Pointer:
+					if _, ok := valueType.Elem().Underlying().(*types.Struct); ok {
+						logger.Debugf("Found a pointer to struct %s at %s\n", val.String(), prog.Fset.Position(v.Pos()))
+						handleStructStore(val, ki_)
+					}
+				}
+			}
+
 			ki_.FuncUpParent(0, nil, func(k ki.Ki, level int, d interface{}) bool {
 				k.(*FieldNode).Used = true
 				return true
 			})
 		} else {
-			logger.Infof("Value %s is not stored into\n", ki_.Path())
+			logger.Infof("Value %s at %s is not stored into\n", ki_.Path(), prog.Fset.Position(v.Pos()))
 		}
 	}
 
@@ -291,14 +317,83 @@ func getCRFields(seedValues []ssa.Value) map[ssa.Value]ki.Ki {
 	return valueToTreeNodeMap
 }
 
-func ifStoredInto(value ssa.Value) bool {
+func ifStoredInto(value ssa.Value) (bool, ssa.Value) {
 	for _, inst := range *value.Referrers() {
 		switch typedInst := inst.(type) {
 		case *ssa.Store:
 			if typedInst.Addr == value {
-				return true
+				return true, typedInst.Val
 			}
 		}
 	}
-	return false
+	return false, nil
+}
+
+func handleStructStore(storeValue ssa.Value, node ki.Ki) {
+	worklist := append([]ssa.Value{}, storeValue)
+	valueToTreeNodeMap := make(map[ssa.Value]ki.Ki)
+	valueToTreeNodeMap[storeValue] = node
+
+	for len(worklist) > 0 {
+		v := worklist[0]
+		worklist = worklist[1:]
+		parentNode := valueToTreeNodeMap[v]
+
+		referrers := v.Referrers()
+		if referrers == nil {
+			continue
+		}
+		for _, inst := range *referrers {
+			switch typedInst := inst.(type) {
+			case *ssa.FieldAddr:
+				tag := typedInst.X.Type().Underlying().(*types.Pointer).Elem().Underlying().(*types.Struct).Tag(typedInst.Field)
+				fieldName := util.GetFieldNameFromJsonTag(tag)
+				if fieldName == "" {
+					valueToTreeNodeMap[typedInst] = parentNode
+				} else {
+					var child ki.Ki
+					if child = parentNode.ChildByName(fieldName, 0); child == nil {
+						child = &FieldNode{Used: true}
+						child.InitName(child, fieldName)
+						parentNode.AddChild(child)
+					}
+					valueToTreeNodeMap[typedInst] = child
+				}
+				worklist = append(worklist, typedInst)
+			case *ssa.Field:
+				tag := typedInst.X.Type().Underlying().(*types.Struct).Tag(typedInst.Field)
+				fieldName := util.GetFieldNameFromJsonTag(tag)
+				if fieldName == "" {
+					valueToTreeNodeMap[typedInst] = parentNode
+				} else {
+					var child ki.Ki
+					if child = parentNode.ChildByName(fieldName, 0); child == nil {
+						child = &FieldNode{Used: true}
+						child.InitName(child, fieldName)
+						parentNode.AddChild(child)
+					}
+					valueToTreeNodeMap[typedInst] = child
+				}
+				worklist = append(worklist, typedInst)
+			case *ssa.Index:
+				var child ki.Ki
+				if child = parentNode.ChildByName("INDEX", 0); child == nil {
+					child = &FieldNode{Used: true}
+					child.InitName(child, "INDEX")
+					parentNode.AddChild(child)
+				}
+				valueToTreeNodeMap[typedInst] = child
+				worklist = append(worklist, typedInst)
+			case *ssa.IndexAddr:
+				var child ki.Ki
+				if child = parentNode.ChildByName("INDEX", 0); child == nil {
+					child = &FieldNode{Used: true}
+					child.InitName(child, "INDEX")
+					parentNode.AddChild(child)
+				}
+				valueToTreeNodeMap[typedInst] = child
+				worklist = append(worklist, typedInst)
+			}
+		}
+	}
 }

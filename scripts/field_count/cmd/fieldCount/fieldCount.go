@@ -12,6 +12,7 @@ func main() {
 	projectPath := flag.String("project-path", "/home/tyler/zookeeper-operator", "the path to the operator's source dir")
 	seedType := flag.String("seed-type", "ZookeeperCluster", "The type of the root")
 	seedPkgPath := flag.String("seed-pkg", "github.com/pravega/zookeeper-operator/api/v1beta1", "The package path of the root")
+	testDir := flag.String("test-dir", "", "the path to the operator's system test dir")
 	flag.Parse()
 
 	// Configure the global logger
@@ -22,5 +23,5 @@ func main() {
 	defer logger.Sync() // flushes buffer, if any
 	zap.ReplaceGlobals(logger)
 
-	fieldCount.CountField(projectPath, seedType, seedPkgPath)
+	fieldCount.CountField(projectPath, testDir, seedType, seedPkgPath)
 }

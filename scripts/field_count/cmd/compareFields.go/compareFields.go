@@ -12,12 +12,21 @@ import (
 	"go.uber.org/zap"
 )
 
+type ConfigFile map[string]Config
+
+type Config struct {
+	ProjectPath  string     `json:"projectPath"`
+	YamlDir      string     `json:"yamlDir"`
+	TestDir      string     `json:"testDir"`
+	SeedType     string     `json:"seedType"`
+	SeedPkgPath  string     `json:"seedPkgPath"`
+	TestPlanPath string     `json:"testPlanPath"`
+	PrunedFields [][]string `json:"prunedFields"`
+}
+
 func main() {
-	projectPath := flag.String("project-path", "/home/tyler/zookeeper-operator", "the path to the operator's source dir")
-	yamlDir := flag.String("yaml-dir", "", "the path to the operator's system test yaml dir")
-	seedType := flag.String("seed-type", "ZookeeperCluster", "The type of the root")
-	seedPkgPath := flag.String("seed-pkg", "github.com/pravega/zookeeper-operator/api/v1beta1", "The package path of the root")
-	testPlanPath := flag.String("test-plan", "", "The path to the test plan")
+	configPath := flag.String("config", "config.json", "the path to the config file")
+	operatorName := flag.String("operator", "zookeeper-operator", "the name of the operator")
 	flag.Parse()
 
 	// Configure the global logger
@@ -27,6 +36,24 @@ func main() {
 	logger, _ := cfg.Build()
 	defer logger.Sync() // flushes buffer, if any
 	zap.ReplaceGlobals(logger)
+
+	configFileData, err := os.ReadFile(*configPath)
+	if err != nil {
+		panic(err)
+	}
+	var configFile ConfigFile
+	err = json.Unmarshal(configFileData, &configFile)
+	if err != nil {
+		panic(err)
+	}
+	config := configFile[*operatorName]
+	projectPath := &config.ProjectPath
+	yamlDir := &config.YamlDir
+	testDir := &config.TestDir
+	seedType := &config.SeedType
+	seedPkgPath := &config.SeedPkgPath
+	testPlanPath := &config.TestPlanPath
+	prunedFields := config.PrunedFields
 
 	data, err := os.ReadFile(*testPlanPath)
 	if err != nil {
@@ -44,12 +71,14 @@ func main() {
 
 		path := "/root"
 		for _, field := range pathSlice {
-			path += "/" + field
+			if field != "" {
+				path += "/" + field
+			}
 		}
 		testPlanFieldSet[path] = struct{}{}
 	}
 
-	fieldSet := fieldCount.CountField(projectPath, seedType, seedPkgPath)
+	fieldSet := fieldCount.CountField(projectPath, testDir, seedType, seedPkgPath)
 	sLogger.Infof("Test Plan Fields:\n%s\n", Intersect(testPlanFieldSet, fieldSet).String())
 
 	if *yamlDir != "" {
@@ -69,11 +98,26 @@ func main() {
 	}
 	sLogger.Infof("Acto Test Extra Fields:\n%s\n", actoExtra)
 
+	operatorTestFieldsAfterPrune := fieldSet.DeepCopy()
+	for _, prunedField := range prunedFields {
+		field := "/root"
+		for _, f := range prunedField {
+			field += "/" + f
+		}
+		for f := range fieldSet {
+			if strings.HasPrefix(f, field) && f != field {
+				delete(operatorTestFieldsAfterPrune, f)
+			}
+		}
+	}
+
 	compareResult := Result{
-		NumActoFields:         len(testPlanFieldSet),
-		NumOperatorTestFields: len(fieldSet),
-		ActoFields:            testPlanFieldSet.Slice(),
-		OperatorTestFields:    fieldSet.Slice(),
+		NumActoFields:                   len(testPlanFieldSet),
+		NumOperatorTestFields:           len(fieldSet),
+		NumOperatorTestFieldsAfterPrune: len(operatorTestFieldsAfterPrune),
+		ActoFields:                      testPlanFieldSet.Slice(),
+		OperatorTestFields:              fieldSet.Slice(),
+		OperatorTestFieldsAfterPrune:    operatorTestFieldsAfterPrune.Slice(),
 	}
 
 	data, err = json.MarshalIndent(compareResult, "", "  ")
@@ -94,8 +138,10 @@ func Intersect(a, b fieldCount.StringSet) fieldCount.StringSet {
 }
 
 type Result struct {
-	NumActoFields         int      `json:"num_acto_fields"`
-	NumOperatorTestFields int      `json:"num_operator_test_fields"`
-	ActoFields            []string `json:"acto_fields"`
-	OperatorTestFields    []string `json:"operator_test_fields"`
+	NumActoFields                   int      `json:"num_acto_fields"`
+	NumOperatorTestFields           int      `json:"num_operator_test_fields"`
+	NumOperatorTestFieldsAfterPrune int      `json:"num_operator_test_fields_after_prune"`
+	ActoFields                      []string `json:"acto_fields"`
+	OperatorTestFields              []string `json:"operator_test_fields"`
+	OperatorTestFieldsAfterPrune    []string `json:"operator_test_fields_after_prune"`
 }

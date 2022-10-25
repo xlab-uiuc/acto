@@ -25,4 +25,12 @@ func (s StringSet) Slice() []string {
 	return slice
 }
 
+func (s StringSet) DeepCopy() StringSet {
+	result := make(StringSet)
+	for k := range s {
+		result[k] = struct{}{}
+	}
+	return result
+}
+
 type Entry interface{}
