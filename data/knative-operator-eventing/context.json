@@ -3,15 +3,12 @@
             "control_flow_fields": [
                   [
                         "root",
-                        "spec",
-                        "source"
+                        "spec"
                   ],
                   [
                         "root",
                         "spec",
-                        "source",
-                        "ceph",
-                        "enabled"
+                        "defaultBrokerClass"
                   ],
                   [
                         "root",
@@ -20,19 +17,22 @@
                   ],
                   [
                         "root",
-                        "spec"
+                        "spec",
+                        "source"
                   ],
                   [
                         "root",
                         "spec",
                         "source",
-                        "redis",
+                        "rabbitmq",
                         "enabled"
                   ],
                   [
                         "root",
                         "spec",
-                        "defaultBrokerClass"
+                        "source",
+                        "kafka",
+                        "enabled"
                   ],
                   [
                         "root",
@@ -45,7 +45,7 @@
                         "root",
                         "spec",
                         "source",
-                        "rabbitmq",
+                        "redis",
                         "enabled"
                   ],
                   [
@@ -59,15 +59,17 @@
                         "root",
                         "spec",
                         "source",
-                        "kafka",
+                        "ceph",
                         "enabled"
                   ]
             ],
             "default_value_map": {},
             "field_conditions_map": {
-                  "[\"spec\", \"source\", \"ceph\", \"enabled\"]": {
+                  "[\"spec\", \"source\", \"redis\", \"enabled\"]": {
+                        "type": "AND",
                         "conditions": [
                               {
+                                    "type": "OR",
                                     "conditions": [
                                           {
                                                 "field": [
@@ -77,15 +79,33 @@
                                                 "op": "!=",
                                                 "value": null
                                           }
-                                    ],
-                                    "type": "OR"
+                                    ]
                               }
-                        ],
-                        "type": "AND"
+                        ]
+                  },
+                  "[\"spec\", \"source\", \"ceph\", \"enabled\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "source"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
                   },
                   "[\"spec\", \"source\", \"github\", \"enabled\"]": {
+                        "type": "AND",
                         "conditions": [
                               {
+                                    "type": "OR",
                                     "conditions": [
                                           {
                                                 "field": [
@@ -95,15 +115,15 @@
                                                 "op": "!=",
                                                 "value": null
                                           }
-                                    ],
-                                    "type": "OR"
+                                    ]
                               }
-                        ],
-                        "type": "AND"
+                        ]
                   },
                   "[\"spec\", \"source\", \"gitlab\", \"enabled\"]": {
+                        "type": "AND",
                         "conditions": [
                               {
+                                    "type": "OR",
                                     "conditions": [
                                           {
                                                 "field": [
@@ -113,15 +133,15 @@
                                                 "op": "!=",
                                                 "value": null
                                           }
-                                    ],
-                                    "type": "OR"
+                                    ]
                               }
-                        ],
-                        "type": "AND"
+                        ]
                   },
                   "[\"spec\", \"source\", \"kafka\", \"enabled\"]": {
+                        "type": "AND",
                         "conditions": [
                               {
+                                    "type": "OR",
                                     "conditions": [
                                           {
                                                 "field": [
@@ -131,15 +151,15 @@
                                                 "op": "!=",
                                                 "value": null
                                           }
-                                    ],
-                                    "type": "OR"
+                                    ]
                               }
-                        ],
-                        "type": "AND"
+                        ]
                   },
                   "[\"spec\", \"source\", \"rabbitmq\", \"enabled\"]": {
+                        "type": "AND",
                         "conditions": [
                               {
+                                    "type": "OR",
                                     "conditions": [
                                           {
                                                 "field": [
@@ -149,29 +169,9 @@
                                                 "op": "!=",
                                                 "value": null
                                           }
-                                    ],
-                                    "type": "OR"
+                                    ]
                               }
-                        ],
-                        "type": "AND"
-                  },
-                  "[\"spec\", \"source\", \"redis\", \"enabled\"]": {
-                        "conditions": [
-                              {
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "source"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ],
-                                    "type": "OR"
-                              }
-                        ],
-                        "type": "AND"
+                        ]
                   }
             }
       },

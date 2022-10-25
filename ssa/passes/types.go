@@ -5,7 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"go/token"
+	"go/types"
+	"strings"
 
+	"github.com/goki/ki/ki"
 	"github.com/xlab-uiuc/acto/ssa/util"
 	"golang.org/x/tools/go/callgraph"
 	"golang.org/x/tools/go/packages"
@@ -61,6 +64,72 @@ func NewCallStack() *CallStack {
 	return &CallStack{}
 }
 
+type FieldNode struct {
+	// A FieldNode represent a specific field in the CR struct
+	ki.Node
+
+	// the list of values that map to this field
+	ValueSet map[ssa.Value]struct{}
+}
+
+func (fn *FieldNode) AddValue(value ssa.Value) {
+	fn.ValueSet[value] = struct{}{}
+}
+
+// Returns the child with the field name, create one if not exist
+func (fn *FieldNode) SubFieldNode(parentStruct *types.Struct, fieldIndex int) *FieldNode {
+	tag := parentStruct.Tag(fieldIndex)
+	fieldName := util.GetFieldNameFromJsonTag(tag)
+
+	if fieldName == "" {
+		return fn
+	}
+
+	if child := fn.ChildByName(fieldName, 0); child == nil {
+		ret := NewFieldNode()
+		ret.SetName(fieldName)
+		fn.AddChild(ret)
+		return ret
+	} else {
+		return child.(*FieldNode)
+	}
+}
+
+// Returns the child with the "INDEX" field name, create one if not exist
+func (fn *FieldNode) IndexFieldNode() *FieldNode {
+	if child := fn.ChildByName("Index", 0); child == nil {
+		ret := NewFieldNode()
+		ret.SetName("Index")
+		fn.AddChild(ret)
+		return ret
+	} else {
+		return child.(*FieldNode)
+	}
+}
+
+func (fn *FieldNode) EncodedPath() string {
+	s := strings.Split(fn.Path(), "/")
+	b, _ := json.Marshal(s)
+	return string(b[:])
+}
+
+func NewFieldNode() *FieldNode {
+	return &FieldNode{
+		ValueSet: make(map[ssa.Value]struct{}),
+	}
+}
+
+type FieldNodeSet map[*FieldNode]struct{}
+
+type ValueToFieldNodeSetMap map[ssa.Value]FieldNodeSet
+
+func (m ValueToFieldNodeSetMap) Add(value ssa.Value, fieldNode *FieldNode) {
+	if _, ok := m[value]; !ok {
+		m[value] = make(FieldNodeSet)
+	}
+	m[value][fieldNode] = struct{}{}
+}
+
 type Context struct {
 	Program                *ssa.Program
 	MainPackages           []*ssa.Package
@@ -69,14 +138,16 @@ type Context struct {
 	PostDominators         map[*ssa.Function]*PostDominator
 	FieldDataDependencyMap map[string]*util.FieldSet // map's key's value depends on value
 
-	ValueFieldMap       map[ssa.Value]*util.FieldSet
-	FieldToValueMap     map[string]*[]ssa.Value
-	StoreInsts          []ssa.Instruction
-	AppendCalls         []ssa.Instruction
-	DefaultValueMap     map[ssa.Value]*ssa.Const
-	IfToCondition       map[ssa.Instruction]*BranchCondition
-	BranchValueDominees map[ssa.Instruction]*UsesInBranch
-	DomineeToConditions map[string]*ConcreteConditionSet
+	FieldTree              *FieldNode
+	ValueToFieldNodeSetMap ValueToFieldNodeSetMap
+	ValueFieldMap          map[ssa.Value]*util.FieldSet
+	FieldToValueMap        map[string]*[]ssa.Value
+	StoreInsts             []ssa.Instruction
+	AppendCalls            []ssa.Instruction
+	DefaultValueMap        map[ssa.Value]*ssa.Const
+	IfToCondition          map[ssa.Instruction]*BranchCondition
+	BranchValueDominees    map[ssa.Instruction]*UsesInBranch
+	DomineeToConditions    map[string]*ConcreteConditionSet
 }
 
 type UsesInBranch struct {

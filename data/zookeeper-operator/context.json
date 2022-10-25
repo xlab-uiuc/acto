@@ -4905,8 +4905,8 @@
             }
       },
       "preload_images": [
-            "docker.io/pravega/zookeeper:0.2.14",
-            "docker.io/pravega/zookeeper-operator:0.2.13"
+            "docker.io/pravega/zookeeper-operator:0.2.13",
+            "docker.io/pravega/zookeeper:0.2.14"
       ],
       "analysis_result": {
             "control_flow_fields": [
@@ -4960,7 +4960,7 @@
                   "[\"root\",\"spec\",\"config\",\"tickTime\"]": "2000",
                   "[\"root\",\"spec\",\"image\",\"pullPolicy\"]": "\"Always\"",
                   "[\"root\",\"spec\",\"image\",\"repository\"]": "\"pravega/zookeeper\"",
-                  "[\"root\",\"spec\",\"image\",\"tag\"]": "\"0.2.13\"",
+                  "[\"root\",\"spec\",\"image\",\"tag\"]": "\"0.2.12\"",
                   "[\"root\",\"spec\",\"pod\",\"serviceAccountName\"]": "\"default\"",
                   "[\"root\",\"spec\",\"pod\",\"terminationGracePeriodSeconds\"]": "30",
                   "[\"root\",\"spec\",\"probes\",\"livenessProbe\",\"failureThreshold\"]": "3",
@@ -4976,7 +4976,7 @@
                   "[\"root\",\"spec\",\"storageType\"]": "\"persistence\""
             },
             "field_conditions_map": {
-                  "[\"spec\", \"persistence\", \"spec\"]": {
+                  "[\"spec\", \"persistence\", \"annotations\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -4994,7 +4994,7 @@
                               }
                         ]
                   },
-                  "[\"spec\", \"initContainers\"]": {
+                  "[\"spec\", \"persistence\", \"spec\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -5003,10 +5003,10 @@
                                           {
                                                 "field": [
                                                       "spec",
-                                                      "initContainers"
+                                                      "storageType"
                                                 ],
                                                 "op": "!=",
-                                                "value": null
+                                                "value": "\"ephemeral\""
                                           }
                                     ]
                               }
@@ -5030,7 +5030,7 @@
                               }
                         ]
                   },
-                  "[\"spec\", \"persistence\", \"annotations\"]": {
+                  "[\"spec\", \"initContainers\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -5039,27 +5039,7 @@
                                           {
                                                 "field": [
                                                       "spec",
-                                                      "storageType"
-                                                ],
-                                                "op": "!=",
-                                                "value": "\"ephemeral\""
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"pod\", \"resources\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "pod",
-                                                      "resources",
-                                                      "requests"
+                                                      "initContainers"
                                                 ],
                                                 "op": "!=",
                                                 "value": null
@@ -5081,6 +5061,26 @@
                                                 ],
                                                 "op": "==",
                                                 "value": "\"ephemeral\""
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"pod\", \"resources\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "pod",
+                                                      "resources",
+                                                      "requests"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
                                           }
                                     ]
                               }

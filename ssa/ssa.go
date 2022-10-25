@@ -55,10 +55,13 @@ func analyze(projectPath string, seedType string, seedPkgPath string) string {
 	log.Printf("%s\n", initial[0])
 
 	context := &analysis.Context{
-		Program:                prog,
-		MainPackages:           ssautil.MainPackages(prog.AllPackages()),
-		RootModule:             initial[0].Module,
-		CallGraph:              nil,
+		Program:      prog,
+		MainPackages: ssautil.MainPackages(prog.AllPackages()),
+		RootModule:   initial[0].Module,
+		CallGraph:    nil,
+
+		FieldTree:              nil,
+		ValueToFieldNodeSetMap: make(map[ssa.Value]analysis.FieldNodeSet),
 		PostDominators:         map[*ssa.Function]*analysis.PostDominator{},
 		FieldDataDependencyMap: map[string]*util.FieldSet{},
 		FieldToValueMap:        map[string]*[]ssa.Value{},

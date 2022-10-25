@@ -497,17 +497,17 @@ func TaintK8sFromValue(context *Context, value ssa.Value, originalValue ssa.Valu
 						// used as Val, propogate back
 						// XXX need to taint to callsite
 
-						if addrFieldSet, ok := valueFieldMap[typedInst.Addr]; ok {
+						if addrFieldSet, ok := context.ValueToFieldNodeSetMap[typedInst.Addr]; ok {
 							// if val is stored into a CR field, don't run backward propogation
 							// handle this case later
 
-							for _, addrField := range addrFieldSet.Fields() {
-								if fs, ok := context.FieldDataDependencyMap[addrField.String()]; ok {
+							for addrField := range addrFieldSet {
+								if fs, ok := context.FieldDataDependencyMap[addrField.EncodedPath()]; ok {
 									fs.Extend(valueFieldMap[originalValue])
 								} else {
 									newFieldSet := util.NewFieldSet()
 									newFieldSet.Extend(valueFieldMap[originalValue])
-									context.FieldDataDependencyMap[addrField.String()] = newFieldSet
+									context.FieldDataDependencyMap[addrField.EncodedPath()] = newFieldSet
 								}
 							}
 						} else {
