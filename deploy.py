@@ -26,15 +26,15 @@ class Deploy:
         self.deploy_method = deploy_method
         self.wait = 20  # sec
 
-    def deploy(self, context: dict, context_name: str):
+    def deploy(self, context: dict, kubeconfig: str, context_name: str):
         # XXX: context param is temporary, need to figure out why rabbitmq complains about namespace
         pass
 
-    def deploy_with_retry(self, context, context_name: str, retry_count=3):
+    def deploy_with_retry(self, context, kubeconfig: str, context_name: str, retry_count=3):
         logger = get_thread_logger(with_prefix=False)
         while retry_count > 0:
             try:
-                return self.deploy(context, context_name)
+                return self.deploy(context, kubeconfig, context_name)
             except Exception as e:
                 logger.warn(e)
                 logger.info(
@@ -43,7 +43,7 @@ class Deploy:
                 retry_count -= 1
         return False
 
-    def check_status(self, context: dict, context_name: str):
+    def check_status(self, context: dict, kubeconfig: str, context_name: str):
         '''
 
         We need to make sure operator to be ready before applying test cases, because Acto would
@@ -51,7 +51,7 @@ class Deploy:
         '''
         logger = get_thread_logger(with_prefix=False)
 
-        apiclient = kubernetes_client(context_name)
+        apiclient = kubernetes_client(kubeconfig, context_name)
 
         logger.debug('Waiting for all pods to be ready')
         pod_ready = False
@@ -137,7 +137,7 @@ class Helm(Deploy):
 
 class Yaml(Deploy):
 
-    def deploy(self, context: dict, context_name: str):
+    def deploy(self, context: dict, kubeconfig: str, context_name: str):
         # TODO: We cannot specify namespace ACTO_NAMESPACE here.
         # rabbitMQ operator will report the error message
         '''
@@ -150,16 +150,16 @@ class Yaml(Deploy):
             self.path) or CONST.ACTO_NAMESPACE
         context['namespace'] = namespace
         ret = k8s_helper.create_namespace(
-            kubernetes_client(context_name), namespace)
+            kubernetes_client(kubeconfig, context_name), namespace)
         if ret == None:
             logger.error('Failed to create namespace')
         if self.init_yaml:
-            kubectl(['apply', '--server-side', '-f', self.init_yaml],
-                    context_name)
-        self.check_status(context, context_name)
-        kubectl(['apply', '--server-side', '-f', self.path, '-n', context['namespace']],
-                context_name)
-        self.check_status(context, context_name)
+            kubectl(['apply', '--server-side', '-f', self.init_yaml], kubeconfig=kubeconfig,
+                    context_name=context_name)
+        self.check_status(context, kubeconfig=kubeconfig, context_name=context_name)
+        kubectl(['apply', '--server-side', '-f', self.path, '-n', context['namespace']], kubeconfig=kubeconfig,
+                context_name=context_name)
+        self.check_status(context, kubeconfig=kubeconfig, context_name=context_name)
 
         # TODO: Return True if deploy successfully
         return True
@@ -167,17 +167,17 @@ class Yaml(Deploy):
 
 class Kustomize(Deploy):
 
-    def deploy(self, context, context_name):
+    def deploy(self, context, kubeconfig, context_name):
         # TODO: We need to remove hardcoded namespace.
         namespace = "cass-operator"
         context['namespace'] = namespace
         if self.init_yaml:
-            kubectl(['apply', '--server-side', '-f', self.init_yaml],
-                    context_name)
-        self.check_status(context, context_name)
-        kubectl(['apply', '--server-side', '-k', self.path, '-n', context['namespace']],
-                context_name)
-        self.check_status(context, context_name)
+            kubectl(['apply', '--server-side', '-f', self.init_yaml], kubeconfig=kubeconfig,
+                context_name=context_name)
+        self.check_status(context, kubeconfig=kubeconfig, context_name=context_name)
+        kubectl(['apply', '--server-side', '-k', self.path, '-n', context['namespace']], kubeconfig=kubeconfig,
+                context_name=context_name)
+        self.check_status(context, kubeconfig=kubeconfig, context_name=context_name)
         return True
 
 

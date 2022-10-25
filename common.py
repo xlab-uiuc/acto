@@ -441,6 +441,7 @@ GENERIC_FIELDS = [
 
 
 def kubectl(args: list,
+            kubeconfig: str,
             context_name: str,
             capture_output=False,
             text=False) -> subprocess.CompletedProcess:
@@ -448,6 +449,11 @@ def kubectl(args: list,
             
     cmd = ['kubectl']
     cmd.extend(args)
+
+    if kubeconfig:
+        cmd.extend(['--kubeconfig', kubeconfig])
+    else:
+        raise Exception('Kubeconfig is not set')
 
     if context_name == None:
         logger.error('Missing context name for kubectl')
@@ -470,8 +476,8 @@ def helm(args: list, context_name: str) -> subprocess.CompletedProcess:
     return subprocess.run(cmd, capture_output=True, text=True)
 
 
-def kubernetes_client(context_name: str) -> kubernetes.client.ApiClient:
-    return kubernetes.config.kube_config.new_client_from_config(
+def kubernetes_client(kubeconfig: str, context_name: str) -> kubernetes.client.ApiClient:
+    return kubernetes.config.kube_config.new_client_from_config(config_file=kubeconfig,
         context=context_name)
 
 if __name__ == '__main__':

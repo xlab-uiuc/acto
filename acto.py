@@ -121,6 +121,7 @@ class TrialRunner:
         self.worker_id = worker_id
         self.context_name = cluster.get_context_name(
             f"acto-cluster-{worker_id}")
+        self.kubeconfig = os.path.join(os.path.expanduser('~'), '.kube', self.context_name)
         self.cluster_name = f"acto-cluster-{worker_id}"
         self.input_model = input_model
         self.deploy = deploy
@@ -139,11 +140,11 @@ class TrialRunner:
         while True:
             trial_start_time = time.time()
             self.cluster.configure_cluster(4, CONST.K8S_VERSION)
-            self.cluster.restart_cluster(self.cluster_name, CONST.K8S_VERSION)
-            apiclient = kubernetes_client(self.context_name)
+            self.cluster.restart_cluster(self.cluster_name, self.kubeconfig, CONST.K8S_VERSION)
+            apiclient = kubernetes_client(self.kubeconfig, self.context_name)
             self.cluster.load_images(self.images_archive, self.cluster_name)
             deployed = self.deploy.deploy_with_retry(
-                self.context, self.context_name)
+                self.context, self.kubeconfig, self.context_name)
             if not deployed:
                 logger.info('Not deployed. Try again!')
                 continue
@@ -182,7 +183,7 @@ class TrialRunner:
             num_mutation: how many mutations to run at each trial
         '''
 
-        runner = Runner(self.context, trial_dir, self.context_name)
+        runner = Runner(self.context, trial_dir, self.kubeconfig, self.context_name)
         checker = Checker(self.context, trial_dir, self.input_model)
 
         curr_input = self.input_model.get_seed_input()
@@ -484,9 +485,13 @@ class Acto:
                                       num_workers, num_cases, mount)
         self.input_model.initialize(self.seed)
         if operator_config.custom_fields != None:
+            pruned_list = []
             module = importlib.import_module(operator_config.custom_fields)
             for custom_field in module.custom_fields:
+                pruned_list.append(custom_field.path)
                 self.input_model.apply_custom_field(custom_field)
+
+            logger.info("Applied custom fields: %s", json.dumps(pruned_list))
 
         # Generate test cases
         self.test_plan = self.input_model.generate_test_plan()
@@ -525,23 +530,24 @@ class Acto:
             # Run learning run to collect some information from runtime
             logger.info('Starting learning run to collect information')
             self.context = {'namespace': '', 'crd': None, 'preload_images': set()}
+            learn_context_name = self.cluster.get_context_name('learn')
+            learn_kubeconfig = os.path.join(os.path.expanduser('~'), '.kube', self.learn_context_name)
 
             while True:
                 self.cluster.restart_cluster('learn', CONST.K8S_VERSION)
                 deployed = self.deploy.deploy_with_retry(
-                    self.context, self.cluster.get_context_name('learn'))
+                    self.context, learn_kubeconfig, learn_context_name)
                 if deployed:
                     break
-            apiclient = kubernetes_client(
-                self.cluster.get_context_name('learn'))
-            runner = Runner(self.context, 'learn',
-                            self.cluster.get_context_name('learn'))
+            apiclient = kubernetes_client(learn_kubeconfig, learn_context_name)
+            runner = Runner(self.context, 'learn', learn_kubeconfig,
+                            learn_context_name)
             runner.run_without_collect(
                 self.operator_config.seed_custom_resource)
 
             update_preload_images(
                 self.context, self.cluster.get_node_list('learn'))
-            process_crd(self.context, apiclient, self.cluster.get_context_name('learn'),
+            process_crd(self.context, apiclient, 'learn', learn_kubeconfig, learn_context_name,
                         self.crd_name, helper_crd)
             self.cluster.delete_cluster('learn')
 

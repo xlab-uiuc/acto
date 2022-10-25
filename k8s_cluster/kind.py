@@ -52,7 +52,7 @@ class Kind(base.KubernetesCluster):
         '''
         return f'kind-{cluster_name}'
 
-    def create_cluster(self, name: str, version: str):
+    def create_cluster(self, name: str, kubeconfig: str, version: str):
         '''Use subprocess to create kind cluster
         Args:
             name: name of the kind cluster
@@ -66,6 +66,12 @@ class Kind(base.KubernetesCluster):
         else:
             cmd.extend(['--name', CONST.CLUSTER_NAME])
 
+        if kubeconfig:
+            logging.info(f'Kubeconfig: {kubeconfig}')
+            cmd.extend(['--kubeconfig', kubeconfig])
+        else:
+            raise Exception('Missing kubeconfig for kind create')
+
         cmd.extend(['--config', self.config_path])
 
         if version:
@@ -74,16 +80,16 @@ class Kind(base.KubernetesCluster):
         p = subprocess.run(cmd)
         while p.returncode != 0:
             logging.error('Failed to create kind cluster, retrying')
-            self.delete_cluster(name)
+            self.delete_cluster(name, kubeconfig)
             time.sleep(5)
             p = subprocess.run(cmd)
 
         try:
-            kubernetes.config.load_kube_config(
+            kubernetes.config.load_kube_config(config_file=kubeconfig, 
                 context=self.get_context_name(name))
         except Exception as e:
             logging.debug("Incorrect kube config file:")
-            with open(f"{os.getenv('HOME')}/.kube/config") as f:
+            with open(kubeconfig) as f:
                 logging.debug(f.read())
             raise e
 
@@ -103,13 +109,18 @@ class Kind(base.KubernetesCluster):
         if p.returncode != 0:
             logging.error('Failed to preload images archive')
 
-    def delete_cluster(self, name: str):
+    def delete_cluster(self, name: str, kubeconfig: str):
         cmd = ['kind', 'delete', 'cluster']
 
         if name:
             cmd.extend(['--name', name])
         else:
             logging.error('Missing cluster name for kind delete')
+
+        if kubeconfig:
+            cmd.extend(['--kubeconfig', kubeconfig])
+        else:
+            raise Exception('Missing kubeconfig for kind create')
 
         while subprocess.run(cmd).returncode != 0:
             continue

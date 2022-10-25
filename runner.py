@@ -15,14 +15,15 @@ from thread_logger import get_thread_logger
 
 class Runner(object):
 
-    def __init__(self, context: dict, trial_dir: str, context_name: str):
+    def __init__(self, context: dict, trial_dir: str, kubeconfig: str, context_name: str):
         self.namespace = context["namespace"]
         self.crd_metainfo: dict = context['crd']
         self.trial_dir = trial_dir
+        self.kubeconfig = kubeconfig
         self.context_name = context_name
         self.log_length = 0
 
-        apiclient = kubernetes_client(context_name)
+        apiclient = kubernetes_client(kubeconfig, context_name)
         self.coreV1Api = kubernetes.client.CoreV1Api(apiclient)
         self.appV1Api = kubernetes.client.AppsV1Api(apiclient)
         self.batchV1Api = kubernetes.client.BatchV1Api(apiclient)
@@ -65,7 +66,7 @@ class Runner(object):
 
         cmd = ['apply', '-f', mutated_filename, '-n', self.namespace]
 
-        cli_result = kubectl(cmd, context_name=self.context_name, capture_output=True, text=True)
+        cli_result = kubectl(cmd, kubeconfig=self.kubeconfig, context_name=self.context_name, capture_output=True, text=True)
         self.wait_for_system_converge()
 
         logger.debug('STDOUT: ' + cli_result.stdout)
@@ -86,7 +87,7 @@ class Runner(object):
 
     def run_without_collect(self, seed_file: str):
         cmd = ['apply', '-f', seed_file, '-n', self.namespace]
-        _ = kubectl(cmd, context_name=self.context_name)
+        _ = kubectl(cmd, kubeconfig=self.kubeconfig, context_name=self.context_name)
 
         self.wait_for_system_converge()
 
