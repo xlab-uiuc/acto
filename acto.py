@@ -30,6 +30,8 @@ from snapshot import EmptySnapshot
 from ssa.analysis import analyze
 from thread_logger import set_thread_logger_prefix, get_thread_logger
 from value_with_schema import ValueWithBasicSchema, ValueWithSchema, attach_schema_to_value
+from reproduce import ReproInputModel
+from reproduce import apply_repro_testcase
 
 CONST = CONST()
 random.seed(0)
@@ -112,7 +114,7 @@ def timeout_handler(sig, frame):
 class TrialRunner:
 
     def __init__(self, context: dict, input_model: InputModel, deploy: Deploy, workdir: str,
-                 cluster: base.KubernetesCluster, worker_id: int, dryrun: bool) -> None:
+                 cluster: base.KubernetesCluster, worker_id: int, dryrun: bool, is_reproduce: bool) -> None:
         self.context = context
         self.workdir = workdir
         self.cluster = cluster
@@ -125,6 +127,7 @@ class TrialRunner:
         self.input_model = input_model
         self.deploy = deploy
         self.dryrun = dryrun
+        self.is_reproduce = is_reproduce
 
         self.snapshots = []
         self.discarded_testcases = {}  # List of test cases failed to run
@@ -216,10 +219,14 @@ class TrialRunner:
                         logger.info('Precondition of %s fails, try setup first',
                                      field_node.get_path())
                         
-                        apply_testcase(curr_input_with_schema,
-                                    field_node.get_path(),
-                                    testcase,
-                                    setup=True)
+                        # Check whether Acto is in the reproduce mode
+                        if not self.is_reproduce:
+                            apply_testcase(curr_input_with_schema,
+                                        field_node.get_path(),
+                                        testcase,
+                                        setup=True)
+                        else:
+                            apply_repro_testcase(curr_input_with_schema, testcase=testcase)
 
                         if not testcase.test_precondition(
                                 curr_input_with_schema.get_value_by_path(list(
@@ -290,8 +297,12 @@ class TrialRunner:
         
         testcase_patches = []
         for field_node, testcase in testcases:
-            logger.debug('Acto is in the normal mode')
-            patch = apply_testcase(curr_input_with_schema, field_node.get_path(), testcase)
+            if not self.is_reproduce:
+                logger.debug('Acto is in the normal mode')
+                patch = apply_testcase(curr_input_with_schema, field_node.get_path(), testcase)
+            else:
+                logger.debug('Acto is in the reproduce mode')
+                patch = apply_repro_testcase(curr_input_with_schema, testcase)
             # field_node.get_testcases().pop()  # finish testcase
             testcase_patches.append((field_node, testcase, patch))
 
@@ -360,8 +371,9 @@ class TrialRunner:
                         return self.run_testcases(curr_input_with_schema, ready_testcases, runner,
                                                 checker, generation)
         else:
-            for patch in testcase_patches:
-                patch[0].get_testcases().pop()  # finish testcase
+            if not self.is_reproduce:
+                for patch in testcase_patches:
+                    patch[0].get_testcases().pop()  # finish testcase
             if isinstance(result, UnchangedInputResult):
                 pass
             elif isinstance(result, ErrorResult):
@@ -429,6 +441,8 @@ class Acto:
                  num_cases: int,
                  dryrun: bool,
                  analysis_only: bool,
+                 is_reproduce: bool,
+                 reproduce_dir: str,
                  mount: list = None) -> None:
         logger = get_thread_logger(with_prefix=False)
 
@@ -468,6 +482,8 @@ class Acto:
         self.images_archive = os.path.join(workdir_path, 'images.tar')
         self.num_workers = num_workers
         self.dryrun = dryrun
+        self.is_reproduce = is_reproduce
+        self.reproduce_dir = reproduce_dir
         self.snapshots = []
 
         # generate configuration files for the cluster runtime
@@ -482,8 +498,11 @@ class Acto:
             self.context['preload_images'].update(preload_images_)
 
         # Apply custom fields
-        self.input_model = InputModel(self.context['crd']['body'], operator_config.example_dir,
+        if not self.is_reproduce:
+            self.input_model = InputModel(self.context['crd']['body'], operator_config.example_dir,
                                       num_workers, num_cases, mount)
+        else:
+            self.input_model = ReproInputModel(self.reproduce_dir)
         self.input_model.initialize(self.seed)
         if operator_config.custom_fields != None:
             pruned_list = []
@@ -586,7 +605,7 @@ class Acto:
         threads = []
         for i in range(self.num_workers):
             runner = TrialRunner(self.context, self.input_model, self.deploy, self.workdir_path, self.cluster,
-                                 i, self.dryrun)
+                                 i, self.dryrun, self.is_reproduce)
             t = threading.Thread(target=runner.run, args=())
             t.start()
             threads.append(t)
@@ -691,6 +710,15 @@ if __name__ == '__main__':
                         dest='dryrun',
                         action='store_true',
                         help='Only generate test cases without executing them')
+    parser.add_argument('--is_reproduce',
+                        dest='is_reproduce',
+                        action='store_true',
+                        required=False,
+                        help='Reproduce mode')
+    parser.add_argument('--reproduce_dir',
+                        dest='reproduce_dir',
+                        required=False,
+                        help='The directory of the trial folder to reproduce')
 
     args = parser.parse_args()
 
@@ -736,7 +764,7 @@ if __name__ == '__main__':
 
     start_time = datetime.now()
     acto = Acto(workdir_path, config, args.cluster_runtime, args.enable_analysis, args.preload_images, context_cache,
-                args.helper_crd, args.num_workers, args.num_cases, args.dryrun, args.learn_analysis_only)
+                args.helper_crd, args.num_workers, args.num_cases, args.dryrun, args.learn_analysis_only, args.is_reproduce, args.reproduce_dir)
     if not args.learn:
         acto.run()
     end_time = datetime.now()
