@@ -1,7 +1,7 @@
-s# Number of bugs
-(Byproduct bugs included) Total bugs: **57**, confirmed: **43**, fixed: **28**.<br/>
+# Number of bugs
+(Byproduct bugs included) Total bugs: **57**, confirmed: **44**, fixed: **28**.<br/>
 
-(Byproduct bugs excluded) Total bugs: **53**, confirmed: **39**, fixed: **25**.<br/>
+(Byproduct bugs excluded) Total bugs: **53**, confirmed: **40**, fixed: **25**.<br/>
 
 # Bugs found
 
@@ -35,7 +35,7 @@ s# Number of bugs
 | kubernetes/kubernetes               | [https://github.com/kubernetes/kubernetes/issues/109839](https://github.com/kubernetes/kubernetes/issues/109839)                 | confirmed |
 |                                     | [https://github.com/kubernetes/kubernetes/issues/110653](https://github.com/kubernetes/kubernetes/issues/110653)                 | confirmed |
 |                                     | [https://github.com/kubernetes/kubernetes/issues/110654](https://github.com/kubernetes/kubernetes/issues/110654)                 | confirmed |
-|                                     | [https://github.com/kubernetes/kubernetes/issues/112609](https://github.com/kubernetes/kubernetes/issues/112609)                 |           |
+|                                     | [https://github.com/kubernetes/kubernetes/issues/112609](https://github.com/kubernetes/kubernetes/issues/112609)                 | confirmed |
 | cockroachdb/cockroach-operator      | [https://github.com/cockroachdb/cockroach-operator/issues/918](https://github.com/cockroachdb/cockroach-operator/issues/918)     | confirmed |
 |                                     | [https://github.com/cockroachdb/cockroach-operator/issues/919](https://github.com/cockroachdb/cockroach-operator/issues/919)     |
 |                                     | [https://github.com/cockroachdb/cockroach-operator/issues/920](https://github.com/cockroachdb/cockroach-operator/issues/920)     | confirmed |

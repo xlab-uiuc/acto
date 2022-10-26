@@ -15,14 +15,15 @@ from thread_logger import get_thread_logger
 
 class Runner(object):
 
-    def __init__(self, context: dict, trial_dir: str, context_name: str):
+    def __init__(self, context: dict, trial_dir: str, kubeconfig: str, context_name: str):
         self.namespace = context["namespace"]
         self.crd_metainfo: dict = context['crd']
         self.trial_dir = trial_dir
+        self.kubeconfig = kubeconfig
         self.context_name = context_name
         self.log_length = 0
 
-        apiclient = kubernetes_client(context_name)
+        apiclient = kubernetes_client(kubeconfig, context_name)
         self.coreV1Api = kubernetes.client.CoreV1Api(apiclient)
         self.appV1Api = kubernetes.client.AppsV1Api(apiclient)
         self.batchV1Api = kubernetes.client.BatchV1Api(apiclient)
@@ -65,7 +66,7 @@ class Runner(object):
 
         cmd = ['apply', '-f', mutated_filename, '-n', self.namespace]
 
-        cli_result = kubectl(cmd, context_name=self.context_name, capture_output=True, text=True)
+        cli_result = kubectl(cmd, kubeconfig=self.kubeconfig, context_name=self.context_name, capture_output=True, text=True)
         self.wait_for_system_converge()
 
         logger.debug('STDOUT: ' + cli_result.stdout)
@@ -86,7 +87,7 @@ class Runner(object):
 
     def run_without_collect(self, seed_file: str):
         cmd = ['apply', '-f', seed_file, '-n', self.namespace]
-        _ = kubectl(cmd, context_name=self.context_name)
+        _ = kubectl(cmd, kubeconfig=self.kubeconfig, context_name=self.context_name)
 
         self.wait_for_system_converge()
 
@@ -233,10 +234,10 @@ class Runner(object):
         timer_hard_timeout = acto_timer.ActoTimer(hard_timeout, combined_event_queue, "timeout")
         watch_process = Process(target=self.watch_system_events,
                                 args=(event_stream, combined_event_queue))
-
+ 
         timer_hard_timeout.start()
         watch_process.start()
-
+        
         while (True):
             try:
                 event = combined_event_queue.get(timeout=60)
@@ -307,3 +308,29 @@ def group_pods(all_pods: dict) -> Tuple[dict, dict]:
             other_pods[name] = pod
 
     return deployment_pods, other_pods
+
+
+# standalone runner for acto
+if __name__ == "__main__":
+    import argparse
+    import sys
+
+    parser = argparse.ArgumentParser(description="Standalone runner for acto")
+    parser.add_argument('-m', '--manifest', type=str, help='path to the manifest file to be applied', required=True)
+    parser.add_argument('-c', '--context', type=str, help='path to the context file', required=True)
+    parser.add_argument('-t', '--trial-dir', type=str, help='path to the trial directory', required=True)
+    parser.add_argument('-g', '--generation', type=int, help='generation number', required=True) 
+    parser.add_argument('-k', '--cluster-context-name', type=str, help='name of the cluster context', required=True)
+    args = parser.parse_args()
+
+    # setting logging output to stdout
+    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+
+    manifest = yaml.load(open(args.manifest, 'r'), Loader=yaml.FullLoader)
+    context = json.load(open(args.context, 'r'))
+
+    runner = Runner(context, args.trial_dir, args.cluster_context_name)
+
+    runner.run(manifest, args.generation)
+    print("Done")
+    

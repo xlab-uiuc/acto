@@ -4,6 +4,7 @@ import json
 import os
 from typing import Tuple
 from deepdiff.helper import NotPresent
+from deepdiff.model import PrettyOrderedSet
 from datetime import datetime, date
 import re
 import string
@@ -93,6 +94,7 @@ class Oracle(str, enum.Enum):
     ERROR_LOG = 'ErrorLog'
     SYSTEM_STATE = 'SystemState'
     SYSTEM_HEALTH = 'SystemHealth'
+    CRASH = 'Crash'
 
 
 class RunResult():
@@ -128,6 +130,21 @@ class ErrorResult(RunResult):
         self.message = msg
         self.input_delta = input_delta
         self.matched_system_delta = matched_system_delta
+
+
+class RecoveryResult(RunResult):
+
+    def __init__(self, delta, from_, to_) -> None:
+        self.delta = delta
+        self.from_ = from_
+        self.to_ = to_
+
+
+class CompoundErrorResult(ErrorResult):
+
+    def __init__(self, normal_err: ErrorResult, recovery_err: RecoveryResult) -> None:
+        self.normal_err = normal_err
+        self.recovery_err = recovery_err
 
 
 def flatten_list(l: list, curr_path: list) -> list:
@@ -189,7 +206,6 @@ def postprocess_diff(diff):
             '''
             if (isinstance(change.t1, dict) or isinstance(change.t1, list)) \
                     and (change.t2 == None or isinstance(change.t2, NotPresent)):
-                logger.debug('dict deleted')
                 if isinstance(change.t1, dict):
                     flattened_changes = flatten_dict(change.t1, [])
                 else:
@@ -303,12 +319,28 @@ def save_result(trial_dir: str, trial_err: ErrorResult, num_tests: int, trial_el
     result_dict['num_tests'] = num_tests
     if trial_err == None:
         logger.info('Trial %s completed without error', trial_dir)
+    elif isinstance(trial_err, CompoundErrorResult):
+        normal_err = trial_err.normal_err
+        result_dict['oracle'] = normal_err.oracle
+        result_dict['message'] = normal_err.message
+        result_dict['input_delta'] = normal_err.input_delta
+        result_dict['matched_system_delta'] = normal_err.matched_system_delta
+
+        # Dump the recovery error in a separate file
+        recovery_err = trial_err.recovery_err
+        recovery_result_dict = {}
+        recovery_result_dict['trial_num'] = result_dict['trial_num']
+        recovery_result_dict['delta'] = json.loads(recovery_err.delta.to_json(default_mapping={datetime: lambda x: x.isoformat()}))
+        recovery_result_dict['from'] = recovery_err.from_
+        recovery_result_dict['to'] = recovery_err.to_
+        recovery_err_path = os.path.join(trial_dir, 'recovery_result.json')
+        with open(recovery_err_path, 'w') as f:
+            json.dump(recovery_result_dict, f, cls=ActoEncoder, indent=6)
     else:
         result_dict['oracle'] = trial_err.oracle
         result_dict['message'] = trial_err.message
         result_dict['input_delta'] = trial_err.input_delta
-        result_dict['matched_system_delta'] = \
-            trial_err.matched_system_delta
+        result_dict['matched_system_delta'] = trial_err.matched_system_delta
     result_path = os.path.join(trial_dir, 'result.json')
     with open(result_path, 'w') as result_file:
         json.dump(result_dict, result_file, cls=ActoEncoder, indent=6)
@@ -327,6 +359,8 @@ class ActoEncoder(json.JSONEncoder):
             return obj.__str__()
         elif isinstance(obj, set):
             return list(obj)
+        elif isinstance(obj, DeepDiff):
+            return obj.to_json()
         return json.JSONEncoder.default(self, obj)
 
 
@@ -408,6 +442,7 @@ GENERIC_FIELDS = [
 
 
 def kubectl(args: list,
+            kubeconfig: str,
             context_name: str,
             capture_output=False,
             text=False) -> subprocess.CompletedProcess:
@@ -415,6 +450,11 @@ def kubectl(args: list,
             
     cmd = ['kubectl']
     cmd.extend(args)
+
+    if kubeconfig:
+        cmd.extend(['--kubeconfig', kubeconfig])
+    else:
+        raise Exception('Kubeconfig is not set')
 
     if context_name == None:
         logger.error('Missing context name for kubectl')
@@ -437,8 +477,8 @@ def helm(args: list, context_name: str) -> subprocess.CompletedProcess:
     return subprocess.run(cmd, capture_output=True, text=True)
 
 
-def kubernetes_client(context_name: str) -> kubernetes.client.ApiClient:
-    return kubernetes.config.kube_config.new_client_from_config(
+def kubernetes_client(kubeconfig: str, context_name: str) -> kubernetes.client.ApiClient:
+    return kubernetes.config.kube_config.new_client_from_config(config_file=kubeconfig,
         context=context_name)
 
 if __name__ == '__main__':

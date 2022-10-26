@@ -1,4 +1,6 @@
+from ast import Pass
 from builtins import TypeError
+from copy import deepcopy
 import sys
 import logging
 from deepdiff import DeepDiff
@@ -56,17 +58,23 @@ class Checker(object):
         logger.info('Encode dependency of %s on %s' % (depender, dependee))
         encoded_path = json.dumps(depender)
         if encoded_path not in self.field_conditions_map:
-            self.field_conditions_map[encoded_path] = []
+            self.field_conditions_map[encoded_path] = {
+                'conditions': [],
+                'type': 'AND'
+            }
 
         # Add dependency to the subfields, idealy we should have a B tree for this
         for key, value in self.field_conditions_map.items():
             path = json.loads(key)
             if is_subfield(path, depender):
                 logger.debug('Add dependency of %s on %s' % (path, dependee))
-                value.append({
-                    'field': dependee,
-                    'op': '==',
-                    'value': True
+                value['conditions'].append({
+                    'type': 'OR',
+                    'conditions': [{
+                        'field': dependee,
+                        'op': '==',
+                        'value': True
+                    }]
                 })
 
     def check(self, snapshot: Snapshot, prev_snapshot: Snapshot, generation: int) -> RunResult:
@@ -86,6 +94,10 @@ class Checker(object):
         self.delta_log_path = "%s/delta-%d.log" % (self.trial_dir, generation)
         input_delta, system_delta = self.get_deltas(snapshot, prev_snapshot)
         flattened_system_state = flatten_dict(snapshot.system_state, [])
+
+        crash_result = self.check_crash(snapshot)
+        if not isinstance(crash_result, PassResult):
+            return crash_result
 
         input_result = self.check_input(snapshot, input_delta)
         if not isinstance(input_result, PassResult):
@@ -122,6 +134,41 @@ class Checker(object):
             return log_result
 
         return PassResult()
+
+    def check_crash(self, snapshot: Snapshot) -> RunResult:
+        pods = snapshot.system_state['pod']
+        deployment_pods = snapshot.system_state['deployment_pods']
+
+        for pod_name, pod in pods.items():
+            container_statuses = pod['status']['container_statuses']
+            if container_statuses is None:
+                continue
+            for container_status in container_statuses:
+                if 'state' in container_status:
+                    if 'terminated' in container_status['state'] and container_status['state']['terminated'] != None:
+                        if container_status['state']['terminated']['reason'] == 'Error':
+                            return ErrorResult(Oracle.CRASH, 'Pod %s crashed' % pod_name)
+                    elif 'waiting' in container_status['state'] and container_status['state']['waiting'] != None:
+                        if container_status['state']['waiting']['reason'] == 'CrashLoopBackOff':
+                            return ErrorResult(Oracle.CRASH, 'Pod %s crashed' % pod_name)
+
+
+        for deployment_name, deployment in deployment_pods.items():
+            for pod in deployment:
+                container_statuses = pod['status']['container_statuses']
+                if container_statuses is None:
+                    continue
+                for container_status in container_statuses:
+                    if 'state' in container_status:
+                        if 'terminated' in container_status['state'] and container_status['state']['terminated'] != None:
+                            if container_status['state']['terminated']['reason'] == 'Error':
+                                return ErrorResult(Oracle.CRASH, 'Pod %s crashed' % pod_name)
+                        elif 'waiting' in container_status['state'] and container_status['state']['waiting'] != None:
+                            if container_status['state']['waiting']['reason'] == 'CrashLoopBackOff':
+                                return ErrorResult(Oracle.CRASH, 'Pod %s crashed' % pod_name)
+
+        return PassResult()
+
 
     def check_input(self, snapshot: Snapshot, input_delta) -> RunResult:
         logger = get_thread_logger(with_prefix=True)
@@ -223,6 +270,22 @@ class Checker(object):
                                        delta)
         return PassResult()
 
+    def check_condition_group(self, input: dict, condition_group: dict, input_delta_path: list) -> bool:
+        if 'type' in condition_group:
+            typ = condition_group['type']
+            if typ == 'AND':
+                for condition in condition_group['conditions']:
+                    if not self.check_condition_group(input, condition, input_delta_path):
+                        return False
+                return True
+            elif typ == 'OR':
+                for condition in condition_group['conditions']:
+                    if self.check_condition_group(input, condition, input_delta_path):
+                        return True
+                return False
+        else:
+            return self.check_condition(input, condition_group, input_delta_path)
+
     def should_skip_input_delta(self, input_delta: Diff, snapshot: Snapshot) -> bool:
         '''Determines if the input delta should be skipped or not
 
@@ -249,25 +312,23 @@ class Checker(object):
         field_conditions_map = self.field_conditions_map
         encoded_path = json.dumps(input_delta.path)
         if encoded_path in field_conditions_map:
-            conditions = field_conditions_map[encoded_path]
-            for condition in conditions:
-                if not self.check_condition(snapshot.input, condition):
-                    # if one condition does not satisfy, skip this testcase
-                    logger.info(
-                        'Field precondition %s does not satisfy, skip this testcase' % condition)
-                    return True
+            condition_group = field_conditions_map[encoded_path]
+            if not self.check_condition_group(snapshot.input, condition_group, input_delta.path):
+                # if one condition does not satisfy, skip this testcase
+                logger.info(
+                    'Field precondition %s does not satisfy, skip this testcase' % condition_group)
+                return True
         else:
             # if no exact match, try find parent field
             parent = Checker.find_nearest_parent(
                 input_delta.path, field_conditions_map.keys())
             if parent is not None:
-                conditions = field_conditions_map[json.dumps(parent)]
-                for condition in conditions:
-                    if not self.check_condition(snapshot.input, condition):
-                        # if one condition does not satisfy, skip this testcase
-                        logger.info(
-                            'Field precondition %s does not satisfy, skip this testcase' % condition)
-                        return True
+                condition_group = field_conditions_map[json.dumps(parent)]
+                if not self.check_condition_group(snapshot.input, condition_group, input_delta.path):
+                    # if one condition does not satisfy, skip this testcase
+                    logger.info(
+                        'Field precondition %s does not satisfy, skip this testcase' % condition_group)
+                    return True
 
         if not self.context['enable_analysis']:
             return False
@@ -313,8 +374,12 @@ class Checker(object):
                 ret = p
         return ret
 
-    def check_condition(self, input: dict, condition: dict) -> bool:
+    def check_condition(self, input: dict, condition: dict, input_delta_path: list) -> bool:
         path = condition['field']
+
+        # corner case: skip if condition is simply checking if the path is not nil
+        if is_subfield(input_delta_path, path) and condition['op'] == '!=' and condition['value'] == None:
+            return True
 
         # hack: convert 'INDEX' to int 0
         for i in range(len(path)):
@@ -506,7 +571,64 @@ class Checker(object):
                          view='tree'))
 
         return input_delta, system_state_delta
+    
+    def check_state_equality(self, snapshot: Snapshot, prev_snapshot: Snapshot) -> RunResult:
+        '''Check whether two system state are semantically equivalent
 
+        Args:
+            - snapshot: a reference to a system state
+            - prev_snapshot: a reference to another system state
+
+        Return value:
+            - a dict of diff results, empty if no diff found
+        '''
+        logger = get_thread_logger(with_prefix=True)
+
+        curr_system_state = deepcopy(snapshot.system_state)
+        prev_system_state = deepcopy(prev_snapshot.system_state)
+
+        # remove pods that belong to jobs from both states to avoid observability problem
+        curr_pods = curr_system_state['pod']
+        prev_pods = prev_system_state['pod']
+        curr_system_state['pod'] = {k: v for k, v in curr_pods.items() if v['metadata']['owner_references'][0]['kind'] != 'Job'}
+        prev_system_state['pod'] = {k: v for k, v in prev_pods.items() if v['metadata']['owner_references'][0]['kind'] != 'Job'}
+
+        # remove custom resource from both states
+        curr_system_state.pop('custom_resource_spec', None)
+        prev_system_state.pop('custom_resource_spec', None)
+        curr_system_state.pop('custom_resource_status', None)
+        prev_system_state.pop('custom_resource_status', None)
+
+        # remove fields that are not deterministic
+        exclude_paths = [
+            r".*\['metadata'\]\['managed_fields'\]",
+            r".*\['metadata'\]\['creation_timestamp'\]",
+            r".*\['metadata'\]\['resource_version'\]",
+            r".*\['metadata'\]\['uid'\]",
+            r".*\['metadata'\]\['generation'\]",
+            r".*\['metadata'\]\['annotations'\]",
+            r".*\['metadata'\]\['annotations'\]\['.*last-applied.*'\]",
+            r".*\['metadata'\]\['annotations'\]\['.*\.kubernetes\.io.*'\]",
+            r".*\['metadata'\]\['labels'\]\['.*revision.*'\]",
+            r".*\['metadata'\]\['labels'\]\['owner-rv\]",
+          
+            r".*\['status'\]",
+
+            r".*\['spec'\]\['init_containers'\]\[.*\]\['volume_mounts'\]\[.*\]\['name'\]",
+            r".*\['spec'\]\['containers'\]\[.*\]\['volume_mounts'\]\[.*\]\['name'\]",
+            r".*\['spec'\]\['volumes'\]\[.*\]\['name'\]",
+            ]
+
+        diff = DeepDiff(prev_system_state, curr_system_state, 
+                            exclude_regex_paths=exclude_paths, 
+                            ignore_order=True)
+        
+        if diff:
+            logger.debug(f"failed attempt recovering to seed state - system state diff: {diff}")
+            return RecoveryResult(delta=diff, from_=prev_system_state, to_=curr_system_state) 
+        
+        return PassResult()
+            
 
 if __name__ == "__main__":
     import glob
@@ -516,6 +638,31 @@ if __name__ == "__main__":
     import argparse
     from types import SimpleNamespace
     import pandas
+
+    def checker_save_result(trial_dir: str, original_result: dict, trial_err: ErrorResult, num_tests: int, trial_elapsed):
+
+        result_dict = {}
+        result_dict['original_result'] = original_result
+        post_result = {}
+        result_dict['post_result'] = post_result
+        try:
+            trial_num = '-'.join(trial_dir.split('-')[-2:])
+            post_result['trial_num'] = trial_num
+        except:
+            post_result['trial_num'] = trial_dir
+        post_result['duration'] = original_result['duration']
+        post_result['num_tests'] = num_tests
+        if trial_err == None:
+            logging.info('Trial %s completed without error', trial_dir)
+        else:
+            post_result['oracle'] = trial_err.oracle
+            post_result['message'] = trial_err.message
+            post_result['input_delta'] = trial_err.input_delta
+            post_result['matched_system_delta'] = trial_err.matched_system_delta
+        result_path = os.path.join(trial_dir, 'post_result.json')
+        with open(result_path, 'w') as result_file:
+            json.dump(result_dict, result_file, cls=ActoEncoder, indent=6)
+
 
     parser = argparse.ArgumentParser(description='Standalone checker for Acto')
     parser.add_argument(
@@ -560,6 +707,8 @@ if __name__ == "__main__":
     with open(context_cache, 'r') as context_fin:
         context = json.load(context_fin)
         context['preload_images'] = set(context['preload_images'])
+    
+    context['enable_analysis'] = True
 
     if 'enable_analysis' in context and context['enable_analysis'] == True:
         logging.info('Analysis is enabled')
@@ -576,6 +725,12 @@ if __name__ == "__main__":
     num_delta_fields_list = []
     for trial_dir in sorted(trial_dirs):
         print(trial_dir)
+        if not os.path.isdir(trial_dir):
+            continue
+        original_result_path = "%s/result.json" % (trial_dir)
+        with open(original_result_path, 'r') as original_result_file:
+            original_result = json.load(original_result_file)
+
         input_model = InputModel(context['crd']['body'], config.example_dir,
                                  1, 1, [])
 
@@ -634,7 +789,7 @@ if __name__ == "__main__":
                     continue
                 elif isinstance(result, ErrorResult):
                     logging.info('%s reports an alarm' % system_state_path)
-                    save_result(trial_dir, result, generation, None)
+                    checker_save_result(trial_dir, original_result, result, generation, None)
                     num_alarms += 1
                     alarm = True
                 elif isinstance(result, PassResult):
@@ -652,6 +807,7 @@ if __name__ == "__main__":
 
         if not alarm:
             logging.info('%s does not report an alarm' % system_state_path)
+            checker_save_result(trial_dir, original_result, None, generation, None)
 
     logging.info('Number of alarms: %d', num_alarms)
     num_system_fields_df = pandas.Series(num_system_fields_list)

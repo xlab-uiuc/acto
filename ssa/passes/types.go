@@ -5,7 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"go/token"
+	"go/types"
+	"strings"
 
+	"github.com/goki/ki/ki"
 	"github.com/xlab-uiuc/acto/ssa/util"
 	"golang.org/x/tools/go/callgraph"
 	"golang.org/x/tools/go/packages"
@@ -61,21 +64,90 @@ func NewCallStack() *CallStack {
 	return &CallStack{}
 }
 
-type Context struct {
-	Program        *ssa.Program
-	MainPackages   []*ssa.Package
-	RootModule     *packages.Module
-	CallGraph      *callgraph.Graph
-	PostDominators map[*ssa.Function]*PostDominator
+type FieldNode struct {
+	// A FieldNode represent a specific field in the CR struct
+	ki.Node
 
-	ValueFieldMap       map[ssa.Value]*util.FieldSet
-	FieldToValueMap     map[string]*[]ssa.Value
-	StoreInsts          []ssa.Instruction
-	AppendCalls         []ssa.Instruction
-	DefaultValueMap     map[ssa.Value]*ssa.Const
-	IfToCondition       map[ssa.Instruction]*BranchCondition
-	BranchValueDominees map[ssa.Instruction]*UsesInBranch
-	DomineeToConditions map[string]*ConcreteConditionSet
+	// the list of values that map to this field
+	ValueSet map[ssa.Value]struct{}
+}
+
+func (fn *FieldNode) AddValue(value ssa.Value) {
+	fn.ValueSet[value] = struct{}{}
+}
+
+// Returns the child with the field name, create one if not exist
+func (fn *FieldNode) SubFieldNode(parentStruct *types.Struct, fieldIndex int) *FieldNode {
+	tag := parentStruct.Tag(fieldIndex)
+	fieldName := util.GetFieldNameFromJsonTag(tag)
+
+	if fieldName == "" {
+		return fn
+	}
+
+	if child := fn.ChildByName(fieldName, 0); child == nil {
+		ret := NewFieldNode()
+		ret.SetName(fieldName)
+		fn.AddChild(ret)
+		return ret
+	} else {
+		return child.(*FieldNode)
+	}
+}
+
+// Returns the child with the "INDEX" field name, create one if not exist
+func (fn *FieldNode) IndexFieldNode() *FieldNode {
+	if child := fn.ChildByName("Index", 0); child == nil {
+		ret := NewFieldNode()
+		ret.SetName("Index")
+		fn.AddChild(ret)
+		return ret
+	} else {
+		return child.(*FieldNode)
+	}
+}
+
+func (fn *FieldNode) EncodedPath() string {
+	s := strings.Split(fn.Path(), "/")
+	b, _ := json.Marshal(s)
+	return string(b[:])
+}
+
+func NewFieldNode() *FieldNode {
+	return &FieldNode{
+		ValueSet: make(map[ssa.Value]struct{}),
+	}
+}
+
+type FieldNodeSet map[*FieldNode]struct{}
+
+type ValueToFieldNodeSetMap map[ssa.Value]FieldNodeSet
+
+func (m ValueToFieldNodeSetMap) Add(value ssa.Value, fieldNode *FieldNode) {
+	if _, ok := m[value]; !ok {
+		m[value] = make(FieldNodeSet)
+	}
+	m[value][fieldNode] = struct{}{}
+}
+
+type Context struct {
+	Program                *ssa.Program
+	MainPackages           []*ssa.Package
+	RootModule             *packages.Module
+	CallGraph              *callgraph.Graph
+	PostDominators         map[*ssa.Function]*PostDominator
+	FieldDataDependencyMap map[string]*util.FieldSet // map's key's value depends on value
+
+	FieldTree              *FieldNode
+	ValueToFieldNodeSetMap ValueToFieldNodeSetMap
+	ValueFieldMap          map[ssa.Value]*util.FieldSet
+	FieldToValueMap        map[string]*[]ssa.Value
+	StoreInsts             []ssa.Instruction
+	AppendCalls            []ssa.Instruction
+	DefaultValueMap        map[ssa.Value]*ssa.Const
+	IfToCondition          map[ssa.Instruction]*BranchCondition
+	BranchValueDominees    map[ssa.Instruction]*UsesInBranch
+	DomineeToConditions    map[string]*ConcreteConditionSet
 }
 
 type UsesInBranch struct {
@@ -118,8 +190,8 @@ func (c *Context) String() string {
 	for dominee, ccs := range c.DomineeToConditions {
 		b.WriteString(fmt.Sprintf("%s needs the following conditions:\n", dominee))
 		b.WriteString("\n")
-		for _, cc := range ccs.ConcreteConditions {
-			b.WriteString(cc.String())
+		for _, cg := range ccs.ConcreteConditionGroups {
+			b.WriteString(cg.Encode())
 		}
 		b.WriteString("\n")
 	}
@@ -131,6 +203,50 @@ type BranchCondition struct {
 	Source ssa.Value
 	Op     token.Token
 	Value  *ssa.Const
+}
+
+type ConditionGroupType string
+
+const (
+	AndConditionGroup ConditionGroupType = "AND"
+	OrConditionGroup  ConditionGroupType = "OR"
+)
+
+type ConditionGroup struct {
+	Typ                ConditionGroupType
+	ConcreteConditions []*ConcreteCondition
+}
+
+func (cg *ConditionGroup) String() string {
+	var b bytes.Buffer
+	b.WriteString(string(cg.Typ))
+	for _, cc := range cg.ConcreteConditions {
+		b.WriteString(fmt.Sprintf("\n%s\n", cc.String()))
+	}
+	return b.String()
+}
+
+func (cg *ConditionGroup) Encode() string {
+	var b bytes.Buffer
+	b.WriteString(string(cg.Typ))
+	for _, cc := range cg.ConcreteConditions {
+		b.WriteString(cc.Encode())
+	}
+	return b.String()
+}
+
+func (cg *ConditionGroup) ToPlainCondition() *PlainConditionGroup {
+	var plainConditionGroup PlainConditionGroup
+	plainConditionGroup.Typ = cg.Typ
+	for _, cc := range cg.ConcreteConditions {
+		plainConditionGroup.ConcreteConditions = append(plainConditionGroup.ConcreteConditions, cc.ToPlainCondition())
+	}
+	return &plainConditionGroup
+}
+
+type PlainConditionGroup struct {
+	Typ                ConditionGroupType `json:"type"`
+	ConcreteConditions []*PlainCondition  `json:"conditions"`
 }
 
 type ConcreteCondition struct {
@@ -164,7 +280,7 @@ func (c *ConcreteCondition) Encode() string {
 	return b.String()
 }
 
-func (c *ConcreteCondition) ToPlainCondition() PlainCondition {
+func (c *ConcreteCondition) ToPlainCondition() *PlainCondition {
 	var field []string
 	json.Unmarshal([]byte(c.Field), &field)
 
@@ -176,7 +292,7 @@ func (c *ConcreteCondition) ToPlainCondition() PlainCondition {
 	} else {
 		value = c.Value.Value.String()
 	}
-	return PlainCondition{
+	return &PlainCondition{
 		Field: field,
 		Op:    c.Op.String(),
 		Value: value,
@@ -191,38 +307,54 @@ type PlainCondition struct {
 }
 
 type ConcreteConditionSet struct {
-	ConcreteConditions map[string]ConcreteCondition
+	ConcreteConditionGroups map[string]*ConditionGroup
 }
 
 func NewConcreteConditionSet() *ConcreteConditionSet {
 	return &ConcreteConditionSet{
-		ConcreteConditions: make(map[string]ConcreteCondition),
+		ConcreteConditionGroups: make(map[string]*ConditionGroup),
 	}
 }
 
-func (ccs *ConcreteConditionSet) Add(cc ConcreteCondition) {
-	ccs.ConcreteConditions[cc.Encode()] = cc
+func (ccs *ConcreteConditionSet) Add(cg *ConditionGroup) {
+	ccs.ConcreteConditionGroups[cg.Encode()] = cg
 }
 
 func (ccs *ConcreteConditionSet) Contain(cc string) bool {
-	_, ok := ccs.ConcreteConditions[cc]
+	_, ok := ccs.ConcreteConditionGroups[cc]
 	return ok
 }
 
-func (ccs *ConcreteConditionSet) Extend(ccList ...ConcreteCondition) {
-	for _, cc := range ccList {
-		ccs.ConcreteConditions[cc.Encode()] = cc
+func (ccs *ConcreteConditionSet) Extend(cgList ...*ConditionGroup) {
+	for _, cc := range cgList {
+		ccs.ConcreteConditionGroups[cc.Encode()] = cc
 	}
 }
 
 func (ccs *ConcreteConditionSet) Intersect(ccs_ *ConcreteConditionSet) *ConcreteConditionSet {
 	newSet := NewConcreteConditionSet()
-	for cc_str, cc := range ccs.ConcreteConditions {
+	for cc_str, cc := range ccs.ConcreteConditionGroups {
 		if ccs_.Contain(cc_str) {
 			newSet.Add(cc)
 		}
 	}
 	return newSet
+}
+
+func (ccs *ConcreteConditionSet) ToPlainConditionSet(path []string) *PlainConcreteConditionSet {
+	var plainConcreteConditionSet PlainConcreteConditionSet
+	plainConcreteConditionSet.Path = path
+	plainConcreteConditionSet.Typ = AndConditionGroup
+	for _, cg := range ccs.ConcreteConditionGroups {
+		plainConcreteConditionSet.PlainConditionGroups = append(plainConcreteConditionSet.PlainConditionGroups, cg.ToPlainCondition())
+	}
+	return &plainConcreteConditionSet
+}
+
+type PlainConcreteConditionSet struct {
+	Path                 []string               `json:"path"`
+	Typ                  ConditionGroupType     `json:"type"`
+	PlainConditionGroups []*PlainConditionGroup `json:"conditionGroups"`
 }
 
 type TaintedStructValue struct {

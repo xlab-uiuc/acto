@@ -3043,44 +3043,19 @@
             }
       },
       "preload_images": [
-            "quay.io/opstree/redis:v6.2.5",
             "docker.io/matt12313/redis-operator:v0.10.0",
-            "quay.io/opstree/redis-exporter:1.0"
+            "quay.io/opstree/redis-exporter:1.0",
+            "quay.io/opstree/redis:v6.2.5"
       ],
       "analysis_result": {
             "control_flow_fields": [
-                  [
-                        "root",
-                        "kind"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "TLS",
-                        "secret",
-                        "secretName"
-                  ],
                   [
                         "root",
                         "apiVersion"
                   ],
                   [
                         "root",
-                        "spec",
-                        "TLS",
-                        "ca"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "TLS",
-                        "key"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "TLS",
-                        "cert"
+                        "kind"
                   ],
                   [
                         "root",
@@ -3092,418 +3067,371 @@
             ],
             "default_value_map": {},
             "field_conditions_map": {
-                  "[\"spec\", \"redisFollower\", \"redisConfig\", \"additionalRedisConfig\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "redisFollower",
-                                    "redisConfig"
-                              ],
-                              "op": "!=",
-                              "value": null
-                        },
-                        {
-                              "field": [
-                                    "spec",
-                                    "redisFollower",
-                                    "replicas"
-                              ],
-                              "op": "==",
-                              "value": "0"
-                        },
-                        {
-                              "field": [
-                                    "spec",
-                                    "redisLeader",
-                                    "replicas"
-                              ],
-                              "op": "==",
-                              "value": "0"
-                        },
-                        {
-                              "field": [
-                                    "spec",
-                                    "clusterSize"
-                              ],
-                              "op": "==",
-                              "value": "0"
-                        }
-                  ],
-                  "[\"spec\", \"kubernetesConfig\", \"redisSecret\", \"key\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "kubernetesConfig",
-                                    "redisSecret"
-                              ],
-                              "op": "!=",
-                              "value": null
-                        }
-                  ],
-                  "[\"spec\", \"sidecars\", \"INDEX\", \"env\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "sidecars",
-                                    "INDEX",
-                                    "env"
-                              ],
-                              "op": "!=",
-                              "value": null
-                        }
-                  ],
-                  "[\"spec\", \"redisExporter\", \"imagePullPolicy\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "redisExporter"
-                              ],
-                              "op": "!=",
-                              "value": null
-                        }
-                  ],
-                  "[\"spec\", \"redisLeader\", \"pdb\", \"maxUnavailable\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "redisLeader",
-                                    "pdb",
-                                    "enabled"
-                              ],
-                              "op": "==",
-                              "value": true
-                        },
-                        {
-                              "field": [
-                                    "spec",
-                                    "redisLeader",
-                                    "pdb"
-                              ],
-                              "op": "!=",
-                              "value": null
-                        },
-                        {
-                              "field": [
-                                    "spec",
-                                    "redisLeader",
-                                    "pdb",
-                                    "maxUnavailable"
-                              ],
-                              "op": "!=",
-                              "value": null
-                        }
-                  ],
-                  "[\"spec\", \"TLS\", \"secret\", \"secretName\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "TLS"
-                              ],
-                              "op": "!=",
-                              "value": null
-                        }
-                  ],
-                  "[\"spec\", \"redisExporter\", \"image\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "redisExporter"
-                              ],
-                              "op": "!=",
-                              "value": null
-                        }
-                  ],
-                  "[\"spec\", \"redisExporter\", \"env\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "redisExporter"
-                              ],
-                              "op": "!=",
-                              "value": null
-                        },
-                        {
-                              "field": [
-                                    "spec",
-                                    "redisExporter",
-                                    "env"
-                              ],
-                              "op": "!=",
-                              "value": null
-                        }
-                  ],
-                  "[\"spec\", \"sidecars\", \"INDEX\", \"resources\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "sidecars",
-                                    "INDEX",
-                                    "resources"
-                              ],
-                              "op": "!=",
-                              "value": null
-                        }
-                  ],
-                  "[\"spec\", \"redisLeader\", \"pdb\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "redisLeader",
-                                    "replicas"
-                              ],
-                              "op": "==",
-                              "value": "0"
-                        },
-                        {
-                              "field": [
-                                    "spec",
-                                    "clusterSize"
-                              ],
-                              "op": "==",
-                              "value": "0"
-                        },
-                        {
-                              "field": [
-                                    "spec",
-                                    "redisLeader",
-                                    "pdb"
-                              ],
-                              "op": "!=",
-                              "value": null
-                        },
-                        {
-                              "field": [
-                                    "spec",
-                                    "redisLeader",
-                                    "pdb",
-                                    "enabled"
-                              ],
-                              "op": "==",
-                              "value": true
-                        },
-                        {
-                              "field": [
-                                    "spec",
-                                    "redisFollower",
-                                    "replicas"
-                              ],
-                              "op": "==",
-                              "value": "0"
-                        }
-                  ],
-                  "[\"spec\", \"redisFollower\", \"affinity\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "redisFollower",
-                                    "replicas"
-                              ],
-                              "op": "==",
-                              "value": "0"
-                        },
-                        {
-                              "field": [
-                                    "spec",
-                                    "redisLeader",
-                                    "replicas"
-                              ],
-                              "op": "==",
-                              "value": "0"
-                        },
-                        {
-                              "field": [
-                                    "spec",
-                                    "clusterSize"
-                              ],
-                              "op": "==",
-                              "value": "0"
-                        }
-                  ],
-                  "[\"spec\", \"kubernetesConfig\", \"imagePullSecrets\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "kubernetesConfig",
-                                    "imagePullSecrets"
-                              ],
-                              "op": "!=",
-                              "value": null
-                        }
-                  ],
-                  "[\"spec\", \"redisFollower\", \"readinessProbe\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "redisFollower",
-                                    "replicas"
-                              ],
-                              "op": "==",
-                              "value": "0"
-                        },
-                        {
-                              "field": [
-                                    "spec",
-                                    "redisLeader",
-                                    "replicas"
-                              ],
-                              "op": "==",
-                              "value": "0"
-                        },
-                        {
-                              "field": [
-                                    "spec",
-                                    "clusterSize"
-                              ],
-                              "op": "==",
-                              "value": "0"
-                        }
-                  ],
-                  "[\"spec\", \"redisLeader\", \"redisConfig\", \"additionalRedisConfig\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "redisLeader",
-                                    "redisConfig"
-                              ],
-                              "op": "!=",
-                              "value": null
-                        }
-                  ],
-                  "[\"spec\", \"storage\", \"volumeClaimTemplate\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "storage"
-                              ],
-                              "op": "!=",
-                              "value": null
-                        }
-                  ],
-                  "[\"spec\", \"redisLeader\", \"pdb\", \"enabled\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "redisFollower",
-                                    "replicas"
-                              ],
-                              "op": "==",
-                              "value": "0"
-                        },
-                        {
-                              "field": [
-                                    "spec",
-                                    "redisLeader",
-                                    "replicas"
-                              ],
-                              "op": "==",
-                              "value": "0"
-                        },
-                        {
-                              "field": [
-                                    "spec",
-                                    "clusterSize"
-                              ],
-                              "op": "==",
-                              "value": "0"
-                        },
-                        {
-                              "field": [
-                                    "spec",
-                                    "redisLeader",
-                                    "pdb"
-                              ],
-                              "op": "!=",
-                              "value": null
-                        }
-                  ],
-                  "[\"spec\", \"redisExporter\", \"resources\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "redisExporter"
-                              ],
-                              "op": "!=",
-                              "value": null
-                        },
-                        {
-                              "field": [
-                                    "spec",
-                                    "redisExporter",
-                                    "resources"
-                              ],
-                              "op": "!=",
-                              "value": null
-                        }
-                  ],
-                  "[\"spec\", \"redisLeader\", \"pdb\", \"minAvailable\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "redisLeader",
-                                    "pdb"
-                              ],
-                              "op": "!=",
-                              "value": null
-                        },
-                        {
-                              "field": [
-                                    "spec",
-                                    "redisLeader",
-                                    "pdb",
-                                    "minAvailable"
-                              ],
-                              "op": "!=",
-                              "value": null
-                        },
-                        {
-                              "field": [
-                                    "spec",
-                                    "redisLeader",
-                                    "pdb",
-                                    "enabled"
-                              ],
-                              "op": "==",
-                              "value": true
-                        }
-                  ],
-                  "[\"spec\", \"redisFollower\", \"livenessProbe\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "redisFollower",
-                                    "replicas"
-                              ],
-                              "op": "==",
-                              "value": "0"
-                        },
-                        {
-                              "field": [
-                                    "spec",
-                                    "redisLeader",
-                                    "replicas"
-                              ],
-                              "op": "==",
-                              "value": "0"
-                        },
-                        {
-                              "field": [
-                                    "spec",
-                                    "clusterSize"
-                              ],
-                              "op": "==",
-                              "value": "0"
-                        }
-                  ],
-                  "[\"spec\", \"redisExporter\", \"enabled\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "redisExporter"
-                              ],
-                              "op": "!=",
-                              "value": null
-                        }
-                  ]
+                  "[\"spec\", \"redisExporter\", \"imagePullPolicy\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "redisExporter"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"redisExporter\", \"image\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "redisExporter"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"redisExporter\", \"enabled\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "redisExporter"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"redisFollower\", \"redisConfig\", \"additionalRedisConfig\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "redisFollower",
+                                                      "redisConfig"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"TLS\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "TLS"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"TLS\", \"secret\", \"secretName\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "TLS"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"storage\", \"volumeClaimTemplate\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "storage"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"redisLeader\", \"pdb\", \"enabled\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "redisLeader",
+                                                      "pdb"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"redisExporter\", \"resources\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "redisExporter"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              },
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "redisExporter",
+                                                      "resources"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"redisLeader\", \"redisConfig\", \"additionalRedisConfig\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "redisLeader",
+                                                      "redisConfig"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"redisLeader\", \"pdb\", \"maxUnavailable\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "redisLeader",
+                                                      "pdb",
+                                                      "enabled"
+                                                ],
+                                                "op": "==",
+                                                "value": true
+                                          }
+                                    ]
+                              },
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "redisLeader",
+                                                      "pdb",
+                                                      "maxUnavailable"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              },
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "redisLeader",
+                                                      "pdb"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"redisExporter\", \"env\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "redisExporter"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              },
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "redisExporter",
+                                                      "env"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"kubernetesConfig\", \"imagePullSecrets\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "kubernetesConfig",
+                                                      "imagePullSecrets"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"redisLeader\", \"pdb\", \"minAvailable\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "redisLeader",
+                                                      "pdb",
+                                                      "minAvailable"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              },
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "redisLeader",
+                                                      "pdb",
+                                                      "enabled"
+                                                ],
+                                                "op": "==",
+                                                "value": true
+                                          }
+                                    ]
+                              },
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "redisLeader",
+                                                      "pdb"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"kubernetesConfig\", \"redisSecret\", \"key\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "kubernetesConfig",
+                                                      "redisSecret"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  }
             }
       }
 }

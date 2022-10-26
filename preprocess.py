@@ -59,6 +59,7 @@ def update_preload_images(context: dict, worker_list):
 
 def process_crd(context: dict,
                 apiclient: kubernetes.client.ApiClient,
+                kubeconfig: str,
                 context_name: str,
                 crd_name: Optional[str] = None,
                 helper_crd: Optional[str] = None):
@@ -93,7 +94,7 @@ def process_crd(context: dict,
             quit()
         if crd:
             # there is openAPIV3Schema schema issue when using python k8s client, need to fetch data from cli
-            crd_result = kubectl(['get', 'crd', crd.metadata.name, "-o", "json"],
+            crd_result = kubectl(['get', 'crd', crd.metadata.name, "-o", "json"], kubeconfig,
                                  context_name, True, True)
             crd_obj = json.loads(crd_result.stdout)
             spec: kubernetes.client.models.V1CustomResourceDefinitionSpec = crd.spec

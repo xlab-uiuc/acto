@@ -3,7 +3,6 @@ import os
 import sys
 import threading
 from types import SimpleNamespace
-import kubernetes
 import yaml
 import time
 from typing import Tuple
@@ -31,8 +30,6 @@ from snapshot import EmptySnapshot
 from ssa.analysis import analyze
 from thread_logger import set_thread_logger_prefix, get_thread_logger
 from value_with_schema import ValueWithBasicSchema, ValueWithSchema, attach_schema_to_value
-from reproduce import ReproInputModel
-from reproduce import apply_repro_testcase
 
 CONST = CONST()
 random.seed(0)
@@ -115,7 +112,7 @@ def timeout_handler(sig, frame):
 class TrialRunner:
 
     def __init__(self, context: dict, input_model: InputModel, deploy: Deploy, workdir: str,
-                 cluster: base.KubernetesCluster, worker_id: int, dryrun: bool, is_reproduce: bool) -> None:
+                 cluster: base.KubernetesCluster, worker_id: int, dryrun: bool) -> None:
         self.context = context
         self.workdir = workdir
         self.cluster = cluster
@@ -123,11 +120,11 @@ class TrialRunner:
         self.worker_id = worker_id
         self.context_name = cluster.get_context_name(
             f"acto-cluster-{worker_id}")
+        self.kubeconfig = os.path.join(os.path.expanduser('~'), '.kube', self.context_name)
         self.cluster_name = f"acto-cluster-{worker_id}"
         self.input_model = input_model
         self.deploy = deploy
         self.dryrun = dryrun
-        self.is_reproduce = is_reproduce
 
         self.snapshots = []
         self.discarded_testcases = {}  # List of test cases failed to run
@@ -142,11 +139,11 @@ class TrialRunner:
         while True:
             trial_start_time = time.time()
             self.cluster.configure_cluster(4, CONST.K8S_VERSION)
-            self.cluster.restart_cluster(self.cluster_name, CONST.K8S_VERSION)
-            apiclient = kubernetes_client(self.context_name)
+            self.cluster.restart_cluster(self.cluster_name, self.kubeconfig, CONST.K8S_VERSION)
+            apiclient = kubernetes_client(self.kubeconfig, self.context_name)
             self.cluster.load_images(self.images_archive, self.cluster_name)
             deployed = self.deploy.deploy_with_retry(
-                self.context, self.context_name)
+                self.context, self.kubeconfig, self.context_name)
             if not deployed:
                 logger.info('Not deployed. Try again!')
                 continue
@@ -185,7 +182,7 @@ class TrialRunner:
             num_mutation: how many mutations to run at each trial
         '''
 
-        runner = Runner(self.context, trial_dir, self.context_name)
+        runner = Runner(self.context, trial_dir, self.kubeconfig, self.context_name)
         checker = Checker(self.context, trial_dir, self.input_model)
 
         curr_input = self.input_model.get_seed_input()
@@ -219,14 +216,10 @@ class TrialRunner:
                         logger.info('Precondition of %s fails, try setup first',
                                      field_node.get_path())
                         
-                        # Check whether Acto is in the reproduce mode
-                        if not self.is_reproduce:
-                            apply_testcase(curr_input_with_schema,
-                                        field_node.get_path(),
-                                        testcase,
-                                        setup=True)
-                        else:
-                            apply_repro_testcase(curr_input_with_schema, testcase=testcase)
+                        apply_testcase(curr_input_with_schema,
+                                    field_node.get_path(),
+                                    testcase,
+                                    setup=True)
 
                         if not testcase.test_precondition(
                                 curr_input_with_schema.get_value_by_path(list(
@@ -251,7 +244,15 @@ class TrialRunner:
                             field_node.discard_testcase(self.discarded_testcases)
                         elif isinstance(result, ErrorResult):
                             field_node.discard_testcase(self.discarded_testcases)
-                            return result, generation
+                            # before return, run the recovery test case
+                            recovery_result = self.run_recovery(runner, checker, generation)
+                            generation += 1
+
+                            if isinstance(recovery_result, RecoveryResult):
+                                logger.debug('Recovery failed')
+                                return CompoundErrorResult(result, recovery_result), generation
+                            else:
+                                return result, generation
                         elif isinstance(result, PassResult):
                             ready_testcases.append((field_node, testcase))
                         else:
@@ -268,7 +269,15 @@ class TrialRunner:
             logger.debug(t)
             result, generation = t
             if isinstance(result, ErrorResult):
-                return result, generation
+                # before return, run the recovery test case
+                recovery_result = self.run_recovery(runner, checker, generation)
+                generation += 1
+
+                if isinstance(recovery_result, RecoveryResult):
+                    logger.debug('Recovery failed')
+                    return CompoundErrorResult(result, recovery_result), generation
+                else:
+                    return result, generation
 
             if self.input_model.is_empty():
                 break
@@ -281,12 +290,8 @@ class TrialRunner:
         
         testcase_patches = []
         for field_node, testcase in testcases:
-            if not self.is_reproduce:
-                logger.debug('Acto is in the normal mode')
-                patch = apply_testcase(curr_input_with_schema, field_node.get_path(), testcase)
-            else:
-                logger.debug('Acto is in the reproduce mode')
-                patch = apply_repro_testcase(curr_input_with_schema, testcase)
+            logger.debug('Acto is in the normal mode')
+            patch = apply_testcase(curr_input_with_schema, field_node.get_path(), testcase)
             # field_node.get_testcases().pop()  # finish testcase
             testcase_patches.append((field_node, testcase, patch))
 
@@ -355,9 +360,8 @@ class TrialRunner:
                         return self.run_testcases(curr_input_with_schema, ready_testcases, runner,
                                                 checker, generation)
         else:
-            if not self.is_reproduce:
-                for patch in testcase_patches:
-                    patch[0].get_testcases().pop()  # finish testcase
+            for patch in testcase_patches:
+                patch[0].get_testcases().pop()  # finish testcase
             if isinstance(result, UnchangedInputResult):
                 pass
             elif isinstance(result, ErrorResult):
@@ -390,6 +394,18 @@ class TrialRunner:
                 break
         return result
 
+    def run_recovery(self, runner: Runner, checker: Checker, generation: int) -> RunResult:
+        '''Runs the recovery test case after an error is reported'''
+        logger = get_thread_logger(with_prefix=True)
+        RECOVERY_SNAPSHOT = -2  # the immediate snapshot before the error
+
+        logger.debug('Running recovery')
+        recovery_input = self.snapshots[RECOVERY_SNAPSHOT].input
+        snapshot = runner.run(recovery_input, generation=-1)
+        result = checker.check_state_equality(snapshot, self.snapshots[RECOVERY_SNAPSHOT])
+
+        return result
+
     def revert(self, runner, checker, generation) -> ValueWithSchema:
         curr_input_with_schema = attach_schema_to_value(self.snapshots[-1].input,
                                                         self.input_model.root_schema)
@@ -412,8 +428,7 @@ class Acto:
                  num_workers: int,
                  num_cases: int,
                  dryrun: bool,
-                 is_reproduce: bool,
-                 reproduce_dir: str,
+                 analysis_only: bool,
                  mount: list = None) -> None:
         logger = get_thread_logger(with_prefix=False)
 
@@ -453,14 +468,12 @@ class Acto:
         self.images_archive = os.path.join(workdir_path, 'images.tar')
         self.num_workers = num_workers
         self.dryrun = dryrun
-        self.is_reproduce = is_reproduce
-        self.reproduce_dir = reproduce_dir
         self.snapshots = []
 
         # generate configuration files for the cluster runtime
         self.cluster.configure_cluster(4, CONST.K8S_VERSION)
 
-        self.__learn(context_file=context_file, helper_crd=helper_crd)
+        self.__learn(context_file=context_file, helper_crd=helper_crd, analysis_only=analysis_only)
 
         self.context['enable_analysis'] = enable_analysis
 
@@ -469,59 +482,73 @@ class Acto:
             self.context['preload_images'].update(preload_images_)
 
         # Apply custom fields
-        if not self.is_reproduce:
-            self.input_model = InputModel(self.context['crd']['body'], operator_config.example_dir,
+        self.input_model = InputModel(self.context['crd']['body'], operator_config.example_dir,
                                       num_workers, num_cases, mount)
-        else:
-            self.input_model = ReproInputModel(self.reproduce_dir)
         self.input_model.initialize(self.seed)
         if operator_config.custom_fields != None:
+            pruned_list = []
             module = importlib.import_module(operator_config.custom_fields)
             for custom_field in module.custom_fields:
+                pruned_list.append(custom_field.path)
                 self.input_model.apply_custom_field(custom_field)
 
-        # Build an archive to be preloaded
-        if len(self.context['preload_images']) > 0:
-            logger.info('Creating preload images archive')
-            # first make sure images are present locally
-            for image in self.context['preload_images']:
-                subprocess.run(['docker', 'pull', image])
-            subprocess.run(['docker', 'image', 'save', '-o', self.images_archive] +
-                           list(self.context['preload_images']))
+            logger.info("Applied custom fields: %s", json.dumps(pruned_list))
 
         # Generate test cases
         self.test_plan = self.input_model.generate_test_plan()
         with open(os.path.join(self.workdir_path, 'test_plan.json'), 'w') as plan_file:
             json.dump(self.test_plan, plan_file, cls=ActoEncoder, indent=4)
 
-    def __learn(self, context_file, helper_crd):
+    def __learn(self, context_file, helper_crd, analysis_only=False):
         logger = get_thread_logger(with_prefix=False)
 
         if os.path.exists(context_file):
+            logger.info('Loading context from file')
             with open(context_file, 'r') as context_fin:
                 self.context = json.load(context_fin)
                 self.context['preload_images'] = set(self.context['preload_images'])
+
+            if analysis_only and self.operator_config.analysis != None:
+                logger.info('Only run learning analysis')
+                with tempfile.TemporaryDirectory() as project_src:
+                    subprocess.run(
+                        ['git', 'clone', self.operator_config.analysis.github_link, project_src])
+                    subprocess.run([
+                        'git', '-C', project_src, 'checkout', self.operator_config.analysis.commit
+                    ])
+
+                    if self.operator_config.analysis.entrypoint != None:
+                        entrypoint_path = os.path.join(project_src,
+                                                    self.operator_config.analysis.entrypoint)
+                    else:
+                        entrypoint_path = project_src
+                    self.context['analysis_result'] = analyze(entrypoint_path,
+                                                            self.operator_config.analysis.type,
+                                                            self.operator_config.analysis.package)
+                with open(context_file, 'w') as context_fout:
+                    json.dump(self.context, context_fout, cls=ContextEncoder, indent=6)
         else:
             # Run learning run to collect some information from runtime
             logger.info('Starting learning run to collect information')
             self.context = {'namespace': '', 'crd': None, 'preload_images': set()}
+            learn_context_name = self.cluster.get_context_name('learn')
+            learn_kubeconfig = os.path.join(os.path.expanduser('~'), '.kube', self.learn_context_name)
 
             while True:
                 self.cluster.restart_cluster('learn', CONST.K8S_VERSION)
                 deployed = self.deploy.deploy_with_retry(
-                    self.context, self.cluster.get_context_name('learn'))
+                    self.context, learn_kubeconfig, learn_context_name)
                 if deployed:
                     break
-            apiclient = kubernetes_client(
-                self.cluster.get_context_name('learn'))
-            runner = Runner(self.context, 'learn',
-                            self.cluster.get_context_name('learn'))
+            apiclient = kubernetes_client(learn_kubeconfig, learn_context_name)
+            runner = Runner(self.context, 'learn', learn_kubeconfig,
+                            learn_context_name)
             runner.run_without_collect(
                 self.operator_config.seed_custom_resource)
 
             update_preload_images(
                 self.context, self.cluster.get_node_list('learn'))
-            process_crd(self.context, apiclient, self.cluster.get_context_name('learn'),
+            process_crd(self.context, apiclient, 'learn', learn_kubeconfig, learn_context_name,
                         self.crd_name, helper_crd)
             self.cluster.delete_cluster('learn')
 
@@ -542,15 +569,24 @@ class Acto:
                                                               self.operator_config.analysis.type,
                                                               self.operator_config.analysis.package)
             with open(context_file, 'w') as context_fout:
-                json.dump(self.context, context_fout, cls=ContextEncoder, indent=6)
+                json.dump(self.context, context_fout, cls=ContextEncoder, indent=6, sort_keys=True)
 
     def run(self):
         logger = get_thread_logger(with_prefix=False)
 
+        # Build an archive to be preloaded
+        if len(self.context['preload_images']) > 0:
+            logger.info('Creating preload images archive')
+            # first make sure images are present locally
+            for image in self.context['preload_images']:
+                subprocess.run(['docker', 'pull', image])
+            subprocess.run(['docker', 'image', 'save', '-o', self.images_archive] +
+                           list(self.context['preload_images']))
+
         threads = []
         for i in range(self.num_workers):
             runner = TrialRunner(self.context, self.input_model, self.deploy, self.workdir_path, self.cluster,
-                                 i, self.dryrun, self.is_reproduce)
+                                 i, self.dryrun)
             t = threading.Thread(target=runner.run, args=())
             t.start()
             threads.append(t)
@@ -649,19 +685,12 @@ if __name__ == '__main__':
                         dest='notify_crash',
                         action='store_true',
                         help='Submit a google form response to notify')
+    parser.add_argument('--learn-analysis', dest='learn_analysis_only', action='store_true', 
+                        help='Only learn analysis')
     parser.add_argument('--dryrun',
                         dest='dryrun',
                         action='store_true',
                         help='Only generate test cases without executing them')
-    parser.add_argument('--is_reproduce',
-                        dest='is_reproduce',
-                        action='store_true',
-                        required=False,
-                        help='Reproduce mode')
-    parser.add_argument('--reproduce_dir',
-                        dest='reproduce_dir',
-                        required=False,
-                        help='The directory of the trial folder to reproduce')
 
     args = parser.parse_args()
 
@@ -707,7 +736,7 @@ if __name__ == '__main__':
 
     start_time = datetime.now()
     acto = Acto(workdir_path, config, args.cluster_runtime, args.enable_analysis, args.preload_images, context_cache,
-                args.helper_crd, args.num_workers, args.num_cases, args.dryrun, args.is_reproduce, args.reproduce_dir)
+                args.helper_crd, args.num_workers, args.num_cases, args.dryrun, args.learn_analysis_only)
     if not args.learn:
         acto.run()
     end_time = datetime.now()

@@ -62,14 +62,21 @@ func GetSeedVariablesFromFunction(f *ssa.Function, seedType types.Type) []ssa.Va
 		for _, inst := range blk.Instrs {
 			switch v := inst.(type) {
 			case ssa.Value:
+				if _, ok := v.(*ssa.Range); ok {
+					continue
+				}
 				vType := v.Type()
 				if types.Identical(vType, seedType) {
+					ret = append(ret, v)
+				} else if vType.String() == seedType.String() {
+					logger.Infof("String matching but type not identical %s", seedType.String())
 					ret = append(ret, v)
 				}
 				if vPointer, ok := vType.(*types.Pointer); ok && types.Identical(vPointer.Elem(), seedType) {
 					ret = append(ret, v)
 				} else if ok && vPointer.Elem().String() == seedType.String() {
 					logger.Infof("String matching but type not identical %s", seedType.String())
+					ret = append(ret, v)
 				}
 			}
 		}

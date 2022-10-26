@@ -41,12 +41,22 @@ func GetValueToFieldMappingPass(context *Context, prog *ssa.Program, seedType *s
 	seedVariables := FindSeedValues(prog, seedType, seedPkgPath)
 	worklist := []ssa.Value{}
 
+	// this is the tree including all the direct subfields
+	root := NewFieldNode()
+	root.InitName(root, "root")
+	context.FieldTree = root
+	valueToFieldNodeSetMap := context.ValueToFieldNodeSetMap
+
 	for _, seedVariable := range seedVariables {
 		rootField := []string{"root"}
 		valueFieldSetMap[seedVariable] = NewFieldSet()
 		valueFieldSetMap[seedVariable].Add(&Field{
 			Path: rootField,
 		})
+
+		root.AddValue(seedVariable)
+		valueToFieldNodeSetMap.Add(seedVariable, root)
+
 		worklist = append(worklist, seedVariable)
 	}
 
@@ -58,6 +68,7 @@ func GetValueToFieldMappingPass(context *Context, prog *ssa.Program, seedType *s
 		worklist = worklist[:len(worklist)-1]
 
 		parentFieldSet := valueFieldSetMap[variable]
+		parentFieldNodeSet, direct := valueToFieldNodeSetMap[variable]
 
 		// stop if field is on metadata, status, or type meta
 		if parentFieldSet.IsMetadata() || parentFieldSet.IsStatus() || parentFieldSet.IsTypeMeta() {
@@ -91,8 +102,15 @@ func GetValueToFieldMappingPass(context *Context, prog *ssa.Program, seedType *s
 										worklist = append(worklist, typedValue)
 									}
 								}
+
+								if direct {
+									for parentFieldNode := range parentFieldNodeSet {
+										parentFieldNode.AddValue(typedValue)
+										valueToFieldNodeSetMap.Add(typedValue, parentFieldNode)
+									}
+								}
 							} else {
-								PropogateToCallee(context, callValue, variable, callSiteTaintedParamIndexSet, parentFieldSet, &worklist, valueFieldSetMap, frontierValues)
+								PropogateToCallee(context, callValue, variable, callSiteTaintedParamIndexSet, parentFieldSet, &worklist, valueFieldSetMap, frontierValues, parentFieldNodeSet)
 							}
 						case *ssa.MakeClosure:
 							// XXX could be closure, let's handle it if it's used
@@ -118,6 +136,13 @@ func GetValueToFieldMappingPass(context *Context, prog *ssa.Program, seedType *s
 									worklist = append(worklist, typedValue)
 								}
 							}
+
+							if direct {
+								for parentFieldNode := range parentFieldNodeSet {
+									parentFieldNode.AddValue(typedValue)
+									valueToFieldNodeSetMap.Add(typedValue, parentFieldNode)
+								}
+							}
 						} else {
 							// interface invocation
 							callGraph := context.CallGraph
@@ -132,7 +157,7 @@ func GetValueToFieldMappingPass(context *Context, prog *ssa.Program, seedType *s
 							}
 
 							for _, callee := range calleeSet {
-								PropogateToCallee(context, callee, variable, callSiteTaintedArgIndexSet, parentFieldSet, &worklist, valueFieldSetMap, frontierValues)
+								PropogateToCallee(context, callee, variable, callSiteTaintedArgIndexSet, parentFieldSet, &worklist, valueFieldSetMap, frontierValues, parentFieldNodeSet)
 							}
 						}
 					}
@@ -144,12 +169,19 @@ func GetValueToFieldMappingPass(context *Context, prog *ssa.Program, seedType *s
 							worklist = append(worklist, typedValue)
 						}
 					}
+
+					if direct {
+						for parentFieldNode := range parentFieldNodeSet {
+							parentFieldNode.AddValue(typedValue)
+							valueToFieldNodeSetMap.Add(typedValue, parentFieldNode)
+						}
+					}
 				case *ssa.ChangeType:
-					if UpdateValueInValueFieldSetMap(typedValue, parentFieldSet, valueFieldSetMap) {
+					if UpdateValueInValueFieldSetMap(context, typedValue, parentFieldSet, valueFieldSetMap, parentFieldNodeSet) {
 						worklist = append(worklist, typedValue)
 					}
 				case *ssa.Convert:
-					if UpdateValueInValueFieldSetMap(typedValue, parentFieldSet, valueFieldSetMap) {
+					if UpdateValueInValueFieldSetMap(context, typedValue, parentFieldSet, valueFieldSetMap, parentFieldNodeSet) {
 						worklist = append(worklist, typedValue)
 					}
 				case *ssa.Field:
@@ -164,6 +196,14 @@ func GetValueToFieldMappingPass(context *Context, prog *ssa.Program, seedType *s
 					if changed {
 						worklist = append(worklist, typedValue)
 					}
+
+					if direct {
+						for parentFieldNode := range parentFieldNodeSet {
+							node := parentFieldNode.SubFieldNode(typedValue.X.Type().Underlying().(*types.Struct), typedValue.Field)
+							node.AddValue(typedValue)
+							valueToFieldNodeSetMap.Add(typedValue, node)
+						}
+					}
 				case *ssa.FieldAddr:
 					changed := false
 					for _, parentField := range parentFieldSet.Fields() {
@@ -175,6 +215,14 @@ func GetValueToFieldMappingPass(context *Context, prog *ssa.Program, seedType *s
 					}
 					if changed {
 						worklist = append(worklist, typedValue)
+					}
+
+					if direct {
+						for parentFieldNode := range parentFieldNodeSet {
+							node := parentFieldNode.SubFieldNode(typedValue.X.Type().Underlying().(*types.Pointer).Elem().Underlying().(*types.Struct), typedValue.Field)
+							node.AddValue(typedValue)
+							valueToFieldNodeSetMap.Add(typedValue, node)
+						}
 					}
 				case *ssa.Index:
 					changed := false
@@ -188,6 +236,14 @@ func GetValueToFieldMappingPass(context *Context, prog *ssa.Program, seedType *s
 					if changed {
 						worklist = append(worklist, typedValue)
 					}
+
+					if direct {
+						for parentFieldNode := range parentFieldNodeSet {
+							newNode := parentFieldNode.IndexFieldNode()
+							newNode.AddValue(typedValue)
+							valueToFieldNodeSetMap.Add(typedValue, newNode)
+						}
+					}
 				case *ssa.IndexAddr:
 					// accessing array index
 					changed := false
@@ -200,6 +256,14 @@ func GetValueToFieldMappingPass(context *Context, prog *ssa.Program, seedType *s
 					}
 					if changed {
 						worklist = append(worklist, typedValue)
+					}
+
+					if direct {
+						for parentFieldNode := range parentFieldNodeSet {
+							newNode := parentFieldNode.IndexFieldNode()
+							newNode.AddValue(typedValue)
+							valueToFieldNodeSetMap.Add(typedValue, newNode)
+						}
 					}
 				case *ssa.Lookup:
 					if typedValue.X == variable {
@@ -223,14 +287,14 @@ func GetValueToFieldMappingPass(context *Context, prog *ssa.Program, seedType *s
 					}
 					mergedFieldSet := MergeFieldSets(fieldSetSlice...)
 
-					if UpdateValueInValueFieldSetMap(typedValue, mergedFieldSet, valueFieldSetMap) {
+					if UpdateValueInValueFieldSetMap(context, typedValue, mergedFieldSet, valueFieldSetMap, parentFieldNodeSet) {
 						worklist = append(worklist, typedValue)
 					}
 				case *ssa.UnOp:
 					switch typedValue.Op {
 					case token.MUL:
 						// If dereferenced, propogate
-						if UpdateValueInValueFieldSetMap(typedValue, parentFieldSet, valueFieldSetMap) {
+						if UpdateValueInValueFieldSetMap(context, typedValue, parentFieldSet, valueFieldSetMap, parentFieldNodeSet) {
 							worklist = append(worklist, typedValue)
 						}
 						log.Printf("Propogate to dereference at [%s]\n", typedValue)
@@ -241,7 +305,7 @@ func GetValueToFieldMappingPass(context *Context, prog *ssa.Program, seedType *s
 					}
 				case *ssa.MakeInterface:
 					// If variable is casted into another interface, propogate
-					if UpdateValueInValueFieldSetMap(typedValue, parentFieldSet, valueFieldSetMap) {
+					if UpdateValueInValueFieldSetMap(context, typedValue, parentFieldSet, valueFieldSetMap, parentFieldNodeSet) {
 						worklist = append(worklist, typedValue)
 					}
 				default:
@@ -270,7 +334,7 @@ func GetValueToFieldMappingPass(context *Context, prog *ssa.Program, seedType *s
 					// }
 					if _, ok := typedInst.Addr.(*ssa.Alloc); ok {
 						// only propogate to the address if it's alloc
-						if UpdateValueInValueFieldSetMap(typedInst.Addr, parentFieldSet, valueFieldSetMap) {
+						if UpdateValueInValueFieldSetMap(context, typedInst.Addr, parentFieldSet, valueFieldSetMap, nil) {
 							worklist = append(worklist, typedInst.Addr)
 						}
 					} else {
@@ -287,7 +351,7 @@ func GetValueToFieldMappingPass(context *Context, prog *ssa.Program, seedType *s
 							}
 							taintedSet := HandleStructField(context, &originalTaintedStructValue)
 							for value := range taintedSet {
-								if UpdateValueInValueFieldSetMap(value, parentFieldSet, valueFieldSetMap) {
+								if UpdateValueInValueFieldSetMap(context, value, parentFieldSet, valueFieldSetMap, nil) {
 									worklist = append(worklist, value)
 								}
 							}
@@ -300,7 +364,7 @@ func GetValueToFieldMappingPass(context *Context, prog *ssa.Program, seedType *s
 								}
 								taintedSet := HandleStructField(context, &originalTaintedStructValue)
 								for value := range taintedSet {
-									if UpdateValueInValueFieldSetMap(value, parentFieldSet, valueFieldSetMap) {
+									if UpdateValueInValueFieldSetMap(context, value, parentFieldSet, valueFieldSetMap, nil) {
 										worklist = append(worklist, value)
 									}
 								}
@@ -336,12 +400,12 @@ func GetValueToFieldMappingPass(context *Context, prog *ssa.Program, seedType *s
 						if callSiteReturnValue := inEdge.Site.Value(); callSiteReturnValue != nil {
 							if typedInst.Parent().Signature.Results().Len() > 1 {
 								for _, tainted := range getExtractTaint(callSiteReturnValue, returnSet) {
-									if UpdateValueInValueFieldSetMap(tainted, parentFieldSet, valueFieldSetMap) {
+									if UpdateValueInValueFieldSetMap(context, tainted, parentFieldSet, valueFieldSetMap, parentFieldNodeSet) {
 										worklist = append(worklist, tainted)
 									}
 								}
 							} else {
-								if UpdateValueInValueFieldSetMap(callSiteReturnValue, parentFieldSet, valueFieldSetMap) {
+								if UpdateValueInValueFieldSetMap(context, callSiteReturnValue, parentFieldSet, valueFieldSetMap, parentFieldNodeSet) {
 									worklist = append(worklist, callSiteReturnValue)
 								}
 							}
@@ -364,7 +428,7 @@ func GetValueToFieldMappingPass(context *Context, prog *ssa.Program, seedType *s
 }
 
 func PropogateToCallee(context *Context, callee *ssa.Function, value ssa.Value, callSiteTaintedArgIndexSet []int,
-	parentFieldSet *FieldSet, worklist *[]ssa.Value, valueFieldSetMap map[ssa.Value]*FieldSet, frontierValues map[ssa.Value]bool) {
+	parentFieldSet *FieldSet, worklist *[]ssa.Value, valueFieldSetMap map[ssa.Value]*FieldSet, frontierValues map[ssa.Value]bool, parentFieldNodeSet map[*FieldNode]struct{}) {
 	if callee.Pkg != nil && strings.Contains(callee.Pkg.Pkg.Path(), context.RootModule.Path) {
 		for _, paramIndex := range callSiteTaintedArgIndexSet {
 
@@ -374,6 +438,13 @@ func PropogateToCallee(context *Context, callee *ssa.Function, value ssa.Value, 
 				ok := AddFieldToValueFieldSetMap(valueFieldSetMap, param, newField)
 				if ok {
 					*worklist = append(*worklist, param)
+				}
+			}
+
+			if parentFieldNodeSet != nil {
+				for parentFieldNode := range parentFieldNodeSet {
+					parentFieldNode.AddValue(param)
+					context.ValueToFieldNodeSetMap.Add(param, parentFieldNode)
 				}
 			}
 		}
@@ -387,12 +458,19 @@ func ExternalLibrary(context *Context, fn *ssa.Function) bool {
 	return fn.Pkg == nil || !strings.Contains(fn.Pkg.Pkg.Path(), context.RootModule.Path)
 }
 
-func UpdateValueInValueFieldSetMap(value ssa.Value, parentFieldSet *FieldSet, valueFieldSetMap map[ssa.Value]*FieldSet) (changed bool) {
+func UpdateValueInValueFieldSetMap(context *Context, value ssa.Value, parentFieldSet *FieldSet, valueFieldSetMap map[ssa.Value]*FieldSet, parentFieldNodeSet FieldNodeSet) (changed bool) {
 	for _, parentField := range parentFieldSet.Fields() {
 		newField := parentField.Clone()
 		ok := AddFieldToValueFieldSetMap(valueFieldSetMap, value, newField)
 		if ok {
 			changed = true
+		}
+	}
+
+	if parentFieldNodeSet != nil {
+		for parentFieldNode := range parentFieldNodeSet {
+			parentFieldNode.AddValue(value)
+			context.ValueToFieldNodeSetMap.Add(value, parentFieldNode)
 		}
 	}
 	return
@@ -447,6 +525,7 @@ func HandleStructField(context *Context, originalTaintedStructValue *TaintedStru
 	ret = make(map[ssa.Value]bool)
 
 	handledPhiMap := make(map[*ssa.Phi]map[ssa.Value]bool) // phi -> set of handled edges
+	handledRetMap := make(map[ssa.Value]bool)
 	worklist := []*TaintedStructValue{originalTaintedStructValue}
 	for len(worklist) > 0 {
 		taintedStructValue := worklist[len(worklist)-1]
@@ -594,18 +673,22 @@ func HandleStructField(context *Context, originalTaintedStructValue *TaintedStru
 						if callSiteReturnValue := inEdge.Site.Value(); callSiteReturnValue != nil {
 							if typedInst.Parent().Signature.Results().Len() > 1 {
 								for _, tainted := range getExtractTaint(callSiteReturnValue, returnSet) {
+									if _, ok := handledRetMap[tainted]; ok {
+										newTaintedStructValue := TaintedStructValue{
+											Value: tainted,
+											Path:  taintedStructValue.Path,
+										}
+										worklist = append(worklist, &newTaintedStructValue)
+									}
+								}
+							} else {
+								if _, ok := handledRetMap[callSiteReturnValue]; ok {
 									newTaintedStructValue := TaintedStructValue{
-										Value: tainted,
+										Value: callSiteReturnValue,
 										Path:  taintedStructValue.Path,
 									}
 									worklist = append(worklist, &newTaintedStructValue)
 								}
-							} else {
-								newTaintedStructValue := TaintedStructValue{
-									Value: callSiteReturnValue,
-									Path:  taintedStructValue.Path,
-								}
-								worklist = append(worklist, &newTaintedStructValue)
 							}
 						}
 					}

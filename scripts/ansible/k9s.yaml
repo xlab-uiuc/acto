@@ -1,0 +1,16 @@
+---
+- name: Install k9s
+  hosts: all
+  become: true
+
+  tasks:
+    - name: download k9s tar.gz
+      ansible.builtin.get_url:
+        url: https://github.com/derailed/k9s/releases/download/v0.26.7/k9s_Linux_x86_64.tar.gz
+        dest: /tmp/k9s.tar.gz
+
+    - name: extract k9s tar.gz
+      ansible.builtin.unarchive:
+        src: /tmp/k9s.tar.gz
+        dest: /usr/local/bin
+        remote_src: yes

@@ -266,6 +266,22 @@ var (
 			TaintedRets: []int{},
 		},
 		{
+			FunctionName: "(*k8s.io/apimachinery/pkg/runtime.Scheme).Convert",
+			TaintSource:  fmt.Sprint([]int{1}),
+		}: {
+			End:         false,
+			TaintedArgs: []int{2},
+			TaintedRets: []int{},
+		},
+		{
+			FunctionName: "(*k8s.io/apimachinery/pkg/runtime.Scheme).Convert",
+			TaintSource:  fmt.Sprint([]int{2}),
+		}: {
+			End:         false,
+			TaintedArgs: []int{},
+			TaintedRets: []int{},
+		},
+		{
 			FunctionName: "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil.AddFinalizer",
 			TaintSource:  fmt.Sprint([]int{1}),
 		}: {
@@ -482,8 +498,8 @@ var (
 		},
 		"encoding/json.Unmarshal": {
 			End:         false,
-			TaintedArgs: []int{},
-			TaintedRets: []int{0},
+			TaintedArgs: []int{1},
+			TaintedRets: []int{},
 		},
 		"encoding/pem.Decode": {
 			End:         false,

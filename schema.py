@@ -53,11 +53,15 @@ class BaseSchema:
     def set_default(self, instance):
         pass
 
-    def delete(self, prev):
+    @abstractmethod
+    def empty_value(self):
         return None
 
+    def delete(self, prev):
+        return self.empty_value()
+
     def delete_precondition(self, prev):
-        return prev != None and prev != self.default
+        return prev != None and prev != self.default and prev != self.empty_value()
 
     def delete_setup(self, prev):
         logger = get_thread_logger(with_prefix=True)
@@ -132,6 +136,9 @@ class StringSchema(BaseSchema):
 
     def set_default(self, instance):
         self.default = str(instance)
+
+    def empty_value(self):
+        return ""
 
     def num_cases(self):
         return 3
@@ -232,6 +239,9 @@ class NumberSchema(BaseSchema):
     def set_default(self, instance):
         self.default = float(instance)
 
+    def empty_value(self):
+        return 0
+
     def num_cases() -> int:
         return 3
 
@@ -322,6 +332,9 @@ class IntegerSchema(NumberSchema):
 
     def set_default(self, instance):
         self.default = int(instance)
+
+    def empty_value(self):
+        return 0
 
     def num_cases(self) -> int:
         return 3
@@ -483,6 +496,9 @@ class ObjectSchema(BaseSchema):
     def set_default(self, instance):
         self.default = instance
 
+    def empty_value(self):
+        return {}
+
     def get_property_schema(self, key):
         logger = get_thread_logger(with_prefix=True)
         if key in self.properties:
@@ -609,6 +625,9 @@ class ArraySchema(BaseSchema):
     def set_default(self, instance):
         self.default = instance
 
+    def empty_value(self):
+        return []
+
     def num_cases(self):
         return self.item_schema.num_cases() + 3
 
@@ -719,6 +738,9 @@ class AnyOfSchema(BaseSchema):
     def get_all_schemas(self) -> list:
         return [self]
 
+    def empty_value(self):
+        return None
+
     def to_tree(self) -> TreeNode:
         return TreeNode(self.path)
 
@@ -791,6 +813,9 @@ class BooleanSchema(BaseSchema):
         elif isinstance(instance, str):
             self.default = instance.lower() in ['true', 'True']
 
+    def empty_value(self):
+        return False
+
     def num_cases(self):
         return 3
 
@@ -856,6 +881,9 @@ class OpaqueSchema(BaseSchema):
 
     def num_fields(self):
         return 1
+
+    def empty_value(self):
+        return None
 
     def __str__(self) -> str:
         return 'any'

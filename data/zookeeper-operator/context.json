@@ -4918,11 +4918,6 @@
                   [
                         "root",
                         "spec",
-                        "triggerRollingRestart"
-                  ],
-                  [
-                        "root",
-                        "spec",
                         "ports",
                         "INDEX",
                         "name"
@@ -4936,6 +4931,11 @@
                   [
                         "root",
                         "spec",
+                        "triggerRollingRestart"
+                  ],
+                  [
+                        "root",
+                        "spec",
                         "persistence",
                         "reclaimPolicy"
                   ],
@@ -4944,35 +4944,6 @@
                         "spec",
                         "adminServerService",
                         "external"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "persistence",
-                        "spec",
-                        "resources",
-                        "requests"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "persistence",
-                        "spec",
-                        "accessModes"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "pod",
-                        "resources",
-                        "limits"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "pod",
-                        "resources",
-                        "requests"
                   ]
             ],
             "default_value_map": {
@@ -4989,7 +4960,7 @@
                   "[\"root\",\"spec\",\"config\",\"tickTime\"]": "2000",
                   "[\"root\",\"spec\",\"image\",\"pullPolicy\"]": "\"Always\"",
                   "[\"root\",\"spec\",\"image\",\"repository\"]": "\"pravega/zookeeper\"",
-                  "[\"root\",\"spec\",\"image\",\"tag\"]": "\"0.2.13\"",
+                  "[\"root\",\"spec\",\"image\",\"tag\"]": "\"0.2.12\"",
                   "[\"root\",\"spec\",\"pod\",\"serviceAccountName\"]": "\"default\"",
                   "[\"root\",\"spec\",\"pod\",\"terminationGracePeriodSeconds\"]": "30",
                   "[\"root\",\"spec\",\"probes\",\"livenessProbe\",\"failureThreshold\"]": "3",
@@ -5005,109 +4976,135 @@
                   "[\"root\",\"spec\",\"storageType\"]": "\"persistence\""
             },
             "field_conditions_map": {
-                  "[\"spec\", \"persistence\", \"annotations\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "storageType"
-                              ],
-                              "op": "!=",
-                              "value": "\"ephemeral\""
-                        }
-                  ],
-                  "[\"spec\", \"domainName\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "domainName"
-                              ],
-                              "op": "!=",
-                              "value": "\"\""
-                        }
-                  ],
-                  "[\"spec\", \"persistence\", \"reclaimPolicy\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "storageType"
-                              ],
-                              "op": "!=",
-                              "value": "\"ephemeral\""
-                        }
-                  ],
-                  "[\"spec\", \"ephemeral\", \"emptydirvolumesource\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "storageType"
-                              ],
-                              "op": "==",
-                              "value": "\"ephemeral\""
-                        }
-                  ],
-                  "[\"spec\", \"persistence\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "storageType"
-                              ],
-                              "op": "!=",
-                              "value": "\"ephemeral\""
-                        }
-                  ],
-                  "[\"spec\", \"persistence\", \"spec\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "storageType"
-                              ],
-                              "op": "!=",
-                              "value": "\"ephemeral\""
-                        }
-                  ],
-                  "[\"spec\", \"initContainers\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "initContainers"
-                              ],
-                              "op": "!=",
-                              "value": null
-                        }
-                  ],
-                  "[\"spec\", \"pod\", \"imagePullSecrets\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "pod",
-                                    "serviceAccountName"
-                              ],
-                              "op": "!=",
-                              "value": "\"default\""
-                        }
-                  ],
-                  "[\"spec\", \"pod\", \"resources\"]": [
-                        {
-                              "field": [
-                                    "spec",
-                                    "pod",
-                                    "resources",
-                                    "requests"
-                              ],
-                              "op": "!=",
-                              "value": null
-                        },
-                        {
-                              "field": [
-                                    "spec",
-                                    "pod",
-                                    "resources",
-                                    "limits"
-                              ],
-                              "op": "!=",
-                              "value": null
-                        }
-                  ]
+                  "[\"spec\", \"persistence\", \"annotations\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "storageType"
+                                                ],
+                                                "op": "!=",
+                                                "value": "\"ephemeral\""
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"persistence\", \"spec\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "storageType"
+                                                ],
+                                                "op": "!=",
+                                                "value": "\"ephemeral\""
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"domainName\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "domainName"
+                                                ],
+                                                "op": "!=",
+                                                "value": "\"\""
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"initContainers\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "initContainers"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"ephemeral\", \"emptydirvolumesource\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "storageType"
+                                                ],
+                                                "op": "==",
+                                                "value": "\"ephemeral\""
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"pod\", \"resources\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "pod",
+                                                      "resources",
+                                                      "requests"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"pod\", \"imagePullSecrets\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "pod",
+                                                      "serviceAccountName"
+                                                ],
+                                                "op": "!=",
+                                                "value": "\"default\""
+                                          }
+                                    ]
+                              }
+                        ]
+                  }
             }
       }
 }
