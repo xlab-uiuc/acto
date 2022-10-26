@@ -141,6 +141,8 @@ class Checker(object):
 
         for pod_name, pod in pods.items():
             container_statuses = pod['status']['container_statuses']
+            if container_statuses is None:
+                continue
             for container_status in container_statuses:
                 if 'state' in container_status:
                     if 'terminated' in container_status['state'] and container_status['state']['terminated'] != None:
@@ -154,6 +156,8 @@ class Checker(object):
         for deployment_name, deployment in deployment_pods.items():
             for pod in deployment:
                 container_statuses = pod['status']['container_statuses']
+                if container_statuses is None:
+                    continue
                 for container_status in container_statuses:
                     if 'state' in container_status:
                         if 'terminated' in container_status['state'] and container_status['state']['terminated'] != None:
