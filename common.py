@@ -94,6 +94,7 @@ class Oracle(str, enum.Enum):
     ERROR_LOG = 'ErrorLog'
     SYSTEM_STATE = 'SystemState'
     SYSTEM_HEALTH = 'SystemHealth'
+    CRASH = 'Crash'
 
 
 class RunResult():

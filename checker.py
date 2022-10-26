@@ -95,6 +95,10 @@ class Checker(object):
         input_delta, system_delta = self.get_deltas(snapshot, prev_snapshot)
         flattened_system_state = flatten_dict(snapshot.system_state, [])
 
+        crash_result = self.check_crash(snapshot)
+        if not isinstance(crash_result, PassResult):
+            return crash_result
+
         input_result = self.check_input(snapshot, input_delta)
         if not isinstance(input_result, PassResult):
             return input_result
@@ -130,6 +134,37 @@ class Checker(object):
             return log_result
 
         return PassResult()
+
+    def check_crash(self, snapshot: Snapshot) -> RunResult:
+        pods = snapshot.system_state['pod']
+        deployment_pods = snapshot.system_state['deployment_pods']
+
+        for pod_name, pod in pods.items():
+            container_statuses = pod['status']['container_statuses']
+            for container_status in container_statuses:
+                if 'state' in container_status:
+                    if 'terminated' in container_status['state'] and container_status['state']['terminated'] != None:
+                        if container_status['state']['terminated']['reason'] == 'Error':
+                            return ErrorResult(Oracle.CRASH, 'Pod %s crashed' % pod_name)
+                    elif 'waiting' in container_status['state'] and container_status['state']['waiting'] != None:
+                        if container_status['state']['waiting']['reason'] == 'CrashLoopBackOff':
+                            return ErrorResult(Oracle.CRASH, 'Pod %s crashed' % pod_name)
+
+
+        for deployment_name, deployment in deployment_pods.items():
+            for pod in deployment:
+                container_statuses = pod['status']['container_statuses']
+                for container_status in container_statuses:
+                    if 'state' in container_status:
+                        if 'terminated' in container_status['state'] and container_status['state']['terminated'] != None:
+                            if container_status['state']['terminated']['reason'] == 'Error':
+                                return ErrorResult(Oracle.CRASH, 'Pod %s crashed' % pod_name)
+                        elif 'waiting' in container_status['state'] and container_status['state']['waiting'] != None:
+                            if container_status['state']['waiting']['reason'] == 'CrashLoopBackOff':
+                                return ErrorResult(Oracle.CRASH, 'Pod %s crashed' % pod_name)
+
+        return PassResult()
+
 
     def check_input(self, snapshot: Snapshot, input_delta) -> RunResult:
         logger = get_thread_logger(with_prefix=True)
@@ -246,7 +281,6 @@ class Checker(object):
                 return False
         else:
             return self.check_condition(input, condition_group, input_delta_path)
-
 
     def should_skip_input_delta(self, input_delta: Diff, snapshot: Snapshot) -> bool:
         '''Determines if the input delta should be skipped or not
