@@ -710,12 +710,12 @@ if __name__ == '__main__':
                         dest='dryrun',
                         action='store_true',
                         help='Only generate test cases without executing them')
-    parser.add_argument('--is_reproduce',
+    parser.add_argument('--is-reproduce',
                         dest='is_reproduce',
                         action='store_true',
                         required=False,
                         help='Reproduce mode')
-    parser.add_argument('--reproduce_dir',
+    parser.add_argument('--reproduce-dir',
                         dest='reproduce_dir',
                         required=False,
                         help='The directory of the trial folder to reproduce')

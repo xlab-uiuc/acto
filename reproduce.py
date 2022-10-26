@@ -1,8 +1,10 @@
 import argparse
+import datetime
 from functools import partial
 import json
-import logging
-import subprocess
+import sys
+from logging import Logger
+from types import SimpleNamespace
 import jsonpatch
 import yaml
 from glob import glob
@@ -14,6 +16,7 @@ from value_with_schema import ValueWithSchema
 from test_case import TestCase
 from common import get_thread_logger
 from input import InputModel
+from acto import Acto
 
 def apply_repro_testcase(value_with_schema: ValueWithSchema,
                    testcase: TestCase) -> jsonpatch.JsonPatch:
@@ -23,7 +26,7 @@ def apply_repro_testcase(value_with_schema: ValueWithSchema,
     prev = value_with_schema.raw_value()
     value_with_schema.update(next_cr)
     curr = value_with_schema.raw_value()
-    logging.debug('current cr: %s', curr)
+    logger.debug('current cr: %s', curr)
 
     patch = jsonpatch.make_patch(prev, curr)
     logger.info('JSON patch: %s' % patch)
@@ -112,3 +115,28 @@ def repro_setup(v):
     return None
 
 # TODO add main function
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--reproduce-dir',
+                        dest='reproduce_dir',
+                        required=True,
+                        help='The directory of the trial folder to reproduce')
+    parser.add_argument('--config', '-c', dest='config',
+                        help='Operator port config path')
+    args = parser.parse_args()
+    with open(args.config, 'r') as config_file:
+        config = json.load(config_file, object_hook=lambda d: SimpleNamespace(**d))
+    if args.context == None:
+        context_cache = os.path.join(os.path.dirname(config.seed_custom_resource), 'context.json')
+    else:
+        context_cache = args.context
+    Logger.info('Acto started with [%s]' % sys.argv)
+    Logger.info('Operator config: %s', config)
+    workdir_path = 'testrun-%s' % datetime.now().strftime('%Y-%m-%d-%H-%M')
+    start_time = datetime.now()
+    acto = Acto(workdir_path, config, context_cache,
+                 num_workers=1, is_reproduce=True, reproduce_dir=args.reproduce_dir)
+    
+    acto.run()
+    end_time = datetime.now()
+    Logger.info('Acto finished in %s', end_time - start_time)
