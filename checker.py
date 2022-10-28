@@ -610,7 +610,7 @@ class Checker(object):
             r".*\['metadata'\]\['annotations'\]\['.*last-applied.*'\]",
             r".*\['metadata'\]\['annotations'\]\['.*\.kubernetes\.io.*'\]",
             r".*\['metadata'\]\['labels'\]\['.*revision.*'\]",
-            r".*\['metadata'\]\['labels'\]\['owner-rv\]",
+            r".*\['metadata'\]\['labels'\]\['owner-rv'\]",
           
             r".*\['status'\]",
 
