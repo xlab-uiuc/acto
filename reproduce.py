@@ -1,9 +1,9 @@
 import argparse
-import datetime
+from datetime import datetime
 from functools import partial
 import json
 import sys
-from logging import Logger
+import logging
 from types import SimpleNamespace
 import jsonpatch
 import yaml
@@ -19,7 +19,9 @@ from input import InputModel
 from acto import Acto
 
 def apply_repro_testcase(value_with_schema: ValueWithSchema,
-                   testcase: TestCase) -> jsonpatch.JsonPatch:
+                         path: list,
+                         testcase: TestCase,
+                         setup: bool = False) -> jsonpatch.JsonPatch:
     logger = get_thread_logger(with_prefix=True)
     next_cr = testcase.mutator(None)  # next cr in yaml format
 
@@ -116,27 +118,86 @@ def repro_setup(v):
 
 # TODO add main function
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description='Automatic, Continuous Testing for k8s/openshift Operators')
     parser.add_argument('--reproduce-dir',
                         dest='reproduce_dir',
                         required=True,
                         help='The directory of the trial folder to reproduce')
     parser.add_argument('--config', '-c', dest='config',
                         help='Operator port config path')
+    parser.add_argument('--cluster-runtime', '-r', dest='cluster_runtime',
+                        default="KIND",
+                        help='Cluster runtime for kubernetes, can be KIND (Default), K3D or MINIKUBE')
+    parser.add_argument('--enable-analysis',
+                        dest='enable_analysis',
+                        action='store_true',
+                        help='Enables static analysis to prune false alarms')
+    parser.add_argument('--duration',
+                        '-d',
+                        dest='duration',
+                        required=False,
+                        help='Number of hours to run')
+    parser.add_argument('--preload-images',
+                        dest='preload_images',
+                        nargs='*',
+                        help='Docker images to preload into Kind cluster')
+    # Temporary solution before integrating controller-gen
+    parser.add_argument('--helper-crd',
+                        dest='helper_crd',
+                        help='generated CRD file that helps with the input generation')
+    parser.add_argument('--context', dest='context', help='Cached context data')
+    parser.add_argument('--num-workers',
+                        dest='num_workers',
+                        type=int,
+                        default=1,
+                        help='Number of concurrent workers to run Acto with')
+    parser.add_argument('--num-cases',
+                        dest='num_cases',
+                        type=int,
+                        default=1,
+                        help='Number of testcases to bundle each time')
+    parser.add_argument('--learn', dest='learn', action='store_true', help='Learn mode')
+    parser.add_argument('--notify-crash',
+                        dest='notify_crash',
+                        action='store_true',
+                        help='Submit a google form response to notify')
+    parser.add_argument('--learn-analysis', dest='learn_analysis_only', action='store_true', 
+                        help='Only learn analysis')
+    parser.add_argument('--dryrun',
+                        dest='dryrun',
+                        action='store_true',
+                        help='Only generate test cases without executing them')
     args = parser.parse_args()
+    
+    workdir_path = 'testrun-%s' % datetime.now().strftime('%Y-%m-%d-%H-%M')
+    os.makedirs(workdir_path, exist_ok=True)
+    # Setting up log infra
+    logging.basicConfig(
+        filename=os.path.join(workdir_path, 'test.log'),
+        level=logging.DEBUG,
+        filemode='w',
+        format=
+        '%(asctime)s %(levelname)-7s, %(name)s, %(filename)-9s:%(lineno)d, %(message)s'
+    )
+    logging.getLogger("kubernetes").setLevel(logging.ERROR)
+    logging.getLogger("sh").setLevel(logging.ERROR)
+
+    logger = get_thread_logger(with_prefix=False)
+    
     with open(args.config, 'r') as config_file:
         config = json.load(config_file, object_hook=lambda d: SimpleNamespace(**d))
-    if args.context == None:
-        context_cache = os.path.join(os.path.dirname(config.seed_custom_resource), 'context.json')
-    else:
-        context_cache = args.context
-    Logger.info('Acto started with [%s]' % sys.argv)
-    Logger.info('Operator config: %s', config)
-    workdir_path = 'testrun-%s' % datetime.now().strftime('%Y-%m-%d-%H-%M')
+    context_cache = os.path.join(os.path.dirname(config.seed_custom_resource), 'context.json')
+    logger.info('Acto started with [%s]' % sys.argv)
+    logger.info('Operator config: %s', config)
+    
+    input_model = ReproInputModel(args.reproduce_dir)
+    apply_testcase_f = apply_repro_testcase
+    is_reproduce = True
     start_time = datetime.now()
-    acto = Acto(workdir_path, config, context_cache,
-                 num_workers=1, is_reproduce=True, reproduce_dir=args.reproduce_dir)
+    acto = Acto(workdir_path, config, args.cluster_runtime, args.enable_analysis, args.preload_images, context_cache,
+                args.helper_crd, args.num_workers, args.num_cases, args.dryrun, args.learn_analysis_only, is_reproduce, input_model, apply_testcase_f)
     
     acto.run()
     end_time = datetime.now()
-    Logger.info('Acto finished in %s', end_time - start_time)
+    logger.info('Acto finished in %s', end_time - start_time)
