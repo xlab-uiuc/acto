@@ -15,10 +15,6 @@ Note that the operator is deployed in "[Cluster-Wide](https://www.percona.com/do
 
 To reproduce an experiment, either 
 - use `reproduce.py`  
-  - usage:
-    ```shell
-    python3 acto.py --config <CONFIG PATH> --num-workers 1 --is_reproduce --reproduce_dir <PATH TO THE FOLDER OF CR FILES>
-    ```
 - or deploy the operator using
 
     ```

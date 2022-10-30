@@ -158,6 +158,14 @@ python3 acto.py --config data/rabbitmq-operator/config.json
                 --num-workers 4
 ```
 
+## Reproduce previously found bugs
+Reproduction utility enables Acto to reproduce previously found bugs by taking a folder that contains previously generated CRs (i.e. mutated files) as input and directly deploying each CR. In this way, to reproduce a bug in a certain operator, Acto can just run a single testcase instead of running all testcases for that operator.
+
+Usage:
+```console
+python3 reproduce.py --reproduce-dir <path to the folder containing CRs> --config <path to corresponding config.json>
+```
+
 ## Porting operators
 Acto aims to automate the E2E testing as much as possible to minimize users' labor.
 
