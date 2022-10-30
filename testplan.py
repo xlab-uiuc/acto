@@ -79,7 +79,10 @@ class TreeNode():
             discarded_testcases: dict to store the discarded testcase
         '''
         encoded_path = json.dumps(self.path)
-        discarded_testcase = self.testcases.pop()
+        if len(self.testcases) > 0:
+            discarded_testcase = self.testcases.pop()
+        else:
+            discarded_testcase = {}
         if encoded_path in discarded_testcases:
             discarded_testcases[encoded_path].append(discarded_testcase)
         else:
