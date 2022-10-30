@@ -433,8 +433,9 @@ class Acto:
                  dryrun: bool,
                  analysis_only: bool,
                  is_reproduce: bool,
-                 input_model: InputModel,
+                 input_model,
                  apply_testcase_f: FunctionType,
+                 reproduce_dir: str = None,
                  mount: list = None) -> None:
         logger = get_thread_logger(with_prefix=False)
 
@@ -477,6 +478,7 @@ class Acto:
         self.is_reproduce = is_reproduce
         self.input_model = input_model
         self.apply_testcase_f = apply_testcase_f
+        self.reproduce_dir = reproduce_dir
         self.snapshots = []
 
         # generate configuration files for the cluster runtime
@@ -491,6 +493,9 @@ class Acto:
             self.context['preload_images'].update(preload_images_)
 
         # Apply custom fields
+        self.input_model = input_model(self.context['crd']['body'], operator_config.example_dir,
+                                      num_workers, num_cases, self.reproduce_dir, mount)
+        self.input_model.initialize(self.seed)
         if operator_config.custom_fields != None:
             pruned_list = []
             module = importlib.import_module(operator_config.custom_fields)
@@ -741,8 +746,9 @@ if __name__ == '__main__':
         context_cache = args.context
     
     # Initialize input model and the apply testcase function
-    input_model = InputModel(context_cache['crd']['body'], config.example_dir,
-                                      args.num_workers, args.num_cases, None)
+    # input_model = InputModel(context_cache['crd']['body'], config.example_dir,
+                                    #   args.num_workers, args.num_cases, None)
+    input_model = InputModel
     apply_testcase_f = apply_testcase
     is_reproduce = False
 

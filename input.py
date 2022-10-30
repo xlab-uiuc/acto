@@ -108,7 +108,7 @@ class ProblematicField(CustomField):
 
 class InputModel:
 
-    def __init__(self, crd: dict, example_dir: str, num_workers: int, num_cases: int, mount: list = None) -> None:
+    def __init__(self, crd: dict, example_dir: str, num_workers: int, num_cases: int, reproduce_dir: str, mount: list = None) -> None:
         if mount != None:
             self.mount = mount
         else:

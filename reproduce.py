@@ -52,10 +52,10 @@ class CustomField:
         self.custom_schema = schema
 
 class ReproInputModel(InputModel):
-    def __init__(self, trial_dir: str) -> None:
+    def __init__(self, crd: dict, example_dir: str, num_workers: int, num_cases: int, reproduce_dir: str, mount: list = None) -> None:
         self.root_schema = OpaqueSchema([], {})
         self.testcases = []
-        cr_list = load_cr_from_trial(trial_dir)
+        cr_list = load_cr_from_trial(reproduce_dir)
         self.seed_input = cr_list[0]
         for cr in cr_list[1:]:
             cr_mutator = partial(repro_mutator, cr)
@@ -191,12 +191,12 @@ if __name__ == '__main__':
     logger.info('Acto started with [%s]' % sys.argv)
     logger.info('Operator config: %s', config)
     
-    input_model = ReproInputModel(args.reproduce_dir)
+    input_model = ReproInputModel
     apply_testcase_f = apply_repro_testcase
     is_reproduce = True
     start_time = datetime.now()
     acto = Acto(workdir_path, config, args.cluster_runtime, args.enable_analysis, args.preload_images, context_cache,
-                args.helper_crd, args.num_workers, args.num_cases, args.dryrun, args.learn_analysis_only, is_reproduce, input_model, apply_testcase_f)
+                args.helper_crd, args.num_workers, args.num_cases, args.dryrun, args.learn_analysis_only, is_reproduce, input_model, apply_testcase_f, args.reproduce_dir)
     
     acto.run()
     end_time = datetime.now()
