@@ -162,10 +162,10 @@ class Checker(object):
                     if 'state' in container_status:
                         if 'terminated' in container_status['state'] and container_status['state']['terminated'] != None:
                             if container_status['state']['terminated']['reason'] == 'Error':
-                                return ErrorResult(Oracle.CRASH, 'Pod %s crashed' % pod_name)
+                                return ErrorResult(Oracle.CRASH, 'Pod %s crashed' % pod['metadata']['name'])
                         elif 'waiting' in container_status['state'] and container_status['state']['waiting'] != None:
                             if container_status['state']['waiting']['reason'] == 'CrashLoopBackOff':
-                                return ErrorResult(Oracle.CRASH, 'Pod %s crashed' % pod_name)
+                                return ErrorResult(Oracle.CRASH, 'Pod %s crashed' % pod['metadata']['name'])
 
         return PassResult()
 
@@ -610,7 +610,7 @@ class Checker(object):
             r".*\['metadata'\]\['annotations'\]\['.*last-applied.*'\]",
             r".*\['metadata'\]\['annotations'\]\['.*\.kubernetes\.io.*'\]",
             r".*\['metadata'\]\['labels'\]\['.*revision.*'\]",
-            r".*\['metadata'\]\['labels'\]\['owner-rv\]",
+            r".*\['metadata'\]\['labels'\]\['owner-rv'\]",
           
             r".*\['status'\]",
 
