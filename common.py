@@ -63,12 +63,13 @@ class AnalysisConfig:
 
 class OperatorConfig:
 
-    def __init__(self, deploy: DeployConfig, crd_name: str, custom_fields: str, example_dir: str,
-                 context: str, seed_custom_resource: str, source_path: str,
+    def __init__(self, deploy: DeployConfig, crd_name: str, custom_fields: str, custom_oracle: str,
+                 example_dir: str, context: str, seed_custom_resource: str, source_path: str,
                  analysis: AnalysisConfig) -> None:
         self.deploy = deploy
         self.crd_name = crd_name
         self.custom_fields = custom_fields
+        self.custom_oracle = custom_oracle
         self.example_dir = example_dir
         self.context = context
         self.seed_custom_resource = seed_custom_resource
@@ -95,6 +96,7 @@ class Oracle(str, enum.Enum):
     SYSTEM_STATE = 'SystemState'
     SYSTEM_HEALTH = 'SystemHealth'
     CRASH = 'Crash'
+    CUSTOM = 'Custom'
 
 
 class RunResult():
@@ -250,8 +252,7 @@ def invalid_input_message(log_msg: str, input_delta: dict) -> Tuple[bool, list]:
 
     for regex in INVALID_INPUT_LOG_REGEX:
         if re.search(regex, log_msg):
-            logger.info(
-                'Recognized invalid input through regex: %s' % log_msg)
+            logger.info('Recognized invalid input through regex: %s' % log_msg)
             return True, None
 
     # Check if the log line contains the field or value
@@ -261,19 +262,20 @@ def invalid_input_message(log_msg: str, input_delta: dict) -> Tuple[bool, list]:
         for delta in delta_category.values():
             if isinstance(delta.path[-1], str) and delta.path[-1] in log_msg:
                 logger.info("Recognized invalid input through field [%s] in error message: %s" %
-                             (delta.path[-1], log_msg))
+                            (delta.path[-1], log_msg))
                 return True, delta.path
             # if delta.curr is an int, we do exact match to avoid matching a short
             # int (e.g. 1) to a log line and consider the int as invalid input
             elif isinstance(delta.curr, int):
                 for item in log_msg.split(' '):
                     if item == str(delta.curr):
-                        logger.info("Recognized invalid input through value [%s] in error message: %s" % (
-                            delta.curr, log_msg))
+                        logger.info(
+                            "Recognized invalid input through value [%s] in error message: %s" %
+                            (delta.curr, log_msg))
                         return True, delta.path
             elif str(delta.curr) in log_msg:
                 logger.info("Recognized invalid input through value [%s] in error message: %s" %
-                             (str(delta.curr), log_msg))
+                            (str(delta.curr), log_msg))
                 return True, delta.path
 
     return False, None
@@ -330,7 +332,8 @@ def save_result(trial_dir: str, trial_err: ErrorResult, num_tests: int, trial_el
         recovery_err = trial_err.recovery_err
         recovery_result_dict = {}
         recovery_result_dict['trial_num'] = result_dict['trial_num']
-        recovery_result_dict['delta'] = json.loads(recovery_err.delta.to_json(default_mapping={datetime: lambda x: x.isoformat()}))
+        recovery_result_dict['delta'] = json.loads(
+            recovery_err.delta.to_json(default_mapping={datetime: lambda x: x.isoformat()}))
         recovery_result_dict['from'] = recovery_err.from_
         recovery_result_dict['to'] = recovery_err.to_
         recovery_err_path = os.path.join(trial_dir, 'recovery_result.json')
@@ -374,6 +377,7 @@ class ContextEncoder(json.JSONEncoder):
         elif isinstance(obj, str) and obj == 'false':
             return False
         return json.JSONEncoder.default(self, obj)
+
 
 def translate_op(input_op: str):
     if input_op == '!=':
@@ -447,7 +451,7 @@ def kubectl(args: list,
             capture_output=False,
             text=False) -> subprocess.CompletedProcess:
     logger = get_thread_logger(with_prefix=True)
-            
+
     cmd = ['kubectl']
     cmd.extend(args)
 
@@ -466,7 +470,7 @@ def kubectl(args: list,
 
 def helm(args: list, context_name: str) -> subprocess.CompletedProcess:
     logger = get_thread_logger(with_prefix=False)
-    
+
     cmd = ['helm']
     cmd.extend(args)
 
@@ -479,23 +483,13 @@ def helm(args: list, context_name: str) -> subprocess.CompletedProcess:
 
 def kubernetes_client(kubeconfig: str, context_name: str) -> kubernetes.client.ApiClient:
     return kubernetes.config.kube_config.new_client_from_config(config_file=kubeconfig,
-        context=context_name)
+                                                                context=context_name)
+
 
 if __name__ == '__main__':
     line = "sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.9.6/pkg/internal/controller/controller.go:214"
-    prev_input = curr_input = {
-        'spec': {
-            'tolerations': {}
-        }
-    }
-    curr_input = {
-        'spec': {
-            'tolerations': {
-                'tolerationSeconds': 1
-            }
-        }
-    }
+    prev_input = curr_input = {'spec': {'tolerations': {}}}
+    curr_input = {'spec': {'tolerations': {'tolerationSeconds': 1}}}
     input_delta = postprocess_diff(
-        DeepDiff(prev_input, curr_input, ignore_order=True, report_repetition=True,
-                 view='tree'))
+        DeepDiff(prev_input, curr_input, ignore_order=True, report_repetition=True, view='tree'))
     print(invalid_input_message(line, input_delta))

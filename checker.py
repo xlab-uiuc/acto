@@ -3,6 +3,7 @@ from builtins import TypeError
 from copy import deepcopy
 import sys
 import logging
+from typing import List
 from deepdiff import DeepDiff
 import re
 import copy
@@ -20,12 +21,13 @@ from parse_log.parse_log import parse_log
 
 class Checker(object):
 
-    def __init__(self, context: dict, trial_dir: str, input_model: InputModel) -> None:
+    def __init__(self, context: dict, trial_dir: str, input_model: InputModel, custom_oracle: List[callable]) -> None:
         self.context = context
         self.namespace = context['namespace']
         self.compare_method = CompareMethods()
         self.trial_dir = trial_dir
         self.input_model = input_model
+        self.custom_oracle = custom_oracle
 
         self.field_conditions_map = {}
         if self.context['enable_analysis']:
@@ -122,7 +124,6 @@ class Checker(object):
         if isinstance(log_result, InvalidInputResult):
             logger.info('Invalid input, skip this case')
             return log_result
-
         if isinstance(health_result, ErrorResult):
             logger.info('Report error from system health oracle')
             return health_result
@@ -132,6 +133,15 @@ class Checker(object):
         elif isinstance(log_result, ErrorResult):
             logger.info('Report error from operator log oracle')
             return log_result
+
+        if self.custom_oracle != None:
+            # This custom_oracle field needs be None when Checker is used in post run
+            # because the custom oracle may need runtime information which is not available in the
+            # post run
+            for oracle in self.custom_oracle:
+                custom_result = oracle()
+                if not isinstance(custom_result, PassResult):
+                    return custom_result
 
         return PassResult()
 

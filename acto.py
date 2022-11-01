@@ -1,12 +1,12 @@
 import argparse
+import functools
 import os
 import sys
 import threading
 from types import SimpleNamespace
-import kubernetes
 import yaml
 import time
-from typing import Tuple
+from typing import List, Tuple
 import random
 from datetime import datetime
 import signal
@@ -15,6 +15,8 @@ import importlib
 import traceback
 import tempfile
 import jsonpatch
+from client.kubectl import KubectlClient
+from client.oracle_handle import OracleHandle
 
 from common import *
 from exception import UnknownDeployMethodError
@@ -26,7 +28,6 @@ from k8s_cluster import base, k3d, kind
 from constant import CONST
 from runner import Runner
 from checker import Checker
-from schema import BaseSchema, ObjectSchema, ArraySchema
 from snapshot import EmptySnapshot
 from ssa.analysis import analyze
 from thread_logger import set_thread_logger_prefix, get_thread_logger
@@ -112,27 +113,29 @@ def timeout_handler(sig, frame):
 
 class TrialRunner:
 
-    def __init__(self, context: dict, input_model: InputModel, deploy: Deploy, workdir: str,
-                 cluster: base.KubernetesCluster, worker_id: int, dryrun: bool) -> None:
+    def __init__(self, context: dict, input_model: InputModel, deploy: Deploy,
+                 custom_oracle: List[callable], workdir: str, cluster: base.KubernetesCluster,
+                 worker_id: int, dryrun: bool) -> None:
         self.context = context
         self.workdir = workdir
         self.cluster = cluster
         self.images_archive = os.path.join(workdir, 'images.tar')
         self.worker_id = worker_id
-        self.context_name = cluster.get_context_name(
-            f"acto-cluster-{worker_id}")
+        self.context_name = cluster.get_context_name(f"acto-cluster-{worker_id}")
         self.kubeconfig = os.path.join(os.path.expanduser('~'), '.kube', self.context_name)
         self.cluster_name = f"acto-cluster-{worker_id}"
         self.input_model = input_model
         self.deploy = deploy
+
+        self.custom_oracle = custom_oracle
         self.dryrun = dryrun
 
         self.snapshots = []
         self.discarded_testcases = {}  # List of test cases failed to run
-        
+
     def run(self):
         logger = get_thread_logger(with_prefix=False)
-        
+
         self.input_model.set_worker_id(self.worker_id)
         curr_trial = 0
         apiclient = None
@@ -143,8 +146,8 @@ class TrialRunner:
             self.cluster.restart_cluster(self.cluster_name, self.kubeconfig, CONST.K8S_VERSION)
             apiclient = kubernetes_client(self.kubeconfig, self.context_name)
             self.cluster.load_images(self.images_archive, self.cluster_name)
-            deployed = self.deploy.deploy_with_retry(
-                self.context, self.kubeconfig, self.context_name)
+            deployed = self.deploy.deploy_with_retry(self.context, self.kubeconfig,
+                                                     self.context_name)
             if not deployed:
                 logger.info('Not deployed. Try again!')
                 continue
@@ -170,9 +173,12 @@ class TrialRunner:
                 break
 
         logger.info('Failed test cases: %s' %
-                     json.dumps(self.discarded_testcases, cls=ActoEncoder, indent=4))
+                    json.dumps(self.discarded_testcases, cls=ActoEncoder, indent=4))
 
-    def run_trial(self, trial_dir: str, curr_trial: int, num_mutation: int = 10) -> Tuple[ErrorResult, int]:
+    def run_trial(self,
+                  trial_dir: str,
+                  curr_trial: int,
+                  num_mutation: int = 10) -> Tuple[ErrorResult, int]:
         '''Run a trial starting with the initial input, mutate with the candidate_dict, 
         and mutate for num_mutation times
 
@@ -183,8 +189,12 @@ class TrialRunner:
             num_mutation: how many mutations to run at each trial
         '''
 
+        oracle_handle = OracleHandle(KubectlClient(self.kubeconfig, self.context_name),
+                                      kubernetes_client(self.kubeconfig, self.context_name),
+                                      self.context['namespace'])
+        custom_oracle = [functools.partial(i, oracle_handle) for i in self.custom_oracle]
         runner = Runner(self.context, trial_dir, self.kubeconfig, self.context_name)
-        checker = Checker(self.context, trial_dir, self.input_model)
+        checker = Checker(self.context, trial_dir, self.input_model, custom_oracle)
 
         curr_input = self.input_model.get_seed_input()
         self.snapshots.append(EmptySnapshot(curr_input))
@@ -215,7 +225,7 @@ class TrialRunner:
                     else:
                         # precondition fails, first run setup
                         logger.info('Precondition of %s fails, try setup first',
-                                     field_node.get_path())
+                                    field_node.get_path())
                         apply_testcase(curr_input_with_schema,
                                        field_node.get_path(),
                                        testcase,
@@ -287,7 +297,7 @@ class TrialRunner:
     def run_testcases(self, curr_input_with_schema, testcases, runner, checker,
                       generation) -> Tuple[RunResult, int]:
         logger = get_thread_logger(with_prefix=True)
-        
+
         testcase_patches = []
         for field_node, testcase in testcases:
             patch = apply_testcase(curr_input_with_schema, field_node.get_path(), testcase)
@@ -336,7 +346,7 @@ class TrialRunner:
                         for op in patch:
                             if op['path'] == jsonpatch_path:
                                 logger.info('Determine the responsible field to be %s' %
-                                             jsonpatch_path)
+                                            jsonpatch_path)
                                 responsible = True
                                 field_node.get_testcases().pop()  # finish testcase
                                 break
@@ -349,15 +359,15 @@ class TrialRunner:
                         logger.error('Fail to determine the responsible patch, try one by one')
                         for field_node, testcase, patch in testcase_patches:
                             result, generation = self.run_testcases(curr_input_with_schema,
-                                                                    [(field_node, testcase)], runner,
-                                                                    checker, generation)
+                                                                    [(field_node, testcase)],
+                                                                    runner, checker, generation)
                             if isinstance(result, ErrorResult):
                                 return result, generation
                         return result, generation
                     else:
                         logger.debug('Rerunning the remaining ready testcases')
                         return self.run_testcases(curr_input_with_schema, ready_testcases, runner,
-                                                checker, generation)
+                                                  checker, generation)
         else:
             for patch in testcase_patches:
                 patch[0].get_testcases().pop()  # finish testcase
@@ -493,6 +503,12 @@ class Acto:
 
             logger.info("Applied custom fields: %s", json.dumps(pruned_list))
 
+        if operator_config.custom_oracle != None:
+            module = importlib.import_module(operator_config.custom_oracle)
+            self.custom_oracle = module.CUSTOM_CHECKER
+        else:
+            self.custom_oracle = None
+
         # Generate test cases
         self.test_plan = self.input_model.generate_test_plan()
         with open(os.path.join(self.workdir_path, 'test_plan.json'), 'w') as plan_file:
@@ -518,12 +534,12 @@ class Acto:
 
                     if self.operator_config.analysis.entrypoint != None:
                         entrypoint_path = os.path.join(project_src,
-                                                    self.operator_config.analysis.entrypoint)
+                                                       self.operator_config.analysis.entrypoint)
                     else:
                         entrypoint_path = project_src
                     self.context['analysis_result'] = analyze(entrypoint_path,
-                                                            self.operator_config.analysis.type,
-                                                            self.operator_config.analysis.package)
+                                                              self.operator_config.analysis.type,
+                                                              self.operator_config.analysis.package)
                 with open(context_file, 'w') as context_fout:
                     json.dump(self.context, context_fout, cls=ContextEncoder, indent=6)
         else:
@@ -531,22 +547,20 @@ class Acto:
             logger.info('Starting learning run to collect information')
             self.context = {'namespace': '', 'crd': None, 'preload_images': set()}
             learn_context_name = self.cluster.get_context_name('learn')
-            learn_kubeconfig = os.path.join(os.path.expanduser('~'), '.kube', self.learn_context_name)
+            learn_kubeconfig = os.path.join(os.path.expanduser('~'), '.kube',
+                                            self.learn_context_name)
 
             while True:
                 self.cluster.restart_cluster('learn', CONST.K8S_VERSION)
-                deployed = self.deploy.deploy_with_retry(
-                    self.context, learn_kubeconfig, learn_context_name)
+                deployed = self.deploy.deploy_with_retry(self.context, learn_kubeconfig,
+                                                         learn_context_name)
                 if deployed:
                     break
             apiclient = kubernetes_client(learn_kubeconfig, learn_context_name)
-            runner = Runner(self.context, 'learn', learn_kubeconfig,
-                            learn_context_name)
-            runner.run_without_collect(
-                self.operator_config.seed_custom_resource)
+            runner = Runner(self.context, 'learn', learn_kubeconfig, learn_context_name)
+            runner.run_without_collect(self.operator_config.seed_custom_resource)
 
-            update_preload_images(
-                self.context, self.cluster.get_node_list('learn'))
+            update_preload_images(self.context, self.cluster.get_node_list('learn'))
             process_crd(self.context, apiclient, 'learn', learn_kubeconfig, learn_context_name,
                         self.crd_name, helper_crd)
             self.cluster.delete_cluster('learn')
@@ -584,8 +598,8 @@ class Acto:
 
         threads = []
         for i in range(self.num_workers):
-            runner = TrialRunner(self.context, self.input_model, self.deploy, self.workdir_path, self.cluster,
-                                 i, self.dryrun)
+            runner = TrialRunner(self.context, self.input_model, self.deploy, self.custom_oracle,
+                                 self.workdir_path, self.cluster, i, self.dryrun)
             t = threading.Thread(target=runner.run, args=())
             t.start()
             threads.append(t)
@@ -593,6 +607,7 @@ class Acto:
         for t in threads:
             t.join()
         logger.info('All tests finished')
+
 
 def handle_excepthook(type, message, stack):
     '''Custom exception handler
@@ -646,11 +661,13 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(
         description='Automatic, Continuous Testing for k8s/openshift Operators')
-    parser.add_argument('--config', '-c', dest='config',
-                        help='Operator port config path')
-    parser.add_argument('--cluster-runtime', '-r', dest='cluster_runtime',
-                        default="KIND",
-                        help='Cluster runtime for kubernetes, can be KIND (Default), K3D or MINIKUBE')
+    parser.add_argument('--config', '-c', dest='config', help='Operator port config path')
+    parser.add_argument(
+        '--cluster-runtime',
+        '-r',
+        dest='cluster_runtime',
+        default="KIND",
+        help='Cluster runtime for kubernetes, can be KIND (Default), K3D or MINIKUBE')
     parser.add_argument('--enable-analysis',
                         dest='enable_analysis',
                         action='store_true',
@@ -684,7 +701,9 @@ if __name__ == '__main__':
                         dest='notify_crash',
                         action='store_true',
                         help='Submit a google form response to notify')
-    parser.add_argument('--learn-analysis', dest='learn_analysis_only', action='store_true', 
+    parser.add_argument('--learn-analysis',
+                        dest='learn_analysis_only',
+                        action='store_true',
                         help='Only learn analysis')
     parser.add_argument('--dryrun',
                         dest='dryrun',
@@ -699,9 +718,7 @@ if __name__ == '__main__':
         filename=os.path.join(workdir_path, 'test.log'),
         level=logging.DEBUG,
         filemode='w',
-        format=
-        '%(asctime)s %(levelname)-7s, %(name)s, %(filename)-9s:%(lineno)d, %(message)s'
-    )
+        format='%(asctime)s %(levelname)-7s, %(name)s, %(filename)-9s:%(lineno)d, %(message)s')
     logging.getLogger("kubernetes").setLevel(logging.ERROR)
     logging.getLogger("sh").setLevel(logging.ERROR)
 
@@ -734,8 +751,9 @@ if __name__ == '__main__':
         context_cache = args.context
 
     start_time = datetime.now()
-    acto = Acto(workdir_path, config, args.cluster_runtime, args.enable_analysis, args.preload_images, context_cache,
-                args.helper_crd, args.num_workers, args.num_cases, args.dryrun, args.learn_analysis_only)
+    acto = Acto(workdir_path, config, args.cluster_runtime, args.enable_analysis,
+                args.preload_images, context_cache, args.helper_crd, args.num_workers,
+                args.num_cases, args.dryrun, args.learn_analysis_only)
     if not args.learn:
         acto.run()
     end_time = datetime.now()
