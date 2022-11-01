@@ -66,7 +66,7 @@ def zookeeper_checker(handle: OracleHandle) -> RunResult:
 
             for key, value in config.items():
                 canonicalize_key = canonicalize(key)
-                if canonicalize_key not in result['config']:
+                if canonicalize_key not in result:
                     return ErrorResult(oracle=Oracle.CUSTOM,
                                        msg='Zookeeper config does not contain key ' + key)
                 elif result[canonicalize_key] != value:
