@@ -104,11 +104,11 @@ class ProblematicField(CustomField):
             super().__init__(path, self.PruneEntireArraySchema)
         else:
             super().__init__(path, self.PruneEntireObjectSchema)
-
+            
 
 class InputModel:
 
-    def __init__(self, crd: dict, example_dir: str, num_workers: int, num_cases: int, mount: list = None) -> None:
+    def __init__(self, crd: dict, example_dir: str, num_workers: int, num_cases: int, reproduce_dir: str, mount: list = None) -> None:
         if mount != None:
             self.mount = mount
         else:
@@ -171,7 +171,7 @@ class InputModel:
     def get_discarded_tests(self) -> dict:
         return self.discarded_tests
 
-    def generate_test_plan(self):
+    def generate_test_plan(self) -> dict:
         '''Generate test plan based on CRD'''
         logger = get_thread_logger(with_prefix=False)
 
