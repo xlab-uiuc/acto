@@ -749,7 +749,7 @@ if __name__ == "__main__":
                 context['analysis_result']['default_value_map'])
 
         checker = Checker(context=context, trial_dir=trial_dir,
-                          input_model=input_model)
+                          input_model=input_model, custom_oracle=None)
         snapshots = []
         snapshots.append(EmptySnapshot(seed))
 

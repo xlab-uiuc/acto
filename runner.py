@@ -314,6 +314,7 @@ def group_pods(all_pods: dict) -> Tuple[dict, dict]:
 if __name__ == "__main__":
     import argparse
     import sys
+    import logging
 
     parser = argparse.ArgumentParser(description="Standalone runner for acto")
     parser.add_argument('-m', '--manifest', type=str, help='path to the manifest file to be applied', required=True)

@@ -2,16 +2,19 @@ from typing import List
 import kubernetes
 from kubernetes.client.models.v1_stateful_set import V1StatefulSet
 from kubernetes.client.models.v1_pod import V1Pod
+
+from snapshot import Snapshot
 from .kubectl import KubectlClient
 
 
 class OracleHandle:
 
     def __init__(self, kubectl_client: KubectlClient, k8s_client: kubernetes.client.ApiClient,
-                 namespace: str):
+                 namespace: str, snapshots: List[Snapshot]):
         self.kubectl_client = kubectl_client
         self.k8s_client = k8s_client
         self.namespace = namespace
+        self.snapshots = snapshots
 
     def get_stateful_sets(self) -> List[V1StatefulSet]:
         '''Get all stateful sets in the namespace
@@ -39,3 +42,11 @@ class OracleHandle:
             for reference in pod.metadata.owner_references:
                 if reference.uid == stateful_set.metadata.uid:
                     yield pod
+
+    def get_cr(self) -> dict:
+        '''Get the most recent applied CR
+        
+        Returns:
+            dict
+        '''
+        return self.snapshots[-1].input

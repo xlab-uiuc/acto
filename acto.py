@@ -194,7 +194,7 @@ class TrialRunner:
 
         oracle_handle = OracleHandle(KubectlClient(self.kubeconfig, self.context_name),
                                      kubernetes_client(self.kubeconfig, self.context_name),
-                                     self.context['namespace'])
+                                     self.context['namespace'], self.snapshots)
         custom_oracle = [functools.partial(i, oracle_handle) for i in self.custom_oracle]
         runner = Runner(self.context, trial_dir, self.kubeconfig, self.context_name)
         checker = Checker(self.context, trial_dir, self.input_model, custom_oracle)
