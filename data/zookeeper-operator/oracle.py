@@ -65,7 +65,11 @@ def zookeeper_checker(handle: OracleHandle) -> RunResult:
                                 msg='Zookeeper cluster curl has error ' + result['error'])
 
             for key, value in config.items():
-                if result[canonicalize(key)] != value:
+                canonicalize_key = canonicalize(key)
+                if canonicalize_key not in result['config']:
+                    return ErrorResult(oracle=Oracle.CUSTOM,
+                                       msg='Zookeeper config does not contain key ' + key)
+                elif result[canonicalize_key] != value:
                     return ErrorResult(oracle=Oracle.CUSTOM,
                                        msg='Zookeeper cluster has incorrect config')
         
