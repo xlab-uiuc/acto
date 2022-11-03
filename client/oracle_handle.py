@@ -39,9 +39,10 @@ class OracleHandle:
             self.namespace).items
 
         for pod in all_pods:
-            for reference in pod.metadata.owner_references:
-                if reference.uid == stateful_set.metadata.uid:
-                    yield pod
+            if pod.metadata.owner_references != None:
+                for reference in pod.metadata.owner_references:
+                    if reference.uid == stateful_set.metadata.uid:
+                        yield pod
 
     def get_cr(self) -> dict:
         '''Get the most recent applied CR

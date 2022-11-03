@@ -2,11 +2,11 @@ import json
 from typing import List
 from client.oracle_handle import OracleHandle
 from common import ErrorResult, Oracle, PassResult, RunResult, canonicalize
+from thread_logger import get_thread_logger
 
 
 def zookeeper_checker(handle: OracleHandle) -> RunResult:
     '''Checks the health of the Zookeeper cluster'''
-
 
     cr = handle.get_cr()
     if 'config' in cr['spec']:
@@ -56,13 +56,14 @@ def zookeeper_checker(handle: OracleHandle) -> RunResult:
         if config != None:
             p = handle.kubectl_client.exec(
                 pod.metadata.name,
-                pod.metadata.namespace, ['curl', 'http://' + pod.status.pod_ip + ':8080/commands/conf'],
+                pod.metadata.namespace,
+                ['curl', 'http://' + pod.status.pod_ip + ':8080/commands/conf'],
                 capture_output=True,
                 text=True)
             result = json.loads(p.stdout)
             if result['error'] != None:
                 return ErrorResult(oracle=Oracle.CUSTOM,
-                                msg='Zookeeper cluster curl has error ' + result['error'])
+                                   msg='Zookeeper cluster curl has error ' + result['error'])
 
             for key, value in config.items():
                 canonicalize_key = canonicalize(key)
@@ -72,12 +73,27 @@ def zookeeper_checker(handle: OracleHandle) -> RunResult:
                 elif result[canonicalize_key] != value:
                     return ErrorResult(oracle=Oracle.CUSTOM,
                                        msg='Zookeeper cluster has incorrect config')
-        
 
     if leaders > 1:
         return ErrorResult(oracle=Oracle.CUSTOM, msg='Zookeeper cluster has more than one leader')
 
+    p = handle.kubectl_client.exec(
+        'zkapp',
+        handle.namespace, 
+        ['request'],
+        capture_output=True,
+        text=True)
+    if p.returncode != 0:
+        return ErrorResult(oracle=Oracle.CUSTOM, msg='Zookeeper app request failed')
+    elif p.stdout != 'test':
+        return ErrorResult(oracle=Oracle.CUSTOM, msg='Zookeeper app request result wrong %s' % p.stdout)
+
     return PassResult()
 
 
+def deploy_zk_app(handle: OracleHandle):
+    handle.kubectl_client.kubectl(['run', 'zkapp', '--image=tylergu1998/zkapp:v1', '-n', handle.namespace])
+
+
 CUSTOM_CHECKER: List[callable] = [zookeeper_checker]
+ON_INIT: List[callable] = [deploy_zk_app]

@@ -114,8 +114,8 @@ def timeout_handler(sig, frame):
 class TrialRunner:
 
     def __init__(self, context: dict, input_model: InputModel, deploy: Deploy,
-                 custom_oracle: List[callable], workdir: str, cluster: base.KubernetesCluster,
-                 worker_id: int, dryrun: bool, is_reproduce: bool,
+                 custom_on_init: List[callable], custom_oracle: List[callable], workdir: str,
+                 cluster: base.KubernetesCluster, worker_id: int, dryrun: bool, is_reproduce: bool,
                  apply_testcase_f: FunctionType) -> None:
         self.context = context
         self.workdir = workdir
@@ -128,6 +128,7 @@ class TrialRunner:
         self.input_model = input_model
         self.deploy = deploy
 
+        self.custom_on_init = custom_on_init
         self.custom_oracle = custom_oracle
         self.dryrun = dryrun
         self.is_reproduce = is_reproduce
@@ -191,10 +192,13 @@ class TrialRunner:
             trial_num: how many trials have been run
             num_mutation: how many mutations to run at each trial
         '''
-
         oracle_handle = OracleHandle(KubectlClient(self.kubeconfig, self.context_name),
                                      kubernetes_client(self.kubeconfig, self.context_name),
                                      self.context['namespace'], self.snapshots)
+        # first run the on_init callbacks if any
+        for on_init in self.custom_on_init:
+            on_init(oracle_handle)
+
         custom_oracle = [functools.partial(i, oracle_handle) for i in self.custom_oracle]
         runner = Runner(self.context, trial_dir, self.kubeconfig, self.context_name)
         checker = Checker(self.context, trial_dir, self.input_model, custom_oracle)
@@ -520,8 +524,10 @@ class Acto:
         if operator_config.custom_oracle != None:
             module = importlib.import_module(operator_config.custom_oracle)
             self.custom_oracle = module.CUSTOM_CHECKER
+            self.custom_on_init = module.ON_INIT
         else:
             self.custom_oracle = None
+            self.custom_on_init = None
 
         # Generate test cases
         self.test_plan = self.input_model.generate_test_plan()
@@ -612,9 +618,9 @@ class Acto:
 
         threads = []
         for i in range(self.num_workers):
-            runner = TrialRunner(self.context, self.input_model, self.deploy, self.custom_oracle,
-                                 self.workdir_path, self.cluster, i, self.dryrun, self.is_reproduce,
-                                 self.apply_testcase_f)
+            runner = TrialRunner(self.context, self.input_model, self.deploy, self.custom_on_init,
+                                 self.custom_oracle, self.workdir_path, self.cluster, i,
+                                 self.dryrun, self.is_reproduce, self.apply_testcase_f)
             t = threading.Thread(target=runner.run, args=())
             t.start()
             threads.append(t)
