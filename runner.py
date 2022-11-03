@@ -291,7 +291,10 @@ def group_pods(all_pods: dict) -> Tuple[dict, dict]:
     deployment_pods = {}
     other_pods = {}
     for name, pod in all_pods.items():
-        if pod['metadata']['owner_references'] != None:
+        if 'acto/tag' in pod['labels'] and pod['labels']['acto/tag'] == 'custom-oracle':
+            # skip pods spawned by users' custom oracle
+            continue
+        elif pod['metadata']['owner_references'] != None:
             owner_reference = pod['metadata']['owner_references'][0]
             if owner_reference['kind'] == 'ReplicaSet' or owner_reference['kind'] == 'Deployment':
                 owner_name = owner_reference['name'] 

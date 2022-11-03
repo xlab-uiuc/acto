@@ -92,7 +92,7 @@ def zookeeper_checker(handle: OracleHandle) -> RunResult:
 
 
 def deploy_zk_app(handle: OracleHandle):
-    handle.kubectl_client.kubectl(['run', 'zkapp', '--image=tylergu1998/zkapp:v1', '-n', handle.namespace])
+    handle.kubectl_client.kubectl(['run', 'zkapp', '--image=tylergu1998/zkapp:v1', '-l acto/tag=custom-oracle', '-n', handle.namespace])
 
 
 CUSTOM_CHECKER: List[callable] = [zookeeper_checker]
