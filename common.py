@@ -63,18 +63,27 @@ class AnalysisConfig:
 
 class OperatorConfig:
 
-    def __init__(self, deploy: DeployConfig, crd_name: str, custom_fields: str, custom_oracle: str,
-                 example_dir: str, context: str, seed_custom_resource: str, source_path: str,
-                 analysis: AnalysisConfig) -> None:
-        self.deploy = deploy
+    def __init__(self,
+                 deploy: dict,
+                 crd_name: str,
+                 custom_fields: str,
+                 example_dir: str,
+                 seed_custom_resource: str,
+                 analysis: dict,
+                 context: str = None,
+                 custom_oracle: str = None) -> None:
+        self.deploy = DeployConfig(**deploy)
         self.crd_name = crd_name
         self.custom_fields = custom_fields
         self.custom_oracle = custom_oracle
         self.example_dir = example_dir
         self.context = context
         self.seed_custom_resource = seed_custom_resource
-        self.source_path = source_path
-        self.analysis = analysis
+        self.analysis = AnalysisConfig(**analysis)
+
+
+def OperatorConfigDecoder(obj) -> OperatorConfig:
+    return OperatorConfig(**obj)
 
 
 class Diff:

@@ -753,7 +753,7 @@ if __name__ == '__main__':
         notify_crash_ = True
 
     with open(args.config, 'r') as config_file:
-        config = json.load(config_file, object_hook=lambda d: SimpleNamespace(**d))
+        config = OperatorConfig(**json.load(config_file))
     logger.info('Acto started with [%s]' % sys.argv)
     logger.info('Operator config: %s', config)
 
