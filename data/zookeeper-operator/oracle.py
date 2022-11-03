@@ -77,22 +77,24 @@ def zookeeper_checker(handle: OracleHandle) -> RunResult:
     if leaders > 1:
         return ErrorResult(oracle=Oracle.CUSTOM, msg='Zookeeper cluster has more than one leader')
 
-    p = handle.kubectl_client.exec(
-        'zkapp',
-        handle.namespace, 
-        ['request'],
-        capture_output=True,
-        text=True)
+    p = handle.kubectl_client.exec('zkapp',
+                                   handle.namespace, ['request'],
+                                   capture_output=True,
+                                   text=True)
     if p.returncode != 0:
         return ErrorResult(oracle=Oracle.CUSTOM, msg='Zookeeper app request failed')
     elif p.stdout != 'test':
-        return ErrorResult(oracle=Oracle.CUSTOM, msg='Zookeeper app request result wrong %s' % p.stdout)
+        return ErrorResult(oracle=Oracle.CUSTOM,
+                           msg='Zookeeper app request result wrong %s' % p.stdout)
 
     return PassResult()
 
 
 def deploy_zk_app(handle: OracleHandle):
-    handle.kubectl_client.kubectl(['run', 'zkapp', '--image=tylergu1998/zkapp:v1', '-l acto/tag=custom-oracle', '-n', handle.namespace])
+    handle.kubectl_client.kubectl([
+        'run', 'zkapp', '--image=tylergu1998/zkapp:v1', '-l', 'acto/tag=custom-oracle', '-n',
+        handle.namespace
+    ])
 
 
 CUSTOM_CHECKER: List[callable] = [zookeeper_checker]
