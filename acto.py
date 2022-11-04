@@ -196,10 +196,14 @@ class TrialRunner:
                                      kubernetes_client(self.kubeconfig, self.context_name),
                                      self.context['namespace'], self.snapshots)
         # first run the on_init callbacks if any
-        for on_init in self.custom_on_init:
-            on_init(oracle_handle)
+        if self.custom_on_init is not None:
+            for on_init in self.custom_on_init:
+                on_init(oracle_handle)
 
-        custom_oracle = [functools.partial(i, oracle_handle) for i in self.custom_oracle]
+        if self.custom_oracle is not None:
+            custom_oracle = [functools.partial(i, oracle_handle) for i in self.custom_oracle]
+        else:
+            custom_oracle = []
         runner = Runner(self.context, trial_dir, self.kubeconfig, self.context_name)
         checker = Checker(self.context, trial_dir, self.input_model, custom_oracle)
 
