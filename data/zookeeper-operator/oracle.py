@@ -11,7 +11,7 @@ def zookeeper_checker(handle: OracleHandle) -> RunResult:
     cr = handle.get_cr()
     if 'config' in cr['spec']:
         config = cr['spec']['config']
-        if 'additionalConfig' in config:
+        if 'additionalConfig' in config and config['additionalConfig'] != None:
             for key, value in config['additionalConfig'].items():
                 config[key] = value
             del config['additionalConfig']
