@@ -129,10 +129,12 @@ class InputModel:
             self.root_schema.load_examples(example_doc)
 
         self.num_workers = num_workers
-        self.num_cases = num_cases
+        self.num_cases = num_cases  # number of test cases to run at a time
         self.seed_input = None
         self.test_plan_partitioned = None
         self.thread_vars = threading.local()
+
+        self.num_total_cases = 0  # to fill in the generate_test_plan function
 
     def initialize(self, initial_value: dict):
         initial_value['metadata']['name'] = 'test-cluster'
@@ -189,6 +191,7 @@ class InputModel:
             num_testcases += len(testcases)
         logger.info('Parsed [%d] fields from schema', num_fields)
         logger.info('Generated [%d] test cases in total', num_testcases)
+        self.num_total_cases = num_testcases
         self.test_plan = ret
 
         test_plan_items = list(self.test_plan.items())

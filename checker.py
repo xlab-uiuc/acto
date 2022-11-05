@@ -130,6 +130,12 @@ class Checker(object):
                 if not isinstance(custom_result, PassResult):
                     runResult.custom_result = custom_result
 
+        if self.feature_gate.write_result_each_generation_enabled():
+            generation_result_path = os.path.join(self.trial_dir,
+                                                'generation-%d-result.json' % generation)
+            with open(generation_result_path, 'w') as f:
+                json.dump(runResult.to_dict(), f, cls=ActoEncoder, indent=4)
+
         return runResult
 
     def check_crash(self, snapshot: Snapshot) -> RunResult:
@@ -237,6 +243,7 @@ class Checker(object):
                 match_deltas = self._list_matched_fields(delta.path, system_delta_without_cr)
 
                 # TODO: should the delta match be inclusive?
+                # Policy: pass if any of the matched deltas is equivalent
                 for match_delta in match_deltas:
                     logger.debug('Input delta [%s] matched with [%s]' %
                                  (delta.path, match_delta.path))
@@ -246,9 +253,9 @@ class Checker(object):
                         logger.error('Input delta: %s -> %s' % (delta.prev, delta.curr))
                         logger.error('Matched delta: %s -> %s' %
                                      (match_delta.prev, match_delta.curr))
-                        return StateResult(Oracle.SYSTEM_STATE,
-                                           'Matched delta inconsistent with input delta', delta,
-                                           match_delta)
+                return StateResult(Oracle.SYSTEM_STATE,
+                                   'Matched delta inconsistent with input delta', delta,
+                                   match_delta)
 
                 if len(match_deltas) == 0:
                     # if prev and curr of the delta are the same, also consider it as a match
@@ -661,7 +668,7 @@ if __name__ == "__main__":
         if trial_err == None:
             logging.info('Trial %s completed without error', trial_dir)
         else:
-            post_result['error'] = trial_err.to_dict() 
+            post_result['error'] = trial_err.to_dict()
         result_path = os.path.join(trial_dir, 'post_result.json')
         with open(result_path, 'w') as result_file:
             json.dump(result_dict, result_file, cls=ActoEncoder, indent=6)
@@ -737,15 +744,15 @@ if __name__ == "__main__":
         if context['enable_analysis']:
             input_model.apply_default_value(context['analysis_result']['default_value_map'])
 
-        checker = Checker(context=context,
-                          trial_dir=trial_dir,
-                          input_model=input_model,
-                          custom_oracle=None,
-                          feature_gate=FeatureGate(FeatureGate.INVALID_INPUT_FROM_LOG |
-                                                   FeatureGate.DEFAULT_VALUE_COMPARISON |
-                                                   FeatureGate.DEPENDENCY_ANALYSIS |
-                                                   FeatureGate.TAINT_ANALYSIS |
-                                                   FeatureGate.CANONICALIZATION))
+        checker = Checker(
+            context=context,
+            trial_dir=trial_dir,
+            input_model=input_model,
+            custom_oracle=None,
+            feature_gate=FeatureGate(FeatureGate.INVALID_INPUT_FROM_LOG |
+                                     FeatureGate.DEFAULT_VALUE_COMPARISON |
+                                     FeatureGate.DEPENDENCY_ANALYSIS | FeatureGate.TAINT_ANALYSIS |
+                                     FeatureGate.CANONICALIZATION))
         snapshots = []
         snapshots.append(EmptySnapshot(seed))
 
@@ -778,8 +785,8 @@ if __name__ == "__main__":
 
                 prev_snapshot = snapshots[-1]
                 runResult = checker.check(snapshot=snapshot,
-                                       prev_snapshot=prev_snapshot,
-                                       generation=generation)
+                                          prev_snapshot=prev_snapshot,
+                                          generation=generation)
                 snapshots.append(snapshot)
 
                 if runResult.is_connection_refused():

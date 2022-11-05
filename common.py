@@ -116,6 +116,7 @@ class FeatureGate:
     DEPENDENCY_ANALYSIS = 0x4
     TAINT_ANALYSIS = 0x8
     CANONICALIZATION = 0x10
+    WRITE_RESULT_EACH_GENERATION = 0x20
 
     def __init__(self, feature_gate: hex) -> None:
         self._feature_gate = feature_gate
@@ -135,6 +136,9 @@ class FeatureGate:
 
     def canonicalization_enabled(self) -> bool:
         return self._feature_gate & FeatureGate.CANONICALIZATION
+
+    def write_result_each_generation_enabled(self) -> bool:
+        return self._feature_gate & FeatureGate.WRITE_RESULT_EACH_GENERATION
 
 
 class RunResult():

@@ -206,7 +206,8 @@ class TrialRunner:
         else:
             custom_oracle = []
         runner = Runner(self.context, trial_dir, self.kubeconfig, self.context_name)
-        checker = Checker(self.context, trial_dir, self.input_model, custom_oracle, self.feature_gate)
+        checker = Checker(self.context, trial_dir, self.input_model, custom_oracle,
+                          self.feature_gate)
 
         curr_input = self.input_model.get_seed_input()
         self.snapshots.append(EmptySnapshot(curr_input))
@@ -285,8 +286,8 @@ class TrialRunner:
 
             t = self.run_testcases(curr_input_with_schema, ready_testcases, runner, checker,
                                    generation)
-            logger.debug(t)
             runResult, generation = t
+            logger.debug(t)
             if not runResult.is_invalid() and runResult.is_error():
                 # before return, run the recovery test case
                 runResult.recovery_result = self.run_recovery(runner, checker, generation)
@@ -448,7 +449,7 @@ class Acto:
                  dryrun: bool,
                  analysis_only: bool,
                  is_reproduce: bool,
-                 input_model,
+                 input_model: type,
                  apply_testcase_f: FunctionType,
                  reproduce_dir: str = None,
                  feature_gate: FeatureGate = None,
@@ -492,14 +493,14 @@ class Acto:
         self.num_workers = num_workers
         self.dryrun = dryrun
         self.is_reproduce = is_reproduce
-        self.input_model = input_model
         self.apply_testcase_f = apply_testcase_f
         self.reproduce_dir = reproduce_dir
 
         if feature_gate is None:
             self.feature_gate = FeatureGate(FeatureGate.INVALID_INPUT_FROM_LOG |
                                             FeatureGate.DEFAULT_VALUE_COMPARISON |
-                                            FeatureGate.CANONICALIZATION)
+                                            FeatureGate.CANONICALIZATION |
+                                            FeatureGate.WRITE_RESULT_EACH_GENERATION)
         else:
             self.feature_gate = feature_gate
         self.snapshots = []
@@ -516,8 +517,9 @@ class Acto:
             self.context['preload_images'].update(preload_images_)
 
         # Apply custom fields
-        self.input_model = input_model(self.context['crd']['body'], operator_config.example_dir,
-                                       num_workers, num_cases, self.reproduce_dir, mount)
+        self.input_model: InputModel = input_model(self.context['crd']['body'],
+                                                   operator_config.example_dir, num_workers,
+                                                   num_cases, self.reproduce_dir, mount)
         self.input_model.initialize(self.seed)
         if operator_config.custom_fields != None:
             pruned_list = []
@@ -623,18 +625,39 @@ class Acto:
             subprocess.run(['docker', 'image', 'save', '-o', self.images_archive] +
                            list(self.context['preload_images']))
 
+        start_time = time.time()
+
         threads = []
+        runners: List[TrialRunner] = []
         for i in range(self.num_workers):
             runner = TrialRunner(self.context, self.input_model, self.deploy, self.custom_on_init,
                                  self.custom_oracle, self.workdir_path, self.cluster, i,
                                  self.dryrun, self.is_reproduce, self.apply_testcase_f,
                                  self.feature_gate)
+            runners.append(runner)
             t = threading.Thread(target=runner.run, args=())
             t.start()
             threads.append(t)
 
         for t in threads:
             t.join()
+
+        end_time = time.time()
+
+        num_total_failed = 0
+        for runner in runners:
+            for testcases in runner.discarded_testcases.values():
+                num_total_failed += len(testcases)
+
+        testrun_info = {
+            'duration': end_time - start_time,
+            'num_workers': self.num_workers,
+            'num_total_testcases': self.input_model.num_total_cases,
+            'num_total_failed': num_total_failed,
+        }
+        with open(os.path.join(self.workdir_path, 'testrun_info.json'), 'w') as info_file:
+            json.dump(testrun_info, info_file, cls=ActoEncoder, indent=4)
+
         logger.info('All tests finished')
 
 
