@@ -116,7 +116,7 @@ class TrialRunner:
     def __init__(self, context: dict, input_model: InputModel, deploy: Deploy,
                  custom_on_init: List[callable], custom_oracle: List[callable], workdir: str,
                  cluster: base.KubernetesCluster, worker_id: int, dryrun: bool, is_reproduce: bool,
-                 apply_testcase_f: FunctionType) -> None:
+                 apply_testcase_f: FunctionType, feature_gate: FeatureGate) -> None:
         self.context = context
         self.workdir = workdir
         self.cluster = cluster
@@ -132,6 +132,7 @@ class TrialRunner:
         self.custom_oracle = custom_oracle
         self.dryrun = dryrun
         self.is_reproduce = is_reproduce
+        self.feature_gate = feature_gate
 
         self.snapshots = []
         self.discarded_testcases = {}  # List of test cases failed to run
@@ -205,7 +206,7 @@ class TrialRunner:
         else:
             custom_oracle = []
         runner = Runner(self.context, trial_dir, self.kubeconfig, self.context_name)
-        checker = Checker(self.context, trial_dir, self.input_model, custom_oracle)
+        checker = Checker(self.context, trial_dir, self.input_model, custom_oracle, self.feature_gate)
 
         curr_input = self.input_model.get_seed_input()
         self.snapshots.append(EmptySnapshot(curr_input))
@@ -251,35 +252,31 @@ class TrialRunner:
                             field_node.discard_testcase(self.discarded_testcases)
                             continue
 
-                        result = TrialRunner.run_and_check(runner, checker,
-                                                           curr_input_with_schema.raw_value(),
-                                                           self.snapshots, generation, self.dryrun)
+                        runResult = TrialRunner.run_and_check(runner, checker,
+                                                              curr_input_with_schema.raw_value(),
+                                                              self.snapshots, generation,
+                                                              self.dryrun)
                         generation += 1
 
-                        if isinstance(result, InvalidInputResult):
+                        is_invalid, _ = runResult.is_invalid()
+                        if is_invalid:
                             logger.info('Setup produced invalid input')
                             self.snapshots.pop()
                             field_node.discard_testcase(self.discarded_testcases)
                             curr_input_with_schema = self.revert(runner, checker, generation)
                             generation += 1
-                        elif isinstance(result, UnchangedInputResult):
+                        elif runResult.is_unchanged():
                             field_node.discard_testcase(self.discarded_testcases)
-                        elif isinstance(result, ErrorResult):
+                        elif runResult.is_error():
                             field_node.discard_testcase(self.discarded_testcases)
                             # before return, run the recovery test case
-                            recovery_result = self.run_recovery(runner, checker, generation)
+                            runResult.recovery_result = self.run_recovery(
+                                runner, checker, generation)
                             generation += 1
 
-                            if isinstance(recovery_result, RecoveryResult):
-                                logger.debug('Recovery failed')
-                                return CompoundErrorResult(result, recovery_result), generation
-                            else:
-                                return result, generation
-                        elif isinstance(result, PassResult):
-                            ready_testcases.append((field_node, testcase))
+                            return runResult, generation
                         else:
-                            logger.error('Unknown return value, abort')
-                            quit()
+                            ready_testcases.append((field_node, testcase))
 
                 if len(ready_testcases) == 0:
                     logger.info('All setups failed')
@@ -289,17 +286,13 @@ class TrialRunner:
             t = self.run_testcases(curr_input_with_schema, ready_testcases, runner, checker,
                                    generation)
             logger.debug(t)
-            result, generation = t
-            if isinstance(result, ErrorResult):
+            runResult, generation = t
+            if not runResult.is_invalid() and runResult.is_error():
                 # before return, run the recovery test case
-                recovery_result = self.run_recovery(runner, checker, generation)
+                runResult.recovery_result = self.run_recovery(runner, checker, generation)
                 generation += 1
 
-                if isinstance(recovery_result, RecoveryResult):
-                    logger.debug('Recovery failed')
-                    return CompoundErrorResult(result, recovery_result), generation
-                else:
-                    return result, generation
+                return runResult, generation
 
             if self.input_model.is_empty():
                 break
@@ -317,10 +310,12 @@ class TrialRunner:
             # field_node.get_testcases().pop()  # finish testcase
             testcase_patches.append((field_node, testcase, patch))
 
-        result = TrialRunner.run_and_check(runner, checker, curr_input_with_schema.raw_value(),
-                                           self.snapshots, generation, self.dryrun)
+        runResult = TrialRunner.run_and_check(runner, checker, curr_input_with_schema.raw_value(),
+                                              self.snapshots, generation, self.dryrun)
         generation += 1
-        if isinstance(result, InvalidInputResult):
+
+        is_invalid, invalidResult = runResult.is_invalid()
+        if is_invalid:
             # If the result indicates our input is invalid, we need to first run revert to
             # go back to previous system state, then construct a new input without the
             # responsible testcase and re-apply
@@ -336,19 +331,19 @@ class TrialRunner:
                 # if only one testcase, then no need to isolate
                 testcase_patches[0][0].get_testcases().pop()  # finish testcase
                 logger.debug('Only one patch, no need to isolate')
-                return result, generation
+                return runResult, generation
             else:
-                responsible_field = result.responsible_field
+                responsible_field = invalidResult.responsible_field
                 if responsible_field == None:
                     # Unable to pinpoint the exact responsible testcase, try one by one
                     logger.debug('Unable to pinpoint the exact responsible field, try one by one')
                     for field_node, testcase, patch in testcase_patches:
-                        result, generation = self.run_testcases(curr_input_with_schema,
-                                                                [(field_node, testcase)], runner,
-                                                                checker, generation)
-                        if isinstance(result, ErrorResult):
-                            return result, generation
-                    return result, generation
+                        iso_result, generation = self.run_testcases(curr_input_with_schema,
+                                                                    [(field_node, testcase)],
+                                                                    runner, checker, generation)
+                        if not iso_result.is_invalid and iso_result.is_error():
+                            return iso_result, generation
+                    return runResult, generation
                 else:
                     jsonpatch_path = ''.join('/' + str(item) for item in responsible_field)
                     logger.debug('Responsible patch path: %s', jsonpatch_path)
@@ -366,17 +361,17 @@ class TrialRunner:
                         if not responsible:
                             ready_testcases.append((field_node, testcase))
                     if len(ready_testcases) == 0:
-                        return result, generation
+                        return runResult, generation
 
                     if len(ready_testcases) == len(testcase_patches):
                         logger.error('Fail to determine the responsible patch, try one by one')
                         for field_node, testcase, patch in testcase_patches:
-                            result, generation = self.run_testcases(curr_input_with_schema,
-                                                                    [(field_node, testcase)],
-                                                                    runner, checker, generation)
-                            if isinstance(result, ErrorResult):
-                                return result, generation
-                        return result, generation
+                            iso_result, generation = self.run_testcases(
+                                curr_input_with_schema, [(field_node, testcase)], runner, checker,
+                                generation)
+                            if not iso_result.is_invalid and iso_result.is_error():
+                                return iso_result, generation
+                        return runResult, generation
                     else:
                         logger.debug('Rerunning the remaining ready testcases')
                         return self.run_testcases(curr_input_with_schema, ready_testcases, runner,
@@ -385,6 +380,7 @@ class TrialRunner:
             if not self.is_reproduce:
                 for patch in testcase_patches:
                     patch[0].get_testcases().pop()  # finish testcase
+            ''' Commented out because no use for now
             if isinstance(result, UnchangedInputResult):
                 pass
             elif isinstance(result, ErrorResult):
@@ -395,29 +391,28 @@ class TrialRunner:
             else:
                 logger.error('Unknown return value, abort')
                 quit()
-            return result, generation
+            '''
+            return runResult, generation
 
     def run_and_check(runner: Runner, checker: Checker, input: dict, snapshots: list,
                       generation: int, dryrun: bool) -> RunResult:
         logger = get_thread_logger(with_prefix=True)
         logger.debug('Run and check')
         while True:
-            if not dryrun:
-                snapshot = runner.run(input, generation)
-                result = checker.check(snapshot, snapshots[-1], generation)
-                snapshots.append(snapshot)
-            else:
-                result = PassResult()
+            snapshot = runner.run(input, generation)
+            runResult = checker.check(snapshot, snapshots[-1], generation)
+            snapshots.append(snapshot)
 
-            if isinstance(result, ConnectionRefusedResult):
+            if runResult.is_connection_refused():
                 # Connection refused due to webhook not ready, let's wait for a bit
                 logger.info('Connection failed. Retry the test after 20 seconds')
                 time.sleep(20)
             else:
                 break
-        return result
 
-    def run_recovery(self, runner: Runner, checker: Checker, generation: int) -> RunResult:
+        return runResult
+
+    def run_recovery(self, runner: Runner, checker: Checker, generation: int) -> OracleResult:
         '''Runs the recovery test case after an error is reported'''
         logger = get_thread_logger(with_prefix=True)
         RECOVERY_SNAPSHOT = -2  # the immediate snapshot before the error
@@ -456,6 +451,7 @@ class Acto:
                  input_model,
                  apply_testcase_f: FunctionType,
                  reproduce_dir: str = None,
+                 feature_gate: FeatureGate = None,
                  mount: list = None) -> None:
         logger = get_thread_logger(with_prefix=False)
 
@@ -499,6 +495,13 @@ class Acto:
         self.input_model = input_model
         self.apply_testcase_f = apply_testcase_f
         self.reproduce_dir = reproduce_dir
+
+        if feature_gate is None:
+            self.feature_gate = FeatureGate(FeatureGate.INVALID_INPUT_FROM_LOG |
+                                            FeatureGate.DEFAULT_VALUE_COMPARISON |
+                                            FeatureGate.CANONICALIZATION)
+        else:
+            self.feature_gate = feature_gate
         self.snapshots = []
 
         # generate configuration files for the cluster runtime
@@ -624,7 +627,8 @@ class Acto:
         for i in range(self.num_workers):
             runner = TrialRunner(self.context, self.input_model, self.deploy, self.custom_on_init,
                                  self.custom_oracle, self.workdir_path, self.cluster, i,
-                                 self.dryrun, self.is_reproduce, self.apply_testcase_f)
+                                 self.dryrun, self.is_reproduce, self.apply_testcase_f,
+                                 self.feature_gate)
             t = threading.Thread(target=runner.run, args=())
             t.start()
             threads.append(t)

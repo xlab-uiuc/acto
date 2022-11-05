@@ -21,13 +21,16 @@ from parse_log.parse_log import parse_log
 
 class Checker(object):
 
-    def __init__(self, context: dict, trial_dir: str, input_model: InputModel, custom_oracle: List[callable]) -> None:
+    def __init__(self, context: dict, trial_dir: str, input_model: InputModel,
+                 custom_oracle: List[callable], feature_gate: FeatureGate) -> None:
         self.context = context
         self.namespace = context['namespace']
-        self.compare_method = CompareMethods()
+        self.compare_method = CompareMethods(feature_gate)
         self.trial_dir = trial_dir
         self.input_model = input_model
         self.custom_oracle = custom_oracle
+
+        self.feature_gate = feature_gate
 
         self.field_conditions_map = {}
         if self.context['enable_analysis']:
@@ -42,7 +45,7 @@ class Checker(object):
             return
         for key, value in schema.get_properties().items():
             if key == 'enabled':
-                self.encode_dependency(schema.path, schema.path+[key])
+                self.encode_dependency(schema.path, schema.path + [key])
             if isinstance(value, ObjectSchema):
                 self.helper(value)
             elif isinstance(value, ArraySchema):
@@ -60,10 +63,7 @@ class Checker(object):
         logger.info('Encode dependency of %s on %s' % (depender, dependee))
         encoded_path = json.dumps(depender)
         if encoded_path not in self.field_conditions_map:
-            self.field_conditions_map[encoded_path] = {
-                'conditions': [],
-                'type': 'AND'
-            }
+            self.field_conditions_map[encoded_path] = {'conditions': [], 'type': 'AND'}
 
         # Add dependency to the subfields, idealy we should have a B tree for this
         for key, value in self.field_conditions_map.items():
@@ -89,24 +89,24 @@ class Checker(object):
             RunResult of the checking
         '''
         logger = get_thread_logger(with_prefix=True)
+        runResult = RunResult(self.feature_gate)
 
         if snapshot.system_state == {}:
-            return InvalidInputResult(None)
+            runResult.misc_result = InvalidInputResult(None)
+            return runResult
 
         self.delta_log_path = "%s/delta-%d.log" % (self.trial_dir, generation)
         input_delta, system_delta = self.get_deltas(snapshot, prev_snapshot)
         flattened_system_state = flatten_dict(snapshot.system_state, [])
 
         crash_result = self.check_crash(snapshot)
-        if not isinstance(crash_result, PassResult):
-            return crash_result
+        runResult.crash_result = crash_result
 
         input_result = self.check_input(snapshot, input_delta)
-        if not isinstance(input_result, PassResult):
-            return input_result
+        runResult.input_result = input_result
 
-        state_result = self.check_resources(snapshot, prev_snapshot)
-        log_result = self.check_operator_log(snapshot, prev_snapshot)
+        runResult.state_result = self.check_resources(snapshot, prev_snapshot)
+        runResult.log_result = self.check_operator_log(snapshot, prev_snapshot)
 
         if len(input_delta) > 0:
             num_delta = 0
@@ -115,24 +115,11 @@ class Checker(object):
                     for state_delta in type_delta_list.values():
                         num_delta += 1
             logger.info('Number of system state fields: [%d] Number of delta: [%d]' %
-                         (len(flattened_system_state), num_delta))
+                        (len(flattened_system_state), num_delta))
 
         # XXX: disable health check for now
         # health_result = self.check_health(snapshot)
         health_result = PassResult()
-
-        if isinstance(log_result, InvalidInputResult):
-            logger.info('Invalid input, skip this case')
-            return log_result
-        if isinstance(health_result, ErrorResult):
-            logger.info('Report error from system health oracle')
-            return health_result
-        elif isinstance(state_result, ErrorResult):
-            logger.info('Report error from system state oracle')
-            return state_result
-        elif isinstance(log_result, ErrorResult):
-            logger.info('Report error from operator log oracle')
-            return log_result
 
         if self.custom_oracle != None:
             # This custom_oracle field needs be None when Checker is used in post run
@@ -141,9 +128,9 @@ class Checker(object):
             for oracle in self.custom_oracle:
                 custom_result = oracle()
                 if not isinstance(custom_result, PassResult):
-                    return custom_result
+                    runResult.custom_result = custom_result
 
-        return PassResult()
+        return runResult
 
     def check_crash(self, snapshot: Snapshot) -> RunResult:
         pods = snapshot.system_state['pod']
@@ -155,13 +142,14 @@ class Checker(object):
                 continue
             for container_status in container_statuses:
                 if 'state' in container_status:
-                    if 'terminated' in container_status['state'] and container_status['state']['terminated'] != None:
+                    if 'terminated' in container_status[
+                            'state'] and container_status['state']['terminated'] != None:
                         if container_status['state']['terminated']['reason'] == 'Error':
                             return ErrorResult(Oracle.CRASH, 'Pod %s crashed' % pod_name)
-                    elif 'waiting' in container_status['state'] and container_status['state']['waiting'] != None:
+                    elif 'waiting' in container_status[
+                            'state'] and container_status['state']['waiting'] != None:
                         if container_status['state']['waiting']['reason'] == 'CrashLoopBackOff':
                             return ErrorResult(Oracle.CRASH, 'Pod %s crashed' % pod_name)
-
 
         for deployment_name, deployment in deployment_pods.items():
             for pod in deployment:
@@ -170,17 +158,20 @@ class Checker(object):
                     continue
                 for container_status in container_statuses:
                     if 'state' in container_status:
-                        if 'terminated' in container_status['state'] and container_status['state']['terminated'] != None:
+                        if 'terminated' in container_status[
+                                'state'] and container_status['state']['terminated'] != None:
                             if container_status['state']['terminated']['reason'] == 'Error':
-                                return ErrorResult(Oracle.CRASH, 'Pod %s crashed' % pod['metadata']['name'])
-                        elif 'waiting' in container_status['state'] and container_status['state']['waiting'] != None:
+                                return ErrorResult(Oracle.CRASH,
+                                                   'Pod %s crashed' % pod['metadata']['name'])
+                        elif 'waiting' in container_status[
+                                'state'] and container_status['state']['waiting'] != None:
                             if container_status['state']['waiting']['reason'] == 'CrashLoopBackOff':
-                                return ErrorResult(Oracle.CRASH, 'Pod %s crashed' % pod['metadata']['name'])
+                                return ErrorResult(Oracle.CRASH,
+                                                   'Pod %s crashed' % pod['metadata']['name'])
 
         return PassResult()
 
-
-    def check_input(self, snapshot: Snapshot, input_delta) -> RunResult:
+    def check_input(self, snapshot: Snapshot, input_delta) -> OracleResult:
         logger = get_thread_logger(with_prefix=True)
 
         stdout, stderr = snapshot.cli_result['stdout'], snapshot.cli_result['stderr']
@@ -188,8 +179,7 @@ class Checker(object):
         if stderr.find('connection refused') != -1:
             return ConnectionRefusedResult()
 
-        is_invalid, reponsible_field_path = invalid_input_message(
-            stderr, input_delta)
+        is_invalid, reponsible_field_path = invalid_input_message(stderr, input_delta)
 
         # the stderr should indicate the invalid input
         if len(stderr) > 0:
@@ -207,7 +197,7 @@ class Checker(object):
 
         return PassResult()
 
-    def check_resources(self, snapshot: Snapshot, prev_snapshot: Snapshot) -> RunResult:
+    def check_resources(self, snapshot: Snapshot, prev_snapshot: Snapshot) -> OracleResult:
         '''
         System state oracle
 
@@ -244,22 +234,19 @@ class Checker(object):
                     continue
 
                 # Find the longest matching field, compare the delta change
-                match_deltas = self._list_matched_fields(
-                    delta.path, system_delta_without_cr)
+                match_deltas = self._list_matched_fields(delta.path, system_delta_without_cr)
 
                 # TODO: should the delta match be inclusive?
                 for match_delta in match_deltas:
                     logger.debug('Input delta [%s] matched with [%s]' %
-                                  (delta.path, match_delta.path))
+                                 (delta.path, match_delta.path))
                     if not self.compare_method.compare(delta.prev, delta.curr, match_delta.prev,
                                                        match_delta.curr):
-                        logger.error(
-                            'Matched delta inconsistent with input delta')
-                        logger.error('Input delta: %s -> %s' %
-                                      (delta.prev, delta.curr))
+                        logger.error('Matched delta inconsistent with input delta')
+                        logger.error('Input delta: %s -> %s' % (delta.prev, delta.curr))
                         logger.error('Matched delta: %s -> %s' %
-                                      (match_delta.prev, match_delta.curr))
-                        return ErrorResult(Oracle.SYSTEM_STATE,
+                                     (match_delta.prev, match_delta.curr))
+                        return StateResult(Oracle.SYSTEM_STATE,
                                            'Matched delta inconsistent with input delta', delta,
                                            match_delta)
 
@@ -276,11 +263,12 @@ class Checker(object):
                         continue
                     logger.error('Found no matching fields for input delta')
                     logger.error('Input delta [%s]' % delta.path)
-                    return ErrorResult(Oracle.SYSTEM_STATE, 'Found no matching fields for input',
+                    return StateResult(Oracle.SYSTEM_STATE, 'Found no matching fields for input',
                                        delta)
         return PassResult()
 
-    def check_condition_group(self, input: dict, condition_group: dict, input_delta_path: list) -> bool:
+    def check_condition_group(self, input: dict, condition_group: dict,
+                              input_delta_path: list) -> bool:
         if 'type' in condition_group:
             typ = condition_group['type']
             if typ == 'AND':
@@ -307,60 +295,60 @@ class Checker(object):
             if the arg input_delta should be skipped in oracle
         '''
         logger = get_thread_logger(with_prefix=True)
-        try:
-            default_value = self.input_model.get_schema_by_path(
-                input_delta.path).default
-            if input_delta.prev == default_value and (input_delta.curr == None or isinstance(input_delta.curr, NotPresent)):
-                return True
-            elif input_delta.curr == default_value and (input_delta.prev == None or isinstance(input_delta.prev, NotPresent)):
-                return True
-        except Exception as e:
-            # print error message
-            logger.warning(f"{e} happened when trying to fetch default value")
 
-        # dependency checking
-        field_conditions_map = self.field_conditions_map
-        encoded_path = json.dumps(input_delta.path)
-        if encoded_path in field_conditions_map:
-            condition_group = field_conditions_map[encoded_path]
-            if not self.check_condition_group(snapshot.input, condition_group, input_delta.path):
-                # if one condition does not satisfy, skip this testcase
-                logger.info(
-                    'Field precondition %s does not satisfy, skip this testcase' % condition_group)
-                return True
-        else:
-            # if no exact match, try find parent field
-            parent = Checker.find_nearest_parent(
-                input_delta.path, field_conditions_map.keys())
-            if parent is not None:
-                condition_group = field_conditions_map[json.dumps(parent)]
-                if not self.check_condition_group(snapshot.input, condition_group, input_delta.path):
+        if self.feature_gate.default_value_comparison_enabled():
+            try:
+                default_value = self.input_model.get_schema_by_path(input_delta.path).default
+                if input_delta.prev == default_value and (input_delta.curr == None or
+                                                          isinstance(input_delta.curr, NotPresent)):
+                    return True
+                elif input_delta.curr == default_value and (input_delta.prev == None or isinstance(
+                        input_delta.prev, NotPresent)):
+                    return True
+            except Exception as e:
+                # print error message
+                logger.warning(f"{e} happened when trying to fetch default value")
+
+        if self.feature_gate.dependency_analysis_enabled():
+            # dependency checking
+            field_conditions_map = self.field_conditions_map
+            encoded_path = json.dumps(input_delta.path)
+            if encoded_path in field_conditions_map:
+                condition_group = field_conditions_map[encoded_path]
+                if not self.check_condition_group(snapshot.input, condition_group,
+                                                  input_delta.path):
                     # if one condition does not satisfy, skip this testcase
-                    logger.info(
-                        'Field precondition %s does not satisfy, skip this testcase' % condition_group)
+                    logger.info('Field precondition %s does not satisfy, skip this testcase' %
+                                condition_group)
                     return True
+            else:
+                # if no exact match, try find parent field
+                parent = Checker.find_nearest_parent(input_delta.path, field_conditions_map.keys())
+                if parent is not None:
+                    condition_group = field_conditions_map[json.dumps(parent)]
+                    if not self.check_condition_group(snapshot.input, condition_group,
+                                                      input_delta.path):
+                        # if one condition does not satisfy, skip this testcase
+                        logger.info('Field precondition %s does not satisfy, skip this testcase' %
+                                    condition_group)
+                        return True
 
-        if not self.context['enable_analysis']:
-            return False
-
-        if 'analysis_result' not in self.context:
-            return False
-
-        control_flow_fields = self.context['analysis_result']['control_flow_fields']
-        for control_flow_field in control_flow_fields:
-            if len(input_delta.path) == len(control_flow_field):
-                not_match = False
-                for i in range(len(input_delta.path)):
-                    if control_flow_field[i] == 'INDEX' and re.match(r"^\d$",
-                                                                     str(input_delta.path[i])):
+        if self.feature_gate.taint_analysis_enabled():
+            control_flow_fields = self.context['analysis_result']['control_flow_fields']
+            for control_flow_field in control_flow_fields:
+                if len(input_delta.path) == len(control_flow_field):
+                    not_match = False
+                    for i in range(len(input_delta.path)):
+                        if control_flow_field[i] == 'INDEX' and re.match(
+                                r"^\d$", str(input_delta.path[i])):
+                            continue
+                        elif input_delta.path[i] != control_flow_field[i]:
+                            not_match = True
+                            break
+                    if not_match:
                         continue
-                    elif input_delta.path[i] != control_flow_field[i]:
-                        not_match = True
-                        break
-                if not_match:
-                    continue
-                else:
-                    return True
+                    else:
+                        return True
 
         return False
 
@@ -388,7 +376,8 @@ class Checker(object):
         path = condition['field']
 
         # corner case: skip if condition is simply checking if the path is not nil
-        if is_subfield(input_delta_path, path) and condition['op'] == '!=' and condition['value'] == None:
+        if is_subfield(input_delta_path,
+                       path) and condition['op'] == '!=' and condition['value'] == None:
             return True
 
         # hack: convert 'INDEX' to int 0
@@ -432,15 +421,15 @@ class Checker(object):
             # We do not check the log line if it is not an warn/error/fatal message
 
             parsed_log = parse_log(line)
-            if parsed_log == {} or parsed_log['level'].lower() != 'warn' and parsed_log['level'].lower() != 'error' and parsed_log['level'].lower() != 'fatal':
+            if parsed_log == {} or parsed_log['level'].lower() != 'warn' and parsed_log[
+                    'level'].lower() != 'error' and parsed_log['level'].lower() != 'fatal':
                 continue
 
             # List all the values in parsed_log
             for value in list(parsed_log.values()):
                 if type(value) != str or value == '':
                     continue
-                is_invalid, reponsible_field_path = invalid_input_message(
-                    value, input_delta)
+                is_invalid, reponsible_field_path = invalid_input_message(value, input_delta)
                 if is_invalid:
                     return InvalidInputResult(reponsible_field_path)
 
@@ -495,8 +484,7 @@ class Checker(object):
         for kind, resources in unhealthy_resources.items():
             if len(resources) != 0:
                 error_msg += f"{kind}: {', '.join(resources)}\n"
-                logger.error(
-                    f"Found {kind}: {', '.join(resources)} with unhealthy status")
+                logger.error(f"Found {kind}: {', '.join(resources)} with unhealthy status")
 
         if error_msg != '':
             return ErrorResult(Oracle.SYSTEM_HEALTH, error_msg)
@@ -546,7 +534,7 @@ class Checker(object):
                 for delta in type_delta_list.values():
                     position = 0
                     while canonicalize(path[-position - 1]) == canonicalize(delta.path[-position -
-                                                                                        1]):
+                                                                                       1]):
                         position += 1
                         if position == min(len(path), len(delta.path)):
                             break
@@ -581,8 +569,8 @@ class Checker(object):
                          view='tree'))
 
         return input_delta, system_state_delta
-    
-    def check_state_equality(self, snapshot: Snapshot, prev_snapshot: Snapshot) -> RunResult:
+
+    def check_state_equality(self, snapshot: Snapshot, prev_snapshot: Snapshot) -> OracleResult:
         '''Check whether two system state are semantically equivalent
 
         Args:
@@ -600,8 +588,16 @@ class Checker(object):
         # remove pods that belong to jobs from both states to avoid observability problem
         curr_pods = curr_system_state['pod']
         prev_pods = prev_system_state['pod']
-        curr_system_state['pod'] = {k: v for k, v in curr_pods.items() if v['metadata']['owner_references'][0]['kind'] != 'Job'}
-        prev_system_state['pod'] = {k: v for k, v in prev_pods.items() if v['metadata']['owner_references'][0]['kind'] != 'Job'}
+        curr_system_state['pod'] = {
+            k: v
+            for k, v in curr_pods.items()
+            if v['metadata']['owner_references'][0]['kind'] != 'Job'
+        }
+        prev_system_state['pod'] = {
+            k: v
+            for k, v in prev_pods.items()
+            if v['metadata']['owner_references'][0]['kind'] != 'Job'
+        }
 
         # remove custom resource from both states
         curr_system_state.pop('custom_resource_spec', None)
@@ -621,24 +617,23 @@ class Checker(object):
             r".*\['metadata'\]\['annotations'\]\['.*\.kubernetes\.io.*'\]",
             r".*\['metadata'\]\['labels'\]\['.*revision.*'\]",
             r".*\['metadata'\]\['labels'\]\['owner-rv'\]",
-          
             r".*\['status'\]",
-
             r".*\['spec'\]\['init_containers'\]\[.*\]\['volume_mounts'\]\[.*\]\['name'\]",
             r".*\['spec'\]\['containers'\]\[.*\]\['volume_mounts'\]\[.*\]\['name'\]",
             r".*\['spec'\]\['volumes'\]\[.*\]\['name'\]",
-            ]
+        ]
 
-        diff = DeepDiff(prev_system_state, curr_system_state, 
-                            exclude_regex_paths=exclude_paths, 
-                            ignore_order=True)
-        
+        diff = DeepDiff(prev_system_state,
+                        curr_system_state,
+                        exclude_regex_paths=exclude_paths,
+                        ignore_order=True)
+
         if diff:
             logger.debug(f"failed attempt recovering to seed state - system state diff: {diff}")
-            return RecoveryResult(delta=diff, from_=prev_system_state, to_=curr_system_state) 
-        
+            return RecoveryResult(delta=diff, from_=prev_system_state, to_=curr_system_state)
+
         return PassResult()
-            
+
 
 if __name__ == "__main__":
     import glob
@@ -649,7 +644,8 @@ if __name__ == "__main__":
     from types import SimpleNamespace
     import pandas
 
-    def checker_save_result(trial_dir: str, original_result: dict, trial_err: ErrorResult, num_tests: int, trial_elapsed):
+    def checker_save_result(trial_dir: str, original_result: dict, trial_err: RunResult,
+                            num_tests: int, trial_elapsed):
 
         result_dict = {}
         result_dict['original_result'] = original_result
@@ -665,34 +661,29 @@ if __name__ == "__main__":
         if trial_err == None:
             logging.info('Trial %s completed without error', trial_dir)
         else:
-            post_result['oracle'] = trial_err.oracle
-            post_result['message'] = trial_err.message
-            post_result['input_delta'] = trial_err.input_delta
-            post_result['matched_system_delta'] = trial_err.matched_system_delta
+            post_result['error'] = trial_err.to_dict() 
         result_path = os.path.join(trial_dir, 'post_result.json')
         with open(result_path, 'w') as result_file:
             json.dump(result_dict, result_file, cls=ActoEncoder, indent=6)
 
-
     parser = argparse.ArgumentParser(description='Standalone checker for Acto')
-    parser.add_argument(
-        '--testrun-dir', help='Directory to check', required=True)
+    parser.add_argument('--testrun-dir', help='Directory to check', required=True)
     parser.add_argument('--config', help='Path to config file', required=True)
+    # parser.add_argument('--output', help='Path to output file', required=True)
 
     args = parser.parse_args()
 
     with open(args.config, 'r') as config_file:
-        config = json.load(
-            config_file, object_hook=lambda d: SimpleNamespace(**d))
+        config = json.load(config_file, object_hook=lambda d: SimpleNamespace(**d))
     testrun_dir = args.testrun_dir
-    context_cache = os.path.join(os.path.dirname(
-        config.seed_custom_resource), 'context.json')
+    context_cache = os.path.join(os.path.dirname(config.seed_custom_resource), 'context.json')
 
     logging.basicConfig(
         filename=os.path.join('.', testrun_dir, 'checker_test.log'),
         level=logging.DEBUG,
         filemode='w',
-        format='%(asctime)s %(threadName)-11s %(levelname)-7s, %(name)s, %(filename)-9s:%(lineno)d, %(message)s'
+        format=
+        '%(asctime)s %(threadName)-11s %(levelname)-7s, %(name)s, %(filename)-9s:%(lineno)d, %(message)s'
     )
 
     def handle_excepthook(type, message, stack):
@@ -717,7 +708,7 @@ if __name__ == "__main__":
     with open(context_cache, 'r') as context_fin:
         context = json.load(context_fin)
         context['preload_images'] = set(context['preload_images'])
-    
+
     context['enable_analysis'] = True
 
     if 'enable_analysis' in context and context['enable_analysis'] == True:
@@ -741,15 +732,20 @@ if __name__ == "__main__":
         with open(original_result_path, 'r') as original_result_file:
             original_result = json.load(original_result_file)
 
-        input_model = InputModel(context['crd']['body'], config.example_dir,
-                                 1, 1, [])
+        input_model = InputModel(context['crd']['body'], config.example_dir, 1, 1, [])
 
         if context['enable_analysis']:
-            input_model.apply_default_value(
-                context['analysis_result']['default_value_map'])
+            input_model.apply_default_value(context['analysis_result']['default_value_map'])
 
-        checker = Checker(context=context, trial_dir=trial_dir,
-                          input_model=input_model, custom_oracle=None)
+        checker = Checker(context=context,
+                          trial_dir=trial_dir,
+                          input_model=input_model,
+                          custom_oracle=None,
+                          feature_gate=FeatureGate(FeatureGate.INVALID_INPUT_FROM_LOG |
+                                                   FeatureGate.DEFAULT_VALUE_COMPARISON |
+                                                   FeatureGate.DEPENDENCY_ANALYSIS |
+                                                   FeatureGate.TAINT_ANALYSIS |
+                                                   FeatureGate.CANONICALIZATION))
         snapshots = []
         snapshots.append(EmptySnapshot(seed))
 
@@ -757,12 +753,10 @@ if __name__ == "__main__":
         for generation in range(0, 20):
             mutated_filename = '%s/mutated-%d.yaml' % (trial_dir, generation)
             operator_log_path = "%s/operator-%d.log" % (trial_dir, generation)
-            system_state_path = "%s/system-state-%03d.json" % (
-                trial_dir, generation)
+            system_state_path = "%s/system-state-%03d.json" % (trial_dir, generation)
             events_log_path = "%s/events.log" % (trial_dir)
             cli_output_path = "%s/cli-output-%d.log" % (trial_dir, generation)
-            field_val_dict_path = "%s/field-val-dict-%d.json" % (
-                trial_dir, generation)
+            field_val_dict_path = "%s/field-val-dict-%d.json" % (trial_dir, generation)
 
             if not os.path.exists(mutated_filename):
                 break
@@ -780,33 +774,36 @@ if __name__ == "__main__":
                 logging.info(cli_result)
                 system_state = json.load(system_state)
                 operator_log = operator_log.read().splitlines()
-                snapshot = Snapshot(input, cli_result,
-                                    system_state, operator_log)
+                snapshot = Snapshot(input, cli_result, system_state, operator_log)
 
                 prev_snapshot = snapshots[-1]
-                result = checker.check(snapshot=snapshot,
+                runResult = checker.check(snapshot=snapshot,
                                        prev_snapshot=prev_snapshot,
                                        generation=generation)
                 snapshots.append(snapshot)
 
-                if isinstance(result, ConnectionRefusedResult):
+                if runResult.is_connection_refused():
+                    logging.debug('Connection refused')
                     snapshots.pop()
                     continue
-                if isinstance(result, InvalidInputResult):
+
+                is_invalid, _ = runResult.is_invalid()
+                if is_invalid:
+                    logging.debug('Invalid')
                     snapshots.pop()
                     continue
-                elif isinstance(result, UnchangedInputResult):
+                elif runResult.is_unchanged():
+                    logging.debug('Unchanged')
                     continue
-                elif isinstance(result, ErrorResult):
+                elif runResult.is_error():
                     logging.info('%s reports an alarm' % system_state_path)
-                    checker_save_result(trial_dir, original_result, result, generation, None)
+                    checker_save_result(trial_dir, original_result, runResult, generation, None)
                     num_alarms += 1
                     alarm = True
-                elif isinstance(result, PassResult):
-                    pass
                 else:
-                    logging.error('Unknown return value, abort')
-                    quit()
+                    pass
+
+                logging.debug(runResult.to_dict())
 
                 num_fields_tuple = checker.count_num_fields(snapshot=snapshot,
                                                             prev_snapshot=prev_snapshot)
@@ -822,7 +819,8 @@ if __name__ == "__main__":
     logging.info('Number of alarms: %d', num_alarms)
     num_system_fields_df = pandas.Series(num_system_fields_list)
     num_delta_fields_df = pandas.Series(num_delta_fields_list)
-    logging.info('Number of system fields: max[%s] min[%s] mean[%s]' %
-                 (num_system_fields_df.max(), num_system_fields_df.min(), num_system_fields_df.mean()))
+    logging.info(
+        'Number of system fields: max[%s] min[%s] mean[%s]' %
+        (num_system_fields_df.max(), num_system_fields_df.min(), num_system_fields_df.mean()))
     logging.info('Number of delta fields: max[%s] min[%s] mean[%s]' %
                  (num_delta_fields_df.max(), num_delta_fields_df.min(), num_delta_fields_df.mean()))

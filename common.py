@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from asyncio.log import logger
 import enum
 import json
@@ -104,33 +105,157 @@ class Oracle(str, enum.Enum):
     ERROR_LOG = 'ErrorLog'
     SYSTEM_STATE = 'SystemState'
     SYSTEM_HEALTH = 'SystemHealth'
+    RECOVERY = 'Recovery'
     CRASH = 'Crash'
     CUSTOM = 'Custom'
 
 
+class FeatureGate:
+    INVALID_INPUT_FROM_LOG = 0x1
+    DEFAULT_VALUE_COMPARISON = 0x2
+    DEPENDENCY_ANALYSIS = 0x4
+    TAINT_ANALYSIS = 0x8
+    CANONICALIZATION = 0x10
+
+    def __init__(self, feature_gate: hex) -> None:
+        self._feature_gate = feature_gate
+
+
+    def invalid_input_from_log_enabled(self) -> bool:
+        return self._feature_gate & FeatureGate.INVALID_INPUT_FROM_LOG
+
+    def default_value_comparison_enabled(self) -> bool:
+        return self._feature_gate & FeatureGate.DEFAULT_VALUE_COMPARISON
+
+    def dependency_analysis_enabled(self) -> bool:
+        return self._feature_gate & FeatureGate.DEPENDENCY_ANALYSIS
+
+    def taint_analysis_enabled(self) -> bool:
+        return self._feature_gate & FeatureGate.TAINT_ANALYSIS
+
+    def canonicalization_enabled(self) -> bool:
+        return self._feature_gate & FeatureGate.CANONICALIZATION
+
+
 class RunResult():
-    pass
+
+    def __init__(self, feature_gate: FeatureGate) -> None:
+        self.crash_result: OracleResult = None
+        self.input_result: OracleResult = None
+        self.state_result: OracleResult = None
+        self.log_result: OracleResult = None
+        self.custom_result: OracleResult = None
+        self.misc_result: OracleResult = None
+        self.recovery_result: OracleResult = None
+
+        self.feature_gate = feature_gate
+
+    def is_pass(self) -> bool:
+        if not isinstance(self.crash_result, PassResult) and self.crash_result is not None:
+            return False
+        elif not isinstance(self.custom_result, PassResult) and self.custom_result is not None:
+            return False
+
+        if isinstance(self.state_result, PassResult):
+            return True
+        else:
+            if self.feature_gate.invalid_input_from_log_enabled and isinstance(
+                    self.log_result, InvalidInputResult):
+                return True
+            else:
+                return False
+
+    def is_invalid(self) -> Tuple[bool, 'InvalidInputResult']:
+        if isinstance(self.input_result, InvalidInputResult):
+            return True, self.input_result
+        elif isinstance(self.log_result, InvalidInputResult):
+            return True, self.log_result
+        else:
+            return False, None
+
+    def is_connection_refused(self) -> bool:
+        return isinstance(self.input_result, ConnectionRefusedResult)
+
+    def is_unchanged(self) -> bool:
+        return isinstance(self.input_result, UnchangedInputResult)
+
+    def is_error(self) -> bool:
+        if isinstance(self.crash_result, ErrorResult):
+            return True
+        elif isinstance(self.custom_result, ErrorResult):
+            return True
+        elif isinstance(self.recovery_result, ErrorResult):
+            return True
+        elif not isinstance(self.state_result, ErrorResult):
+            return False
+        else:
+            if self.feature_gate.invalid_input_from_log_enabled and isinstance(
+                    self.log_result, InvalidInputResult):
+                return False
+            else:
+                return True
+
+    def to_dict(self):
+        '''serialize RunResult object
+        '''
+        return {
+            'crash_result': self.crash_result.to_dict() if self.crash_result else None,
+            'input_result': self.input_result.to_dict() if self.input_result else None,
+            'state_result': self.state_result.to_dict() if self.state_result else None,
+            'log_result': self.log_result.to_dict() if self.log_result else None,
+            'custom_result': self.custom_result.to_dict() if self.custom_result else None,
+            'misc_result': self.misc_result.to_dict() if self.misc_result else None,
+            'recovery_result': self.recovery_result.to_dict() if self.recovery_result else None
+        }
 
 
-class PassResult(RunResult):
-    pass
+class OracleResult:
+
+    @abstractmethod
+    def to_dict(self):
+        '''serialize OracleResult object
+        '''
+        return {}
 
 
-class InvalidInputResult(RunResult):
+class PassResult(OracleResult):
+
+    def to_dict(self):
+        return 'Pass'
+
+
+class InvalidInputResult(OracleResult):
 
     def __init__(self, responsible_field: list) -> None:
         self.responsible_field = responsible_field
 
-
-class UnchangedInputResult(RunResult):
-    pass
-
-
-class ConnectionRefusedResult(RunResult):
-    pass
+    def to_dict(self):
+        return {'responsible_field': self.responsible_field}
 
 
-class ErrorResult(RunResult):
+class UnchangedInputResult(OracleResult):
+
+    def to_dict(self):
+        return 'UnchangedInput'
+
+
+class ConnectionRefusedResult(OracleResult):
+
+    def to_dict(self):
+        return 'ConnectionRefused'
+
+
+class ErrorResult(OracleResult):
+
+    def __init__(self, oracle: Oracle, msg: str) -> None:
+        self.oracle = oracle
+        self.message = msg
+
+    def to_dict(self):
+        return {'oracle': self.oracle, 'message': self.message}
+
+
+class StateResult(ErrorResult):
 
     def __init__(self,
                  oracle: Oracle,
@@ -142,20 +267,38 @@ class ErrorResult(RunResult):
         self.input_delta = input_delta
         self.matched_system_delta = matched_system_delta
 
+    def to_dict(self):
+        return {
+            'oracle':
+                self.oracle,
+            'message':
+                self.message,
+            'input_delta':
+                self.input_delta.to_dict() if self.input_delta else None,
+            'matched_system_delta':
+                self.matched_system_delta.to_dict() if self.matched_system_delta else None
+        }
 
-class RecoveryResult(RunResult):
+
+class RecoveryResult(ErrorResult):
 
     def __init__(self, delta, from_, to_) -> None:
+        self.oracle = Oracle.RECOVERY
         self.delta = delta
         self.from_ = from_
         self.to_ = to_
 
-
-class CompoundErrorResult(ErrorResult):
-
-    def __init__(self, normal_err: ErrorResult, recovery_err: RecoveryResult) -> None:
-        self.normal_err = normal_err
-        self.recovery_err = recovery_err
+    def to_dict(self):
+        return {
+            'oracle':
+                self.oracle,
+            'delta':
+                json.loads(self.delta.to_json(default_mapping={datetime: lambda x: x.isoformat()})),
+            'from':
+                self.from_,
+            'to':
+                self.to_
+        }
 
 
 def flatten_list(l: list, curr_path: list) -> list:
@@ -317,7 +460,7 @@ def random_string(n: int):
     return (''.join(random.choice(letters) for i in range(10)))
 
 
-def save_result(trial_dir: str, trial_err: ErrorResult, num_tests: int, trial_elapsed):
+def save_result(trial_dir: str, trial_result: RunResult, num_tests: int, trial_elapsed):
     logger = get_thread_logger(with_prefix=False)
 
     result_dict = {}
@@ -328,31 +471,10 @@ def save_result(trial_dir: str, trial_err: ErrorResult, num_tests: int, trial_el
         result_dict['trial_num'] = trial_dir
     result_dict['duration'] = trial_elapsed
     result_dict['num_tests'] = num_tests
-    if trial_err == None:
+    if trial_result == None:
         logger.info('Trial %s completed without error', trial_dir)
-    elif isinstance(trial_err, CompoundErrorResult):
-        normal_err = trial_err.normal_err
-        result_dict['oracle'] = normal_err.oracle
-        result_dict['message'] = normal_err.message
-        result_dict['input_delta'] = normal_err.input_delta
-        result_dict['matched_system_delta'] = normal_err.matched_system_delta
-
-        # Dump the recovery error in a separate file
-        recovery_err = trial_err.recovery_err
-        recovery_result_dict = {}
-        recovery_result_dict['trial_num'] = result_dict['trial_num']
-        recovery_result_dict['delta'] = json.loads(
-            recovery_err.delta.to_json(default_mapping={datetime: lambda x: x.isoformat()}))
-        recovery_result_dict['from'] = recovery_err.from_
-        recovery_result_dict['to'] = recovery_err.to_
-        recovery_err_path = os.path.join(trial_dir, 'recovery_result.json')
-        with open(recovery_err_path, 'w') as f:
-            json.dump(recovery_result_dict, f, cls=ActoEncoder, indent=6)
     else:
-        result_dict['oracle'] = trial_err.oracle
-        result_dict['message'] = trial_err.message
-        result_dict['input_delta'] = trial_err.input_delta
-        result_dict['matched_system_delta'] = trial_err.matched_system_delta
+        result_dict['error'] = trial_result.to_dict()
     result_path = os.path.join(trial_dir, 'result.json')
     with open(result_path, 'w') as result_file:
         json.dump(result_dict, result_file, cls=ActoEncoder, indent=6)

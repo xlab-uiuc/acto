@@ -1,22 +1,18 @@
-import base64
 from deepdiff.helper import NotPresent
 import configparser
 
 from k8s_util.k8sutil import canonicalizeQuantity
 from thread_logger import get_thread_logger
+from common import FeatureGate
 
 
 class CompareMethods:
 
-    def __init__(self):
-        # self.method_list = \
-        #     [a for a in dir(self) if not a.startswith('__') and a != "compare" and callable(getattr(self, a))]
-        self.custom_operators = [self.substring_operator, self.config_operator]
-
-    # def __iter__(self):
-    #     # make the defined methods iterable
-    #     for method in self.method_list:
-    #         yield getattr(self, method)
+    def __init__(self, feature_gate: FeatureGate):
+        self.custom_operators = []
+        self.feature_gate = feature_gate
+        if feature_gate.canonicalization_enabled():
+            self.custom_operators.extend([self.substring_operator, self.config_operator])
 
     def operator(self, input, output) -> bool:
         '''Operator here means binary comparison "==" operator'''
@@ -96,16 +92,17 @@ class CompareMethods:
         '''transform the field value if necessary
             only one transformer is allowed for each field
         '''
-        # transform method 1: convert Quantity to unified unit
-        new_in_prev = canonicalizeQuantity(in_prev)
-        new_in_curr = canonicalizeQuantity(in_curr)
-        new_out_prev = canonicalizeQuantity(out_prev)
-        new_out_curr = canonicalizeQuantity(out_curr)
+        if self.feature_gate.canonicalization_enabled():
+            # transform method 1: convert Quantity to unified unit
+            new_in_prev = canonicalizeQuantity(in_prev)
+            new_in_curr = canonicalizeQuantity(in_curr)
+            new_out_prev = canonicalizeQuantity(out_prev)
+            new_out_curr = canonicalizeQuantity(out_curr)
 
-        if not (new_in_curr == in_curr and new_in_prev == in_prev and
-                new_out_curr == out_curr and new_out_prev == out_prev):
-            # field values has been changed using canonicalizeQuantity
-            return new_in_prev, new_in_curr, new_out_prev, new_out_curr
+            if not (new_in_curr == in_curr and new_in_prev == in_prev and
+                    new_out_curr == out_curr and new_out_prev == out_prev):
+                # field values has been changed using canonicalizeQuantity
+                return new_in_prev, new_in_curr, new_out_prev, new_out_curr
 
         # default: return original values
         return in_prev, in_curr, out_prev, out_curr
