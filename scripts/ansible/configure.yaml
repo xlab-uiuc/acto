@@ -1,0 +1,41 @@
+---
+- name: Install Docker
+  hosts: all
+  vars_files:
+    - data.yaml
+
+- name: tmpfs
+  import_playbook: tmpfs.yaml
+
+- name: Install go
+  import_playbook: go.yaml
+
+- name: Install go
+  import_playbook: docker.yaml
+
+- name: Install python
+  import_playbook: python.yaml
+
+- name: Install kind
+  import_playbook: kind.yaml
+
+- name: Install kubectl
+  import_playbook: kubectl.yaml
+
+- name: Install helm
+  import_playbook: helm.yaml
+
+- name: Install sysctl
+  import_playbook: sysctl.yaml
+
+- name: Install k3d
+  import_playbook: k3d.yaml
+
+- name: Install k9s
+  import_playbook: k9s.yaml
+
+- name: Install htop
+  import_playbook: htop.yaml
+
+- name: Install acto
+  import_playbook: acto.yaml
