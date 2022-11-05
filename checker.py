@@ -253,9 +253,9 @@ class Checker(object):
                         logger.error('Input delta: %s -> %s' % (delta.prev, delta.curr))
                         logger.error('Matched delta: %s -> %s' %
                                      (match_delta.prev, match_delta.curr))
-                return StateResult(Oracle.SYSTEM_STATE,
-                                   'Matched delta inconsistent with input delta', delta,
-                                   match_delta)
+                        return StateResult(Oracle.SYSTEM_STATE,
+                                        'Matched delta inconsistent with input delta', delta,
+                                        match_delta)
 
                 if len(match_deltas) == 0:
                     # if prev and curr of the delta are the same, also consider it as a match
