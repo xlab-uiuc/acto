@@ -176,6 +176,8 @@ class RunResult():
             return True, self.input_result
         elif isinstance(self.log_result, InvalidInputResult):
             return True, self.log_result
+        elif isinstance(self.misc_result, InvalidInputResult):
+            return True, self.misc_result
         else:
             return False, None
 

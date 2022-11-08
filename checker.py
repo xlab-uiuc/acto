@@ -91,6 +91,9 @@ class Checker(object):
         logger = get_thread_logger(with_prefix=True)
         runResult = RunResult(generation, self.feature_gate)
 
+        input_result = self.check_input(snapshot, input_delta)
+        runResult.input_result = input_result
+
         if snapshot.system_state == {}:
             runResult.misc_result = InvalidInputResult(None)
             return runResult
@@ -101,9 +104,6 @@ class Checker(object):
 
         crash_result = self.check_crash(snapshot)
         runResult.crash_result = crash_result
-
-        input_result = self.check_input(snapshot, input_delta)
-        runResult.input_result = input_result
 
         runResult.state_result = self.check_resources(snapshot, prev_snapshot)
         runResult.log_result = self.check_operator_log(snapshot, prev_snapshot)
