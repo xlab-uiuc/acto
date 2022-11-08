@@ -655,7 +655,7 @@ if __name__ == "__main__":
     import queue
 
     def checker_save_result(trial_dir: str, original_result: dict, runResult: RunResult,
-                            alarm: bool):
+                            alarm: bool, mode: str):
 
         result_dict = {}
         result_dict['alarm'] = alarm
@@ -668,13 +668,15 @@ if __name__ == "__main__":
         except:
             post_result['trial_num'] = trial_dir
         post_result['error'] = runResult.to_dict()
-        result_path = os.path.join(trial_dir, 'post-result-%d.json' % runResult.generation)
+        result_path = os.path.join(trial_dir,
+                                   'post-result-%d-%s.json' % (runResult.generation, mode))
         with open(result_path, 'w') as result_file:
             json.dump(result_dict, result_file, cls=ActoEncoder, indent=6)
 
     def check_trial_worker(workqueue: multiprocessing.Queue,
                            num_system_fields_list: multiprocessing.Array,
-                           num_delta_fields_list: multiprocessing.Array):
+                           num_delta_fields_list: multiprocessing.Array, mode: str,
+                           feature_gate: FeatureGate):
         while True:
             try:
                 trial_dir = workqueue.get(block=False)
@@ -693,15 +695,11 @@ if __name__ == "__main__":
             if context['enable_analysis']:
                 input_model.apply_default_value(context['analysis_result']['default_value_map'])
 
-            checker = Checker(
-                context=context,
-                trial_dir=trial_dir,
-                input_model=input_model,
-                custom_oracle=None,
-                feature_gate=FeatureGate(FeatureGate.INVALID_INPUT_FROM_LOG |
-                                         FeatureGate.DEFAULT_VALUE_COMPARISON |
-                                         FeatureGate.DEPENDENCY_ANALYSIS |
-                                         FeatureGate.TAINT_ANALYSIS | FeatureGate.CANONICALIZATION))
+            checker = Checker(context=context,
+                              trial_dir=trial_dir,
+                              input_model=input_model,
+                              custom_oracle=None,
+                              feature_gate=FeatureGate(feature_gate))
             snapshots = []
             snapshots.append(EmptySnapshot(seed))
 
@@ -740,33 +738,37 @@ if __name__ == "__main__":
                                               generation=generation)
                     snapshots.append(snapshot)
 
-                    if runtime_result['recovery_result'] != None and runtime_result['recovery_result'] != 'Pass':
-                        runResult.recovery_result = RecoveryResult(runtime_result['delta', runtime_result['from'], runtime_result['to']])
-                    
-                    if runtime_result['custom_result'] != None and runtime_result['custom_result'] != 'Pass':
-                        runResult.custom_result = ErrorResult(Oracle.CUSTOM, runtime_result['custom_result']['message'])
+                    if runtime_result['recovery_result'] != None and runtime_result[
+                            'recovery_result'] != 'Pass':
+                        runResult.recovery_result = RecoveryResult(
+                            runtime_result['delta', runtime_result['from'], runtime_result['to']])
+
+                    if runtime_result['custom_result'] != None and runtime_result[
+                            'custom_result'] != 'Pass':
+                        runResult.custom_result = ErrorResult(
+                            Oracle.CUSTOM, runtime_result['custom_result']['message'])
 
                     if runResult.is_connection_refused():
                         logging.debug('Connection refused')
                         snapshots.pop()
-                        checker_save_result(trial_dir, runtime_result, runResult, False)
+                        checker_save_result(trial_dir, runtime_result, runResult, False, mode)
                         continue
                     is_invalid, _ = runResult.is_invalid()
                     if is_invalid:
                         logging.debug('Invalid')
                         snapshots.pop()
-                        checker_save_result(trial_dir, runtime_result, runResult, False)
+                        checker_save_result(trial_dir, runtime_result, runResult, False, mode)
                         continue
                     elif runResult.is_unchanged():
                         logging.debug('Unchanged')
-                        checker_save_result(trial_dir, runtime_result, runResult, False)
+                        checker_save_result(trial_dir, runtime_result, runResult, False, mode)
                         continue
                     elif runResult.is_error():
                         logging.info('%s reports an alarm' % system_state_path)
-                        checker_save_result(trial_dir, runtime_result, runResult, True)
+                        checker_save_result(trial_dir, runtime_result, runResult, True, mode)
                         alarm = True
                     else:
-                        checker_save_result(trial_dir, runtime_result, runResult, False)
+                        checker_save_result(trial_dir, runtime_result, runResult, False, mode)
 
                     num_fields_tuple = checker.count_num_fields(snapshot=snapshot,
                                                                 prev_snapshot=prev_snapshot)
@@ -834,31 +836,47 @@ if __name__ == "__main__":
     with open(config.seed_custom_resource, 'r') as seed_file:
         seed = yaml.load(seed_file, Loader=yaml.FullLoader)
 
-    mp_manager = multiprocessing.Manager()
+    BASELINE = FeatureGate.INVALID_INPUT_FROM_LOG | FeatureGate.DEFAULT_VALUE_COMPARISON
+    CANONICALIZATION = BASELINE | FeatureGate.CANONICALIZATION
+    TAINT_ANALYSIS = CANONICALIZATION | FeatureGate.TAINT_ANALYSIS
+    DEPENDENCY_ANALYSIS = TAINT_ANALYSIS | FeatureGate.DEPENDENCY_ANALYSIS
+    ALL = (FeatureGate.INVALID_INPUT_FROM_LOG | FeatureGate.DEFAULT_VALUE_COMPARISON |
+           FeatureGate.DEPENDENCY_ANALYSIS | FeatureGate.TAINT_ANALYSIS |
+           FeatureGate.CANONICALIZATION)
+    F = {
+        'baseline': BASELINE,
+        'canonicalization': CANONICALIZATION,
+        'taint_analysis': TAINT_ANALYSIS,
+        'dependency_analysis': DEPENDENCY_ANALYSIS,
+    }
 
-    num_system_fields_list =  mp_manager.list()
-    num_delta_fields_list = mp_manager.list()
+    for name, feature_gate in F.items():
+        mp_manager = multiprocessing.Manager()
 
-    workqueue = multiprocessing.Queue()
-    for trial_dir in sorted(trial_dirs):
-        workqueue.put(trial_dir)
+        num_system_fields_list = mp_manager.list()
+        num_delta_fields_list = mp_manager.list()
 
-    workers = [
-        multiprocessing.Process(target=check_trial_worker,
-                                args=(workqueue, num_system_fields_list, num_delta_fields_list))
-        for _ in range(args.num_workers)
-    ]
+        workqueue = multiprocessing.Queue()
+        for trial_dir in sorted(trial_dirs):
+            workqueue.put(trial_dir)
 
-    for worker in workers:
-        worker.start()
+        workers = [
+            multiprocessing.Process(target=check_trial_worker,
+                                    args=(workqueue, num_system_fields_list, num_delta_fields_list, name, feature_gate))
+            for _ in range(args.num_workers)
+        ]
 
-    for worker in workers:
-        worker.join()
+        for worker in workers:
+            worker.start()
 
-    num_system_fields_df = pandas.Series(num_system_fields_list)
-    num_delta_fields_df = pandas.Series(num_delta_fields_list)
-    logging.info(
-        'Number of system fields: max[%s] min[%s] mean[%s]' %
-        (num_system_fields_df.max(), num_system_fields_df.min(), num_system_fields_df.mean()))
-    logging.info('Number of delta fields: max[%s] min[%s] mean[%s]' %
-                 (num_delta_fields_df.max(), num_delta_fields_df.min(), num_delta_fields_df.mean()))
+        for worker in workers:
+            worker.join()
+
+        num_system_fields_df = pandas.Series(list(num_system_fields_list))
+        num_delta_fields_df = pandas.Series(list(num_delta_fields_list))
+        logging.info(
+            'Number of system fields: max[%s] min[%s] mean[%s]' %
+            (num_system_fields_df.max(), num_system_fields_df.min(), num_system_fields_df.mean()))
+        logging.info(
+            'Number of delta fields: max[%s] min[%s] mean[%s]' %
+            (num_delta_fields_df.max(), num_delta_fields_df.min(), num_delta_fields_df.mean()))
