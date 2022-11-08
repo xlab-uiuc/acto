@@ -143,7 +143,7 @@ class FeatureGate:
 
 class RunResult():
 
-    def __init__(self, feature_gate: FeatureGate) -> None:
+    def __init__(self, generation: int, feature_gate: FeatureGate) -> None:
         self.crash_result: OracleResult = None
         self.input_result: OracleResult = None
         self.state_result: OracleResult = None
@@ -151,6 +151,8 @@ class RunResult():
         self.custom_result: OracleResult = None
         self.misc_result: OracleResult = None
         self.recovery_result: OracleResult = None
+
+        self.generation = generation
 
         self.feature_gate = feature_gate
 
@@ -203,6 +205,7 @@ class RunResult():
         '''serialize RunResult object
         '''
         return {
+            'generation': self.generation,
             'crash_result': self.crash_result.to_dict() if self.crash_result else None,
             'input_result': self.input_result.to_dict() if self.input_result else None,
             'state_result': self.state_result.to_dict() if self.state_result else None,

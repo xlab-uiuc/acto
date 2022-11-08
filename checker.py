@@ -89,7 +89,7 @@ class Checker(object):
             RunResult of the checking
         '''
         logger = get_thread_logger(with_prefix=True)
-        runResult = RunResult(self.feature_gate)
+        runResult = RunResult(generation, self.feature_gate)
 
         if snapshot.system_state == {}:
             runResult.misc_result = InvalidInputResult(None)
@@ -132,7 +132,7 @@ class Checker(object):
 
         if self.feature_gate.write_result_each_generation_enabled():
             generation_result_path = os.path.join(self.trial_dir,
-                                                'generation-%d-result.json' % generation)
+                                                  'generation-%d-runtime.json' % generation)
             with open(generation_result_path, 'w') as f:
                 json.dump(runResult.to_dict(), f, cls=ActoEncoder, indent=4)
 
@@ -254,8 +254,8 @@ class Checker(object):
                         logger.error('Matched delta: %s -> %s' %
                                      (match_delta.prev, match_delta.curr))
                         return StateResult(Oracle.SYSTEM_STATE,
-                                        'Matched delta inconsistent with input delta', delta,
-                                        match_delta)
+                                           'Matched delta inconsistent with input delta', delta,
+                                           match_delta)
 
                 if len(match_deltas) == 0:
                     # if prev and curr of the delta are the same, also consider it as a match
@@ -649,33 +649,139 @@ if __name__ == "__main__":
     import traceback
     import argparse
     from types import SimpleNamespace
+    import typing
     import pandas
+    import multiprocessing
+    import queue
 
-    def checker_save_result(trial_dir: str, original_result: dict, trial_err: RunResult,
-                            num_tests: int, trial_elapsed):
+    def checker_save_result(trial_dir: str, original_result: dict, runResult: RunResult,
+                            alarm: bool):
 
         result_dict = {}
+        result_dict['alarm'] = alarm
         result_dict['original_result'] = original_result
         post_result = {}
         result_dict['post_result'] = post_result
         try:
             trial_num = '-'.join(trial_dir.split('-')[-2:])
-            post_result['trial_num'] = trial_num
+            post_result['trial_num'] = trial_num + '-%d' % runResult.generation
         except:
             post_result['trial_num'] = trial_dir
-        post_result['duration'] = original_result['duration']
-        post_result['num_tests'] = num_tests
-        if trial_err == None:
-            logging.info('Trial %s completed without error', trial_dir)
-        else:
-            post_result['error'] = trial_err.to_dict()
-        result_path = os.path.join(trial_dir, 'post_result.json')
+        post_result['error'] = runResult.to_dict()
+        result_path = os.path.join(trial_dir, 'post-result-%d.json' % runResult.generation)
         with open(result_path, 'w') as result_file:
             json.dump(result_dict, result_file, cls=ActoEncoder, indent=6)
+
+    def check_trial_worker(workqueue: multiprocessing.Queue,
+                           num_system_fields_list: multiprocessing.Array,
+                           num_delta_fields_list: multiprocessing.Array):
+        while True:
+            try:
+                trial_dir = workqueue.get(block=False)
+            except queue.Empty:
+                break
+
+            print(trial_dir)
+            if not os.path.isdir(trial_dir):
+                continue
+            original_result_path = "%s/result.json" % (trial_dir)
+            with open(original_result_path, 'r') as original_result_file:
+                original_result = json.load(original_result_file)
+
+            input_model = InputModel(context['crd']['body'], config.example_dir, 1, 1, [])
+
+            if context['enable_analysis']:
+                input_model.apply_default_value(context['analysis_result']['default_value_map'])
+
+            checker = Checker(
+                context=context,
+                trial_dir=trial_dir,
+                input_model=input_model,
+                custom_oracle=None,
+                feature_gate=FeatureGate(FeatureGate.INVALID_INPUT_FROM_LOG |
+                                         FeatureGate.DEFAULT_VALUE_COMPARISON |
+                                         FeatureGate.DEPENDENCY_ANALYSIS |
+                                         FeatureGate.TAINT_ANALYSIS | FeatureGate.CANONICALIZATION))
+            snapshots = []
+            snapshots.append(EmptySnapshot(seed))
+
+            alarm = False
+            for generation in range(0, 20):
+                mutated_filename = '%s/mutated-%d.yaml' % (trial_dir, generation)
+                operator_log_path = "%s/operator-%d.log" % (trial_dir, generation)
+                system_state_path = "%s/system-state-%03d.json" % (trial_dir, generation)
+                events_log_path = "%s/events.log" % (trial_dir)
+                cli_output_path = "%s/cli-output-%d.log" % (trial_dir, generation)
+                runtime_result_path = "%s/generation-%d-result.json" % (trial_dir, generation)
+
+                if not os.path.exists(mutated_filename):
+                    break
+
+                if not os.path.exists(operator_log_path):
+                    continue
+
+                with open(mutated_filename, 'r') as input_file, \
+                        open(operator_log_path, 'r') as operator_log, \
+                        open(system_state_path, 'r') as system_state, \
+                        open(events_log_path, 'r') as events_log, \
+                        open(cli_output_path, 'r') as cli_output, \
+                        open(runtime_result_path, 'r') as runtime_result_file:
+                    input = yaml.load(input_file, Loader=yaml.FullLoader)
+                    cli_result = json.load(cli_output)
+                    logging.info(cli_result)
+                    system_state = json.load(system_state)
+                    runtime_result = json.load(runtime_result_file)
+                    operator_log = operator_log.read().splitlines()
+                    snapshot = Snapshot(input, cli_result, system_state, operator_log)
+
+                    prev_snapshot = snapshots[-1]
+                    runResult = checker.check(snapshot=snapshot,
+                                              prev_snapshot=prev_snapshot,
+                                              generation=generation)
+                    snapshots.append(snapshot)
+
+                    if runtime_result['recovery_result'] != None and runtime_result['recovery_result'] != 'Pass':
+                        runResult.recovery_result = RecoveryResult(runtime_result['delta', runtime_result['from'], runtime_result['to']])
+                    
+                    if runtime_result['custom_result'] != None and runtime_result['custom_result'] != 'Pass':
+                        runResult.custom_result = ErrorResult(Oracle.CUSTOM, runtime_result['custom_result']['message'])
+
+                    if runResult.is_connection_refused():
+                        logging.debug('Connection refused')
+                        snapshots.pop()
+                        checker_save_result(trial_dir, runtime_result, runResult, False)
+                        continue
+                    is_invalid, _ = runResult.is_invalid()
+                    if is_invalid:
+                        logging.debug('Invalid')
+                        snapshots.pop()
+                        checker_save_result(trial_dir, runtime_result, runResult, False)
+                        continue
+                    elif runResult.is_unchanged():
+                        logging.debug('Unchanged')
+                        checker_save_result(trial_dir, runtime_result, runResult, False)
+                        continue
+                    elif runResult.is_error():
+                        logging.info('%s reports an alarm' % system_state_path)
+                        checker_save_result(trial_dir, runtime_result, runResult, True)
+                        alarm = True
+                    else:
+                        checker_save_result(trial_dir, runtime_result, runResult, False)
+
+                    num_fields_tuple = checker.count_num_fields(snapshot=snapshot,
+                                                                prev_snapshot=prev_snapshot)
+                    if num_fields_tuple != None:
+                        num_system_fields, num_delta_fields = num_fields_tuple
+                        num_system_fields_list.append(num_system_fields)
+                        num_delta_fields_list.append(num_delta_fields)
+
+            if not alarm:
+                logging.info('%s does not report an alarm' % system_state_path)
 
     parser = argparse.ArgumentParser(description='Standalone checker for Acto')
     parser.add_argument('--testrun-dir', help='Directory to check', required=True)
     parser.add_argument('--config', help='Path to config file', required=True)
+    parser.add_argument('--num-workers', help='Number of workers', type=int, default=4)
     # parser.add_argument('--output', help='Path to output file', required=True)
 
     args = parser.parse_args()
@@ -728,102 +834,27 @@ if __name__ == "__main__":
     with open(config.seed_custom_resource, 'r') as seed_file:
         seed = yaml.load(seed_file, Loader=yaml.FullLoader)
 
-    num_alarms = 0
-    num_system_fields_list = []
-    num_delta_fields_list = []
+    mp_manager = multiprocessing.Manager()
+
+    num_system_fields_list =  mp_manager.list()
+    num_delta_fields_list = mp_manager.list()
+
+    workqueue = multiprocessing.Queue()
     for trial_dir in sorted(trial_dirs):
-        print(trial_dir)
-        if not os.path.isdir(trial_dir):
-            continue
-        original_result_path = "%s/result.json" % (trial_dir)
-        with open(original_result_path, 'r') as original_result_file:
-            original_result = json.load(original_result_file)
+        workqueue.put(trial_dir)
 
-        input_model = InputModel(context['crd']['body'], config.example_dir, 1, 1, [])
+    workers = [
+        multiprocessing.Process(target=check_trial_worker,
+                                args=(workqueue, num_system_fields_list, num_delta_fields_list))
+        for _ in range(args.num_workers)
+    ]
 
-        if context['enable_analysis']:
-            input_model.apply_default_value(context['analysis_result']['default_value_map'])
+    for worker in workers:
+        worker.start()
 
-        checker = Checker(
-            context=context,
-            trial_dir=trial_dir,
-            input_model=input_model,
-            custom_oracle=None,
-            feature_gate=FeatureGate(FeatureGate.INVALID_INPUT_FROM_LOG |
-                                     FeatureGate.DEFAULT_VALUE_COMPARISON |
-                                     FeatureGate.DEPENDENCY_ANALYSIS | FeatureGate.TAINT_ANALYSIS |
-                                     FeatureGate.CANONICALIZATION))
-        snapshots = []
-        snapshots.append(EmptySnapshot(seed))
+    for worker in workers:
+        worker.join()
 
-        alarm = False
-        for generation in range(0, 20):
-            mutated_filename = '%s/mutated-%d.yaml' % (trial_dir, generation)
-            operator_log_path = "%s/operator-%d.log" % (trial_dir, generation)
-            system_state_path = "%s/system-state-%03d.json" % (trial_dir, generation)
-            events_log_path = "%s/events.log" % (trial_dir)
-            cli_output_path = "%s/cli-output-%d.log" % (trial_dir, generation)
-            field_val_dict_path = "%s/field-val-dict-%d.json" % (trial_dir, generation)
-
-            if not os.path.exists(mutated_filename):
-                break
-
-            if not os.path.exists(operator_log_path):
-                continue
-
-            with open(mutated_filename, 'r') as input_file, \
-                    open(operator_log_path, 'r') as operator_log, \
-                    open(system_state_path, 'r') as system_state, \
-                    open(events_log_path, 'r') as events_log, \
-                    open(cli_output_path, 'r') as cli_output:
-                input = yaml.load(input_file, Loader=yaml.FullLoader)
-                cli_result = json.load(cli_output)
-                logging.info(cli_result)
-                system_state = json.load(system_state)
-                operator_log = operator_log.read().splitlines()
-                snapshot = Snapshot(input, cli_result, system_state, operator_log)
-
-                prev_snapshot = snapshots[-1]
-                runResult = checker.check(snapshot=snapshot,
-                                          prev_snapshot=prev_snapshot,
-                                          generation=generation)
-                snapshots.append(snapshot)
-
-                if runResult.is_connection_refused():
-                    logging.debug('Connection refused')
-                    snapshots.pop()
-                    continue
-
-                is_invalid, _ = runResult.is_invalid()
-                if is_invalid:
-                    logging.debug('Invalid')
-                    snapshots.pop()
-                    continue
-                elif runResult.is_unchanged():
-                    logging.debug('Unchanged')
-                    continue
-                elif runResult.is_error():
-                    logging.info('%s reports an alarm' % system_state_path)
-                    checker_save_result(trial_dir, original_result, runResult, generation, None)
-                    num_alarms += 1
-                    alarm = True
-                else:
-                    pass
-
-                logging.debug(runResult.to_dict())
-
-                num_fields_tuple = checker.count_num_fields(snapshot=snapshot,
-                                                            prev_snapshot=prev_snapshot)
-                if num_fields_tuple != None:
-                    num_system_fields, num_delta_fields = num_fields_tuple
-                    num_system_fields_list.append(num_system_fields)
-                    num_delta_fields_list.append(num_delta_fields)
-
-        if not alarm:
-            logging.info('%s does not report an alarm' % system_state_path)
-            checker_save_result(trial_dir, original_result, None, generation, None)
-
-    logging.info('Number of alarms: %d', num_alarms)
     num_system_fields_df = pandas.Series(num_system_fields_list)
     num_delta_fields_df = pandas.Series(num_delta_fields_list)
     logging.info(
