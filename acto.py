@@ -267,6 +267,7 @@ class TrialRunner:
                             curr_input_with_schema = self.revert(runner, checker, generation)
                             generation += 1
                         elif runResult.is_unchanged():
+                            logger.info('Setup produced unchanged input')
                             field_node.discard_testcase(self.discarded_testcases)
                         elif runResult.is_error():
                             field_node.discard_testcase(self.discarded_testcases)
@@ -287,9 +288,11 @@ class TrialRunner:
             t = self.run_testcases(curr_input_with_schema, ready_testcases, runner, checker,
                                    generation)
             runResult, generation = t
-            logger.debug(t)
-            if not runResult.is_invalid() and runResult.is_error():
+            is_invalid, _ = runResult.is_invalid()
+            if is_invalid and runResult.is_error():
                 # before return, run the recovery test case
+
+                logger.info('Error result, running recovery')
                 runResult.recovery_result = self.run_recovery(runner, checker, generation)
                 generation += 1
 
