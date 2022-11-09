@@ -710,7 +710,7 @@ if __name__ == "__main__":
                 system_state_path = "%s/system-state-%03d.json" % (trial_dir, generation)
                 events_log_path = "%s/events.log" % (trial_dir)
                 cli_output_path = "%s/cli-output-%d.log" % (trial_dir, generation)
-                runtime_result_path = "%s/generation-%d-result.json" % (trial_dir, generation)
+                runtime_result_path = "%s/generation-%d-runtime.json" % (trial_dir, generation)
 
                 if not os.path.exists(mutated_filename):
                     break
