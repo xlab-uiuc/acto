@@ -4,7 +4,6 @@ from functools import partial
 import json
 import sys
 import logging
-from types import SimpleNamespace
 import jsonpatch
 import yaml
 from glob import glob
@@ -14,7 +13,7 @@ from testplan import TreeNode
 
 from value_with_schema import ValueWithSchema
 from test_case import TestCase
-from common import get_thread_logger
+from common import OperatorConfig, get_thread_logger
 from input import InputModel
 from acto import Acto
 
@@ -56,11 +55,16 @@ class ReproInputModel(InputModel):
         self.root_schema = OpaqueSchema([], {})
         self.testcases = []
         cr_list = load_cr_from_trial(reproduce_dir)
+        if cr_list == []:
+            raise Exception('No CRs found in %s. CR file name should start with mutated-' % reproduce_dir)
         self.seed_input = cr_list[0]
         for cr in cr_list[1:]:
             cr_mutator = partial(repro_mutator, cr)
             t = TestCase(repro_precondition, cr_mutator, repro_setup)
             self.testcases.append(t)
+        self.num_total_cases = len(cr_list) - 1
+        self.num_workers = 1
+        
             
     def initialize(self, initial_value: dict):
         pass
@@ -123,7 +127,7 @@ if __name__ == '__main__':
     parser.add_argument('--reproduce-dir',
                         dest='reproduce_dir',
                         required=True,
-                        help='The directory of the trial folder to reproduce')
+                        help='The directory of the trial folder to reproduce. CR files should have names starting with "mutated-"')
     parser.add_argument('--config', '-c', dest='config',
                         help='Operator port config path')
     parser.add_argument('--cluster-runtime', '-r', dest='cluster_runtime',
@@ -186,7 +190,7 @@ if __name__ == '__main__':
     logger = get_thread_logger(with_prefix=False)
     
     with open(args.config, 'r') as config_file:
-        config = json.load(config_file, object_hook=lambda d: SimpleNamespace(**d))
+        config = OperatorConfig(**json.load(config_file))
     context_cache = os.path.join(os.path.dirname(config.seed_custom_resource), 'context.json')
     logger.info('Acto started with [%s]' % sys.argv)
     logger.info('Operator config: %s', config)
