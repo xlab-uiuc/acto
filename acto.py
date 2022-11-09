@@ -716,6 +716,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(
         description='Automatic, Continuous Testing for k8s/openshift Operators')
+    parser.add_argument('--workdir', type=str, default=workdir_path, help='Working directory')
     parser.add_argument('--config', '-c', dest='config', help='Operator port config path')
     parser.add_argument(
         '--cluster-runtime',
@@ -767,10 +768,10 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    os.makedirs(workdir_path, exist_ok=True)
+    os.makedirs(args.workdir_path, exist_ok=True)
     # Setting up log infra
     logging.basicConfig(
-        filename=os.path.join(workdir_path, 'test.log'),
+        filename=os.path.join(args.workdir_path, 'test.log'),
         level=logging.DEBUG,
         filemode='w',
         format='%(asctime)s %(levelname)-7s, %(name)s, %(filename)-9s:%(lineno)d, %(message)s')
@@ -813,7 +814,7 @@ if __name__ == '__main__':
     is_reproduce = False
 
     start_time = datetime.now()
-    acto = Acto(workdir_path, config, args.cluster_runtime, args.enable_analysis,
+    acto = Acto(args.workdir_path, config, args.cluster_runtime, args.enable_analysis,
                 args.preload_images, context_cache, args.helper_crd, args.num_workers,
                 args.num_cases, args.dryrun, args.learn_analysis_only, is_reproduce, input_model,
                 apply_testcase_f)
