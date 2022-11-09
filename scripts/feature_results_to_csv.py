@@ -70,8 +70,8 @@ if __name__ == '__main__':
                 ignore_index=True)
 
     merged = pd.merge(baseline_df, canonicalization_df, on='Trial number')
-    merged = pd.merge(merged, dependency_df, on='Trial number')
     merged = pd.merge(merged, taint_analysis_df, on='Trial number')
+    merged = pd.merge(merged, dependency_df, on='Trial number')
     merged= merged.drop(columns=['baseline_error', 'canonicalization_error', 'dependency_error', 'taint_analysis_error'])
     merged = merged.sort_values(by=['Trial number'])
 
