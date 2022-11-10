@@ -211,8 +211,8 @@ if __name__ == '__main__':
         merged.to_excel(writer, sheet_name='Overview', index=False)
         baseline_df.to_excel(writer, sheet_name='Baseline', index=False)
         canonicalization_df.to_excel(writer, sheet_name='Canonicalization', index=False)
-        dependency_df.to_excel(writer, sheet_name='Dependency', index=False)
         taint_analysis_df.to_excel(writer, sheet_name='Taint analysis', index=False)
+        dependency_df.to_excel(writer, sheet_name='Dependency', index=False)
 
     print(merged['baseline_alarm'].value_counts())
     print(merged['canonicalization_alarm'].value_counts())
