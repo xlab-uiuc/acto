@@ -1,3 +1,4 @@
+from typing import Tuple
 import yaml
 from copy import deepcopy
 import random
@@ -37,7 +38,9 @@ class BaseSchema:
         return None
 
     @abstractmethod
-    def get_all_schemas(self):
+    def get_all_schemas(self) -> Tuple[list, list, list]:
+        '''Returns a tuple of normal schemas, schemas pruned by over-specified, schemas pruned by 
+        copied-over'''
         return None
 
     @abstractmethod
@@ -125,8 +128,8 @@ class StringSchema(BaseSchema):
             ret.append(TestCase(self.empty_precondition, self.empty_mutator, self.empty_setup))
         return ret
 
-    def get_all_schemas(self) -> list:
-        return [self]
+    def get_all_schemas(self) -> Tuple[list, list, list]:
+        return [self], [], []
 
     def to_tree(self) -> TreeNode:
         return TreeNode(self.path)
@@ -227,8 +230,8 @@ class NumberSchema(BaseSchema):
             ret.append(TestCase(self.empty_precondition, self.empty_mutator, self.empty_setup))
         return ret
 
-    def get_all_schemas(self) -> list:
-        return [self]
+    def get_all_schemas(self) -> Tuple[list, list, list]:
+        return [self], [], []
 
     def to_tree(self) -> TreeNode:
         return TreeNode(self.path)
@@ -321,8 +324,8 @@ class IntegerSchema(NumberSchema):
     def test_cases(self) -> list:
         return super().test_cases()
 
-    def get_all_schemas(self) -> list:
-        return [self]
+    def get_all_schemas(self) -> Tuple[list, list, list]:
+        return [self], [], []
 
     def to_tree(self) -> TreeNode:
         return TreeNode(self.path)
@@ -463,18 +466,23 @@ class ObjectSchema(BaseSchema):
             ret.append(TestCase(self.empty_precondition, self.empty_mutator, self.empty_setup))
         return ret
 
-    def get_all_schemas(self) -> list:
+    def get_all_schemas(self) -> Tuple[list, list, list]:
         '''Return all the subschemas as a list'''
-        ret = [self]
+        normal_schemas = [self]
+        pruned_by_overspecified = []
+        pruned_by_copiedover = []
         if self.properties != None:
             for value in self.properties.values():
-                ret.extend(value.get_all_schemas())
+                child_schema_tuple = value.get_all_schemas()
+                normal_schemas.extend(child_schema_tuple[0])
+                pruned_by_overspecified.extend(child_schema_tuple[1])
+                pruned_by_copiedover.extend(child_schema_tuple[2])
         if self.additional_properties != None:
-            ret.append(self.additional_properties)
+            normal_schemas.append(self.additional_properties)
         # if len(ret) > 500:
         #     # XXX: Temporary prune
         #     return []
-        return ret
+        return normal_schemas, pruned_by_overspecified, pruned_by_copiedover
 
     def to_tree(self) -> TreeNode:
         node = TreeNode(self.path)
@@ -607,10 +615,17 @@ class ArraySchema(BaseSchema):
             ret.append(TestCase(self.empty_precondition, self.empty_mutator, self.empty_setup))
         return ret
 
-    def get_all_schemas(self) -> list:
-        ret = [self]
-        ret.extend(self.item_schema.get_all_schemas())
-        return ret
+    def get_all_schemas(self) -> Tuple[list, list, list]:
+        normal_schemas = [self]
+        pruned_by_overspecified = []
+        pruned_by_copiedover = []
+
+        child_schema_tuple = self.item_schema.get_all_schemas()
+        normal_schemas.extend(child_schema_tuple[0])
+        pruned_by_overspecified.extend(child_schema_tuple[1])
+        pruned_by_copiedover.extend(child_schema_tuple[2])
+
+        return normal_schemas, pruned_by_overspecified, pruned_by_copiedover
 
     def to_tree(self) -> TreeNode:
         node = TreeNode(self.path)
@@ -735,8 +750,8 @@ class AnyOfSchema(BaseSchema):
                 ret.extend(testcases)
         return ret
 
-    def get_all_schemas(self) -> list:
-        return [self]
+    def get_all_schemas(self) -> Tuple[list, list, list]:
+        return [self], [], []
 
     def empty_value(self):
         return None
@@ -798,8 +813,8 @@ class BooleanSchema(BaseSchema):
             ret.append(TestCase(self.toggle_on_precondition, self.toggle_on, self.toggle_on_setup))
         return ret
 
-    def get_all_schemas(self) -> list:
-        return [self]
+    def get_all_schemas(self) -> Tuple[list, list, list]:
+        return [self], [], []
 
     def to_tree(self) -> TreeNode:
         return TreeNode(self.path)
@@ -867,8 +882,8 @@ class OpaqueSchema(BaseSchema):
     def test_cases(self):
         return []
 
-    def get_all_schemas(self):
-        return []
+    def get_all_schemas(self) -> Tuple[list, list, list]:
+        return [], [], []
 
     def to_tree(self) -> TreeNode:
         return TreeNode(self.path)

@@ -692,8 +692,7 @@ if __name__ == "__main__":
 
             input_model = InputModel(context['crd']['body'], config.example_dir, 1, 1, [])
 
-            if context['enable_analysis']:
-                input_model.apply_default_value(context['analysis_result']['default_value_map'])
+            input_model.apply_default_value(context['analysis_result']['default_value_map'])
 
             checker = Checker(context=context,
                               trial_dir=trial_dir,

@@ -15,6 +15,7 @@ from value_with_schema import attach_schema_to_value
 from common import random_string
 from thread_logger import get_thread_logger
 
+
 class CustomField:
 
     def __init__(self, path, schema) -> None:
@@ -38,7 +39,21 @@ class CopiedOverField(CustomField):
 
         def get_all_schemas(self) -> list:
             '''Return all the subschemas as a list'''
-            return [self]
+            normal_schemas = [self]
+            pruned_by_overspecified = []
+            pruned_by_copiedover = []
+
+            if self.properties != None:
+                for value in self.properties.values():
+                    child_schema_tuple = value.get_all_schemas()
+                    normal_schemas.add(child_schema_tuple[0].pop())
+                    pruned_by_overspecified.extend(child_schema_tuple[1])
+                    pruned_by_copiedover.extend(child_schema_tuple[0])
+                    pruned_by_copiedover.extend(child_schema_tuple[2])
+            if self.additional_properties != None:
+                normal_schemas.append(self.additional_properties)
+
+            return normal_schemas, pruned_by_overspecified, pruned_by_copiedover
 
         def __str__(self) -> str:
             return 'Children Pruned'
@@ -53,7 +68,84 @@ class CopiedOverField(CustomField):
 
         def get_all_schemas(self) -> list:
             '''Return all the subschemas as a list'''
-            return [self]
+            normal_schemas = [self]
+            pruned_by_overspecified = []
+            pruned_by_copiedover = []
+
+            child_schema_tuple = self.item_schema.get_all_schemas()
+            normal_schemas.add(child_schema_tuple[0].pop())
+            pruned_by_overspecified.extend(child_schema_tuple[1])
+            pruned_by_copiedover.extend(child_schema_tuple[0])
+            pruned_by_copiedover.extend(child_schema_tuple[2])
+
+            return normal_schemas, pruned_by_overspecified, pruned_by_copiedover
+
+        def __str__(self) -> str:
+            return 'Children Pruned'
+
+    def __init__(self, path, array: bool = False) -> None:
+        if array:
+            super().__init__(path, self.PruneChildrenArraySchema)
+        else:
+            super().__init__(path, self.PruneChildrenObjectSchema)
+
+
+class OverSpecifiedField(CustomField):
+    '''For pruning the fields that are simply copied over to other resources
+    
+    All the subfields of this field (excluding this field) will be pruned
+    '''
+
+    class PruneChildrenObjectSchema(ObjectSchema):
+
+        def __init__(self, path: list, schema: dict) -> None:
+            super().__init__(path, schema)
+
+        def __init__(self, schema_obj: BaseSchema) -> None:
+            super().__init__(schema_obj.path, schema_obj.raw_schema)
+
+        def get_all_schemas(self) -> list:
+            '''Return all the subschemas as a list'''
+            normal_schemas = [self]
+            pruned_by_overspecified = []
+            pruned_by_copiedover = []
+
+            if self.properties != None:
+                for value in self.properties.values():
+                    child_schema_tuple = value.get_all_schemas()
+                    normal_schemas.add(child_schema_tuple[0].pop())
+                    pruned_by_overspecified.extend(child_schema_tuple[1])
+                    pruned_by_overspecified.extend(child_schema_tuple[0])
+                    pruned_by_copiedover.extend(child_schema_tuple[2])
+            if self.additional_properties != None:
+                normal_schemas.append(self.additional_properties)
+
+            return normal_schemas, pruned_by_overspecified, pruned_by_copiedover
+
+        def __str__(self) -> str:
+            return 'Children Pruned'
+
+    class PruneChildrenArraySchema(ArraySchema):
+
+        def __init__(self, path: list, schema: dict) -> None:
+            super().__init__(path, schema)
+
+        def __init__(self, schema_obj: BaseSchema) -> None:
+            super().__init__(schema_obj.path, schema_obj.raw_schema)
+
+        def get_all_schemas(self) -> list:
+            '''Return all the subschemas as a list'''
+            normal_schemas = [self]
+            pruned_by_overspecified = []
+            pruned_by_copiedover = []
+
+            child_schema_tuple = self.item_schema.get_all_schemas()
+            normal_schemas.add(child_schema_tuple[0].pop())
+            pruned_by_overspecified.extend(child_schema_tuple[1])
+            pruned_by_overspecified.extend(child_schema_tuple[0])
+            pruned_by_copiedover.extend(child_schema_tuple[2])
+
+            return normal_schemas, pruned_by_overspecified, pruned_by_copiedover
 
         def __str__(self) -> str:
             return 'Children Pruned'
@@ -79,8 +171,8 @@ class ProblematicField(CustomField):
         def __init__(self, schema_obj: BaseSchema) -> None:
             super().__init__(schema_obj.path, schema_obj.raw_schema)
 
-        def get_all_schemas(self) -> list:
-            return []
+        def get_all_schemas(self) -> Tuple[list, list, list]:
+            return [], [], []
 
         def __str__(self):
             return "Field Pruned"
@@ -93,8 +185,8 @@ class ProblematicField(CustomField):
         def __init__(self, schema_obj: BaseSchema) -> None:
             super().__init__(schema_obj.path, schema_obj.raw_schema)
 
-        def get_all_schemas(self) -> list:
-            return []
+        def get_all_schemas(self) -> Tuple[list, list, list]:
+            return [], [], []
 
         def __str__(self):
             return "Field Pruned"
@@ -104,12 +196,22 @@ class ProblematicField(CustomField):
             super().__init__(path, self.PruneEntireArraySchema)
         else:
             super().__init__(path, self.PruneEntireObjectSchema)
-            
+
 
 class InputModel:
 
-    def __init__(self, crd: dict, example_dir: str, num_workers: int, num_cases: int, reproduce_dir: str, mount: list = None) -> None:
-        if mount != None:
+    NORMAL = 'NORMAL'
+    OVERSPECIFIED = 'OVERSPECIFIED'
+    COPIED_OVER = 'COPIED_OVER'
+
+    def __init__(self,
+                 crd: dict,
+                 example_dir: str,
+                 num_workers: int,
+                 num_cases: int,
+                 reproduce_dir: str,
+                 mount: list = None) -> None:
+        if mount is not None:
             self.mount = mount
         else:
             self.mount = ['spec']  # We model the cr.spec as the input
@@ -131,10 +233,20 @@ class InputModel:
         self.num_workers = num_workers
         self.num_cases = num_cases  # number of test cases to run at a time
         self.seed_input = None
-        self.test_plan_partitioned = None
+        self.normal_test_plan_partitioned = None
+        self.overspecified_test_plan_partitioned = None
+        self.copiedover_test_plan_partitioned = None
+
         self.thread_vars = threading.local()
 
-        self.num_total_cases = 0  # to fill in the generate_test_plan function
+        self.metadata = {
+            'normal_schemas': 0,
+            'pruned_by_overspecified': 0,
+            'pruned_by_copied': 0,
+            'num_normal_testcases': 0,
+            'num_overspecified_testcases': 0,
+            'num_copiedover_testcases': 0,
+        }  # to fill in the generate_test_plan function
 
     def initialize(self, initial_value: dict):
         initial_value['metadata']['name'] = 'test-cluster'
@@ -143,14 +255,39 @@ class InputModel:
 
     def set_worker_id(self, id: int):
         '''Claim this thread's id, so that we can split the test plan among threads'''
+
+        if self.thread_vars.id is not None:
+            # Avoid initialize twice
+            return
+
         # Thread local variables
         self.thread_vars.id = id
         # so that we can run the test case itself right after the setup
-        self.thread_vars.test_plan = TestPlan(self.root_schema.to_tree())
+        self.thread_vars.normal_test_plan = TestPlan(self.root_schema.to_tree())
+        self.thread_vars.overspecified_test_plan = TestPlan(self.root_schema.to_tree())
+        self.thread_vars.copiedover_test_plan = TestPlan(self.root_schema.to_tree())
 
-        for key, value in dict(self.test_plan_partitioned[id]).items():
+        for key, value in dict(self.normal_test_plan_partitioned[id]).items():
             path = json.loads(key)
-            self.thread_vars.test_plan.add_testcases_by_path(value, path)
+            self.thread_vars.normal_test_plan.add_testcases_by_path(value, path)
+
+        for key, value in dict(self.overspecified_test_plan_partitioned[id]).items():
+            path = json.loads(key)
+            self.thread_vars.overspecified_test_plan.add_testcases_by_path(value, path)
+
+        for key, value in dict(self.copiedover_test_plan_partitioned[id]).items():
+            path = json.loads(key)
+            self.thread_vars.copiedover_test_plan.add_testcases_by_path(value, path)
+
+    def set_mode(self, mode: str):
+        if mode == 'NORMAL':
+            self.thread_vars.test_plan = self.thread_vars.normal_test_plan
+        elif mode == 'OVERSPECIFIED':
+            self.thread_vars.test_plan = self.thread_vars.overspecified_test_plan
+        elif mode == 'COPIED_OVER':
+            self.thread_vars.test_plan = self.thread_vars.copiedover_test_plan
+        else:
+            raise ValueError(mode)
 
     def is_empty(self):
         '''if test plan is empty'''
@@ -177,37 +314,102 @@ class InputModel:
         '''Generate test plan based on CRD'''
         logger = get_thread_logger(with_prefix=False)
 
-        ret = {}
+        normal_testcases = {}
+        overspecified_testcases = {}
+        copiedover_testcases = {}
+        num_normal_testcases = 0
+        num_overspecified_testcases = 0
+        num_copiedover_testcases = 0
+
         mounted_schema = self.get_schema_by_path(self.mount)
-        schema_list = mounted_schema.get_all_schemas()
-        num_fields = len(schema_list)
-        num_testcases = 0
-        for schema in schema_list:
+        normal_schemas, pruned_by_overspecified, pruned_by_copied = mounted_schema.get_all_schemas()
+        for schema in normal_schemas:
             testcases = schema.test_cases()
             path = json.dumps(schema.path).replace('\"ITEM\"',
                                                    '0').replace('additional_properties',
                                                                 random_string(5))
-            ret[path] = testcases
-            num_testcases += len(testcases)
-        logger.info('Parsed [%d] fields from schema', num_fields)
-        logger.info('Generated [%d] test cases in total', num_testcases)
-        self.num_total_cases = num_testcases
-        self.test_plan = ret
+            normal_testcases[path] = testcases
+            num_normal_testcases += len(testcases)
 
-        test_plan_items = list(self.test_plan.items())
-        random.shuffle(test_plan_items)  # randomize to reduce skewness among workers
-        self.test_plan_partitioned = []
+        for schema in pruned_by_overspecified:
+            testcases = schema.test_cases()
+            path = json.dumps(schema.path).replace('\"ITEM\"',
+                                                   '0').replace('additional_properties',
+                                                                random_string(5))
+            overspecified_testcases[path] = testcases
+            num_overspecified_testcases += len(testcases)
+
+        for schema in pruned_by_overspecified:
+            testcases = schema.test_cases()
+            path = json.dumps(schema.path).replace('\"ITEM\"',
+                                                   '0').replace('additional_properties',
+                                                                random_string(5))
+            copiedover_testcases[path] = testcases
+            num_copiedover_testcases += len(testcases)
+
+        logger.info('Parsed [%d] fields from normal schema' % len(normal_schemas))
+        logger.info('Parsed [%d] fields from over-specified schema' % len(pruned_by_overspecified))
+        logger.info('Parsed [%d] fields from over-specified schema' % len(pruned_by_copied))
+
+        logger.info('Generated [%d] test cases for normal schemas', num_normal_testcases)
+        logger.info('Generated [%d] test cases for overspecified schemas',
+                    num_overspecified_testcases)
+        logger.info('Generated [%d] test cases for copiedover schemas', num_copiedover_testcases)
+
+        self.metadata['normal_schemas'] = len(normal_schemas)
+        self.metadata['pruned_by_overspecified'] = len(pruned_by_overspecified)
+        self.metadata['pruned_by_copied'] = len(pruned_by_copied)
+        self.metadata['num_normal_testcases'] = num_normal_testcases
+        self.metadata['num_overspecified_testcases'] = num_overspecified_testcases
+        self.metadata['num_copiedover_testcases'] = num_copiedover_testcases
+
+        normal_test_plan_items = list(normal_testcases.items())
+        overspecified_test_plan_items = list(overspecified_testcases.items())
+        copiedover_test_plan_items = list(copiedover_testcases.items())
+        random.shuffle(normal_test_plan_items)  # randomize to reduce skewness among workers
+        random.shuffle(overspecified_test_plan_items)
+        random.shuffle(copiedover_test_plan_items)
+
+        # Initialize the three test plans, and assign test cases to them according to the number of
+        # workers
+        self.normal_test_plan_partitioned = []
+        self.overspecified_test_plan_partitioned = []
+        self.copiedover_test_plan_partitioned = []
 
         for i in range(self.num_workers):
-            self.test_plan_partitioned.append([])
+            self.normal_test_plan_partitioned.append([])
+            self.overspecified_test_plan_partitioned.append([])
+            self.copiedover_test_plan_partitioned.append([])
 
-        for i in range(0, len(test_plan_items)):
-            self.test_plan_partitioned[i % self.num_workers].append(test_plan_items[i])
+        for i in range(0, len(normal_test_plan_items)):
+            self.normal_test_plan_partitioned[i % self.num_workers].append(
+                normal_test_plan_items[i])
+
+        for i in range(0, len(overspecified_test_plan_items)):
+            self.overspecified_test_plan_partitioned[i % self.num_workers].append(
+                overspecified_test_plan_items[i])
+
+        for i in range(0, len(copiedover_test_plan_items)):
+            self.copiedover_test_plan_partitioned[i % self.num_workers].append(
+                copiedover_test_plan_items[i])
+
         # appending empty lists to avoid no test cases distributed to certain work nodes
-        assert (self.num_workers == len(self.test_plan_partitioned))
-        assert (sum(len(p) for p in self.test_plan_partitioned) == len(test_plan_items))
+        assert (self.num_workers == len(self.normal_test_plan_partitioned))
+        assert (self.num_workers == len(self.overspecified_test_plan_partitioned))
+        assert (self.num_workers == len(self.copiedover_test_plan_partitioned))
+        assert (sum(
+            len(p) for p in self.normal_test_plan_partitioned) == len(normal_test_plan_items))
+        assert (sum(len(p) for p in self.overspecified_test_plan_partitioned) == len(
+            overspecified_test_plan_items))
+        assert (sum(
+            len(p)
+            for p in self.copiedover_test_plan_partitioned) == len(copiedover_test_plan_items))
 
-        return ret
+        return {
+            'normal_testcases': normal_testcases,
+            'overspecified_testcases': overspecified_testcases,
+            'copiedover_testcases': copiedover_testcases,
+        }
 
     def next_test(self) -> list:
         '''Selects next test case to run from the test plan

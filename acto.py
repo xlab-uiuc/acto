@@ -138,12 +138,18 @@ class TrialRunner:
         self.discarded_testcases = {}  # List of test cases failed to run
         self.apply_testcase_f = apply_testcase_f
 
-    def run(self):
+        self.curr_trial = 0
+
+    def run(self, mode: str = InputModel.NORMAL):
         logger = get_thread_logger(with_prefix=False)
 
         self.input_model.set_worker_id(self.worker_id)
-        curr_trial = 0
         apiclient = None
+
+        self.input_model.set_mode(mode)
+        if mode != InputModel.NORMAL:
+            self.workdir = os.path.join(self.workdir, mode)
+            os.makedirs(self.workdir, exist_ok=True)
 
         while True:
             trial_start_time = time.time()
@@ -159,19 +165,19 @@ class TrialRunner:
 
             add_acto_label(apiclient, self.context)
 
-            trial_dir = os.path.join(self.workdir, 'trial-%02d-%04d' % (self.worker_id, curr_trial))
+            trial_dir = os.path.join(self.workdir, 'trial-%02d-%04d' % (self.worker_id, self.curr_trial))
             os.makedirs(trial_dir, exist_ok=True)
 
-            trial_err, num_tests = self.run_trial(trial_dir=trial_dir, curr_trial=curr_trial)
+            trial_err, num_tests = self.run_trial(trial_dir=trial_dir, curr_trial=self.curr_trial)
             self.snapshots = []
 
             trial_elapsed = time.strftime("%H:%M:%S", time.gmtime(time.time() - trial_start_time))
-            logger.info('Trial %d finished, completed in %s' % (curr_trial, trial_elapsed))
+            logger.info('Trial %d finished, completed in %s' % (self.curr_trial, trial_elapsed))
             logger.info('---------------------------------------\n')
 
             delete_operator_pod(apiclient, self.context['namespace'])
             save_result(trial_dir, trial_err, num_tests, trial_elapsed)
-            curr_trial = curr_trial + 1
+            self.curr_trial = self.curr_trial + 1
 
             if self.input_model.is_empty():
                 logger.info('Test finished')
@@ -645,6 +651,26 @@ class Acto:
         for t in threads:
             t.join()
 
+        normal_time = time.time()
+        threads = []
+        for runner in runners:
+            t = threading.Thread(target=runner.run, args=(InputModel.OVERSPECIFIED))
+            t.start()
+            threads.append(t)
+
+        for t in threads:
+            t.join()
+
+        overspecified_time = time.time()
+        threads = []
+        for runner in runners:
+            t = threading.Thread(target=runner.run, args=(InputModel.COPIED_OVER))
+            t.start()
+            threads.append(t)
+
+        for t in threads:
+            t.join()
+
         end_time = time.time()
 
         num_total_failed = 0
@@ -653,9 +679,11 @@ class Acto:
                 num_total_failed += len(testcases)
 
         testrun_info = {
-            'duration': end_time - start_time,
+            'normal_duration': normal_time - start_time,
+            'overspecified_duration': overspecified_time - normal_time,
+            'copied_over_duration': end_time - overspecified_time,
             'num_workers': self.num_workers,
-            'num_total_testcases': self.input_model.num_total_cases,
+            'num_total_testcases': self.input_model.metadata,
             'num_total_failed': num_total_failed,
         }
         with open(os.path.join(self.workdir_path, 'testrun_info.json'), 'w') as info_file:
