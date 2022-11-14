@@ -645,7 +645,7 @@ class Acto:
                                  self.dryrun, self.is_reproduce, self.apply_testcase_f,
                                  self.feature_gate)
             runners.append(runner)
-            t = threading.Thread(target=runner.run, args=())
+            t = threading.Thread(target=runner.run, args=([]))
             t.start()
             threads.append(t)
 
@@ -655,7 +655,7 @@ class Acto:
         normal_time = time.time()
         threads = []
         for runner in runners:
-            t = threading.Thread(target=runner.run, args=(InputModel.OVERSPECIFIED))
+            t = threading.Thread(target=runner.run, args=([InputModel.OVERSPECIFIED]))
             t.start()
             threads.append(t)
 
@@ -665,7 +665,7 @@ class Acto:
         overspecified_time = time.time()
         threads = []
         for runner in runners:
-            t = threading.Thread(target=runner.run, args=(InputModel.COPIED_OVER))
+            t = threading.Thread(target=runner.run, args=([InputModel.COPIED_OVER]))
             t.start()
             threads.append(t)
 
