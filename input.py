@@ -46,7 +46,7 @@ class CopiedOverField(CustomField):
             if self.properties != None:
                 for value in self.properties.values():
                     child_schema_tuple = value.get_all_schemas()
-                    normal_schemas.add(child_schema_tuple[0].pop())
+                    normal_schemas.append(child_schema_tuple[0].pop())
                     pruned_by_overspecified.extend(child_schema_tuple[1])
                     pruned_by_copiedover.extend(child_schema_tuple[0])
                     pruned_by_copiedover.extend(child_schema_tuple[2])
@@ -73,7 +73,7 @@ class CopiedOverField(CustomField):
             pruned_by_copiedover = []
 
             child_schema_tuple = self.item_schema.get_all_schemas()
-            normal_schemas.add(child_schema_tuple[0].pop())
+            normal_schemas.append(child_schema_tuple[0].pop())
             pruned_by_overspecified.extend(child_schema_tuple[1])
             pruned_by_copiedover.extend(child_schema_tuple[0])
             pruned_by_copiedover.extend(child_schema_tuple[2])
@@ -113,7 +113,7 @@ class OverSpecifiedField(CustomField):
             if self.properties != None:
                 for value in self.properties.values():
                     child_schema_tuple = value.get_all_schemas()
-                    normal_schemas.add(child_schema_tuple[0].pop())
+                    normal_schemas.append(child_schema_tuple[0].pop())
                     pruned_by_overspecified.extend(child_schema_tuple[1])
                     pruned_by_overspecified.extend(child_schema_tuple[0])
                     pruned_by_copiedover.extend(child_schema_tuple[2])
@@ -140,7 +140,7 @@ class OverSpecifiedField(CustomField):
             pruned_by_copiedover = []
 
             child_schema_tuple = self.item_schema.get_all_schemas()
-            normal_schemas.add(child_schema_tuple[0].pop())
+            normal_schemas.append(child_schema_tuple[0].pop())
             pruned_by_overspecified.extend(child_schema_tuple[1])
             pruned_by_overspecified.extend(child_schema_tuple[0])
             pruned_by_copiedover.extend(child_schema_tuple[2])
