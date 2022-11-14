@@ -165,7 +165,8 @@ class TrialRunner:
 
             add_acto_label(apiclient, self.context)
 
-            trial_dir = os.path.join(self.workdir, 'trial-%02d-%04d' % (self.worker_id, self.curr_trial))
+            trial_dir = os.path.join(self.workdir,
+                                     'trial-%02d-%04d' % (self.worker_id, self.curr_trial))
             os.makedirs(trial_dir, exist_ok=True)
 
             trial_err, num_tests = self.run_trial(trial_dir=trial_dir, curr_trial=self.curr_trial)
@@ -744,7 +745,11 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(
         description='Automatic, Continuous Testing for k8s/openshift Operators')
-    parser.add_argument('--workdir', type=str, default=workdir_path, help='Working directory')
+    parser.add_argument('--workdir',
+                        dest='workdir_path',
+                        type=str,
+                        default=workdir_path,
+                        help='Working directory')
     parser.add_argument('--config', '-c', dest='config', help='Operator port config path')
     parser.add_argument(
         '--cluster-runtime',
