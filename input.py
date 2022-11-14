@@ -339,7 +339,7 @@ class InputModel:
             overspecified_testcases[path] = testcases
             num_overspecified_testcases += len(testcases)
 
-        for schema in pruned_by_overspecified:
+        for schema in pruned_by_copied:
             testcases = schema.test_cases()
             path = json.dumps(schema.path).replace('\"ITEM\"',
                                                    '0').replace('additional_properties',
