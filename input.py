@@ -256,7 +256,7 @@ class InputModel:
     def set_worker_id(self, id: int):
         '''Claim this thread's id, so that we can split the test plan among threads'''
 
-        if self.thread_vars.id is not None:
+        if hasattr(self.thread_vars, 'id'):
             # Avoid initialize twice
             return
 
