@@ -1,5 +1,6 @@
 import ctypes
 import json
+import copy
 
 def analyze(project_path: str, seed_type: str, seed_pkg: str) -> dict:
     analysis_lib = ctypes.cdll.LoadLibrary('ssa/libanalysis.so')
@@ -10,7 +11,7 @@ def analyze(project_path: str, seed_type: str, seed_pkg: str) -> dict:
     analysis_result = analyze_func(project_path.encode("utf-8"), seed_type.encode("utf-8"), seed_pkg.encode("utf-8"))
     analysis_result_bytes = ctypes.string_at(analysis_result)
     taint_analysis_result = json.loads(analysis_result_bytes)
-    all_fields = taint_analysis_result['usedPaths']
+    all_fields = copy.deepcopy(taint_analysis_result['usedPaths'])
     tainted_fields = taint_analysis_result['taintedPaths']
     default_value_map = taint_analysis_result['defaultValues']
     field_conditions_list = taint_analysis_result['fieldConditions']
@@ -63,6 +64,7 @@ def analyze(project_path: str, seed_type: str, seed_pkg: str) -> dict:
         field_conditions_map[json.dumps(field_condition_groups['path'][1:])] = new_field_condition_group
 
     analysis_result = {
+        'used_fields': taint_analysis_result['usedPaths'],
         'control_flow_fields': all_fields,
         'default_value_map': default_value_map,
         'field_conditions_map': field_conditions_map,
@@ -82,9 +84,9 @@ def is_subfield(subpath: list, path: list) -> bool:
 
 
 if __name__ == '__main__':
-    print(analyze('/home/tyler/rabbitmq-operator', 'RabbitmqCluster', 'github.com/rabbitmq/cluster-operator/api/v1beta1'))
+    # print(analyze('/home/tyler/rabbitmq-operator', 'RabbitmqCluster', 'github.com/rabbitmq/cluster-operator/api/v1beta1'))
     # print(analyze('/home/tyler/redis-operator/cmd/redisoperator', 'RedisFailover', 'github.com/spotahome/redis-operator/api/redisfailover/v1'))
-    # print(analyze('/home/tyler/cass-operator', 'CassandraDatacenter', 'github.com/k8ssandra/cass-operator/apis/cassandra/v1beta1'))
+    print(analyze('/home/tyler/acto-ops/cass-operator-241e71', 'CassandraDatacenter', 'github.com/k8ssandra/cass-operator/apis/cassandra/v1beta1'))
     # print(analyze('/home/tyler/percona-server-mongodb-operator/cmd/manager', 'PerconaServerMongoDB', 'github.com/percona/percona-server-mongodb-operator/pkg/apis/psmdb/v1'))
     # print(analyze('/home/tyler/zookeeper-operator', 'ZookeeperCluster', 'github.com/pravega/zookeeper-operator/api/v1beta1'))
     # print(analyze('/home/tyler/cockroach-operator/cmd/cockroach-operator', 'CrdbCluster', 'github.com/cockroachdb/cockroach-operator/apis/v1alpha1'))

@@ -1,6 +1,6 @@
 {
       "analysis_result": {
-            "control_flow_fields": [
+            "used_fields": [
                   [
                         "root",
                         "spec"
@@ -11,6 +11,21 @@
                         "defaultBrokerClass"
                   ],
                   [
+                        "root"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "source",
+                        "github",
+                        "enabled"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "source"
+                  ],
+                  [
                         "root",
                         "spec",
                         "sinkBindingSelectionMode"
@@ -18,7 +33,16 @@
                   [
                         "root",
                         "spec",
-                        "source"
+                        "source",
+                        "ceph",
+                        "enabled"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "source",
+                        "redis",
+                        "enabled"
                   ],
                   [
                         "root",
@@ -40,6 +64,41 @@
                         "source",
                         "gitlab",
                         "enabled"
+                  ]
+            ],
+            "control_flow_fields": [
+                  [
+                        "root",
+                        "spec"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "defaultBrokerClass"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "source",
+                        "github",
+                        "enabled"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "source"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "sinkBindingSelectionMode"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "source",
+                        "ceph",
+                        "enabled"
                   ],
                   [
                         "root",
@@ -52,19 +111,44 @@
                         "root",
                         "spec",
                         "source",
-                        "github",
+                        "rabbitmq",
                         "enabled"
                   ],
                   [
                         "root",
                         "spec",
                         "source",
-                        "ceph",
+                        "kafka",
+                        "enabled"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "source",
+                        "gitlab",
                         "enabled"
                   ]
             ],
             "default_value_map": {},
             "field_conditions_map": {
+                  "[\"spec\", \"source\", \"rabbitmq\", \"enabled\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "source"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
                   "[\"spec\", \"source\", \"redis\", \"enabled\"]": {
                         "type": "AND",
                         "conditions": [
@@ -138,24 +222,6 @@
                         ]
                   },
                   "[\"spec\", \"source\", \"kafka\", \"enabled\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "source"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"source\", \"rabbitmq\", \"enabled\"]": {
                         "type": "AND",
                         "conditions": [
                               {

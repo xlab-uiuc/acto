@@ -9,8 +9,6 @@ spec:
   selector:
     matchLabels:
       app: redisoperator
-  strategy:
-    type: RollingUpdate
   template:
     metadata:
       labels:
@@ -18,7 +16,7 @@ spec:
     spec:
       serviceAccountName: redisoperator
       containers:
-        - image: docker.io/tylergu1998/redis-operator:test
+        - image: tylergu1998/redis-operator:test
           imagePullPolicy: IfNotPresent
           name: app
           resources:
@@ -31,7 +29,6 @@ spec:
           volumeMounts:
           - mountPath: /tmp/profile
             name: profile-dir
-      restartPolicy: Always
       securityContext:
         runAsUser: 0
         fsGroup: 0

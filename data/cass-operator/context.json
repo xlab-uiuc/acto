@@ -6837,51 +6837,45 @@
       },
       "preload_images": [
             "quay.io/jetstack/cert-manager-webhook:v1.7.1",
-            "docker.io/k8ssandra/cass-management-api:3.11.7",
+            "quay.io/jetstack/cert-manager-controller:v1.7.1",
+            "quay.io/jetstack/cert-manager-cainjector:v1.7.1",
+            "docker.io/k8ssandra/system-logger:v1.10.3",
             "docker.io/datastax/cass-config-builder:1.0.4-ubi7",
             "docker.io/k8ssandra/cass-operator:v1.10.3",
-            "quay.io/jetstack/cert-manager-cainjector:v1.7.1",
-            "quay.io/jetstack/cert-manager-controller:v1.7.1",
-            "docker.io/k8ssandra/system-logger:v1.10.3"
+            "docker.io/k8ssandra/cass-management-api:3.11.7"
       ],
       "analysis_result": {
-            "control_flow_fields": [
+            "used_fields": [
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec"
+                  ],
                   [
                         "root",
                         "spec",
                         "podTemplateSpec",
+                        "metadata",
+                        "annotations"
+                  ],
+                  [
+                        "root",
                         "spec",
-                        "containers",
+                        "podTemplateSpec",
+                        "metadata",
+                        "labels"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "racks",
                         "INDEX",
-                        "image"
+                        "nodeAffinityLabels"
                   ],
                   [
                         "root",
                         "spec",
-                        "systemLoggerImage"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "dockerImageRunsAsCassandra"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "podTemplateSpec",
-                        "spec",
-                        "initContainers"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "nodeSelector"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "dseWorkloads",
-                        "analyticsEnabled"
+                        "nodeAffinityLabels"
                   ],
                   [
                         "root",
@@ -6890,51 +6884,26 @@
                         "spec",
                         "containers",
                         "INDEX",
-                        "readinessProbe",
-                        "httpGet"
+                        "lifecycle"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "config"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "serverVersion"
                   ],
                   [
                         "root",
                         "spec",
                         "podTemplateSpec",
                         "spec",
-                        "imagePullSecrets"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "podTemplateSpec",
-                        "spec",
-                        "volumes"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "podTemplateSpec",
-                        "spec",
-                        "containers",
+                        "initContainers",
                         "INDEX",
-                        "name"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "podTemplateSpec",
-                        "spec",
-                        "containers",
-                        "INDEX",
-                        "ports",
-                        "INDEX"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "dseWorkloads"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "serverType"
+                        "imagePullPolicy"
                   ],
                   [
                         "root",
@@ -6954,19 +6923,262 @@
                   [
                         "root",
                         "spec",
-                        "configBuilderResources",
-                        "limits"
+                        "configSecret"
+                  ],
+                  [
+                        "root"
                   ],
                   [
                         "root",
                         "spec",
-                        "systemLoggerResources",
-                        "limits"
+                        "additionalServiceConfig",
+                        "additionalSeedService",
+                        "additionalLabels"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "additionalServiceConfig",
+                        "seedService",
+                        "additionalLabels"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "additionalServiceConfig",
+                        "allpodsService",
+                        "additionalLabels"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "additionalServiceConfig",
+                        "dcService",
+                        "additionalLabels"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "additionalServiceConfig",
+                        "nodePortService",
+                        "additionalLabels"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "serverImage"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "livenessProbe",
+                        "tcpSocket"
                   ],
                   [
                         "root",
                         "spec",
                         "configBuilderImage"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "storageConfig",
+                        "cassandraDataVolumeClaimSpec",
+                        "accessModes"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "clusterName"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "additionalServiceConfig",
+                        "additionalSeedService",
+                        "additionalAnnotations"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "additionalServiceConfig",
+                        "seedService",
+                        "additionalAnnotations"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "additionalServiceConfig",
+                        "allpodsService",
+                        "additionalAnnotations"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "additionalServiceConfig",
+                        "dcService",
+                        "additionalAnnotations"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "additionalServiceConfig",
+                        "nodePortService",
+                        "additionalAnnotations"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "racks",
+                        "INDEX",
+                        "name"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "networking",
+                        "nodePort",
+                        "native"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "networking",
+                        "nodePort",
+                        "nativeSSL"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "managementApiAuth",
+                        "manual"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "volumes"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "initContainers",
+                        "INDEX",
+                        "env"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "additionalSeeds"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "serviceAccount"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "readinessProbe"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "nodeSelector"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "allowMultipleNodesPerWorker"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "name"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "affinity"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "env"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "serverType"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "additionalSeeds",
+                        "INDEX"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "superuserSecretName"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "storageConfig",
+                        "additionalVolumes",
+                        "INDEX"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "securityContext"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "size"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "initContainers"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "racks"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "storageConfig",
+                        "cassandraDataVolumeClaimSpec"
                   ],
                   [
                         "root",
@@ -6979,8 +7191,147 @@
                   [
                         "root",
                         "spec",
+                        "dseWorkloads"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "volumes",
+                        "INDEX"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "racks",
+                        "INDEX"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "dseWorkloads",
+                        "analyticsEnabled"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "storageConfig",
+                        "additionalVolumes"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "dockerImageRunsAsCassandra"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "networking",
+                        "nodePort",
+                        "internode"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "dseWorkloads",
+                        "graphEnabled"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "resources"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "storageConfig",
+                        "additionalVolumes",
+                        "INDEX",
+                        "mountPath"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "networking",
+                        "hostNetwork"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "systemLoggerResources",
+                        "requests"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "configBuilderResources",
+                        "requests"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "systemLoggerImage"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "initContainers",
+                        "INDEX",
+                        "name"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "networking",
+                        "nodePort",
+                        "internodeSSL"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "racks",
+                        "INDEX",
+                        "zone"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "additionalLabels"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "replaceNodes"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "initContainers",
+                        "INDEX"
+                  ],
+                  [
+                        "root",
+                        "spec",
                         "resources",
-                        "limits"
+                        "requests"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "replaceNodes",
+                        "INDEX"
                   ],
                   [
                         "root",
@@ -6989,12 +7340,24 @@
                         "spec",
                         "containers",
                         "INDEX",
-                        "livenessProbe"
+                        "ports",
+                        "INDEX"
                   ],
                   [
                         "root",
                         "spec",
-                        "serverImage"
+                        "podTemplateSpec",
+                        "spec",
+                        "hostNetwork"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "image"
                   ],
                   [
                         "root",
@@ -7009,7 +7372,34 @@
                         "spec",
                         "containers",
                         "INDEX",
-                        "readinessProbe"
+                        "readinessProbe",
+                        "tcpSocket"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "systemLoggerResources",
+                        "limits"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "configBuilderResources",
+                        "limits"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "canaryUpgrade"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "livenessProbe"
                   ],
                   [
                         "root",
@@ -7017,6 +7407,134 @@
                         "podTemplateSpec",
                         "spec",
                         "initContainers",
+                        "INDEX",
+                        "image"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "storageConfig",
+                        "cassandraDataVolumeClaimSpec",
+                        "storageClassName"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "lifecycle",
+                        "preStop"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "stopped"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "terminationGracePeriodSeconds"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "initContainers",
+                        "INDEX",
+                        "resources"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "systemLoggerResources"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "configBuilderResources"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "storageConfig",
+                        "additionalVolumes",
+                        "INDEX",
+                        "pvcSpec"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "networking"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "resources"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "rollingRestartRequested"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "tolerations"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "volumeMounts",
+                        "INDEX"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "initContainers",
+                        "INDEX",
+                        "volumeMounts",
+                        "INDEX"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "users",
+                        "INDEX",
+                        "secretName"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "dnsPolicy"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "users"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "volumes",
                         "INDEX",
                         "name"
                   ],
@@ -7027,58 +7545,33 @@
                         "spec",
                         "containers",
                         "INDEX",
-                        "env"
+                        "readinessProbe",
+                        "httpGet"
                   ],
                   [
                         "root",
                         "spec",
-                        "dseWorkloads",
-                        "graphEnabled"
+                        "storageConfig"
                   ],
                   [
                         "root",
                         "spec",
-                        "forceUpgradeRacks"
+                        "storageConfig",
+                        "additionalVolumes",
+                        "INDEX",
+                        "name"
                   ],
                   [
                         "root",
                         "spec",
-                        "tolerations"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "canaryUpgrade"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "stopped"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "networking",
-                        "hostNetwork"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "config"
+                        "canaryUpgradeCount"
                   ],
                   [
                         "root",
                         "spec",
                         "podTemplateSpec",
                         "spec",
-                        "initContainers",
-                        "INDEX",
-                        "env"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "allowMultipleNodesPerWorker"
+                        "serviceAccountName"
                   ],
                   [
                         "root",
@@ -7087,56 +7580,8 @@
                         "spec",
                         "containers",
                         "INDEX",
-                        "ports"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "podTemplateSpec",
-                        "spec",
-                        "securityContext"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "serviceAccount"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "podTemplateSpec",
-                        "spec",
-                        "containers"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "podTemplateSpec",
-                        "spec",
-                        "affinity"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "resources"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "podTemplateSpec",
-                        "spec",
-                        "initContainers",
-                        "INDEX",
-                        "volumeMounts"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "podTemplateSpec",
-                        "spec",
-                        "containers",
-                        "INDEX",
-                        "resources"
+                        "livenessProbe",
+                        "exec"
                   ],
                   [
                         "root",
@@ -7156,84 +7601,6 @@
                         "spec",
                         "containers",
                         "INDEX",
-                        "volumeMounts",
-                        "INDEX"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "podTemplateSpec",
-                        "spec",
-                        "initContainers",
-                        "INDEX",
-                        "volumeMounts",
-                        "INDEX"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "podTemplateSpec",
-                        "spec",
-                        "initContainers",
-                        "INDEX",
-                        "image"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "podTemplateSpec",
-                        "spec",
-                        "dnsPolicy"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "resources",
-                        "requests"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "configBuilderResources"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "systemLoggerResources"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "podTemplateSpec",
-                        "spec",
-                        "containers",
-                        "INDEX",
-                        "lifecycle"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "podTemplateSpec",
-                        "spec",
-                        "serviceAccountName"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "podTemplateSpec",
-                        "spec",
-                        "containers",
-                        "INDEX",
-                        "lifecycle",
-                        "preStop"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "podTemplateSpec",
-                        "spec",
-                        "containers",
-                        "INDEX",
                         "env",
                         "INDEX",
                         "name"
@@ -7254,9 +7621,12 @@
                         "spec",
                         "podTemplateSpec",
                         "spec",
-                        "initContainers",
-                        "INDEX",
-                        "imagePullPolicy"
+                        "nodeSelector"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "forceUpgradeRacks"
                   ],
                   [
                         "root",
@@ -7264,12 +7634,21 @@
                         "podTemplateSpec",
                         "spec",
                         "initContainers",
-                        "INDEX"
+                        "INDEX",
+                        "volumeMounts"
                   ],
                   [
                         "root",
                         "spec",
-                        "disableSystemLoggerSidecar"
+                        "podTemplateSpec",
+                        "spec",
+                        "imagePullSecrets"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "networking",
+                        "nodePort"
                   ],
                   [
                         "root",
@@ -7278,8 +7657,18 @@
                         "spec",
                         "containers",
                         "INDEX",
-                        "env",
-                        "INDEX"
+                        "ports"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "volumeMounts",
+                        "INDEX",
+                        "name"
                   ],
                   [
                         "root",
@@ -7288,13 +7677,9 @@
                         "spec",
                         "initContainers",
                         "INDEX",
-                        "env",
-                        "INDEX"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "rollingRestartRequested"
+                        "volumeMounts",
+                        "INDEX",
+                        "name"
                   ],
                   [
                         "root",
@@ -7309,8 +7694,17 @@
                         "spec",
                         "containers",
                         "INDEX",
-                        "livenessProbe",
-                        "exec"
+                        "imagePullPolicy"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "env",
+                        "INDEX"
                   ],
                   [
                         "root",
@@ -7319,7 +7713,296 @@
                         "spec",
                         "initContainers",
                         "INDEX",
+                        "env",
+                        "INDEX"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "livenessProbe",
+                        "httpGet"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "disableSystemLoggerSidecar"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "resources",
+                        "limits"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "tolerations"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "readinessProbe",
+                        "exec"
+                  ]
+            ],
+            "control_flow_fields": [
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "lifecycle"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "config"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "initContainers",
+                        "INDEX",
+                        "imagePullPolicy"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "managementApiAuth",
+                        "insecure"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "volumeMounts"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "serverImage"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "livenessProbe",
+                        "tcpSocket"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "configBuilderImage"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "volumes"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "initContainers",
+                        "INDEX",
+                        "env"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "serviceAccount"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "readinessProbe"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "nodeSelector"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "allowMultipleNodesPerWorker"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "name"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "affinity"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "env"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "serverType"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "securityContext"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "initContainers"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "dseWorkloads"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "volumes",
+                        "INDEX"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "dseWorkloads",
+                        "analyticsEnabled"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "dockerImageRunsAsCassandra"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "dseWorkloads",
+                        "graphEnabled"
+                  ],
+                  [
+                        "root",
+                        "spec",
                         "resources"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "networking",
+                        "hostNetwork"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "systemLoggerResources",
+                        "requests"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "configBuilderResources",
+                        "requests"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "systemLoggerImage"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "initContainers",
+                        "INDEX",
+                        "name"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "initContainers",
+                        "INDEX"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "resources",
+                        "requests"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "ports",
+                        "INDEX"
                   ],
                   [
                         "root",
@@ -7335,6 +8018,271 @@
                         "spec",
                         "containers",
                         "INDEX",
+                        "image"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "dseWorkloads",
+                        "searchEnabled"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "readinessProbe",
+                        "tcpSocket"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "systemLoggerResources",
+                        "limits"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "configBuilderResources",
+                        "limits"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "canaryUpgrade"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "livenessProbe"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "initContainers",
+                        "INDEX",
+                        "image"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "lifecycle",
+                        "preStop"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "stopped"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "terminationGracePeriodSeconds"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "initContainers",
+                        "INDEX",
+                        "resources"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "systemLoggerResources"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "configBuilderResources"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "resources"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "rollingRestartRequested"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "tolerations"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "volumeMounts",
+                        "INDEX"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "initContainers",
+                        "INDEX",
+                        "volumeMounts",
+                        "INDEX"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "users",
+                        "INDEX",
+                        "secretName"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "dnsPolicy"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "users"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "volumes",
+                        "INDEX",
+                        "name"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "readinessProbe",
+                        "httpGet"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "serviceAccountName"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "livenessProbe",
+                        "exec"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "ports",
+                        "INDEX",
+                        "name"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "env",
+                        "INDEX",
+                        "name"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "initContainers",
+                        "INDEX",
+                        "env",
+                        "INDEX",
+                        "name"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "nodeSelector"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "forceUpgradeRacks"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "initContainers",
+                        "INDEX",
+                        "volumeMounts"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "imagePullSecrets"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
+                        "ports"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "containers",
+                        "INDEX",
                         "volumeMounts",
                         "INDEX",
                         "name"
@@ -7354,13 +8302,7 @@
                         "root",
                         "spec",
                         "users",
-                        "INDEX",
-                        "secretName"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "users"
+                        "INDEX"
                   ],
                   [
                         "root",
@@ -7376,45 +8318,20 @@
                         "spec",
                         "podTemplateSpec",
                         "spec",
-                        "tolerations"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "podTemplateSpec",
-                        "spec",
-                        "volumes",
-                        "INDEX",
-                        "name"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "podTemplateSpec",
-                        "spec",
-                        "terminationGracePeriodSeconds"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "configBuilderResources",
-                        "requests"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "systemLoggerResources",
-                        "requests"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "podTemplateSpec",
-                        "spec",
                         "containers",
                         "INDEX",
-                        "livenessProbe",
-                        "tcpSocket"
+                        "env",
+                        "INDEX"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "podTemplateSpec",
+                        "spec",
+                        "initContainers",
+                        "INDEX",
+                        "env",
+                        "INDEX"
                   ],
                   [
                         "root",
@@ -7429,9 +8346,20 @@
                   [
                         "root",
                         "spec",
+                        "disableSystemLoggerSidecar"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "resources",
+                        "limits"
+                  ],
+                  [
+                        "root",
+                        "spec",
                         "podTemplateSpec",
                         "spec",
-                        "nodeSelector"
+                        "tolerations"
                   ],
                   [
                         "root",
@@ -7442,321 +8370,10 @@
                         "INDEX",
                         "readinessProbe",
                         "exec"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "podTemplateSpec",
-                        "spec",
-                        "containers",
-                        "INDEX",
-                        "readinessProbe",
-                        "tcpSocket"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "podTemplateSpec",
-                        "spec",
-                        "volumes",
-                        "INDEX"
                   ]
             ],
             "default_value_map": {},
             "field_conditions_map": {
-                  "[\"spec\", \"additionalServiceConfig\", \"dcService\", \"additionalLabels\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "additionalServiceConfig",
-                                                      "dcService",
-                                                      "additionalLabels"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "additionalServiceConfig",
-                                                      "allpodsService",
-                                                      "additionalLabels"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "additionalServiceConfig",
-                                                      "nodePortService",
-                                                      "additionalLabels"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "additionalServiceConfig",
-                                                      "additionalSeedService",
-                                                      "additionalLabels"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "additionalServiceConfig",
-                                                      "seedService",
-                                                      "additionalLabels"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"podTemplateSpec\", \"spec\", \"volumes\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "podTemplateSpec",
-                                                      "spec",
-                                                      "containers",
-                                                      "INDEX"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"resources\", \"limits\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "dseWorkloads",
-                                                      "searchEnabled"
-                                                ],
-                                                "op": "!=",
-                                                "value": true
-                                          }
-                                    ]
-                              },
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "allowMultipleNodesPerWorker"
-                                                ],
-                                                "op": "==",
-                                                "value": true
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"additionalServiceConfig\", \"additionalSeedService\", \"additionalAnnotations\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "additionalServiceConfig",
-                                                      "dcService",
-                                                      "additionalAnnotations"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "additionalServiceConfig",
-                                                      "allpodsService",
-                                                      "additionalAnnotations"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "additionalServiceConfig",
-                                                      "nodePortService",
-                                                      "additionalAnnotations"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "additionalServiceConfig",
-                                                      "additionalSeedService",
-                                                      "additionalAnnotations"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "additionalServiceConfig",
-                                                      "seedService",
-                                                      "additionalAnnotations"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"podTemplateSpec\", \"spec\", \"containers\", \"INDEX\", \"env\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "podTemplateSpec",
-                                                      "spec",
-                                                      "containers",
-                                                      "INDEX"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"additionalServiceConfig\", \"dcService\", \"additionalAnnotations\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "additionalServiceConfig",
-                                                      "dcService",
-                                                      "additionalAnnotations"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "additionalServiceConfig",
-                                                      "allpodsService",
-                                                      "additionalAnnotations"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "additionalServiceConfig",
-                                                      "nodePortService",
-                                                      "additionalAnnotations"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "additionalServiceConfig",
-                                                      "additionalSeedService",
-                                                      "additionalAnnotations"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "additionalServiceConfig",
-                                                      "seedService",
-                                                      "additionalAnnotations"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"dseWorkloads\", \"searchEnabled\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "dseWorkloads"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"podTemplateSpec\", \"spec\", \"containers\", \"INDEX\", \"volumeMounts\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "podTemplateSpec",
-                                                      "spec",
-                                                      "containers",
-                                                      "INDEX"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
                   "[\"spec\", \"systemLoggerImage\"]": {
                         "type": "AND",
                         "conditions": [
@@ -7787,7 +8404,47 @@
                               }
                         ]
                   },
-                  "[\"spec\", \"additionalServiceConfig\", \"additionalSeedService\", \"additionalLabels\"]": {
+                  "[\"spec\", \"allowMultipleNodesPerWorker\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "dseWorkloads",
+                                                      "searchEnabled"
+                                                ],
+                                                "op": "!=",
+                                                "value": true
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"podTemplateSpec\", \"spec\", \"containers\", \"INDEX\", \"env\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "podTemplateSpec",
+                                                      "spec",
+                                                      "containers",
+                                                      "INDEX"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"additionalServiceConfig\", \"seedService\", \"additionalAnnotations\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -7797,7 +8454,251 @@
                                                 "field": [
                                                       "spec",
                                                       "additionalServiceConfig",
+                                                      "additionalSeedService",
+                                                      "additionalAnnotations"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "additionalServiceConfig",
+                                                      "seedService",
+                                                      "additionalAnnotations"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "additionalServiceConfig",
+                                                      "allpodsService",
+                                                      "additionalAnnotations"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "additionalServiceConfig",
                                                       "dcService",
+                                                      "additionalAnnotations"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "additionalServiceConfig",
+                                                      "nodePortService",
+                                                      "additionalAnnotations"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"dseWorkloads\", \"analyticsEnabled\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "dseWorkloads"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"dseWorkloads\", \"searchEnabled\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "dseWorkloads"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"nodeSelector\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "storageConfig",
+                                                      "cassandraDataVolumeClaimSpec"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"podTemplateSpec\", \"spec\", \"volumes\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "podTemplateSpec",
+                                                      "spec",
+                                                      "containers",
+                                                      "INDEX"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"managementApiAuth\", \"manual\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "managementApiAuth",
+                                                      "manual"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"additionalServiceConfig\", \"allpodsService\", \"additionalAnnotations\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "additionalServiceConfig",
+                                                      "additionalSeedService",
+                                                      "additionalAnnotations"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "additionalServiceConfig",
+                                                      "seedService",
+                                                      "additionalAnnotations"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "additionalServiceConfig",
+                                                      "allpodsService",
+                                                      "additionalAnnotations"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "additionalServiceConfig",
+                                                      "dcService",
+                                                      "additionalAnnotations"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "additionalServiceConfig",
+                                                      "nodePortService",
+                                                      "additionalAnnotations"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"tolerations\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "storageConfig",
+                                                      "cassandraDataVolumeClaimSpec"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"additionalServiceConfig\", \"dcService\", \"additionalLabels\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "additionalServiceConfig",
+                                                      "additionalSeedService",
+                                                      "additionalLabels"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "additionalServiceConfig",
+                                                      "seedService",
                                                       "additionalLabels"
                                                 ],
                                                 "op": "!=",
@@ -7817,12 +8718,32 @@
                                                 "field": [
                                                       "spec",
                                                       "additionalServiceConfig",
-                                                      "nodePortService",
+                                                      "dcService",
                                                       "additionalLabels"
                                                 ],
                                                 "op": "!=",
                                                 "value": null
                                           },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "additionalServiceConfig",
+                                                      "nodePortService",
+                                                      "additionalLabels"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"additionalServiceConfig\", \"seedService\", \"additionalLabels\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
                                           {
                                                 "field": [
                                                       "spec",
@@ -7838,6 +8759,36 @@
                                                       "spec",
                                                       "additionalServiceConfig",
                                                       "seedService",
+                                                      "additionalLabels"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "additionalServiceConfig",
+                                                      "allpodsService",
+                                                      "additionalLabels"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "additionalServiceConfig",
+                                                      "dcService",
+                                                      "additionalLabels"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "additionalServiceConfig",
+                                                      "nodePortService",
                                                       "additionalLabels"
                                                 ],
                                                 "op": "!=",
@@ -7879,7 +8830,7 @@
                               }
                         ]
                   },
-                  "[\"spec\", \"additionalServiceConfig\", \"allpodsService\", \"additionalAnnotations\"]": {
+                  "[\"spec\", \"additionalServiceConfig\", \"additionalSeedService\", \"additionalLabels\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -7889,38 +8840,8 @@
                                                 "field": [
                                                       "spec",
                                                       "additionalServiceConfig",
-                                                      "dcService",
-                                                      "additionalAnnotations"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "additionalServiceConfig",
-                                                      "allpodsService",
-                                                      "additionalAnnotations"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "additionalServiceConfig",
-                                                      "nodePortService",
-                                                      "additionalAnnotations"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "additionalServiceConfig",
                                                       "additionalSeedService",
-                                                      "additionalAnnotations"
+                                                      "additionalLabels"
                                                 ],
                                                 "op": "!=",
                                                 "value": null
@@ -7930,7 +8851,37 @@
                                                       "spec",
                                                       "additionalServiceConfig",
                                                       "seedService",
-                                                      "additionalAnnotations"
+                                                      "additionalLabels"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "additionalServiceConfig",
+                                                      "allpodsService",
+                                                      "additionalLabels"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "additionalServiceConfig",
+                                                      "dcService",
+                                                      "additionalLabels"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "additionalServiceConfig",
+                                                      "nodePortService",
+                                                      "additionalLabels"
                                                 ],
                                                 "op": "!=",
                                                 "value": null
@@ -7939,7 +8890,67 @@
                               }
                         ]
                   },
-                  "[\"spec\", \"nodeSelector\"]": {
+                  "[\"spec\", \"additionalServiceConfig\", \"nodePortService\", \"additionalLabels\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "additionalServiceConfig",
+                                                      "additionalSeedService",
+                                                      "additionalLabels"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "additionalServiceConfig",
+                                                      "seedService",
+                                                      "additionalLabels"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "additionalServiceConfig",
+                                                      "allpodsService",
+                                                      "additionalLabels"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "additionalServiceConfig",
+                                                      "dcService",
+                                                      "additionalLabels"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "additionalServiceConfig",
+                                                      "nodePortService",
+                                                      "additionalLabels"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"podTemplateSpec\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -7958,7 +8969,7 @@
                               }
                         ]
                   },
-                  "[\"spec\", \"additionalServiceConfig\", \"nodePortService\", \"additionalAnnotations\"]": {
+                  "[\"spec\", \"additionalServiceConfig\", \"allpodsService\", \"additionalLabels\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -7968,8 +8979,18 @@
                                                 "field": [
                                                       "spec",
                                                       "additionalServiceConfig",
-                                                      "dcService",
-                                                      "additionalAnnotations"
+                                                      "additionalSeedService",
+                                                      "additionalLabels"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "additionalServiceConfig",
+                                                      "seedService",
+                                                      "additionalLabels"
                                                 ],
                                                 "op": "!=",
                                                 "value": null
@@ -7979,7 +9000,17 @@
                                                       "spec",
                                                       "additionalServiceConfig",
                                                       "allpodsService",
-                                                      "additionalAnnotations"
+                                                      "additionalLabels"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "additionalServiceConfig",
+                                                      "dcService",
+                                                      "additionalLabels"
                                                 ],
                                                 "op": "!=",
                                                 "value": null
@@ -7989,11 +9020,42 @@
                                                       "spec",
                                                       "additionalServiceConfig",
                                                       "nodePortService",
-                                                      "additionalAnnotations"
+                                                      "additionalLabels"
                                                 ],
                                                 "op": "!=",
                                                 "value": null
-                                          },
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"podTemplateSpec\", \"spec\", \"containers\", \"INDEX\", \"volumeMounts\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "podTemplateSpec",
+                                                      "spec",
+                                                      "containers",
+                                                      "INDEX"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"additionalServiceConfig\", \"dcService\", \"additionalAnnotations\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
                                           {
                                                 "field": [
                                                       "spec",
@@ -8013,44 +9075,35 @@
                                                 ],
                                                 "op": "!=",
                                                 "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"allowMultipleNodesPerWorker\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
+                                          },
                                           {
                                                 "field": [
                                                       "spec",
-                                                      "dseWorkloads",
-                                                      "searchEnabled"
+                                                      "additionalServiceConfig",
+                                                      "allpodsService",
+                                                      "additionalAnnotations"
                                                 ],
                                                 "op": "!=",
-                                                "value": true
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"dockerImageRunsAsCassandra\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
+                                                "value": null
+                                          },
                                           {
                                                 "field": [
                                                       "spec",
-                                                      "podTemplateSpec",
-                                                      "spec",
-                                                      "securityContext"
+                                                      "additionalServiceConfig",
+                                                      "dcService",
+                                                      "additionalAnnotations"
                                                 ],
-                                                "op": "==",
+                                                "op": "!=",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "additionalServiceConfig",
+                                                      "nodePortService",
+                                                      "additionalAnnotations"
+                                                ],
+                                                "op": "!=",
                                                 "value": null
                                           }
                                     ]
@@ -8075,71 +9128,9 @@
                               }
                         ]
                   },
-                  "[\"spec\", \"dseWorkloads\", \"analyticsEnabled\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "dseWorkloads"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"configBuilderImage\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "podTemplateSpec",
-                                                      "spec",
-                                                      "initContainers",
-                                                      "INDEX",
-                                                      "image"
-                                                ],
-                                                "op": "==",
-                                                "value": "\"\""
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "configBuilderImage"
-                                                ],
-                                                "op": "==",
-                                                "value": "\"\""
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
                   "[\"spec\", \"storageConfig\", \"cassandraDataVolumeClaimSpec\", \"accessModes\"]": {
                         "type": "AND",
                         "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "storageConfig",
-                                                      "cassandraDataVolumeClaimSpec"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              },
                               {
                                     "type": "OR",
                                     "conditions": [
@@ -8152,6 +9143,20 @@
                                                 ],
                                                 "op": "!=",
                                                 "value": "\"\""
+                                          }
+                                    ]
+                              },
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "storageConfig",
+                                                      "cassandraDataVolumeClaimSpec"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
                                           }
                                     ]
                               },
@@ -8191,7 +9196,7 @@
                               }
                         ]
                   },
-                  "[\"spec\", \"additionalServiceConfig\", \"allpodsService\", \"additionalLabels\"]": {
+                  "[\"spec\", \"dockerImageRunsAsCassandra\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -8200,58 +9205,18 @@
                                           {
                                                 "field": [
                                                       "spec",
-                                                      "additionalServiceConfig",
-                                                      "dcService",
-                                                      "additionalLabels"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          },
-                                          {
-                                                "field": [
+                                                      "podTemplateSpec",
                                                       "spec",
-                                                      "additionalServiceConfig",
-                                                      "allpodsService",
-                                                      "additionalLabels"
+                                                      "securityContext"
                                                 ],
-                                                "op": "!=",
-                                                "value": null
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "additionalServiceConfig",
-                                                      "nodePortService",
-                                                      "additionalLabels"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "additionalServiceConfig",
-                                                      "additionalSeedService",
-                                                      "additionalLabels"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "additionalServiceConfig",
-                                                      "seedService",
-                                                      "additionalLabels"
-                                                ],
-                                                "op": "!=",
+                                                "op": "==",
                                                 "value": null
                                           }
                                     ]
                               }
                         ]
                   },
-                  "[\"spec\", \"additionalServiceConfig\", \"nodePortService\", \"additionalLabels\"]": {
+                  "[\"spec\", \"additionalServiceConfig\", \"additionalSeedService\", \"additionalAnnotations\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -8261,38 +9226,8 @@
                                                 "field": [
                                                       "spec",
                                                       "additionalServiceConfig",
-                                                      "dcService",
-                                                      "additionalLabels"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "additionalServiceConfig",
-                                                      "allpodsService",
-                                                      "additionalLabels"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "additionalServiceConfig",
-                                                      "nodePortService",
-                                                      "additionalLabels"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "additionalServiceConfig",
                                                       "additionalSeedService",
-                                                      "additionalLabels"
+                                                      "additionalAnnotations"
                                                 ],
                                                 "op": "!=",
                                                 "value": null
@@ -8302,26 +9237,6 @@
                                                       "spec",
                                                       "additionalServiceConfig",
                                                       "seedService",
-                                                      "additionalLabels"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"additionalServiceConfig\", \"seedService\", \"additionalAnnotations\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "additionalServiceConfig",
-                                                      "dcService",
                                                       "additionalAnnotations"
                                                 ],
                                                 "op": "!=",
@@ -8341,27 +9256,17 @@
                                                 "field": [
                                                       "spec",
                                                       "additionalServiceConfig",
+                                                      "dcService",
+                                                      "additionalAnnotations"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "additionalServiceConfig",
                                                       "nodePortService",
-                                                      "additionalAnnotations"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "additionalServiceConfig",
-                                                      "additionalSeedService",
-                                                      "additionalAnnotations"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "additionalServiceConfig",
-                                                      "seedService",
                                                       "additionalAnnotations"
                                                 ],
                                                 "op": "!=",
@@ -8390,7 +9295,7 @@
                               }
                         ]
                   },
-                  "[\"spec\", \"additionalServiceConfig\", \"seedService\", \"additionalLabels\"]": {
+                  "[\"spec\", \"additionalServiceConfig\", \"nodePortService\", \"additionalAnnotations\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -8400,38 +9305,8 @@
                                                 "field": [
                                                       "spec",
                                                       "additionalServiceConfig",
-                                                      "dcService",
-                                                      "additionalLabels"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "additionalServiceConfig",
-                                                      "allpodsService",
-                                                      "additionalLabels"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "additionalServiceConfig",
-                                                      "nodePortService",
-                                                      "additionalLabels"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          },
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "additionalServiceConfig",
                                                       "additionalSeedService",
-                                                      "additionalLabels"
+                                                      "additionalAnnotations"
                                                 ],
                                                 "op": "!=",
                                                 "value": null
@@ -8441,7 +9316,37 @@
                                                       "spec",
                                                       "additionalServiceConfig",
                                                       "seedService",
-                                                      "additionalLabels"
+                                                      "additionalAnnotations"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "additionalServiceConfig",
+                                                      "allpodsService",
+                                                      "additionalAnnotations"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "additionalServiceConfig",
+                                                      "dcService",
+                                                      "additionalAnnotations"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "additionalServiceConfig",
+                                                      "nodePortService",
+                                                      "additionalAnnotations"
                                                 ],
                                                 "op": "!=",
                                                 "value": null
@@ -8450,7 +9355,7 @@
                               }
                         ]
                   },
-                  "[\"spec\", \"tolerations\"]": {
+                  "[\"spec\", \"configBuilderImage\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -8459,17 +9364,28 @@
                                           {
                                                 "field": [
                                                       "spec",
-                                                      "storageConfig",
-                                                      "cassandraDataVolumeClaimSpec"
+                                                      "podTemplateSpec",
+                                                      "spec",
+                                                      "initContainers",
+                                                      "INDEX",
+                                                      "image"
                                                 ],
-                                                "op": "!=",
-                                                "value": null
+                                                "op": "==",
+                                                "value": "\"\""
+                                          },
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "configBuilderImage"
+                                                ],
+                                                "op": "==",
+                                                "value": "\"\""
                                           }
                                     ]
                               }
                         ]
                   },
-                  "[\"spec\", \"podTemplateSpec\"]": {
+                  "[\"spec\", \"resources\", \"limits\"]": {
                         "type": "AND",
                         "conditions": [
                               {
@@ -8478,30 +9394,24 @@
                                           {
                                                 "field": [
                                                       "spec",
-                                                      "storageConfig",
-                                                      "cassandraDataVolumeClaimSpec"
+                                                      "allowMultipleNodesPerWorker"
                                                 ],
-                                                "op": "!=",
-                                                "value": null
+                                                "op": "==",
+                                                "value": true
                                           }
                                     ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"managementApiAuth\", \"manual\"]": {
-                        "type": "AND",
-                        "conditions": [
+                              },
                               {
                                     "type": "OR",
                                     "conditions": [
                                           {
                                                 "field": [
                                                       "spec",
-                                                      "managementApiAuth",
-                                                      "manual"
+                                                      "dseWorkloads",
+                                                      "searchEnabled"
                                                 ],
                                                 "op": "!=",
-                                                "value": null
+                                                "value": true
                                           }
                                     ]
                               }

@@ -119,6 +119,7 @@ class TrialRunner:
                  apply_testcase_f: FunctionType, feature_gate: FeatureGate) -> None:
         self.context = context
         self.workdir = workdir
+        self.base_workdir = workdir
         self.cluster = cluster
         self.images_archive = os.path.join(workdir, 'images.tar')
         self.worker_id = worker_id
@@ -149,7 +150,7 @@ class TrialRunner:
         self.input_model.set_mode(mode)
         if mode != InputModel.NORMAL:
             self.workdir = os.path.join(self.workdir, mode)
-            os.makedirs(self.workdir, exist_ok=True)
+            os.makedirs(self.base_workdir, exist_ok=True)
 
         while True:
             trial_start_time = time.time()
@@ -527,7 +528,7 @@ class Acto:
             self.context['preload_images'].update(preload_images_)
 
         # Apply custom fields
-        self.input_model: InputModel = input_model(self.context['crd']['body'],
+        self.input_model: InputModel = input_model(self.context['crd']['body'], self.context['analysis_result']['used_fields'],
                                                    operator_config.example_dir, num_workers,
                                                    num_cases, self.reproduce_dir, mount)
         self.input_model.initialize(self.seed)

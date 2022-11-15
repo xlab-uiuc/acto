@@ -1,6 +1,5 @@
-from functools import reduce
+from functools import partial, reduce
 import json
-import math
 import operator
 import random
 import threading
@@ -14,6 +13,7 @@ from testplan import TestPlan
 from value_with_schema import attach_schema_to_value
 from common import random_string
 from thread_logger import get_thread_logger
+from testplan import TreeNode
 
 
 class CustomField:
@@ -206,6 +206,7 @@ class InputModel:
 
     def __init__(self,
                  crd: dict,
+                 used_fields: list,
                  example_dir: str,
                  num_workers: int,
                  num_cases: int,
@@ -230,6 +231,7 @@ class InputModel:
         for example_doc in example_docs:
             self.root_schema.load_examples(example_doc)
 
+        self.used_fields = used_fields
         self.num_workers = num_workers
         self.num_cases = num_cases  # number of test cases to run at a time
         self.seed_input = None
@@ -314,6 +316,42 @@ class InputModel:
         '''Generate test plan based on CRD'''
         logger = get_thread_logger(with_prefix=False)
 
+        tree: TreeNode = self.root_schema.to_tree()
+        for field in self.used_fields:
+            field = field[1:]
+            node = tree.get_node_by_path(field)
+            if node is None:
+                logger.warning(f'Field {field} not found in CRD')
+                continue
+
+            node.set_used()
+
+        def func(l: list, node: TreeNode) -> bool:
+            if len(node.children) == 0:
+                return False
+
+            if not node.used:
+                l.append(node.path)
+                return False
+
+            used_child = []
+            for child in node.children.values():
+                if child.used:
+                    used_child.append(child)
+
+            if len(used_child) == 0:
+                l.append(node.path)
+                return False
+            elif len(used_child) == len(node.children):
+                return True
+            else:
+                return True
+
+        overspecified_fields = []
+        tree.traverse_func(partial(func, overspecified_fields))
+        for field in overspecified_fields:
+            logger.info('Overspecified field: %s', field)
+
         normal_testcases = {}
         overspecified_testcases = {}
         copiedover_testcases = {}
@@ -349,7 +387,7 @@ class InputModel:
 
         logger.info('Parsed [%d] fields from normal schema' % len(normal_schemas))
         logger.info('Parsed [%d] fields from over-specified schema' % len(pruned_by_overspecified))
-        logger.info('Parsed [%d] fields from over-specified schema' % len(pruned_by_copied))
+        logger.info('Parsed [%d] fields from copied-over schema' % len(pruned_by_copied))
 
         logger.info('Generated [%d] test cases for normal schemas', num_normal_testcases)
         logger.info('Generated [%d] test cases for overspecified schemas',

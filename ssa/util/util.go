@@ -187,6 +187,7 @@ func getSeedVariablesFromFunction(f *ssa.Function, seedType types.Type) []ssa.Va
 func GetCallsiteArgIndices(value ssa.Value, call *ssa.CallCommon) []int {
 	paramSet := NewSet[int]()
 	if value == call.Value {
+		// add receiver's index in the case of invoke mode
 		paramSet.Add(-1)
 	}
 	for index, param := range call.Args {

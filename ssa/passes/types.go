@@ -158,7 +158,17 @@ type UsesInBranch struct {
 func (c *Context) String() string {
 	var b bytes.Buffer
 	b.WriteString(fmt.Sprintf("Root module: %s\n", c.RootModule.Path))
-	b.WriteString("ValueFieldMap:\n")
+	b.WriteString("Field value map:\n")
+
+	for field, values := range c.FieldToValueMap {
+		b.WriteString(field)
+		b.WriteString(": ")
+		for _, value := range *values {
+			b.WriteString(value.Name())
+			b.WriteString(", ")
+		}
+		b.WriteString("\n")
+	}
 
 	b.WriteString("Post Dominators:\n")
 

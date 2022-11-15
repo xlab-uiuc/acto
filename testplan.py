@@ -9,12 +9,15 @@ class TreeNode():
     def __init__(self, path: list) -> None:
         self.path = list(path)
 
-        self.parent = None
+        self.parent: TreeNode = None
         self.children = {}
         self.testcases = []
 
         self.node_disabled = False
         self.subtree_disabled = False
+
+        # for Overspecified fields analysis
+        self.used = False
 
     def add_child(self, key: str, child: 'TreeNode'):
         self.children[key] = child
@@ -23,6 +26,16 @@ class TreeNode():
 
     def set_parent(self, parent: 'TreeNode'):
         self.parent = parent
+
+    def set_used(self):
+        self.used = True
+        parent = self.parent
+
+        while parent != None:
+            parent.used = True
+            parent = parent.parent
+
+        return
 
     def add_testcases(self, testcases: list):
         self.testcases.extend(testcases)
@@ -114,8 +127,15 @@ class TreeNode():
     def get_path(self) -> list:
         return self.path
 
+    def traverse_func(self, func: callable):
+        if func(self):
+            for child in self.children.values():
+                child.traverse_func(func)
+
     def __getitem__(self, key):
         if key not in self.children:
+            if 'ITEM' in self.children and key == 'INDEX':
+                return self.children['ITEM']
             if isinstance(key, int) and 'ITEM' in self.children:
                 return self.children['ITEM']
             elif 'additional_properties' in self.children and isinstance(key, str):
@@ -127,6 +147,8 @@ class TreeNode():
 
     def __contains__(self, key) -> bool:
         if key not in self.children:
+            if 'ITEM' in self.children and key == 'INDEX':
+                return True
             if 'ITEM' in self.children and isinstance(key, int):
                 return True
             elif 'additional_properties' in self.children and isinstance(key, str):

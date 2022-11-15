@@ -11,4 +11,5 @@ custom_fields = [
     input.CopiedOverField(['spec', 'persistence', 'spec']),
     input.CopiedOverField(['spec', 'containers'], True),
     input.CopiedOverField(['spec', 'volumes'], True),
+    input.OverSpecifiedField(['spec', 'volumeMounts'], True),
 ]

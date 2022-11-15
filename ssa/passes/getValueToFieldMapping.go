@@ -109,6 +109,28 @@ func GetValueToFieldMappingPass(context *Context, prog *ssa.Program, seedType *s
 										valueToFieldNodeSetMap.Add(typedValue, parentFieldNode)
 									}
 								}
+							} else if callValue.Name() == "DeepCopyInto" {
+								for _, paramIndex := range callSiteTaintedParamIndexSet {
+									if paramIndex == 0 {
+										// the source of DeepCopyInto is tainted
+										log.Printf("Propogate through %s\n", callValue.Name())
+										target := typedValue.Call.Args[1]  // the value that got deepcopied into
+										for _, parentField := range parentFieldSet.Fields() {
+											newField := parentField.Clone()
+											ok := AddFieldToValueFieldSetMap(valueFieldSetMap, target,  newField)
+											if ok {
+												worklist = append(worklist, target)
+											}
+										}
+
+										if direct {
+											for parentFieldNode := range parentFieldNodeSet {
+												parentFieldNode.AddValue(target)
+												valueToFieldNodeSetMap.Add(target, parentFieldNode)
+											}
+										}
+									}
+								}	
 							} else {
 								PropogateToCallee(context, callValue, variable, callSiteTaintedParamIndexSet, parentFieldSet, &worklist, valueFieldSetMap, frontierValues, parentFieldNodeSet)
 							}

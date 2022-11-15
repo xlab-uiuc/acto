@@ -4,7 +4,7 @@ metadata:
   name: test-cluster
 spec:
   sentinel:
-    replicas: 2
+    replicas: 3
     imagePullPolicy: IfNotPresent
     affinity:
       podAntiAffinity:
@@ -22,7 +22,7 @@ spec:
       - "down-after-milliseconds 2000"
       - "failover-timeout 3000"
   redis:
-    replicas: 2
+    replicas: 3
     imagePullPolicy: IfNotPresent
     customConfig:
       - "maxclients 100"
