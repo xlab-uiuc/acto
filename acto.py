@@ -624,7 +624,7 @@ class Acto:
             with open(context_file, 'w') as context_fout:
                 json.dump(self.context, context_fout, cls=ContextEncoder, indent=6, sort_keys=True)
 
-    def run(self):
+    def run(self, modes: list=['normal', 'overspecified', 'copiedover']):
         logger = get_thread_logger(with_prefix=False)
 
         # Build an archive to be preloaded
@@ -638,7 +638,6 @@ class Acto:
 
         start_time = time.time()
 
-        threads = []
         runners: List[TrialRunner] = []
         for i in range(self.num_workers):
             runner = TrialRunner(self.context, self.input_model, self.deploy, self.custom_on_init,
@@ -646,32 +645,40 @@ class Acto:
                                  self.dryrun, self.is_reproduce, self.apply_testcase_f,
                                  self.feature_gate)
             runners.append(runner)
-            t = threading.Thread(target=runner.run, args=([]))
-            t.start()
-            threads.append(t)
 
-        for t in threads:
-            t.join()
+        if 'normal' in modes:
+            threads = []
+            for runner in runners:
+                t = threading.Thread(target=runner.run, args=([]))
+                t.start()
+                threads.append(t)
+
+            for t in threads:
+                t.join()
 
         normal_time = time.time()
-        threads = []
-        for runner in runners:
-            t = threading.Thread(target=runner.run, args=([InputModel.OVERSPECIFIED]))
-            t.start()
-            threads.append(t)
 
-        for t in threads:
-            t.join()
+        if 'overspecified' in modes:
+            threads = []
+            for runner in runners:
+                t = threading.Thread(target=runner.run, args=([InputModel.OVERSPECIFIED]))
+                t.start()
+                threads.append(t)
+
+            for t in threads:
+                t.join()
 
         overspecified_time = time.time()
-        threads = []
-        for runner in runners:
-            t = threading.Thread(target=runner.run, args=([InputModel.COPIED_OVER]))
-            t.start()
-            threads.append(t)
 
-        for t in threads:
-            t.join()
+        if 'copiedover' in modes:
+            threads = []
+            for runner in runners:
+                t = threading.Thread(target=runner.run, args=([InputModel.COPIED_OVER]))
+                t.start()
+                threads.append(t)
+
+            for t in threads:
+                t.join()
 
         end_time = time.time()
 
@@ -853,6 +860,6 @@ if __name__ == '__main__':
                 args.num_cases, args.dryrun, args.learn_analysis_only, is_reproduce, input_model,
                 apply_testcase_f)
     if not args.learn:
-        acto.run()
+        acto.run(modes=['normal'])
     end_time = datetime.now()
     logger.info('Acto finished in %s', end_time - start_time)
