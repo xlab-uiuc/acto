@@ -434,7 +434,7 @@ def invalid_input_message(log_msg: str, input_delta: dict) -> Tuple[bool, list]:
                             "Recognized invalid input through value [%s] in error message: %s" %
                             (delta.curr, log_msg))
                         return True, delta.path
-            elif str(delta.curr) in log_msg:
+            elif len(str(delta.curr)) > 1 and str(delta.curr) in log_msg:
                 logger.info("Recognized invalid input through value [%s] in error message: %s" %
                             (str(delta.curr), log_msg))
                 return True, delta.path
