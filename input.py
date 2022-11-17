@@ -46,12 +46,15 @@ class CopiedOverField(CustomField):
             if self.properties != None:
                 for value in self.properties.values():
                     child_schema_tuple = value.get_all_schemas()
-                    normal_schemas.append(child_schema_tuple[0].pop())
+                    normal_schemas.extend(child_schema_tuple[0])
                     pruned_by_overspecified.extend(child_schema_tuple[1])
-                    pruned_by_copiedover.extend(child_schema_tuple[0])
                     pruned_by_copiedover.extend(child_schema_tuple[2])
             if self.additional_properties != None:
                 normal_schemas.append(self.additional_properties)
+
+            keep = normal_schemas.pop()
+            pruned_by_copiedover.extend(normal_schemas)
+            normal_schemas = [keep]
 
             return normal_schemas, pruned_by_overspecified, pruned_by_copiedover
 
@@ -96,7 +99,7 @@ class OverSpecifiedField(CustomField):
     All the subfields of this field (excluding this field) will be pruned
     '''
 
-    class PruneChildrenObjectSchema(ObjectSchema):
+    class OverSpecifiedObjectSchema(ObjectSchema):
 
         def __init__(self, path: list, schema: dict) -> None:
             super().__init__(path, schema)
@@ -113,19 +116,22 @@ class OverSpecifiedField(CustomField):
             if self.properties != None:
                 for value in self.properties.values():
                     child_schema_tuple = value.get_all_schemas()
-                    normal_schemas.append(child_schema_tuple[0].pop())
+                    normal_schemas.extend(child_schema_tuple[0])
                     pruned_by_overspecified.extend(child_schema_tuple[1])
-                    pruned_by_overspecified.extend(child_schema_tuple[0])
                     pruned_by_copiedover.extend(child_schema_tuple[2])
             if self.additional_properties != None:
                 normal_schemas.append(self.additional_properties)
+
+            keep = normal_schemas.pop()
+            pruned_by_overspecified.extend(normal_schemas)
+            normal_schemas = [keep]
 
             return normal_schemas, pruned_by_overspecified, pruned_by_copiedover
 
         def __str__(self) -> str:
             return 'Children Pruned'
 
-    class PruneChildrenArraySchema(ArraySchema):
+    class OverSpecifiedArraySchema(ArraySchema):
 
         def __init__(self, path: list, schema: dict) -> None:
             super().__init__(path, schema)
@@ -152,9 +158,9 @@ class OverSpecifiedField(CustomField):
 
     def __init__(self, path, array: bool = False) -> None:
         if array:
-            super().__init__(path, self.PruneChildrenArraySchema)
+            super().__init__(path, self.OverSpecifiedArraySchema)
         else:
-            super().__init__(path, self.PruneChildrenObjectSchema)
+            super().__init__(path, self.OverSpecifiedObjectSchema)
 
 
 class ProblematicField(CustomField):
