@@ -10,6 +10,14 @@ python3 acto.py --config data/cockroach-operator/config.json --num-workers 16 --
 python3 checker.py --config data/cockroach-operator/config.json --num-workers 16 --testrun-dir testrun-crdb
 bash scripts/teardown.sh
 
+python3 acto.py --config data/knative-operator-serving/config.json --enable-analysis --num-workers 16 --num-cases 1 --workdir testrun-knative-serving --notify-crash
+python3 checker.py --config data/knative-operator-serving/config.json --num-workers 16 --testrun-dir testrun-crdb
+bash scripts/teardown.sh
+
+python3 acto.py --config data/knative-operator-eventing/config.json --enable-analysis --num-workers 16 --num-cases 1 --workdir testrun-knative-eventing --notify-crash
+python3 checker.py --config data/knative-operator-eventing/config.json --num-workers 16 --testrun-dir testrun-crdb
+bash scripts/teardown.sh
+
 python3 acto.py --config data/mongodb-community-operator/config.json --num-workers 16 --num-cases 1 --workdir testrun-mongodb-comm --notify-crash
 python3 checker.py --config data/mongodb-community-operator/config.json --num-workers 16 --testrun-dir testrun-mongodb-comm
 bash scripts/teardown.sh
@@ -18,7 +26,7 @@ python3 acto.py --config data/percona-server-mongodb-operator/config.json --num-
 python3 checker.py --config data/percona-server-mongodb-operator/config.json --num-workers 16 --testrun-dir testrun-percona-mongodb
 bash scripts/teardown.sh
 
-python3 acto.py --config data/percona-xtradb-cluster-operator/config.json --num-workers 12 --num-cases 1 --workdir testrun-xtradb --notify-crash
+python3 acto.py --config data/percona-xtradb-cluster-operator/config.json --num-workers 8 --num-cases 1 --workdir testrun-xtradb --notify-crash
 python3 checker.py --config data/percona-xtradb-cluster-operator/config.json --num-workers 16 --testrun-dir testrun-xtradb
 bash scripts/teardown.sh
 

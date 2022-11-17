@@ -690,7 +690,7 @@ if __name__ == "__main__":
             with open(original_result_path, 'r') as original_result_file:
                 original_result = json.load(original_result_file)
 
-            input_model = InputModel(context['crd']['body'], config.example_dir, 1, 1, [])
+            input_model = InputModel(context['crd']['body'], [], config.example_dir, 1, 1, [])
 
             input_model.apply_default_value(context['analysis_result']['default_value_map'])
 
