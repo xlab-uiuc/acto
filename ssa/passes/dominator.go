@@ -50,7 +50,7 @@ func Dominators(context *Context, frontierSet map[ssa.Value]bool) {
 				trueDominees = append(trueDominees, trueFunctionDominee.Blocks...)
 			}
 		}
-		log.Printf("Branch at %s [TRUE] has the block dominees: ", context.Program.Fset.Position(ifStmt.(*ssa.If).Cond.Pos()))
+		log.Printf("Branch %s at %s [TRUE] has the block dominees: ", ifStmt, context.Program.Fset.Position(ifStmt.(*ssa.If).Cond.Pos()))
 		for _, trueDominee := range trueDominees {
 			log.Printf("%d ", trueDominee.Index)
 		}
@@ -61,7 +61,7 @@ func Dominators(context *Context, frontierSet map[ssa.Value]bool) {
 				falseDominees = append(falseDominees, falseFunctionDominee.Blocks...)
 			}
 		}
-		log.Printf("Branch at %s [FALSE] has the block dominees: ", context.Program.Fset.Position(ifStmt.(*ssa.If).Cond.Pos()))
+		log.Printf("Branch %s at %s [FALSE] has the block dominees: ", ifStmt, context.Program.Fset.Position(ifStmt.(*ssa.If).Cond.Pos()))
 		for _, falseDominee := range falseDominees {
 			log.Printf("%d ", falseDominee.Index)
 		}
@@ -154,7 +154,7 @@ func Dominators(context *Context, frontierSet map[ssa.Value]bool) {
 			// if value is only used in BinOp, then it is not a use
 			referrers := value.Referrers()
 			if len(*referrers) == 1 {
-				if _, ok := (*referrers)[0].(*ssa.BinOp); ok {
+				if binop, ok := (*referrers)[0].(*ssa.BinOp); ok && (binop.Op == token.EQL || binop.Op == token.NEQ || binop.Op == token.LSS || binop.Op == token.GTR || binop.Op == token.LEQ || binop.Op == token.GEQ) {
 					continue
 				} else if s, ok := (*referrers)[0].(*ssa.Store); ok && value == s.Addr {
 					continue
@@ -194,8 +194,9 @@ func BranchDominees(context *Context, bb *ssa.BasicBlock) (trueDominees, falseDo
 	trueWorklist := []*ssa.BasicBlock{trueBlock}
 	falseWorklist := []*ssa.BasicBlock{falseBlock}
 
-	trueReachSet := ReachableBlocks(context, trueBlock)
-	falseReachSet := ReachableBlocks(context, falseBlock)
+	// find reachable blocks except blocked by the other branch to handle loops
+	trueReachSet := ReachableBlocks(context, trueBlock, bb)
+	falseReachSet := ReachableBlocks(context, falseBlock, bb)
 
 	if !pd.Dominate(trueBlock, bb) && !falseReachSet[trueBlock] {
 		trueDominees = append(trueDominees, trueBlock)
@@ -232,7 +233,7 @@ func BranchDominees(context *Context, bb *ssa.BasicBlock) (trueDominees, falseDo
 	return
 }
 
-func ReachableBlocks(context *Context, bb *ssa.BasicBlock) (reachSet map[*ssa.BasicBlock]bool) {
+func ReachableBlocks(context *Context, bb *ssa.BasicBlock, stop *ssa.BasicBlock) (reachSet map[*ssa.BasicBlock]bool) {
 	worklist := []*ssa.BasicBlock{bb}
 	reachSet = make(map[*ssa.BasicBlock]bool)
 
@@ -244,7 +245,10 @@ func ReachableBlocks(context *Context, bb *ssa.BasicBlock) (reachSet map[*ssa.Ba
 			if succ != nil {
 				if _, ok := reachSet[succ]; !ok {
 					reachSet[succ] = true
-					worklist = append(worklist, succ)
+
+					if succ != stop {
+						worklist = append(worklist, succ)
+					}
 				}
 			}
 		}
@@ -258,10 +262,12 @@ func FindUsesInBlocks(context *Context, blocks []*ssa.BasicBlock, frontierValues
 		if _, ok := frontierValuesByBlock[bb]; ok {
 			for _, value := range *frontierValuesByBlock[bb] {
 
+				log.Printf("Value %s used at %s", value, context.Program.Fset.Position(value.Pos()))
+
 				// if value is only used in BinOp, then it is not a use
 				referrers := value.Referrers()
 				if len(*referrers) == 1 {
-					if _, ok := (*referrers)[0].(*ssa.BinOp); ok {
+					if binop, ok := (*referrers)[0].(*ssa.BinOp); ok && (binop.Op == token.EQL || binop.Op == token.NEQ || binop.Op == token.LSS || binop.Op == token.GTR || binop.Op == token.LEQ || binop.Op == token.GEQ) {
 						continue
 					}
 				}
