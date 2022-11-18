@@ -34,5 +34,11 @@ custom_fields = [
     input.OverSpecifiedField(['spec', 'sharding', 'mongos', 'sidecarVolumes'], True),
     input.CopiedOverField(['spec', 'sharding', 'mongos', 'sidecars'], True),
     input.CopiedOverField(['spec', 'sharding', 'mongos', 'tolerations'], True),
+
     input.ProblematicField(['spec', 'pmm']),  # ignore external dependency
+    input.ProblematicField(['spec', 'crVersion']),  # ignore external dependency
+    input.ProblematicField(['spec', 'mongod', 'setParameter']),  # ignore external dependency
+    input.ProblematicField(['spec', 'mongod', 'security']),
+    input.ProblematicField(['spec', 'mongod', 'replication']),
+    input.ProblematicField(['spec', 'mongod', 'operationProfiling']),
 ]

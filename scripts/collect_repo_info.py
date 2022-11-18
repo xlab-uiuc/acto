@@ -1,11 +1,14 @@
 from github import Github
 import csv
 import datetime
+from texttable import Texttable
 
 if __name__ == '__main__':
     REPOS = [
         'k8ssandra/cass-operator',
         'cockroachdb/cockroach-operator',
+        'knative/operator',
+        'mongodb/mongodb-kubernetes-operator',
         'percona/percona-server-mongodb-operator',
         'percona/percona-xtradb-cluster-operator',
         'rabbitmq/cluster-operator',
@@ -15,7 +18,12 @@ if __name__ == '__main__':
         'pravega/zookeeper-operator',
     ]
 
-    g = Github("$TOKEN")
+    g = Github("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")
+
+    textTable = Texttable()
+    textTable.set_cols_align(["c"] * 4)
+    textTable.set_deco(Texttable.HEADER)
+    table = []
 
     with open('repo_info.csv', 'w') as outstream:
         csvwriter = csv.writer(outstream)
