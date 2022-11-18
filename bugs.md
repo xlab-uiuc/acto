@@ -11,6 +11,8 @@
 |                                     | [https://github.com/rabbitmq/cluster-operator/issues/968](https://github.com/rabbitmq/cluster-operator/issues/968)               |           |
 |                                     | [https://github.com/rabbitmq/cluster-operator/issues/992](https://github.com/rabbitmq/cluster-operator/issues/992)               | confirmed |
 | pravega/zookeeper-operator          | [https://github.com/pravega/zookeeper-operator/issues/474](https://github.com/pravega/zookeeper-operator/issues/474)             | fixed     |
+|                                     | [https://github.com/pravega/zookeeper-operator/issues/454](https://github.com/pravega/zookeeper-operator/issues/454)             | confirmed |
+|                                     | [https://github.com/pravega/zookeeper-operator/issues/513](https://github.com/pravega/zookeeper-operator/issues/513)             |           |
 | k8ssandra/cass-operator             | [https://github.com/k8ssandra/cass-operator/issues/315](https://github.com/k8ssandra/cass-operator/issues/315)                   | fixed     |
 |                                     | [https://github.com/k8ssandra/cass-operator/issues/324](https://github.com/k8ssandra/cass-operator/issues/324)                   |           |
 |                                     | [https://github.com/k8ssandra/cass-operator/issues/330](https://github.com/k8ssandra/cass-operator/issues/330)                   | fixed     |
@@ -28,7 +30,7 @@
 |                                     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/287](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/287)   | fixed     |
 |                                     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/289](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/289)   | fixed     |
 |                                     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/290](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/290)   | fixed     |
-|                                     | [https://github.com/OT-CONTAINER-KIT/redis-operator/pull/292](https://github.com/OT-CONTAINER-KIT/redis-operator/pull/292)     | fixed     |
+|                                     | [https://github.com/OT-CONTAINER-KIT/redis-operator/pull/292](https://github.com/OT-CONTAINER-KIT/redis-operator/pull/292)       | fixed     |
 |                                     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/297](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/297)   | fixed     |
 |                                     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/310](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/310)   |           |
 | kubernetes-sigs/controller-tools    | [https://github.com/kubernetes-sigs/controller-tools/issues/665](https://github.com/kubernetes-sigs/controller-tools/issues/665) | confirmed |
@@ -67,4 +69,3 @@
 | mongodb/mongodb-kubernetes-operator | [https://github.com/mongodb/helm-charts/pull/123](https://github.com/mongodb/helm-charts/pull/123)                   | fixed     |
 | pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/issues/4614](https://github.com/pingcap/tidb-operator/issues/4614)         | fixed     |
 | k8ssandra/cass-operator             | [https://github.com/k8ssandra/k8ssandra/issues/1380](https://github.com/k8ssandra/k8ssandra/issues/1380)             | fixed     |
-| pravega/zookeeper-operator          | [https://github.com/pravega/zookeeper-operator/issues/454](https://github.com/pravega/zookeeper-operator/issues/454) | confirmed |
