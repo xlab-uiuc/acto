@@ -30,6 +30,30 @@ class CompareMethods:
             return True
         elif isinstance(input, NotPresent) or isinstance(output, NotPresent):
             return True
+        else:
+            if isinstance(input, str) and input == '':
+                return True
+            elif isinstance(output, str) and output == '':
+                return True
+            elif isinstance(input, int) and input == 0:
+                return True
+            elif isinstance(output, int) and output == 0:
+                return True
+            elif isinstance(input, float) and input == 0:
+                return True
+            elif isinstance(output, float) and output == 0:
+                return True
+            elif isinstance(input, list) and len(input) == 0:
+                return True
+            elif isinstance(output, list) and len(output) == 0:
+                return True
+            elif isinstance(input, dict) and len(input) == 0:
+                return True
+            elif isinstance(output, dict) and len(output) == 0:
+                return True
+
+        return False
+
 
     def substring_operator(self, input, output) -> bool:
         # if input is int, then we want exact match to avoid mapping 10 to 1000, 2 to 20, etc.
@@ -55,6 +79,7 @@ class CompareMethods:
                     logger.debug(f"{k} - {v}")
                     if outputparser.get("ACTO", k) != v:
                         return False
+                logger.info('Equal through config operator')
                 return True
             except configparser.Error as e:
                 return False
@@ -86,6 +111,36 @@ class CompareMethods:
         elif isinstance(prev, NotPresent) and curr == None:
             return True
         else:
+            if isinstance(prev, str) and prev == '':
+                if curr == None or isinstance(curr, NotPresent):
+                    return True
+            elif isinstance(curr, str) and curr == '':
+                if prev == None or isinstance(prev, NotPresent):
+                    return True
+            elif isinstance(prev, int) and prev == 0:
+                if curr == None or isinstance(curr, NotPresent):
+                    return True
+            elif isinstance(curr, int) and curr == 0:
+                if prev == None or isinstance(prev, NotPresent):
+                    return True
+            elif isinstance(prev, float) and prev == 0:
+                if curr == None or isinstance(curr, NotPresent):
+                    return True
+            elif isinstance(curr, float) and curr == 0:
+                if prev == None or isinstance(prev, NotPresent):
+                    return True
+            elif isinstance(prev, list) and len(prev) == 0:
+                if curr == None or isinstance(curr, NotPresent):
+                    return True
+            elif isinstance(curr, list) and len(curr) == 0:
+                if prev == None or isinstance(prev, NotPresent):
+                    return True
+            elif isinstance(prev, dict) and len(prev) == 0:
+                if curr == None or isinstance(curr, NotPresent):
+                    return True
+            elif isinstance(curr, dict) and len(curr) == 0:
+                if prev == None or isinstance(prev, NotPresent):
+                    return True
             return False
 
     def transform_field_value(self, in_prev, in_curr, out_prev, out_curr):

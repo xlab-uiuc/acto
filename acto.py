@@ -410,6 +410,8 @@ class TrialRunner:
                       generation: int, dryrun: bool) -> RunResult:
         logger = get_thread_logger(with_prefix=True)
         logger.debug('Run and check')
+
+        retry = 0
         while True:
             snapshot = runner.run(input, generation)
             runResult = checker.check(snapshot, snapshots[-1], generation)
@@ -419,6 +421,11 @@ class TrialRunner:
                 # Connection refused due to webhook not ready, let's wait for a bit
                 logger.info('Connection failed. Retry the test after 20 seconds')
                 time.sleep(20)
+                retry += 1
+
+                if retry > 5:
+                    logger.error('Connection failed too many times. Abort')
+                    break
             else:
                 break
 
