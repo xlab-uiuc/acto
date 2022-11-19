@@ -8,7 +8,7 @@ from deepdiff import DeepDiff
 import glob
 import yaml
 
-from schema import extract_schema, BaseSchema, ObjectSchema, ArraySchema
+from schema import OpaqueSchema, StringSchema, extract_schema, BaseSchema, ObjectSchema, ArraySchema
 from testplan import TestPlan
 from value_with_schema import attach_schema_to_value
 from common import random_string
@@ -169,6 +169,20 @@ class ProblematicField(CustomField):
     All the subfields of this field (including this field itself) will be pruned
     '''
 
+    class PruneEntireStringSchema(StringSchema):
+
+        def __init__(self, path: list, schema: dict) -> None:
+            super().__init__(path, schema)
+
+        def __init__(self, schema_obj: BaseSchema) -> None:
+            super().__init__(schema_obj.path, schema_obj.raw_schema)
+
+        def get_all_schemas(self) -> Tuple[list, list, list]:
+            return [], [], []
+
+        def __str__(self):
+            return "Field Pruned"
+
     class PruneEntireObjectSchema(ObjectSchema):
 
         def __init__(self, path: list, schema: dict) -> None:
@@ -199,9 +213,9 @@ class ProblematicField(CustomField):
 
     def __init__(self, path, array: bool = False) -> None:
         if array:
-            super().__init__(path, self.PruneEntireArraySchema)
+            super().__init__(path, OpaqueSchema)
         else:
-            super().__init__(path, self.PruneEntireObjectSchema)
+            super().__init__(path, OpaqueSchema)
 
 
 class InputModel:
