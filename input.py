@@ -211,11 +211,13 @@ class ProblematicField(CustomField):
         def __str__(self):
             return "Field Pruned"
 
-    def __init__(self, path, array: bool = False) -> None:
+    def __init__(self, path, array: bool = False, string: bool = False) -> None:
         if array:
-            super().__init__(path, OpaqueSchema)
+            super().__init__(path, self.PruneEntireArraySchema)
+        elif string:
+            super().__init__(path, self.PruneEntireStringSchema)
         else:
-            super().__init__(path, OpaqueSchema)
+            super().__init__(path, self.PruneEntireObjectSchema)
 
 
 class InputModel:

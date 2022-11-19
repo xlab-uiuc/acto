@@ -36,7 +36,7 @@ custom_fields = [
     input.CopiedOverField(['spec', 'sharding', 'mongos', 'tolerations'], True),
 
     input.ProblematicField(['spec', 'pmm']),  # ignore external dependency
-    input.ProblematicField(['spec', 'crVersion']),  # ignore external dependency
+    input.ProblematicField(['spec', 'crVersion'], string=True),  # ignore external dependency
     input.ProblematicField(['spec', 'mongod', 'setParameter']),  # ignore external dependency
     input.ProblematicField(['spec', 'mongod', 'security']),
     input.ProblematicField(['spec', 'mongod', 'replication']),
