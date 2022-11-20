@@ -226,6 +226,19 @@ class Checker(object):
             f.write('\n---------- SYSTEM DELTA ----------\n')
             f.write(json.dumps(system_delta, cls=ActoEncoder, indent=6))
 
+        status_delta = system_delta['custom_resource_status']
+        if status_delta is not None:
+            for delta_list in status_delta.values():
+                for delta in delta_list.values():
+                    if len(
+                            delta.path
+                    ) == 3 and delta.path[0] == 'conditions' and delta.path[2] == 'message':
+                        is_invalid, responsible_path = invalid_input_message(
+                            delta.curr, input_delta)
+                        if is_invalid:
+                            logger.info('Invalid input from status message: %s' % delta.curr)
+                            return PassResult()
+
         # cr_spec_diff is same as input delta, so it is excluded
         system_delta_without_cr = copy.deepcopy(system_delta)
         system_delta_without_cr.pop('custom_resource_spec')
@@ -559,9 +572,7 @@ class Checker(object):
         curr_input, curr_system_state = snapshot.input, snapshot.system_state
         prev_input, prev_system_state = prev_snapshot.input, prev_snapshot.system_state
 
-        input_delta = postprocess_diff(
-            DeepDiff(prev_input, curr_input, ignore_order=True, report_repetition=True,
-                     view='tree'))
+        input_delta = postprocess_diff(DeepDiff(prev_input, curr_input, view='tree'))
 
         system_state_delta = {}
         for resource in curr_system_state:
@@ -752,6 +763,11 @@ if __name__ == "__main__":
                         snapshots.pop()
                         checker_save_result(trial_dir, runtime_result, runResult, False, mode)
                         continue
+                    elif runResult.is_basic_error():
+                        logging.debug('Basic error')
+                        snapshots.pop()
+                        checker_save_result(trial_dir, runtime_result, runResult, True, mode)
+                        continue
                     is_invalid, _ = runResult.is_invalid()
                     if is_invalid:
                         logging.debug('Invalid')
@@ -861,8 +877,8 @@ if __name__ == "__main__":
 
         workers = [
             multiprocessing.Process(target=check_trial_worker,
-                                    args=(workqueue, num_system_fields_list, num_delta_fields_list, name, feature_gate))
-            for _ in range(args.num_workers)
+                                    args=(workqueue, num_system_fields_list, num_delta_fields_list,
+                                          name, feature_gate)) for _ in range(args.num_workers)
         ]
 
         for worker in workers:

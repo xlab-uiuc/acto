@@ -203,6 +203,16 @@ class RunResult():
             else:
                 return True
 
+    def is_basic_error(self) -> bool:
+        if isinstance(self.crash_result, ErrorResult):
+            return True
+        elif isinstance(self.custom_result, ErrorResult):
+            return True
+        elif isinstance(self.recovery_result, ErrorResult):
+            return True
+        else:
+            return False
+
     def to_dict(self):
         '''serialize RunResult object
         '''
@@ -374,6 +384,8 @@ def postprocess_diff(diff):
                 else:
                     flattened_changes = flatten_list(change.t1, [])
                 for (path, value) in flattened_changes:
+                    if value == None or isinstance(value, NotPresent):
+                        continue
                     str_path = change.path()
                     for i in path:
                         str_path += '[%s]' % i
@@ -386,6 +398,8 @@ def postprocess_diff(diff):
                 else:
                     flattened_changes = flatten_list(change.t2, [])
                 for (path, value) in flattened_changes:
+                    if value == None or isinstance(value, NotPresent):
+                        continue
                     str_path = change.path()
                     for i in path:
                         str_path += '[%s]' % i
@@ -573,6 +587,7 @@ INVALID_INPUT_LOG_REGEX = [
     r"not valid",
     r"unsupported",
     r"but expected",
+    r"are not available",
 ]
 
 GENERIC_FIELDS = [
