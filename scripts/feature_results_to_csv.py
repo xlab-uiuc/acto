@@ -33,11 +33,11 @@ if __name__ == '__main__':
             elif post_result['error']['crash_result'] == 'Pass':
                 crash_result = 'Pass'
 
-            if post_result['error']['crash_result'] == None:
+            if post_result['error']['health_result'] == None:
                 crash_result = 'Pass'
-            elif isinstance(post_result['error']['crash_result'], dict):
-                crash_result = post_result['error']['crash_result']['message']
-            elif post_result['error']['crash_result'] == 'Pass':
+            elif isinstance(post_result['error']['health_result'], dict):
+                crash_result = post_result['error']['health_result']['message']
+            elif post_result['error']['health_result'] == 'Pass':
                 crash_result = 'Pass'
 
             if post_result['error']['state_result'] == None:
@@ -85,6 +85,13 @@ if __name__ == '__main__':
             elif post_result['error']['crash_result'] == 'Pass':
                 crash_result = 'Pass'
 
+            if post_result['error']['health_result'] == None:
+                crash_result = 'Pass'
+            elif isinstance(post_result['error']['health_result'], dict):
+                crash_result = post_result['error']['health_result']['message']
+            elif post_result['error']['health_result'] == 'Pass':
+                crash_result = 'Pass'
+
             if post_result['error']['state_result'] == None:
                 post_state_result = 'Pass'
             elif isinstance(post_result['error']['state_result'], dict):
@@ -130,6 +137,13 @@ if __name__ == '__main__':
             elif post_result['error']['crash_result'] == 'Pass':
                 crash_result = 'Pass'
 
+            if post_result['error']['health_result'] == None:
+                crash_result = 'Pass'
+            elif isinstance(post_result['error']['health_result'], dict):
+                crash_result = post_result['error']['health_result']['message']
+            elif post_result['error']['health_result'] == 'Pass':
+                crash_result = 'Pass'
+
             if post_result['error']['state_result'] == None:
                 post_state_result = 'Pass'
             elif isinstance(post_result['error']['state_result'], dict):
@@ -173,6 +187,13 @@ if __name__ == '__main__':
             elif isinstance(post_result['error']['crash_result'], dict):
                 crash_result = post_result['error']['crash_result']['message']
             elif post_result['error']['crash_result'] == 'Pass':
+                crash_result = 'Pass'
+
+            if post_result['error']['health_result'] == None:
+                crash_result = 'Pass'
+            elif isinstance(post_result['error']['health_result'], dict):
+                crash_result = post_result['error']['health_result']['message']
+            elif post_result['error']['health_result'] == 'Pass':
                 crash_result = 'Pass'
 
             if post_result['error']['state_result'] == None:

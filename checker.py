@@ -477,23 +477,23 @@ class Checker(object):
             if sfs['status']['ready_replicas'] == None and sfs['status']['replicas'] == 0:
                 # replicas could be 0
                 continue
-            if sfs['spec']['replicas'] == sfs['status']['replicas'] and \
-                    sfs['status']['replicas'] == sfs['status']['ready_replicas'] and \
-                    sfs['status']['current_revision'] == sfs['status']['update_revision']:
-                continue
-            unhealthy_resources['statefulset'].append(sfs['metadata']['name'])
+            if sfs['status']['replicas'] != sfs['status']['ready_replicas']:
+                unhealthy_resources['statefulset'].append(
+                    '%s replicas [%s] ready_replicas [%s]' %
+                    (sfs['metadata']['name'], sfs['status']['replicas'],
+                     sfs['status']['ready_replicas']))
 
         # check Health of Deployments
         unhealthy_resources['deployment'] = []
         for dp in system_state['deployment'].values():
             if dp['spec']['replicas'] == 0:
                 continue
-
-            if dp['spec']['replicas'] == dp['status']['replicas'] and \
-                    dp['status']['replicas'] == dp['status']['ready_replicas'] and \
-                    dp['status']['ready_replicas'] == dp['status']['updated_replicas']:
-                continue
-            unhealthy_resources['deployment'].append(dp['metadata']['name'])
+            
+            if dp['status']['replicas'] != dp['status']['ready_replicas']:
+                unhealthy_resources['deployment'].append(
+                    '%s replicas [%s] ready_replicas [%s]' %
+                    (dp['metadata']['name'], dp['status']['replicas'],
+                     dp['status']['ready_replicas']))
 
         # check Health of Pods
         unhealthy_resources['pod'] = []
