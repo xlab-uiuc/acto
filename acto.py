@@ -297,7 +297,7 @@ class TrialRunner:
                                    generation)
             runResult, generation = t
             is_invalid, _ = runResult.is_invalid()
-            if is_invalid and runResult.is_error():
+            if not is_invalid and runResult.is_error():
                 # before return, run the recovery test case
 
                 logger.info('Error result, running recovery')
