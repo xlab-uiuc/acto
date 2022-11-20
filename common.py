@@ -146,6 +146,7 @@ class RunResult():
     def __init__(self, generation: int, feature_gate: FeatureGate) -> None:
         self.crash_result: OracleResult = None
         self.input_result: OracleResult = None
+        self.health_result: OracleResult = None
         self.state_result: OracleResult = None
         self.log_result: OracleResult = None
         self.custom_result: OracleResult = None
@@ -158,6 +159,8 @@ class RunResult():
 
     def is_pass(self) -> bool:
         if not isinstance(self.crash_result, PassResult) and self.crash_result is not None:
+            return False
+        elif not isinstance(self.health_result, PassResult) and self.health_result is not None:
             return False
         elif not isinstance(self.custom_result, PassResult) and self.custom_result is not None:
             return False
@@ -190,6 +193,8 @@ class RunResult():
     def is_error(self) -> bool:
         if isinstance(self.crash_result, ErrorResult):
             return True
+        elif isinstance(self.health_result, ErrorResult):
+            return True
         elif isinstance(self.custom_result, ErrorResult):
             return True
         elif isinstance(self.recovery_result, ErrorResult):
@@ -206,6 +211,8 @@ class RunResult():
     def is_basic_error(self) -> bool:
         if isinstance(self.crash_result, ErrorResult):
             return True
+        elif isinstance(self.health_result, ErrorResult):
+            return True
         elif isinstance(self.custom_result, ErrorResult):
             return True
         elif isinstance(self.recovery_result, ErrorResult):
@@ -220,6 +227,7 @@ class RunResult():
             'generation': self.generation,
             'crash_result': self.crash_result.to_dict() if self.crash_result else None,
             'input_result': self.input_result.to_dict() if self.input_result else None,
+            'health_result': self.health_result.to_dict() if self.health_result else None,
             'state_result': self.state_result.to_dict() if self.state_result else None,
             'log_result': self.log_result.to_dict() if self.log_result else None,
             'custom_result': self.custom_result.to_dict() if self.custom_result else None,
@@ -296,6 +304,19 @@ class StateResult(ErrorResult):
                 self.input_delta.to_dict() if self.input_delta else None,
             'matched_system_delta':
                 self.matched_system_delta.to_dict() if self.matched_system_delta else None
+        }
+
+
+class UnhealthyResult(ErrorResult):
+
+    def __init__(self, oracle: Oracle, msg: str) -> None:
+        self.oracle = oracle
+        self.message = msg
+
+    def to_dict(self):
+        return {
+            'oracle': self.oracle,
+            'message': self.message
         }
 
 

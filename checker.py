@@ -118,8 +118,8 @@ class Checker(object):
                         (len(flattened_system_state), num_delta))
 
         # XXX: disable health check for now
-        # health_result = self.check_health(snapshot)
-        health_result = PassResult()
+        runResult.health_result = self.check_health(snapshot)
+        # health_result = PassResult()
 
         if self.custom_oracle != None:
             # This custom_oracle field needs be None when Checker is used in post run
@@ -464,7 +464,7 @@ class Checker(object):
             # return ErrorResult(Oracle.ERROR_LOG, line)
         return PassResult()
 
-    def check_health(self, snapshot: Snapshot) -> RunResult:
+    def check_health(self, snapshot: Snapshot) -> OracleResult:
         '''System health oracle'''
         logger = get_thread_logger(with_prefix=True)
 
@@ -474,6 +474,9 @@ class Checker(object):
         # check Health of Statefulsets
         unhealthy_resources['statefulset'] = []
         for sfs in system_state['stateful_set'].values():
+            if sfs['status']['ready_replicas'] == None and sfs['status']['replicas'] == 0:
+                # replicas could be 0
+                continue
             if sfs['spec']['replicas'] == sfs['status']['replicas'] and \
                     sfs['status']['replicas'] == sfs['status']['ready_replicas'] and \
                     sfs['status']['current_revision'] == sfs['status']['update_revision']:
@@ -506,7 +509,7 @@ class Checker(object):
                 logger.error(f"Found {kind}: {', '.join(resources)} with unhealthy status")
 
         if error_msg != '':
-            return ErrorResult(Oracle.SYSTEM_HEALTH, error_msg)
+            return UnhealthyResult(Oracle.SYSTEM_HEALTH, error_msg)
 
         return PassResult()
 
