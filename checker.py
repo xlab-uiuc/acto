@@ -230,9 +230,8 @@ class Checker(object):
         if status_delta is not None:
             for delta_list in status_delta.values():
                 for delta in delta_list.values():
-                    if len(
-                            delta.path
-                    ) == 3 and delta.path[0] == 'conditions' and delta.path[2] == 'message':
+                    if len(delta.path) == 3 and delta.path[0] == 'conditions' and delta.path[
+                            2] == 'message' and isinstance(delta.curr, str):
                         is_invalid, responsible_path = invalid_input_message(
                             delta.curr, input_delta)
                         if is_invalid:
