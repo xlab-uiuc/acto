@@ -5,6 +5,10 @@ metadata:
   namespace: mongodb
   name: test-cluster
 spec:
+  automationConfig:
+      processes:
+      - disabled: false
+        name: test-cluster-1
   members: 3
   type: ReplicaSet
   version: "4.4.0"
@@ -33,18 +37,18 @@ spec:
               resources:
                 limits:
                   cpu: "1"
-                  memory: 250M
+                  memory: 1000M
                 requests:
                   cpu: "1"
-                  memory: 200M
+                  memory: 1000M
             - name: mongodb-agent
               resources:
                 limits:
                   cpu: "1"
-                  memory: 250M
+                  memory: 1000M
                 requests:
                   cpu: "1"
-                  memory: 200M
+                  memory: 1000M
 # the user credentials will be generated from this secret
 # once the credentials are generated, this secret is no longer required
 #---
