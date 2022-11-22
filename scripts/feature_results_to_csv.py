@@ -15,6 +15,7 @@ if __name__ == '__main__':
         os.path.join(result_folder, '*', 'post-result-*-dependency_analysis.json'))
     taint_analysis_results = glob.glob(
         os.path.join(result_folder, '*', 'post-result-*-taint_analysis.json'))
+    recovery_results = glob.glob(os.path.join(result_folder, '*', 'result.json'))
 
     baseline_df = pd.DataFrame()
     canonicalization_df = pd.DataFrame()
@@ -34,11 +35,11 @@ if __name__ == '__main__':
                 crash_result = 'Pass'
 
             if post_result['error']['health_result'] == None:
-                crash_result = 'Pass'
+                health_result = 'Pass'
             elif isinstance(post_result['error']['health_result'], dict):
-                crash_result = post_result['error']['health_result']['message']
+                health_result = post_result['error']['health_result']['message']
             elif post_result['error']['health_result'] == 'Pass':
-                crash_result = 'Pass'
+                health_result = 'Pass'
 
             if post_result['error']['state_result'] == None:
                 post_state_result = 'Pass'
@@ -67,6 +68,7 @@ if __name__ == '__main__':
                     'Trial number': json_instance['post_result']['trial_num'],
                     'baseline_alarm': json_instance['alarm'],
                     'baseline_crash_result': crash_result,
+                    'baseline_health_result': health_result,
                     'baseline_recovery_result': recovery_result,
                     'baseline_state_result': post_state_result,
                     'baseline_custom_result': custom_result
@@ -86,11 +88,11 @@ if __name__ == '__main__':
                 crash_result = 'Pass'
 
             if post_result['error']['health_result'] == None:
-                crash_result = 'Pass'
+                health_result = 'Pass'
             elif isinstance(post_result['error']['health_result'], dict):
-                crash_result = post_result['error']['health_result']['message']
+                health_result = post_result['error']['health_result']['message']
             elif post_result['error']['health_result'] == 'Pass':
-                crash_result = 'Pass'
+                health_result = 'Pass'
 
             if post_result['error']['state_result'] == None:
                 post_state_result = 'Pass'
@@ -119,6 +121,7 @@ if __name__ == '__main__':
                     'Trial number': json_instance['post_result']['trial_num'],
                     'canonicalization_alarm': json_instance['alarm'],
                     'canonicalization_crash_result': crash_result,
+                    'canonicalization_health_result': health_result,
                     'canonicalization_recovery_result': recovery_result,
                     'canonicalization_state_result': post_state_result,
                     'canonicalization_custom_result': custom_result
@@ -138,11 +141,11 @@ if __name__ == '__main__':
                 crash_result = 'Pass'
 
             if post_result['error']['health_result'] == None:
-                crash_result = 'Pass'
+                health_result = 'Pass'
             elif isinstance(post_result['error']['health_result'], dict):
-                crash_result = post_result['error']['health_result']['message']
+                health_result = post_result['error']['health_result']['message']
             elif post_result['error']['health_result'] == 'Pass':
-                crash_result = 'Pass'
+                health_result = 'Pass'
 
             if post_result['error']['state_result'] == None:
                 post_state_result = 'Pass'
@@ -171,6 +174,7 @@ if __name__ == '__main__':
                     'Trial number': json_instance['post_result']['trial_num'],
                     'dependency_alarm': json_instance['alarm'],
                     'dependency_crash_result': crash_result,
+                    'dependency_health_result': health_result,
                     'dependency_recovery_result': recovery_result,
                     'dependency_state_result': post_state_result,
                     'dependency_custom_result': custom_result
@@ -190,11 +194,11 @@ if __name__ == '__main__':
                 crash_result = 'Pass'
 
             if post_result['error']['health_result'] == None:
-                crash_result = 'Pass'
+                health_result = 'Pass'
             elif isinstance(post_result['error']['health_result'], dict):
-                crash_result = post_result['error']['health_result']['message']
+                health_result = post_result['error']['health_result']['message']
             elif post_result['error']['health_result'] == 'Pass':
-                crash_result = 'Pass'
+                health_result = 'Pass'
 
             if post_result['error']['state_result'] == None:
                 post_state_result = 'Pass'
@@ -223,9 +227,74 @@ if __name__ == '__main__':
                     'Trial number': json_instance['post_result']['trial_num'],
                     'taint_analysis_alarm': json_instance['alarm'],
                     'taint_analysis_crash_result': crash_result,
+                    'taint_analysis_health_result': health_result,
                     'taint_analysis_recovery_result': recovery_result,
                     'taint_analysis_state_result': post_state_result,
                     'taint_analysis_custom_result': custom_result
+                },
+                ignore_index=True)
+
+    for json_path in recovery_results:
+        with open(json_path, 'r') as json_file:
+            json_instance = json.load(json_file)
+
+            if 'error' in json_instance:
+                if json_instance['error']['recovery_result'] == None:
+                    recovery_result = 'Pass'
+                elif json_instance['error']['recovery_result'] == 'Pass':
+                    recovery_result = 'Pass'
+                elif isinstance(json_instance['error']['recovery_result'], dict):
+                    recovery_result = json_instance['error']['recovery_result']['delta']
+            else:
+                recovery_result = 'Pass'
+
+            recovery_alarm = recovery_result != 'Pass'
+
+            baseline_df = baseline_df.append(
+                {
+                    'Trial number': json_instance['trial_num'],
+                    'baseline_alarm': recovery_alarm,
+                    'baseline_crash_result': 'Pass',
+                    'baseline_health_result': 'Pass',
+                    'baseline_recovery_result': recovery_result,
+                    'baseline_state_result': 'Pass',
+                    'baseline_custom_result': 'Pass'
+                },
+                ignore_index=True)
+
+            canonicalization_df = canonicalization_df.append(
+                {
+                    'Trial number': json_instance['trial_num'],
+                    'canonicalization_alarm': recovery_alarm,
+                    'canonicalization_crash_result': 'Pass',
+                    'canonicalization_health_result': 'Pass',
+                    'canonicalization_recovery_result': recovery_result,
+                    'canonicalization_state_result': 'Pass',
+                    'canonicalization_custom_result': 'Pass'
+                },
+                ignore_index=True)
+
+            taint_analysis_df = taint_analysis_df.append(
+                {
+                    'Trial number': json_instance['trial_num'],
+                    'taint_analysis_alarm': recovery_alarm,
+                    'taint_analysis_crash_result': 'Pass',
+                    'taint_analysis_health_result': 'Pass',
+                    'taint_analysis_recovery_result': recovery_result,
+                    'taint_analysis_state_result': 'Pass',
+                    'taint_analysis_custom_result': 'Pass'
+                },
+                ignore_index=True)
+
+            dependency_df = dependency_df.append(
+                {
+                    'Trial number': json_instance['trial_num'],
+                    'dependency_alarm': recovery_alarm,
+                    'dependency_crash_result': 'Pass',
+                    'dependency_health_result': 'Pass',
+                    'dependency_recovery_result': recovery_result,
+                    'dependency_state_result': 'Pass',
+                    'dependency_custom_result': 'Pass'
                 },
                 ignore_index=True)
 

@@ -92,10 +92,12 @@ spec:
           requests:
             storage: 2G
   pxc:
+    enabled: true
+    livenessDelaySec: 300
     affinity:
       antiAffinityTopologyKey: kubernetes.io/hostname
     autoRecovery: true
-    gracePeriod: 600
+    gracePeriod: 30
     image: percona/percona-xtradb-cluster:8.0.27-18.1
     imagePullPolicy: IfNotPresent
     podDisruptionBudget:

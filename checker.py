@@ -641,6 +641,7 @@ class Checker(object):
             r".*\['spec'\]\['init_containers'\]\[.*\]\['volume_mounts'\]\[.*\]\['name'\]",
             r".*\['spec'\]\['containers'\]\[.*\]\['volume_mounts'\]\[.*\]\['name'\]",
             r".*\['spec'\]\['volumes'\]\[.*\]\['name'\]",
+            r".*\['spec'\]\['node_name'\]",
         ]
 
         diff = DeepDiff(prev_system_state,
