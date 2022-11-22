@@ -584,8 +584,6 @@ class Checker(object):
                 DeepDiff(prev_system_state[resource],
                          curr_system_state[resource],
                          exclude_regex_paths=EXCLUDE_PATH_REGEX,
-                         report_repetition=True,
-                         ignore_order=True,
                          view='tree'))
 
         return input_delta, system_state_delta

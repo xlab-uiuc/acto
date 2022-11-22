@@ -2,6 +2,7 @@ import input
 
 custom_fields = [
     input.ProblematicField(['spec', 'pmm']),
+    input.ProblematicField(['spec', 'backup']),
 
     input.CopiedOverField(['spec', 'haproxy', 'affinity']),
     input.CopiedOverField(['spec', 'haproxy', 'containerSecurityContext']),
