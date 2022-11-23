@@ -118,7 +118,7 @@ class Checker(object):
                         (len(flattened_system_state), num_delta))
 
         # XXX: disable health check for now
-        runResult.health_result = self.check_health(snapshot)
+        runResult.health_result = self.check_health(snapshot, prev_snapshot)
         # health_result = PassResult()
 
         if self.custom_oracle != None:
@@ -464,7 +464,7 @@ class Checker(object):
             # return ErrorResult(Oracle.ERROR_LOG, line)
         return PassResult()
 
-    def check_health(self, snapshot: Snapshot) -> OracleResult:
+    def check_health(self, snapshot: Snapshot, prev_snapshot: Snapshot) -> OracleResult:
         '''System health oracle'''
         logger = get_thread_logger(with_prefix=True)
 

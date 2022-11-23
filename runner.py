@@ -41,6 +41,9 @@ class Runner(object):
             'ingress': self.networkingV1Api.list_namespaced_ingress,
             'pod_disruption_budget': self.policyV1Api.list_namespaced_pod_disruption_budget,
             'secret': self.coreV1Api.list_namespaced_secret,
+            'endpoints': self.coreV1Api.list_namespaced_endpoints,
+            'service_account': self.coreV1Api.list_namespaced_service_account,
+            'job': self.batchV1Api.list_namespaced_job,
         }
 
     def run(self, input: dict, generation: int) -> Snapshot:
