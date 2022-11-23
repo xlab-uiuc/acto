@@ -33,7 +33,7 @@ func CountFieldYaml(filePath string, fieldSet StringSet, kind string) {
 	}
 	logger.Infof("Unmarshalled yaml file %s\n", instance)
 
-	mapToTree(instance, &root)
+	MapToTree(instance, &root)
 	buffer := &bytes.Buffer{}
 	root.WriteJSON(buffer, true)
 	logger.Infof("Root %s", buffer)
@@ -52,7 +52,7 @@ func CountFieldYaml(filePath string, fieldSet StringSet, kind string) {
 	})
 }
 
-func mapToTree(instance interface{}, node ki.Ki) {
+func MapToTree(instance interface{}, node ki.Ki) {
 	logger := zap.S()
 	switch typedInstance := instance.(type) {
 	case map[string]interface{}:
@@ -64,7 +64,7 @@ func mapToTree(instance interface{}, node ki.Ki) {
 				child.InitName(child, k)
 				node.AddChild(child)
 			}
-			mapToTree(v, child)
+			MapToTree(v, child)
 		}
 	case []interface{}:
 		for _, v := range typedInstance {
@@ -74,7 +74,7 @@ func mapToTree(instance interface{}, node ki.Ki) {
 				child.InitName(child, "INDEX")
 				node.AddChild(child)
 			}
-			mapToTree(v, child)
+			MapToTree(v, child)
 		}
 	case map[interface{}]interface{}:
 		for k, v := range typedInstance {
@@ -85,7 +85,7 @@ func mapToTree(instance interface{}, node ki.Ki) {
 				child.InitName(child, k.(string))
 				node.AddChild(child)
 			}
-			mapToTree(v, child)
+			MapToTree(v, child)
 		}
 	default:
 		logger.Debugf("Found a leaf %T\n", typedInstance)
