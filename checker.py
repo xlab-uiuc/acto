@@ -652,8 +652,7 @@ class Checker(object):
 
         diff = DeepDiff(prev_system_state,
                         curr_system_state,
-                        exclude_regex_paths=exclude_paths,
-                        ignore_order=True)
+                        exclude_regex_paths=exclude_paths)
 
         if diff:
             logger.debug(f"failed attempt recovering to seed state - system state diff: {diff}")
