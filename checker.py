@@ -488,12 +488,24 @@ class Checker(object):
         for dp in system_state['deployment'].values():
             if dp['spec']['replicas'] == 0:
                 continue
-            
+
             if dp['status']['replicas'] != dp['status']['ready_replicas']:
                 unhealthy_resources['deployment'].append(
                     '%s replicas [%s] ready_replicas [%s]' %
                     (dp['metadata']['name'], dp['status']['replicas'],
                      dp['status']['ready_replicas']))
+
+            for condition in dp['status']['conditions']:
+                if condition['type'] == 'Available' and condition['status'] != 'True':
+                    unhealthy_resources['deployment'].append(
+                        '%s condition [%s] status [%s] message [%s]' %
+                        (dp['metadata']['name'], condition['type'], condition['status'],
+                         condition['message']))
+                elif condition['type'] == 'Progressing' and condition['status'] != 'True':
+                    unhealthy_resources['deployment'].append(
+                        '%s condition [%s] status [%s] message [%s]' %
+                        (dp['metadata']['name'], condition['type'], condition['status'],
+                         condition['message']))
 
         # check Health of Pods
         unhealthy_resources['pod'] = []
@@ -650,9 +662,7 @@ class Checker(object):
             r".*\['version'\]",
         ]
 
-        diff = DeepDiff(prev_system_state,
-                        curr_system_state,
-                        exclude_regex_paths=exclude_paths)
+        diff = DeepDiff(prev_system_state, curr_system_state, exclude_regex_paths=exclude_paths)
 
         if diff:
             logger.debug(f"failed attempt recovering to seed state - system state diff: {diff}")
