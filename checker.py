@@ -617,6 +617,13 @@ class Checker(object):
             if v['metadata']['owner_references'][0]['kind'] != 'Job'
         }
 
+        for name, obj in curr_system_state['secret'].items():
+            for key, data in obj['data'].items():
+                try:
+                    obj['data'][key] = json.loads(data)
+                except:
+                    pass
+
         # remove custom resource from both states
         curr_system_state.pop('custom_resource_spec', None)
         prev_system_state.pop('custom_resource_spec', None)
@@ -640,6 +647,7 @@ class Checker(object):
             r".*\['spec'\]\['containers'\]\[.*\]\['volume_mounts'\]\[.*\]\['name'\]",
             r".*\['spec'\]\['volumes'\]\[.*\]\['name'\]",
             r".*\['spec'\]\['node_name'\]",
+            r".*\['version'\]",
         ]
 
         diff = DeepDiff(prev_system_state,
