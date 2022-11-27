@@ -220,7 +220,7 @@ class Runner(object):
             result_dict[cr['metadata']['name']] = cr
         return result_dict
 
-    def wait_for_system_converge(self, hard_timeout=600):
+    def wait_for_system_converge(self, hard_timeout=900):
         '''This function blocks until the system converges. It keeps 
            watching for incoming events. If there is no event within 
            60 seconds, the system is considered to have converged. 
@@ -247,7 +247,7 @@ class Runner(object):
 
         while (True):
             try:
-                event = combined_event_queue.get(timeout=60)
+                event = combined_event_queue.get(timeout=90)
                 if event == "timeout":
                     logger.debug('Hard timeout %d triggered', hard_timeout)
                     break

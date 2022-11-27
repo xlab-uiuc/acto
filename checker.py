@@ -630,11 +630,12 @@ class Checker(object):
         }
 
         for name, obj in curr_system_state['secret'].items():
-            for key, data in obj['data'].items():
-                try:
-                    obj['data'][key] = json.loads(data)
-                except:
-                    pass
+            if 'data' in obj and obj['data'] != None:
+                for key, data in obj['data'].items():
+                    try:
+                        obj['data'][key] = json.loads(data)
+                    except:
+                        pass
 
         # remove custom resource from both states
         curr_system_state.pop('custom_resource_spec', None)
