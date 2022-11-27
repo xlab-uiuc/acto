@@ -1,6 +1,9 @@
 {
       "analysis_result": {
-            "control_flow_fields": [
+            "used_fields": [
+                  [
+                        "root"
+                  ],
                   [
                         "root",
                         "spec"
@@ -17,20 +20,8 @@
                         "spec",
                         "ingress",
                         "istio",
-                        "knative-local-gateway"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "controller-custom-certs"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "ingress",
-                        "istio",
                         "knative-ingress-gateway",
-                        "servers"
+                        "selector"
                   ],
                   [
                         "root",
@@ -38,25 +29,7 @@
                         "ingress",
                         "istio",
                         "knative-local-gateway",
-                        "servers"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "ingress",
-                        "kourier",
-                        "service-type"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "ingress"
-                  ],
-                  [
-                        "root",
-                        "spec",
-                        "controller-custom-certs",
-                        "type"
+                        "selector"
                   ],
                   [
                         "root",
@@ -75,6 +48,78 @@
                   [
                         "root",
                         "spec",
+                        "controller-custom-certs",
+                        "type"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "controller-custom-certs"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "ingress"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "ingress",
+                        "kourier",
+                        "service-type"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "controller-custom-certs",
+                        "name"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "ingress",
+                        "istio",
+                        "knative-local-gateway"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "ingress",
+                        "kourier",
+                        "enabled"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "ingress",
+                        "istio",
+                        "knative-ingress-gateway",
+                        "servers"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "ingress",
+                        "istio",
+                        "knative-local-gateway",
+                        "servers"
+                  ]
+            ],
+            "control_flow_fields": [
+                  [
+                        "root",
+                        "spec"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "ingress",
+                        "istio",
+                        "knative-ingress-gateway"
+                  ],
+                  [
+                        "root",
+                        "spec",
                         "ingress",
                         "istio",
                         "knative-ingress-gateway",
@@ -91,6 +136,43 @@
                   [
                         "root",
                         "spec",
+                        "ingress",
+                        "contour",
+                        "enabled"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "ingress",
+                        "istio",
+                        "enabled"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "controller-custom-certs",
+                        "type"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "controller-custom-certs"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "ingress"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "ingress",
+                        "kourier",
+                        "service-type"
+                  ],
+                  [
+                        "root",
+                        "spec",
                         "controller-custom-certs",
                         "name"
                   ],
@@ -98,12 +180,73 @@
                         "root",
                         "spec",
                         "ingress",
+                        "istio",
+                        "knative-local-gateway"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "ingress",
                         "kourier",
                         "enabled"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "ingress",
+                        "istio",
+                        "knative-ingress-gateway",
+                        "servers"
+                  ],
+                  [
+                        "root",
+                        "spec",
+                        "ingress",
+                        "istio",
+                        "knative-local-gateway",
+                        "servers"
                   ]
             ],
             "default_value_map": {},
             "field_conditions_map": {
+                  "[\"spec\", \"ingress\", \"kourier\", \"service-type\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "ingress",
+                                                      "kourier",
+                                                      "service-type"
+                                                ],
+                                                "op": "!=",
+                                                "value": "\"\""
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
+                  "[\"spec\", \"ingress\", \"istio\", \"enabled\"]": {
+                        "type": "AND",
+                        "conditions": [
+                              {
+                                    "type": "OR",
+                                    "conditions": [
+                                          {
+                                                "field": [
+                                                      "spec",
+                                                      "ingress"
+                                                ],
+                                                "op": "!=",
+                                                "value": null
+                                          }
+                                    ]
+                              }
+                        ]
+                  },
                   "[\"spec\", \"ingress\", \"kourier\", \"enabled\"]": {
                         "type": "AND",
                         "conditions": [
@@ -135,44 +278,6 @@
                                                 ],
                                                 "op": "!=",
                                                 "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"ingress\", \"istio\", \"enabled\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "ingress"
-                                                ],
-                                                "op": "!=",
-                                                "value": null
-                                          }
-                                    ]
-                              }
-                        ]
-                  },
-                  "[\"spec\", \"ingress\", \"kourier\", \"service-type\"]": {
-                        "type": "AND",
-                        "conditions": [
-                              {
-                                    "type": "OR",
-                                    "conditions": [
-                                          {
-                                                "field": [
-                                                      "spec",
-                                                      "ingress",
-                                                      "kourier",
-                                                      "service-type"
-                                                ],
-                                                "op": "!=",
-                                                "value": "\"\""
                                           }
                                     ]
                               }
@@ -1374,16 +1479,16 @@
       },
       "namespace": "knative-serving",
       "preload_images": [
-            "gcr.io/knative-releases/knative.dev/serving/cmd/controller:v1.6.0",
-            "gcr.io/knative-releases/knative.dev/serving/cmd/domain-mapping:v1.6.0",
-            "gcr.io/knative-releases/knative.dev/operator/cmd/operator:v1.6.0",
-            "gcr.io/knative-releases/knative.dev/net-kourier/cmd/kourier:v1.6.0",
-            "gcr.io/knative-releases/knative.dev/pkg/apiextensions/storageversion/cmd/migrate:latest",
-            "gcr.io/knative-releases/knative.dev/serving/cmd/domain-mapping-webhook:v1.6.0",
             "gcr.io/knative-releases/knative.dev/serving/cmd/webhook:v1.6.0",
-            "gcr.io/knative-releases/knative.dev/serving/cmd/autoscaler-hpa:v1.6.0",
-            "docker.io/envoyproxy/envoy:v1.20-latest",
             "gcr.io/knative-releases/knative.dev/serving/cmd/autoscaler:v1.6.0",
-            "gcr.io/knative-releases/knative.dev/serving/cmd/activator:v1.6.0"
+            "docker.io/envoyproxy/envoy:v1.20-latest",
+            "gcr.io/knative-releases/knative.dev/net-kourier/cmd/kourier:v1.6.0",
+            "gcr.io/knative-releases/knative.dev/serving/cmd/domain-mapping:v1.6.0",
+            "gcr.io/knative-releases/knative.dev/serving/cmd/domain-mapping-webhook:v1.6.0",
+            "gcr.io/knative-releases/knative.dev/serving/cmd/activator:v1.6.0",
+            "gcr.io/knative-releases/knative.dev/pkg/apiextensions/storageversion/cmd/migrate:latest",
+            "gcr.io/knative-releases/knative.dev/operator/cmd/operator:v1.6.0",
+            "gcr.io/knative-releases/knative.dev/serving/cmd/controller:v1.6.0",
+            "gcr.io/knative-releases/knative.dev/serving/cmd/autoscaler-hpa:v1.6.0"
       ]
 }
