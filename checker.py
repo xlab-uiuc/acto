@@ -629,6 +629,14 @@ class Checker(object):
             if v['metadata']['owner_references'][0]['kind'] != 'Job'
         }
 
+        for name, obj in prev_system_state['secret'].items():
+            if 'data' in obj and obj['data'] != None:
+                for key, data in obj['data'].items():
+                    try:
+                        obj['data'][key] = json.loads(data)
+                    except:
+                        pass
+
         for name, obj in curr_system_state['secret'].items():
             if 'data' in obj and obj['data'] != None:
                 for key, data in obj['data'].items():
