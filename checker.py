@@ -669,6 +669,9 @@ class Checker(object):
             r".*\['spec'\]\['volumes'\]\[.*\]\['name'\]",
             r".*\['spec'\]\['node_name'\]",
             r".*\['version'\]",
+            r".*\['endpoints'\]\[.*\]\['addresses'\]\[.*\]\['target_ref'\]\['uid'\]",
+            r".*\['endpoints'\]\[.*\]\['addresses'\]\[.*\]\['target_ref'\]\['resource_version'\]",
+            r".*\['endpoints'\]\[.*\]\['addresses'\]\[.*\]\['target_ref'\]\['ip'\]",
         ]
 
         diff = DeepDiff(prev_system_state, curr_system_state, exclude_regex_paths=exclude_paths)
