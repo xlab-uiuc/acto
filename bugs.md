@@ -52,9 +52,10 @@
 |                                     | [https://github.com/pingcap/tidb-operator/issues/4705](https://github.com/pingcap/tidb-operator/issues/4705)                     |           |
 | percona-xtradb-cluster-operator     | [https://jira.percona.com/browse/K8SPXC-1060](https://jira.percona.com/browse/K8SPXC-1060)                                       | fixed     |
 |                                     | [https://jira.percona.com/browse/K8SPXC-1061](https://jira.percona.com/browse/K8SPXC-1061)                                       | fixed     |
-|                                     | [https://jira.percona.com/browse/K8SPXC-1067](https://jira.percona.com/browse/K8SPXC-1067)                                       | fixed          |
+|                                     | [https://jira.percona.com/browse/K8SPXC-1067](https://jira.percona.com/browse/K8SPXC-1067)                                       | fixed     |
 |                                     | [https://jira.percona.com/browse/K8SPXC-1068](https://jira.percona.com/browse/K8SPXC-1068)                                       |           |
 |                                     | [https://jira.percona.com/browse/K8SPXC-1069](https://jira.percona.com/browse/K8SPXC-1069)                                       |           |
+|                                     | [https://jira.percona.com/browse/K8SPXC-1155](https://jira.percona.com/browse/K8SPXC-1155)                                       |           |
 | runtime/cgo                         | [https://github.com/golang/go/issues/53958](https://github.com/golang/go/issues/53958)                                           | fixed     |
 | knative-operator                    | [https://github.com/knative/operator/issues/1157](https://github.com/knative/operator/issues/1157)                               | fixed     |
 |                                     | [https://github.com/knative/operator/issues/1158](https://github.com/knative/operator/issues/1158)                               | fixed     |
@@ -64,8 +65,8 @@
 |                                     | [mongodb/mongodb-kubernetes-operator#1074](https://github.com/mongodb/mongodb-kubernetes-operator/issues/1074)                   |           |
 # Byproduct bugs
 
-| Operator                            | Link                                                                                                                 | Status    |
-| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------- | --------- |
-| mongodb/mongodb-kubernetes-operator | [https://github.com/mongodb/helm-charts/pull/123](https://github.com/mongodb/helm-charts/pull/123)                   | fixed     |
-| pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/issues/4614](https://github.com/pingcap/tidb-operator/issues/4614)         | fixed     |
-| k8ssandra/cass-operator             | [https://github.com/k8ssandra/k8ssandra/issues/1380](https://github.com/k8ssandra/k8ssandra/issues/1380)             | fixed     |
+| Operator                            | Link                                                                                                         | Status |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------ | ------ |
+| mongodb/mongodb-kubernetes-operator | [https://github.com/mongodb/helm-charts/pull/123](https://github.com/mongodb/helm-charts/pull/123)           | fixed  |
+| pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/issues/4614](https://github.com/pingcap/tidb-operator/issues/4614) | fixed  |
+| k8ssandra/cass-operator             | [https://github.com/k8ssandra/k8ssandra/issues/1380](https://github.com/k8ssandra/k8ssandra/issues/1380)     | fixed  |
