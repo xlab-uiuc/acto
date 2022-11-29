@@ -671,7 +671,7 @@ class Checker(object):
             r".*\['version'\]",
             r".*\['endpoints'\]\[.*\]\['addresses'\]\[.*\]\['target_ref'\]\['uid'\]",
             r".*\['endpoints'\]\[.*\]\['addresses'\]\[.*\]\['target_ref'\]\['resource_version'\]",
-            r".*\['endpoints'\]\[.*\]\['addresses'\]\[.*\]\['target_ref'\]\['ip'\]",
+            r".*\['endpoints'\]\[.*\]\['addresses'\]\[.*\]\['ip'\]",
         ]
 
         diff = DeepDiff(prev_system_state, curr_system_state, exclude_regex_paths=exclude_paths)
