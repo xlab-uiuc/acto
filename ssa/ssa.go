@@ -134,6 +134,9 @@ func analyze(projectPath string, seedType string, seedPkgPath string) string {
 		log.Printf("Copied over path %s", field.Path)
 	}
 
+	// analysis.FindUsesInConditions(context, frontierSet)
+	analysis.FindAllUses(context)
+
 	marshalled, _ := json.MarshalIndent(analysisResult, "", "\t")
 	return string(marshalled[:])
 }
