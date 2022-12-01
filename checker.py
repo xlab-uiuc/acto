@@ -738,7 +738,7 @@ if __name__ == "__main__":
         with open(result_path, 'w') as result_file:
             json.dump(result_dict, result_file, cls=ActoEncoder, indent=6)
 
-    def check_trial_worker(workqueue: multiprocessing.Queue,
+    def check_trial_worker(workqueue: multiprocessing.Queue, checker_class: type,
                            num_system_fields_list: multiprocessing.Array,
                            num_delta_fields_list: multiprocessing.Array, mode: str,
                            feature_gate: FeatureGate):
@@ -759,11 +759,11 @@ if __name__ == "__main__":
 
             input_model.apply_default_value(context['analysis_result']['default_value_map'])
 
-            checker = Checker(context=context,
-                              trial_dir=trial_dir,
-                              input_model=input_model,
-                              custom_oracle=None,
-                              feature_gate=FeatureGate(feature_gate))
+            checker: Checker = checker_class(context=context,
+                                             trial_dir=trial_dir,
+                                             input_model=input_model,
+                                             custom_oracle=None,
+                                             feature_gate=FeatureGate(feature_gate))
             snapshots = []
             snapshots.append(EmptySnapshot(seed))
 
@@ -799,7 +799,9 @@ if __name__ == "__main__":
                     prev_snapshot = snapshots[-1]
                     runResult = checker.check(snapshot=snapshot,
                                               prev_snapshot=prev_snapshot,
-                                              generation=generation)
+                                              revert=runtime_result['revert'],
+                                              generation=generation,
+                                              testcase_signature=runtime_result['generation'])
                     snapshots.append(snapshot)
 
                     if runtime_result['recovery_result'] != None and runtime_result[
@@ -853,6 +855,7 @@ if __name__ == "__main__":
     parser.add_argument('--testrun-dir', help='Directory to check', required=True)
     parser.add_argument('--config', help='Path to config file', required=True)
     parser.add_argument('--num-workers', help='Number of workers', type=int, default=4)
+    parser.add_argument('--blackbox', dest='blackbox', help='Blackbox mode', action='store_true')
     # parser.add_argument('--output', help='Path to output file', required=True)
 
     args = parser.parse_args()
@@ -919,6 +922,8 @@ if __name__ == "__main__":
         'dependency_analysis': DEPENDENCY_ANALYSIS,
     }
 
+    checker_class = Checker if not args.blackbox else BlackBoxChecker
+
     for name, feature_gate in F.items():
         mp_manager = multiprocessing.Manager()
 
@@ -931,8 +936,9 @@ if __name__ == "__main__":
 
         workers = [
             multiprocessing.Process(target=check_trial_worker,
-                                    args=(workqueue, num_system_fields_list, num_delta_fields_list,
-                                          name, feature_gate)) for _ in range(args.num_workers)
+                                    args=(workqueue, checker_class, num_system_fields_list,
+                                          num_delta_fields_list, name, feature_gate))
+            for _ in range(args.num_workers)
         ]
 
         for worker in workers:

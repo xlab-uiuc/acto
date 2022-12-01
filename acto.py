@@ -325,6 +325,7 @@ class TrialRunner:
         logger = get_thread_logger(with_prefix=True)
 
         testcase_patches = []
+        testcase_signature = None
         for field_node, testcase in testcases:
             testcase_signature = {
                 'field': json.dumps(field_node.get_path()),
