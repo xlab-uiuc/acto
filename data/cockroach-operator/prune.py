@@ -6,14 +6,12 @@ import input
 
 custom_fields = [
     input.CopiedOverField(['spec', 'affinity']),
-    input.CopiedOverField(['spec', 'resources']),
-    input.CopiedOverField(['spec', 'tolerations'], True),
-    input.CopiedOverField(['spec', 'topologySpreadConstraints'], True),
-    input.CopiedOverField(['spec', 'dataStore', 'pvc', 'spec']),
+    input.OverSpecifiedField(['spec', 'dataStore', 'pvc', 'spec'], used_fields=[
+        ['spec', 'dataStore', 'pvc', 'spec', 'resources', 'requests']
+    ]),
     input.CopiedOverField(['spec', 'dataStore', 'pvc', 'source']),
     input.CopiedOverField(['spec', 'dataStore', 'hostPath']),
-    input.CopiedOverField(['spec', 'nodeSelector']),
-    
-    input.OverSpecifiedField(['spec', 'ingress', 'sql', 'tls']),
-    input.OverSpecifiedField(['spec', 'ingress', 'ui', 'tls', 'INDEX', 'hosts']),
+    input.CopiedOverField(['spec', 'resources']),
+    input.CopiedOverField(['spec', 'tolerations'], array=True),
+    input.CopiedOverField(['spec', 'topologySpreadConstraints'], array=True),
 ]

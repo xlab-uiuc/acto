@@ -24,18 +24,21 @@ custom_fields = [
     input.CopiedOverField(['spec', 'pump', 'initContainers', 'ITEM']),
     input.CopiedOverField(['spec', 'pump', 'podSecurityContext']),
     input.CopiedOverField(['spec', 'pump', 'tolerations'], array=True),
+
     input.CopiedOverField(['spec', 'ticdc', 'additionalContainers', 'ITEM']),
     input.CopiedOverField(['spec', 'ticdc', 'additionalVolumes', 'ITEM']),
     input.CopiedOverField(['spec', 'ticdc', 'affinity']),
     input.CopiedOverField(['spec', 'ticdc', 'initContainers', 'ITEM']),
     input.CopiedOverField(['spec', 'ticdc', 'podSecurityContext']),
     input.CopiedOverField(['spec', 'ticdc', 'tolerations'], array=True),
+
     input.CopiedOverField(['spec', 'tidb', 'additionalContainers', 'ITEM']),
     input.CopiedOverField(['spec', 'tidb', 'additionalVolumes', 'ITEM']),
     input.CopiedOverField(['spec', 'tidb', 'affinity']),
     input.CopiedOverField(['spec', 'tidb', 'initContainers', 'ITEM']),
     input.CopiedOverField(['spec', 'tidb', 'podSecurityContext']),
     input.CopiedOverField(['spec', 'tidb', 'tolerations'], array=True),
+
     input.CopiedOverField(['spec', 'tiflash', 'additionalContainers', 'ITEM']),
     input.CopiedOverField(['spec', 'tiflash', 'additionalVolumes', 'ITEM']),
     input.CopiedOverField(['spec', 'tiflash', 'affinity']),
@@ -45,6 +48,7 @@ custom_fields = [
     input.CopiedOverField(['spec', 'tiflash', 'podSecurityContext']),
     input.CopiedOverField(['spec', 'tiflash', 'storageClaims', 'ITEM', 'resources']),
     input.CopiedOverField(['spec', 'tiflash', 'tolerations']),
+    
     input.CopiedOverField(['spec', 'tikv', 'additionalContainers', 'ITEM']),
     input.CopiedOverField(['spec', 'tikv', 'additionalVolumes', 'ITEM']),
     input.CopiedOverField(['spec', 'tikv', 'affinity']),

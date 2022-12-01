@@ -395,11 +395,31 @@ class ContainersSchema(K8sArraySchema):
         return "Containers"
 
 
+class HostPathVolumeSource(K8sObjectSchema):
+
+    fields = {
+        "path": K8sStringSchema,
+        "type": K8sStringSchema
+    }
+
+    def Match(schema: ObjectSchema) -> bool:
+        if not K8sObjectSchema.Match(schema):
+            return False
+        for field, field_schema in HostPathVolumeSource.fields.items():
+            if field not in schema.properties:
+                return False
+            elif not field_schema.Match(schema.properties[field]):
+                return False
+        return True
+
+    def __str__(self) -> str:
+        return "HostPathVolumeSource"
+
 class VolumeSchema(K8sObjectSchema):
 
     fields = {
         "name": K8sStringSchema,
-        "hostPath": K8sObjectSchema,
+        "hostPath": HostPathVolumeSource,
         "emptyDir": K8sObjectSchema,
         "gcePersistentDisk": K8sObjectSchema,
         "awsElasticBlockStore": K8sObjectSchema,

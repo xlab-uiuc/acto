@@ -10,6 +10,7 @@ custom_fields = [
     input.CopiedOverField(['spec', 'redis', 'resources']),
     input.CopiedOverField(['spec', 'redis', 'securityContext']),
     input.CopiedOverField(['spec', 'redis', 'storage', 'persistentVolumeClaim']),
+    input.CopiedOverField(['spec', 'redis', 'storage', 'emptyDir']),
     input.CopiedOverField(['spec', 'redis', 'tolerations'], array=True),
     input.CopiedOverField(['spec', 'sentinel', 'affinity']),
     input.CopiedOverField(['spec', 'sentinel', 'exporter', 'resources']),

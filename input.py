@@ -212,7 +212,7 @@ class ProblematicField(CustomField):
         def __init__(self, path: list, schema: dict) -> None:
             super().__init__(path, schema)
 
-        def __init__(self, schema_obj: BaseSchema) -> None:
+        def __init__(self, schema_obj: BaseSchema, used_fields: list) -> None:
             super().__init__(schema_obj.path, schema_obj.raw_schema)
 
         def get_all_schemas(self) -> Tuple[list, list, list]:
@@ -226,7 +226,7 @@ class ProblematicField(CustomField):
         def __init__(self, path: list, schema: dict) -> None:
             super().__init__(path, schema)
 
-        def __init__(self, schema_obj: BaseSchema) -> None:
+        def __init__(self, schema_obj: BaseSchema, used_fields: list) -> None:
             super().__init__(schema_obj.path, schema_obj.raw_schema)
 
         def get_all_schemas(self) -> Tuple[list, list, list]:
@@ -240,7 +240,7 @@ class ProblematicField(CustomField):
         def __init__(self, path: list, schema: dict) -> None:
             super().__init__(path, schema)
 
-        def __init__(self, schema_obj: BaseSchema) -> None:
+        def __init__(self, schema_obj: BaseSchema, used_fields: list) -> None:
             super().__init__(schema_obj.path, schema_obj.raw_schema)
 
         def get_all_schemas(self) -> Tuple[list, list, list]:
@@ -251,11 +251,11 @@ class ProblematicField(CustomField):
 
     def __init__(self, path, array: bool = False, string: bool = False) -> None:
         if array:
-            super().__init__(path, self.PruneEntireArraySchema)
+            super().__init__(path, self.PruneEntireArraySchema, [])
         elif string:
-            super().__init__(path, self.PruneEntireStringSchema)
+            super().__init__(path, self.PruneEntireStringSchema, [])
         else:
-            super().__init__(path, self.PruneEntireObjectSchema)
+            super().__init__(path, self.PruneEntireObjectSchema, [])
 
 
 class InputModel:
