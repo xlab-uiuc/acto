@@ -1,5 +1,6 @@
 import random
 import json
+from typing import List
 
 from test_case import TestCase
 from thread_logger import get_thread_logger
@@ -161,7 +162,7 @@ class TreeNode():
     def __str__(self) -> str:
         return str(self.path)
 
-    def eligible_fields(self) -> list:
+    def eligible_fields(self) -> List['TreeNode']:
         '''Returns all eligible fields of this subtree
         
         a field is eligible if it is not disabled and has at least one testcase
@@ -194,7 +195,7 @@ class TestPlan():
     def __init__(self, root: TreeNode) -> None:
         self.root = root
 
-    def select_fields(self, num_cases: int = 1):
+    def select_fields(self, num_cases: int = 1) -> List[TreeNode]:
         logger = get_thread_logger(with_prefix=True)
         ret = []
 
