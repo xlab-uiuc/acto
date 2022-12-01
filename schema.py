@@ -70,7 +70,7 @@ class BaseSchema:
         logger = get_thread_logger(with_prefix=True)
         if len(self.examples) > 0:
             logger.info('Using example for setting up field [%s]: [%s]' %
-                         (self.path, self.examples[0]))
+                        (self.path, self.examples[0]))
             example_without_default = [x for x in self.enum if x != self.default]
             if len(example_without_default) > 0:
                 return random.choice(example_without_default)
@@ -172,7 +172,7 @@ class StringSchema(BaseSchema):
         logger = get_thread_logger(with_prefix=True)
         if len(self.examples) > 0:
             logger.info('Using example for setting up field [%s]: [%s]' %
-                         (self.path, self.examples[0]))
+                        (self.path, self.examples[0]))
             return self.examples[0]
         else:
             return self.gen()
@@ -306,7 +306,7 @@ class IntegerSchema(NumberSchema):
         if self.default == None:
             self.default = 0
 
-    def gen(self, exclude_value = None, **kwargs) -> int:
+    def gen(self, exclude_value=None, **kwargs) -> int:
         # TODO: Use exclusive_minimum, exclusive_maximum
         if self.enum != None:
             if exclude_value != None:
@@ -317,7 +317,8 @@ class IntegerSchema(NumberSchema):
             return random.randrange(self.minimum, self.maximum + 1, self.multiple_of)
         else:
             if exclude_value != None:
-                return random.choice([x for x in range(self.minimum, self.maximum + 1) if x != exclude_value])
+                return random.choice(
+                    [x for x in range(self.minimum, self.maximum + 1) if x != exclude_value])
             else:
                 return random.randrange(self.minimum, self.maximum + 1)
 
@@ -360,7 +361,7 @@ class IntegerSchema(NumberSchema):
         if self.multiple_of != None:
             return random.randrange(prev, self.maximum + 1, self.multiple_of)
         else:
-            return random.randint(prev + 1, self.maximum)
+            return min(self.maximum, prev * 2)
 
     def increase_setup(self, prev):
         return self.minimum
@@ -377,7 +378,7 @@ class IntegerSchema(NumberSchema):
         if self.multiple_of != None:
             return random.randrange(self.minimum, prev, self.multiple_of)
         else:
-            return random.randint(self.minimum, prev - 1)
+            return max(self.minimum, int(prev / 2))
 
     def decrease_setup(self, prev):
         return self.maximum
@@ -406,7 +407,7 @@ class ObjectSchema(BaseSchema):
         logger = get_thread_logger(with_prefix=True)
         if 'properties' not in schema and 'additionalProperties' not in schema:
             logger.warning('Object schema %s does not have properties nor additionalProperties' %
-                            self.path)
+                           self.path)
         if 'properties' in schema:
             for property_key, property_schema in schema['properties'].items():
                 self.properties[property_key] = extract_schema(self.path + [property_key],
@@ -421,7 +422,7 @@ class ObjectSchema(BaseSchema):
         if 'maxProperties' in schema:
             self.max_properties = schema['maxProperties']
 
-    def gen(self, exclude_value = None, minimum: bool = False, **kwargs) -> dict:
+    def gen(self, exclude_value=None, minimum: bool = False, **kwargs) -> dict:
         # TODO: Use constraints: minProperties, maxProperties
         logger = get_thread_logger(with_prefix=True)
 
@@ -556,7 +557,7 @@ class ObjectSchema(BaseSchema):
 
     def __getitem__(self, key):
         if self.additional_properties != None and key not in self.properties:
-            # if the object schema has additionalProperties, and the key is not in the properties, 
+            # if the object schema has additionalProperties, and the key is not in the properties,
             # return the additionalProperties schema
             return self.additional_properties
         return self.properties[key]
@@ -587,7 +588,7 @@ class ArraySchema(BaseSchema):
     def get_item_schema(self):
         return self.item_schema
 
-    def gen(self, exclude_value = None, minimum: bool = False, **kwargs) -> list:
+    def gen(self, exclude_value=None, minimum: bool = False, **kwargs) -> list:
         if self.enum != None:
             if exclude_value != None:
                 return random.choice([x for x in self.enum if x != exclude_value])
@@ -666,7 +667,7 @@ class ArraySchema(BaseSchema):
             for example in self.examples:
                 if len(example) > 1:
                     logger.info('Using example for setting up field [%s]: [%s]' %
-                                 (self.path, self.examples[0]))
+                                (self.path, self.examples[0]))
                     return example
         if prev == None:
             return self.gen()
@@ -692,7 +693,7 @@ class ArraySchema(BaseSchema):
             for example in self.examples:
                 if len(example) > 1:
                     logger.info('Using example for setting up field [%s]: [%s]' %
-                                 (self.path, self.examples[0]))
+                                (self.path, self.examples[0]))
                     return example
         if prev == None:
             return self.gen()
@@ -733,7 +734,7 @@ class AnyOfSchema(BaseSchema):
     def get_possibilities(self):
         return self.possibilities
 
-    def gen(self, exclude_value = None, minimum: bool = False, **kwargs):
+    def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
         schema = random.choice(self.possibilities)
         return schema.gen(exclude_value=exclude_value, minimum=minimum)
 
@@ -787,6 +788,7 @@ class AnyOfSchema(BaseSchema):
         ret += ']'
         return ret
 
+
 class OneOfSchema(BaseSchema):
     '''Representing a schema with AnyOf keyword in it
     '''
@@ -803,7 +805,7 @@ class OneOfSchema(BaseSchema):
     def get_possibilities(self):
         return self.possibilities
 
-    def gen(self, exclude_value = None, minimum: bool = False, **kwargs):
+    def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
         schema = random.choice(self.possibilities)
         return schema.gen(exclude_value=exclude_value, minimum=minimum)
 
@@ -866,7 +868,7 @@ class BooleanSchema(BaseSchema):
             self.default = False
         pass
 
-    def gen(self, exclude_value = None, **kwargs):
+    def gen(self, exclude_value=None, **kwargs):
         if exclude_value != None:
             return not exclude_value
         else:
@@ -1063,17 +1065,29 @@ if __name__ == '__main__':
     print(resource_num_fields)
 
     used_resource_in_operators = {
-        'cass-operator': ['configmap', 'deployment', 'pvc', 'pdb', 'secret', 'service', 'statefulset'],
-        'cockroach-operator': ['configmap', 'deployment', 'pvc', 'pdb', 'secret', 'service', 'statefulset'],
+        'cass-operator': [
+            'configmap', 'deployment', 'pvc', 'pdb', 'secret', 'service', 'statefulset'
+        ],
+        'cockroach-operator': [
+            'configmap', 'deployment', 'pvc', 'pdb', 'secret', 'service', 'statefulset'
+        ],
         'knative-operator': ['configmap', 'deployment', 'pdb', 'secret', 'service'],
-        'mongodb-community-operator': ['configmap', 'deployment', 'pvc', 'secret', 'service', 'statefulset'],
-        'percona-server-mongodb-operator': ['configmap', 'deployment', 'ingress', 'pvc', 'pdb', 'secret', 'service', 'statefulset'],
-        'percona-xtradb-cluster-operator': ['configmap', 'deployment', 'pvc', 'pdb', 'secret', 'service', 'statefulset'],
+        'mongodb-community-operator': [
+            'configmap', 'deployment', 'pvc', 'secret', 'service', 'statefulset'
+        ],
+        'percona-server-mongodb-operator': [
+            'configmap', 'deployment', 'ingress', 'pvc', 'pdb', 'secret', 'service', 'statefulset'
+        ],
+        'percona-xtradb-cluster-operator': [
+            'configmap', 'deployment', 'pvc', 'pdb', 'secret', 'service', 'statefulset'
+        ],
         'rabbitmq-operator': ['configmap', 'deployment', 'pvc', 'secret', 'service', 'statefulset'],
         'redis-operator': ['configmap', 'deployment', 'pdb', 'secret', 'service', 'statefulset'],
         'redis-ot-operator': ['configmap', 'deployment', 'pvc', 'secret', 'service', 'statefulset'],
         'tidb-operator': ['configmap', 'deployment', 'pvc', 'secret', 'service', 'statefulset'],
-        'zookeeper-operator': ['configmap', 'deployment', 'pvc', 'pdb', 'secret', 'service', 'statefulset'],
+        'zookeeper-operator': [
+            'configmap', 'deployment', 'pvc', 'pdb', 'secret', 'service', 'statefulset'
+        ],
     }
 
     for operator, resources in used_resource_in_operators.items():

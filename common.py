@@ -143,7 +143,7 @@ class FeatureGate:
 
 class RunResult():
 
-    def __init__(self, generation: int, feature_gate: FeatureGate) -> None:
+    def __init__(self, revert, generation: int, feature_gate: FeatureGate, testcase_signature: dict) -> None:
         self.crash_result: OracleResult = None
         self.input_result: OracleResult = None
         self.health_result: OracleResult = None
@@ -156,6 +156,9 @@ class RunResult():
         self.generation = generation
 
         self.feature_gate = feature_gate
+
+        self.revert = revert
+        self.testcase_signature = testcase_signature
 
     def is_pass(self) -> bool:
         if not isinstance(self.crash_result, PassResult) and self.crash_result is not None:
@@ -224,7 +227,9 @@ class RunResult():
         '''serialize RunResult object
         '''
         return {
+            'revert': self.revert,
             'generation': self.generation,
+            'testcase': self.testcase_signature,
             'crash_result': self.crash_result.to_dict() if self.crash_result else None,
             'input_result': self.input_result.to_dict() if self.input_result else None,
             'health_result': self.health_result.to_dict() if self.health_result else None,

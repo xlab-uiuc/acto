@@ -3,12 +3,13 @@ import json
 import operator
 import random
 import threading
-from typing import Tuple
+from typing import List, Tuple
 from deepdiff import DeepDiff
 import glob
 import yaml
 
 from schema import OpaqueSchema, StringSchema, extract_schema, BaseSchema, ObjectSchema, ArraySchema
+from test_case import TestCase
 from testplan import TestPlan
 from value_with_schema import attach_schema_to_value
 from common import random_string
@@ -305,11 +306,11 @@ class InputModel:
 
     def set_mode(self, mode: str):
         if mode == 'NORMAL':
-            self.thread_vars.test_plan = self.thread_vars.normal_test_plan
+            self.thread_vars.test_plan: TestPlan = self.thread_vars.normal_test_plan
         elif mode == 'OVERSPECIFIED':
-            self.thread_vars.test_plan = self.thread_vars.overspecified_test_plan
+            self.thread_vars.test_plan: TestPlan = self.thread_vars.overspecified_test_plan
         elif mode == 'COPIED_OVER':
-            self.thread_vars.test_plan = self.thread_vars.copiedover_test_plan
+            self.thread_vars.test_plan: TestPlan = self.thread_vars.copiedover_test_plan
         else:
             raise ValueError(mode)
 
@@ -334,9 +335,14 @@ class InputModel:
     def get_discarded_tests(self) -> dict:
         return self.discarded_tests
 
-    def generate_test_plan(self) -> dict:
+    def generate_test_plan(self, delta_from: str = None) -> dict:
         '''Generate test plan based on CRD'''
         logger = get_thread_logger(with_prefix=False)
+
+        existing_testcases = {}
+        if delta_from is not None:
+            with open(delta_from, 'r') as delta_from_file:
+                existing_testcases = json.load(delta_from_file)['normal_testcases']
 
         tree: TreeNode = self.root_schema.to_tree()
         for field in self.used_fields:
@@ -374,6 +380,7 @@ class InputModel:
         for field in overspecified_fields:
             logger.info('Overspecified field: %s', field)
 
+        planned_normal_testcases = {}
         normal_testcases = {}
         overspecified_testcases = {}
         copiedover_testcases = {}
@@ -384,10 +391,12 @@ class InputModel:
         mounted_schema = self.get_schema_by_path(self.mount)
         normal_schemas, pruned_by_overspecified, pruned_by_copied = mounted_schema.get_all_schemas()
         for schema in normal_schemas:
-            testcases = schema.test_cases()
             path = json.dumps(schema.path).replace('\"ITEM\"',
-                                                   '0').replace('additional_properties',
-                                                                random_string(5))
+                                                   '0').replace('additional_properties', 'ACTOKEY')
+            testcases = schema.test_cases()
+            planned_normal_testcases[path] = testcases
+            if path in existing_testcases:
+                continue
             normal_testcases[path] = testcases
             num_normal_testcases += len(testcases)
 
@@ -466,12 +475,13 @@ class InputModel:
             for p in self.copiedover_test_plan_partitioned) == len(copiedover_test_plan_items))
 
         return {
+            'delta_from': delta_from,
             'normal_testcases': normal_testcases,
             'overspecified_testcases': overspecified_testcases,
             'copiedover_testcases': copiedover_testcases,
         }
 
-    def next_test(self) -> list:
+    def next_test(self) -> List[Tuple[TreeNode, TestCase]]:
         '''Selects next test case to run from the test plan
         
         Randomly select a test field, and fetch the tail of the test case list
@@ -488,7 +498,8 @@ class InputModel:
         ret = []
 
         # TODO: multi-testcase
-        selected_fields = self.thread_vars.test_plan.select_fields(num_cases=self.num_cases)
+        selected_fields: List[TreeNode] = self.thread_vars.test_plan.select_fields(
+            num_cases=self.num_cases)
 
         for selected_field in selected_fields:
             logger.info('Selected field [%s]', selected_field.get_path())

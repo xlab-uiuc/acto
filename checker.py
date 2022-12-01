@@ -13,7 +13,7 @@ from functools import reduce
 from common import *
 from compare import CompareMethods
 from input import InputModel
-from schema import ArraySchema, ObjectSchema
+from schema import ArraySchema, BooleanSchema, ObjectSchema
 from snapshot import EmptySnapshot, Snapshot
 from thread_logger import get_thread_logger
 from parse_log.parse_log import parse_log
@@ -32,9 +32,10 @@ class Checker(object):
 
         self.feature_gate = feature_gate
 
+        self.control_flow_fields = self.context['analysis_result']['control_flow_fields']
+
         self.field_conditions_map = {}
-        if self.context['enable_analysis']:
-            self.field_conditions_map = self.context['analysis_result']['field_conditions_map']
+        self.field_conditions_map = self.context['analysis_result']['field_conditions_map']
         self.helper(self.input_model.get_root_schema())
         # logging.info('Field condition map: %s' %
         #              json.dumps(self.field_conditions_map, indent=6))
@@ -79,7 +80,8 @@ class Checker(object):
                     }]
                 })
 
-    def check(self, snapshot: Snapshot, prev_snapshot: Snapshot, generation: int) -> RunResult:
+    def check(self, snapshot: Snapshot, prev_snapshot: Snapshot, revert: bool, generation: int,
+              testcase_signature: dict) -> RunResult:
         '''Use acto oracles against the results to check for any errors
 
         Args:        
@@ -89,7 +91,7 @@ class Checker(object):
             RunResult of the checking
         '''
         logger = get_thread_logger(with_prefix=True)
-        runResult = RunResult(generation, self.feature_gate)
+        runResult = RunResult(revert, generation, self.feature_gate, testcase_signature)
 
         if snapshot.system_state == {}:
             runResult.misc_result = InvalidInputResult(None)
@@ -353,8 +355,7 @@ class Checker(object):
                         return True
 
         if self.feature_gate.taint_analysis_enabled():
-            control_flow_fields = self.context['analysis_result']['control_flow_fields']
-            for control_flow_field in control_flow_fields:
+            for control_flow_field in self.control_flow_fields:
                 if len(input_delta.path) == len(control_flow_field):
                     not_match = False
                     for i in range(len(input_delta.path)):
@@ -681,6 +682,29 @@ class Checker(object):
             return RecoveryResult(delta=diff, from_=prev_system_state, to_=curr_system_state)
 
         return PassResult()
+
+
+class BlackBoxChecker(Checker):
+
+    def __init__(self, context: dict, trial_dir: str, input_model: InputModel,
+                 custom_oracle: List[callable], feature_gate: FeatureGate) -> None:
+        self.context = context
+        self.namespace = context['namespace']
+        self.compare_method = CompareMethods(feature_gate)
+        self.trial_dir = trial_dir
+        self.input_model = input_model
+        self.custom_oracle = custom_oracle
+
+        self.feature_gate = feature_gate
+
+        self.field_conditions_map = {}
+        self.helper(self.input_model.get_root_schema())
+
+        schemas_tuple = input_model.get_all_schemas()
+        all_schemas = schemas_tuple[0] + schemas_tuple[1] + schemas_tuple[2]
+        self.control_flow_fields = [
+            schema.get_path() for schema in all_schemas if isinstance(schema, BooleanSchema)
+        ]
 
 
 if __name__ == "__main__":

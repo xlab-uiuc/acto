@@ -27,9 +27,10 @@ from deploy import Deploy, DeployMethod
 from k8s_cluster import base, k3d, kind
 from constant import CONST
 from runner import Runner
-from checker import Checker
+from checker import BlackBoxChecker, Checker
 from snapshot import EmptySnapshot
 from ssa.analysis import analyze
+from testplan import TreeNode
 from thread_logger import set_thread_logger_prefix, get_thread_logger
 from value_with_schema import ValueWithSchema, attach_schema_to_value
 
@@ -113,10 +114,11 @@ def timeout_handler(sig, frame):
 
 class TrialRunner:
 
-    def __init__(self, context: dict, input_model: InputModel, deploy: Deploy,
-                 custom_on_init: List[callable], custom_oracle: List[callable], workdir: str,
-                 cluster: base.KubernetesCluster, worker_id: int, dryrun: bool, is_reproduce: bool,
-                 apply_testcase_f: FunctionType, feature_gate: FeatureGate) -> None:
+    def __init__(self, context: dict, input_model: InputModel, deploy: Deploy, runner_t: type,
+                 checker_t: type, custom_on_init: List[callable], custom_oracle: List[callable],
+                 workdir: str, cluster: base.KubernetesCluster, worker_id: int, dryrun: bool,
+                 is_reproduce: bool, apply_testcase_f: FunctionType,
+                 feature_gate: FeatureGate) -> None:
         self.context = context
         self.workdir = workdir
         self.base_workdir = workdir
@@ -128,6 +130,8 @@ class TrialRunner:
         self.cluster_name = f"acto-cluster-{worker_id}"
         self.input_model = input_model
         self.deploy = deploy
+        self.runner_t = runner_t
+        self.checker_t = checker_t
 
         self.custom_on_init = custom_on_init
         self.custom_oracle = custom_oracle
@@ -213,9 +217,9 @@ class TrialRunner:
             custom_oracle = [functools.partial(i, oracle_handle) for i in self.custom_oracle]
         else:
             custom_oracle = []
-        runner = Runner(self.context, trial_dir, self.kubeconfig, self.context_name)
-        checker = Checker(self.context, trial_dir, self.input_model, custom_oracle,
-                          self.feature_gate)
+        runner: Runner = self.runner_t(self.context, trial_dir, self.kubeconfig, self.context_name)
+        checker: Checker = self.checker_t(self.context, trial_dir, self.input_model, custom_oracle,
+                                          self.feature_gate)
 
         curr_input = self.input_model.get_seed_input()
         self.snapshots.append(EmptySnapshot(curr_input))
@@ -235,7 +239,12 @@ class TrialRunner:
                     break
                 next_tests = self.input_model.next_test()
 
+                # First make sure all the next tests are valid
                 for (field_node, testcase) in next_tests:  # iterate on list of next tests
+                    testcase_signature = {
+                        'field': json.dumps(field_node.get_path()),
+                        'testcase': str(testcase)
+                    }
                     field_curr_value = curr_input_with_schema.get_value_by_path(
                         list(field_node.get_path()))
 
@@ -264,7 +273,7 @@ class TrialRunner:
                         runResult = TrialRunner.run_and_check(runner, checker,
                                                               curr_input_with_schema.raw_value(),
                                                               self.snapshots, generation,
-                                                              self.dryrun)
+                                                              testcase_signature, self.dryrun)
                         generation += 1
 
                         is_invalid, _ = runResult.is_invalid()
@@ -311,19 +320,24 @@ class TrialRunner:
 
         return None, generation
 
-    def run_testcases(self, curr_input_with_schema, testcases, runner, checker,
-                      generation) -> Tuple[RunResult, int]:
+    def run_testcases(self, curr_input_with_schema, testcases: List[Tuple[TreeNode, TestCase]],
+                      runner, checker, generation) -> Tuple[RunResult, int]:
         logger = get_thread_logger(with_prefix=True)
 
         testcase_patches = []
         for field_node, testcase in testcases:
+            testcase_signature = {
+                'field': json.dumps(field_node.get_path()),
+                'testcase': str(testcase)
+            }
             patch = self.apply_testcase_f(curr_input_with_schema, field_node.get_path(), testcase)
 
             # field_node.get_testcases().pop()  # finish testcase
             testcase_patches.append((field_node, testcase, patch))
 
         runResult = TrialRunner.run_and_check(runner, checker, curr_input_with_schema.raw_value(),
-                                              self.snapshots, generation, self.dryrun)
+                                              self.snapshots, generation, testcase_signature,
+                                              self.dryrun)
         generation += 1
 
         is_invalid, invalidResult = runResult.is_invalid()
@@ -406,15 +420,25 @@ class TrialRunner:
             '''
             return runResult, generation
 
-    def run_and_check(runner: Runner, checker: Checker, input: dict, snapshots: list,
-                      generation: int, dryrun: bool) -> RunResult:
+    def run_and_check(runner: Runner,
+                      checker: Checker,
+                      input: dict,
+                      snapshots: list,
+                      generation: int,
+                      testcase_signature: dict,
+                      dryrun: bool,
+                      revert: bool = False) -> RunResult:
         logger = get_thread_logger(with_prefix=True)
         logger.debug('Run and check')
 
         retry = 0
         while True:
             snapshot = runner.run(input, generation)
-            runResult = checker.check(snapshot, snapshots[-1], generation)
+            runResult = checker.check(snapshot,
+                                      snapshots[-1],
+                                      revert,
+                                      generation,
+                                      testcase_signature=testcase_signature)
             snapshots.append(snapshot)
 
             if runResult.is_connection_refused():
@@ -447,8 +471,19 @@ class TrialRunner:
         curr_input_with_schema = attach_schema_to_value(self.snapshots[-1].input,
                                                         self.input_model.root_schema)
 
-        result = TrialRunner.run_and_check(runner, checker, curr_input_with_schema.raw_value(),
-                                           self.snapshots, generation, self.dryrun)
+        testcase_sig = {
+            'field': '',
+            'testcase': 'revert'
+        }
+
+        result = TrialRunner.run_and_check(runner,
+                                           checker,
+                                           curr_input_with_schema.raw_value(),
+                                           self.snapshots,
+                                           generation,
+                                           testcase_sig,
+                                           self.dryrun,
+                                           revert=True)
         return curr_input_with_schema
 
 
@@ -471,6 +506,8 @@ class Acto:
                  apply_testcase_f: FunctionType,
                  reproduce_dir: str = None,
                  feature_gate: FeatureGate = None,
+                 blackbox: bool = False,
+                 delta_from: str = None,
                  mount: list = None) -> None:
         logger = get_thread_logger(with_prefix=False)
 
@@ -521,6 +558,15 @@ class Acto:
                                             FeatureGate.WRITE_RESULT_EACH_GENERATION)
         else:
             self.feature_gate = feature_gate
+
+        if blackbox:
+            logger.info('Running in blackbox mode')
+            self.runner_type = Runner
+            self.checker_type = BlackBoxChecker
+        else:
+            self.runner_type = Runner
+            self.checker_type = Checker
+
         self.snapshots = []
 
         # generate configuration files for the cluster runtime
@@ -535,7 +581,8 @@ class Acto:
             self.context['preload_images'].update(preload_images_)
 
         # Apply custom fields
-        self.input_model: InputModel = input_model(self.context['crd']['body'], self.context['analysis_result']['used_fields'],
+        self.input_model: InputModel = input_model(self.context['crd']['body'],
+                                                   self.context['analysis_result']['used_fields'],
                                                    operator_config.example_dir, num_workers,
                                                    num_cases, self.reproduce_dir, mount)
         self.input_model.initialize(self.seed)
@@ -557,7 +604,10 @@ class Acto:
             self.custom_on_init = None
 
         # Generate test cases
-        self.test_plan = self.input_model.generate_test_plan()
+        testplan_path = None
+        if delta_from != None:
+            testplan_path = os.path.join(delta_from, 'test_plan.json')
+        self.test_plan = self.input_model.generate_test_plan(testplan_path)
         with open(os.path.join(self.workdir_path, 'test_plan.json'), 'w') as plan_file:
             json.dump(self.test_plan, plan_file, cls=ActoEncoder, indent=4)
 
@@ -631,7 +681,7 @@ class Acto:
             with open(context_file, 'w') as context_fout:
                 json.dump(self.context, context_fout, cls=ContextEncoder, indent=6, sort_keys=True)
 
-    def run(self, modes: list=['normal', 'overspecified', 'copiedover']):
+    def run(self, modes: list = ['normal', 'overspecified', 'copiedover']):
         logger = get_thread_logger(with_prefix=False)
 
         # Build an archive to be preloaded
@@ -647,10 +697,10 @@ class Acto:
 
         runners: List[TrialRunner] = []
         for i in range(self.num_workers):
-            runner = TrialRunner(self.context, self.input_model, self.deploy, self.custom_on_init,
-                                 self.custom_oracle, self.workdir_path, self.cluster, i,
-                                 self.dryrun, self.is_reproduce, self.apply_testcase_f,
-                                 self.feature_gate)
+            runner = TrialRunner(self.context, self.input_model, self.deploy, self.runner_type,
+                                 self.checker_type, self.custom_on_init, self.custom_oracle,
+                                 self.workdir_path, self.cluster, i, self.dryrun, self.is_reproduce,
+                                 self.apply_testcase_f, self.feature_gate)
             runners.append(runner)
 
         if 'normal' in modes:
@@ -801,6 +851,8 @@ if __name__ == '__main__':
                         default=1,
                         help='Number of testcases to bundle each time')
     parser.add_argument('--learn', dest='learn', action='store_true', help='Learn mode')
+    parser.add_argument('--blackbox', dest='blackbox', action='store_true', help='Blackbox mode')
+    parser.add_argument('--delta-from', dest='delta_from', help='Delta from')
     parser.add_argument('--notify-crash',
                         dest='notify_crash',
                         action='store_true',
@@ -862,10 +914,22 @@ if __name__ == '__main__':
     is_reproduce = False
 
     start_time = datetime.now()
-    acto = Acto(args.workdir_path, config, args.cluster_runtime, args.enable_analysis,
-                args.preload_images, context_cache, args.helper_crd, args.num_workers,
-                args.num_cases, args.dryrun, args.learn_analysis_only, is_reproduce, input_model,
-                apply_testcase_f)
+    acto = Acto(workdir_path=args.workdir_path,
+                operator_config=config,
+                cluster_runtime=args.cluster_runtime,
+                enable_analysis=args.enable_analysis,
+                preload_images_=args.preload_images,
+                context_file=context_cache,
+                helper_crd=args.helper_crd,
+                num_workers=args.num_workers,
+                num_cases=args.num_cases,
+                dryrun=args.dryrun,
+                analysis_only=args.learn_analysis_only,
+                is_reproduce=is_reproduce,
+                input_model=input_model,
+                apply_testcase_f=apply_testcase_f,
+                blackbox=args.blackbox,
+                delta_from=args.delta_from)
     if not args.learn:
         acto.run(modes=['normal'])
     end_time = datetime.now()
