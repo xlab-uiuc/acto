@@ -30,20 +30,29 @@ class Runner(object):
         self.customObjectApi = kubernetes.client.CustomObjectsApi(apiclient)
         self.policyV1Api = kubernetes.client.PolicyV1Api(apiclient)
         self.networkingV1Api = kubernetes.client.NetworkingV1Api(apiclient)
+        self.rbacAuthorizationV1Api = kubernetes.client.RbacAuthorizationV1Api(apiclient)
+        self.storageV1Api = kubernetes.client.StorageV1Api(apiclient)
+        self.schedulingV1Api = kubernetes.client.SchedulingV1Api(apiclient)
         self.resource_methods = {
             'pod': self.coreV1Api.list_namespaced_pod,
             'stateful_set': self.appV1Api.list_namespaced_stateful_set,
             'deployment': self.appV1Api.list_namespaced_deployment,
             'config_map': self.coreV1Api.list_namespaced_config_map,
             'service': self.coreV1Api.list_namespaced_service,
+            'service_account': self.coreV1Api.list_namespaced_service_account,
             'pvc': self.coreV1Api.list_namespaced_persistent_volume_claim,
             'cronjob': self.batchV1Api.list_namespaced_cron_job,
             'ingress': self.networkingV1Api.list_namespaced_ingress,
+            'network_policy': self.networkingV1Api.list_namespaced_network_policy,
             'pod_disruption_budget': self.policyV1Api.list_namespaced_pod_disruption_budget,
             'secret': self.coreV1Api.list_namespaced_secret,
             'endpoints': self.coreV1Api.list_namespaced_endpoints,
             'service_account': self.coreV1Api.list_namespaced_service_account,
             'job': self.batchV1Api.list_namespaced_job,
+            'role': self.rbacAuthorizationV1Api.list_namespaced_role,
+            'role_binding': self.rbacAuthorizationV1Api.list_namespaced_role_binding,
+            'storage_class': self.storageV1Api.list_storage_class,
+            'priority_class': self.schedulingV1Api.list_priority_class,
         }
 
     def run(self, input: dict, generation: int) -> Snapshot:
