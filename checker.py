@@ -801,7 +801,7 @@ if __name__ == "__main__":
                                               prev_snapshot=prev_snapshot,
                                               revert=runtime_result['revert'],
                                               generation=generation,
-                                              testcase_signature=runtime_result['generation'])
+                                              testcase_signature=runtime_result['testcase'])
                     snapshots.append(snapshot)
 
                     if runtime_result['recovery_result'] != None and runtime_result[
