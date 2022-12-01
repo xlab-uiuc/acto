@@ -587,7 +587,13 @@ class Acto:
                                                    operator_config.example_dir, num_workers,
                                                    num_cases, self.reproduce_dir, mount)
         self.input_model.initialize(self.seed)
-        if operator_config.custom_fields != None:
+        if blackbox:
+            pruned_list = []
+            module = importlib.import_module(operator_config.blackbox_custom_fields)
+            for custom_field in module.custom_fields:
+                pruned_list.append(custom_field.path)
+                self.input_model.apply_custom_field(custom_field)
+        else:
             pruned_list = []
             module = importlib.import_module(operator_config.custom_fields)
             for custom_field in module.custom_fields:

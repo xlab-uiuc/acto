@@ -66,6 +66,7 @@ if __name__ == '__main__':
             baseline_df = baseline_df.append(
                 {
                     'Trial number': json_instance['post_result']['trial_num'],
+                    'testcase': json_instance['post_result']['error']['testcase'],
                     'baseline_alarm': json_instance['alarm'],
                     'baseline_crash_result': crash_result,
                     'baseline_health_result': health_result,
@@ -119,6 +120,7 @@ if __name__ == '__main__':
             canonicalization_df = canonicalization_df.append(
                 {
                     'Trial number': json_instance['post_result']['trial_num'],
+                    'testcase': json_instance['post_result']['error']['testcase'],
                     'canonicalization_alarm': json_instance['alarm'],
                     'canonicalization_crash_result': crash_result,
                     'canonicalization_health_result': health_result,
@@ -172,6 +174,7 @@ if __name__ == '__main__':
             dependency_df = dependency_df.append(
                 {
                     'Trial number': json_instance['post_result']['trial_num'],
+                    'testcase': json_instance['post_result']['error']['testcase'],
                     'dependency_alarm': json_instance['alarm'],
                     'dependency_crash_result': crash_result,
                     'dependency_health_result': health_result,
@@ -225,6 +228,7 @@ if __name__ == '__main__':
             taint_analysis_df = taint_analysis_df.append(
                 {
                     'Trial number': json_instance['post_result']['trial_num'],
+                    'testcase': json_instance['post_result']['error']['testcase'],
                     'taint_analysis_alarm': json_instance['alarm'],
                     'taint_analysis_crash_result': crash_result,
                     'taint_analysis_health_result': health_result,

@@ -114,7 +114,7 @@ class StringSchema(BaseSchema):
         if self.pattern != None:
             # XXX: since it's random, we don't need to exclude the value
             return exrex.getone(self.pattern, self.max_length)
-        return random_string(10)
+        return 'ACTOKEY'
 
     def test_cases(self):
         '''String schema currently has two test cases, delete and change'''
@@ -163,7 +163,7 @@ class StringSchema(BaseSchema):
         if self.pattern != None:
             new_string = exrex.getone(self.pattern, self.max_length)
         else:
-            new_string = random_string(10)
+            new_string = 'ACTOKEY'
         if prev == new_string:
             logger.error('Failed to change, generated the same string with previous one')
         return new_string
@@ -439,7 +439,7 @@ class ObjectSchema(BaseSchema):
                 # raise TypeError('[%s]: No properties and no additional properties' % self.path)
                 logger.warning('[%s]: No properties and no additional properties' % self.path)
                 return None
-            key = random_string(5)
+            key = 'ACTOKEY'
             result[key] = self.additional_properties.gen(minimum=minimum)
         else:
             for k, v in self.properties.items():

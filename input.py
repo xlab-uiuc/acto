@@ -1,5 +1,6 @@
 from functools import partial, reduce
 import json
+import logging
 import operator
 import random
 import threading
@@ -19,9 +20,10 @@ from testplan import TreeNode
 
 class CustomField:
 
-    def __init__(self, path, schema) -> None:
+    def __init__(self, path, schema, used_fields: list) -> None:
         self.path = path
         self.custom_schema = schema
+        self.used_fields = used_fields
 
 
 class CopiedOverField(CustomField):
@@ -35,7 +37,8 @@ class CopiedOverField(CustomField):
         def __init__(self, path: list, schema: dict) -> None:
             super().__init__(path, schema)
 
-        def __init__(self, schema_obj: BaseSchema) -> None:
+        def __init__(self, schema_obj: BaseSchema, used_fields: list) -> None:
+            self.used_fields = used_fields
             super().__init__(schema_obj.path, schema_obj.raw_schema)
 
         def get_all_schemas(self) -> list:
@@ -53,9 +56,16 @@ class CopiedOverField(CustomField):
             if self.additional_properties != None:
                 normal_schemas.append(self.additional_properties)
 
-            keep = normal_schemas.pop()
-            pruned_by_copiedover.extend(normal_schemas)
-            normal_schemas = [keep]
+            if len(self.used_fields) == 0:
+                keep = [normal_schemas.pop()]
+            else:
+                keep = []
+            for schema in normal_schemas:
+                if schema.path in self.used_fields:
+                    keep.append(schema)
+                else:
+                    pruned_by_copiedover.append(schema)
+            normal_schemas = keep
 
             return normal_schemas, pruned_by_overspecified, pruned_by_copiedover
 
@@ -67,7 +77,8 @@ class CopiedOverField(CustomField):
         def __init__(self, path: list, schema: dict) -> None:
             super().__init__(path, schema)
 
-        def __init__(self, schema_obj: BaseSchema) -> None:
+        def __init__(self, schema_obj: BaseSchema, used_fields: list) -> None:
+            self.used_fields = used_fields
             super().__init__(schema_obj.path, schema_obj.raw_schema)
 
         def get_all_schemas(self) -> list:
@@ -77,9 +88,15 @@ class CopiedOverField(CustomField):
             pruned_by_copiedover = []
 
             child_schema_tuple = self.item_schema.get_all_schemas()
-            normal_schemas.append(child_schema_tuple[0].pop())
+            child_normal_schemas = child_schema_tuple[0]
+            for child_schema in child_normal_schemas:
+                if child_schema.path in self.used_fields:
+                    normal_schemas.append(child_schema)
+                else:
+                    pruned_by_copiedover.append(child_schema)
+            if len(self.used_fields) == 0:
+                normal_schemas.append(child_schema_tuple[0].pop())
             pruned_by_overspecified.extend(child_schema_tuple[1])
-            pruned_by_copiedover.extend(child_schema_tuple[0])
             pruned_by_copiedover.extend(child_schema_tuple[2])
 
             return normal_schemas, pruned_by_overspecified, pruned_by_copiedover
@@ -87,11 +104,13 @@ class CopiedOverField(CustomField):
         def __str__(self) -> str:
             return 'Children Pruned'
 
-    def __init__(self, path, array: bool = False) -> None:
+    def __init__(self, path, used_fields: list = None, array: bool = False) -> None:
         if array:
-            super().__init__(path, self.PruneChildrenArraySchema)
+            super().__init__(path, self.PruneChildrenArraySchema,
+                             used_fields if used_fields != None else [])
         else:
-            super().__init__(path, self.PruneChildrenObjectSchema)
+            super().__init__(path, self.PruneChildrenObjectSchema,
+                             used_fields if used_fields != None else [])
 
 
 class OverSpecifiedField(CustomField):
@@ -105,7 +124,8 @@ class OverSpecifiedField(CustomField):
         def __init__(self, path: list, schema: dict) -> None:
             super().__init__(path, schema)
 
-        def __init__(self, schema_obj: BaseSchema) -> None:
+        def __init__(self, schema_obj: BaseSchema, used_fields: list) -> None:
+            self.used_fields = used_fields
             super().__init__(schema_obj.path, schema_obj.raw_schema)
 
         def get_all_schemas(self) -> list:
@@ -123,9 +143,17 @@ class OverSpecifiedField(CustomField):
             if self.additional_properties != None:
                 normal_schemas.append(self.additional_properties)
 
-            keep = normal_schemas.pop()
-            pruned_by_overspecified.extend(normal_schemas)
-            normal_schemas = [keep]
+            if len(self.used_fields) == 0:
+                keep = [normal_schemas.pop()]
+            else:
+                keep = []
+            for schema in normal_schemas:
+                if schema.path in self.used_fields:
+                    logging.debug('Keeping %s' % schema.path)
+                    keep.append(schema)
+                else:
+                    pruned_by_overspecified.append(schema)
+            normal_schemas = keep
 
             return normal_schemas, pruned_by_overspecified, pruned_by_copiedover
 
@@ -137,7 +165,8 @@ class OverSpecifiedField(CustomField):
         def __init__(self, path: list, schema: dict) -> None:
             super().__init__(path, schema)
 
-        def __init__(self, schema_obj: BaseSchema) -> None:
+        def __init__(self, schema_obj: BaseSchema, used_fields: list) -> None:
+            self.used_fields = used_fields
             super().__init__(schema_obj.path, schema_obj.raw_schema)
 
         def get_all_schemas(self) -> list:
@@ -147,9 +176,15 @@ class OverSpecifiedField(CustomField):
             pruned_by_copiedover = []
 
             child_schema_tuple = self.item_schema.get_all_schemas()
-            normal_schemas.append(child_schema_tuple[0].pop())
+            child_normal_schemas = child_schema_tuple[0]
+            for child_schema in child_normal_schemas:
+                if child_schema.path in self.used_fields:
+                    normal_schemas.append(child_schema)
+                else:
+                    pruned_by_overspecified.append(child_schema)
+            if len(self.used_fields) == 0:
+                normal_schemas.append(child_schema_tuple[0].pop())
             pruned_by_overspecified.extend(child_schema_tuple[1])
-            pruned_by_overspecified.extend(child_schema_tuple[0])
             pruned_by_copiedover.extend(child_schema_tuple[2])
 
             return normal_schemas, pruned_by_overspecified, pruned_by_copiedover
@@ -157,11 +192,13 @@ class OverSpecifiedField(CustomField):
         def __str__(self) -> str:
             return 'Children Pruned'
 
-    def __init__(self, path, array: bool = False) -> None:
+    def __init__(self, path, used_fields: list = None, array: bool = False) -> None:
         if array:
-            super().__init__(path, self.OverSpecifiedArraySchema)
+            super().__init__(path, self.OverSpecifiedArraySchema,
+                             used_fields if used_fields != None else [])
         else:
-            super().__init__(path, self.OverSpecifiedObjectSchema)
+            super().__init__(path, self.OverSpecifiedObjectSchema,
+                             used_fields if used_fields != None else [])
 
 
 class ProblematicField(CustomField):
@@ -354,21 +391,22 @@ class InputModel:
 
             node.set_used()
 
-        def func(l: list, node: TreeNode) -> bool:
+        def func(overspecified_fields: list, unused_fields: list, node: TreeNode) -> bool:
             if len(node.children) == 0:
                 return False
 
             if not node.used:
-                l.append(node.path)
                 return False
 
             used_child = []
             for child in node.children.values():
                 if child.used:
                     used_child.append(child)
+                else:
+                    unused_fields.append(child.path)
 
             if len(used_child) == 0:
-                l.append(node.path)
+                overspecified_fields.append(node.path)
                 return False
             elif len(used_child) == len(node.children):
                 return True
@@ -376,9 +414,12 @@ class InputModel:
                 return True
 
         overspecified_fields = []
-        tree.traverse_func(partial(func, overspecified_fields))
+        unused_fields = []
+        tree.traverse_func(partial(func, overspecified_fields, unused_fields))
         for field in overspecified_fields:
             logger.info('Overspecified field: %s', field)
+        for field in unused_fields:
+            logger.info('Unused field: %s', field)
 
         planned_normal_testcases = {}
         normal_testcases = {}
@@ -476,6 +517,7 @@ class InputModel:
 
         return {
             'delta_from': delta_from,
+            'existing_testcases': existing_testcases,
             'normal_testcases': normal_testcases,
             'overspecified_testcases': overspecified_testcases,
             'copiedover_testcases': copiedover_testcases,
@@ -544,7 +586,8 @@ class InputModel:
         '''
         path = custom_field.path
         if len(path) == 0:
-            self.root_schema = custom_field.custom_schema(self.root_schema)
+            self.root_schema = custom_field.custom_schema(self.root_schema,
+                                                          custom_field.used_fields)
 
         # fetch the parent schema
         curr = self.root_schema
@@ -552,7 +595,7 @@ class InputModel:
             curr = curr[idx]
 
         # construct new schema
-        custom_schema = custom_field.custom_schema(curr[path[-1]])
+        custom_schema = custom_field.custom_schema(curr[path[-1]], custom_field.used_fields)
 
         # replace old schema with the new one
         curr[path[-1]] = custom_schema

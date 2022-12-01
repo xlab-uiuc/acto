@@ -68,6 +68,7 @@ class OperatorConfig:
                  deploy: dict,
                  crd_name: str,
                  custom_fields: str,
+                 blackbox_custom_fields: str,
                  example_dir: str,
                  seed_custom_resource: str,
                  analysis: dict,
@@ -76,6 +77,7 @@ class OperatorConfig:
         self.deploy = DeployConfig(**deploy)
         self.crd_name = crd_name
         self.custom_fields = custom_fields
+        self.blackbox_custom_fields = blackbox_custom_fields
         self.custom_oracle = custom_oracle
         self.example_dir = example_dir
         self.context = context
