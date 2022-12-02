@@ -51,8 +51,6 @@ class Runner(object):
             'job': self.batchV1Api.list_namespaced_job,
             'role': self.rbacAuthorizationV1Api.list_namespaced_role,
             'role_binding': self.rbacAuthorizationV1Api.list_namespaced_role_binding,
-            'storage_class': self.storageV1Api.list_storage_class,
-            'priority_class': self.schedulingV1Api.list_priority_class,
         }
 
     def run(self, input: dict, generation: int) -> Snapshot:
