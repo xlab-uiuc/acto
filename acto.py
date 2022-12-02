@@ -829,10 +829,6 @@ if __name__ == '__main__':
         dest='cluster_runtime',
         default="KIND",
         help='Cluster runtime for kubernetes, can be KIND (Default), K3D or MINIKUBE')
-    parser.add_argument('--enable-analysis',
-                        dest='enable_analysis',
-                        action='store_true',
-                        help='Enables static analysis to prune false alarms')
     parser.add_argument('--duration',
                         '-d',
                         dest='duration',
