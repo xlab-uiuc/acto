@@ -621,6 +621,8 @@ class Acto:
     def __learn(self, context_file, helper_crd, analysis_only=False):
         logger = get_thread_logger(with_prefix=False)
 
+        learn_start_time = time.time()
+
         if os.path.exists(context_file):
             logger.info('Loading context from file')
             with open(context_file, 'r') as context_fin:
@@ -644,8 +646,12 @@ class Acto:
                     self.context['analysis_result'] = analyze(entrypoint_path,
                                                               self.operator_config.analysis.type,
                                                               self.operator_config.analysis.package)
+
+                learn_end_time = time.time()
+                self.context['static_analysis_time'] = learn_end_time - learn_start_time
+
                 with open(context_file, 'w') as context_fout:
-                    json.dump(self.context, context_fout, cls=ContextEncoder, indent=6)
+                    json.dump(self.context, context_fout, cls=ContextEncoder, indent=4, sort_keys=True)
         else:
             # Run learning run to collect some information from runtime
             logger.info('Starting learning run to collect information')
@@ -669,6 +675,8 @@ class Acto:
                         self.crd_name, helper_crd)
             self.cluster.delete_cluster('learn')
 
+            run_end_time = time.time()
+
             if self.operator_config.analysis != None:
                 with tempfile.TemporaryDirectory() as project_src:
                     subprocess.run(
@@ -685,8 +693,13 @@ class Acto:
                     self.context['analysis_result'] = analyze(entrypoint_path,
                                                               self.operator_config.analysis.type,
                                                               self.operator_config.analysis.package)
+
+            learn_end_time = time.time()
+
+            self.context['static_analysis_time'] = learn_end_time - run_end_time
+            self.context['learnrun_time'] = run_end_time - learn_start_time
             with open(context_file, 'w') as context_fout:
-                json.dump(self.context, context_fout, cls=ContextEncoder, indent=6, sort_keys=True)
+                json.dump(self.context, context_fout, cls=ContextEncoder, indent=4, sort_keys=True)
 
     def run(self, modes: list = ['normal', 'overspecified', 'copiedover']):
         logger = get_thread_logger(with_prefix=False)
@@ -920,7 +933,7 @@ if __name__ == '__main__':
     acto = Acto(workdir_path=args.workdir_path,
                 operator_config=config,
                 cluster_runtime=args.cluster_runtime,
-                enable_analysis=args.enable_analysis,
+                enable_analysis=False,
                 preload_images_=args.preload_images,
                 context_file=context_cache,
                 helper_crd=args.helper_crd,

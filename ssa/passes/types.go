@@ -97,9 +97,9 @@ func (fn *FieldNode) SubFieldNode(parentStruct *types.Struct, fieldIndex int) *F
 
 // Returns the child with the "INDEX" field name, create one if not exist
 func (fn *FieldNode) IndexFieldNode() *FieldNode {
-	if child := fn.ChildByName("Index", 0); child == nil {
+	if child := fn.ChildByName("ITEM", 0); child == nil {
 		ret := NewFieldNode()
-		ret.SetName("Index")
+		ret.SetName("ITEM")
 		fn.AddChild(ret)
 		return ret
 	} else {
@@ -148,6 +148,7 @@ type Context struct {
 	IfToCondition          map[ssa.Instruction]*BranchCondition
 	BranchValueDominees    map[ssa.Instruction]*UsesInBranch
 	DomineeToConditions    map[string]*ConcreteConditionSet
+	FieldToK8sMapping      map[*TypeFieldNode]FieldInKubernetes
 }
 
 type UsesInBranch struct {

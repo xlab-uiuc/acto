@@ -68,6 +68,7 @@ def analyze(project_path: str, seed_type: str, seed_pkg: str) -> dict:
         'control_flow_fields': all_fields,
         'default_value_map': default_value_map,
         'field_conditions_map': field_conditions_map,
+        'fields_to_k8s_map': taint_analysis_result['fieldToK8sMapping']
     }
     return analysis_result
 

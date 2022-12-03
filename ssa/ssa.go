@@ -69,6 +69,7 @@ func analyze(projectPath string, seedType string, seedPkgPath string) string {
 		IfToCondition:          map[ssa.Instruction]*analysis.BranchCondition{},
 		BranchValueDominees:    map[ssa.Instruction]*analysis.UsesInBranch{},
 		DomineeToConditions:    map[string]*analysis.ConcreteConditionSet{},
+		FieldToK8sMapping:      map[*analysis.TypeFieldNode]analysis.FieldInKubernetes{},
 	}
 
 	log.Println("Running initial pass...")
@@ -99,7 +100,8 @@ func analyze(projectPath string, seedType string, seedPkgPath string) string {
 	mergedFieldSet := util.MergeFieldSets(fieldSets...)
 
 	analysisResult := AnalysisResult{
-		DefaultValues: map[string]string{},
+		DefaultValues:     map[string]string{},
+		FieldToK8sMapping: map[string]analysis.FieldInKubernetes{},
 	}
 	for _, field := range mergedFieldSet.Fields() {
 		analysisResult.UsedPaths = append(analysisResult.UsedPaths, field.Path)
@@ -136,6 +138,11 @@ func analyze(projectPath string, seedType string, seedPkgPath string) string {
 
 	// analysis.FindUsesInConditions(context, frontierSet)
 	analysis.FindAllUses(context)
+
+	analysis.GetFieldToK8sMapping(context, context.Program, &seedType, &seedPkgPath)
+	for field, mapping := range context.FieldToK8sMapping {
+		analysisResult.FieldToK8sMapping[field.EncodedPath()] = mapping
+	}
 
 	marshalled, _ := json.MarshalIndent(analysisResult, "", "\t")
 	return string(marshalled[:])
@@ -188,11 +195,12 @@ func main() {
 }
 
 type AnalysisResult struct {
-	UsedPaths       [][]string                            `json:"usedPaths"`
-	TaintedPaths    [][]string                            `json:"taintedPaths"`
-	DefaultValues   map[string]string                     `json:"defaultValues"`
-	FieldConditions []*analysis.PlainConcreteConditionSet `json:"fieldConditions"`
-	CopiedOverPaths [][]string                            `json:"copiedOverPaths"`
+	UsedPaths         [][]string                            `json:"usedPaths"`
+	TaintedPaths      [][]string                            `json:"taintedPaths"`
+	DefaultValues     map[string]string                     `json:"defaultValues"`
+	FieldConditions   []*analysis.PlainConcreteConditionSet `json:"fieldConditions"`
+	CopiedOverPaths   [][]string                            `json:"copiedOverPaths"`
+	FieldToK8sMapping map[string]analysis.FieldInKubernetes `json:"fieldToK8sMapping"`
 }
 
 type FieldCondition struct {
