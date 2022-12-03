@@ -35,6 +35,7 @@ func GetTypeTree(context *Context, seedType types.Type) {
 }
 
 func GetTypeTreeHelper(context *Context, seedType types.Type, node *TypeFieldNode) {
+
 	switch typ := seedType.Underlying().(type) {
 	case *types.Struct:
 		for i := 0; i < typ.NumFields(); i++ {
@@ -46,6 +47,11 @@ func GetTypeTreeHelper(context *Context, seedType types.Type, node *TypeFieldNod
 			fieldNode := NewTypeFieldNode(tagName, field.Type())
 			fieldNode.InitName(fieldNode, field.Name())
 			node.AddChild(fieldNode)
+
+			if strings.Contains(field.Type().String(), "istio.io/api") {
+				// this field uses recursive type
+				return
+			}
 
 			GetTypeTreeHelper(context, field.Type(), fieldNode)
 		}
