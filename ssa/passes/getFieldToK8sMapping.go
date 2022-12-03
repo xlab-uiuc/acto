@@ -468,7 +468,7 @@ func (fn *TypeFieldNode) EncodedPath() string {
 		}
 		return true
 	})
-	b, _ := json.Marshal(path[1:])
+	b, _ := json.Marshal(path[:])
 	return string(b[:])
 }
 
