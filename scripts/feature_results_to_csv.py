@@ -12,7 +12,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Script to convert feature results to xlsx')
     parser.add_argument('--testrun-dir', help='Directory to check', required=True)
     parser.add_argument('--testplan', help='Testplan', required=False)
-    parser.add_argument('--previous', help='Number of workers', type=str, default=4)
+    parser.add_argument('--previous', help='Previous result', type=str)
     args = parser.parse_args()
 
     result_folder = args.testrun_dir
@@ -20,10 +20,12 @@ if __name__ == '__main__':
         test_plan_path = args.testplan
     else:
         test_plan_path = os.path.join(result_folder, 'test_plan.json')
-    previous_inspection = args.previous
 
-    with open(previous_inspection, 'rb') as f:
-        previous_df = pd.read_excel(f, sheet_name='Overview', index_col=0, usecols=['Trial number', 'testcase_x', 'True/False'])
+    if args.previous:
+        previous_inspection = args.previous
+
+        with open(previous_inspection, 'rb') as f:
+            previous_df = pd.read_excel(f, sheet_name='Overview', index_col=0, usecols=['Trial number', 'testcase_x', 'True/False'])
 
     baseline_results = glob.glob(os.path.join(result_folder, '*', 'post-result-*-baseline.json'))
     canonicalization_results = glob.glob(
@@ -349,7 +351,14 @@ if __name__ == '__main__':
     merged= merged.drop(columns=list(merged.filter(regex = '_result')))
     merged = merged.sort_values(by=['Trial number'])
 
-    merged = pd.merge(merged, previous_df, on='Trial number', how='left')
+    baseline_df = baseline_df.sort_values(by=['Trial number'])
+    canonicalization_df = canonicalization_df.sort_values(by=['Trial number'])
+    taint_analysis_df = taint_analysis_df.sort_values(by=['Trial number'])
+    dependency_df = dependency_df.sort_values(by=['Trial number'])
+
+
+    if args.previous:
+        merged = pd.merge(merged, previous_df, on='Trial number', how='left')
 
     with pd.ExcelWriter(os.path.join(result_folder, 'result.xlsx'), mode='w') as writer:
         merged.to_excel(writer, sheet_name='Overview', index=False)
