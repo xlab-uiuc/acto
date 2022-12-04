@@ -17,7 +17,42 @@ def canonicalizeQuantity(value):
         logging.error('the regex for number conversion is incorrect! The input string cannot be parsed')
         return parse_string
     return format(float(parse_string), ".3f")
-    
+
+def double_quantity(value):
+    value = str(value)
+    if not isinstance(value, str) or not bool(re.match('^[-+]?((\.[0-9]+)|([0-9]+(\.[0-9]+)?)|([0-9]+\.))(([KMGTPE]i)|([eE][-+]?((\.[0-9]+)|([0-9]+(\.[0-9]+)?)|([0-9]+\.)))|([mnkMGTPE]|))$', value)):
+        return value
+    k8sutil = ctypes.cdll.LoadLibrary('k8s_util/lib/k8sutil.so')
+    double_func = k8sutil.doubleIt
+    double_func.argtypes = [ctypes.c_char_p]
+    double_func.restype = ctypes.c_void_p
+
+    double_output = double_func(str(value).encode("utf-8"))
+    double_bytes = ctypes.string_at(double_output)
+    double_string = double_bytes.decode('utf-8')
+
+    if 'INVALID' == double_string:
+        logging.error('the regex for number conversion is incorrect! The input string cannot be parsed')
+        return double_string
+    return double_string
+
+def half_quantity(value):
+    value = str(value)
+    if not isinstance(value, str) or not bool(re.match('^[-+]?((\.[0-9]+)|([0-9]+(\.[0-9]+)?)|([0-9]+\.))(([KMGTPE]i)|([eE][-+]?((\.[0-9]+)|([0-9]+(\.[0-9]+)?)|([0-9]+\.)))|([mnkMGTPE]|))$', value)):
+        return value
+    k8sutil = ctypes.cdll.LoadLibrary('k8s_util/lib/k8sutil.so')
+    half_func = k8sutil.halfIt
+    half_func.argtypes = [ctypes.c_char_p]
+    half_func.restype = ctypes.c_void_p
+
+    output = half_func(str(value).encode("utf-8"))
+    bytes = ctypes.string_at(output)
+    half_string = bytes.decode('utf-8')
+
+    if 'INVALID' == half_string:
+        logging.error('the regex for number conversion is incorrect! The input string cannot be parsed')
+        return half_string
+    return half_string    
 
 if __name__ == '__main__':
     # print(canonicalizeQuantity('172.18.0.4'))
@@ -39,4 +74,4 @@ if __name__ == '__main__':
     # print(canonicalizeQuantity(".2316344e999842"))
     # print(canonicalizeQuantity("-92743e6047801799")) # crash
     print(canonicalizeQuantity(".6064887"))
-    print(canonicalizeQuantity("607m")) # interesting case
+    print(half_quantity("607m")) # interesting case

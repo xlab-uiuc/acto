@@ -298,6 +298,7 @@ class InputModel:
         self.normal_test_plan_partitioned = None
         self.overspecified_test_plan_partitioned = None
         self.copiedover_test_plan_partitioned = None
+        self.semantic_test_plan_partitioned = None
 
         self.thread_vars = threading.local()
 
@@ -423,6 +424,7 @@ class InputModel:
 
         planned_normal_testcases = {}
         normal_testcases = {}
+        semantic_testcases = {}
         overspecified_testcases = {}
         copiedover_testcases = {}
         num_normal_testcases = 0
@@ -434,26 +436,32 @@ class InputModel:
         for schema in normal_schemas:
             path = json.dumps(schema.path).replace('\"ITEM\"',
                                                    '0').replace('additional_properties', 'ACTOKEY')
-            testcases = schema.test_cases()
+            testcases, semantic_testcases_ = schema.test_cases()
             planned_normal_testcases[path] = testcases
+            if len(semantic_testcases_) > 0:
+                semantic_testcases[path] = semantic_testcases_
             if path in existing_testcases:
                 continue
             normal_testcases[path] = testcases
             num_normal_testcases += len(testcases)
 
         for schema in pruned_by_overspecified:
-            testcases = schema.test_cases()
+            testcases, semantic_testcases_ = schema.test_cases()
             path = json.dumps(schema.path).replace('\"ITEM\"',
                                                    '0').replace('additional_properties',
                                                                 random_string(5))
+            if len(semantic_testcases_) > 0:
+                semantic_testcases[path] = semantic_testcases_
             overspecified_testcases[path] = testcases
             num_overspecified_testcases += len(testcases)
 
         for schema in pruned_by_copied:
-            testcases = schema.test_cases()
+            testcases, semantic_testcases_ = schema.test_cases()
             path = json.dumps(schema.path).replace('\"ITEM\"',
                                                    '0').replace('additional_properties',
                                                                 random_string(5))
+            if len(semantic_testcases_) > 0:
+                semantic_testcases[path] = semantic_testcases_
             copiedover_testcases[path] = testcases
             num_copiedover_testcases += len(testcases)
 
@@ -465,13 +473,15 @@ class InputModel:
         logger.info('Generated [%d] test cases for overspecified schemas',
                     num_overspecified_testcases)
         logger.info('Generated [%d] test cases for copiedover schemas', num_copiedover_testcases)
+        logger.info('Generated [%d] test cases for semantic schemas', len(semantic_testcases))
 
-        self.metadata['normal_schemas'] = len(normal_schemas)
         self.metadata['pruned_by_overspecified'] = len(pruned_by_overspecified)
         self.metadata['pruned_by_copied'] = len(pruned_by_copied)
+        self.metadata['semantic_schemas'] = len(semantic_testcases)
         self.metadata['num_normal_testcases'] = num_normal_testcases
         self.metadata['num_overspecified_testcases'] = num_overspecified_testcases
         self.metadata['num_copiedover_testcases'] = num_copiedover_testcases
+        self.metadata['num_semantic_testcases'] = len(semantic_testcases)
 
         normal_test_plan_items = list(normal_testcases.items())
         overspecified_test_plan_items = list(overspecified_testcases.items())
@@ -503,6 +513,10 @@ class InputModel:
             self.copiedover_test_plan_partitioned[i % self.num_workers].append(
                 copiedover_test_plan_items[i])
 
+        for i in range(0, len(semantic_testcases)):
+            self.semantic_test_plan_partitioned[i % self.num_workers].append(
+                semantic_testcases[i])
+
         # appending empty lists to avoid no test cases distributed to certain work nodes
         assert (self.num_workers == len(self.normal_test_plan_partitioned))
         assert (self.num_workers == len(self.overspecified_test_plan_partitioned))
@@ -521,6 +535,8 @@ class InputModel:
             'normal_testcases': normal_testcases,
             'overspecified_testcases': overspecified_testcases,
             'copiedover_testcases': copiedover_testcases,
+            'semantic_testcases': semantic_testcases,
+            'planned_normal_testcases': planned_normal_testcases,
         }
 
     def next_test(self) -> List[Tuple[TreeNode, TestCase]]:
@@ -623,3 +639,55 @@ class InputModel:
             for key, value in candidates.items():
                 ret.extend(self.candidates_dict_to_list(value, path + [key]))
             return ret
+
+
+if __name__ == '__main__':
+    import time
+    import argparse
+    from datetime import datetime
+    import os
+    import importlib
+    from common import OperatorConfig, ActoEncoder
+
+    start_time = time.time()
+    workdir_path = 'testrun-%s' % datetime.now().strftime('%Y-%m-%d-%H-%M')
+    os.mkdir(workdir_path)
+
+    parser = argparse.ArgumentParser(
+        description='Automatic, Continuous Testing for k8s/openshift Operators')
+    parser.add_argument('--config', '-c', dest='config', help='Operator port config path')
+    parser.add_argument('--blackbox', dest='blackbox', action='store_true', help='Blackbox mode')
+    parser.add_argument('--delta-from', dest='delta_from', help='Delta from')
+
+    args = parser.parse_args()
+
+    with open(args.config, 'r') as config_file:
+        config = OperatorConfig(**json.load(config_file))
+
+    context_cache = os.path.join(os.path.dirname(config.seed_custom_resource), 'context.json')
+    with open(context_cache, 'r') as context_fin:
+        context = json.load(context_fin)
+        context['preload_images'] = set(context['preload_images'])
+
+    # Apply custom fields
+    input_model: InputModel = InputModel(context['crd']['body'], [], config.example_dir, 1, 1, [])
+    if args.blackbox:
+        pruned_list = []
+        module = importlib.import_module(config.blackbox_custom_fields)
+        for custom_field in module.custom_fields:
+            pruned_list.append(custom_field.path)
+            input_model.apply_custom_field(custom_field)
+    else:
+        pruned_list = []
+        module = importlib.import_module(config.custom_fields)
+        for custom_field in module.custom_fields:
+            pruned_list.append(custom_field.path)
+            input_model.apply_custom_field(custom_field)
+
+    # Generate test cases
+    testplan_path = None
+    if args.delta_from != None:
+        testplan_path = os.path.join(args.delta_from, 'test_plan.json')
+    test_plan = input_model.generate_test_plan(testplan_path)
+    with open(os.path.join(workdir_path, 'test_plan.json'), 'w') as plan_file:
+        json.dump(test_plan, plan_file, cls=ActoEncoder, indent=4)

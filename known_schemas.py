@@ -1,7 +1,17 @@
 from abc import abstractmethod
 from typing import List, Tuple
 from common import OperatorConfig
+from input import CustomField
+from k8s_util.k8sutil import canonicalizeQuantity, double_quantity, half_quantity
 from schema import AnyOfSchema, ArraySchema, BaseSchema, BooleanSchema, IntegerSchema, ObjectSchema, StringSchema, extract_schema
+from test_case import TestCase
+
+
+class K8sField():
+
+    def __init__(self, path, schema) -> None:
+        self.path = path
+        self.custom_schema = schema
 
 
 class K8sSchema:
@@ -55,6 +65,35 @@ class K8sAnyOfSchema(K8sSchema, AnyOfSchema):
 
 class QuantitySchema(K8sAnyOfSchema):
 
+    def increase_precondition(prev) -> bool:
+        if prev == None:
+            return False
+        elif canonicalizeQuantity(prev) == 'INVALID':
+            return False
+        return True
+
+    def increase(prev):
+        return double_quantity(prev)
+
+    def increase_setup(prev):
+        return "1000m"
+
+    def decrease_precondition(prev) -> bool:
+        if prev == None:
+            return False
+        elif canonicalizeQuantity(prev) == 'INVALID':
+            return False
+        return True
+
+    def decrease(prev):
+        return half_quantity(prev)
+
+    def decrease_setup(prev):
+        return "1000m"
+
+    Increase = TestCase(increase_precondition, increase, increase_setup)
+    Decrease = TestCase(decrease_precondition, decrease, decrease_setup)
+
     def Match(schema: AnyOfSchema) -> bool:
         if not K8sAnyOfSchema.Match(schema):
             return False
@@ -64,6 +103,14 @@ class QuantitySchema(K8sAnyOfSchema):
                 return False
 
         return True
+
+    def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
+        return '1000m'
+
+    def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
+        base_test_cases = super().test_cases()
+        base_test_cases[1].extend([QuantitySchema.Increase, QuantitySchema.Decrease])
+        return base_test_cases
 
     def __str__(self) -> str:
         return "Quantity"
@@ -82,6 +129,72 @@ class ResourceSchema(K8sObjectSchema):
 
     def __str__(self) -> str:
         return "Resource"
+
+
+class ComputeResourceSchema(ResourceSchema):
+
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        self.properties['cpu'] = QuantitySchema(self.additional_properties)
+        self.properties['memory'] = QuantitySchema(self.additional_properties)
+
+    def gen(self, exclude_value=None, minimum: bool = False, **kwargs) -> list:
+        return {'cpu': '1000m', 'memory': '1000m'}
+
+
+class StorageResourceSchema(ResourceSchema):
+
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        self.properties['storage'] = QuantitySchema(self.additional_properties)
+
+    def gen(self, exclude_value=None, minimum: bool = False, **kwargs) -> list:
+        return {'storage': '1000m'}
+
+    def __str__(self) -> str:
+        return "StorageResource"
+
+
+class ComputeResourceRequirementsSchema(K8sObjectSchema):
+
+    fields = {"limits": ComputeResourceSchema, "requests": ComputeResourceSchema}
+
+    def Match(schema: ObjectSchema) -> bool:
+        if not K8sObjectSchema.Match(schema):
+            return False
+        if len(schema.properties) != len(ResourceRequirementsSchema.fields):
+            return False
+        for field, field_schema in ResourceRequirementsSchema.fields.items():
+            if field not in schema.properties:
+                return False
+            elif not field_schema.Match(schema.properties[field]):
+                return False
+
+        return True
+
+    def __str__(self) -> str:
+        return "ResourceRequirements"
+
+
+class StorageResourceRequirementsSchema(K8sObjectSchema):
+
+    fields = {"limits": StorageResourceSchema, "requests": StorageResourceSchema}
+
+    def Match(schema: ObjectSchema) -> bool:
+        if not K8sObjectSchema.Match(schema):
+            return False
+        if len(schema.properties) != len(ResourceRequirementsSchema.fields):
+            return False
+        for field, field_schema in ResourceRequirementsSchema.fields.items():
+            if field not in schema.properties:
+                return False
+            elif not field_schema.Match(schema.properties[field]):
+                return False
+
+        return True
+
+    def __str__(self) -> str:
+        return "ResourceRequirements"
 
 
 class ResourceRequirementsSchema(K8sObjectSchema):
@@ -115,9 +228,42 @@ class PodManagementPolicySchema(K8sStringSchema):
 
 
 class ReplicasSchema(K8sIntegerSchema):
+    '''ScaleDownUp and ScaleUpDown'''
+
+    def scaleDownUpPrecondition(prev) -> bool:
+        return False
+
+    def scaleDownUp(prev) -> int:
+        return prev + 1
+
+    def scaleDownUpSetup(prev) -> int:
+        return prev - 1
+
+    def scaleUpDownPrecondition(prev) -> bool:
+        return False
+
+    def scaleUpDown(prev) -> int:
+        return prev + 1
+
+    def scaleUpDownSetup(prev) -> int:
+        return prev - 1
+
+    ScaleDownUp = TestCase(scaleDownUpPrecondition, scaleDownUp, scaleDownUpSetup)
+    ScaleUpDown = TestCase(scaleUpDownPrecondition, scaleUpDown, scaleUpDownSetup)
+
+    def gen(self, exclude_value=None, minimum: bool = False, **kwargs) -> list:
+        if exclude_value is None:
+            return 3
+        else:
+            return exclude_value + 1
 
     def Match(schema: ObjectSchema) -> bool:
         return isinstance(schema, IntegerSchema)
+
+    def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
+        base_testcases = super().test_cases()
+        base_testcases[1].extend([ReplicasSchema.ScaleDownUp, ReplicasSchema.ScaleUpDown])
+        return base_testcases
 
     def __str__(self) -> str:
         return "Replicas"
@@ -146,6 +292,47 @@ class NodeAffinitySchema(K8sObjectSchema):
     fields = {
         "requiredDuringSchedulingIgnoredDuringExecution": NodeSelectorSchema,
         "preferredDuringSchedulingIgnoredDuringExecution": PreferredSchedulingTermArraySchema
+    }
+
+    OneNodeAffinity = {
+        "requiredDuringSchedulingIgnoredDuringExecution": {
+            "nodeSelectorTerms": [{
+                "matchExpressions": [{
+                    "key": "kubernetes.io/hostname",
+                    "operator": "In",
+                    "values": ["kind-worker",]
+                }]
+            }]
+        }
+    }
+
+    PlainNodeAffinity = {
+        "requiredDuringSchedulingIgnoredDuringExecution": {
+            "nodeSelectorTerms": [{
+                "matchExpressions": [{
+                    "key": "kubernetes.io/hostname",
+                    "operator": "In",
+                    "values": [
+                        "kind-worker",
+                        "kind-worker2",
+                        "kind-worker3"
+                        "kind-control-plane",
+                    ]
+                }]
+            }]
+        }
+    }
+
+    UnAchievableNodeAffinity = {
+        "requiredDuringSchedulingIgnoredDuringExecution": {
+            "nodeSelectorTerms": [{
+                "matchExpressions": [{
+                    "key": "kubernetes.io/hostname",
+                    "operator": "In",
+                    "values": ["NULL",]
+                }]
+            }]
+        }
     }
 
     def Match(schema: ObjectSchema) -> bool:
@@ -191,6 +378,48 @@ class PodAffinitySchema(K8sObjectSchema):
         "preferredDuringSchedulingIgnoredDuringExecution": WeightedPodAffinityTermArraySchema
     }
 
+    AllOnOneNodeAffinity = {
+        "requiredDuringSchedulingIgnoredDuringExecution": [{
+            "labelSelector": {
+                "matchExpressions": [{
+                    "key": "app.kubernetes.io/name",
+                    "operator": "In",
+                    "values": ["test-cluster"]
+                }]
+            },
+            "topologyKey": "kubernetes.io/hostname"
+        }]
+    }
+
+    PlainPodAffinity = {
+        "requiredDuringSchedulingIgnoredDuringExecution": [{
+            "labelSelector": {
+                "matchExpressions": [{
+                    "key": "app.kubernetes.io/name",
+                    "operator": "In",
+                    "values": ["test-cluster"]
+                }]
+            },
+            "topologyKey": "kubernetes.io/os"
+        }]
+    }
+
+    UnAchievablePodAffinity = {
+        "requiredDuringSchedulingIgnoredDuringExecution": [{
+            "labelSelector": {
+                "matchExpressions": [{
+                    "key": "app.kubernetes.io/name",
+                    "operator": "In",
+                    "values": ["test-cluster"]
+                }]
+            },
+            "topologyKey": "NULL"
+        }]
+    }
+
+    def gen(self, exclude_value=None, minimum: bool = False, **kwargs) -> list:
+        return PodAffinitySchema.AllOnOneNodeAffinity
+
     def Match(schema: ObjectSchema) -> bool:
         if not K8sObjectSchema.Match(schema):
             return False
@@ -211,6 +440,35 @@ class PodAntiAffinitySchema(K8sObjectSchema):
         "requiredDuringSchedulingIgnoredDuringExecution": PodAffinityTermArraySchema,
         "preferredDuringSchedulingIgnoredDuringExecution": WeightedPodAffinityTermArraySchema
     }
+
+    AllOnDifferentNodesAntiAffinity = {
+        "requiredDuringSchedulingIgnoredDuringExecution": [{
+            "labelSelector": {
+                "matchExpressions": [{
+                    "key": "app.kubernetes.io/name",
+                    "operator": "In",
+                    "values": ["test-cluster"]
+                }]
+            },
+            "topologyKey": "kubernetes.io/hostname"
+        }]
+    }
+
+    UnAchievablePodAntiAffinity = {
+        "requiredDuringSchedulingIgnoredDuringExecution": [{
+            "labelSelector": {
+                "matchExpressions": [{
+                    "key": "app.kubernetes.io/name",
+                    "operator": "In",
+                    "values": ["test-cluster"]
+                }]
+            },
+            "topologyKey": "kubernetes.io/os"
+        }]
+    }
+
+    def gen(self, exclude_value=None, minimum: bool = False, **kwargs) -> list:
+        return PodAntiAffinitySchema.AllOnDifferentNodesAntiAffinity
 
     def Match(schema: ObjectSchema) -> bool:
         if not K8sObjectSchema.Match(schema):
@@ -234,6 +492,56 @@ class AffinitySchema(K8sObjectSchema):
         "podAntiAffinity": PodAntiAffinitySchema,
     }
 
+    AllOnOneNodeAffinity = {
+        "nodeAffinity": NodeAffinitySchema.OneNodeAffinity,
+    }
+
+    AllOnDifferentNodesAntiAffinity = {
+        "podAntiAffinity": PodAntiAffinitySchema.AllOnDifferentNodesAntiAffinity,
+    }
+
+    InvalidAffinity = {
+        "nodeAffinity": NodeAffinitySchema.UnAchievableNodeAffinity,
+    }
+
+    NormalAffinity = {
+        "nodeAffinity": NodeAffinitySchema.PlainNodeAffinity,
+    }
+
+    def all_on_one_node_precondition(prev) -> bool:
+        return prev != AffinitySchema.AllOnOneNodeAffinity
+
+    def all_on_one_node(prev) -> dict:
+        return AffinitySchema.AllOnOneNodeAffinity
+
+    def all_on_one_node_setup(prev) -> dict:
+        return AffinitySchema.NormalAffinity
+
+    def all_on_different_nodes_precondition(prev) -> bool:
+        return prev != AffinitySchema.AllOnDifferentNodesAntiAffinity
+
+    def all_on_different_nodes(prev) -> dict:
+        return AffinitySchema.AllOnDifferentNodesAntiAffinity
+
+    def all_on_different_nodes_setup(prev) -> dict:
+        return AffinitySchema.NormalAffinity
+
+    def invalid_affinity_precondition(prev) -> bool:
+        return prev != AffinitySchema.InvalidAffinity
+
+    def invalid_affinity(prev) -> dict:
+        return AffinitySchema.InvalidAffinity
+
+    def invalid_affinity_setup(prev) -> dict:
+        return AffinitySchema.NormalAffinity
+
+    AllOnOneNodeTestCase = TestCase(all_on_one_node_precondition, all_on_one_node,
+                                    all_on_one_node_setup)
+    AllOnDifferentNodesTestCase = TestCase(all_on_different_nodes_precondition,
+                                           all_on_different_nodes, all_on_different_nodes_setup)
+    InvalidAffinityTestCase = TestCase(invalid_affinity_precondition, invalid_affinity,
+                                       invalid_affinity_setup)
+
     def Match(schema: ObjectSchema) -> bool:
         if not K8sObjectSchema.Match(schema):
             return False
@@ -244,11 +552,76 @@ class AffinitySchema(K8sObjectSchema):
                 return False
         return True
 
+    def gen(self, exclude_value=None, minimum: bool = False, **kwargs) -> list:
+        return AffinitySchema.NormalAffinity
+
+    def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
+        base_test_cases = super().test_cases()
+        base_test_cases[1].extend([
+            AffinitySchema.AllOnOneNodeTestCase, AffinitySchema.AllOnDifferentNodesTestCase,
+            AffinitySchema.InvalidAffinityTestCase
+        ])
+        return base_test_cases
+
     def __str__(self) -> str:
         return "Affinity"
 
 
 class PodSecurityContextSchema(K8sObjectSchema):
+
+    def bad_security_context_precondition(prev) -> bool:
+        return True
+
+    def bad_security_context(prev) -> dict:
+        return {"runAsUser": 500, "runAsGroup": 500, "fsGroup": 500, "supplementalGroups": [500]}
+
+    def bad_security_context_setup(prev) -> dict:
+        return {
+            "runAsUser": 1000,
+            "runAsGroup": 1000,
+            "fsGroup": 1000,
+            "supplementalGroups": [1000]
+        }
+
+    def root_security_context_precondition(prev) -> bool:
+        return True
+
+    def root_security_context(prev) -> dict:
+        return {"runAsUser": 0, "runAsGroup": 0, "fsGroup": 0, "supplementalGroups": [0]}
+
+    def root_security_context_setup(prev) -> dict:
+        return {
+            "runAsUser": 1000,
+            "runAsGroup": 1000,
+            "fsGroup": 1000,
+            "supplementalGroups": [1000]
+        }
+
+    def normal_security_context_precondition(prev) -> bool:
+        return prev != {
+            "runAsUser": 1000,
+            "runAsGroup": 1000,
+            "fsGroup": 1000,
+            "supplementalGroups": [1000]
+        }
+
+    def normal_security_context(prev) -> dict:
+        return {
+            "runAsUser": 1000,
+            "runAsGroup": 1000,
+            "fsGroup": 1000,
+            "supplementalGroups": [1000]
+        }
+
+    def normal_security_context_setup(prev) -> dict:
+        return {"runAsUser": 0, "runAsGroup": 0, "fsGroup": 0, "supplementalGroups": [0]}
+
+    BadSecurityContextTestCase = TestCase(bad_security_context_precondition, bad_security_context,
+                                          bad_security_context_setup)
+    RootSecurityContextTestCase = TestCase(root_security_context_precondition,
+                                           root_security_context, root_security_context_setup)
+    NormalSecurityContextTestCase = TestCase(normal_security_context_precondition,
+                                             normal_security_context, normal_security_context_setup)
 
     fields = {
         "fsGroup": K8sIntegerSchema,
@@ -260,6 +633,15 @@ class PodSecurityContextSchema(K8sObjectSchema):
         "sysctls": K8sArraySchema,
         "windowsOptions": K8sObjectSchema
     }
+
+    def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
+        base_test_cases = super().test_cases()
+        base_test_cases[1].extend([
+            PodSecurityContextSchema.BadSecurityContextTestCase,
+            PodSecurityContextSchema.RootSecurityContextTestCase,
+            PodSecurityContextSchema.NormalSecurityContextTestCase
+        ])
+        return base_test_cases
 
     def Match(schema: ObjectSchema) -> bool:
         if not K8sObjectSchema.Match(schema):
@@ -315,6 +697,43 @@ class TolerationSchema(K8sObjectSchema):
         "tolerationSeconds": K8sIntegerSchema
     }
 
+    PlainToleration = {
+        "key": "test-key",
+        "operator": "Equal",
+        "value": "test-value",
+        "effect": "NoSchedule"
+    }
+
+    ControlPlaneToleration = {
+        "key": "node-role.kubernetes.io/control-plane",
+        "operator": "Exists",
+        "effect": "NoSchedule"
+    }
+
+    def plain_toleration_precondition(prev) -> bool:
+        return prev != TolerationSchema.PlainToleration
+
+    def plain_toleration(prev) -> dict:
+        return TolerationSchema.PlainToleration
+
+    def plain_toleration_setup(prev) -> dict:
+        return {}
+
+    def control_plane_toleration_precondition(prev) -> bool:
+        return prev != TolerationSchema.ControlPlaneToleration
+
+    def control_plane_toleration(prev) -> dict:
+        return TolerationSchema.ControlPlaneToleration
+
+    def control_plane_toleration_setup(prev) -> dict:
+        return TolerationSchema.PlainToleration
+
+    PlainTolerationTestCase = TestCase(plain_toleration_precondition, plain_toleration,
+                                       plain_toleration_setup)
+    ControlPlaneTolerationTestCase = TestCase(control_plane_toleration_precondition,
+                                              control_plane_toleration,
+                                              control_plane_toleration_setup)
+
     def Match(schema: ObjectSchema) -> bool:
         if not K8sObjectSchema.Match(schema):
             return False
@@ -324,6 +743,20 @@ class TolerationSchema(K8sObjectSchema):
             elif not field_schema.Match(schema.properties[field]):
                 return False
         return True
+
+    def gen(self, exclude_value=None, minimum: bool = False, **kwargs) -> list:
+        if minimum:
+            return [TolerationSchema.PlainToleration]
+        else:
+            return [TolerationSchema.PlainToleration, TolerationSchema.ControlPlaneToleration]
+
+    def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
+        base_testcases = super().test_cases()
+        base_testcases[1].extend([
+            TolerationSchema.PlainTolerationTestCase,
+            TolerationSchema.ControlPlaneTolerationTestCase
+        ])
+        return base_testcases
 
     def __str__(self) -> str:
         return "Toleration"
@@ -397,10 +830,7 @@ class ContainersSchema(K8sArraySchema):
 
 class HostPathVolumeSource(K8sObjectSchema):
 
-    fields = {
-        "path": K8sStringSchema,
-        "type": K8sStringSchema
-    }
+    fields = {"path": K8sStringSchema, "type": K8sStringSchema}
 
     def Match(schema: ObjectSchema) -> bool:
         if not K8sObjectSchema.Match(schema):
@@ -414,6 +844,7 @@ class HostPathVolumeSource(K8sObjectSchema):
 
     def __str__(self) -> str:
         return "HostPathVolumeSource"
+
 
 class VolumeSchema(K8sObjectSchema):
 
@@ -491,6 +922,110 @@ class TopologySpreadConstraintsSchema(K8sArraySchema):
         return "TopologySpreadConstraint"
 
 
+class NodeNameSchema(K8sStringSchema):
+
+    def node_name_change_precondition(prev):
+        return prev is not None
+
+    def node_name_change(prev):
+        if prev == 'kind-worker':
+            return 'kind-worker1'
+        else:
+            return 'kind-worker'
+
+    def node_name_change_setup(prev):
+        return 'kind-worker'
+
+    NodeNameChangeTestcase = TestCase(node_name_change_precondition, node_name_change,
+                                      node_name_change_setup)
+
+    def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
+        return "kind-worker"
+
+    def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
+        base_testcases = super().test_cases()
+        base_testcases[1].extend([NodeNameSchema.NodeNameChangeTestcase])
+        return super().test_cases()
+
+    def Match(schema: ObjectSchema) -> bool:
+        return K8sStringSchema.Match(schema)
+
+    def __str__(self) -> str:
+        return "NodeName"
+
+
+class PreemptionPolicySchema(K8sStringSchema):
+
+    def preemption_policy_change_precondition(prev):
+        return prev is not None
+
+    def preemption_policy_change(prev):
+        if prev == 'Never':
+            return 'PreemptLowerPriority'
+        else:
+            return 'Never'
+
+    def preemption_policy_change_setup(prev):
+        return 'Never'
+
+    PreemptionPolicyChangeTestcase = TestCase(preemption_policy_change_precondition,
+                                              preemption_policy_change,
+                                              preemption_policy_change_setup)
+
+    def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
+        if exclude_value == 'PreemptLowerPriority':
+            return 'Never'
+        else:
+            return 'PreemptLowerPriority'
+
+    def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
+        base_testcases = super().test_cases()
+        base_testcases[1].extend([PreemptionPolicySchema.PreemptionPolicyChangeTestcase])
+        return super().test_cases()
+
+    def Match(schema: ObjectSchema) -> bool:
+        return K8sStringSchema.Match(schema)
+
+    def __str__(self) -> str:
+        return "PreemptionPolicy"
+
+
+class PriorityClassNameSchema(K8sStringSchema):
+
+    def priority_class_name_change_precondition(prev):
+        return prev is not None
+
+    def priority_class_name_change(prev):
+        if prev == 'system-cluster-critical':
+            return 'system-node-critical'
+        else:
+            return 'system-cluster-critical'
+
+    def priority_class_name_change_setup(prev):
+        return 'system-cluster-critical'
+
+    PriorityClassNameChangeTestcase = TestCase(priority_class_name_change_precondition,
+                                               priority_class_name_change,
+                                               priority_class_name_change_setup)
+
+    def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
+        if exclude_value == 'system-node-critical':
+            return 'system-cluster-critical'
+        else:
+            return 'system-node-critical'
+
+    def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
+        base_testcases = super().test_cases()
+        base_testcases[1].extend([PriorityClassNameSchema.PriorityClassNameChangeTestcase])
+        return super().test_cases()
+
+    def Match(schema: ObjectSchema) -> bool:
+        return K8sStringSchema.Match(schema)
+
+    def __str__(self) -> str:
+        return "PriorityClassName"
+
+
 class PodSpecSchema(K8sObjectSchema):
 
     fields = {
@@ -499,20 +1034,20 @@ class PodSpecSchema(K8sObjectSchema):
         "dnsConfig": K8sObjectSchema,
         "dnsPolicy": K8sStringSchema,
         "enableServiceLinks": K8sBooleanSchema,
-        "ephemeralContainers": K8sArraySchema,
+        "ephemeralContainers": ContainersSchema,
         "initContainers": ContainersSchema,
         "nodeName": K8sStringSchema,
         "nodeSelector": K8sObjectSchema,
-        "preemptionPolicy": K8sStringSchema,
+        "preemptionPolicy": PreemptionPolicySchema,
         "priority": K8sIntegerSchema,
-        "priorityClassName": K8sStringSchema,
+        "priorityClassName": PriorityClassNameSchema,
         "restartPolicy": K8sStringSchema,
-        "runtimeClassName": K8sStringSchema,
-        "schedulerName": K8sStringSchema,
+        "runtimeClassName": K8sStringSchema,  # hard to support, need cluster support
+        "schedulerName": K8sStringSchema,  # hard to support, need scheduler
         "securityContext": PodSecurityContextSchema,
         "serviceAccountName": K8sStringSchema,
         "terminationGracePeriodSeconds": K8sIntegerSchema,
-        "tolerations": K8sArraySchema,
+        "tolerations": TolerationsSchema,
         "topologySpreadConstraints": K8sArraySchema,
         "volumes": VolumesSchema
     }
@@ -550,6 +1085,45 @@ class PodTemplateSchema(K8sObjectSchema):
 
     def __str__(self) -> str:
         return "PodTemplate"
+
+
+class UpdateStrategySchema(K8sStringSchema):
+
+    def update_strategy_change_precondition(prev):
+        return prev is not None
+
+    def update_strategy_change(prev):
+        if prev == 'RollingUpdate':
+            return 'OnDelete'
+        else:
+            return 'RollingUpdate'
+
+    def update_strategy_change_setup(prev):
+        return 'RollingUpdate'
+
+    UpdateStrategyChangeTestcase = TestCase(update_strategy_change_precondition,
+                                            update_strategy_change, update_strategy_change_setup)
+
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        self.default = 'RollingUpdate'
+
+    def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
+        if exclude_value == 'OnDelete':
+            return 'RollingUpdate'
+        else:
+            return 'OnDelete'
+
+    def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
+        base_testcases = super().test_cases()
+        base_testcases[1].extend([UpdateStrategySchema.UpdateStrategyChangeTestcase])
+        return super().test_cases()
+
+    def Match(schema: ObjectSchema) -> bool:
+        return K8sStringSchema.Match(schema)
+
+    def __str__(self) -> str:
+        return "UpdateStrategy"
 
 
 class StatefulSetSpecSchema(K8sObjectSchema):
@@ -596,6 +1170,86 @@ class StatefulSetSchema(K8sObjectSchema):
         return "StatefulSetSchema"
 
 
+class DeploymentSpecSchema(K8sObjectSchema):
+
+    fields = {
+        "minReadySeconds": K8sIntegerSchema,
+        "paused": K8sBooleanSchema,
+        "progressDeadlineSeconds": K8sIntegerSchema,
+        "replicas": ReplicasSchema,
+        "revisionHistoryLimit": K8sIntegerSchema,
+        "selector": K8sObjectSchema,
+        "strategy": K8sObjectSchema,
+        "template": PodTemplateSchema,
+    }
+
+    def Match(schema: ObjectSchema) -> bool:
+        if not K8sObjectSchema.Match(schema):
+            return False
+        for field, field_schema in DeploymentSpecSchema.fields.items():
+            if field not in schema.properties:
+                return False
+            elif not field_schema.Match(schema.properties[field]):
+                return False
+        return True
+
+    def __str__(self) -> str:
+        return "DeploymentSpecSchema"
+
+
+class DeploymentSchema(K8sObjectSchema):
+
+    fields = {"metadata": K8sObjectSchema, "spec": DeploymentSpecSchema}
+
+    def Match(schema: ObjectSchema) -> bool:
+        if not K8sObjectSchema.Match(schema):
+            return False
+        for field, field_schema in DeploymentSchema.fields.items():
+            if field not in schema.properties:
+                return False
+            elif not field_schema.Match(schema.properties[field]):
+                return False
+        return True
+
+    def __str__(self) -> str:
+        return "DeploymentSchema"
+
+
+class ServiceTypeSchema(K8sStringSchema):
+
+    def service_type_change_precondition(prev):
+        return prev is not None
+
+    def service_type_change(prev):
+        if prev == 'ClusterIP':
+            return 'NodePort'
+        else:
+            return 'ClusterIP'
+
+    def service_type_change_setup(prev):
+        return 'ClusterIP'
+
+    ServiceTypeChangeTestcase = TestCase(service_type_change_precondition, service_type_change,
+                                         service_type_change_setup)
+
+    def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
+        if exclude_value == 'LoadBalancer':
+            return 'ClusterIP'
+        else:
+            return 'LoadBalancer'
+
+    def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
+        base_testcases = super().test_cases()
+        base_testcases[1].extend([ServiceTypeSchema.ServiceTypeChangeTestcase])
+        return super().test_cases()
+
+    def Match(schema: ObjectSchema) -> bool:
+        return K8sStringSchema.Match(schema)
+
+    def __str__(self) -> str:
+        return "ServiceType"
+
+
 class ServiceSpecSchema(K8sObjectSchema):
 
     fields = {
@@ -615,7 +1269,7 @@ class ServiceSpecSchema(K8sObjectSchema):
         "sessionAffinity": K8sStringSchema,
         "sessionAffinityConfig": K8sObjectSchema,
         "topologyKeys": K8sArraySchema,
-        "type": K8sStringSchema
+        "type": ServiceTypeSchema
     }
 
     def Match(schema: ObjectSchema) -> bool:
@@ -650,15 +1304,70 @@ class ServiceSchema(K8sObjectSchema):
         return "ServiceSchema"
 
 
+class AccessModeSchema(K8sStringSchema):
+
+    def change_access_mode_precondition(prev):
+        return prev is not None
+
+    def change_access_mode(prev):
+        if prev == 'ReadWriteOnce':
+            return 'ReadWriteMany'
+        else:
+            return 'ReadWriteOnce'
+
+    def change_access_mode_setup(prev):
+        return 'ReadWriteOnce'
+
+    AccessModeChangeTestcase = TestCase(change_access_mode_precondition, change_access_mode,
+                                        change_access_mode_setup)
+
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        self.enum = ['ReadWriteOnce', 'ReadOnlyMany', 'ReadWriteMany', 'ReadWriteOncePod']
+
+    def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
+        if exclude_value == 'ReadWriteOnce':
+            return 'ReadOnlyMany'
+        else:
+            return 'ReadWriteOnce'
+
+    def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
+        base_testcases = super().test_cases()
+        base_testcases[1].extend([AccessModeSchema.AccessModeChangeTestcase])
+        return base_testcases
+
+    def Match(schema: ObjectSchema) -> bool:
+        return K8sStringSchema.Match(schema)
+
+    def __str__(self) -> str:
+        return "AccessMode"
+
+
+class StorageClassNameSchema(K8sStringSchema):
+
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        self.default = 'standard'
+
+    def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
+        return 'standard'
+
+    def Match(schema: ObjectSchema) -> bool:
+        return K8sStringSchema.Match(schema)
+
+    def __str__(self) -> str:
+        return "StorageClassName"
+
+
 class PersistentVolumeClaimSpecSchema(K8sObjectSchema):
 
     fields = {
-        "accessModes": K8sArraySchema,
+        "accessModes": AccessModeSchema,
         "dataSource": K8sObjectSchema,
-        "resources": ResourceRequirementsSchema,
+        "resources": StorageResourceRequirementsSchema,
         "selector": K8sObjectSchema,
         "storageClassName": K8sStringSchema,
-        "volumeMode": K8sStringSchema,
+        "volumeMode": K8sStringSchema,  # Filesystem or Block
         "volumeName": K8sStringSchema
     }
 
@@ -697,6 +1406,8 @@ class PersistentVolumeClaimSchema(K8sObjectSchema):
 KUBERNETES_SCHEMA = {
     'statefulSet': StatefulSetSchema,
     'statefulSetSpec': StatefulSetSpecSchema,
+    'deployment': DeploymentSchema,
+    'deploymentSpec': DeploymentSpecSchema,
     'service': ServiceSchema,
     'serviceSpec': ServiceSpecSchema,
     'affinity': AffinitySchema,
@@ -740,7 +1451,9 @@ if __name__ == '__main__':
     import json
     import glob
 
-    for file in glob.glob('data/*/context.json'):
+    files = glob.glob('data/*/context.json')
+    files.sort()
+    for file in files:
         with open(file, 'r') as f:
             context = json.load(f)
             crd = extract_schema(
@@ -749,4 +1462,6 @@ if __name__ == '__main__':
 
             print("Matched schemas for %s:" % file)
             for schema, k8s_schema in tuples:
-                print(f"input.CopiedOverField({schema.path}),")
+                print(f"known_schemas.K8sField({schema.path}, known_schemas.{type(k8s_schema).__name__}),")
+
+            print()

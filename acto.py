@@ -116,8 +116,8 @@ class TrialRunner:
 
     def __init__(self, context: dict, input_model: InputModel, deploy: Deploy, runner_t: type,
                  checker_t: type, custom_on_init: List[callable], custom_oracle: List[callable],
-                 workdir: str, cluster: base.KubernetesCluster, worker_id: int, dryrun: bool,
-                 is_reproduce: bool, apply_testcase_f: FunctionType,
+                 workdir: str, cluster: base.KubernetesCluster, worker_id: int, sequence_base: int,
+                 dryrun: bool, is_reproduce: bool, apply_testcase_f: FunctionType,
                  feature_gate: FeatureGate) -> None:
         self.context = context
         self.workdir = workdir
@@ -125,6 +125,7 @@ class TrialRunner:
         self.cluster = cluster
         self.images_archive = os.path.join(workdir, 'images.tar')
         self.worker_id = worker_id
+        self.sequence_base = sequence_base
         self.context_name = cluster.get_context_name(f"acto-cluster-{worker_id}")
         self.kubeconfig = os.path.join(os.path.expanduser('~'), '.kube', self.context_name)
         self.cluster_name = f"acto-cluster-{worker_id}"
@@ -170,8 +171,9 @@ class TrialRunner:
 
             add_acto_label(apiclient, self.context)
 
-            trial_dir = os.path.join(self.workdir,
-                                     'trial-%02d-%04d' % (self.worker_id, self.curr_trial))
+            trial_dir = os.path.join(
+                self.workdir,
+                'trial-%02d-%04d' % (self.worker_id + self.sequence_base, self.curr_trial))
             os.makedirs(trial_dir, exist_ok=True)
 
             trial_err, num_tests = self.run_trial(trial_dir=trial_dir, curr_trial=self.curr_trial)
@@ -472,10 +474,7 @@ class TrialRunner:
         curr_input_with_schema = attach_schema_to_value(self.snapshots[-1].input,
                                                         self.input_model.root_schema)
 
-        testcase_sig = {
-            'field': '',
-            'testcase': 'revert'
-        }
+        testcase_sig = {'field': '', 'testcase': 'revert'}
 
         result = TrialRunner.run_and_check(runner,
                                            checker,
@@ -602,6 +601,8 @@ class Acto:
 
             logger.info("Applied custom fields: %s", json.dumps(pruned_list))
 
+        self.sequence_base = 20 if delta_from else 0
+
         if operator_config.custom_oracle != None:
             module = importlib.import_module(operator_config.custom_oracle)
             self.custom_oracle = module.CUSTOM_CHECKER
@@ -651,7 +652,11 @@ class Acto:
                 self.context['static_analysis_time'] = learn_end_time - learn_start_time
 
                 with open(context_file, 'w') as context_fout:
-                    json.dump(self.context, context_fout, cls=ContextEncoder, indent=4, sort_keys=True)
+                    json.dump(self.context,
+                              context_fout,
+                              cls=ContextEncoder,
+                              indent=4,
+                              sort_keys=True)
         else:
             # Run learning run to collect some information from runtime
             logger.info('Starting learning run to collect information')
@@ -719,8 +724,9 @@ class Acto:
         for i in range(self.num_workers):
             runner = TrialRunner(self.context, self.input_model, self.deploy, self.runner_type,
                                  self.checker_type, self.custom_on_init, self.custom_oracle,
-                                 self.workdir_path, self.cluster, i, self.dryrun, self.is_reproduce,
-                                 self.apply_testcase_f, self.feature_gate)
+                                 self.workdir_path, self.cluster, i, self.sequence_base,
+                                 self.dryrun, self.is_reproduce, self.apply_testcase_f,
+                                 self.feature_gate)
             runners.append(runner)
 
         if 'normal' in modes:

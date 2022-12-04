@@ -69,6 +69,8 @@ extern "C" {
 #endif
 
 extern char* parse(char* valuePtr);
+extern char* doubleIt(char* valuePtr);
+extern char* halfIt(char* valuePtr);
 
 #ifdef __cplusplus
 }

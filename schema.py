@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import List, Tuple
 import yaml
 from copy import deepcopy
 import random
@@ -34,11 +34,16 @@ class BaseSchema:
         return None
 
     @abstractmethod
-    def test_cases(self) -> list:
+    def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
+        '''Generate test cases for this schema
+        
+        Returns:
+            Tuple of normal test cases, and semantic test cases
+        '''
         return None
 
     @abstractmethod
-    def get_all_schemas(self) -> Tuple[list, list, list]:
+    def get_all_schemas(self) -> Tuple[List['BaseSchema'], List['BaseSchema'], List['BaseSchema']]:
         '''Returns a tuple of normal schemas, schemas pruned by over-specified, schemas pruned by 
         copied-over'''
         return None
@@ -116,7 +121,7 @@ class StringSchema(BaseSchema):
             return exrex.getone(self.pattern, self.max_length)
         return 'ACTOKEY'
 
-    def test_cases(self):
+    def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
         '''String schema currently has two test cases, delete and change'''
         ret = [TestCase(self.delete_precondition, self.delete, self.delete_setup)]
         if self.enum != None:
@@ -126,7 +131,7 @@ class StringSchema(BaseSchema):
             change_testcase = TestCase(self.change_precondition, self.change, self.change_setup)
             ret.append(change_testcase)
             ret.append(TestCase(self.empty_precondition, self.empty_mutator, self.empty_setup))
-        return ret
+        return ret, []
 
     def get_all_schemas(self) -> Tuple[list, list, list]:
         return [self], [], []
@@ -219,7 +224,7 @@ class NumberSchema(BaseSchema):
                 return random.choice(self.enum)
         return random.uniform(self.minimum, self.maximum)
 
-    def test_cases(self) -> list:
+    def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
         ret = [TestCase(self.delete_precondition, self.delete, self.delete_setup)]
         if self.enum != None:
             for case in self.enum:
@@ -228,7 +233,7 @@ class NumberSchema(BaseSchema):
             ret.append(TestCase(self.increase_precondition, self.increase, self.increase_setup))
             ret.append(TestCase(self.decrease_precondition, self.decrease, self.decrease_setup))
             ret.append(TestCase(self.empty_precondition, self.empty_mutator, self.empty_setup))
-        return ret
+        return ret, []
 
     def get_all_schemas(self) -> Tuple[list, list, list]:
         return [self], [], []
@@ -322,8 +327,9 @@ class IntegerSchema(NumberSchema):
             else:
                 return random.randrange(self.minimum, self.maximum + 1)
 
-    def test_cases(self) -> list:
-        return super().test_cases()
+    def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
+        normal, special = super().test_cases()
+        return normal, special
 
     def get_all_schemas(self) -> Tuple[list, list, list]:
         return [self], [], []
@@ -458,14 +464,14 @@ class ObjectSchema(BaseSchema):
             result['enabled'] = True
         return result
 
-    def test_cases(self):
+    def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
         ret = [TestCase(self.delete_precondition, self.delete, self.delete_setup)]
         if self.enum != None:
             for case in self.enum:
                 ret.append(EnumTestCase(case))
         else:
             ret.append(TestCase(self.empty_precondition, self.empty_mutator, self.empty_setup))
-        return ret
+        return ret, []
 
     def get_all_schemas(self) -> Tuple[list, list, list]:
         '''Return all the subschemas as a list'''
@@ -605,7 +611,7 @@ class ArraySchema(BaseSchema):
                 result.append(self.item_schema.gen(minimum=minimum))
             return result
 
-    def test_cases(self) -> list:
+    def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
         ret = [TestCase(self.delete_precondition, self.delete, self.delete_setup)]
         if self.enum != None:
             for case in self.enum:
@@ -614,7 +620,7 @@ class ArraySchema(BaseSchema):
             ret.append(TestCase(self.push_precondition, self.push_mutator, self.push_setup))
             ret.append(TestCase(self.pop_precondition, self.pop_mutator, self.pop_setup))
             ret.append(TestCase(self.empty_precondition, self.empty_mutator, self.empty_setup))
-        return ret
+        return ret, []
 
     def get_all_schemas(self) -> Tuple[list, list, list]:
         normal_schemas = [self]
@@ -738,18 +744,18 @@ class AnyOfSchema(BaseSchema):
         schema = random.choice(self.possibilities)
         return schema.gen(exclude_value=exclude_value, minimum=minimum)
 
-    def test_cases(self) -> list:
+    def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
         ret = []
         if self.enum != None:
             for case in self.enum:
                 ret.append(EnumTestCase(case))
         else:
             for possibility in self.possibilities:
-                testcases = possibility.test_cases()
+                testcases, _ = possibility.test_cases()
                 for testcase in testcases:
                     testcase.add_precondition(SchemaPrecondition(possibility).precondition)
                 ret.extend(testcases)
-        return ret
+        return ret, []
 
     def get_all_schemas(self) -> Tuple[list, list, list]:
         return [self], [], []
@@ -809,18 +815,18 @@ class OneOfSchema(BaseSchema):
         schema = random.choice(self.possibilities)
         return schema.gen(exclude_value=exclude_value, minimum=minimum)
 
-    def test_cases(self) -> list:
+    def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
         ret = []
         if self.enum != None:
             for case in self.enum:
                 ret.append(EnumTestCase(case))
         else:
             for possibility in self.possibilities:
-                testcases = possibility.test_cases()
+                testcases, _ = possibility.test_cases()
                 for testcase in testcases:
                     testcase.add_precondition(SchemaPrecondition(possibility).precondition)
                 ret.extend(testcases)
-        return ret
+        return ret, []
 
     def get_all_schemas(self) -> Tuple[list, list, list]:
         return [self], [], []
@@ -874,7 +880,7 @@ class BooleanSchema(BaseSchema):
         else:
             return random.choice([True, False])
 
-    def test_cases(self):
+    def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
         ret = [TestCase(self.delete_precondition, self.delete, self.delete_setup)]
         if self.enum != None:
             for case in self.enum:
@@ -883,7 +889,7 @@ class BooleanSchema(BaseSchema):
             ret.append(
                 TestCase(self.toggle_off_precondition, self.toggle_off, self.toggle_off_setup))
             ret.append(TestCase(self.toggle_on_precondition, self.toggle_on, self.toggle_on_setup))
-        return ret
+        return ret, []
 
     def get_all_schemas(self) -> Tuple[list, list, list]:
         return [self], [], []
@@ -951,8 +957,8 @@ class OpaqueSchema(BaseSchema):
     def gen(self, **kwargs):
         return None
 
-    def test_cases(self):
-        return []
+    def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
+        return [], []
 
     def get_all_schemas(self) -> Tuple[list, list, list]:
         return [], [], []

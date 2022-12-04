@@ -4,6 +4,7 @@ import "C"
 import (
 	"fmt"
 
+	"gopkg.in/inf.v0"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
@@ -19,6 +20,31 @@ func parse(valuePtr *C.char) *C.char {
 	q.RoundUp(milliScale) // round up to the nearest milli for V1Api compatiability
 
 	return C.CString(q.AsDec().String())
+}
+
+//export doubleIt
+func doubleIt(valuePtr *C.char) *C.char {
+	value := C.GoString(valuePtr)
+	q, err := resource.ParseQuantity(value)
+	if err != nil {
+		return C.CString("INVALID")
+	}
+
+	q.Add(q)
+	return C.CString(q.String())
+}
+
+//export halfIt
+func halfIt(valuePtr *C.char) *C.char {
+	value := C.GoString(valuePtr)
+	q, err := resource.ParseQuantity(value)
+	if err != nil {
+		return C.CString("INVALID")
+	}
+
+	halfDec := inf.NewDec(5, 1)
+	result := q.AsDec().Mul(q.AsDec(), halfDec)
+	return C.CString(result.String())
 }
 
 func main() {

@@ -616,6 +616,11 @@ class Checker(object):
         curr_system_state = deepcopy(snapshot.system_state)
         prev_system_state = deepcopy(prev_snapshot.system_state)
 
+        del curr_system_state['endpoints']
+        del prev_system_state['endpoints']
+        del curr_system_state['job']
+        del prev_system_state['job']
+
         # remove pods that belong to jobs from both states to avoid observability problem
         curr_pods = curr_system_state['pod']
         prev_pods = prev_system_state['pod']
@@ -657,7 +662,7 @@ class Checker(object):
             r".*\['metadata'\]\['managed_fields'\]",
             r".*\['metadata'\]\['creation_timestamp'\]",
             r".*\['metadata'\]\['resource_version'\]",
-            r".*\['metadata'\]\['uid'\]",
+            r".*\['metadata'\]\[.*\]\['uid'\]",
             r".*\['metadata'\]\['generation'\]",
             r".*\['metadata'\]\['annotations'\]",
             r".*\['metadata'\]\['annotations'\]\['.*last-applied.*'\]",
@@ -668,11 +673,13 @@ class Checker(object):
             r".*\['spec'\]\['init_containers'\]\[.*\]\['volume_mounts'\]\[.*\]\['name'\]",
             r".*\['spec'\]\['containers'\]\[.*\]\['volume_mounts'\]\[.*\]\['name'\]",
             r".*\['spec'\]\['volumes'\]\[.*\]\['name'\]",
-            r".*\['spec'\]\['node_name'\]",
+            r".*\[.*\]\['node_name'\]",
             r".*\['version'\]",
             r".*\['endpoints'\]\[.*\]\['addresses'\]\[.*\]\['target_ref'\]\['uid'\]",
             r".*\['endpoints'\]\[.*\]\['addresses'\]\[.*\]\['target_ref'\]\['resource_version'\]",
             r".*\['endpoints'\]\[.*\]\['addresses'\]\[.*\]\['ip'\]",
+            r".*\['cluster_ip'\]",
+            r".*\['cluster_i_ps'\].*",
         ]
 
         diff = DeepDiff(prev_system_state, curr_system_state, exclude_regex_paths=exclude_paths)
