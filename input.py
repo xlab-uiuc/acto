@@ -8,6 +8,7 @@ from typing import List, Tuple
 from deepdiff import DeepDiff
 import glob
 import yaml
+from known_schemas import K8sField
 
 from schema import OpaqueSchema, StringSchema, extract_schema, BaseSchema, ObjectSchema, ArraySchema
 from test_case import TestCase
@@ -263,6 +264,7 @@ class InputModel:
     NORMAL = 'NORMAL'
     OVERSPECIFIED = 'OVERSPECIFIED'
     COPIED_OVER = 'COPIED_OVER'
+    SEMANTIC = 'SEMANTIC'
 
     def __init__(self,
                  crd: dict,
@@ -329,6 +331,7 @@ class InputModel:
         self.thread_vars.normal_test_plan = TestPlan(self.root_schema.to_tree())
         self.thread_vars.overspecified_test_plan = TestPlan(self.root_schema.to_tree())
         self.thread_vars.copiedover_test_plan = TestPlan(self.root_schema.to_tree())
+        self.thread_vars.semantic_test_plan = TestPlan(self.root_schema.to_tree())
 
         for key, value in dict(self.normal_test_plan_partitioned[id]).items():
             path = json.loads(key)
@@ -342,6 +345,10 @@ class InputModel:
             path = json.loads(key)
             self.thread_vars.copiedover_test_plan.add_testcases_by_path(value, path)
 
+        for key, value in dict(self.semantic_test_plan_partitioned[id]).items():
+            path = json.loads(key)
+            self.thread_vars.semantic_test_plan.add_testcases_by_path(value, path)
+
     def set_mode(self, mode: str):
         if mode == 'NORMAL':
             self.thread_vars.test_plan: TestPlan = self.thread_vars.normal_test_plan
@@ -349,6 +356,8 @@ class InputModel:
             self.thread_vars.test_plan: TestPlan = self.thread_vars.overspecified_test_plan
         elif mode == 'COPIED_OVER':
             self.thread_vars.test_plan: TestPlan = self.thread_vars.copiedover_test_plan
+        elif mode == InputModel.SEMANTIC:
+            self.thread_vars.test_plan: TestPlan = self.thread_vars.semantic_test_plan
         else:
             raise ValueError(mode)
 
@@ -486,20 +495,24 @@ class InputModel:
         normal_test_plan_items = list(normal_testcases.items())
         overspecified_test_plan_items = list(overspecified_testcases.items())
         copiedover_test_plan_items = list(copiedover_testcases.items())
+        semantic_test_plan_items = list(semantic_testcases.items())
         random.shuffle(normal_test_plan_items)  # randomize to reduce skewness among workers
         random.shuffle(overspecified_test_plan_items)
         random.shuffle(copiedover_test_plan_items)
+        random.shuffle(semantic_test_plan_items)
 
         # Initialize the three test plans, and assign test cases to them according to the number of
         # workers
         self.normal_test_plan_partitioned = []
         self.overspecified_test_plan_partitioned = []
         self.copiedover_test_plan_partitioned = []
+        self.semantic_test_plan_partitioned = []
 
         for i in range(self.num_workers):
             self.normal_test_plan_partitioned.append([])
             self.overspecified_test_plan_partitioned.append([])
             self.copiedover_test_plan_partitioned.append([])
+            self.semantic_test_plan_partitioned.append([])
 
         for i in range(0, len(normal_test_plan_items)):
             self.normal_test_plan_partitioned[i % self.num_workers].append(
@@ -513,9 +526,9 @@ class InputModel:
             self.copiedover_test_plan_partitioned[i % self.num_workers].append(
                 copiedover_test_plan_items[i])
 
-        for i in range(0, len(semantic_testcases)):
+        for i in range(0, len(semantic_test_plan_items)):
             self.semantic_test_plan_partitioned[i % self.num_workers].append(
-                semantic_testcases[i])
+                semantic_test_plan_items[i])
 
         # appending empty lists to avoid no test cases distributed to certain work nodes
         assert (self.num_workers == len(self.normal_test_plan_partitioned))
@@ -615,6 +628,23 @@ class InputModel:
 
         # replace old schema with the new one
         curr[path[-1]] = custom_schema
+
+    def apply_k8s_schema(self, k8s_field: K8sField):
+        path = k8s_field.path
+        if len(path) == 0:
+            self.root_schema = k8s_field.custom_schema(self.root_schema)
+
+        # fetch the parent schema
+        curr = self.root_schema
+        for idx in path[:-1]:
+            curr = curr[idx]
+
+        # construct new schema
+        custom_schema = k8s_field.custom_schema(curr[path[-1]])
+
+        # replace old schema with the new one
+        curr[path[-1]] = custom_schema
+
 
     def apply_candidates(self, candidates: dict, path: list):
         '''Apply candidates file onto schema'''

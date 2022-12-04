@@ -1,7 +1,5 @@
 from abc import abstractmethod
 from typing import List, Tuple
-from common import OperatorConfig
-from input import CustomField
 from k8s_util.k8sutil import canonicalizeQuantity, double_quantity, half_quantity
 from schema import AnyOfSchema, ArraySchema, BaseSchema, BooleanSchema, IntegerSchema, ObjectSchema, StringSchema, extract_schema
 from test_case import TestCase
@@ -120,6 +118,11 @@ class ResourceSchema(K8sObjectSchema):
 
     additional_properties = QuantitySchema
 
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        self.additional_properties = ResourceSchema.additional_properties(
+            self.additional_properties)
+
     def Match(schema: ObjectSchema) -> bool:
         if not K8sObjectSchema.Match(schema):
             return False
@@ -159,6 +162,12 @@ class ComputeResourceRequirementsSchema(K8sObjectSchema):
 
     fields = {"limits": ComputeResourceSchema, "requests": ComputeResourceSchema}
 
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        for field, field_schema in ComputeResourceRequirementsSchema.fields.items():
+            if field in schema_obj.properties:
+                self.properties[field] = field_schema(schema_obj.properties[field])
+
     def Match(schema: ObjectSchema) -> bool:
         if not K8sObjectSchema.Match(schema):
             return False
@@ -180,6 +189,12 @@ class StorageResourceRequirementsSchema(K8sObjectSchema):
 
     fields = {"limits": StorageResourceSchema, "requests": StorageResourceSchema}
 
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        for field, field_schema in StorageResourceRequirementsSchema.fields.items():
+            if field in schema_obj.properties:
+                self.properties[field] = field_schema(schema_obj.properties[field])
+
     def Match(schema: ObjectSchema) -> bool:
         if not K8sObjectSchema.Match(schema):
             return False
@@ -200,6 +215,13 @@ class StorageResourceRequirementsSchema(K8sObjectSchema):
 class ResourceRequirementsSchema(K8sObjectSchema):
 
     fields = {"limits": ResourceSchema, "requests": ResourceSchema}
+
+
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        for field, field_schema in ResourceRequirementsSchema.fields.items():
+            if field in schema_obj.properties:
+                self.properties[field] = field_schema(schema_obj.properties[field])
 
     def Match(schema: ObjectSchema) -> bool:
         if not K8sObjectSchema.Match(schema):
@@ -278,7 +300,7 @@ class NodeSelectorSchema(K8sObjectSchema):
         return "NodeSelector"
 
 
-class PreferredSchedulingTermArraySchema(K8sObjectSchema):
+class PreferredSchedulingTermArraySchema(K8sArraySchema):
 
     def Match(schema: ObjectSchema) -> bool:
         return isinstance(schema, ArraySchema)
@@ -334,6 +356,12 @@ class NodeAffinitySchema(K8sObjectSchema):
             }]
         }
     }
+
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        for field, field_schema in NodeAffinitySchema.fields.items():
+            if field in schema_obj.properties:
+                self.properties[field] = field_schema(schema_obj.properties[field])
 
     def Match(schema: ObjectSchema) -> bool:
         if not K8sObjectSchema.Match(schema):
@@ -417,6 +445,12 @@ class PodAffinitySchema(K8sObjectSchema):
         }]
     }
 
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        for field, field_schema in PodAffinitySchema.fields.items():
+            if field in schema_obj.properties:
+                self.properties[field] = field_schema(schema_obj.properties[field])
+
     def gen(self, exclude_value=None, minimum: bool = False, **kwargs) -> list:
         return PodAffinitySchema.AllOnOneNodeAffinity
 
@@ -466,6 +500,12 @@ class PodAntiAffinitySchema(K8sObjectSchema):
             "topologyKey": "kubernetes.io/os"
         }]
     }
+
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        for field, field_schema in PodAntiAffinitySchema.fields.items():
+            if field in schema_obj.properties:
+                self.properties[field] = field_schema(schema_obj.properties[field])
 
     def gen(self, exclude_value=None, minimum: bool = False, **kwargs) -> list:
         return PodAntiAffinitySchema.AllOnDifferentNodesAntiAffinity
@@ -541,6 +581,12 @@ class AffinitySchema(K8sObjectSchema):
                                            all_on_different_nodes, all_on_different_nodes_setup)
     InvalidAffinityTestCase = TestCase(invalid_affinity_precondition, invalid_affinity,
                                        invalid_affinity_setup)
+
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        for field, field_schema in AffinitySchema.fields.items():
+            if field in schema_obj.properties:
+                self.properties[field] = field_schema(schema_obj.properties[field])
 
     def Match(schema: ObjectSchema) -> bool:
         if not K8sObjectSchema.Match(schema):
@@ -634,6 +680,12 @@ class PodSecurityContextSchema(K8sObjectSchema):
         "windowsOptions": K8sObjectSchema
     }
 
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        for field, field_schema in PodSecurityContextSchema.fields.items():
+            if field in schema_obj.properties:
+                self.properties[field] = field_schema(schema_obj.properties[field])
+
     def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
         base_test_cases = super().test_cases()
         base_test_cases[1].extend([
@@ -672,6 +724,12 @@ class SecurityContextSchema(K8sObjectSchema):
         "seccompProfile": K8sObjectSchema,
         "windowsOptions": K8sObjectSchema
     }
+
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        for field, field_schema in SecurityContextSchema.fields.items():
+            if field in schema_obj.properties:
+                self.properties[field] = field_schema(schema_obj.properties[field])
 
     def Match(schema: ObjectSchema) -> bool:
         if not K8sObjectSchema.Match(schema):
@@ -734,6 +792,12 @@ class TolerationSchema(K8sObjectSchema):
                                               control_plane_toleration,
                                               control_plane_toleration_setup)
 
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        for field, field_schema in TolerationSchema.fields.items():
+            if field in schema_obj.properties:
+                self.properties[field] = field_schema(schema_obj.properties[field])
+
     def Match(schema: ObjectSchema) -> bool:
         if not K8sObjectSchema.Match(schema):
             return False
@@ -766,6 +830,10 @@ class TolerationsSchema(K8sArraySchema):
 
     item = TolerationSchema
 
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        self.item_schema = TolerationSchema(schema_obj.item_schema)
+
     def Match(schema: ObjectSchema) -> bool:
         if not K8sArraySchema.Match(schema):
             return False
@@ -776,11 +844,20 @@ class TolerationsSchema(K8sArraySchema):
         return "Tolerations"
 
 
+class ImageSchema(K8sStringSchema):
+    
+    def Match(schema: ObjectSchema) -> bool:
+        return K8sStringSchema.Match(schema)
+
+    def __str__(self) -> str:
+        return "Image"
+
+
 class ContainerSchema(K8sObjectSchema):
 
     fields = {
         "name": K8sStringSchema,
-        "image": K8sStringSchema,
+        "image": ImageSchema,
         "command": K8sArraySchema,
         "args": K8sArraySchema,
         "workingDir": K8sStringSchema,
@@ -800,6 +877,12 @@ class ContainerSchema(K8sObjectSchema):
         "tty": K8sBooleanSchema
     }
 
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        for field, field_schema in ContainerSchema.fields.items():
+            if field in schema_obj.properties:
+                self.properties[field] = field_schema(schema_obj.properties[field])
+
     def Match(schema: ObjectSchema) -> bool:
         if not K8sObjectSchema.Match(schema):
             return False
@@ -818,6 +901,10 @@ class ContainersSchema(K8sArraySchema):
 
     item = ContainerSchema
 
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        self.item_schema= ContainerSchema(schema_obj.item_schema)
+
     def Match(schema: ObjectSchema) -> bool:
         if not K8sArraySchema.Match(schema):
             return False
@@ -831,6 +918,12 @@ class ContainersSchema(K8sArraySchema):
 class HostPathVolumeSource(K8sObjectSchema):
 
     fields = {"path": K8sStringSchema, "type": K8sStringSchema}
+
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        for field, field_schema in HostPathVolumeSource.fields.items():
+            if field in schema_obj.properties:
+                self.properties[field] = field_schema(schema_obj.properties[field])
 
     def Match(schema: ObjectSchema) -> bool:
         if not K8sObjectSchema.Match(schema):
@@ -857,6 +950,12 @@ class VolumeSchema(K8sObjectSchema):
         "gitRepo": K8sObjectSchema,
     }
 
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        for field, field_schema in VolumeSchema.fields.items():
+            if field in schema_obj.properties:
+                self.properties[field] = field_schema(schema_obj.properties[field])
+
     def Match(schema: ObjectSchema) -> bool:
         if not K8sObjectSchema.Match(schema):
             return False
@@ -874,6 +973,10 @@ class VolumeSchema(K8sObjectSchema):
 class VolumesSchema(K8sArraySchema):
 
     item = VolumeSchema
+
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        self.item_schema= VolumeSchema(schema_obj.item_schema)
 
     def Match(schema: ObjectSchema) -> bool:
         if not K8sArraySchema.Match(schema):
@@ -894,6 +997,12 @@ class TopologySpreadConstraintSchema(K8sObjectSchema):
         "labelSelector": K8sObjectSchema
     }
 
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        for field, field_schema in TopologySpreadConstraintSchema.fields.items():
+            if field in schema_obj.properties:
+                self.properties[field] = field_schema(schema_obj.properties[field])
+
     def Match(schema: ObjectSchema) -> bool:
         if not K8sObjectSchema.Match(schema):
             return False
@@ -911,6 +1020,10 @@ class TopologySpreadConstraintSchema(K8sObjectSchema):
 class TopologySpreadConstraintsSchema(K8sArraySchema):
 
     item = TopologySpreadConstraintSchema
+
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        self.item_schema= TopologySpreadConstraintSchema(schema_obj.item_schema)
 
     def Match(schema: ObjectSchema) -> bool:
         if not K8sArraySchema.Match(schema):
@@ -1026,6 +1139,39 @@ class PriorityClassNameSchema(K8sStringSchema):
         return "PriorityClassName"
 
 
+class ServiceAccountNameSchema(K8sStringSchema):
+    
+    def service_account_name_change_precondition(prev):
+        return prev is not None
+
+    def service_account_name_change(prev):
+        if prev == 'default':
+            return 'default1'
+        else:
+            return 'default'
+
+    def service_account_name_change_setup(prev):
+        return 'default'
+
+    ServiceAccountNameChangeTestcase = TestCase(service_account_name_change_precondition,
+                                                service_account_name_change,
+                                                service_account_name_change_setup)
+
+    def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
+        return "default"
+
+    def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
+        base_testcases = super().test_cases()
+        base_testcases[1].extend([ServiceAccountNameSchema.ServiceAccountNameChangeTestcase])
+        return super().test_cases()
+
+    def Match(schema: ObjectSchema) -> bool:
+        return K8sStringSchema.Match(schema)
+
+    def __str__(self) -> str:
+        return "ServiceAccountName"
+
+
 class PodSpecSchema(K8sObjectSchema):
 
     fields = {
@@ -1045,12 +1191,18 @@ class PodSpecSchema(K8sObjectSchema):
         "runtimeClassName": K8sStringSchema,  # hard to support, need cluster support
         "schedulerName": K8sStringSchema,  # hard to support, need scheduler
         "securityContext": PodSecurityContextSchema,
-        "serviceAccountName": K8sStringSchema,
+        "serviceAccountName": ServiceAccountNameSchema,
         "terminationGracePeriodSeconds": K8sIntegerSchema,
         "tolerations": TolerationsSchema,
         "topologySpreadConstraints": K8sArraySchema,
         "volumes": VolumesSchema
     }
+
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        for field, field_schema in PodSpecSchema.fields.items():
+            if field in schema_obj.properties:
+                self.properties[field] = field_schema(schema_obj.properties[field])
 
     def Match(schema: ObjectSchema) -> bool:
         if not K8sObjectSchema.Match(schema):
@@ -1072,6 +1224,12 @@ class PodTemplateSchema(K8sObjectSchema):
         "metadata": K8sObjectSchema,
         "spec": PodSpecSchema,
     }
+
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        for field, field_schema in PodTemplateSchema.fields.items():
+            if field in schema_obj.properties:
+                self.properties[field] = field_schema(schema_obj.properties[field])
 
     def Match(schema: ObjectSchema) -> bool:
         if not K8sObjectSchema.Match(schema):
@@ -1138,6 +1296,12 @@ class StatefulSetSpecSchema(K8sObjectSchema):
         'volumeClaimTemplates': K8sArraySchema
     }
 
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        for field, field_schema in StatefulSetSpecSchema.fields.items():
+            if field in schema_obj.properties:
+                self.properties[field] = field_schema(schema_obj.properties[field])
+
     def Match(schema: ObjectSchema) -> bool:
         if not K8sObjectSchema.Match(schema):
             return False
@@ -1155,6 +1319,12 @@ class StatefulSetSpecSchema(K8sObjectSchema):
 class StatefulSetSchema(K8sObjectSchema):
 
     fields = {"metadata": K8sObjectSchema, "spec": StatefulSetSpecSchema}
+
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        for field, field_schema in StatefulSetSchema.fields.items():
+            if field in schema_obj.properties:
+                self.properties[field] = field_schema(schema_obj.properties[field])
 
     def Match(schema: ObjectSchema) -> bool:
         if not K8sObjectSchema.Match(schema):
@@ -1183,6 +1353,12 @@ class DeploymentSpecSchema(K8sObjectSchema):
         "template": PodTemplateSchema,
     }
 
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        for field, field_schema in DeploymentSpecSchema.fields.items():
+            if field in schema_obj.properties:
+                self.properties[field] = field_schema(schema_obj.properties[field])
+
     def Match(schema: ObjectSchema) -> bool:
         if not K8sObjectSchema.Match(schema):
             return False
@@ -1200,6 +1376,12 @@ class DeploymentSpecSchema(K8sObjectSchema):
 class DeploymentSchema(K8sObjectSchema):
 
     fields = {"metadata": K8sObjectSchema, "spec": DeploymentSpecSchema}
+
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        for field, field_schema in DeploymentSchema.fields.items():
+            if field in schema_obj.properties:
+                self.properties[field] = field_schema(schema_obj.properties[field])
 
     def Match(schema: ObjectSchema) -> bool:
         if not K8sObjectSchema.Match(schema):
@@ -1272,6 +1454,12 @@ class ServiceSpecSchema(K8sObjectSchema):
         "type": ServiceTypeSchema
     }
 
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        for field, field_schema in ServiceSpecSchema.fields.items():
+            if field in schema_obj.properties:
+                self.properties[field] = field_schema(schema_obj.properties[field])
+
     def Match(schema: ObjectSchema) -> bool:
         if not K8sObjectSchema.Match(schema):
             return False
@@ -1289,6 +1477,12 @@ class ServiceSpecSchema(K8sObjectSchema):
 class ServiceSchema(K8sObjectSchema):
 
     fields = {"metadata": K8sObjectSchema, "spec": ServiceSpecSchema}
+
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        for field, field_schema in ServiceSchema.fields.items():
+            if field in schema_obj.properties:
+                self.properties[field] = field_schema(schema_obj.properties[field])
 
     def Match(schema: ObjectSchema) -> bool:
         if not K8sObjectSchema.Match(schema):
@@ -1371,6 +1565,12 @@ class PersistentVolumeClaimSpecSchema(K8sObjectSchema):
         "volumeName": K8sStringSchema
     }
 
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        for field, field_schema in PersistentVolumeClaimSpecSchema.fields.items():
+            if field in schema_obj.properties:
+                self.properties[field] = field_schema(schema_obj.properties[field])
+
     def Match(schema: ObjectSchema) -> bool:
         if not K8sObjectSchema.Match(schema):
             return False
@@ -1388,6 +1588,12 @@ class PersistentVolumeClaimSpecSchema(K8sObjectSchema):
 class PersistentVolumeClaimSchema(K8sObjectSchema):
 
     fields = {"metadata": K8sObjectSchema, "spec": PersistentVolumeClaimSpecSchema}
+
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        for field, field_schema in PersistentVolumeClaimSchema.fields.items():
+            if field in schema_obj.properties:
+                self.properties[field] = field_schema(schema_obj.properties[field])
 
     def Match(schema: ObjectSchema) -> bool:
         if not K8sObjectSchema.Match(schema):

@@ -507,6 +507,7 @@ class Acto:
                  reproduce_dir: str = None,
                  feature_gate: FeatureGate = None,
                  blackbox: bool = False,
+                 k8s_fields: bool = False,
                  delta_from: str = None,
                  mount: list = None) -> None:
         logger = get_thread_logger(with_prefix=False)
@@ -586,20 +587,31 @@ class Acto:
                                                    operator_config.example_dir, num_workers,
                                                    num_cases, self.reproduce_dir, mount)
         self.input_model.initialize(self.seed)
-        if blackbox:
-            pruned_list = []
-            module = importlib.import_module(operator_config.blackbox_custom_fields)
-            for custom_field in module.custom_fields:
-                pruned_list.append(custom_field.path)
-                self.input_model.apply_custom_field(custom_field)
-        else:
-            pruned_list = []
-            module = importlib.import_module(operator_config.custom_fields)
-            for custom_field in module.custom_fields:
-                pruned_list.append(custom_field.path)
-                self.input_model.apply_custom_field(custom_field)
 
-            logger.info("Applied custom fields: %s", json.dumps(pruned_list))
+        if k8s_fields:
+            module = importlib.import_module(operator_config.k8s_fields)
+
+            if blackbox:
+                for k8s_field in module.BLACKBOX:
+                    self.input_model.apply_k8s_schema(k8s_field)
+            else:
+                for k8s_field in module.WHITEBOX:
+                    self.input_model.apply_k8s_schema(k8s_field)
+        else:
+            if blackbox:
+                pruned_list = []
+                module = importlib.import_module(operator_config.blackbox_custom_fields)
+                for custom_field in module.custom_fields:
+                    pruned_list.append(custom_field.path)
+                    self.input_model.apply_custom_field(custom_field)
+            else:
+                pruned_list = []
+                module = importlib.import_module(operator_config.custom_fields)
+                for custom_field in module.custom_fields:
+                    pruned_list.append(custom_field.path)
+                    self.input_model.apply_custom_field(custom_field)
+
+                logger.info("Applied custom fields: %s", json.dumps(pruned_list))
 
         self.sequence_base = 20 if delta_from else 0
 
@@ -763,6 +775,16 @@ class Acto:
             for t in threads:
                 t.join()
 
+        if 'semantic' in modes:
+            threads = []
+            for runner in runners:
+                t = threading.Thread(target=runner.run, args=([InputModel.SEMANTIC]))
+                t.start()
+                threads.append(t)
+
+            for t in threads:
+                t.join()
+
         end_time = time.time()
 
         num_total_failed = 0
@@ -874,6 +896,7 @@ if __name__ == '__main__':
                         help='Number of testcases to bundle each time')
     parser.add_argument('--learn', dest='learn', action='store_true', help='Learn mode')
     parser.add_argument('--blackbox', dest='blackbox', action='store_true', help='Blackbox mode')
+    parser.add_argument('--k8s-fields', dest='k8s_fields', action='store_true', help='Run k8s fields testcases')
     parser.add_argument('--delta-from', dest='delta_from', help='Delta from')
     parser.add_argument('--notify-crash',
                         dest='notify_crash',
@@ -951,8 +974,11 @@ if __name__ == '__main__':
                 input_model=input_model,
                 apply_testcase_f=apply_testcase_f,
                 blackbox=args.blackbox,
+                k8s_fields=args.k8s_fields,
                 delta_from=args.delta_from)
-    if not args.learn:
+    if args.k8s_fields:
+        acto.run(modes=['semantic'])
+    elif not args.learn:
         acto.run(modes=['normal'])
     end_time = datetime.now()
     logger.info('Acto finished in %s', end_time - start_time)
