@@ -23,6 +23,11 @@ cp -r acto-data/percona-server-mongodb-operator/testrun-percona-mongodb-blackbox
 bash scripts/teardown.sh
 python3 checker.py --config data/percona-server-mongodb-operator/config.json --num-workers 64 --testrun-dir testrun-percona-mongodb-whitebox
 
+python3 acto.py --config data/mongodb-community-operator/config.json --delta-from acto-data/mongodb-community-operator/testrun-mongodb-comm-blackbox/ --num-workers 16 --num-cases 1 --workdir testrun-mongodb-comm-whitebox --notify-crash
+cp -r acto-data/mongodb-community-operator/testrun-mongodb-comm-blackbox/trial-* testrun-mongodb-comm-whitebox/
+bash scripts/teardown.sh
+python3 checker.py --config data/mongodb-community-operator/config.json --num-workers 64 --testrun-dir testrun-mongodb-comm-whitebox
+
 python3 acto.py --config data/percona-xtradb-cluster-operator/config.json --delta-from acto-data/percona-xtradb-cluster-operator/testrun-xtradb-blackbox/ --num-workers 8 --num-cases 1 --workdir testrun-xtradb-whitebox --notify-crash
 cp -r acto-data/percona-xtradb-cluster-operator/testrun-xtradb-blackbox/trial-* testrun-xtradb-whitebox/
 bash scripts/teardown.sh
