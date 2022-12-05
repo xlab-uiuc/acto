@@ -67,5 +67,4 @@ class KubernetesCluster(ABC):
         if p.stdout == None or p.stdout == '':
             # no nodes can be found, returning an empty array
             return []
-        logger.debug("Container found:", p.stdout.strip().split('\n'))
         return p.stdout.strip().split('\n')

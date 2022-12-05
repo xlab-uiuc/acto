@@ -216,7 +216,6 @@ class ResourceRequirementsSchema(K8sObjectSchema):
 
     fields = {"limits": ResourceSchema, "requests": ResourceSchema}
 
-
     def __init__(self, schema_obj: BaseSchema) -> None:
         super().__init__(schema_obj)
         for field, field_schema in ResourceRequirementsSchema.fields.items():
@@ -845,12 +844,42 @@ class TolerationsSchema(K8sArraySchema):
 
 
 class ImageSchema(K8sStringSchema):
-    
+
     def Match(schema: ObjectSchema) -> bool:
         return K8sStringSchema.Match(schema)
 
     def __str__(self) -> str:
         return "Image"
+
+
+class ImagePullPolicySchema(K8sStringSchema):
+
+    def change_image_pull_policy_precondition(prev) -> bool:
+        return prev != None
+
+    def change_image_pull_policy(prev) -> str:
+        if prev == "Always":
+            return "IfNotPresent"
+        else:
+            return "Always"
+
+    def change_image_pull_policy_setup(prev) -> str:
+        return "Always"
+
+    ChangeImagePullPolicyTestCase = TestCase(change_image_pull_policy_precondition,
+                                             change_image_pull_policy,
+                                             change_image_pull_policy_setup)
+
+    def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
+        base_testcases = super().test_cases()
+        base_testcases[1].append(ImagePullPolicySchema.ChangeImagePullPolicyTestCase)
+        return base_testcases
+
+    def Match(schema: ObjectSchema) -> bool:
+        return K8sStringSchema.Match(schema)
+
+    def __str__(self) -> str:
+        return "ImagePullPolicy"
 
 
 class ContainerSchema(K8sObjectSchema):
@@ -903,7 +932,7 @@ class ContainersSchema(K8sArraySchema):
 
     def __init__(self, schema_obj: BaseSchema) -> None:
         super().__init__(schema_obj)
-        self.item_schema= ContainerSchema(schema_obj.item_schema)
+        self.item_schema = ContainerSchema(schema_obj.item_schema)
 
     def Match(schema: ObjectSchema) -> bool:
         if not K8sArraySchema.Match(schema):
@@ -976,7 +1005,7 @@ class VolumesSchema(K8sArraySchema):
 
     def __init__(self, schema_obj: BaseSchema) -> None:
         super().__init__(schema_obj)
-        self.item_schema= VolumeSchema(schema_obj.item_schema)
+        self.item_schema = VolumeSchema(schema_obj.item_schema)
 
     def Match(schema: ObjectSchema) -> bool:
         if not K8sArraySchema.Match(schema):
@@ -1023,7 +1052,7 @@ class TopologySpreadConstraintsSchema(K8sArraySchema):
 
     def __init__(self, schema_obj: BaseSchema) -> None:
         super().__init__(schema_obj)
-        self.item_schema= TopologySpreadConstraintSchema(schema_obj.item_schema)
+        self.item_schema = TopologySpreadConstraintSchema(schema_obj.item_schema)
 
     def Match(schema: ObjectSchema) -> bool:
         if not K8sArraySchema.Match(schema):
@@ -1140,7 +1169,7 @@ class PriorityClassNameSchema(K8sStringSchema):
 
 
 class ServiceAccountNameSchema(K8sStringSchema):
-    
+
     def service_account_name_change_precondition(prev):
         return prev is not None
 
@@ -1170,6 +1199,118 @@ class ServiceAccountNameSchema(K8sStringSchema):
 
     def __str__(self) -> str:
         return "ServiceAccountName"
+
+
+class ConcurrencyPolicySchema(K8sStringSchema):
+
+    def concurrency_policy_change_precondition(prev):
+        return prev is not None
+
+    def concurrency_policy_change(prev):
+        if prev == 'Forbid':
+            return 'Replace'
+        else:
+            return 'Forbid'
+
+    def concurrency_policy_change_setup(prev):
+        return 'Forbid'
+
+    ConcurrencyPolicyChangeTestcase = TestCase(concurrency_policy_change_precondition,
+                                               concurrency_policy_change,
+                                               concurrency_policy_change_setup)
+
+    def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
+        if exclude_value == 'Replace':
+            return 'Forbid'
+        else:
+            return 'Replace'
+
+    def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
+        base_testcases = super().test_cases()
+        base_testcases[1].extend([ConcurrencyPolicySchema.ConcurrencyPolicyChangeTestcase])
+        return super().test_cases()
+
+    def Match(schema: ObjectSchema) -> bool:
+        return K8sStringSchema.Match(schema)
+
+    def __str__(self) -> str:
+        return "ConcurrencyPolicy"
+
+
+class CronJobScheduleSchema(K8sStringSchema):
+
+    def cronjob_schedule_change_precondition(prev):
+        return prev is not None
+
+    def cronjob_schedule_change(prev):
+        if prev == '0 0 * * *':
+            return '0 0 * * *1'
+        else:
+            return '0 0 * * *'
+
+    def cronjob_schedule_change_setup(prev):
+        return '0 0 * * *'
+
+    CronJobScheduleChangeTestcase = TestCase(cronjob_schedule_change_precondition,
+                                             cronjob_schedule_change, cronjob_schedule_change_setup)
+
+    def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
+        return "0 0 * * *"
+
+    def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
+        base_testcases = super().test_cases()
+        base_testcases[1].extend([CronJobScheduleSchema.CronJobScheduleChangeTestcase])
+        return super().test_cases()
+
+    def Match(schema: ObjectSchema) -> bool:
+        return K8sStringSchema.Match(schema)
+
+    def __str__(self) -> str:
+        return "CronJobSchedule"
+
+
+class CronJobSpecSchema(K8sObjectSchema):
+
+    fields = {
+        'concurrencyPolicy': ConcurrencyPolicySchema,
+        "schedule": CronJobScheduleSchema,
+        "startingDeadlineSeconds": K8sIntegerSchema,
+        "successfulJobsHistoryLimit": K8sIntegerSchema,
+        "suspend": K8sBooleanSchema,
+        "failedJobsHistoryLimit": K8sIntegerSchema,
+        "jobTemplate": K8sObjectSchema,
+    }
+
+    def Match(schema: ObjectSchema) -> bool:
+        if not K8sObjectSchema.Match(schema):
+            return False
+        for field, field_schema in CronJobSpecSchema.fields.items():
+            if field not in schema.properties:
+                return False
+            elif not field_schema.Match(schema.properties[field]):
+                return False
+        return True
+
+
+class CronJobSchema(K8sObjectSchema):
+
+    fields = {
+        'metadata': K8sObjectSchema,
+        'spec': CronJobSpecSchema,
+    }
+
+    def Match(schema: ObjectSchema) -> bool:
+        if not K8sObjectSchema.Match(schema):
+            return False
+        for field, field_schema in CronJobSchema.fields.items():
+            if field not in schema.properties:
+                return False
+            elif not field_schema.Match(schema.properties[field]):
+                return False
+        return True
+
+    def __str__(self) -> str:
+        return "CronJob"
 
 
 class PodSpecSchema(K8sObjectSchema):
@@ -1608,6 +1749,57 @@ class PersistentVolumeClaimSchema(K8sObjectSchema):
     def __str__(self) -> str:
         return "PersistentVolumeClaimSchema"
 
+class PodDisruptionBudgetSpecSchema(K8sObjectSchema):
+
+    fields = {
+        "maxUnavailable": K8sIntegerSchema,
+        "minAvailable": K8sIntegerSchema,
+        "selector": K8sObjectSchema
+    }
+
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        for field, field_schema in PodDisruptionBudgetSpecSchema.fields.items():
+            if field in schema_obj.properties:
+                self.properties[field] = field_schema(schema_obj.properties[field])
+
+    def Match(schema: ObjectSchema) -> bool:
+        if not K8sObjectSchema.Match(schema):
+            return False
+        for field, field_schema in PodDisruptionBudgetSpecSchema.fields.items():
+            if field not in schema.properties:
+                return False
+            elif not field_schema.Match(schema.properties[field]):
+                return False
+        return True
+
+    def __str__(self) -> str:
+        return "PodDisruptionBudgetSpecSchema"
+
+
+class PodDisruptionBudgetSchema(K8sObjectSchema):
+
+    fields = {"metadata": K8sObjectSchema, "spec": K8sObjectSchema}
+
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        for field, field_schema in PodDisruptionBudgetSchema.fields.items():
+            if field in schema_obj.properties:
+                self.properties[field] = field_schema(schema_obj.properties[field])
+
+    def Match(schema: ObjectSchema) -> bool:
+        if not K8sObjectSchema.Match(schema):
+            return False
+        for field, field_schema in PodDisruptionBudgetSchema.fields.items():
+            if field not in schema.properties:
+                return False
+            elif not field_schema.Match(schema.properties[field]):
+                return False
+        return True
+
+    def __str__(self) -> str:
+        return "PodDisruptionBudgetSchema"
+
 
 KUBERNETES_SCHEMA = {
     'statefulSet': StatefulSetSchema,
@@ -1668,6 +1860,8 @@ if __name__ == '__main__':
 
             print("Matched schemas for %s:" % file)
             for schema, k8s_schema in tuples:
-                print(f"known_schemas.K8sField({schema.path}, known_schemas.{type(k8s_schema).__name__}),")
+                print(
+                    f"known_schemas.K8sField({schema.path}, known_schemas.{type(k8s_schema).__name__}),"
+                )
 
             print()
