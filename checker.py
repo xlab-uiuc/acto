@@ -662,7 +662,7 @@ class Checker(object):
             r".*\['metadata'\]\['managed_fields'\]",
             r".*\['metadata'\]\['creation_timestamp'\]",
             r".*\['metadata'\]\['resource_version'\]",
-            r".*\['metadata'\]\[.*\]\['uid'\]",
+            r".*\['metadata'\].*\['uid'\]",
             r".*\['metadata'\]\['generation'\]",
             r".*\['metadata'\]\['annotations'\]",
             r".*\['metadata'\]\['annotations'\]\['.*last-applied.*'\]",

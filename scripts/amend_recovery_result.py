@@ -76,7 +76,7 @@ def amend_result(workqueue):
                         r".*\['metadata'\]\['managed_fields'\]",
                         r".*\['metadata'\]\['creation_timestamp'\]",
                         r".*\['metadata'\]\['resource_version'\]",
-                        r".*\['metadata'\]\[.*\]\['uid'\]",
+                        r".*\['metadata'\].*\['uid'\]",
                         r".*\['metadata'\]\['generation'\]",
                         r".*\['metadata'\]\['annotations'\]",
                         r".*\['metadata'\]\['annotations'\]\['.*last-applied.*'\]",
@@ -98,7 +98,7 @@ def amend_result(workqueue):
 
                     diff = DeepDiff(prev_system_state, curr_system_state, exclude_regex_paths=exclude_paths)
 
-                    if diff:
+                    if diff == None:
                         json_instance['error']['recovery_result'] = 'Pass'
                     else:
 

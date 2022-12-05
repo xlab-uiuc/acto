@@ -158,6 +158,10 @@ class TrialRunner:
             os.makedirs(self.base_workdir, exist_ok=True)
 
         while True:
+            if self.input_model.is_empty():
+                logger.info('Test finished')
+                break
+
             trial_start_time = time.time()
             self.cluster.configure_cluster(4, CONST.K8S_VERSION)
             self.cluster.restart_cluster(self.cluster_name, self.kubeconfig, CONST.K8S_VERSION)
@@ -675,10 +679,10 @@ class Acto:
             self.context = {'namespace': '', 'crd': None, 'preload_images': set()}
             learn_context_name = self.cluster.get_context_name('learn')
             learn_kubeconfig = os.path.join(os.path.expanduser('~'), '.kube',
-                                            self.learn_context_name)
+                                            learn_context_name)
 
             while True:
-                self.cluster.restart_cluster('learn', CONST.K8S_VERSION)
+                self.cluster.restart_cluster('learn', learn_kubeconfig, CONST.K8S_VERSION)
                 deployed = self.deploy.deploy_with_retry(self.context, learn_kubeconfig,
                                                          learn_context_name)
                 if deployed:
@@ -688,9 +692,9 @@ class Acto:
             runner.run_without_collect(self.operator_config.seed_custom_resource)
 
             update_preload_images(self.context, self.cluster.get_node_list('learn'))
-            process_crd(self.context, apiclient, 'learn', learn_kubeconfig, learn_context_name,
+            process_crd(self.context, apiclient, learn_kubeconfig, learn_context_name,
                         self.crd_name, helper_crd)
-            self.cluster.delete_cluster('learn')
+            self.cluster.delete_cluster('learn', learn_kubeconfig)
 
             run_end_time = time.time()
 

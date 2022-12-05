@@ -18,12 +18,12 @@ cp -r acto-data/knative-operator-serving/testrun-knative-serving-blackbox/trial-
 bash scripts/teardown.sh
 python3 checker.py --config data/knative-operator-serving/config.json --num-workers 64 --testrun-dir testrun-knative-serving-whitebox
 
-python3 acto.py --config data/percona-server-mongodb-operator/config.json --delta-from acto-data/percona-server-mongodb-operator/testrun-percona-mongodb-blackbox/ --num-workers 16 --num-cases 1 --workdir testrun-percona-mongodb-whitebox --notify-crash
+python3 acto.py --config data/percona-server-mongodb-operator/config.json --delta-from acto-data/percona-server-mongodb-operator/testrun-percona-mongodb-blackbox/ --num-workers 12 --num-cases 1 --workdir testrun-percona-mongodb-whitebox --notify-crash
 cp -r acto-data/percona-server-mongodb-operator/testrun-percona-mongodb-blackbox/trial-* testrun-percona-mongodb-whitebox/
 bash scripts/teardown.sh
 python3 checker.py --config data/percona-server-mongodb-operator/config.json --num-workers 64 --testrun-dir testrun-percona-mongodb-whitebox
 
-python3 acto.py --config data/percona-xtradb-cluster-operator/config.json --delta-from acto-data/percona-xtradb-cluster-operator/testrun-xtradb-blackbox/ --num-workers 16 --num-cases 1 --workdir testrun-xtradb-whitebox --notify-crash
+python3 acto.py --config data/percona-xtradb-cluster-operator/config.json --delta-from acto-data/percona-xtradb-cluster-operator/testrun-xtradb-blackbox/ --num-workers 8 --num-cases 1 --workdir testrun-xtradb-whitebox --notify-crash
 cp -r acto-data/percona-xtradb-cluster-operator/testrun-xtradb-blackbox/trial-* testrun-xtradb-whitebox/
 bash scripts/teardown.sh
 python3 checker.py --config data/percona-xtradb-cluster-operator/config.json --num-workers 64 --testrun-dir testrun-xtradb-whitebox
@@ -43,7 +43,7 @@ cp -r acto-data/redis-ot-container-kit-operator/testrun-redis-ot-blackbox/trial-
 bash scripts/teardown.sh
 python3 checker.py --config data/redis-ot-container-kit-operator/config.json --num-workers 64 --testrun-dir testrun-redis-ot-whitebox
 
-python3 acto.py --config data/tidb-operator/config.json --delta-from acto-data/tidb-operator/testrun-tidb-blackbox/ --num-workers 16 --num-cases 1 --workdir testrun-tidb-whitebox --notify-crash
+python3 acto.py --config data/tidb-operator/config.json --delta-from acto-data/tidb-operator/testrun-tidb-blackbox/ --num-workers 12 --num-cases 1 --workdir testrun-tidb-whitebox --notify-crash
 cp -r acto-data/tidb-operator/testrun-tidb-blackbox/trial-* testrun-tidb-whitebox/
 bash scripts/teardown.sh
 python3 checker.py --config data/tidb-operator/config.json --num-workers 64 --testrun-dir testrun-tidb-whitebox
