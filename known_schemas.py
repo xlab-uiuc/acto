@@ -258,6 +258,8 @@ class ReplicasSchema(K8sIntegerSchema):
         return prev + 1
 
     def scaleDownUpSetup(prev) -> int:
+        if prev == None:
+            return 1
         return prev - 1
 
     def scaleUpDownPrecondition(prev) -> bool:
@@ -267,7 +269,9 @@ class ReplicasSchema(K8sIntegerSchema):
         return prev + 1
 
     def scaleUpDownSetup(prev) -> int:
-        return prev - 1
+        if prev == None:
+            return 4
+        return prev + 1
 
     ScaleDownUp = TestCase(scaleDownUpPrecondition, scaleDownUp, scaleDownUpSetup)
     ScaleUpDown = TestCase(scaleUpDownPrecondition, scaleUpDown, scaleUpDownSetup)
