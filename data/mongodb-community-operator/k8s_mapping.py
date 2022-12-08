@@ -1,9 +1,9 @@
-import known_schemas
+from known_schemas import *
 
 WHITEBOX = [
-    known_schemas.K8sField(['spec', 'statefulSet', 'spec'], known_schemas.StatefulSetSpecSchema),
+    K8sField(['spec', 'statefulSet', 'spec'], StatefulSetSpecSchema),
 ]
 
 BLACKBOX = [
-    known_schemas.K8sField(['spec', 'statefulSet', 'spec'], known_schemas.StatefulSetSpecSchema),
+    K8sField(['spec', 'statefulSet', 'spec'], StatefulSetSpecSchema),
 ]

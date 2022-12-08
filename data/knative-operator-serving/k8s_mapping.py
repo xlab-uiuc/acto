@@ -1,12 +1,12 @@
-import known_schemas
+from known_schemas import *
 
 WHITEBOX = [
-    known_schemas.K8sField(['spec', 'deployments', 'ITEM', 'affinity'], known_schemas.AffinitySchema),
-    known_schemas.K8sField(['spec', 'deployments', 'ITEM', 'tolerations'], known_schemas.TolerationsSchema),
-    known_schemas.K8sField(['spec', 'ingress', 'kourier', 'service-type'], known_schemas.ServiceTypeSchema),
+    K8sField(['spec', 'deployments', 'ITEM', 'affinity'], AffinitySchema),
+    K8sField(['spec', 'deployments', 'ITEM', 'tolerations'], TolerationsSchema),
+    K8sField(['spec', 'ingress', 'kourier', 'service-type'], ServiceTypeSchema),
 ]
 
 BLACKBOX = [
-    known_schemas.K8sField(['spec', 'deployments', 'ITEM', 'affinity'], known_schemas.AffinitySchema),
-    known_schemas.K8sField(['spec', 'deployments', 'ITEM', 'tolerations'], known_schemas.TolerationsSchema),
+    K8sField(['spec', 'deployments', 'ITEM', 'affinity'], AffinitySchema),
+    K8sField(['spec', 'deployments', 'ITEM', 'tolerations'], TolerationsSchema),
 ]

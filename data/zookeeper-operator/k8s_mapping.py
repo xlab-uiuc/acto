@@ -1,26 +1,26 @@
-import known_schemas
+from known_schemas import *
 
 WHITEBOX = [
-    known_schemas.K8sField(['spec', 'image', 'pullPolicy'], known_schemas.ImagePullPolicySchema),
-    known_schemas.K8sField(['spec', 'persistence', 'spec'], known_schemas.PersistentVolumeClaimSpecSchema),
-    known_schemas.K8sField(['spec', 'containers', 'ITEM'], known_schemas.ContainerSchema),
-    known_schemas.K8sField(['spec', 'initContainers', 'ITEM'], known_schemas.ContainerSchema),
-    known_schemas.K8sField(['spec', 'pod', 'affinity'], known_schemas.AffinitySchema),
-    known_schemas.K8sField(['spec', 'pod', 'resources'], known_schemas.ResourceRequirementsSchema),
-    known_schemas.K8sField(['spec', 'pod', 'securityContext'], known_schemas.PodSecurityContextSchema),
-    known_schemas.K8sField(['spec', 'pod', 'tolerations'], known_schemas.TolerationsSchema),
-    known_schemas.K8sField(['spec', 'replicas'], known_schemas.ReplicasSchema),
-    known_schemas.K8sField(['spec', 'volumes', 'ITEM'], known_schemas.VolumeSchema),
+    K8sField(['spec', 'image', 'pullPolicy'], ImagePullPolicySchema),
+    K8sField(['spec', 'persistence', 'spec'], PersistentVolumeClaimSpecSchema),
+    K8sField(['spec', 'containers', 'ITEM'], ContainerSchema),
+    K8sField(['spec', 'initContainers', 'ITEM'], ContainerSchema),
+    K8sField(['spec', 'pod', 'affinity'], AffinitySchema),
+    K8sField(['spec', 'pod', 'resources'], ResourceRequirementsSchema),
+    K8sField(['spec', 'pod', 'securityContext'], PodSecurityContextSchema),
+    K8sField(['spec', 'pod', 'tolerations'], TolerationsSchema),
+    K8sField(['spec', 'replicas'], ReplicasSchema),
+    K8sField(['spec', 'volumes', 'ITEM'], VolumeSchema),
 ]
 
 BLACKBOX = [
-    known_schemas.K8sField(['spec', 'containers', 'ITEM'], known_schemas.ContainerSchema),
-    known_schemas.K8sField(['spec', 'initContainers', 'ITEM'], known_schemas.ContainerSchema),
-    known_schemas.K8sField(['spec', 'persistence', 'spec'], known_schemas.PersistentVolumeClaimSpecSchema),
-    known_schemas.K8sField(['spec', 'pod', 'affinity'], known_schemas.AffinitySchema),
-    known_schemas.K8sField(['spec', 'pod', 'resources'], known_schemas.ComputeResourceRequirementsSchema),
-    known_schemas.K8sField(['spec', 'pod', 'securityContext'], known_schemas.PodSecurityContextSchema),
-    known_schemas.K8sField(['spec', 'pod', 'tolerations'], known_schemas.TolerationsSchema),
-    known_schemas.K8sField(['spec', 'pod', 'serviceAccountName'], known_schemas.ServiceAccountNameSchema),
-    known_schemas.K8sField(['spec', 'volumes', 'ITEM'], known_schemas.VolumeSchema),
+    K8sField(['spec', 'containers', 'ITEM'], ContainerSchema),
+    K8sField(['spec', 'initContainers', 'ITEM'], ContainerSchema),
+    K8sField(['spec', 'persistence', 'spec'], PersistentVolumeClaimSpecSchema),
+    K8sField(['spec', 'pod', 'affinity'], AffinitySchema),
+    K8sField(['spec', 'pod', 'resources'], ComputeResourceRequirementsSchema),
+    K8sField(['spec', 'pod', 'securityContext'], PodSecurityContextSchema),
+    K8sField(['spec', 'pod', 'tolerations'], TolerationsSchema),
+    K8sField(['spec', 'pod', 'serviceAccountName'], ServiceAccountNameSchema),
+    K8sField(['spec', 'volumes', 'ITEM'], VolumeSchema),
 ]

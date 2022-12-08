@@ -1,17 +1,17 @@
-import known_schemas
+from known_schemas import *
 
 WHITEBOX = [
-    known_schemas.K8sField(['spec', 'affinity'], known_schemas.AffinitySchema),
-    known_schemas.K8sField(['spec', 'dataStore', 'pvc', 'spec', 'resources'], known_schemas.StorageResourceRequirementsSchema),
-    known_schemas.K8sField(['spec', 'resources'], known_schemas.ComputeResourceRequirementsSchema),
-    known_schemas.K8sField(['spec', 'tolerations'], known_schemas.TolerationsSchema),
-    known_schemas.K8sField(['spec', 'topologySpreadConstraints'], known_schemas.TopologySpreadConstraintsSchema),
+    K8sField(['spec', 'affinity'], AffinitySchema),
+    K8sField(['spec', 'dataStore', 'pvc', 'spec', 'resources'], StorageResourceRequirementsSchema),
+    K8sField(['spec', 'resources'], ComputeResourceRequirementsSchema),
+    K8sField(['spec', 'tolerations'], TolerationsSchema),
+    K8sField(['spec', 'topologySpreadConstraints'], TopologySpreadConstraintsSchema),
 ]
 
 BLACKBOX = [
-    known_schemas.K8sField(['spec', 'affinity'], known_schemas.AffinitySchema),
-    known_schemas.K8sField(['spec', 'dataStore', 'pvc', 'spec', 'resources'], known_schemas.ResourceRequirementsSchema),
-    known_schemas.K8sField(['spec', 'resources'], known_schemas.ResourceRequirementsSchema),
-    known_schemas.K8sField(['spec', 'tolerations'], known_schemas.TolerationsSchema),
-    known_schemas.K8sField(['spec', 'topologySpreadConstraints'], known_schemas.TopologySpreadConstraintsSchema),
+    K8sField(['spec', 'affinity'], AffinitySchema),
+    K8sField(['spec', 'dataStore', 'pvc', 'spec', 'resources'], ResourceRequirementsSchema),
+    K8sField(['spec', 'resources'], ResourceRequirementsSchema),
+    K8sField(['spec', 'tolerations'], TolerationsSchema),
+    K8sField(['spec', 'topologySpreadConstraints'], TopologySpreadConstraintsSchema),
 ]

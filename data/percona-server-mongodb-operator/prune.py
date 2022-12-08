@@ -23,8 +23,13 @@ custom_fields = [
     input.CopiedOverField(['spec', 'replsets', 'ITEM', 'nonvoting', 'resources'], used_fields=[
         ['spec', 'replsets', 'ITEM', 'nonvoting', 'resources', 'limits'],
     ]),
+    input.CopiedOverField(['spec', 'replsets', 'ITEM', 'nonvoting', 'readinessProbe']),
+    input.CopiedOverField(['spec', 'replsets', 'ITEM', 'nonvoting', 'livenessProbe']),
+    input.CopiedOverField(['spec', 'replsets', 'ITEM', 'nonvoting', 'podSecurityContext']),
     input.CopiedOverField(['spec', 'replsets', 'ITEM', 'nonvoting', 'sidecarPVCs', 'ITEM']),
-    input.CopiedOverField(['spec', 'replsets', 'ITEM', 'nonvoting', 'sidecarVolumes', 'ITEM', 'ephemeral', 'volumeClaimTemplate']),
+    input.CopiedOverField(['spec', 'replsets', 'ITEM', 'nonvoting', 'sidecarVolumes', 'ITEM'], used_fields=[
+        ['spec', 'replsets', 'ITEM', 'nonvoting', 'sidecarVolumes', 'ITEM', 'ephemeral', 'volumeClaimTemplate']
+    ]),
     input.CopiedOverField(['spec', 'replsets', 'ITEM', 'nonvoting', 'sidecars', 'ITEM']),
     input.CopiedOverField(['spec', 'replsets', 'ITEM', 'nonvoting', 'tolerations'], array=True),
     input.CopiedOverField(['spec', 'replsets', 'ITEM', 'nonvoting', 'volumeSpec', 'persistentVolumeClaim']),

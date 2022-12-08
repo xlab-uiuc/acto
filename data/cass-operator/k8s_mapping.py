@@ -1,23 +1,24 @@
-import known_schemas
+from known_schemas import K8sField, ResourceRequirementsSchema, PodTemplateSchema, TolerationsSchema
+from known_schemas import ServiceAccountNameSchema, ImageSchema
 
 WHITEBOX = [
-    known_schemas.K8sField(['spec', 'configBuilderResources'], known_schemas.ResourceRequirementsSchema),
-    known_schemas.K8sField(['spec', 'podTemplateSpec'], known_schemas.PodTemplateSchema),
-    known_schemas.K8sField(['spec', 'resources'], known_schemas.ResourceRequirementsSchema),
-    known_schemas.K8sField(['spec', 'storageConfig', 'additionalVolumes', 'ITEM', 'pvcSpec', 'resources'], known_schemas.ResourceRequirementsSchema),
-    known_schemas.K8sField(['spec', 'storageConfig', 'cassandraDataVolumeClaimSpec', 'resources'], known_schemas.ResourceRequirementsSchema),
-    known_schemas.K8sField(['spec', 'systemLoggerResources'], known_schemas.ResourceRequirementsSchema),
-    known_schemas.K8sField(['spec', 'tolerations'], known_schemas.TolerationsSchema),
+    K8sField(['spec', 'configBuilderResources'], ResourceRequirementsSchema),
+    K8sField(['spec', 'podTemplateSpec'], PodTemplateSchema),
+    K8sField(['spec', 'resources'], ResourceRequirementsSchema),
+    K8sField(['spec', 'storageConfig', 'additionalVolumes', 'ITEM', 'pvcSpec', 'resources'], ResourceRequirementsSchema),
+    K8sField(['spec', 'storageConfig', 'cassandraDataVolumeClaimSpec', 'resources'], ResourceRequirementsSchema),
+    K8sField(['spec', 'systemLoggerResources'], ResourceRequirementsSchema),
+    K8sField(['spec', 'tolerations'], TolerationsSchema),
 ]
 
 BLACKBOX = [
-    known_schemas.K8sField(['spec', 'configBuilderResources'], known_schemas.ResourceRequirementsSchema),
-    known_schemas.K8sField(['spec', 'podTemplateSpec'], known_schemas.PodTemplateSchema),
-    known_schemas.K8sField(['spec', 'resources'], known_schemas.ResourceRequirementsSchema),
-    known_schemas.K8sField(['spec', 'serviceAccount'], known_schemas.ServiceAccountNameSchema),
-    known_schemas.K8sField(['spec', 'storageConfig', 'additionalVolumes', 'ITEM', 'pvcSpec', 'resources'], known_schemas.ResourceRequirementsSchema),
-    known_schemas.K8sField(['spec', 'storageConfig', 'cassandraDataVolumeClaimSpec', 'resources'], known_schemas.ResourceRequirementsSchema),
-    known_schemas.K8sField(['spec', 'systemLoggerResources'], known_schemas.ResourceRequirementsSchema),
-    known_schemas.K8sField(['spec', 'systemLoggerImage'], known_schemas.ImageSchema),
-    known_schemas.K8sField(['spec', 'tolerations'], known_schemas.TolerationsSchema),
+    K8sField(['spec', 'configBuilderResources'], ResourceRequirementsSchema),
+    K8sField(['spec', 'podTemplateSpec'], PodTemplateSchema),
+    K8sField(['spec', 'resources'], ResourceRequirementsSchema),
+    K8sField(['spec', 'serviceAccount'], ServiceAccountNameSchema),
+    K8sField(['spec', 'storageConfig', 'additionalVolumes', 'ITEM', 'pvcSpec', 'resources'], ResourceRequirementsSchema),
+    K8sField(['spec', 'storageConfig', 'cassandraDataVolumeClaimSpec', 'resources'], ResourceRequirementsSchema),
+    K8sField(['spec', 'systemLoggerResources'], ResourceRequirementsSchema),
+    K8sField(['spec', 'systemLoggerImage'], ImageSchema),
+    K8sField(['spec', 'tolerations'], TolerationsSchema),
 ]
