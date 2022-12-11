@@ -501,6 +501,8 @@ class InputModel:
         random.shuffle(copiedover_test_plan_items)
         random.shuffle(semantic_test_plan_items)
 
+        normal_test_plan_items.extend(semantic_test_plan_items)  # run semantic testcases anyway
+
         # Initialize the three test plans, and assign test cases to them according to the number of
         # workers
         self.normal_test_plan_partitioned = []

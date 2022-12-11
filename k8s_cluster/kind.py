@@ -42,9 +42,8 @@ class Kind(base.KubernetesCluster):
         except FileExistsError:
             pass
 
-        if not os.path.exists(self.config_path):
-            with open(self.config_path, 'w') as config_file:
-                yaml.dump(config_dict, config_file)
+        with open(self.config_path, 'w') as config_file:
+            yaml.dump(config_dict, config_file)
 
     def get_context_name(self, cluster_name: str) -> str:
         '''Returns the kubecontext based onthe cluster name

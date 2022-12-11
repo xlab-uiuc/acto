@@ -115,17 +115,17 @@ def timeout_handler(sig, frame):
 class TrialRunner:
 
     def __init__(self, context: dict, input_model: InputModel, deploy: Deploy, runner_t: type,
-                 checker_t: type, custom_on_init: List[callable], custom_oracle: List[callable],
-                 workdir: str, cluster: base.KubernetesCluster, worker_id: int, sequence_base: int,
-                 dryrun: bool, is_reproduce: bool, apply_testcase_f: FunctionType,
-                 feature_gate: FeatureGate) -> None:
+                 checker_t: type, wait_time: int, custom_on_init: List[callable],
+                 custom_oracle: List[callable], workdir: str, cluster: base.KubernetesCluster,
+                 worker_id: int, sequence_base: int, dryrun: bool, is_reproduce: bool,
+                 apply_testcase_f: FunctionType, feature_gate: FeatureGate) -> None:
         self.context = context
         self.workdir = workdir
         self.base_workdir = workdir
         self.cluster = cluster
         self.images_archive = os.path.join(workdir, 'images.tar')
         self.worker_id = worker_id
-        self.sequence_base = sequence_base
+        self.sequence_base = sequence_base  # trial number to start with
         self.context_name = cluster.get_context_name(f"acto-cluster-{worker_id}")
         self.kubeconfig = os.path.join(os.path.expanduser('~'), '.kube', self.context_name)
         self.cluster_name = f"acto-cluster-{worker_id}"
@@ -133,6 +133,7 @@ class TrialRunner:
         self.deploy = deploy
         self.runner_t = runner_t
         self.checker_t = checker_t
+        self.wait_time = wait_time  # seconds of the resettable timer
 
         self.custom_on_init = custom_on_init
         self.custom_oracle = custom_oracle
@@ -163,7 +164,6 @@ class TrialRunner:
                 break
 
             trial_start_time = time.time()
-            self.cluster.configure_cluster(4, CONST.K8S_VERSION)
             self.cluster.restart_cluster(self.cluster_name, self.kubeconfig, CONST.K8S_VERSION)
             apiclient = kubernetes_client(self.kubeconfig, self.context_name)
             self.cluster.load_images(self.images_archive, self.cluster_name)
@@ -223,7 +223,8 @@ class TrialRunner:
             custom_oracle = [functools.partial(i, oracle_handle) for i in self.custom_oracle]
         else:
             custom_oracle = []
-        runner: Runner = self.runner_t(self.context, trial_dir, self.kubeconfig, self.context_name)
+        runner: Runner = self.runner_t(self.context, trial_dir, self.kubeconfig, self.context_name,
+                                       self.wait_time)
         checker: Checker = self.checker_t(self.context, trial_dir, self.input_model, custom_oracle,
                                           self.feature_gate)
 
@@ -575,7 +576,7 @@ class Acto:
         self.snapshots = []
 
         # generate configuration files for the cluster runtime
-        self.cluster.configure_cluster(4, CONST.K8S_VERSION)
+        self.cluster.configure_cluster(operator_config.num_nodes, CONST.K8S_VERSION)
 
         self.__learn(context_file=context_file, helper_crd=helper_crd, analysis_only=analysis_only)
 
@@ -678,8 +679,7 @@ class Acto:
             logger.info('Starting learning run to collect information')
             self.context = {'namespace': '', 'crd': None, 'preload_images': set()}
             learn_context_name = self.cluster.get_context_name('learn')
-            learn_kubeconfig = os.path.join(os.path.expanduser('~'), '.kube',
-                                            learn_context_name)
+            learn_kubeconfig = os.path.join(os.path.expanduser('~'), '.kube', learn_context_name)
 
             while True:
                 self.cluster.restart_cluster('learn', learn_kubeconfig, CONST.K8S_VERSION)
@@ -739,10 +739,10 @@ class Acto:
         runners: List[TrialRunner] = []
         for i in range(self.num_workers):
             runner = TrialRunner(self.context, self.input_model, self.deploy, self.runner_type,
-                                 self.checker_type, self.custom_on_init, self.custom_oracle,
-                                 self.workdir_path, self.cluster, i, self.sequence_base,
-                                 self.dryrun, self.is_reproduce, self.apply_testcase_f,
-                                 self.feature_gate)
+                                 self.checker_type, self.operator_config.wait_time,
+                                 self.custom_on_init, self.custom_oracle, self.workdir_path,
+                                 self.cluster, i, self.sequence_base, self.dryrun,
+                                 self.is_reproduce, self.apply_testcase_f, self.feature_gate)
             runners.append(runner)
 
         if 'normal' in modes:
@@ -900,7 +900,10 @@ if __name__ == '__main__':
                         help='Number of testcases to bundle each time')
     parser.add_argument('--learn', dest='learn', action='store_true', help='Learn mode')
     parser.add_argument('--blackbox', dest='blackbox', action='store_true', help='Blackbox mode')
-    parser.add_argument('--k8s-fields', dest='k8s_fields', action='store_true', help='Run k8s fields testcases')
+    parser.add_argument('--k8s-fields',
+                        dest='k8s_fields',
+                        action='store_true',
+                        help='Run k8s fields testcases')
     parser.add_argument('--delta-from', dest='delta_from', help='Delta from')
     parser.add_argument('--notify-crash',
                         dest='notify_crash',

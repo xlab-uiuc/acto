@@ -73,6 +73,8 @@ class OperatorConfig:
                  example_dir: str,
                  seed_custom_resource: str,
                  analysis: dict,
+                 num_nodes: int = 4,
+                 wait_time: int = 90,
                  context: str = None,
                  custom_oracle: str = None) -> None:
         self.deploy = DeployConfig(**deploy)
@@ -85,6 +87,9 @@ class OperatorConfig:
         self.context = context
         self.seed_custom_resource = seed_custom_resource
         self.analysis = AnalysisConfig(**analysis)
+
+        self.num_nodes = num_nodes
+        self.wait_time = wait_time
 
 
 def OperatorConfigDecoder(obj) -> OperatorConfig:

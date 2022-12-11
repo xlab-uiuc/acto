@@ -15,12 +15,13 @@ from thread_logger import get_thread_logger
 
 class Runner(object):
 
-    def __init__(self, context: dict, trial_dir: str, kubeconfig: str, context_name: str):
+    def __init__(self, context: dict, trial_dir: str, kubeconfig: str, context_name: str, wait_time: int = 90):
         self.namespace = context["namespace"]
         self.crd_metainfo: dict = context['crd']
         self.trial_dir = trial_dir
         self.kubeconfig = kubeconfig
         self.context_name = context_name
+        self.wait_time = wait_time
         self.log_length = 0
 
         apiclient = kubernetes_client(kubeconfig, context_name)
@@ -254,7 +255,7 @@ class Runner(object):
 
         while (True):
             try:
-                event = combined_event_queue.get(timeout=90)
+                event = combined_event_queue.get(timeout=self.wait_time)
                 if event == "timeout":
                     logger.debug('Hard timeout %d triggered', hard_timeout)
                     break
