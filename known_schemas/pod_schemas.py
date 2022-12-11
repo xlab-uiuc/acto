@@ -4,7 +4,7 @@ from known_schemas.base import K8sStringSchema, K8sObjectSchema, K8sArraySchema,
 from schema import BaseSchema
 from test_case import TestCase
 
-from resource_schemas import ResourceRequirementsSchema
+from .resource_schemas import ResourceRequirementsSchema
 
 
 class NodeSelectorSchema(K8sObjectSchema):

@@ -1,7 +1,7 @@
 from typing import List, Tuple
 from schema import BaseSchema, ObjectSchema
 from known_schemas.base import K8sBooleanSchema, K8sStringSchema, K8sObjectSchema, K8sArraySchema, K8sIntegerSchema
-from known_schemas.resource_schemas import StorageResourceRequirementsSchema
+from .resource_schemas import StorageResourceRequirementsSchema
 from test_case import TestCase
 
 class AccessModeSchema(K8sStringSchema):
