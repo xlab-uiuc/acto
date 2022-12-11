@@ -1,9 +1,27 @@
 from typing import List, Tuple
-from schema import BaseSchema, ObjectSchema
-from known_schemas.base import K8sBooleanSchema, K8sObjectSchema, K8sArraySchema, K8sIntegerSchema
+from schema import BaseSchema, ObjectSchema, StringSchema
+from known_schemas.base import K8sBooleanSchema, K8sObjectSchema, K8sArraySchema, K8sIntegerSchema, K8sStringSchema
 from known_schemas.pod_schemas import PodSpecSchema
 from known_schemas.statefulset_schemas import PodManagementPolicySchema, ReplicasSchema, PodTemplateSchema
 from schema import BaseSchema
+
+class DeploymentStrategy(K8sStringSchema):
+
+    
+    
+    def gen(self, exclude_value=None, **kwargs):
+        if exclude_value == None:
+            return "RollingUpdate"
+        elif exclude_value == "RollingUpdate":
+            return "Recreate"
+        else:
+            return "RollingUpdate"
+
+    def Match(schema: StringSchema) -> bool:
+        return K8sStringSchema.Match(schema)
+
+    def __str__(self) -> str:
+        return "DeploymentStrategy"
 
 class DeploymentSpecSchema(K8sObjectSchema):
 

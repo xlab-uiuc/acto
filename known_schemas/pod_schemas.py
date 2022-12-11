@@ -705,6 +705,42 @@ class PreemptionPolicySchema(K8sStringSchema):
         return "PreemptionPolicy"
 
 
+class RestartPolicySchema(K8sStringSchema):
+
+    def restart_policy_change_precondition(prev):
+        return prev is not None
+
+    def restart_policy_change(prev):
+        if prev == 'Always':
+            return 'OnFailure'
+        else:
+            return 'Always'
+
+    def restart_policy_change_setup(prev):
+        return 'Always'
+
+    RestartPolicyChangeTestcase = TestCase(restart_policy_change_precondition,
+                                           restart_policy_change,
+                                           restart_policy_change_setup)
+
+    def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
+        if exclude_value == 'OnFailure':
+            return 'Always'
+        else:
+            return 'OnFailure'
+
+    def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
+        base_testcases = super().test_cases()
+        base_testcases[1].extend([RestartPolicySchema.RestartPolicyChangeTestcase])
+        return super().test_cases()
+
+    def Match(schema: ObjectSchema) -> bool:
+        return K8sStringSchema.Match(schema)
+
+    def __str__(self) -> str:
+        return "RestartPolicy"
+
+
 class PriorityClassNameSchema(K8sStringSchema):
 
     def priority_class_name_change_precondition(prev):
@@ -909,7 +945,7 @@ class PodSpecSchema(K8sObjectSchema):
         "preemptionPolicy": PreemptionPolicySchema,
         "priority": K8sIntegerSchema,
         "priorityClassName": PriorityClassNameSchema,
-        "restartPolicy": K8sStringSchema,
+        "restartPolicy": RestartPolicySchema,
         "runtimeClassName": K8sStringSchema,  # hard to support, need cluster support
         "schedulerName": K8sStringSchema,  # hard to support, need scheduler
         "securityContext": PodSecurityContextSchema,
