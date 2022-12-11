@@ -113,10 +113,16 @@ class ComputeResourceRequirementsSchema(K8sObjectSchema):
                 self.properties[field] = field_schema(schema_obj.properties[field])
 
     def gen(self, exclude_value=None, minimum: bool = False, **kwargs) -> dict:
-        ret = {}
-        for field, field_schema in ComputeResourceRequirementsSchema.fields.items():
-            ret[field] = field_schema.gen()
-        return ret
+        return {
+            "requests": {
+                "cpu": "800m",
+                "memory": "1000m"
+            },
+            "limits": {
+                "cpu": "800m",
+                "memory": "1000m"
+            }
+        }
 
     def Match(schema: ObjectSchema) -> bool:
         if not K8sObjectSchema.Match(schema):
@@ -180,10 +186,14 @@ class ResourceRequirementsSchema(K8sObjectSchema):
                 self.properties[field] = field_schema(schema_obj.properties[field])
 
     def gen(self, exclude_value=None, minimum: bool = False, **kwargs) -> dict:
-        ret = {}
-        for field, field_schema in ResourceRequirementsSchema.fields.items():
-            ret[field] = field_schema.gen()
-        return ret
+        return {
+            "requests": {
+                "cpu": "800m"
+            },
+            "limits": {
+                "cpu": "800m"
+            },
+        }
 
     def Match(schema: ObjectSchema) -> bool:
         if not K8sObjectSchema.Match(schema):
