@@ -533,10 +533,7 @@ class TolerationSchema(K8sObjectSchema):
         return True
 
     def gen(self, exclude_value=None, minimum: bool = False, **kwargs) -> list:
-        if minimum:
-            return [TolerationSchema.PlainToleration]
-        else:
-            return [TolerationSchema.PlainToleration, TolerationSchema.ControlPlaneToleration]
+        return TolerationSchema.PlainToleration
 
     def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
         base_testcases = super().test_cases()
@@ -563,6 +560,12 @@ class TolerationsSchema(K8sArraySchema):
             return False
         else:
             return TolerationsSchema.item.Match(schema.get_item_schema())
+
+    def gen(self, exclude_value=None, minimum: bool = False, **kwargs) -> list:
+        if minimum:
+            return [TolerationSchema.PlainToleration]
+        else:
+            return [TolerationSchema.PlainToleration, TolerationSchema.ControlPlaneToleration]
 
     def __str__(self) -> str:
         return "Tolerations"
