@@ -28,6 +28,7 @@ class BaseSchema:
 
         self.copied_over = False
         self.over_specified = False
+        self.problematic = False
         self.used_fields = []
 
     def get_path(self) -> list:
@@ -138,6 +139,8 @@ class StringSchema(BaseSchema):
         return ret, []
 
     def get_all_schemas(self) -> Tuple[list, list, list]:
+        if self.problematic:
+            return [], [], []
         return [self], [], []
 
     def to_tree(self) -> TreeNode:
@@ -240,6 +243,8 @@ class NumberSchema(BaseSchema):
         return ret, []
 
     def get_all_schemas(self) -> Tuple[list, list, list]:
+        if self.problematic:
+            return [], [], []
         return [self], [], []
 
     def to_tree(self) -> TreeNode:
@@ -336,6 +341,8 @@ class IntegerSchema(NumberSchema):
         return normal, special
 
     def get_all_schemas(self) -> Tuple[list, list, list]:
+        if self.problematic:
+            return [], [], []
         return [self], [], []
 
     def to_tree(self) -> TreeNode:
@@ -479,6 +486,9 @@ class ObjectSchema(BaseSchema):
 
     def get_all_schemas(self) -> Tuple[list, list, list]:
         '''Return all the subschemas as a list'''
+        if self.problematic:
+            return [], [], []
+
         normal_schemas = [self]
         pruned_by_overspecified = []
         pruned_by_copiedover = []
@@ -648,6 +658,9 @@ class ArraySchema(BaseSchema):
         return ret, []
 
     def get_all_schemas(self) -> Tuple[list, list, list]:
+        if self.problematic:
+            return [], [], []
+
         normal_schemas = [self]
         pruned_by_overspecified = []
         pruned_by_copiedover = []
@@ -806,6 +819,8 @@ class AnyOfSchema(BaseSchema):
         return ret, []
 
     def get_all_schemas(self) -> Tuple[list, list, list]:
+        if self.problematic:
+            return [], [], []
         return [self], [], []
 
     def empty_value(self):
@@ -877,6 +892,8 @@ class OneOfSchema(BaseSchema):
         return ret, []
 
     def get_all_schemas(self) -> Tuple[list, list, list]:
+        if self.problematic:
+            return [], [], []
         return [self], [], []
 
     def empty_value(self):
@@ -940,6 +957,8 @@ class BooleanSchema(BaseSchema):
         return ret, []
 
     def get_all_schemas(self) -> Tuple[list, list, list]:
+        if self.problematic:
+            return [], [], []
         return [self], [], []
 
     def to_tree(self) -> TreeNode:

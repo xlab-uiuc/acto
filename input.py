@@ -52,55 +52,8 @@ class ProblematicField(CustomField):
     All the subfields of this field (including this field itself) will be pruned
     '''
 
-    class PruneEntireStringSchema(StringSchema):
-
-        def __init__(self, path: list, schema: dict) -> None:
-            super().__init__(path, schema)
-
-        def __init__(self, schema_obj: BaseSchema, used_fields: list) -> None:
-            super().__init__(schema_obj.path, schema_obj.raw_schema)
-
-        def get_all_schemas(self) -> Tuple[list, list, list]:
-            return [], [], []
-
-        def __str__(self):
-            return "Field Pruned"
-
-    class PruneEntireObjectSchema(ObjectSchema):
-
-        def __init__(self, path: list, schema: dict) -> None:
-            super().__init__(path, schema)
-
-        def __init__(self, schema_obj: BaseSchema, used_fields: list) -> None:
-            super().__init__(schema_obj.path, schema_obj.raw_schema)
-
-        def get_all_schemas(self) -> Tuple[list, list, list]:
-            return [], [], []
-
-        def __str__(self):
-            return "Field Pruned"
-
-    class PruneEntireArraySchema(ArraySchema):
-
-        def __init__(self, path: list, schema: dict) -> None:
-            super().__init__(path, schema)
-
-        def __init__(self, schema_obj: BaseSchema, used_fields: list) -> None:
-            super().__init__(schema_obj.path, schema_obj.raw_schema)
-
-        def get_all_schemas(self) -> Tuple[list, list, list]:
-            return [], [], []
-
-        def __str__(self):
-            return "Field Pruned"
-
     def __init__(self, path, array: bool = False, string: bool = False) -> None:
-        if array:
-            super().__init__(path, self.PruneEntireArraySchema, [])
-        elif string:
-            super().__init__(path, self.PruneEntireStringSchema, [])
-        else:
-            super().__init__(path, self.PruneEntireObjectSchema, [])
+        super().__init__(path, [])
 
 
 class InputModel:
@@ -473,6 +426,8 @@ class InputModel:
             curr.copied_over = True
         elif isinstance(custom_field, OverSpecifiedField):
             curr.over_specified = True
+        elif isinstance(custom_field, ProblematicField):
+            curr.problematic = True
         else:
             raise Exception('Unknown custom field type')
 
