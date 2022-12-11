@@ -21,9 +21,8 @@ from testplan import TreeNode
 
 class CustomField:
 
-    def __init__(self, path, schema, used_fields: list) -> None:
+    def __init__(self, path, used_fields: list) -> None:
         self.path = path
-        self.custom_schema = schema
         self.used_fields = used_fields
 
 
@@ -33,85 +32,8 @@ class CopiedOverField(CustomField):
     All the subfields of this field (excluding this field) will be pruned
     '''
 
-    class PruneChildrenObjectSchema(ObjectSchema):
-
-        def __init__(self, path: list, schema: dict) -> None:
-            super().__init__(path, schema)
-
-        def __init__(self, schema_obj: BaseSchema, used_fields: list) -> None:
-            self.used_fields = used_fields
-            super().__init__(schema_obj.path, schema_obj.raw_schema)
-
-        def get_all_schemas(self) -> list:
-            '''Return all the subschemas as a list'''
-            normal_schemas = [self]
-            pruned_by_overspecified = []
-            pruned_by_copiedover = []
-
-            if self.properties != None:
-                for value in self.properties.values():
-                    child_schema_tuple = value.get_all_schemas()
-                    normal_schemas.extend(child_schema_tuple[0])
-                    pruned_by_overspecified.extend(child_schema_tuple[1])
-                    pruned_by_copiedover.extend(child_schema_tuple[2])
-            if self.additional_properties != None:
-                normal_schemas.append(self.additional_properties)
-
-            if len(self.used_fields) == 0:
-                keep = [normal_schemas.pop()]
-            else:
-                keep = []
-            for schema in normal_schemas:
-                if schema.path in self.used_fields:
-                    keep.append(schema)
-                else:
-                    pruned_by_copiedover.append(schema)
-            normal_schemas = keep
-
-            return normal_schemas, pruned_by_overspecified, pruned_by_copiedover
-
-        def __str__(self) -> str:
-            return 'Children Pruned'
-
-    class PruneChildrenArraySchema(ArraySchema):
-
-        def __init__(self, path: list, schema: dict) -> None:
-            super().__init__(path, schema)
-
-        def __init__(self, schema_obj: BaseSchema, used_fields: list) -> None:
-            self.used_fields = used_fields
-            super().__init__(schema_obj.path, schema_obj.raw_schema)
-
-        def get_all_schemas(self) -> list:
-            '''Return all the subschemas as a list'''
-            normal_schemas = [self]
-            pruned_by_overspecified = []
-            pruned_by_copiedover = []
-
-            child_schema_tuple = self.item_schema.get_all_schemas()
-            child_normal_schemas = child_schema_tuple[0]
-            for child_schema in child_normal_schemas:
-                if child_schema.path in self.used_fields:
-                    normal_schemas.append(child_schema)
-                else:
-                    pruned_by_copiedover.append(child_schema)
-            if len(self.used_fields) == 0:
-                normal_schemas.append(child_schema_tuple[0].pop())
-            pruned_by_overspecified.extend(child_schema_tuple[1])
-            pruned_by_copiedover.extend(child_schema_tuple[2])
-
-            return normal_schemas, pruned_by_overspecified, pruned_by_copiedover
-
-        def __str__(self) -> str:
-            return 'Children Pruned'
-
     def __init__(self, path, used_fields: list = None, array: bool = False) -> None:
-        if array:
-            super().__init__(path, self.PruneChildrenArraySchema,
-                             used_fields if used_fields != None else [])
-        else:
-            super().__init__(path, self.PruneChildrenObjectSchema,
-                             used_fields if used_fields != None else [])
+        super().__init__(path, used_fields)
 
 
 class OverSpecifiedField(CustomField):
@@ -120,86 +42,8 @@ class OverSpecifiedField(CustomField):
     All the subfields of this field (excluding this field) will be pruned
     '''
 
-    class OverSpecifiedObjectSchema(ObjectSchema):
-
-        def __init__(self, path: list, schema: dict) -> None:
-            super().__init__(path, schema)
-
-        def __init__(self, schema_obj: BaseSchema, used_fields: list) -> None:
-            self.used_fields = used_fields
-            super().__init__(schema_obj.path, schema_obj.raw_schema)
-
-        def get_all_schemas(self) -> list:
-            '''Return all the subschemas as a list'''
-            normal_schemas = [self]
-            pruned_by_overspecified = []
-            pruned_by_copiedover = []
-
-            if self.properties != None:
-                for value in self.properties.values():
-                    child_schema_tuple = value.get_all_schemas()
-                    normal_schemas.extend(child_schema_tuple[0])
-                    pruned_by_overspecified.extend(child_schema_tuple[1])
-                    pruned_by_copiedover.extend(child_schema_tuple[2])
-            if self.additional_properties != None:
-                normal_schemas.append(self.additional_properties)
-
-            if len(self.used_fields) == 0:
-                keep = [normal_schemas.pop()]
-            else:
-                keep = []
-            for schema in normal_schemas:
-                if schema.path in self.used_fields:
-                    logging.debug('Keeping %s' % schema.path)
-                    keep.append(schema)
-                else:
-                    pruned_by_overspecified.append(schema)
-            normal_schemas = keep
-
-            return normal_schemas, pruned_by_overspecified, pruned_by_copiedover
-
-        def __str__(self) -> str:
-            return 'Children Pruned'
-
-    class OverSpecifiedArraySchema(ArraySchema):
-
-        def __init__(self, path: list, schema: dict) -> None:
-            super().__init__(path, schema)
-
-        def __init__(self, schema_obj: BaseSchema, used_fields: list) -> None:
-            self.used_fields = used_fields
-            super().__init__(schema_obj.path, schema_obj.raw_schema)
-
-        def get_all_schemas(self) -> list:
-            '''Return all the subschemas as a list'''
-            normal_schemas = [self]
-            pruned_by_overspecified = []
-            pruned_by_copiedover = []
-
-            child_schema_tuple = self.item_schema.get_all_schemas()
-            child_normal_schemas = child_schema_tuple[0]
-            for child_schema in child_normal_schemas:
-                if child_schema.path in self.used_fields:
-                    normal_schemas.append(child_schema)
-                else:
-                    pruned_by_overspecified.append(child_schema)
-            if len(self.used_fields) == 0:
-                normal_schemas.append(child_schema_tuple[0].pop())
-            pruned_by_overspecified.extend(child_schema_tuple[1])
-            pruned_by_copiedover.extend(child_schema_tuple[2])
-
-            return normal_schemas, pruned_by_overspecified, pruned_by_copiedover
-
-        def __str__(self) -> str:
-            return 'Children Pruned'
-
     def __init__(self, path, used_fields: list = None, array: bool = False) -> None:
-        if array:
-            super().__init__(path, self.OverSpecifiedArraySchema,
-                             used_fields if used_fields != None else [])
-        else:
-            super().__init__(path, self.OverSpecifiedObjectSchema,
-                             used_fields if used_fields != None else [])
+        super().__init__(path, used_fields)
 
 
 class ProblematicField(CustomField):
@@ -622,14 +466,15 @@ class InputModel:
 
         # fetch the parent schema
         curr = self.root_schema
-        for idx in path[:-1]:
+        for idx in path:
             curr = curr[idx]
 
-        # construct new schema
-        custom_schema = custom_field.custom_schema(curr[path[-1]], custom_field.used_fields)
-
-        # replace old schema with the new one
-        curr[path[-1]] = custom_schema
+        if isinstance(custom_field, CopiedOverField):
+            curr.copied_over = True
+        elif isinstance(custom_field, OverSpecifiedField):
+            curr.over_specified = True
+        else:
+            raise Exception('Unknown custom field type')
 
     def apply_k8s_schema(self, k8s_field: K8sField):
         path = k8s_field.path
@@ -646,7 +491,6 @@ class InputModel:
 
         # replace old schema with the new one
         curr[path[-1]] = custom_schema
-
 
     def apply_candidates(self, candidates: dict, path: list):
         '''Apply candidates file onto schema'''

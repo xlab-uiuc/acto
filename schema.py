@@ -26,6 +26,10 @@ class BaseSchema:
         self.enum = None if 'enum' not in schema else schema['enum']
         self.examples = []
 
+        self.copied_over = False
+        self.over_specified = False
+        self.used_fields = []
+
     def get_path(self) -> list:
         return self.path
 
@@ -486,9 +490,30 @@ class ObjectSchema(BaseSchema):
                 pruned_by_copiedover.extend(child_schema_tuple[2])
         if self.additional_properties != None:
             normal_schemas.append(self.additional_properties)
-        # if len(ret) > 500:
-        #     # XXX: Temporary prune
-        #     return []
+
+        if self.copied_over:
+            if len(self.used_fields) == 0:
+                keep = [normal_schemas.pop()]
+            else:
+                keep = []
+            for schema in normal_schemas:
+                if schema.path in self.used_fields:
+                    keep.append(schema)
+                else:
+                    pruned_by_copiedover.append(schema)
+            normal_schemas = keep
+        elif self.over_specified:
+            if len(self.used_fields) == 0:
+                keep = [normal_schemas.pop()]
+            else:
+                keep = []
+            for schema in normal_schemas:
+                if schema.path in self.used_fields:
+                    keep.append(schema)
+                else:
+                    pruned_by_overspecified.append(schema)
+            normal_schemas = keep
+
         return normal_schemas, pruned_by_overspecified, pruned_by_copiedover
 
     def to_tree(self) -> TreeNode:
@@ -631,6 +656,29 @@ class ArraySchema(BaseSchema):
         normal_schemas.extend(child_schema_tuple[0])
         pruned_by_overspecified.extend(child_schema_tuple[1])
         pruned_by_copiedover.extend(child_schema_tuple[2])
+
+        if self.copied_over:
+            if len(self.used_fields) == 0:
+                keep = [normal_schemas.pop()]
+            else:
+                keep = []
+            for schema in normal_schemas:
+                if schema.path in self.used_fields:
+                    keep.append(schema)
+                else:
+                    pruned_by_copiedover.append(schema)
+            normal_schemas = keep
+        elif self.over_specified:
+            if len(self.used_fields) == 0:
+                keep = [normal_schemas.pop()]
+            else:
+                keep = []
+            for schema in normal_schemas:
+                if schema.path in self.used_fields:
+                    keep.append(schema)
+                else:
+                    pruned_by_overspecified.append(schema)
+            normal_schemas = keep
 
         return normal_schemas, pruned_by_overspecified, pruned_by_copiedover
 

@@ -593,30 +593,29 @@ class Acto:
                                                    num_cases, self.reproduce_dir, mount)
         self.input_model.initialize(self.seed)
 
-        if k8s_fields:
-            module = importlib.import_module(operator_config.k8s_fields)
+        module = importlib.import_module(operator_config.k8s_fields)
 
-            if blackbox:
-                for k8s_field in module.BLACKBOX:
-                    self.input_model.apply_k8s_schema(k8s_field)
-            else:
-                for k8s_field in module.WHITEBOX:
-                    self.input_model.apply_k8s_schema(k8s_field)
+        if blackbox:
+            for k8s_field in module.BLACKBOX:
+                self.input_model.apply_k8s_schema(k8s_field)
         else:
-            if blackbox:
-                pruned_list = []
-                module = importlib.import_module(operator_config.blackbox_custom_fields)
-                for custom_field in module.custom_fields:
-                    pruned_list.append(custom_field.path)
-                    self.input_model.apply_custom_field(custom_field)
-            else:
-                pruned_list = []
-                module = importlib.import_module(operator_config.custom_fields)
-                for custom_field in module.custom_fields:
-                    pruned_list.append(custom_field.path)
-                    self.input_model.apply_custom_field(custom_field)
+            for k8s_field in module.WHITEBOX:
+                self.input_model.apply_k8s_schema(k8s_field)
 
-                logger.info("Applied custom fields: %s", json.dumps(pruned_list))
+        if blackbox:
+            pruned_list = []
+            module = importlib.import_module(operator_config.blackbox_custom_fields)
+            for custom_field in module.custom_fields:
+                pruned_list.append(custom_field.path)
+                self.input_model.apply_custom_field(custom_field)
+        else:
+            pruned_list = []
+            module = importlib.import_module(operator_config.custom_fields)
+            for custom_field in module.custom_fields:
+                pruned_list.append(custom_field.path)
+                self.input_model.apply_custom_field(custom_field)
+
+            logger.info("Applied custom fields: %s", json.dumps(pruned_list))
 
         self.sequence_base = 20 if delta_from else 0
 

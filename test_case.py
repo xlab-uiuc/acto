@@ -56,6 +56,15 @@ class TestCase:
         return ret
 
 
+class K8sTestCase(TestCase):
+    '''Class represent a test case for k8s, purely for test case name purposes'''
+
+    def __init__(self, precondition: Callable, mutator: Callable, setup: Callable) -> None:
+        super().__init__(precondition, mutator, setup)
+
+    def __str__(self) -> str:
+        return 'K8s-%s' % (self.mutator.__name__)
+
 class EnumTestCase(TestCase):
 
     def __init__(self, case) -> None:
