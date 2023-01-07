@@ -2,13 +2,17 @@ from typing import Callable
 
 from thread_logger import get_thread_logger
 
+class Store:
+    def __init__(self) -> None:
+        self.data = None
 
 class TestCase:
 
     def __init__(self,
                  precondition: Callable,
                  mutator: Callable,
-                 setup: Callable) -> None:
+                 setup: Callable,
+                 store: Store = None) -> None:
         '''Class represent a test case
 
         Args:
@@ -25,6 +29,7 @@ class TestCase:
         self.mutator = mutator
         self.setup = setup
         self.additional_preconditions = []
+        self.store = store
 
     def test_precondition(self, prev) -> bool:
         logger = get_thread_logger(with_prefix=True)
@@ -33,7 +38,10 @@ class TestCase:
         for additional_precondition in self.additional_preconditions:
             ret = ret and additional_precondition(prev)
             logger.debug('Precondition [%s] Result [%s]' % (additional_precondition.__name__, ret))
-        ret = ret and self.precondition(prev)
+        if self.store != None:
+            ret = ret and self.precondition(prev, self.store)
+        else:
+            ret = ret and self.precondition(prev)
         logger.debug('Precondition [%s] Result [%s]' % (self.precondition.__name__, ret))
         return ret
 

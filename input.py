@@ -130,19 +130,19 @@ class InputModel:
         self.thread_vars.copiedover_test_plan = TestPlan(self.root_schema.to_tree())
         self.thread_vars.semantic_test_plan = TestPlan(self.root_schema.to_tree())
 
-        for key, value in dict(self.normal_test_plan_partitioned[id]).items():
+        for key, value in self.normal_test_plan_partitioned[id]:
             path = json.loads(key)
             self.thread_vars.normal_test_plan.add_testcases_by_path(value, path)
 
-        for key, value in dict(self.overspecified_test_plan_partitioned[id]).items():
+        for key, value in self.overspecified_test_plan_partitioned[id]:
             path = json.loads(key)
             self.thread_vars.overspecified_test_plan.add_testcases_by_path(value, path)
 
-        for key, value in dict(self.copiedover_test_plan_partitioned[id]).items():
+        for key, value in self.copiedover_test_plan_partitioned[id]:
             path = json.loads(key)
             self.thread_vars.copiedover_test_plan.add_testcases_by_path(value, path)
 
-        for key, value in dict(self.semantic_test_plan_partitioned[id]).items():
+        for key, value in self.semantic_test_plan_partitioned[id]:
             path = json.loads(key)
             self.thread_vars.semantic_test_plan.add_testcases_by_path(value, path)
 
@@ -236,6 +236,7 @@ class InputModel:
         num_normal_testcases = 0
         num_overspecified_testcases = 0
         num_copiedover_testcases = 0
+        num_semantic_testcases = 0
 
         mounted_schema = self.get_schema_by_path(self.mount)
         normal_schemas, pruned_by_overspecified, pruned_by_copied = mounted_schema.get_all_schemas()
@@ -246,6 +247,7 @@ class InputModel:
             planned_normal_testcases[path] = testcases
             if len(semantic_testcases_) > 0:
                 semantic_testcases[path] = semantic_testcases_
+                num_semantic_testcases += len(semantic_testcases_)
             if path in existing_testcases:
                 continue
             normal_testcases[path] = testcases
@@ -258,6 +260,7 @@ class InputModel:
                                                                 random_string(5))
             if len(semantic_testcases_) > 0:
                 semantic_testcases[path] = semantic_testcases_
+                num_semantic_testcases += len(semantic_testcases_)
             overspecified_testcases[path] = testcases
             num_overspecified_testcases += len(testcases)
 
@@ -268,6 +271,7 @@ class InputModel:
                                                                 random_string(5))
             if len(semantic_testcases_) > 0:
                 semantic_testcases[path] = semantic_testcases_
+                num_semantic_testcases += len(semantic_testcases_)
             copiedover_testcases[path] = testcases
             num_copiedover_testcases += len(testcases)
 
@@ -279,7 +283,7 @@ class InputModel:
         logger.info('Generated [%d] test cases for overspecified schemas',
                     num_overspecified_testcases)
         logger.info('Generated [%d] test cases for copiedover schemas', num_copiedover_testcases)
-        logger.info('Generated [%d] test cases for semantic schemas', len(semantic_testcases))
+        logger.info('Generated [%d] test cases for semantic schemas', num_semantic_testcases)
 
         self.metadata['pruned_by_overspecified'] = len(pruned_by_overspecified)
         self.metadata['pruned_by_copied'] = len(pruned_by_copied)
@@ -287,7 +291,7 @@ class InputModel:
         self.metadata['num_normal_testcases'] = num_normal_testcases
         self.metadata['num_overspecified_testcases'] = num_overspecified_testcases
         self.metadata['num_copiedover_testcases'] = num_copiedover_testcases
-        self.metadata['num_semantic_testcases'] = len(semantic_testcases)
+        self.metadata['num_semantic_testcases'] = num_semantic_testcases
 
         normal_test_plan_items = list(normal_testcases.items())
         overspecified_test_plan_items = list(overspecified_testcases.items())

@@ -15,7 +15,7 @@ from thread_logger import get_thread_logger
 
 class Runner(object):
 
-    def __init__(self, context: dict, trial_dir: str, kubeconfig: str, context_name: str, wait_time: int = 90):
+    def __init__(self, context: dict, trial_dir: str, kubeconfig: str, context_name: str, wait_time: int = 45):
         self.namespace = context["namespace"]
         self.crd_metainfo: dict = context['crd']
         self.trial_dir = trial_dir
@@ -54,7 +54,7 @@ class Runner(object):
             'role_binding': self.rbacAuthorizationV1Api.list_namespaced_role_binding,
         }
 
-    def run(self, input: dict, generation: int) -> Snapshot:
+    def run(self, input: dict, generation: int) -> Tuple[Snapshot, bool]:
         '''Simply run the cmd and dumps system_state, delta, operator log, events and input files without checking. 
            The function blocks until system converges.
 
@@ -62,7 +62,7 @@ class Runner(object):
             cmd: subprocess command to be executed using subprocess.run
 
         Returns:
-            result 
+            result, err
         '''
         logger = get_thread_logger(with_prefix=True)
 
@@ -82,7 +82,7 @@ class Runner(object):
                              context_name=self.context_name,
                              capture_output=True,
                              text=True)
-        self.wait_for_system_converge()
+        err = self.wait_for_system_converge()
 
         logger.debug('STDOUT: ' + cli_result.stdout)
         logger.debug('STDERR: ' + cli_result.stderr)
@@ -98,13 +98,13 @@ class Runner(object):
             operator_log = ''
 
         snapshot = Snapshot(input, self.collect_cli_result(cli_result), system_state, operator_log)
-        return snapshot
+        return snapshot, err
 
     def run_without_collect(self, seed_file: str):
         cmd = ['apply', '-f', seed_file, '-n', self.namespace]
         _ = kubectl(cmd, kubeconfig=self.kubeconfig, context_name=self.context_name)
 
-        self.wait_for_system_converge()
+        err = self.wait_for_system_converge()
 
     def collect_system_state(self) -> dict:
         '''Queries resources in the test namespace, computes delta
@@ -228,13 +228,16 @@ class Runner(object):
             result_dict[cr['metadata']['name']] = cr
         return result_dict
 
-    def wait_for_system_converge(self, hard_timeout=900):
+    def wait_for_system_converge(self, hard_timeout=600) -> bool:
         '''This function blocks until the system converges. It keeps 
            watching for incoming events. If there is no event within 
            60 seconds, the system is considered to have converged. 
 
         Args:
             hard_timeout: the maximal wait time for system convergence
+
+        Returns:
+            True if the system fails to converge within the hard timeout
         '''
         logger = get_thread_logger(with_prefix=True)
 
@@ -253,21 +256,62 @@ class Runner(object):
         timer_hard_timeout.start()
         watch_process.start()
 
+        converge = True
         while (True):
             try:
                 event = combined_event_queue.get(timeout=self.wait_time)
                 if event == "timeout":
-                    logger.debug('Hard timeout %d triggered', hard_timeout)
+                    converge = False
                     break
             except queue.Empty:
-                break
+                ready = True
+                statefulsets = self.__get_all_objects(self.appV1Api.list_namespaced_stateful_set)
+                deployments = self.__get_all_objects(self.appV1Api.list_namespaced_deployment)
+
+                for sfs in statefulsets.values():
+                    if sfs['status']['ready_replicas'] == None and sfs['status']['replicas'] == 0:
+                        # replicas could be 0
+                        continue
+                    if sfs['status']['replicas'] != sfs['status']['ready_replicas']:
+                        ready = False
+                        logger.info("Statefulset %s is not ready yet" % sfs['metadata']['name'])
+                        break
+
+                for dp in deployments.values():
+                    if dp['spec']['replicas'] == 0:
+                        continue
+
+                    if dp['status']['replicas'] != dp['status']['ready_replicas']:
+                        ready = False
+                        logger.info("Deployment %s is not ready yet" % dp['metadata']['name'])
+                        break
+
+                    for condition in dp['status']['conditions']:
+                        if condition['type'] == 'Available' and condition['status'] != 'True':
+                            ready = False
+                            logger.info("Deployment %s is not ready yet" % dp['metadata']['name'])
+                            break
+                        elif condition['type'] == 'Progressing' and condition['status'] != 'True':
+                            ready = False
+                            logger.info("Deployment %s is not ready yet" % dp['metadata']['name'])
+                            break
+
+                if ready:
+                    # only stop waiting if all deployments and statefulsets are ready
+                    # else, keep waiting until ready or hard timeout
+                    break
 
         event_stream.close()
         timer_hard_timeout.cancel()
         watch_process.terminate()
 
         time_elapsed = time.strftime("%H:%M:%S", time.gmtime(time.time() - start_timestamp))
-        logger.info('System took %s to converge' % time_elapsed)
+        if converge:
+            logger.info('System took %s to converge' % time_elapsed)
+            return False
+        else:
+            logger.error('System failed to converge within %d seconds' % hard_timeout)
+            return True
 
     def watch_system_events(self, event_stream, queue: Queue):
         '''A process that watches namespaced events

@@ -92,7 +92,7 @@ if __name__ == '__main__':
                 field = json_instance['post_result']['error']['testcase']['field']
                 testcase = json_instance['post_result']['error']['testcase']['testcase']
 
-                if field in test_plan and testcase in test_plan[field] or field in semantic_testplan and testcase in semantic_testplan[field]:
+                if field in normal_testplan and testcase in normal_testplan[field] or field in semantic_testplan and testcase in semantic_testplan[field]:
                     baseline_df = baseline_df.append(
                         {
                             'Trial number': json_instance['post_result']['trial_num'],
@@ -153,7 +153,7 @@ if __name__ == '__main__':
                 field = json_instance['post_result']['error']['testcase']['field']
                 testcase = json_instance['post_result']['error']['testcase']['testcase']
 
-                if field in test_plan and testcase in test_plan[field] or field in semantic_testplan and testcase in semantic_testplan[field]:
+                if field in normal_testplan and testcase in normal_testplan[field] or field in semantic_testplan and testcase in semantic_testplan[field]:
                     canonicalization_df = canonicalization_df.append(
                         {
                             'Trial number': json_instance['post_result']['trial_num'],
@@ -212,7 +212,7 @@ if __name__ == '__main__':
                 field = json_instance['post_result']['error']['testcase']['field']
                 testcase = json_instance['post_result']['error']['testcase']['testcase']
 
-                if field in test_plan and testcase in test_plan[field] or field in semantic_testplan and testcase in semantic_testplan[field]:
+                if field in normal_testplan and testcase in normal_testplan[field] or field in semantic_testplan and testcase in semantic_testplan[field]:
 
                     dependency_df = dependency_df.append(
                         {
@@ -272,7 +272,7 @@ if __name__ == '__main__':
                 field = json_instance['post_result']['error']['testcase']['field']
                 testcase = json_instance['post_result']['error']['testcase']['testcase']
 
-                if field in test_plan and testcase in test_plan[field] or field in semantic_testplan and testcase in semantic_testplan[field]:
+                if field in normal_testplan and testcase in normal_testplan[field] or field in semantic_testplan and testcase in semantic_testplan[field]:
                     taint_analysis_df = taint_analysis_df.append(
                         {
                             'Trial number': json_instance['post_result']['trial_num'],
@@ -350,9 +350,9 @@ if __name__ == '__main__':
                 },
                 ignore_index=True)
 
-    merged = pd.merge(baseline_df, canonicalization_df, on='Trial number')
-    merged = pd.merge(merged, taint_analysis_df, on='Trial number')
-    merged = pd.merge(merged, dependency_df, on='Trial number')
+    merged = pd.merge(baseline_df, canonicalization_df.drop(columns=['testcase']), on='Trial number')
+    merged = pd.merge(merged, taint_analysis_df.drop(columns=['testcase']), on='Trial number')
+    merged = pd.merge(merged, dependency_df.drop(columns=['testcase']), on='Trial number')
     merged= merged.drop(columns=list(merged.filter(regex = '_result')))
     merged = merged.sort_values(by=['Trial number'])
 

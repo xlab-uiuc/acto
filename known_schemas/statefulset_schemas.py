@@ -3,7 +3,7 @@ from schema import BaseSchema, ObjectSchema
 from known_schemas.base import K8sStringSchema, K8sObjectSchema, K8sArraySchema, K8sIntegerSchema
 from known_schemas.pod_schemas import PodSpecSchema
 from schema import BaseSchema, IntegerSchema, StringSchema
-from test_case import TestCase
+from test_case import Store, TestCase
 
 
 class PodManagementPolicySchema(K8sStringSchema):
@@ -26,8 +26,12 @@ class PodManagementPolicySchema(K8sStringSchema):
 class ReplicasSchema(K8sIntegerSchema):
     '''ScaleDownUp and ScaleUpDown'''
 
-    def scaleDownUpPrecondition(prev) -> bool:
-        return False
+    def scaleDownUpPrecondition(prev, store: Store) -> bool:
+        if store.data == None:
+            store.data = True
+            return False
+        else:
+            return True
 
     def scaleDownUp(prev) -> int:
         return prev + 1
@@ -37,19 +41,24 @@ class ReplicasSchema(K8sIntegerSchema):
             return 1
         return prev - 1
 
-    def scaleUpDownPrecondition(prev) -> bool:
-        return False
+    def scaleUpDownPrecondition(prev, store: Store) -> bool:
+        if store.data == None:
+            store.data = True
+            return False
+        else:
+            return True
+
 
     def scaleUpDown(prev) -> int:
-        return prev + 1
+        return prev - 1
 
     def scaleUpDownSetup(prev) -> int:
         if prev == None:
             return 4
         return prev + 1
 
-    ScaleDownUp = TestCase(scaleDownUpPrecondition, scaleDownUp, scaleDownUpSetup)
-    ScaleUpDown = TestCase(scaleUpDownPrecondition, scaleUpDown, scaleUpDownSetup)
+    ScaleDownUp = TestCase(scaleDownUpPrecondition, scaleDownUp, scaleDownUpSetup, Store())
+    ScaleUpDown = TestCase(scaleUpDownPrecondition, scaleUpDown, scaleUpDownSetup, Store())
 
     def gen(self, exclude_value=None, minimum: bool = False, **kwargs) -> list:
         if exclude_value is None:

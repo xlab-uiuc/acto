@@ -74,7 +74,7 @@ class OperatorConfig:
                  seed_custom_resource: str,
                  analysis: dict,
                  num_nodes: int = 4,
-                 wait_time: int = 90,
+                 wait_time: int = 60,
                  context: str = None,
                  custom_oracle: str = None) -> None:
         self.deploy = DeployConfig(**deploy)

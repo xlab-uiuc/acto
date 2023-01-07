@@ -284,7 +284,15 @@ class TrialRunner:
                         generation += 1
 
                         is_invalid, _ = runResult.is_invalid()
-                        if is_invalid:
+                        if runResult.is_basic_error():
+                            field_node.discard_testcase(self.discarded_testcases)
+                            # before return, run the recovery test case
+                            runResult.recovery_result = self.run_recovery(
+                                runner, checker, generation)
+                            generation += 1
+
+                            return runResult, generation
+                        elif is_invalid:
                             logger.info('Setup produced invalid input')
                             self.snapshots.pop()
                             field_node.discard_testcase(self.discarded_testcases)
@@ -313,7 +321,7 @@ class TrialRunner:
                                    generation)
             runResult, generation = t
             is_invalid, _ = runResult.is_invalid()
-            if not is_invalid and runResult.is_error():
+            if (not is_invalid and runResult.is_error()) or runResult.is_basic_error():
                 # before return, run the recovery test case
 
                 logger.info('Error result, running recovery')
@@ -375,7 +383,8 @@ class TrialRunner:
                         iso_result, generation = self.run_testcases(curr_input_with_schema,
                                                                     [(field_node, testcase)],
                                                                     runner, checker, generation)
-                        if not iso_result.is_invalid and iso_result.is_error():
+                        if (not iso_result.is_invalid()[0] and
+                                iso_result.is_error()) or iso_result.is_basic_error():
                             return iso_result, generation
                     return runResult, generation
                 else:
@@ -403,7 +412,8 @@ class TrialRunner:
                             iso_result, generation = self.run_testcases(
                                 curr_input_with_schema, [(field_node, testcase)], runner, checker,
                                 generation)
-                            if not iso_result.is_invalid and iso_result.is_error():
+                            if (not iso_result.is_invalid()[0] and
+                                    iso_result.is_error()) or iso_result.is_basic_error():
                                 return iso_result, generation
                         return runResult, generation
                     else:
@@ -441,7 +451,7 @@ class TrialRunner:
 
         retry = 0
         while True:
-            snapshot = runner.run(input, generation)
+            snapshot, err = runner.run(input, generation)
             runResult = checker.check(snapshot,
                                       snapshots[-1],
                                       revert,
@@ -470,7 +480,7 @@ class TrialRunner:
 
         logger.debug('Running recovery')
         recovery_input = self.snapshots[RECOVERY_SNAPSHOT].input
-        snapshot = runner.run(recovery_input, generation=-1)
+        snapshot, err = runner.run(recovery_input, generation=-1)
         result = checker.check_state_equality(snapshot, self.snapshots[RECOVERY_SNAPSHOT])
 
         return result
