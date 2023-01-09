@@ -33,7 +33,7 @@
 |                                     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/290](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/290)   | fixed     |
 |                                     | [https://github.com/OT-CONTAINER-KIT/redis-operator/pull/292](https://github.com/OT-CONTAINER-KIT/redis-operator/pull/292)       | fixed     |
 |                                     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/297](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/297)   | fixed     |
-|                                     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/310](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/310)   |           |
+|                                     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/310](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/310)   | fixed     |
 | kubernetes-sigs/controller-tools    | [https://github.com/kubernetes-sigs/controller-tools/issues/665](https://github.com/kubernetes-sigs/controller-tools/issues/665) | confirmed |
 | kubernetes/kubernetes               | [https://github.com/kubernetes/kubernetes/issues/109839](https://github.com/kubernetes/kubernetes/issues/109839)                 | confirmed |
 |                                     | [https://github.com/kubernetes/kubernetes/issues/110653](https://github.com/kubernetes/kubernetes/issues/110653)                 | confirmed |
