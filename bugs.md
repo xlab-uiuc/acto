@@ -20,6 +20,7 @@
 |                                     | [https://github.com/k8ssandra/cass-operator/issues/471](https://github.com/k8ssandra/cass-operator/issues/471)                   |           |
 | spotahome/redis-operator            | [https://github.com/spotahome/redis-operator/issues/400](https://github.com/spotahome/redis-operator/issues/400)                 | confirmed |
 |                                     | [https://github.com/spotahome/redis-operator/issues/407](https://github.com/spotahome/redis-operator/issues/407)                 |           |
+|                                     | [https://github.com/spotahome/redis-operator/issues/552](https://github.com/spotahome/redis-operator/issues/552)                 |           |
 | percona-server-mongodb-operator     | [https://jira.percona.com/browse/K8SPSMDB-696](https://jira.percona.com/browse/K8SPSMDB-696)                                     | fixed     |
 |                                     | [https://jira.percona.com/browse/K8SPSMDB-697](https://jira.percona.com/browse/K8SPSMDB-697)                                     | fixed     |
 |                                     | [https://jira.percona.com/browse/K8SPSMDB-738](https://jira.percona.com/browse/K8SPSMDB-738)                                     | confirmed |
