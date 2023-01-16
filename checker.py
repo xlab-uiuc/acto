@@ -524,7 +524,7 @@ class Checker(object):
                         '%s condition [%s] status [%s] message [%s]' %
                         (system_state['custom_resource_status']['metadata']['name'],
                          condition['type'], condition['status'], condition['message']))
-                         
+
         error_msg = ''
         for kind, resources in unhealthy_resources.items():
             if len(resources) != 0:
@@ -690,6 +690,7 @@ class Checker(object):
             r".*\['endpoints'\]\[.*\]\['addresses'\]\[.*\]\['ip'\]",
             r".*\['cluster_ip'\]",
             r".*\['cluster_i_ps'\].*",
+            r".*\['deployment_pods'\].*\['metadata'\]\['name'\]",
         ]
 
         diff = DeepDiff(prev_system_state, curr_system_state, exclude_regex_paths=exclude_paths)
