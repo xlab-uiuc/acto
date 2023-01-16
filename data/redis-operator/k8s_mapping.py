@@ -17,7 +17,6 @@ WHITEBOX = [
     K8sField(['spec', 'sentinel', 'tolerations'], TolerationsSchema),
     K8sField(['spec', 'sentinel', 'priorityClassName'], PriorityClassNameSchema),
     K8sField(['spec', 'sentinel', 'replicas'], ReplicasSchema),
-    K8sField(['spec', 'sentinel', 'serviceAccountName'], ReplicasSchema),
 ]
 
 BLACKBOX = [

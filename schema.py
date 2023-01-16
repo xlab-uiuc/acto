@@ -524,6 +524,9 @@ class ObjectSchema(BaseSchema):
                     pruned_by_overspecified.append(schema)
             normal_schemas = keep
 
+        if self not in normal_schemas:
+            normal_schemas.append(self)
+
         return normal_schemas, pruned_by_overspecified, pruned_by_copiedover
 
     def to_tree(self) -> TreeNode:
