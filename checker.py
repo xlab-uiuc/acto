@@ -515,6 +515,16 @@ class Checker(object):
                 continue
             unhealthy_resources['pod'].append(pod['metadata']['name'])
 
+        # check Health of CRs
+        unhealthy_resources['cr'] = []
+        if 'conditions' in system_state['custom_resource_status']:
+            for condition in system_state['custom_resource_status']['conditions']:
+                if condition['type'] == 'Ready' and condition['status'] != 'True':
+                    unhealthy_resources['cr'].append(
+                        '%s condition [%s] status [%s] message [%s]' %
+                        (system_state['custom_resource_status']['metadata']['name'],
+                         condition['type'], condition['status'], condition['message']))
+                         
         error_msg = ''
         for kind, resources in unhealthy_resources.items():
             if len(resources) != 0:
