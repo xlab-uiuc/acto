@@ -20,8 +20,8 @@ if __name__ == '__main__':
     parser.add_argument('--bugs-csv', dest='bugs_csv', help='Bugs info file', required=True)
     args = parser.parse_args()
 
-    g = Github("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")
-    auth_jira = JIRA(server='https://jira.percona.com/', token_auth='MzI4NTk0MzAyNDQzOngGQxBw+uSGL+7YvZoidLsNQozX')
+    g = Github("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")
+    auth_jira = JIRA(server='https://jira.percona.com/', token_auth='MjY3MjI0OTkyNTc3OoKNTUoqJZrWZ7MdEZd9fZ+SxLWI')
     with open(args.bugs_csv, 'r') as bugs_csv, open('bugs_info.csv', 'w') as bugs_info_csv:
         reader = csv.reader(bugs_csv)
         writer = csv.writer(bugs_info_csv)

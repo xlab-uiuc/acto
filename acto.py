@@ -992,6 +992,8 @@ if __name__ == '__main__':
                 blackbox=args.blackbox,
                 k8s_fields=args.k8s_fields,
                 delta_from=args.delta_from)
+    generation_time = datetime.now()
+    logger.info('Acto generation finished in %s', generation_time - start_time)
     if args.k8s_fields:
         acto.run(modes=['semantic'])
     elif not args.learn:

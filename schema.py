@@ -489,9 +489,9 @@ class ObjectSchema(BaseSchema):
         if self.problematic:
             return [], [], []
 
-        normal_schemas = [self]
-        pruned_by_overspecified = []
-        pruned_by_copiedover = []
+        normal_schemas: List[BaseSchema] = []
+        pruned_by_overspecified: List[BaseSchema] = []
+        pruned_by_copiedover: List[BaseSchema] = []
         if self.properties != None:
             for value in self.properties.values():
                 child_schema_tuple = value.get_all_schemas()
@@ -664,7 +664,7 @@ class ArraySchema(BaseSchema):
         if self.problematic:
             return [], [], []
 
-        normal_schemas = [self]
+        normal_schemas = []
         pruned_by_overspecified = []
         pruned_by_copiedover = []
 
@@ -695,6 +695,9 @@ class ArraySchema(BaseSchema):
                 else:
                     pruned_by_overspecified.append(schema)
             normal_schemas = keep
+
+        if self not in normal_schemas:
+            normal_schemas.append(self)
 
         return normal_schemas, pruned_by_overspecified, pruned_by_copiedover
 

@@ -1,5 +1,5 @@
 from typing import List, Tuple
-from schema import AnyOfSchema, BaseSchema, IntegerSchema, ObjectSchema, StringSchema
+from schema import AnyOfSchema, BaseSchema, IntegerSchema, ObjectSchema, StringSchema, extract_schema
 from known_schemas.base import K8sObjectSchema, K8sAnyOfSchema
 from schema import BaseSchema
 from k8s_util.k8sutil import canonicalizeQuantity, double_quantity, half_quantity
@@ -82,8 +82,10 @@ class ComputeResourceSchema(ResourceSchema):
 
     def __init__(self, schema_obj: BaseSchema) -> None:
         super().__init__(schema_obj)
-        self.properties['cpu'] = QuantitySchema(self.additional_properties)
-        self.properties['memory'] = QuantitySchema(self.additional_properties)
+        cpu_schema = extract_schema(self.path + ['cpu'], self.additional_properties.raw_schema)
+        memory_schema = extract_schema(self.path + ['memory'], self.additional_properties.raw_schema)
+        self.properties['cpu'] = QuantitySchema(cpu_schema)
+        self.properties['memory'] = QuantitySchema(memory_schema)
 
     def gen(self, exclude_value=None, minimum: bool = False, **kwargs) -> list:
         return {'cpu': '1000m', 'memory': '1000m'}
@@ -93,7 +95,8 @@ class StorageResourceSchema(ResourceSchema):
 
     def __init__(self, schema_obj: BaseSchema) -> None:
         super().__init__(schema_obj)
-        self.properties['storage'] = QuantitySchema(self.additional_properties)
+        storage_schema = extract_schema(self.path + ['storage'], self.additional_properties.raw_schema)
+        self.properties['storage'] = QuantitySchema(storage_schema)
 
     def gen(self, exclude_value=None, minimum: bool = False, **kwargs) -> list:
         return {'storage': '1000m'}
