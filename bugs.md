@@ -23,8 +23,7 @@
 |                                     | [https://jira.percona.com/browse/K8SPSMDB-697](https://jira.percona.com/browse/K8SPSMDB-697)                                     | fixed     |
 |                                     | [https://jira.percona.com/browse/K8SPSMDB-738](https://jira.percona.com/browse/K8SPSMDB-738)                                     | confirmed |
 |                                     | [https://jira.percona.com/browse/K8SPSMDB-742](https://jira.percona.com/browse/K8SPSMDB-742)                                     |           |
-| OT-CONTAINER-KIT/redis-operator     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/279](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/279)   | fixed     |
-|                                     | [https://github.com/OT-CONTAINER-KIT/redis-operator/pull/280](https://github.com/OT-CONTAINER-KIT/redis-operator/pull/280)       | fixed     |
+| OT-CONTAINER-KIT/redis-operator     | [https://github.com/OT-CONTAINER-KIT/redis-operator/pull/280](https://github.com/OT-CONTAINER-KIT/redis-operator/pull/280)       | fixed     |
 |                                     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/283](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/283)   | fixed     |
 |                                     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/286](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/286)   | fixed     |
 |                                     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/287](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/287)   | fixed     |
@@ -64,12 +63,13 @@
 |                                     | [mongodb/mongodb-kubernetes-operator#1074](https://github.com/mongodb/mongodb-kubernetes-operator/issues/1074)                   |           |
 # Byproduct bugs
 
-| Operator                            | Link                                                                                                                         | Status |
-| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------ |
-| k8ssandra/cass-operator             | [https://github.com/k8ssandra/cass-operator/issues/324](https://github.com/k8ssandra/cass-operator/issues/324)               |        |
-| k8ssandra/cass-operator             | [https://github.com/k8ssandra/k8ssandra/issues/1380](https://github.com/k8ssandra/k8ssandra/issues/1380)                     | fixed  |
-| mongodb/mongodb-kubernetes-operator | [https://github.com/mongodb/helm-charts/pull/123](https://github.com/mongodb/helm-charts/pull/123)                           | fixed  |
-| cockroachdb/cockroach-operator      | [https://github.com/cockroachdb/cockroach-operator/issues/919](https://github.com/cockroachdb/cockroach-operator/issues/919) |        |
-| spotahome/redis-operator            | [https://github.com/spotahome/redis-operator/issues/407](https://github.com/spotahome/redis-operator/issues/407)             |        |
-| pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/pull/4608](https://github.com/pingcap/tidb-operator/pull/4608)                     | fixed  |
-| pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/issues/4614](https://github.com/pingcap/tidb-operator/issues/4614)                 | fixed  |
+| Operator                            | Link                                                                                                                           | Status |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------ |
+| k8ssandra/cass-operator             | [https://github.com/k8ssandra/cass-operator/issues/324](https://github.com/k8ssandra/cass-operator/issues/324)                 |        |
+| k8ssandra/cass-operator             | [https://github.com/k8ssandra/k8ssandra/issues/1380](https://github.com/k8ssandra/k8ssandra/issues/1380)                       | fixed  |
+| mongodb/mongodb-kubernetes-operator | [https://github.com/mongodb/helm-charts/pull/123](https://github.com/mongodb/helm-charts/pull/123)                             | fixed  |
+| cockroachdb/cockroach-operator      | [https://github.com/cockroachdb/cockroach-operator/issues/919](https://github.com/cockroachdb/cockroach-operator/issues/919)   |        |
+| spotahome/redis-operator            | [https://github.com/spotahome/redis-operator/issues/407](https://github.com/spotahome/redis-operator/issues/407)               |        |
+| OT-CONTAINER-KIT/redis-operator     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/279](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/279) | fixed  |
+| pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/pull/4608](https://github.com/pingcap/tidb-operator/pull/4608)                       | fixed  |
+| pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/issues/4614](https://github.com/pingcap/tidb-operator/issues/4614)                   | fixed  |
