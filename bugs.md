@@ -1,7 +1,7 @@
 # Number of bugs
 (Byproduct bugs included) Total bugs: **62**, confirmed: **48**, fixed: **32**.<br/>
 
-(Byproduct bugs excluded) Total bugs: **55**, confirmed: **44**, fixed: **28**.<br/>
+(Byproduct bugs excluded) Total bugs: **54**, confirmed: **43**, fixed: **27**.<br/>
 
 # Bugs found
 
