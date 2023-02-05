@@ -82,7 +82,12 @@ class Runner(object):
                              context_name=self.context_name,
                              capture_output=True,
                              text=True)
-        err = self.wait_for_system_converge()
+        try:
+            err = self.wait_for_system_converge()
+        except (KeyError, ValueError) as e:
+            logger.error('Bug! Exception raised when waiting for converge.', e)
+            system_state = {}
+            operator_log = 'Bug! Exception raised when waiting for converge.'
 
         logger.debug('STDOUT: ' + cli_result.stdout)
         logger.debug('STDERR: ' + cli_result.stderr)
@@ -93,9 +98,9 @@ class Runner(object):
             operator_log = self.collect_operator_log()
             self.collect_events()
         except (KeyError, ValueError) as e:
-            logger.warn(e)
+            logger.error('Bug! Exception raised when waiting for converge.', e)
             system_state = {}
-            operator_log = ''
+            operator_log = 'Bug! Exception raised when waiting for converge.'
 
         snapshot = Snapshot(input, self.collect_cli_result(cli_result), system_state, operator_log)
         return snapshot, err
@@ -104,7 +109,12 @@ class Runner(object):
         cmd = ['apply', '-f', seed_file, '-n', self.namespace]
         _ = kubectl(cmd, kubeconfig=self.kubeconfig, context_name=self.context_name)
 
-        err = self.wait_for_system_converge()
+        try:
+            err = self.wait_for_system_converge()
+        except (KeyError, ValueError) as e:
+            logger.error('Bug! Exception raised when waiting for converge.', e)
+            system_state = {}
+            operator_log = 'Bug! Exception raised when waiting for converge.'
 
     def collect_system_state(self) -> dict:
         '''Queries resources in the test namespace, computes delta
