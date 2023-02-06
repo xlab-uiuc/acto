@@ -18,6 +18,7 @@
 |                                     | [https://github.com/k8ssandra/cass-operator/issues/334](https://github.com/k8ssandra/cass-operator/issues/334)                   | confirmed |
 |                                     | [https://github.com/k8ssandra/cass-operator/issues/471](https://github.com/k8ssandra/cass-operator/issues/471)                   |           |
 | spotahome/redis-operator            | [https://github.com/spotahome/redis-operator/issues/400](https://github.com/spotahome/redis-operator/issues/400)                 | confirmed |
+| spotahome/redis-operator            | [https://github.com/spotahome/redis-operator/issues/407](https://github.com/spotahome/redis-operator/issues/407)                 |           |
 |                                     | [https://github.com/spotahome/redis-operator/issues/552](https://github.com/spotahome/redis-operator/issues/552)                 |           |
 | percona-server-mongodb-operator     | [https://jira.percona.com/browse/K8SPSMDB-696](https://jira.percona.com/browse/K8SPSMDB-696)                                     | fixed     |
 |                                     | [https://jira.percona.com/browse/K8SPSMDB-697](https://jira.percona.com/browse/K8SPSMDB-697)                                     | fixed     |
@@ -59,6 +60,8 @@
 |                                     | [mongodb/mongodb-kubernetes-operator#1055](https://github.com/mongodb/mongodb-kubernetes-operator/issues/1055)                   | fixed     |
 |                                     | [mongodb/mongodb-kubernetes-operator#1072](https://github.com/mongodb/mongodb-kubernetes-operator/issues/1072)                   |           |
 |                                     | [mongodb/mongodb-kubernetes-operator#1074](https://github.com/mongodb/mongodb-kubernetes-operator/issues/1074)                   |           |
+| knative-operator                    | [https://github.com/knative/operator/issues/1158](https://github.com/knative/operator/issues/1158)                               | fixed     |
+
 # Byproduct bugs
 
 | Operator                            | Link                                                                                                                           | Status |
@@ -67,11 +70,9 @@
 | k8ssandra/cass-operator             | [https://github.com/k8ssandra/k8ssandra/issues/1380](https://github.com/k8ssandra/k8ssandra/issues/1380)                       | fixed  |
 | mongodb/mongodb-kubernetes-operator | [https://github.com/mongodb/helm-charts/pull/123](https://github.com/mongodb/helm-charts/pull/123)                             | fixed  |
 | cockroachdb/cockroach-operator      | [https://github.com/cockroachdb/cockroach-operator/issues/919](https://github.com/cockroachdb/cockroach-operator/issues/919)   |        |
-| spotahome/redis-operator            | [https://github.com/spotahome/redis-operator/issues/407](https://github.com/spotahome/redis-operator/issues/407)               |        |
 | OT-CONTAINER-KIT/redis-operator     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/279](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/279) | fixed  |
 | pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/pull/4608](https://github.com/pingcap/tidb-operator/pull/4608)                       | fixed  |
 | pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/issues/4614](https://github.com/pingcap/tidb-operator/issues/4614)                   | fixed  |
-| knative-operator                    | [https://github.com/knative/operator/issues/1157](https://github.com/knative/operator/issues/1157)                               | fixed     |
-| knative-operator                    | [https://github.com/knative/operator/issues/1158](https://github.com/knative/operator/issues/1158)                               | fixed     |
-|                                     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/289](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/289)   | fixed     |
-|                                     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/310](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/310)   | fixed     |
+| knative-operator                    | [https://github.com/knative/operator/issues/1157](https://github.com/knative/operator/issues/1157)                             | fixed  |
+|                                     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/289](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/289) | fixed  |
+|                                     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/310](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/310) | fixed  |
