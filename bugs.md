@@ -24,14 +24,10 @@
 |                                     | [https://jira.percona.com/browse/K8SPSMDB-738](https://jira.percona.com/browse/K8SPSMDB-738)                                     | confirmed |
 |                                     | [https://jira.percona.com/browse/K8SPSMDB-742](https://jira.percona.com/browse/K8SPSMDB-742)                                     |           |
 | OT-CONTAINER-KIT/redis-operator     | [https://github.com/OT-CONTAINER-KIT/redis-operator/pull/280](https://github.com/OT-CONTAINER-KIT/redis-operator/pull/280)       | fixed     |
-|                                     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/283](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/283)   | fixed     |
 |                                     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/286](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/286)   | fixed     |
 |                                     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/287](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/287)   | fixed     |
-|                                     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/289](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/289)   | fixed     |
 |                                     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/290](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/290)   | fixed     |
-|                                     | [https://github.com/OT-CONTAINER-KIT/redis-operator/pull/292](https://github.com/OT-CONTAINER-KIT/redis-operator/pull/292)       | fixed     |
 |                                     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/297](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/297)   | fixed     |
-|                                     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/310](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/310)   | fixed     |
 | kubernetes-sigs/controller-tools    | [https://github.com/kubernetes-sigs/controller-tools/issues/665](https://github.com/kubernetes-sigs/controller-tools/issues/665) | confirmed |
 | kubernetes/kubernetes               | [https://github.com/kubernetes/kubernetes/issues/109839](https://github.com/kubernetes/kubernetes/issues/109839)                 | confirmed |
 |                                     | [https://github.com/kubernetes/kubernetes/issues/110653](https://github.com/kubernetes/kubernetes/issues/110653)                 | confirmed |
@@ -75,3 +71,7 @@
 | pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/issues/4614](https://github.com/pingcap/tidb-operator/issues/4614)                   | fixed  |
 | knative-operator                    | [https://github.com/knative/operator/issues/1157](https://github.com/knative/operator/issues/1157)                               | fixed     |
 | knative-operator                    | [https://github.com/knative/operator/issues/1158](https://github.com/knative/operator/issues/1158)                               | fixed     |
+|                                     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/283](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/283)   | fixed     |
+|                                     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/289](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/289)   | fixed     |
+|                                     | [https://github.com/OT-CONTAINER-KIT/redis-operator/pull/292](https://github.com/OT-CONTAINER-KIT/redis-operator/pull/292)       | fixed     |
+|                                     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/310](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/310)   | fixed     |
