@@ -85,7 +85,7 @@ class Runner(object):
         try:
             err = self.wait_for_system_converge()
         except (KeyError, ValueError) as e:
-            logger.error('Bug! Exception raised when waiting for converge.', e)
+            logger.error('Bug! Exception raised when waiting for converge.', exc_info=e)
             system_state = {}
             operator_log = 'Bug! Exception raised when waiting for converge.'
 
@@ -98,7 +98,7 @@ class Runner(object):
             operator_log = self.collect_operator_log()
             self.collect_events()
         except (KeyError, ValueError) as e:
-            logger.error('Bug! Exception raised when waiting for converge.', e)
+            logger.error('Bug! Exception raised when waiting for converge.', exc_info=e)
             system_state = {}
             operator_log = 'Bug! Exception raised when waiting for converge.'
 
@@ -112,7 +112,7 @@ class Runner(object):
         try:
             err = self.wait_for_system_converge()
         except (KeyError, ValueError) as e:
-            logger.error('Bug! Exception raised when waiting for converge.', e)
+            logger.error('Bug! Exception raised when waiting for converge.', exc_info=e)
             system_state = {}
             operator_log = 'Bug! Exception raised when waiting for converge.'
 
