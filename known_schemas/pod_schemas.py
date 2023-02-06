@@ -4,7 +4,7 @@ from known_schemas.base import K8sStringSchema, K8sObjectSchema, K8sArraySchema,
 from schema import BaseSchema
 from test_case import TestCase
 
-from .resource_schemas import ResourceRequirementsSchema
+from .resource_schemas import ComputeResourceRequirementsSchema, ResourceRequirementsSchema
 
 
 class NodeSelectorSchema(K8sObjectSchema):
@@ -346,17 +346,16 @@ class PodSecurityContextSchema(K8sObjectSchema):
         }
 
     def root_security_context_precondition(prev) -> bool:
-        return True
+        return prev != {"runAsUser": 0, "runAsGroup": 0, "fsGroup": 0}
 
     def root_security_context(prev) -> dict:
-        return {"runAsUser": 0, "runAsGroup": 0, "fsGroup": 0, "supplementalGroups": [0]}
+        return {"runAsUser": 0, "runAsGroup": 0, "fsGroup": 0}
 
     def root_security_context_setup(prev) -> dict:
         return {
             "runAsUser": 1000,
             "runAsGroup": 1000,
-            "fsGroup": 1000,
-            "supplementalGroups": [1000]
+            "fsGroup": 1000
         }
 
     def normal_security_context_precondition(prev) -> bool:
@@ -407,7 +406,6 @@ class PodSecurityContextSchema(K8sObjectSchema):
             "runAsUser": 1000,
             "runAsGroup": 1000,
             "fsGroup": 1000,
-            "supplementalGroups": [1000]
         }
 
     def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
@@ -610,6 +608,81 @@ class ImagePullPolicySchema(K8sStringSchema):
         return "ImagePullPolicy"
 
 
+class GRPCSchema(K8sObjectSchema):
+
+    fields = {
+        "port": K8sIntegerSchema,
+        "service": K8sStringSchema,
+    }
+
+    def invalid_grpc_precondition(prev) -> bool:
+        return True
+    
+    def invalid_grpc(prev) -> dict:
+        return {
+            "port": 1234,
+            "service": "invalid-service"
+        }
+    
+    def invalid_grpc_setup(prev) -> dict:
+        return {
+            "port": 1234,
+            "service": "invalid-service"
+        }
+
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        for field, field_schema in GRPCSchema.fields.items():
+            if field in schema_obj.properties:
+                self.properties[field] = field_schema(schema_obj.properties[field])
+
+    def Match(schema: ObjectSchema) -> bool:
+        if not K8sObjectSchema.Match(schema):
+            return False
+        for field, field_schema in GRPCSchema.fields.items():
+            if field not in schema.properties:
+                return False
+            elif not field_schema.Match(schema.properties[field]):
+                return False
+        return True
+    
+    def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
+        base_testcases = super().test_cases()
+        base_testcases[1].append(TestCase(GRPCSchema.invalid_grpc_precondition,
+                                          GRPCSchema.invalid_grpc,
+                                          GRPCSchema.invalid_grpc_setup))
+        return base_testcases
+
+    def __str__(self) -> str:
+        return "GRPC"
+
+class LivenessProbeSchema(K8sObjectSchema):
+
+    fields = {
+        "exec": K8sObjectSchema,
+        "httpGet": K8sObjectSchema,
+        "tcpSocket": K8sObjectSchema,
+        "grpc": GRPCSchema,
+        "initialDelaySeconds": K8sIntegerSchema,
+        "timeoutSeconds": K8sIntegerSchema,
+        "periodSeconds": K8sIntegerSchema,
+        "successThreshold": K8sIntegerSchema,
+        "failureThreshold": K8sIntegerSchema,
+    }
+    
+    def Match(schema: ObjectSchema) -> bool:
+        if not K8sObjectSchema.Match(schema):
+            return False
+        for field, field_schema in LivenessProbeSchema.fields.items():
+            if field not in schema.properties:
+                return False
+            elif not field_schema.Match(schema.properties[field]):
+                return False
+        return True
+
+    def __str__(self) -> str:
+        return "LivenessProbe"
+
 class ContainerSchema(K8sObjectSchema):
 
     fields = {
@@ -620,9 +693,9 @@ class ContainerSchema(K8sObjectSchema):
         "workingDir": K8sStringSchema,
         "ports": K8sArraySchema,
         "env": K8sArraySchema,
-        "resources": ResourceRequirementsSchema,
+        "resources": ComputeResourceRequirementsSchema,
         "volumeMounts": K8sArraySchema,
-        "livenessProbe": K8sObjectSchema,
+        "livenessProbe": LivenessProbeSchema,
         "readinessProbe": K8sObjectSchema,
         "lifecycle": K8sObjectSchema,
         "terminationMessagePath": K8sStringSchema,
