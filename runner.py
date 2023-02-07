@@ -82,6 +82,8 @@ class Runner(object):
                              context_name=self.context_name,
                              capture_output=True,
                              text=True)
+        
+        err = None
         try:
             err = self.wait_for_system_converge()
         except (KeyError, ValueError) as e:
