@@ -64,6 +64,7 @@
 | mongodb/mongodb-kubernetes-operator | [https://github.com/mongodb/helm-charts/pull/123](https://github.com/mongodb/helm-charts/pull/123)                               | fixed     |
 | knative-operator                    | [https://github.com/knative/operator/issues/1158](https://github.com/knative/operator/issues/1158)                               | fixed     |
 
+
 # Byproduct bugs
 
 | Operator | Link | Status |
