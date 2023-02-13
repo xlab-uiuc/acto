@@ -1,4 +1,4 @@
-# Acto: Automatic, Continuous Testing for (Kubernetes/OpenShift) Operators
+# Acto: Automatic Correctness Testing for (Kubernetes) Operators
 
 False alarm category sheet: https://docs.google.com/spreadsheets/d/1_tmdu3MBnwHizVvgNGLjUsJYM6MGa1ppNa0YRHS64w0/edit?usp=sharing
 
