@@ -2,6 +2,11 @@
 
 False alarm category sheet: https://docs.google.com/spreadsheets/d/1_tmdu3MBnwHizVvgNGLjUsJYM6MGa1ppNa0YRHS64w0/edit?usp=sharing
 
+## Next steps
+- [ ] Alarm grouping utility
+- [ ] Annotation support for false alarm
+- [ ] Integrate with Augeas (Augeas only support reading files, while we want to parse raw strings"
+
 ## Prerequisites
 - Golang
 - Python dependencies
