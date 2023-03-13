@@ -361,6 +361,7 @@ if __name__ == '__main__':
     taint_analysis_df = taint_analysis_df.sort_values(by=['Trial number'])
     dependency_df = dependency_df.sort_values(by=['Trial number'])
 
+    # TODO: preprocess the alarm sheet using rules
 
     if args.previous:
         merged = pd.merge(merged, previous_df, on='Trial number', how='left')
