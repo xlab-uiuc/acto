@@ -225,7 +225,7 @@ class TestPlan():
 
 class TestGroup:
 
-    def __init__(self, tests: list[Tuple[str, TestCase]]):
+    def __init__(self, tests: List[Tuple[str, TestCase]]):
         self.tests = tests
 
     def discard_testcase(self, discarded_testcases: dict):
