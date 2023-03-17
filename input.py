@@ -502,20 +502,18 @@ class DeterministicInputModel(InputModel):
         self.thread_vars.id = id
         # so that we can run the test case itself right after the setup
         self.thread_vars.normal_test_plan = DeterministicTestPlan()
-        self.thread_vars.overspecified_test_plan = TestPlan(self.root_schema.to_tree())
-        self.thread_vars.copiedover_test_plan = TestPlan(self.root_schema.to_tree())
+        self.thread_vars.overspecified_test_plan = DeterministicTestPlan()
+        self.thread_vars.copiedover_test_plan = DeterministicTestPlan()
         self.thread_vars.semantic_test_plan = TestPlan(self.root_schema.to_tree())
 
         for group in self.normal_test_plan_partitioned[id]:
             self.thread_vars.normal_test_plan.add_testcase_group(TestGroup(group))
 
-        for key, value in self.overspecified_test_plan_partitioned[id]:
-            path = json.loads(key)
-            self.thread_vars.overspecified_test_plan.add_testcases_by_path(value, path)
+        for group in self.overspecified_test_plan_partitioned[id]:
+            self.thread_vars.overspecified_test_plan.add_testcase_group(TestGroup(group))
 
-        for key, value in self.copiedover_test_plan_partitioned[id]:
-            path = json.loads(key)
-            self.thread_vars.copiedover_test_plan.add_testcases_by_path(value, path)
+        for group in self.copiedover_test_plan_partitioned[id]:
+            self.thread_vars.copiedover_test_plan.add_testcase_group(TestGroup(group))
 
         for key, value in self.semantic_test_plan_partitioned[id]:
             path = json.loads(key)
@@ -648,15 +646,22 @@ class DeterministicInputModel(InputModel):
 
         normal_test_plan_items.extend(semantic_test_plan_items)  # run semantic testcases anyway
 
-        all_testcases = []
         CHUNK_SIZE = 10
-        for path, testcases in normal_test_plan_items:
-            for testcase in testcases:
-                all_testcases.append((path, testcase))
 
-        subgroups = []
-        for i in range(0, len(all_testcases), CHUNK_SIZE):
-            subgroups.append(all_testcases[i:i + CHUNK_SIZE])
+        def split_into_subgroups(test_plan_items) -> List[List[Tuple[str, List[TestCase]]]]:
+            all_testcases = []
+            for path, testcases in test_plan_items:
+                for testcase in testcases:
+                    all_testcases.append((path, testcase))
+
+            subgroups = []
+            for i in range(0, len(all_testcases), CHUNK_SIZE):
+                subgroups.append(all_testcases[i:i + CHUNK_SIZE])
+            return subgroups
+        
+        normal_subgroups = split_into_subgroups(normal_test_plan_items)
+        overspecified_subgroups = split_into_subgroups(overspecified_test_plan_items)
+        copiedover_subgroups = split_into_subgroups(copiedover_test_plan_items)
 
         # Initialize the three test plans, and assign test cases to them according to the number of
         # workers
@@ -671,16 +676,16 @@ class DeterministicInputModel(InputModel):
             self.copiedover_test_plan_partitioned.append([])
             self.semantic_test_plan_partitioned.append([])
 
-        for i in range(0, len(subgroups)):
-            self.normal_test_plan_partitioned[i % self.num_workers].append(subgroups[i])
+        for i in range(0, len(normal_subgroups)):
+            self.normal_test_plan_partitioned[i % self.num_workers].append(normal_subgroups[i])
 
-        for i in range(0, len(overspecified_test_plan_items)):
+        for i in range(0, len(overspecified_subgroups)):
             self.overspecified_test_plan_partitioned[i % self.num_workers].append(
-                overspecified_test_plan_items[i])
-
-        for i in range(0, len(copiedover_test_plan_items)):
+                overspecified_subgroups[i])
+            
+        for i in range(0, len(copiedover_subgroups)):
             self.copiedover_test_plan_partitioned[i % self.num_workers].append(
-                copiedover_test_plan_items[i])
+                copiedover_subgroups[i])
 
         for i in range(0, len(semantic_test_plan_items)):
             self.semantic_test_plan_partitioned[i % self.num_workers].append(
@@ -691,12 +696,6 @@ class DeterministicInputModel(InputModel):
         assert (self.num_workers == len(self.overspecified_test_plan_partitioned))
         assert (self.num_workers == len(self.copiedover_test_plan_partitioned))
 
-        assert (sum(len(p) for p in self.overspecified_test_plan_partitioned) == len(
-            overspecified_test_plan_items))
-        assert (sum(
-            len(p)
-            for p in self.copiedover_test_plan_partitioned) == len(copiedover_test_plan_items))
-
         return {
             'delta_from': delta_from,
             'existing_testcases': existing_testcases,
@@ -705,7 +704,9 @@ class DeterministicInputModel(InputModel):
             'copiedover_testcases': copiedover_testcases,
             'semantic_testcases': semantic_testcases,
             'planned_normal_testcases': planned_normal_testcases,
-            'groups': subgroups,
+            'normal_subgroups': normal_subgroups,
+            'overspecified_subgroups': overspecified_subgroups,
+            'copiedover_subgroups': copiedover_subgroups,
         }
 
     def next_test(self) -> List[Tuple[TreeNode, TestCase]]:
