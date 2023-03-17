@@ -2,7 +2,8 @@ from typing import List, Tuple
 from schema import BaseSchema, ObjectSchema
 from known_schemas.base import K8sBooleanSchema, K8sStringSchema, K8sObjectSchema, K8sArraySchema, K8sIntegerSchema
 from .resource_schemas import StorageResourceRequirementsSchema
-from test_case import TestCase
+from test_case import TestCase, K8sTestCase
+
 
 class AccessModeSchema(K8sStringSchema):
 
@@ -18,8 +19,8 @@ class AccessModeSchema(K8sStringSchema):
     def change_access_mode_setup(prev):
         return 'ReadWriteOnce'
 
-    AccessModeChangeTestcase = TestCase(change_access_mode_precondition, change_access_mode,
-                                        change_access_mode_setup)
+    AccessModeChangeTestcase = K8sTestCase(change_access_mode_precondition, change_access_mode,
+                                           change_access_mode_setup)
 
     def __init__(self, schema_obj: BaseSchema) -> None:
         super().__init__(schema_obj)

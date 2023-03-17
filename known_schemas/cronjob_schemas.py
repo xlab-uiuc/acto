@@ -1,7 +1,8 @@
 from typing import List, Tuple
 from schema import BaseSchema, ObjectSchema
 from known_schemas.base import K8sBooleanSchema, K8sStringSchema, K8sObjectSchema, K8sArraySchema, K8sIntegerSchema
-from test_case import TestCase
+from test_case import TestCase, K8sTestCase
+
 
 class ConcurrencyPolicySchema(K8sStringSchema):
 
@@ -17,9 +18,9 @@ class ConcurrencyPolicySchema(K8sStringSchema):
     def concurrency_policy_change_setup(prev):
         return 'Forbid'
 
-    ConcurrencyPolicyChangeTestcase = TestCase(concurrency_policy_change_precondition,
-                                               concurrency_policy_change,
-                                               concurrency_policy_change_setup)
+    ConcurrencyPolicyChangeTestcase = K8sTestCase(concurrency_policy_change_precondition,
+                                                  concurrency_policy_change,
+                                                  concurrency_policy_change_setup)
 
     def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
         if exclude_value == 'Replace':
@@ -53,8 +54,9 @@ class CronJobScheduleSchema(K8sStringSchema):
     def cronjob_schedule_change_setup(prev):
         return '0 0 * * *'
 
-    CronJobScheduleChangeTestcase = TestCase(cronjob_schedule_change_precondition,
-                                             cronjob_schedule_change, cronjob_schedule_change_setup)
+    CronJobScheduleChangeTestcase = K8sTestCase(cronjob_schedule_change_precondition,
+                                                cronjob_schedule_change,
+                                                cronjob_schedule_change_setup)
 
     def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
         return "0 0 * * *"

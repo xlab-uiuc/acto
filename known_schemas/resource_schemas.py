@@ -3,7 +3,7 @@ from schema import AnyOfSchema, BaseSchema, IntegerSchema, ObjectSchema, StringS
 from known_schemas.base import K8sObjectSchema, K8sAnyOfSchema
 from schema import BaseSchema
 from k8s_util.k8sutil import canonicalizeQuantity, double_quantity, half_quantity
-from test_case import TestCase
+from test_case import TestCase, K8sTestCase
 
 class QuantitySchema(K8sAnyOfSchema):
 
@@ -14,7 +14,7 @@ class QuantitySchema(K8sAnyOfSchema):
             return False
         return True
 
-    def increase(prev):
+    def quantity_increase(prev):
         return double_quantity(prev)
 
     def increase_setup(prev):
@@ -27,14 +27,14 @@ class QuantitySchema(K8sAnyOfSchema):
             return False
         return True
 
-    def decrease(prev):
+    def quantity_decrease(prev):
         return half_quantity(prev)
 
     def decrease_setup(prev):
         return "1000m"
 
-    Increase = TestCase(increase_precondition, increase, increase_setup)
-    Decrease = TestCase(decrease_precondition, decrease, decrease_setup)
+    Increase = K8sTestCase(increase_precondition, quantity_increase, increase_setup)
+    Decrease = K8sTestCase(decrease_precondition, quantity_decrease, decrease_setup)
 
     def Match(schema: AnyOfSchema) -> bool:
         if not K8sAnyOfSchema.Match(schema):

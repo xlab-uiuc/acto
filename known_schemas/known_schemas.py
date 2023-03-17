@@ -1,6 +1,6 @@
 from typing import List, Tuple
 from schema import AnyOfSchema, ArraySchema, BaseSchema, BooleanSchema, IntegerSchema, ObjectSchema, StringSchema, extract_schema
-from test_case import TestCase
+from test_case import TestCase, K8sTestCase
 
 from known_schemas.base import K8sSchema, K8sStringSchema, K8sObjectSchema, K8sArraySchema, K8sIntegerSchema, K8sBooleanSchema, K8sAnyOfSchema
 
@@ -27,8 +27,8 @@ class NodeNameSchema(K8sStringSchema):
     def node_name_change_setup(prev):
         return 'kind-worker'
 
-    NodeNameChangeTestcase = TestCase(node_name_change_precondition, node_name_change,
-                                      node_name_change_setup)
+    NodeNameChangeTestcase = K8sTestCase(node_name_change_precondition, node_name_change,
+                                         node_name_change_setup)
 
     def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
         return "kind-worker"

@@ -2,7 +2,7 @@ from typing import List, Tuple
 from schema import AnyOfSchema, ArraySchema, BaseSchema, BooleanSchema, IntegerSchema, ObjectSchema, StringSchema, extract_schema
 from known_schemas.base import K8sStringSchema, K8sObjectSchema, K8sArraySchema, K8sIntegerSchema, K8sBooleanSchema
 from schema import BaseSchema
-from test_case import TestCase
+from test_case import TestCase, K8sTestCase
 
 from .resource_schemas import ComputeResourceRequirementsSchema, ResourceRequirementsSchema
 
@@ -291,12 +291,12 @@ class AffinitySchema(K8sObjectSchema):
     def invalid_affinity_setup(prev) -> dict:
         return AffinitySchema.NormalAffinity
 
-    AllOnOneNodeTestCase = TestCase(all_on_one_node_precondition, all_on_one_node,
-                                    all_on_one_node_setup)
-    AllOnDifferentNodesTestCase = TestCase(all_on_different_nodes_precondition,
-                                           all_on_different_nodes, all_on_different_nodes_setup)
-    InvalidAffinityTestCase = TestCase(invalid_affinity_precondition, invalid_affinity,
-                                       invalid_affinity_setup)
+    AllOnOneNodeTestCase = K8sTestCase(all_on_one_node_precondition, all_on_one_node,
+                                       all_on_one_node_setup)
+    AllOnDifferentNodesTestCase = K8sTestCase(all_on_different_nodes_precondition,
+                                              all_on_different_nodes, all_on_different_nodes_setup)
+    InvalidAffinityTestCase = K8sTestCase(invalid_affinity_precondition, invalid_affinity,
+                                          invalid_affinity_setup)
 
     def __init__(self, schema_obj: BaseSchema) -> None:
         super().__init__(schema_obj)
@@ -352,11 +352,7 @@ class PodSecurityContextSchema(K8sObjectSchema):
         return {"runAsUser": 0, "runAsGroup": 0, "fsGroup": 0}
 
     def root_security_context_setup(prev) -> dict:
-        return {
-            "runAsUser": 1000,
-            "runAsGroup": 1000,
-            "fsGroup": 1000
-        }
+        return {"runAsUser": 1000, "runAsGroup": 1000, "fsGroup": 1000}
 
     def normal_security_context_precondition(prev) -> bool:
         return prev != {
@@ -377,12 +373,13 @@ class PodSecurityContextSchema(K8sObjectSchema):
     def normal_security_context_setup(prev) -> dict:
         return {"runAsUser": 0, "runAsGroup": 0, "fsGroup": 0, "supplementalGroups": [0]}
 
-    BadSecurityContextTestCase = TestCase(bad_security_context_precondition, bad_security_context,
-                                          bad_security_context_setup)
-    RootSecurityContextTestCase = TestCase(root_security_context_precondition,
-                                           root_security_context, root_security_context_setup)
-    NormalSecurityContextTestCase = TestCase(normal_security_context_precondition,
-                                             normal_security_context, normal_security_context_setup)
+    BadSecurityContextTestCase = K8sTestCase(bad_security_context_precondition,
+                                             bad_security_context, bad_security_context_setup)
+    RootSecurityContextTestCase = K8sTestCase(root_security_context_precondition,
+                                              root_security_context, root_security_context_setup)
+    NormalSecurityContextTestCase = K8sTestCase(normal_security_context_precondition,
+                                                normal_security_context,
+                                                normal_security_context_setup)
 
     fields = {
         "fsGroup": K8sIntegerSchema,
@@ -508,11 +505,11 @@ class TolerationSchema(K8sObjectSchema):
     def control_plane_toleration_setup(prev) -> dict:
         return TolerationSchema.PlainToleration
 
-    PlainTolerationTestCase = TestCase(plain_toleration_precondition, plain_toleration,
-                                       plain_toleration_setup)
-    ControlPlaneTolerationTestCase = TestCase(control_plane_toleration_precondition,
-                                              control_plane_toleration,
-                                              control_plane_toleration_setup)
+    PlainTolerationTestCase = K8sTestCase(plain_toleration_precondition, plain_toleration,
+                                          plain_toleration_setup)
+    ControlPlaneTolerationTestCase = K8sTestCase(control_plane_toleration_precondition,
+                                                 control_plane_toleration,
+                                                 control_plane_toleration_setup)
 
     def __init__(self, schema_obj: BaseSchema) -> None:
         super().__init__(schema_obj)
@@ -592,9 +589,9 @@ class ImagePullPolicySchema(K8sStringSchema):
     def change_image_pull_policy_setup(prev) -> str:
         return "Always"
 
-    ChangeImagePullPolicyTestCase = TestCase(change_image_pull_policy_precondition,
-                                             change_image_pull_policy,
-                                             change_image_pull_policy_setup)
+    ChangeImagePullPolicyTestCase = K8sTestCase(change_image_pull_policy_precondition,
+                                                change_image_pull_policy,
+                                                change_image_pull_policy_setup)
 
     def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
         base_testcases = super().test_cases()
@@ -617,18 +614,12 @@ class GRPCSchema(K8sObjectSchema):
 
     def invalid_grpc_precondition(prev) -> bool:
         return True
-    
+
     def invalid_grpc(prev) -> dict:
-        return {
-            "port": 1234,
-            "service": "invalid-service"
-        }
-    
+        return {"port": 1234, "service": "invalid-service"}
+
     def invalid_grpc_setup(prev) -> dict:
-        return {
-            "port": 1234,
-            "service": "invalid-service"
-        }
+        return {"port": 1234, "service": "invalid-service"}
 
     def __init__(self, schema_obj: BaseSchema) -> None:
         super().__init__(schema_obj)
@@ -645,16 +636,17 @@ class GRPCSchema(K8sObjectSchema):
             elif not field_schema.Match(schema.properties[field]):
                 return False
         return True
-    
+
     def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
         base_testcases = super().test_cases()
-        base_testcases[1].append(TestCase(GRPCSchema.invalid_grpc_precondition,
-                                          GRPCSchema.invalid_grpc,
-                                          GRPCSchema.invalid_grpc_setup))
+        base_testcases[1].append(
+            TestCase(GRPCSchema.invalid_grpc_precondition, GRPCSchema.invalid_grpc,
+                     GRPCSchema.invalid_grpc_setup))
         return base_testcases
 
     def __str__(self) -> str:
         return "GRPC"
+
 
 class LivenessProbeSchema(K8sObjectSchema):
 
@@ -669,7 +661,7 @@ class LivenessProbeSchema(K8sObjectSchema):
         "successThreshold": K8sIntegerSchema,
         "failureThreshold": K8sIntegerSchema,
     }
-    
+
     def Match(schema: ObjectSchema) -> bool:
         if not K8sObjectSchema.Match(schema):
             return False
@@ -682,6 +674,7 @@ class LivenessProbeSchema(K8sObjectSchema):
 
     def __str__(self) -> str:
         return "LivenessProbe"
+
 
 class ContainerSchema(K8sObjectSchema):
 
@@ -759,9 +752,9 @@ class PreemptionPolicySchema(K8sStringSchema):
     def preemption_policy_change_setup(prev):
         return 'Never'
 
-    PreemptionPolicyChangeTestcase = TestCase(preemption_policy_change_precondition,
-                                              preemption_policy_change,
-                                              preemption_policy_change_setup)
+    PreemptionPolicyChangeTestcase = K8sTestCase(preemption_policy_change_precondition,
+                                                 preemption_policy_change,
+                                                 preemption_policy_change_setup)
 
     def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
         if exclude_value == 'PreemptLowerPriority':
@@ -795,9 +788,8 @@ class RestartPolicySchema(K8sStringSchema):
     def restart_policy_change_setup(prev):
         return 'Always'
 
-    RestartPolicyChangeTestcase = TestCase(restart_policy_change_precondition,
-                                           restart_policy_change,
-                                           restart_policy_change_setup)
+    RestartPolicyChangeTestcase = K8sTestCase(restart_policy_change_precondition,
+                                              restart_policy_change, restart_policy_change_setup)
 
     def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
         if exclude_value == 'OnFailure':
@@ -831,9 +823,9 @@ class PriorityClassNameSchema(K8sStringSchema):
     def priority_class_name_change_setup(prev):
         return 'system-cluster-critical'
 
-    PriorityClassNameChangeTestcase = TestCase(priority_class_name_change_precondition,
-                                               priority_class_name_change,
-                                               priority_class_name_change_setup)
+    PriorityClassNameChangeTestcase = K8sTestCase(priority_class_name_change_precondition,
+                                                  priority_class_name_change,
+                                                  priority_class_name_change_setup)
 
     def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
         if exclude_value == 'system-node-critical':
@@ -867,9 +859,9 @@ class ServiceAccountNameSchema(K8sStringSchema):
     def service_account_name_change_setup(prev):
         return 'default'
 
-    ServiceAccountNameChangeTestcase = TestCase(service_account_name_change_precondition,
-                                                service_account_name_change,
-                                                service_account_name_change_setup)
+    ServiceAccountNameChangeTestcase = K8sTestCase(service_account_name_change_precondition,
+                                                   service_account_name_change,
+                                                   service_account_name_change_setup)
 
     def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
         return "default"

@@ -22,7 +22,7 @@ from common import *
 from exception import UnknownDeployMethodError
 from k8s_helper import delete_operator_pod
 from preprocess import add_acto_label, process_crd, update_preload_images
-from input import InputModel
+from input import InputModel, DeterministicInputModel
 from deploy import Deploy, DeployMethod
 from k8s_cluster import base, k3d, kind
 from constant import CONST
@@ -244,37 +244,38 @@ class TrialRunner:
             if generation > 0:
                 if self.input_model.is_empty():
                     break
-                next_tests = self.input_model.next_test()
+                test_groups = self.input_model.next_test()
+
+                # if test_group is None, it means this group is exhausted
+                # break and move to the next trial
+                if test_groups is None:
+                    break
 
                 # First make sure all the next tests are valid
-                for (field_node, testcase) in next_tests:  # iterate on list of next tests
-                    testcase_signature = {
-                        'field': json.dumps(field_node.get_path()),
-                        'testcase': str(testcase)
-                    }
-                    field_curr_value = curr_input_with_schema.get_value_by_path(
-                        list(field_node.get_path()))
+                for (group, testcase_with_path) in test_groups:  # iterate on list of next tests
+                    field_path_str, testcase = testcase_with_path
+                    field_path = json.loads(field_path_str)
+                    testcase_signature = {'field': field_path_str, 'testcase': str(testcase)}
+                    field_curr_value = curr_input_with_schema.get_value_by_path(list(field_path))
 
                     if testcase.test_precondition(field_curr_value):
                         # precondition of this testcase satisfies
-                        logger.info('Precondition of %s satisfies', field_node.get_path())
-                        ready_testcases.append((field_node, testcase))
+                        logger.info('Precondition of %s satisfies', field_path)
+                        ready_testcases.append((group, testcase_with_path))
                     else:
                         # precondition fails, first run setup
-                        logger.info('Precondition of %s fails, try setup first',
-                                    field_node.get_path())
+                        logger.info('Precondition of %s fails, try setup first', field_path_str)
 
                         self.apply_testcase_f(curr_input_with_schema,
-                                              field_node.get_path(),
+                                              field_path,
                                               testcase,
                                               setup=True)
 
                         if not testcase.test_precondition(
-                                curr_input_with_schema.get_value_by_path(list(
-                                    field_node.get_path()))):
+                                curr_input_with_schema.get_value_by_path(list(field_path))):
                             # just in case the setup does not work correctly, drop this testcase
                             logger.error('Setup does not work correctly')
-                            field_node.discard_testcase(self.discarded_testcases)
+                            group.discard_testcase(self.discarded_testcases)
                             continue
 
                         runResult = TrialRunner.run_and_check(runner, checker,
@@ -285,7 +286,7 @@ class TrialRunner:
 
                         is_invalid, _ = runResult.is_invalid()
                         if runResult.is_basic_error():
-                            field_node.discard_testcase(self.discarded_testcases)
+                            group.discard_testcase(self.discarded_testcases)
                             # before return, run the recovery test case
                             runResult.recovery_result = self.run_recovery(
                                 runner, checker, generation)
@@ -295,14 +296,14 @@ class TrialRunner:
                         elif is_invalid:
                             logger.info('Setup produced invalid input')
                             self.snapshots.pop()
-                            field_node.discard_testcase(self.discarded_testcases)
+                            group.discard_testcase(self.discarded_testcases)
                             curr_input_with_schema = self.revert(runner, checker, generation)
                             generation += 1
                         elif runResult.is_unchanged():
                             logger.info('Setup produced unchanged input')
-                            field_node.discard_testcase(self.discarded_testcases)
+                            group.discard_testcase(self.discarded_testcases)
                         elif runResult.is_error():
-                            field_node.discard_testcase(self.discarded_testcases)
+                            group.discard_testcase(self.discarded_testcases)
                             # before return, run the recovery test case
                             runResult.recovery_result = self.run_recovery(
                                 runner, checker, generation)
@@ -310,7 +311,7 @@ class TrialRunner:
 
                             return runResult, generation
                         else:
-                            ready_testcases.append((field_node, testcase))
+                            ready_testcases.append((group, testcase_with_path))
 
                 if len(ready_testcases) == 0:
                     logger.info('All setups failed')
@@ -341,15 +342,14 @@ class TrialRunner:
 
         testcase_patches = []
         testcase_signature = None
-        for field_node, testcase in testcases:
-            testcase_signature = {
-                'field': json.dumps(field_node.get_path()),
-                'testcase': str(testcase)
-            }
-            patch = self.apply_testcase_f(curr_input_with_schema, field_node.get_path(), testcase)
+        for group, testcase_with_path in testcases:
+            field_path_str, testcase = testcase_with_path
+            field_path = json.loads(field_path_str)
+            testcase_signature = {'field': field_path_str, 'testcase': str(testcase)}
+            patch = self.apply_testcase_f(curr_input_with_schema, field_path, testcase)
 
             # field_node.get_testcases().pop()  # finish testcase
-            testcase_patches.append((field_node, testcase, patch))
+            testcase_patches.append((group, testcase_with_path, patch))
 
         runResult = TrialRunner.run_and_check(runner, checker, curr_input_with_schema.raw_value(),
                                               self.snapshots, generation, testcase_signature,
@@ -371,7 +371,7 @@ class TrialRunner:
             # 2. Construct a new input and re-apply
             if len(testcase_patches) == 1:
                 # if only one testcase, then no need to isolate
-                testcase_patches[0][0].get_testcases().pop()  # finish testcase
+                testcase_patches[0][0].finish_testcase()  # finish testcase
                 logger.debug('Only one patch, no need to isolate')
                 return runResult, generation
             else:
@@ -379,9 +379,9 @@ class TrialRunner:
                 if responsible_field == None:
                     # Unable to pinpoint the exact responsible testcase, try one by one
                     logger.debug('Unable to pinpoint the exact responsible field, try one by one')
-                    for field_node, testcase, patch in testcase_patches:
+                    for group, testcase_with_path, patch in testcase_patches:
                         iso_result, generation = self.run_testcases(curr_input_with_schema,
-                                                                    [(field_node, testcase)],
+                                                                    [(group, testcase_with_path)],
                                                                     runner, checker, generation)
                         if (not iso_result.is_invalid()[0] and
                                 iso_result.is_error()) or iso_result.is_basic_error():
@@ -392,26 +392,26 @@ class TrialRunner:
                     logger.debug('Responsible patch path: %s', jsonpatch_path)
                     # isolate the responsible invalid testcase and re-apply
                     ready_testcases = []
-                    for field_node, testcase, patch in testcase_patches:
+                    for group, testcase_with_path, patch in testcase_patches:
                         responsible = False
                         for op in patch:
                             if op['path'] == jsonpatch_path:
                                 logger.info('Determine the responsible field to be %s' %
                                             jsonpatch_path)
                                 responsible = True
-                                field_node.get_testcases().pop()  # finish testcase
+                                group.finish_testcase()  # finish testcase
                                 break
                         if not responsible:
-                            ready_testcases.append((field_node, testcase))
+                            ready_testcases.append((group, testcase_with_path))
                     if len(ready_testcases) == 0:
                         return runResult, generation
 
                     if len(ready_testcases) == len(testcase_patches):
                         logger.error('Fail to determine the responsible patch, try one by one')
-                        for field_node, testcase, patch in testcase_patches:
+                        for group, testcase_with_path, patch in testcase_patches:
                             iso_result, generation = self.run_testcases(
-                                curr_input_with_schema, [(field_node, testcase)], runner, checker,
-                                generation)
+                                curr_input_with_schema, [(group, testcase_with_path)], runner,
+                                checker, generation)
                             if (not iso_result.is_invalid()[0] and
                                     iso_result.is_error()) or iso_result.is_basic_error():
                                 return iso_result, generation
@@ -423,7 +423,7 @@ class TrialRunner:
         else:
             if not self.is_reproduce:
                 for patch in testcase_patches:
-                    patch[0].get_testcases().pop()  # finish testcase
+                    patch[0].finish_testcase()  # finish testcase
             ''' Commented out because no use for now
             if isinstance(result, UnchangedInputResult):
                 pass
@@ -970,7 +970,7 @@ if __name__ == '__main__':
     # Initialize input model and the apply testcase function
     # input_model = InputModel(context_cache['crd']['body'], config.example_dir,
     #   args.num_workers, args.num_cases, None)
-    input_model = InputModel
+    input_model = DeterministicInputModel
     apply_testcase_f = apply_testcase
     is_reproduce = False
 

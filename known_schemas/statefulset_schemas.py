@@ -3,7 +3,7 @@ from schema import BaseSchema, ObjectSchema
 from known_schemas.base import K8sStringSchema, K8sObjectSchema, K8sArraySchema, K8sIntegerSchema
 from known_schemas.pod_schemas import PodSpecSchema
 from schema import BaseSchema, IntegerSchema, StringSchema
-from test_case import Store, TestCase
+from test_case import Store, TestCase, K8sTestCase
 
 
 class PodManagementPolicySchema(K8sStringSchema):
@@ -48,7 +48,6 @@ class ReplicasSchema(K8sIntegerSchema):
         else:
             return True
 
-
     def scaleUpDown(prev) -> int:
         return prev - 1
 
@@ -57,8 +56,8 @@ class ReplicasSchema(K8sIntegerSchema):
             return 4
         return prev + 1
 
-    ScaleDownUp = TestCase(scaleDownUpPrecondition, scaleDownUp, scaleDownUpSetup, Store())
-    ScaleUpDown = TestCase(scaleUpDownPrecondition, scaleUpDown, scaleUpDownSetup, Store())
+    ScaleDownUp = K8sTestCase(scaleDownUpPrecondition, scaleDownUp, scaleDownUpSetup, Store())
+    ScaleUpDown = K8sTestCase(scaleUpDownPrecondition, scaleUpDown, scaleUpDownSetup, Store())
 
     def gen(self, exclude_value=None, minimum: bool = False, **kwargs) -> list:
         if exclude_value is None:
@@ -119,8 +118,8 @@ class UpdateStrategySchema(K8sStringSchema):
     def update_strategy_change_setup(prev):
         return 'RollingUpdate'
 
-    UpdateStrategyChangeTestcase = TestCase(update_strategy_change_precondition,
-                                            update_strategy_change, update_strategy_change_setup)
+    UpdateStrategyChangeTestcase = K8sTestCase(update_strategy_change_precondition,
+                                               update_strategy_change, update_strategy_change_setup)
 
     def __init__(self, schema_obj: BaseSchema) -> None:
         super().__init__(schema_obj)

@@ -1,9 +1,10 @@
 import random
 import json
-from typing import List
+from typing import List, Tuple
 
 from test_case import TestCase
 from thread_logger import get_thread_logger
+
 
 class TreeNode():
 
@@ -48,12 +49,13 @@ class TreeNode():
             key = path.pop(0)
             if key not in self.children:
                 if 'ITEM' in self.children and isinstance(key, int):
-                    concrete_node = self.children['ITEM'].deepcopy(self.path+[key])
+                    concrete_node = self.children['ITEM'].deepcopy(self.path + [key])
                     concrete_node.path[-1] = key
                     concrete_node.add_testcases_by_path(testcases, path)
                     self.children[key] = concrete_node
                 elif 'additional_properties' in self.children and isinstance(key, str):
-                    concrete_node = self.children['additional_properties'].deepcopy(self.path+[key])
+                    concrete_node = self.children['additional_properties'].deepcopy(self.path +
+                                                                                    [key])
                     concrete_node.path[-1] = key
                     concrete_node.add_testcases_by_path(testcases, path)
                     self.children[key] = concrete_node
@@ -107,7 +109,7 @@ class TreeNode():
 
         if len(path) == 0:
             return self
-        
+
         key = path.pop(0)
         if key in self:
             return self[key].get_node_by_path(path)
@@ -183,7 +185,7 @@ class TreeNode():
     def deepcopy(self, path: list):
         ret = TreeNode(path)
         for key, child in self.children.items():
-            ret.add_child(key, child.deepcopy(path+[key]))
+            ret.add_child(key, child.deepcopy(path + [key]))
 
         ret.testcases = list(self.testcases)
 
@@ -219,3 +221,56 @@ class TestPlan():
 
     def __len__(self):
         return sum([len(i.get_testcases()) for i in self.root.eligible_fields()])
+
+
+class TestGroup:
+
+    def __init__(self, tests: list[Tuple[str, TestCase]]):
+        self.tests = tests
+
+    def discard_testcase(self, discarded_testcases: dict):
+        '''Discard the current testcase, store the discarded testcase into the parameter
+        
+        Args:
+            discarded_testcases: dict to store the discarded testcase
+        '''
+        path, testcase = self.tests.pop(0)
+        encoded_path = json.dumps(path)
+        if encoded_path in discarded_testcases:
+            discarded_testcases[encoded_path].append(testcase)
+        else:
+            discarded_testcases[encoded_path] = [testcase]
+
+    def get_next_testcase(self) -> Tuple[str, TestCase]:
+        return self.tests[0]
+    
+    def finish_testcase(self):
+        self.tests.pop(0)
+
+    def __len__(self):
+        return len(self.tests)
+
+
+class DeterministicTestPlan(TestPlan):
+
+    def __init__(self):
+        self.groups = []
+        pass
+
+    def next_group(self):
+        if len(self.groups) == 0:
+            return None
+        elif len(self.groups[0]) == 0:
+            self.groups.pop(0)
+            return None
+        else:
+            return self.groups[0]
+
+    def add_testcase_groups(self, groups: List[TestGroup]):
+        self.groups.extend(groups)
+
+    def add_testcase_group(self, groups: TestGroup):
+        self.groups.append(groups)
+
+    def __len__(self):
+        return sum([len(i) for i in self.groups])

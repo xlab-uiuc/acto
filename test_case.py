@@ -2,13 +2,17 @@ from typing import Callable
 
 from thread_logger import get_thread_logger
 
+
 class Store:
+
     def __init__(self) -> None:
         self.data = None
+
 
 class TestCase:
 
     def __init__(self,
+                 name: str,
                  precondition: Callable,
                  mutator: Callable,
                  setup: Callable,
@@ -16,6 +20,7 @@ class TestCase:
         '''Class represent a test case
 
         Args:
+            name: the name of the test case
             precondition: a function returns whether the previous value 
                 satisfies the test case's precondition
             mutator: a function to change the value to execute the test case
@@ -25,6 +30,7 @@ class TestCase:
                 field is mainly used for AnyOfSchema
         '''
 
+        self.name = name
         self.precondition = precondition
         self.mutator = mutator
         self.setup = setup
@@ -52,7 +58,7 @@ class TestCase:
         self.additional_preconditions.append(precondition)
 
     def __str__(self) -> str:
-        return '%s' % (self.mutator.__name__)
+        return '%s' % (self.name)
 
     def to_dict(self) -> dict:
         ret = {}
@@ -67,17 +73,20 @@ class TestCase:
 class K8sTestCase(TestCase):
     '''Class represent a test case for k8s, purely for test case name purposes'''
 
-    def __init__(self, precondition: Callable, mutator: Callable, setup: Callable) -> None:
-        super().__init__(precondition, mutator, setup)
+    def __init__(self,
+                 precondition: Callable,
+                 mutator: Callable,
+                 setup: Callable,
+                 store: Store = None) -> None:
+        name = 'k8s-%s' % (mutator.__name__)
+        super().__init__(name, precondition, mutator, setup, store)
 
-    def __str__(self) -> str:
-        return 'K8s-%s' % (self.mutator.__name__)
 
 class EnumTestCase(TestCase):
 
     def __init__(self, case) -> None:
         self.case = case
-        super().__init__(self.enum_precondition, self.enum_mutator, self.setup)
+        super().__init__(case, self.enum_precondition, self.enum_mutator, self.setup)
 
     def enum_precondition(self, prev):
         return True

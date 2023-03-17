@@ -12,7 +12,7 @@ from known_schemas import K8sField
 
 from schema import OpaqueSchema, StringSchema, extract_schema, BaseSchema, ObjectSchema, ArraySchema
 from test_case import TestCase
-from testplan import TestPlan
+from testplan import DeterministicTestPlan, TestGroup, TestPlan
 from value_with_schema import attach_schema_to_value
 from common import random_string
 from thread_logger import get_thread_logger
@@ -188,6 +188,7 @@ class InputModel:
             with open(delta_from, 'r') as delta_from_file:
                 existing_testcases = json.load(delta_from_file)['normal_testcases']
 
+        # Calculate the unused fields using used_fields from static analysis
         tree: TreeNode = self.root_schema.to_tree()
         for field in self.used_fields:
             field = field[1:]
@@ -227,6 +228,7 @@ class InputModel:
             logger.info('Overspecified field: %s', field)
         for field in unused_fields:
             logger.info('Unused field: %s', field)
+        ########################################
 
         planned_normal_testcases = {}
         normal_testcases = {}
@@ -304,6 +306,16 @@ class InputModel:
 
         normal_test_plan_items.extend(semantic_test_plan_items)  # run semantic testcases anyway
 
+        all_testcases = []
+        CHUNK_SIZE = 10
+        for path, testcases in normal_test_plan_items:
+            for testcase in testcases:
+                all_testcases.append((path, testcase.__str__()))
+
+        subgroups = []
+        for i in range(0, len(all_testcases), CHUNK_SIZE):
+            subgroups.append(all_testcases[i:i + CHUNK_SIZE])
+
         # Initialize the three test plans, and assign test cases to them according to the number of
         # workers
         self.normal_test_plan_partitioned = []
@@ -353,6 +365,7 @@ class InputModel:
             'copiedover_testcases': copiedover_testcases,
             'semantic_testcases': semantic_testcases,
             'planned_normal_testcases': planned_normal_testcases,
+            'groups': subgroups,
         }
 
     def next_test(self) -> List[Tuple[TreeNode, TestCase]]:
@@ -475,6 +488,249 @@ class InputModel:
                 ret.extend(self.candidates_dict_to_list(value, path + [key]))
             return ret
 
+
+class DeterministicInputModel(InputModel):
+
+    def set_worker_id(self, id: int):
+        '''Claim this thread's id, so that we can split the test plan among threads'''
+
+        if hasattr(self.thread_vars, 'id'):
+            # Avoid initialize twice
+            return
+
+        # Thread local variables
+        self.thread_vars.id = id
+        # so that we can run the test case itself right after the setup
+        self.thread_vars.normal_test_plan = DeterministicTestPlan()
+        self.thread_vars.overspecified_test_plan = TestPlan(self.root_schema.to_tree())
+        self.thread_vars.copiedover_test_plan = TestPlan(self.root_schema.to_tree())
+        self.thread_vars.semantic_test_plan = TestPlan(self.root_schema.to_tree())
+
+        for group in self.normal_test_plan_partitioned[id]:
+            self.thread_vars.normal_test_plan.add_testcase_group(TestGroup(group))
+
+        for key, value in self.overspecified_test_plan_partitioned[id]:
+            path = json.loads(key)
+            self.thread_vars.overspecified_test_plan.add_testcases_by_path(value, path)
+
+        for key, value in self.copiedover_test_plan_partitioned[id]:
+            path = json.loads(key)
+            self.thread_vars.copiedover_test_plan.add_testcases_by_path(value, path)
+
+        for key, value in self.semantic_test_plan_partitioned[id]:
+            path = json.loads(key)
+            self.thread_vars.semantic_test_plan.add_testcases_by_path(value, path)
+
+    def generate_test_plan(self, delta_from: str = None) -> dict:
+        '''Generate test plan based on CRD'''
+        logger = get_thread_logger(with_prefix=False)
+
+        existing_testcases = {}
+        if delta_from is not None:
+            with open(delta_from, 'r') as delta_from_file:
+                existing_testcases = json.load(delta_from_file)['normal_testcases']
+
+        # Calculate the unused fields using used_fields from static analysis
+        tree: TreeNode = self.root_schema.to_tree()
+        for field in self.used_fields:
+            field = field[1:]
+            node = tree.get_node_by_path(field)
+            if node is None:
+                logger.warning(f'Field {field} not found in CRD')
+                continue
+
+            node.set_used()
+
+        def func(overspecified_fields: list, unused_fields: list, node: TreeNode) -> bool:
+            if len(node.children) == 0:
+                return False
+
+            if not node.used:
+                return False
+
+            used_child = []
+            for child in node.children.values():
+                if child.used:
+                    used_child.append(child)
+                else:
+                    unused_fields.append(child.path)
+
+            if len(used_child) == 0:
+                overspecified_fields.append(node.path)
+                return False
+            elif len(used_child) == len(node.children):
+                return True
+            else:
+                return True
+
+        overspecified_fields = []
+        unused_fields = []
+        tree.traverse_func(partial(func, overspecified_fields, unused_fields))
+        for field in overspecified_fields:
+            logger.info('Overspecified field: %s', field)
+        for field in unused_fields:
+            logger.info('Unused field: %s', field)
+        ########################################
+
+        planned_normal_testcases = {}
+        normal_testcases = {}
+        semantic_testcases = {}
+        overspecified_testcases = {}
+        copiedover_testcases = {}
+        num_normal_testcases = 0
+        num_overspecified_testcases = 0
+        num_copiedover_testcases = 0
+        num_semantic_testcases = 0
+
+        mounted_schema = self.get_schema_by_path(self.mount)
+        normal_schemas, pruned_by_overspecified, pruned_by_copied = mounted_schema.get_all_schemas()
+        for schema in normal_schemas:
+            path = json.dumps(schema.path).replace('\"ITEM\"',
+                                                   '0').replace('additional_properties', 'ACTOKEY')
+            testcases, semantic_testcases_ = schema.test_cases()
+            planned_normal_testcases[path] = testcases
+            if len(semantic_testcases_) > 0:
+                semantic_testcases[path] = semantic_testcases_
+                num_semantic_testcases += len(semantic_testcases_)
+            if path in existing_testcases:
+                continue
+            normal_testcases[path] = testcases
+            num_normal_testcases += len(testcases)
+
+        for schema in pruned_by_overspecified:
+            testcases, semantic_testcases_ = schema.test_cases()
+            path = json.dumps(schema.path).replace('\"ITEM\"',
+                                                   '0').replace('additional_properties',
+                                                                random_string(5))
+            if len(semantic_testcases_) > 0:
+                semantic_testcases[path] = semantic_testcases_
+                num_semantic_testcases += len(semantic_testcases_)
+            overspecified_testcases[path] = testcases
+            num_overspecified_testcases += len(testcases)
+
+        for schema in pruned_by_copied:
+            testcases, semantic_testcases_ = schema.test_cases()
+            path = json.dumps(schema.path).replace('\"ITEM\"',
+                                                   '0').replace('additional_properties',
+                                                                random_string(5))
+            if len(semantic_testcases_) > 0:
+                semantic_testcases[path] = semantic_testcases_
+                num_semantic_testcases += len(semantic_testcases_)
+            copiedover_testcases[path] = testcases
+            num_copiedover_testcases += len(testcases)
+
+        logger.info('Parsed [%d] fields from normal schema' % len(normal_schemas))
+        logger.info('Parsed [%d] fields from over-specified schema' % len(pruned_by_overspecified))
+        logger.info('Parsed [%d] fields from copied-over schema' % len(pruned_by_copied))
+
+        logger.info('Generated [%d] test cases for normal schemas', num_normal_testcases)
+        logger.info('Generated [%d] test cases for overspecified schemas',
+                    num_overspecified_testcases)
+        logger.info('Generated [%d] test cases for copiedover schemas', num_copiedover_testcases)
+        logger.info('Generated [%d] test cases for semantic schemas', num_semantic_testcases)
+
+        self.metadata['pruned_by_overspecified'] = len(pruned_by_overspecified)
+        self.metadata['pruned_by_copied'] = len(pruned_by_copied)
+        self.metadata['semantic_schemas'] = len(semantic_testcases)
+        self.metadata['num_normal_testcases'] = num_normal_testcases
+        self.metadata['num_overspecified_testcases'] = num_overspecified_testcases
+        self.metadata['num_copiedover_testcases'] = num_copiedover_testcases
+        self.metadata['num_semantic_testcases'] = num_semantic_testcases
+
+        normal_test_plan_items = list(normal_testcases.items())
+        overspecified_test_plan_items = list(overspecified_testcases.items())
+        copiedover_test_plan_items = list(copiedover_testcases.items())
+        semantic_test_plan_items = list(semantic_testcases.items())
+        random.shuffle(normal_test_plan_items)  # randomize to reduce skewness among workers
+        random.shuffle(overspecified_test_plan_items)
+        random.shuffle(copiedover_test_plan_items)
+        random.shuffle(semantic_test_plan_items)
+
+        normal_test_plan_items.extend(semantic_test_plan_items)  # run semantic testcases anyway
+
+        all_testcases = []
+        CHUNK_SIZE = 10
+        for path, testcases in normal_test_plan_items:
+            for testcase in testcases:
+                all_testcases.append((path, testcase))
+
+        subgroups = []
+        for i in range(0, len(all_testcases), CHUNK_SIZE):
+            subgroups.append(all_testcases[i:i + CHUNK_SIZE])
+
+        # Initialize the three test plans, and assign test cases to them according to the number of
+        # workers
+        self.normal_test_plan_partitioned = []
+        self.overspecified_test_plan_partitioned = []
+        self.copiedover_test_plan_partitioned = []
+        self.semantic_test_plan_partitioned = []
+
+        for i in range(self.num_workers):
+            self.normal_test_plan_partitioned.append([])
+            self.overspecified_test_plan_partitioned.append([])
+            self.copiedover_test_plan_partitioned.append([])
+            self.semantic_test_plan_partitioned.append([])
+
+        for i in range(0, len(subgroups)):
+            self.normal_test_plan_partitioned[i % self.num_workers].append(subgroups[i])
+
+        for i in range(0, len(overspecified_test_plan_items)):
+            self.overspecified_test_plan_partitioned[i % self.num_workers].append(
+                overspecified_test_plan_items[i])
+
+        for i in range(0, len(copiedover_test_plan_items)):
+            self.copiedover_test_plan_partitioned[i % self.num_workers].append(
+                copiedover_test_plan_items[i])
+
+        for i in range(0, len(semantic_test_plan_items)):
+            self.semantic_test_plan_partitioned[i % self.num_workers].append(
+                semantic_test_plan_items[i])
+
+        # appending empty lists to avoid no test cases distributed to certain work nodes
+        assert (self.num_workers == len(self.normal_test_plan_partitioned))
+        assert (self.num_workers == len(self.overspecified_test_plan_partitioned))
+        assert (self.num_workers == len(self.copiedover_test_plan_partitioned))
+
+        assert (sum(len(p) for p in self.overspecified_test_plan_partitioned) == len(
+            overspecified_test_plan_items))
+        assert (sum(
+            len(p)
+            for p in self.copiedover_test_plan_partitioned) == len(copiedover_test_plan_items))
+
+        return {
+            'delta_from': delta_from,
+            'existing_testcases': existing_testcases,
+            'normal_testcases': normal_testcases,
+            'overspecified_testcases': overspecified_testcases,
+            'copiedover_testcases': copiedover_testcases,
+            'semantic_testcases': semantic_testcases,
+            'planned_normal_testcases': planned_normal_testcases,
+            'groups': subgroups,
+        }
+
+    def next_test(self) -> List[Tuple[TreeNode, TestCase]]:
+        '''Selects next test case to run from the test plan
+        
+        Instead of random, it selects the next test case from the group.
+        If the group is exhausted, it returns None, and will move to next group.
+        
+        Returns:
+            Tuple of (new value, if this is a setup)
+        '''
+        logger = get_thread_logger(with_prefix=True)
+
+        logger.info('Progress [%d] cases left' % len(self.thread_vars.test_plan))
+
+        # TODO: multi-testcase
+        selected_group: TestGroup = self.thread_vars.test_plan.next_group()
+
+        if selected_group is None:
+            return None
+        elif len(selected_group) == 0:
+            return None
+        else:
+            testcase = selected_group.get_next_testcase()
+            return [(selected_group, testcase)]
 
 if __name__ == '__main__':
     import time

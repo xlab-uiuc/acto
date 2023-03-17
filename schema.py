@@ -106,6 +106,9 @@ class StringSchema(BaseSchema):
         - pattern
     '''
     default_max_length = 10
+    DELETION_TEST = 'string-deletion'
+    CHANGE_TEST = 'string-change'
+    EMPTY_TEST = 'string-empty'
 
     def __init__(self, path: list, schema: dict) -> None:
         super().__init__(path, schema)
@@ -128,14 +131,14 @@ class StringSchema(BaseSchema):
 
     def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
         '''String schema currently has two test cases, delete and change'''
-        ret = [TestCase(self.delete_precondition, self.delete, self.delete_setup)]
+        ret = [TestCase(StringSchema.DELETION_TEST, self.delete_precondition, self.delete, self.delete_setup)]
         if self.enum != None:
             for case in self.enum:
                 ret.append(EnumTestCase(case))
         else:
-            change_testcase = TestCase(self.change_precondition, self.change, self.change_setup)
+            change_testcase = TestCase(StringSchema.CHANGE_TEST, self.change_precondition, self.change, self.change_setup)
             ret.append(change_testcase)
-            ret.append(TestCase(self.empty_precondition, self.empty_mutator, self.empty_setup))
+            ret.append(TestCase(StringSchema.EMPTY_TEST, self.empty_precondition, self.empty_mutator, self.empty_setup))
         return ret, []
 
     def get_all_schemas(self) -> Tuple[list, list, list]:
@@ -212,6 +215,11 @@ class NumberSchema(BaseSchema):
     default_minimum = 0
     default_maximum = 5
 
+    DELETION_TEST = 'number-deletion'
+    INCREASE_TEST = 'number-increase'
+    DECREASE_TEST = 'number-decrease'
+    EMPTY_TEST = 'number-empty'
+
     def __init__(self, path: list, schema: dict) -> None:
         super().__init__(path, schema)
         self.minimum = self.default_minimum if 'minimum' not in schema else schema['minimum']
@@ -232,14 +240,14 @@ class NumberSchema(BaseSchema):
         return random.uniform(self.minimum, self.maximum)
 
     def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
-        ret = [TestCase(self.delete_precondition, self.delete, self.delete_setup)]
+        ret = [TestCase(NumberSchema.DELETION_TEST, self.delete_precondition, self.delete, self.delete_setup)]
         if self.enum != None:
             for case in self.enum:
                 ret.append(EnumTestCase(case))
         else:
-            ret.append(TestCase(self.increase_precondition, self.increase, self.increase_setup))
-            ret.append(TestCase(self.decrease_precondition, self.decrease, self.decrease_setup))
-            ret.append(TestCase(self.empty_precondition, self.empty_mutator, self.empty_setup))
+            ret.append(TestCase(NumberSchema.INCREASE_TEST, self.increase_precondition, self.increase, self.increase_setup))
+            ret.append(TestCase(NumberSchema.DECREASE_TEST, self.decrease_precondition, self.decrease, self.decrease_setup))
+            ret.append(TestCase(NumberSchema.EMPTY_TEST, self.empty_precondition, self.empty_mutator, self.empty_setup))
         return ret, []
 
     def get_all_schemas(self) -> Tuple[list, list, list]:
@@ -416,6 +424,9 @@ class ObjectSchema(BaseSchema):
         - regexp
     '''
 
+    DELETION_TEST = 'object-deletion'
+    EMPTY_TEST = 'object-empty'
+
     def __init__(self, path: list, schema: dict) -> None:
         super().__init__(path, schema)
         self.properties = {}
@@ -476,12 +487,12 @@ class ObjectSchema(BaseSchema):
         return result
 
     def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
-        ret = [TestCase(self.delete_precondition, self.delete, self.delete_setup)]
+        ret = [TestCase(ObjectSchema.DELETION_TEST, self.delete_precondition, self.delete, self.delete_setup)]
         if self.enum != None:
             for case in self.enum:
                 ret.append(EnumTestCase(case))
         else:
-            ret.append(TestCase(self.empty_precondition, self.empty_mutator, self.empty_setup))
+            ret.append(TestCase(ObjectSchema.EMPTY_TEST, self.empty_precondition, self.empty_mutator, self.empty_setup))
         return ret, []
 
     def get_all_schemas(self) -> Tuple[list, list, list]:
@@ -622,6 +633,11 @@ class ArraySchema(BaseSchema):
     default_min_items = 0
     default_max_items = 5
 
+    DELETION_TEST = 'array-deletion'
+    PUSH_TEST = 'array-push'
+    POP_TEST = 'array-pop'
+    EMPTY_TEST = 'array-empty'
+
     def __init__(self, path: list, schema: dict) -> None:
         super().__init__(path, schema)
         self.item_schema = extract_schema(self.path + ['ITEM'], schema['items'])
@@ -650,14 +666,14 @@ class ArraySchema(BaseSchema):
             return result
 
     def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
-        ret = [TestCase(self.delete_precondition, self.delete, self.delete_setup)]
+        ret = [TestCase(ArraySchema.DELETION_TEST, self.delete_precondition, self.delete, self.delete_setup)]
         if self.enum != None:
             for case in self.enum:
                 ret.append(EnumTestCase(case))
         else:
-            ret.append(TestCase(self.push_precondition, self.push_mutator, self.push_setup))
-            ret.append(TestCase(self.pop_precondition, self.pop_mutator, self.pop_setup))
-            ret.append(TestCase(self.empty_precondition, self.empty_mutator, self.empty_setup))
+            ret.append(TestCase(ArraySchema.PUSH_TEST, self.push_precondition, self.push_mutator, self.push_setup))
+            ret.append(TestCase(ArraySchema.POP_TEST, self.pop_precondition, self.pop_mutator, self.pop_setup))
+            ret.append(TestCase(ArraySchema.EMPTY_TEST, self.empty_precondition, self.empty_mutator, self.empty_setup))
         return ret, []
 
     def get_all_schemas(self) -> Tuple[list, list, list]:
@@ -939,6 +955,10 @@ class OneOfSchema(BaseSchema):
 
 class BooleanSchema(BaseSchema):
 
+    DELETION_TEST = 'boolean-deletion'
+    TOGGLE_OFF_TEST = 'boolean-toggle-off'
+    TOGGLE_ON_TEST = 'boolean-toggle-on'
+
     def __init__(self, path: list, schema: dict) -> None:
         super().__init__(path, schema)
         if self.default == None:
@@ -952,14 +972,14 @@ class BooleanSchema(BaseSchema):
             return random.choice([True, False])
 
     def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
-        ret = [TestCase(self.delete_precondition, self.delete, self.delete_setup)]
+        ret = [TestCase(BooleanSchema.DELETION_TEST, self.delete_precondition, self.delete, self.delete_setup)]
         if self.enum != None:
             for case in self.enum:
                 ret.append(EnumTestCase(case))
         else:
             ret.append(
-                TestCase(self.toggle_off_precondition, self.toggle_off, self.toggle_off_setup))
-            ret.append(TestCase(self.toggle_on_precondition, self.toggle_on, self.toggle_on_setup))
+                TestCase(BooleanSchema.TOGGLE_OFF_TEST, self.toggle_off_precondition, self.toggle_off, self.toggle_off_setup))
+            ret.append(TestCase(BooleanSchema.TOGGLE_ON_TEST, self.toggle_on_precondition, self.toggle_on, self.toggle_on_setup))
         return ret, []
 
     def get_all_schemas(self) -> Tuple[list, list, list]:

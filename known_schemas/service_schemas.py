@@ -1,7 +1,7 @@
 from typing import List, Tuple
 from schema import BaseSchema, ObjectSchema
 from known_schemas.base import K8sBooleanSchema, K8sStringSchema, K8sObjectSchema, K8sArraySchema, K8sIntegerSchema
-from test_case import TestCase
+from test_case import TestCase, K8sTestCase
 
 class ServiceTypeSchema(K8sStringSchema):
 
@@ -17,7 +17,7 @@ class ServiceTypeSchema(K8sStringSchema):
     def service_type_change_setup(prev):
         return 'ClusterIP'
 
-    ServiceTypeChangeTestcase = TestCase(service_type_change_precondition, service_type_change,
+    ServiceTypeChangeTestcase = K8sTestCase(service_type_change_precondition, service_type_change,
                                          service_type_change_setup)
 
     def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
