@@ -368,7 +368,7 @@ class InputModel:
             'groups': subgroups,
         }
 
-    def next_test(self) -> List[Tuple[TreeNode, TestCase]]:
+    def next_test(self) -> List[Tuple[TestGroup, TestCase]]:
         '''Selects next test case to run from the test plan
         
         Randomly select a test field, and fetch the tail of the test case list
@@ -709,7 +709,7 @@ class DeterministicInputModel(InputModel):
             'copiedover_subgroups': copiedover_subgroups,
         }
 
-    def next_test(self) -> List[Tuple[TreeNode, TestCase]]:
+    def next_test(self) -> List[Tuple[TestGroup, TestCase]]:
         '''Selects next test case to run from the test plan
         
         Instead of random, it selects the next test case from the group.

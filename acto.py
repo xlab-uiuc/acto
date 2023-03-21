@@ -148,7 +148,7 @@ class TrialRunner:
         self.curr_trial = 0
 
     def run(self, mode: str = InputModel.NORMAL):
-        logger = get_thread_logger(with_prefix=False)
+        logger = get_thread_logger(with_prefix=True)
 
         self.input_model.set_worker_id(self.worker_id)
         apiclient = None
@@ -332,6 +332,7 @@ class TrialRunner:
                 return runResult, generation
 
             if self.input_model.is_empty():
+                logger.info('Input model is empty, break')
                 break
 
         return None, generation
@@ -732,7 +733,7 @@ class Acto:
                 json.dump(self.context, context_fout, cls=ContextEncoder, indent=4, sort_keys=True)
 
     def run(self, modes: list = ['normal', 'overspecified', 'copiedover']):
-        logger = get_thread_logger(with_prefix=False)
+        logger = get_thread_logger(with_prefix=True)
 
         # Build an archive to be preloaded
         if len(self.context['preload_images']) > 0:
