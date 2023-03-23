@@ -93,6 +93,13 @@ class Checker(object):
         logger = get_thread_logger(with_prefix=True)
         runResult = RunResult(revert, generation, self.feature_gate, testcase_signature)
 
+        stdout, stderr = snapshot.cli_result['stdout'], snapshot.cli_result['stderr']
+
+        if stderr.find('connection refused') != -1 or stderr.find('deadline exceeded') != -1:
+            logger.info('Connection refused, reject mutation')
+            runResult.input_result = ConnectionRefusedResult()
+            return runResult
+
         if snapshot.operator_log != None and 'Bug!' in snapshot.operator_log:
             runResult.crash_result = ErrorResult(Oracle.CRASH, snapshot.operator_log)
             return runResult
