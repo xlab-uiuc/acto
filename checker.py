@@ -517,7 +517,8 @@ class Checker(object):
 
         # check Health of CRs
         unhealthy_resources['cr'] = []
-        if 'conditions' in system_state['custom_resource_status']:
+        if system_state['custom_resource_status'] != None and 'conditions' in system_state[
+                'custom_resource_status']:
             for condition in system_state['custom_resource_status']['conditions']:
                 if condition['type'] == 'Ready' and condition['status'] != 'True':
                     unhealthy_resources['cr'].append('%s condition [%s] status [%s] message [%s]' %
