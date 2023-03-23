@@ -149,6 +149,8 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser()
+    parser.add_argument('--config', type=str, required=True)
+    parser.add_argument('--testrun-dir', type=str, required=True)
     parser.add_argument('--workdir-path', type=str, required=True)
     args = parser.parse_args()
 
@@ -162,8 +164,8 @@ if __name__ == '__main__':
     logging.getLogger("kubernetes").setLevel(logging.ERROR)
     logging.getLogger("sh").setLevel(logging.ERROR)
 
-    with open('/home/tyler/acto/data/cass-operator/config.json', 'r') as config_file:
+    with open(args.config, 'r') as config_file:
         config = OperatorConfig(**json.load(config_file))
-    p = PostDiffTest(testrun_dir='/home/tyler/acto-data/cass-operator/testrun-cass-whitebox-1',
+    p = PostDiffTest(testrun_dir=args.testrun_dir,
                      config=config)
     p.post_process(args.workdir_path)
