@@ -189,6 +189,7 @@ class Checker(object):
         stdout, stderr = snapshot.cli_result['stdout'], snapshot.cli_result['stderr']
 
         if stderr.find('connection refused') != -1 or stderr.find('deadline exceeded') != -1:
+            logger.info('Connection refused, reject mutation')
             return ConnectionRefusedResult()
 
         is_invalid, reponsible_field_path = invalid_input_message(stderr, input_delta)
