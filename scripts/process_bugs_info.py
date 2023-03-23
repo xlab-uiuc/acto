@@ -18,9 +18,10 @@ jira_regex += r'(\S+)\)$' # issue ID
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Process bugs info')
     parser.add_argument('--bugs-csv', dest='bugs_csv', help='Bugs info file', required=True)
+    parser.add_argument("--token", help="access token for github")
     args = parser.parse_args()
 
-    g = Github("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")
+    g = Github(args.token)
     auth_jira = JIRA(server='https://jira.percona.com/', token_auth='MjY3MjI0OTkyNTc3OoKNTUoqJZrWZ7MdEZd9fZ+SxLWI')
     with open(args.bugs_csv, 'r') as bugs_csv, open('bugs_info.csv', 'w') as bugs_info_csv:
         reader = csv.reader(bugs_csv)

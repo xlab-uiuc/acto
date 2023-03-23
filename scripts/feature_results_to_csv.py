@@ -25,7 +25,10 @@ if __name__ == '__main__':
         previous_inspection = args.previous
 
         with open(previous_inspection, 'rb') as f:
-            previous_df = pd.read_excel(f, sheet_name='Overview', index_col=0, usecols=['Trial number', 'testcase_x', 'True/False'])
+            previous_df = pd.read_excel(f,
+                                        sheet_name='Overview',
+                                        index_col=0,
+                                        usecols=['Trial number', 'testcase_x', 'True/False'])
 
     baseline_results = glob.glob(os.path.join(result_folder, '*', 'post-result-*-baseline.json'))
     canonicalization_results = glob.glob(
@@ -69,8 +72,7 @@ if __name__ == '__main__':
             if post_result['error']['state_result'] == None:
                 post_state_result = 'Pass'
             elif isinstance(post_result['error']['state_result'], dict):
-                post_state_result = post_result['error']['state_result']['input_delta'][
-                    'path']
+                post_state_result = post_result['error']['state_result']['input_delta']['path']
             elif post_result['error']['state_result'] == 'Pass':
                 post_state_result = 'Pass'
 
@@ -92,7 +94,9 @@ if __name__ == '__main__':
                 field = json_instance['post_result']['error']['testcase']['field']
                 testcase = json_instance['post_result']['error']['testcase']['testcase']
 
-                if field in normal_testplan and testcase in normal_testplan[field] or field in semantic_testplan and testcase in semantic_testplan[field]:
+                if field in normal_testplan and testcase in normal_testplan[
+                        field] or field in semantic_testplan and testcase in semantic_testplan[
+                            field]:
                     baseline_df = baseline_df.append(
                         {
                             'Trial number': json_instance['post_result']['trial_num'],
@@ -106,7 +110,8 @@ if __name__ == '__main__':
                         },
                         ignore_index=True)
                 else:
-                    print('Testcase {} is not in test plan'.format(json_instance['post_result']['error']['testcase']))
+                    print('Testcase {} is not in test plan'.format(
+                        json_instance['post_result']['error']['testcase']))
 
     for json_path in canonicalization_results:
         with open(json_path, 'r') as json_file:
@@ -130,8 +135,7 @@ if __name__ == '__main__':
             if post_result['error']['state_result'] == None:
                 post_state_result = 'Pass'
             elif isinstance(post_result['error']['state_result'], dict):
-                post_state_result = post_result['error']['state_result']['input_delta'][
-                    'path']
+                post_state_result = post_result['error']['state_result']['input_delta']['path']
             elif post_result['error']['state_result'] == 'Pass':
                 post_state_result = 'Pass'
 
@@ -153,7 +157,9 @@ if __name__ == '__main__':
                 field = json_instance['post_result']['error']['testcase']['field']
                 testcase = json_instance['post_result']['error']['testcase']['testcase']
 
-                if field in normal_testplan and testcase in normal_testplan[field] or field in semantic_testplan and testcase in semantic_testplan[field]:
+                if field in normal_testplan and testcase in normal_testplan[
+                        field] or field in semantic_testplan and testcase in semantic_testplan[
+                            field]:
                     canonicalization_df = canonicalization_df.append(
                         {
                             'Trial number': json_instance['post_result']['trial_num'],
@@ -189,8 +195,7 @@ if __name__ == '__main__':
             if post_result['error']['state_result'] == None:
                 post_state_result = 'Pass'
             elif isinstance(post_result['error']['state_result'], dict):
-                post_state_result = post_result['error']['state_result']['input_delta'][
-                    'path']
+                post_state_result = post_result['error']['state_result']['input_delta']['path']
             elif post_result['error']['state_result'] == 'Pass':
                 post_state_result = 'Pass'
 
@@ -212,7 +217,9 @@ if __name__ == '__main__':
                 field = json_instance['post_result']['error']['testcase']['field']
                 testcase = json_instance['post_result']['error']['testcase']['testcase']
 
-                if field in normal_testplan and testcase in normal_testplan[field] or field in semantic_testplan and testcase in semantic_testplan[field]:
+                if field in normal_testplan and testcase in normal_testplan[
+                        field] or field in semantic_testplan and testcase in semantic_testplan[
+                            field]:
 
                     dependency_df = dependency_df.append(
                         {
@@ -249,8 +256,7 @@ if __name__ == '__main__':
             if post_result['error']['state_result'] == None:
                 post_state_result = 'Pass'
             elif isinstance(post_result['error']['state_result'], dict):
-                post_state_result = post_result['error']['state_result']['input_delta'][
-                    'path']
+                post_state_result = post_result['error']['state_result']['input_delta']['path']
             elif post_result['error']['state_result'] == 'Pass':
                 post_state_result = 'Pass'
 
@@ -272,7 +278,9 @@ if __name__ == '__main__':
                 field = json_instance['post_result']['error']['testcase']['field']
                 testcase = json_instance['post_result']['error']['testcase']['testcase']
 
-                if field in normal_testplan and testcase in normal_testplan[field] or field in semantic_testplan and testcase in semantic_testplan[field]:
+                if field in normal_testplan and testcase in normal_testplan[
+                        field] or field in semantic_testplan and testcase in semantic_testplan[
+                            field]:
                     taint_analysis_df = taint_analysis_df.append(
                         {
                             'Trial number': json_instance['post_result']['trial_num'],
@@ -350,10 +358,12 @@ if __name__ == '__main__':
                 },
                 ignore_index=True)
 
-    merged = pd.merge(baseline_df, canonicalization_df.drop(columns=['testcase']), on='Trial number')
+    merged = pd.merge(baseline_df,
+                      canonicalization_df.drop(columns=['testcase']),
+                      on='Trial number')
     merged = pd.merge(merged, taint_analysis_df.drop(columns=['testcase']), on='Trial number')
     merged = pd.merge(merged, dependency_df.drop(columns=['testcase']), on='Trial number')
-    merged= merged.drop(columns=list(merged.filter(regex = '_result')))
+    merged = merged.drop(columns=list(merged.filter(regex='_result')))
     merged = merged.sort_values(by=['Trial number'])
 
     baseline_df = baseline_df.sort_values(by=['Trial number'])
