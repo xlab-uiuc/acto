@@ -93,6 +93,10 @@ class Checker(object):
         logger = get_thread_logger(with_prefix=True)
         runResult = RunResult(revert, generation, self.feature_gate, testcase_signature)
 
+        if snapshot.operator_log != None and 'Bug!' in snapshot.operator_log:
+            runResult.crash_result = ErrorResult(Oracle.CRASH, snapshot.operator_log)
+            return runResult
+
         if snapshot.system_state == {}:
             runResult.misc_result = InvalidInputResult(None)
             return runResult

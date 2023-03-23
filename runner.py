@@ -93,6 +93,7 @@ class Runner(object):
             logger.error('Bug! Exception raised when waiting for converge.', exc_info=e)
             system_state = {}
             operator_log = 'Bug! Exception raised when waiting for converge.'
+            err = True
 
         logger.debug('STDOUT: ' + cli_result.stdout)
         logger.debug('STDERR: ' + cli_result.stderr)
@@ -106,6 +107,7 @@ class Runner(object):
             logger.error('Bug! Exception raised when waiting for converge.', exc_info=e)
             system_state = {}
             operator_log = 'Bug! Exception raised when waiting for converge.'
+            err = True
 
         snapshot = Snapshot(input, self.collect_cli_result(cli_result), system_state, operator_log)
         return snapshot, err
