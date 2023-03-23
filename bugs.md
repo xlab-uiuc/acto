@@ -21,6 +21,7 @@
 | mongodb/mongodb-kubernetes-operator | [mongodb/mongodb-kubernetes-operator#1055](https://github.com/mongodb/mongodb-kubernetes-operator/issues/1055)                   | fixed     |
 | mongodb/mongodb-kubernetes-operator | [mongodb/mongodb-kubernetes-operator#1072](https://github.com/mongodb/mongodb-kubernetes-operator/issues/1072)                   | fixed     |
 | mongodb/mongodb-kubernetes-operator | [mongodb/mongodb-kubernetes-operator#1074](https://github.com/mongodb/mongodb-kubernetes-operator/issues/1074)                   | fixed     |
+| mongodb/mongodb-kubernetes-operator | [mongodb/mongodb-kubernetes-operator#1245](https://github.com/mongodb/mongodb-kubernetes-operator/issues/1245)                   | fixed     |
 | mongodb/mongodb-kubernetes-operator | [https://github.com/mongodb/helm-charts/pull/123](https://github.com/mongodb/helm-charts/pull/123)                               | fixed     |
 | percona-server-mongodb-operator     | [https://jira.percona.com/browse/K8SPSMDB-696](https://jira.percona.com/browse/K8SPSMDB-696)                                     | fixed     |
 | percona-server-mongodb-operator     | [https://jira.percona.com/browse/K8SPSMDB-697](https://jira.percona.com/browse/K8SPSMDB-697)                                     | fixed     |
