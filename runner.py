@@ -8,6 +8,7 @@ import yaml
 import base64
 
 import acto_timer
+from client.kubectl import KubectlClient
 from snapshot import Snapshot
 from common import *
 from thread_logger import get_thread_logger
@@ -23,6 +24,8 @@ class Runner(object):
         self.context_name = context_name
         self.wait_time = wait_time
         self.log_length = 0
+
+        self.kubectl_client = KubectlClient(kubeconfig, context_name)
 
         apiclient = kubernetes_client(kubeconfig, context_name)
         self.coreV1Api = kubernetes.client.CoreV1Api(apiclient)
@@ -117,6 +120,29 @@ class Runner(object):
             logger.error('Bug! Exception raised when waiting for converge.', exc_info=e)
             system_state = {}
             operator_log = 'Bug! Exception raised when waiting for converge.'
+
+    def delete(self, generation: int) -> bool:
+        mutated_filename = '%s/mutated-%d.yaml' % (self.trial_dir, generation)
+        logger.info('Deleting : ' + mutated_filename)
+        
+        cmd = ['delete', '-f', mutated_filename, '-n', self.namespace]
+        cli_result = self.kubectl_client.kubectl(cmd, capture_output=True, text=True)
+        logger.debug('STDOUT: ' + cli_result.stdout)
+        logger.debug('STDERR: ' + cli_result.stderr)
+
+        for tick in range(0, 600):
+            crs = self.__get_custom_resources(self.namespace, self.crd_metainfo['group'],
+                                        self.crd_metainfo['version'], self.crd_metainfo['plural'])
+            if len(crs) == 0:
+                break
+            time.sleep(1)
+
+        if len(crs) != 0:
+            logger.error('Failed to delete custom resource.')
+            return True
+        else:
+            logger.info(f'Successfully deleted custom resource in {tick}s.')
+            return False
 
     def collect_system_state(self) -> dict:
         '''Queries resources in the test namespace, computes delta

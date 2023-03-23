@@ -26,6 +26,25 @@ class Deploy:
         self.deploy_method = deploy_method
         self.wait = 20  # sec
 
+    def undeploy(self, context: dict, apiclient):
+        logger = get_thread_logger(with_prefix=False)
+        corev1Api = kubernetes.client.CoreV1Api(apiclient)
+        try:
+            corev1Api.delete_namespace(name=context['namespace'])
+        except Exception as e:
+            logger.error(e)
+
+        while True:
+            nss = corev1Api.list_namespace().items
+            for ns in nss:
+                if ns.metadata.name == context['namespace']:
+                    logger.info('Namespace %s still exists' % context['namespace'])
+                    time.sleep(5)
+                    continue
+            break
+        time.sleep(5)
+        logger.info('Namespace %s deleted' % context['namespace'])
+
     def deploy(self, context: dict, kubeconfig: str, context_name: str):
         # XXX: context param is temporary, need to figure out why rabbitmq complains about namespace
         pass

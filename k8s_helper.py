@@ -92,6 +92,17 @@ def create_namespace(apiclient, name: str) -> V1Namespace:
     return namespace
 
 
+def delete_namespace(apiclient, name: str) -> bool:
+    logger = get_thread_logger(with_prefix=False)
+    corev1Api = kubernetes.client.CoreV1Api(apiclient)
+    try:
+        corev1Api.delete_namespace(name=name)
+    except Exception as e:
+        logger.error(e)
+        return False
+    return True
+
+
 def delete_operator_pod(apiclient, namespace: str) -> bool:
     logger = get_thread_logger(with_prefix=False)
 

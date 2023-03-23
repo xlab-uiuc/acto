@@ -109,6 +109,11 @@ class Diff:
         '''
         return {'prev': self.prev, 'curr': self.curr, 'path': self.path}
 
+    def from_dict(dict) -> 'Diff':
+        '''deserialize Diff object
+        '''
+        return Diff(**dict)
+
 
 class Oracle(str, enum.Enum):
     ERROR_LOG = 'ErrorLog'
@@ -129,7 +134,6 @@ class FeatureGate:
 
     def __init__(self, feature_gate: hex) -> None:
         self._feature_gate = feature_gate
-
 
     def invalid_input_from_log_enabled(self) -> bool:
         return self._feature_gate & FeatureGate.INVALID_INPUT_FROM_LOG
@@ -152,7 +156,8 @@ class FeatureGate:
 
 class RunResult():
 
-    def __init__(self, revert, generation: int, feature_gate: FeatureGate, testcase_signature: dict) -> None:
+    def __init__(self, revert, generation: int, feature_gate: FeatureGate,
+                 testcase_signature: dict) -> None:
         self.crash_result: OracleResult = None
         self.input_result: OracleResult = None
         self.health_result: OracleResult = None
@@ -239,6 +244,7 @@ class RunResult():
             'revert': self.revert,
             'generation': self.generation,
             'testcase': self.testcase_signature,
+            'feature_gate': self.feature_gate._feature_gate,
             'crash_result': self.crash_result.to_dict() if self.crash_result else None,
             'input_result': self.input_result.to_dict() if self.input_result else None,
             'health_result': self.health_result.to_dict() if self.health_result else None,
@@ -248,6 +254,25 @@ class RunResult():
             'misc_result': self.misc_result.to_dict() if self.misc_result else None,
             'recovery_result': self.recovery_result.to_dict() if self.recovery_result else None
         }
+
+    def from_dict(d: dict) -> 'RunResult':
+        '''deserialize RunResult object
+        '''
+
+        result = RunResult(
+            d['revert'], d['generation'],
+            FeatureGate((FeatureGate.INVALID_INPUT_FROM_LOG | FeatureGate.DEFAULT_VALUE_COMPARISON |
+                         FeatureGate.DEPENDENCY_ANALYSIS | FeatureGate.TAINT_ANALYSIS |
+                         FeatureGate.CANONICALIZATION)), d['testcase'])
+        result.crash_result = oracle_result_from_dict(d['crash_result'])
+        result.input_result = oracle_result_from_dict(d['input_result'])
+        result.health_result = oracle_result_from_dict(d['health_result'])
+        result.state_result = oracle_result_from_dict(d['state_result'])
+        result.log_result = oracle_result_from_dict(d['log_result'])
+        result.custom_result = oracle_result_from_dict(d['custom_result'])
+        result.misc_result = oracle_result_from_dict(d['misc_result'])
+        result.recovery_result = oracle_result_from_dict(d['recovery_result'])
+        return result
 
 
 class OracleResult:
@@ -295,6 +320,10 @@ class ErrorResult(OracleResult):
     def to_dict(self):
         return {'oracle': self.oracle, 'message': self.message}
 
+    def from_dict(self, d: dict):
+        self.oracle = d['oracle']
+        self.message = d['message']
+
 
 class StateResult(ErrorResult):
 
@@ -320,6 +349,13 @@ class StateResult(ErrorResult):
                 self.matched_system_delta.to_dict() if self.matched_system_delta else None
         }
 
+    def from_dict(d: dict) -> 'StateResult':
+        result = StateResult(d['oracle'], d['message'])
+        result.input_delta = Diff.from_dict(d['input_delta']) if d['input_delta'] else None
+        result.matched_system_delta = Diff.from_dict(
+            d['matched_system_delta']) if d['matched_system_delta'] else None
+        return result
+
 
 class UnhealthyResult(ErrorResult):
 
@@ -328,10 +364,10 @@ class UnhealthyResult(ErrorResult):
         self.message = msg
 
     def to_dict(self):
-        return {
-            'oracle': self.oracle,
-            'message': self.message
-        }
+        return {'oracle': self.oracle, 'message': self.message}
+
+    def from_dict(d: dict):
+        return UnhealthyResult(d['oracle'], d['message'])
 
 
 class RecoveryResult(ErrorResult):
@@ -353,6 +389,33 @@ class RecoveryResult(ErrorResult):
             'to':
                 self.to_
         }
+
+    def from_dict(d: dict) -> 'RecoveryResult':
+        result = RecoveryResult(d['delta'], d['from'], d['to'])
+        return result
+
+
+def oracle_result_from_dict(d: dict) -> OracleResult:
+    if d == None:
+        return PassResult()
+    if d == 'Pass':
+        return PassResult()
+    elif d == 'UnchangedInput':
+        return UnchangedInputResult()
+    elif d == 'ConnectionRefused':
+        return ConnectionRefusedResult()
+
+    if 'responsible_field' in d:
+        return InvalidInputResult(d['responsible_field'])
+    elif 'oracle' in d:
+        if d['oracle'] == Oracle.SYSTEM_STATE:
+            return StateResult.from_dict(d)
+        elif d['oracle'] == Oracle.SYSTEM_HEALTH:
+            return UnhealthyResult.from_dict(d)
+        elif d['oracle'] == Oracle.RECOVERY:
+            return RecoveryResult.from_dict(d)
+
+    raise ValueError('Invalid oracle result dict: {}'.format(d))
 
 
 def flatten_list(l: list, curr_path: list) -> list:
