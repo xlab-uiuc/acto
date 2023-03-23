@@ -73,6 +73,7 @@ class Deploy:
         apiclient = kubernetes_client(kubeconfig, context_name)
 
         logger.debug('Waiting for all pods to be ready')
+        time.sleep(10)
         pod_ready = False
         for tick in range(600):
             # check if all pods are ready
