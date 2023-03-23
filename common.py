@@ -414,6 +414,10 @@ def oracle_result_from_dict(d: dict) -> OracleResult:
             return UnhealthyResult.from_dict(d)
         elif d['oracle'] == Oracle.RECOVERY:
             return RecoveryResult.from_dict(d)
+        elif d['oracle'] == Oracle.CRASH:
+            return UnhealthyResult.from_dict(d)
+        elif d['oracle'] == Oracle.CUSTOM:
+            return ErrorResult.from_dict(d)
 
     raise ValueError('Invalid oracle result dict: {}'.format(d))
 
