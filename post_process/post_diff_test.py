@@ -152,6 +152,7 @@ if __name__ == '__main__':
     parser.add_argument('--config', type=str, required=True)
     parser.add_argument('--testrun-dir', type=str, required=True)
     parser.add_argument('--workdir-path', type=str, required=True)
+    parser.add_argument('--num-workers', type=int, default=1)
     args = parser.parse_args()
 
     os.makedirs(args.workdir_path, exist_ok=True)
@@ -168,4 +169,4 @@ if __name__ == '__main__':
         config = OperatorConfig(**json.load(config_file))
     p = PostDiffTest(testrun_dir=args.testrun_dir,
                      config=config)
-    p.post_process(args.workdir_path)
+    p.post_process(args.workdir_path, num_workers=args.num_workers)
