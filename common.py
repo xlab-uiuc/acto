@@ -327,9 +327,8 @@ class ErrorResult(OracleResult):
     def to_dict(self):
         return {'oracle': self.oracle, 'message': self.message}
 
-    def from_dict(self, d: dict):
-        self.oracle = d['oracle']
-        self.message = d['message']
+    def from_dict(d: dict):
+        return ErrorResult(d['oracle'], d['message'])
 
 
 class StateResult(ErrorResult):
