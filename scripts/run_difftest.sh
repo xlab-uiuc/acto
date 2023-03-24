@@ -1,0 +1,2 @@
+python3 -m post_process.post_diff_test --config data/cass-operator/config.json --num-workers 1 \
+    --testrun-dir /home/tyler/acto-data/cass-operator/testrun-cass-whitebox-1 --workdir-path testrun-cass-whitebox-1/difftest --checkonly

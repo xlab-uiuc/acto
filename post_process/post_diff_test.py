@@ -152,40 +152,67 @@ class PostDiffTest(PostProcessor):
         for p in processes:
             p.join()
 
-    def check(self, workdir: str):
+    def check(self, workdir: str, num_workers: int = 1):
         logger = get_thread_logger(with_prefix=True)
         logger.info('Additional exclude paths: %s' % self.config.diff_ignore_fields)
         trial_dirs = glob.glob(os.path.join(workdir, 'trial-*'))
 
-        with open(os.path.join(workdir, 'compare_results.json'), 'w') as result_f:
-            for trial_dir in trial_dirs:
-                for diff_test_result_path in glob.glob(os.path.join(trial_dir, 'difftest-*.json')):
-                    with open(diff_test_result_path, 'r') as f:
-                        diff_test_result = json.load(f)
-                        error = self.check_diff_test_result(diff_test_result)
-                        if error:
-                            result_f.write(json.dumps(error.to_dict(), cls=ActoEncoder, indent=6))
+        workqueue = multiprocessing.Queue()
+        for trial_dir in trial_dirs:
+            for diff_test_result_path in glob.glob(os.path.join(trial_dir, 'difftest-*.json')):
+                workqueue.put(diff_test_result_path)
 
-    def check_diff_test_result(self, diff_test_result: Dict):
+        processes = []
+        for i in range(num_workers):
+            p = multiprocessing.Process(target=self.check_diff_test_result,
+                                        args=(workqueue, workdir))
+            p.start()
+            processes.append(p)
+
+        for p in processes:
+            p.join()
+
+    def check_diff_test_result(self, workqueue: multiprocessing.Queue, workdir: str):
         logger = get_thread_logger(with_prefix=True)
-        snapshot = diff_test_result['snapshot']
-        originals = diff_test_result['originals']
 
-        for original in originals:
-            trial = original['trial']
-            gen = original['gen']
+        while True:
+            try:
+                diff_test_result_path = workqueue.get(block=False)
+            except queue.Empty:
+                break
 
-            if isinstance(self.trial_to_steps[trial][gen].runtime_result.health_result, ErrorResult):
-                continue
-            original_system_state = self.trial_to_steps[trial][gen].system_state
-            result = compare_system_equality(snapshot['system_state'], original_system_state,
-                                             self.config.diff_ignore_fields)
-            if isinstance(result, PassResult):
-                logger.info(f'Pass diff test for trial {trial} gen {gen}')
-            else:
-                logger.error(f'Fail diff test for trial {trial} gen {gen}')
-                logger.error(result)
-                return result
+            with open(diff_test_result_path, 'r') as f:
+                diff_test_result = json.load(f)
+            snapshot = diff_test_result['snapshot']
+            originals = diff_test_result['originals']
+
+            group_errs = []
+            for original in originals:
+                trial = original['trial']
+                gen = original['gen']
+
+                invalid, _ = self.trial_to_steps[trial][gen].runtime_result.is_invalid()
+                if isinstance(self.trial_to_steps[trial][gen].runtime_result.health_result,
+                              ErrorResult) or invalid:
+                    continue
+                original_system_state = self.trial_to_steps[trial][gen].system_state
+                result = compare_system_equality(snapshot['system_state'], original_system_state,
+                                                 self.config.diff_ignore_fields)
+                if isinstance(result, PassResult):
+                    logger.info(f'Pass diff test for trial {trial} gen {gen}')
+                else:
+                    logger.error(f'Fail diff test for trial {trial} gen {gen}')
+                    error_result = result.to_dict()
+                    error_result['trial'] = trial
+                    error_result['gen'] = gen
+                    group_errs.append(error_result)
+                if len(group_errs) > 0:
+                    with open(
+                            os.path.join(
+                                workdir,
+                                f'compare-results-{diff_test_result["input_digest"]}.json'),
+                            'w') as result_f:
+                        json.dump(group_errs, result_f, cls=ActoEncoder, indent=6)
 
         return None
 
@@ -198,6 +225,7 @@ if __name__ == '__main__':
     parser.add_argument('--testrun-dir', type=str, required=True)
     parser.add_argument('--workdir-path', type=str, required=True)
     parser.add_argument('--num-workers', type=int, default=1)
+    parser.add_argument('--checkonly', action='store_true')
     args = parser.parse_args()
 
     # Register custom exception hook
@@ -206,10 +234,11 @@ if __name__ == '__main__':
     global notify_crash_
     notify_crash_ = True
 
+    log_filename = 'check.log' if args.checkonly else 'test.log'
     os.makedirs(args.workdir_path, exist_ok=True)
     # Setting up log infra
     logging.basicConfig(
-        filename=os.path.join(args.workdir_path, 'test.log'),
+        filename=os.path.join(args.workdir_path, log_filename),
         level=logging.DEBUG,
         filemode='w',
         format='%(asctime)s %(levelname)-7s, %(name)s, %(filename)-9s:%(lineno)d, %(message)s')
@@ -221,7 +250,8 @@ if __name__ == '__main__':
     with open(args.config, 'r') as config_file:
         config = OperatorConfig(**json.load(config_file))
     p = PostDiffTest(testrun_dir=args.testrun_dir, config=config)
-    p.post_process(args.workdir_path, num_workers=args.num_workers)
+    if not args.checkonly:
+        p.post_process(args.workdir_path, num_workers=args.num_workers)
     p.check(args.workdir_path)
 
     logging.info(f'Total time: {time.time() - start} seconds')
