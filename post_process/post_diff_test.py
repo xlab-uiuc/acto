@@ -1,3 +1,4 @@
+import glob
 import json
 import logging
 import multiprocessing
@@ -10,8 +11,9 @@ import pandas as pd
 sys.path.append('.')
 sys.path.append('..')
 from constant import CONST
+from checker import compare_system_equality
 from thread_logger import get_thread_logger
-from common import ActoEncoder, OperatorConfig, kubernetes_client
+from common import ActoEncoder, ErrorResult, OperatorConfig, PassResult, kubernetes_client
 from runner import Runner
 from deploy import Deploy, DeployMethod
 from k8s_cluster import base, kind
@@ -144,6 +146,43 @@ class PostDiffTest(PostProcessor):
         for p in processes:
             p.join()
 
+    def check(self, workdir: str):
+        logger = get_thread_logger(with_prefix=True)
+        logger.info('Additional exclude paths: %s' % self.config.diff_ignore_fields)
+        trial_dirs = glob.glob(os.path.join(workdir, 'trial-*'))
+
+        with open(os.path.join(workdir, 'compare_results.json'), 'w') as result_f:
+            for trial_dir in trial_dirs:
+                for diff_test_result_path in glob.glob(os.path.join(trial_dir, 'difftest-*.json')):
+                    with open(diff_test_result_path, 'r') as f:
+                        diff_test_result = json.load(f)
+                        error = self.check_diff_test_result(diff_test_result)
+                        if error:
+                            result_f.write(json.dumps(error.to_dict(), cls=ActoEncoder, indent=6))
+
+    def check_diff_test_result(self, diff_test_result: Dict):
+        logger = get_thread_logger(with_prefix=True)
+        snapshot = diff_test_result['snapshot']
+        originals = diff_test_result['originals']
+
+        for original in originals:
+            trial = original['trial']
+            gen = original['gen']
+
+            if isinstance(self.trial_to_steps[trial][gen].runtime_result.health_result, ErrorResult):
+                continue
+            original_system_state = self.trial_to_steps[trial][gen].system_state
+            result = compare_system_equality(snapshot['system_state'], original_system_state,
+                                             self.config.diff_ignore_fields)
+            if isinstance(result, PassResult):
+                logger.info(f'Pass diff test for trial {trial} gen {gen}')
+            else:
+                logger.error(f'Fail diff test for trial {trial} gen {gen}')
+                logger.error(result)
+                return result
+
+        return None
+
 
 if __name__ == '__main__':
     import argparse
@@ -167,6 +206,6 @@ if __name__ == '__main__':
 
     with open(args.config, 'r') as config_file:
         config = OperatorConfig(**json.load(config_file))
-    p = PostDiffTest(testrun_dir=args.testrun_dir,
-                     config=config)
+    p = PostDiffTest(testrun_dir=args.testrun_dir, config=config)
     p.post_process(args.workdir_path, num_workers=args.num_workers)
+    p.check(args.workdir_path)

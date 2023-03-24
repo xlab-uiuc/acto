@@ -3,7 +3,7 @@ from asyncio.log import logger
 import enum
 import json
 import os
-from typing import Tuple
+from typing import List, Tuple
 from deepdiff.helper import NotPresent
 from deepdiff.model import PrettyOrderedSet
 from datetime import datetime, date
@@ -76,7 +76,8 @@ class OperatorConfig:
                  num_nodes: int = 4,
                  wait_time: int = 60,
                  context: str = None,
-                 custom_oracle: str = None) -> None:
+                 custom_oracle: str = None,
+                 diff_ignore_fields: List[str] = None) -> None:
         self.deploy = DeployConfig(**deploy)
         self.crd_name = crd_name
         self.custom_fields = custom_fields
@@ -87,6 +88,12 @@ class OperatorConfig:
         self.context = context
         self.seed_custom_resource = seed_custom_resource
         self.analysis = AnalysisConfig(**analysis)
+
+        self.diff_ignore_fields = []
+        if diff_ignore_fields is not None:
+            for ignore_field in diff_ignore_fields:
+                self.diff_ignore_fields.append(fr"{ignore_field}")
+
 
         self.num_nodes = num_nodes
         self.wait_time = wait_time

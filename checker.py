@@ -1,10 +1,12 @@
-from ast import Pass
 from builtins import TypeError
 from copy import deepcopy
 import sys
 import logging
-from typing import List
+from typing import Dict, List
 from deepdiff import DeepDiff
+from deepdiff.model import DiffLevel
+from deepdiff.operator import BaseOperator
+from deepdiff.helper import CannotCompare
 import re
 import copy
 import operator
@@ -712,6 +714,111 @@ class Checker(object):
             return RecoveryResult(delta=diff, from_=prev_system_state, to_=curr_system_state)
 
         return PassResult()
+    
+
+def compare_system_equality(curr_system_state: Dict, prev_system_state: Dict, additional_exclude_paths: List[str] = []):
+    curr_system_state = deepcopy(curr_system_state)
+    prev_system_state = deepcopy(prev_system_state)
+
+    del curr_system_state['endpoints']
+    del prev_system_state['endpoints']
+    del curr_system_state['job']
+    del prev_system_state['job']
+
+    # remove pods that belong to jobs from both states to avoid observability problem
+    curr_pods = curr_system_state['pod']
+    prev_pods = prev_system_state['pod']
+    curr_system_state['pod'] = {
+        k: v
+        for k, v in curr_pods.items()
+        if v['metadata']['owner_references'][0]['kind'] != 'Job'
+    }
+    prev_system_state['pod'] = {
+        k: v
+        for k, v in prev_pods.items()
+        if v['metadata']['owner_references'][0]['kind'] != 'Job'
+    }
+
+    for name, obj in prev_system_state['secret'].items():
+        if 'data' in obj and obj['data'] != None:
+            for key, data in obj['data'].items():
+                try:
+                    obj['data'][key] = json.loads(data)
+                except:
+                    pass
+
+    for name, obj in curr_system_state['secret'].items():
+        if 'data' in obj and obj['data'] != None:
+            for key, data in obj['data'].items():
+                try:
+                    obj['data'][key] = json.loads(data)
+                except:
+                    pass
+
+    # remove custom resource from both states
+    curr_system_state.pop('custom_resource_spec', None)
+    prev_system_state.pop('custom_resource_spec', None)
+    curr_system_state.pop('custom_resource_status', None)
+    prev_system_state.pop('custom_resource_status', None)
+
+    # remove fields that are not deterministic
+    exclude_paths = [
+        r".*\['metadata'\]\['managed_fields'\]",
+        r".*\['metadata'\]\['cluster_name'\]",
+        r".*\['metadata'\]\['creation_timestamp'\]",
+        r".*\['metadata'\]\['resource_version'\]",
+        r".*\['metadata'\].*\['uid'\]",
+        r".*\['metadata'\]\['generation'\]",
+        r".*\['metadata'\]\['annotations'\]",
+        r".*\['metadata'\]\['annotations'\]\['.*last-applied.*'\]",
+        r".*\['metadata'\]\['annotations'\]\['.*\.kubernetes\.io.*'\]",
+        r".*\['metadata'\]\['labels'\]\['.*revision.*'\]",
+        r".*\['metadata'\]\['labels'\]\['owner-rv'\]",
+        r".*\['status'\]",
+        r".*\['spec'\]\['init_containers'\]\[.*\]\['volume_mounts'\]\[.*\]\['name'\]",
+        r".*\['spec'\]\['containers'\]\[.*\]\['volume_mounts'\]\[.*\]\['name'\]",
+        r".*\['spec'\]\['volumes'\]\[.*\]\['name'\]",
+        r".*\[.*\]\['node_name'\]",
+        r".*\[\'spec\'\]\[\'host_users\'\]",
+        r".*\[\'spec\'\]\[\'os\'\]",
+        r".*\[\'grpc\'\]",
+        r".*\[\'spec\'\]\[\'volume_name\'\]",
+        r".*\['version'\]",
+        r".*\['endpoints'\]\[.*\]\['addresses'\]\[.*\]\['target_ref'\]\['uid'\]",
+        r".*\['endpoints'\]\[.*\]\['addresses'\]\[.*\]\['target_ref'\]\['resource_version'\]",
+        r".*\['endpoints'\]\[.*\]\['addresses'\]\[.*\]\['ip'\]",
+        r".*\['cluster_ip'\]",
+        r".*\['cluster_i_ps'\].*",
+        r".*\['deployment_pods'\].*\['metadata'\]\['name'\]",
+        r"\[\'config_map\'\]\[\'kube\-root\-ca\.crt\'\]\[\'data\'\]\[\'ca\.crt\'\]",
+    ]
+    
+    exclude_paths.extend(additional_exclude_paths)
+
+    diff = DeepDiff(prev_system_state, curr_system_state, exclude_regex_paths=exclude_paths)
+
+    if diff:
+        logger.debug(f"failed attempt recovering to seed state - system state diff: {diff}")
+        return RecoveryResult(delta=diff, from_=prev_system_state, to_=curr_system_state)
+
+    return PassResult()
+
+# def compare_func(x, y, level: DiffLevel=None):
+#     try:
+#         if level.path(output_format='list')
+#         return x['name'] == y['name']
+#     except:
+#         raise CannotCompare() from None
+
+# class CustomOperator(BaseOperator):
+
+#     def give_up_diffing(self, level, diff_instance):
+#         pattern = r"\['service_account'\]\['cass\-operator\-controller\-manager'\]\['secrets'\]\[.*\]\['name'\]"
+
+#         if level.path(output_format='list') == ['spec', 'containers']:
+#             return True
+#         return False
+
 
 
 class BlackBoxChecker(Checker):
