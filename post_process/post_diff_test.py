@@ -6,6 +6,7 @@ import os
 import queue
 import sys
 import threading
+import time
 from typing import Dict, List
 import pandas as pd
 
@@ -94,6 +95,7 @@ class PostDiffTest(PostProcessor):
 
     def __init__(self, testrun_dir: str, config: OperatorConfig):
         super().__init__(testrun_dir, config)
+        logger = get_thread_logger(with_prefix=True)
 
         self.all_inputs = []
         for trial, steps in self.trial_to_steps.items():
@@ -123,6 +125,7 @@ class PostDiffTest(PostProcessor):
         for digest, group in groups:
             self.unique_inputs[digest] = group
 
+        logger.info(f'Found {len(self.unique_inputs)} unique inputs')
         print(groups.count())
         series = groups.count().sort_values('trial', ascending=False)
         print(series.head())
@@ -213,8 +216,12 @@ if __name__ == '__main__':
     logging.getLogger("kubernetes").setLevel(logging.ERROR)
     logging.getLogger("sh").setLevel(logging.ERROR)
 
+    start = time.time()
+
     with open(args.config, 'r') as config_file:
         config = OperatorConfig(**json.load(config_file))
     p = PostDiffTest(testrun_dir=args.testrun_dir, config=config)
     p.post_process(args.workdir_path, num_workers=args.num_workers)
     p.check(args.workdir_path)
+
+    logging.info(f'Total time: {time.time() - start} seconds')
