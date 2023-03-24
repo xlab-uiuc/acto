@@ -5,11 +5,13 @@ import multiprocessing
 import os
 import queue
 import sys
+import threading
 from typing import Dict, List
 import pandas as pd
 
 sys.path.append('.')
 sys.path.append('..')
+from acto import handle_excepthook, thread_excepthook
 from constant import CONST
 from checker import compare_system_equality
 from thread_logger import get_thread_logger
@@ -127,6 +129,7 @@ class PostDiffTest(PostProcessor):
 
     def post_process(self, workdir: str, num_workers: int = 1):
         cluster = kind.Kind()
+        cluster.configure_cluster(self.config.num_nodes, CONST.K8S_VERSION)
         deploy = Deploy(DeployMethod.YAML, self.config.deploy.file, self.config.deploy.init).new()
         workqueue = multiprocessing.Queue()
         for unique_input_group in self.unique_inputs.values():
@@ -193,6 +196,12 @@ if __name__ == '__main__':
     parser.add_argument('--workdir-path', type=str, required=True)
     parser.add_argument('--num-workers', type=int, default=1)
     args = parser.parse_args()
+
+    # Register custom exception hook
+    sys.excepthook = handle_excepthook
+    threading.excepthook = thread_excepthook
+    global notify_crash_
+    notify_crash_ = True
 
     os.makedirs(args.workdir_path, exist_ok=True)
     # Setting up log infra
