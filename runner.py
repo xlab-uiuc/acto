@@ -129,11 +129,11 @@ class Runner(object):
         
         cmd = ['delete', '-f', mutated_filename, '-n', self.namespace]
         try:
-            cli_result = self.kubectl_client.kubectl(cmd, capture_output=True, text=True)
+            cli_result = self.kubectl_client.kubectl(cmd, capture_output=True, text=True, timeout=120)
         except subprocess.TimeoutExpired as e:
             logger.error('kubectl delete timeout.')
             return True
-            
+
         logger.debug('STDOUT: ' + cli_result.stdout)
         logger.debug('STDERR: ' + cli_result.stderr)
 
