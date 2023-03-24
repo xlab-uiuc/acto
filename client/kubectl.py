@@ -28,7 +28,11 @@ class KubectlClient:
 
         return self.kubectl(cmd, capture_output, text)
 
-    def kubectl(self, args: list, capture_output=False, text=False) -> subprocess.CompletedProcess:
+    def kubectl(self,
+                args: list,
+                capture_output=False,
+                text=False,
+                timeout: int = 600) -> subprocess.CompletedProcess:
         '''Executes a kubectl command'''
         cmd = ['kubectl']
         cmd.extend(['--kubeconfig', self.kubeconfig])
@@ -36,5 +40,5 @@ class KubectlClient:
 
         cmd.extend(args)
 
-        p = subprocess.run(cmd, capture_output=capture_output, text=text)
+        p = subprocess.run(cmd, capture_output=capture_output, text=text, timeout=timeout)
         return p
