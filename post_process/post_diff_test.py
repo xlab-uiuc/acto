@@ -191,11 +191,12 @@ class PostDiffTest(PostProcessor):
                 trial = original['trial']
                 gen = original['gen']
 
-                invalid, _ = self.trial_to_steps[trial][gen].runtime_result.is_invalid()
-                if isinstance(self.trial_to_steps[trial][gen].runtime_result.health_result,
+                trial_basename = os.path.basename(trial)
+                invalid, _ = self.trial_to_steps[trial_basename][gen].runtime_result.is_invalid()
+                if isinstance(self.trial_to_steps[trial_basename][gen].runtime_result.health_result,
                               ErrorResult) or invalid:
                     continue
-                original_system_state = self.trial_to_steps[trial][gen].system_state
+                original_system_state = self.trial_to_steps[trial_basename][gen].system_state
                 result = compare_system_equality(snapshot['system_state'], original_system_state,
                                                  self.config.diff_ignore_fields)
                 if isinstance(result, PassResult):

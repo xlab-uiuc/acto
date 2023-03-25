@@ -714,9 +714,11 @@ class Checker(object):
             return RecoveryResult(delta=diff, from_=prev_system_state, to_=curr_system_state)
 
         return PassResult()
-    
 
-def compare_system_equality(curr_system_state: Dict, prev_system_state: Dict, additional_exclude_paths: List[str] = []):
+
+def compare_system_equality(curr_system_state: Dict,
+                            prev_system_state: Dict,
+                            additional_exclude_paths: List[str] = []):
     curr_system_state = deepcopy(curr_system_state)
     prev_system_state = deepcopy(prev_system_state)
 
@@ -728,16 +730,22 @@ def compare_system_equality(curr_system_state: Dict, prev_system_state: Dict, ad
     # remove pods that belong to jobs from both states to avoid observability problem
     curr_pods = curr_system_state['pod']
     prev_pods = prev_system_state['pod']
-    curr_system_state['pod'] = {
-        k: v
-        for k, v in curr_pods.items()
-        if v['metadata']['owner_references'][0]['kind'] != 'Job'
-    }
-    prev_system_state['pod'] = {
-        k: v
-        for k, v in prev_pods.items()
-        if v['metadata']['owner_references'][0]['kind'] != 'Job'
-    }
+
+    new_pods = {}
+    for k, v in curr_pods.items():
+        if 'metadata' in v and 'owner_references' in v[
+                'metadata'] and v['metadata']['owner_references'] != None and v['metadata'][
+                    'owner_references'][0]['kind'] != 'Job':
+            new_pods[k] = v
+    curr_system_state['pod'] = new_pods
+
+    new_pods = {}
+    for k, v in prev_pods.items():
+        if 'metadata' in v and 'owner_references' in v[
+                'metadata'] and v['metadata']['owner_references'] != None and v['metadata'][
+                    'owner_references'][0]['kind'] != 'Job':
+            new_pods[k] = v
+    prev_system_state['pod'] = new_pods
 
     for name, obj in prev_system_state['secret'].items():
         if 'data' in obj and obj['data'] != None:
@@ -791,17 +799,32 @@ def compare_system_equality(curr_system_state: Dict, prev_system_state: Dict, ad
         r".*\['cluster_i_ps'\].*$",
         r".*\['deployment_pods'\].*\['metadata'\]\['name'\]$",
         r"\[\'config_map\'\]\[\'kube\-root\-ca\.crt\'\]\[\'data\'\]\[\'ca\.crt\'\]$",
+        r".*\['secret'\].*$",
+        r"\['secrets'\]\[.*\]\['name'\]"
     ]
-    
+
     exclude_paths.extend(additional_exclude_paths)
 
     diff = DeepDiff(prev_system_state, curr_system_state, exclude_regex_paths=exclude_paths)
+
+    if 'dictionary_item_removed' in diff:
+        new_removed_items = []
+        for removed_item in diff['dictionary_item_removed']:
+            if removed_item.startswith("root['pvc']"):
+                logger.debug(f"ignoring removed pod {removed_item}")
+            else:
+                new_removed_items.append(removed_item)
+        if len(new_removed_items) == 0:
+            del diff['dictionary_item_removed']
+        else:
+            diff['dictionary_item_removed'] = new_removed_items
 
     if diff:
         logger.debug(f"failed attempt recovering to seed state - system state diff: {diff}")
         return RecoveryResult(delta=diff, from_=prev_system_state, to_=curr_system_state)
 
     return PassResult()
+
 
 # def compare_func(x, y, level: DiffLevel=None):
 #     try:
@@ -818,7 +841,6 @@ def compare_system_equality(curr_system_state: Dict, prev_system_state: Dict, ad
 #         if level.path(output_format='list') == ['spec', 'containers']:
 #             return True
 #         return False
-
 
 
 class BlackBoxChecker(Checker):

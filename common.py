@@ -696,6 +696,7 @@ INVALID_INPUT_LOG_REGEX = [
     r"unsupported",
     r"but expected",
     r"are not available",
+    r"must include",
 ]
 
 GENERIC_FIELDS = [

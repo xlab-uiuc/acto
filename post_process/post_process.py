@@ -126,7 +126,7 @@ class PostProcessor(object):
                 continue
             else:
                 self._trials.append(trial_dir)
-                self._trial_to_steps[trial_dir] = read_trial_dir(trial_dir)
+                self._trial_to_steps[os.path.basename(trial_dir)] = read_trial_dir(trial_dir)
 
     @property
     def trials(self) -> List[str]:
