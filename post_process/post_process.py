@@ -86,6 +86,9 @@ def read_trial_dir(trial_dir: str) -> List[Step]:
         if not os.path.exists(operator_log_path):
             continue
 
+        if not os.path.exists(runtime_result_path):
+            continue
+
         with open(mutated_filename, 'r') as input_file, \
                 open(operator_log_path, 'r') as operator_log_file, \
                 open(system_state_path, 'r') as system_state_file, \
