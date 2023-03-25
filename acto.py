@@ -283,6 +283,10 @@ class TrialRunner:
                                                               self.snapshots, generation,
                                                               testcase_signature, self.dryrun)
                         generation += 1
+                        
+                        if runResult.is_connection_refused():
+                            logger.error('Connection refused, exiting')
+                            return runResult, generation
 
                         is_invalid, _ = runResult.is_invalid()
                         if runResult.is_basic_error():
@@ -356,6 +360,9 @@ class TrialRunner:
                                               self.snapshots, generation, testcase_signature,
                                               self.dryrun)
         generation += 1
+        if runResult.is_connection_refused():
+            logger.error('Connection refused, exiting')
+            return runResult, generation
 
         is_invalid, invalidResult = runResult.is_invalid()
         if is_invalid:
