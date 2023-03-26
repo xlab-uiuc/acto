@@ -253,6 +253,6 @@ if __name__ == '__main__':
     p = PostDiffTest(testrun_dir=args.testrun_dir, config=config)
     if not args.checkonly:
         p.post_process(args.workdir_path, num_workers=args.num_workers)
-    p.check(args.workdir_path)
+    p.check(args.workdir_path, num_workers=args.num_workers)
 
     logging.info(f'Total time: {time.time() - start} seconds')

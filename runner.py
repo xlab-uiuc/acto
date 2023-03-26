@@ -124,6 +124,7 @@ class Runner(object):
             operator_log = 'Bug! Exception raised when waiting for converge.'
 
     def delete(self, generation: int) -> bool:
+        start = time.time()
         mutated_filename = '%s/mutated-%d.yaml' % (self.trial_dir, generation)
         logger.info('Deleting : ' + mutated_filename)
         
@@ -148,7 +149,7 @@ class Runner(object):
             logger.error('Failed to delete custom resource.')
             return True
         else:
-            logger.info(f'Successfully deleted custom resource in {tick}s.')
+            logger.info(f'Successfully deleted custom resource in {time.time() - start}s.')
             return False
 
     def collect_system_state(self) -> dict:
@@ -318,6 +319,10 @@ class Runner(object):
                         # replicas could be 0
                         continue
                     if sfs['status']['replicas'] != sfs['status']['ready_replicas']:
+                        ready = False
+                        logger.info("Statefulset %s is not ready yet" % sfs['metadata']['name'])
+                        break
+                    if sfs['spec']['replicas'] != sfs['status']['replicas']:
                         ready = False
                         logger.info("Statefulset %s is not ready yet" % sfs['metadata']['name'])
                         break

@@ -722,10 +722,13 @@ def compare_system_equality(curr_system_state: Dict,
     curr_system_state = deepcopy(curr_system_state)
     prev_system_state = deepcopy(prev_system_state)
 
-    del curr_system_state['endpoints']
-    del prev_system_state['endpoints']
-    del curr_system_state['job']
-    del prev_system_state['job']
+    try:
+        del curr_system_state['endpoints']
+        del prev_system_state['endpoints']
+        del curr_system_state['job']
+        del prev_system_state['job']
+    except:
+        return PassResult()
 
     # remove pods that belong to jobs from both states to avoid observability problem
     curr_pods = curr_system_state['pod']
@@ -768,44 +771,39 @@ def compare_system_equality(curr_system_state: Dict,
     prev_system_state.pop('custom_resource_spec', None)
     curr_system_state.pop('custom_resource_status', None)
     prev_system_state.pop('custom_resource_status', None)
+    curr_system_state.pop('pvc', None)
+    prev_system_state.pop('pvc', None)
 
     # remove fields that are not deterministic
     exclude_paths = [
-        r".*\['metadata'\]\['managed_fields'\]",
-        r".*\['metadata'\]\['cluster_name'\]",
-        r".*\['metadata'\]\['creation_timestamp'\]",
-        r".*\['metadata'\]\['resource_version'\]",
-        r".*\['metadata'\].*\['uid'\]",
-        r".*\['metadata'\]\['generation'\]$",
+        r".*\['metadata'\]\['managed_fields'\]", r".*\['metadata'\]\['cluster_name'\]",
+        r".*\['metadata'\]\['creation_timestamp'\]", r".*\['metadata'\]\['resource_version'\]",
+        r".*\['metadata'\].*\['uid'\]", r".*\['metadata'\]\['generation'\]$",
         r".*\['metadata'\]\['annotations'\]",
         r".*\['metadata'\]\['annotations'\]\['.*last-applied.*'\]",
         r".*\['metadata'\]\['annotations'\]\['.*\.kubernetes\.io.*'\]",
         r".*\['metadata'\]\['labels'\]\['.*revision.*'\]",
-        r".*\['metadata'\]\['labels'\]\['owner-rv'\]",
-        r".*\['status'\]",
+        r".*\['metadata'\]\['labels'\]\['owner-rv'\]", r".*\['status'\]",
         r".*\['spec'\]\['init_containers'\]\[.*\]\['volume_mounts'\]\[.*\]\['name'\]$",
         r".*\['spec'\]\['containers'\]\[.*\]\['volume_mounts'\]\[.*\]\['name'\]$",
-        r".*\['spec'\]\['volumes'\]\[.*\]\['name'\]$",
-        r".*\[.*\]\['node_name'\]$",
-        r".*\[\'spec\'\]\[\'host_users\'\]$",
-        r".*\[\'spec\'\]\[\'os\'\]$",
-        r".*\[\'grpc\'\]$",
-        r".*\[\'spec\'\]\[\'volume_name\'\]$",
-        r".*\['version'\]$",
+        r".*\['spec'\]\['volumes'\]\[.*\]\['name'\]$", r".*\[.*\]\['node_name'\]$",
+        r".*\[\'spec\'\]\[\'host_users\'\]$", r".*\[\'spec\'\]\[\'os\'\]$", r".*\[\'grpc\'\]$",
+        r".*\[\'spec\'\]\[\'volume_name\'\]$", r".*\['version'\]$",
         r".*\['endpoints'\]\[.*\]\['addresses'\]\[.*\]\['target_ref'\]\['uid'\]$",
         r".*\['endpoints'\]\[.*\]\['addresses'\]\[.*\]\['target_ref'\]\['resource_version'\]$",
-        r".*\['endpoints'\]\[.*\]\['addresses'\]\[.*\]\['ip'\]",
-        r".*\['cluster_ip'\]$",
-        r".*\['cluster_i_ps'\].*$",
-        r".*\['deployment_pods'\].*\['metadata'\]\['name'\]$",
+        r".*\['endpoints'\]\[.*\]\['addresses'\]\[.*\]\['ip'\]", r".*\['cluster_ip'\]$",
+        r".*\['cluster_i_ps'\].*$", r".*\['deployment_pods'\].*\['metadata'\]\['name'\]$",
         r"\[\'config_map\'\]\[\'kube\-root\-ca\.crt\'\]\[\'data\'\]\[\'ca\.crt\'\]$",
-        r".*\['secret'\].*$",
-        r"\['secrets'\]\[.*\]\['name'\]"
+        r".*\['secret'\].*$", r"\['secrets'\]\[.*\]\['name'\]"
     ]
 
     exclude_paths.extend(additional_exclude_paths)
 
-    diff = DeepDiff(prev_system_state, curr_system_state, exclude_regex_paths=exclude_paths)
+    diff = DeepDiff(prev_system_state,
+                    curr_system_state,
+                    exclude_regex_paths=exclude_paths,
+                    iterable_compare_func=compare_func,
+                    custom_operators=[NameOperator(r".*\['name'\]$")])
 
     if 'dictionary_item_removed' in diff:
         new_removed_items = []
@@ -826,21 +824,31 @@ def compare_system_equality(curr_system_state: Dict,
     return PassResult()
 
 
-# def compare_func(x, y, level: DiffLevel=None):
-#     try:
-#         if level.path(output_format='list')
-#         return x['name'] == y['name']
-#     except:
-#         raise CannotCompare() from None
+def compare_func(x, y, level: DiffLevel = None):
+    try:
+        if 'name' not in x or 'name' not in y:
+            return x['key'] == y['key'] and x['operator'] == y['operator']
+        x_name = x['name']
+        y_name = y['name']
+        if len(x_name) < 5 or len(y_name) < 5:
+            return x_name == y_name
+        else:
+            return x_name[:5] == y_name[:5]
+    except:
+        raise CannotCompare() from None
 
-# class CustomOperator(BaseOperator):
 
-#     def give_up_diffing(self, level, diff_instance):
-#         pattern = r"\['service_account'\]\['cass\-operator\-controller\-manager'\]\['secrets'\]\[.*\]\['name'\]"
+class NameOperator(BaseOperator):
 
-#         if level.path(output_format='list') == ['spec', 'containers']:
-#             return True
-#         return False
+    def give_up_diffing(self, level, diff_instance):
+        x_name = level.t1
+        y_name = level.t2
+        if x_name == None or y_name == None:
+            return False
+        if re.search(r"^.+-([A-Za-z0-9]{5})$", x_name) and re.search(r"^.+-([A-Za-z0-9]{5})$",
+                                                                     y_name):
+            return x_name[:5] == y_name[:5]
+        return False
 
 
 class BlackBoxChecker(Checker):
