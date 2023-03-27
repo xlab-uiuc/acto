@@ -55,6 +55,7 @@
 | pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/issues/4684](https://github.com/pingcap/tidb-operator/issues/4684)                     |           |
 | pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/issues/4705](https://github.com/pingcap/tidb-operator/issues/4705)                     |           |
 | pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/issues/4614](https://github.com/pingcap/tidb-operator/issues/4614)                     | fixed     |
+| pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/issues/4942](https://github.com/pingcap/tidb-operator/issues/4942)                     |           |
 | pravega/zookeeper-operator          | [https://github.com/pravega/zookeeper-operator/issues/474](https://github.com/pravega/zookeeper-operator/issues/474)             | fixed     |
 | pravega/zookeeper-operator          | [https://github.com/pravega/zookeeper-operator/issues/454](https://github.com/pravega/zookeeper-operator/issues/454)             | confirmed |
 | pravega/zookeeper-operator          | [https://github.com/pravega/zookeeper-operator/issues/513](https://github.com/pravega/zookeeper-operator/issues/513)             |           |
