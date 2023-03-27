@@ -519,6 +519,28 @@ def postprocess_diff(diff):
     return diff_dict
 
 
+def invalid_input_message_regex(log_msg: List[str]) -> bool:
+    '''Returns if the log shows the input is invalid
+
+    Args:
+        log_msg: message body of the log
+
+    Returns:
+        Tuple(bool, list):
+            - if the log_msg indicates the input delta is invalid
+            - when log indicates invalid input: the responsible field path for the invalid input
+    '''
+    logger = get_thread_logger(with_prefix=True)
+
+    for line in log_msg:
+        for regex in INVALID_INPUT_LOG_REGEX:
+            if re.search(regex, line):
+                logger.info('Recognized invalid input through regex: %s' % line)
+                return True
+
+    return False
+
+
 def invalid_input_message(log_msg: str, input_delta: dict) -> Tuple[bool, list]:
     '''Returns if the log shows the input is invalid
 
@@ -697,6 +719,7 @@ INVALID_INPUT_LOG_REGEX = [
     r"but expected",
     r"are not available",
     r"must include",
+    r"must have"
 ]
 
 GENERIC_FIELDS = [

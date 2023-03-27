@@ -16,7 +16,7 @@ from acto import handle_excepthook, thread_excepthook
 from constant import CONST
 from checker import compare_system_equality
 from thread_logger import get_thread_logger
-from common import ActoEncoder, ErrorResult, OperatorConfig, PassResult, kubernetes_client
+from common import ActoEncoder, ErrorResult, OperatorConfig, PassResult, invalid_input_message_regex, kubernetes_client
 from runner import Runner
 from deploy import Deploy, DeployMethod
 from k8s_cluster import base, kind
@@ -58,6 +58,7 @@ class DeployRunner:
 
         trial_dir = os.path.join(self._workdir, 'trial-%02d' % self._worker_id)
         os.makedirs(trial_dir, exist_ok=True)
+        runner = Runner(self._context, trial_dir, self._kubeconfig, self._context_name)
         while True:
             try:
                 group = self._workqueue.get(block=False)
@@ -65,7 +66,6 @@ class DeployRunner:
                 break
 
             cr = group.iloc[0]['input']
-            runner = Runner(self._context, trial_dir, self._kubeconfig, self._context_name)
 
             snapshot, err = runner.run(cr, generation=generation)
             err = runner.delete(generation=generation)
@@ -87,6 +87,7 @@ class DeployRunner:
                 deployed = self._deploy.deploy_with_retry(self._context, self._kubeconfig,
                                                           self._context_name)
                 add_acto_label(apiclient, self._context)
+                runner = Runner(self._context, trial_dir, self._kubeconfig, self._context_name)
 
             generation += 1
 
@@ -196,6 +197,9 @@ class PostDiffTest(PostProcessor):
                 if isinstance(self.trial_to_steps[trial_basename][gen].runtime_result.health_result,
                               ErrorResult) or invalid:
                     continue
+                if invalid_input_message_regex(snapshot['operator_log']):
+                    continue
+
                 original_system_state = self.trial_to_steps[trial_basename][gen].system_state
                 result = compare_system_equality(snapshot['system_state'], original_system_state,
                                                  self.config.diff_ignore_fields)
