@@ -715,11 +715,12 @@ EXCLUDE_ERROR_REGEX = [
 INVALID_INPUT_LOG_REGEX = [
     r"invalid",
     r"not valid",
+    r"no valid",
     r"unsupported",
     r"but expected",
     r"are not available",
     r"must include",
-    r"must have"
+    r"must have",
 ]
 
 GENERIC_FIELDS = [

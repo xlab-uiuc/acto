@@ -192,6 +192,9 @@ class PostDiffTest(PostProcessor):
                 trial = original['trial']
                 gen = original['gen']
 
+                if gen == 0:
+                    continue
+
                 trial_basename = os.path.basename(trial)
                 invalid, _ = self.trial_to_steps[trial_basename][gen].runtime_result.is_invalid()
                 if isinstance(self.trial_to_steps[trial_basename][gen].runtime_result.health_result,

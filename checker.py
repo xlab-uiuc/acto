@@ -784,6 +784,8 @@ def compare_system_equality(curr_system_state: Dict,
         r".*\['metadata'\]\['annotations'\]\['.*\.kubernetes\.io.*'\]",
         r".*\['metadata'\]\['labels'\]\['.*revision.*'\]",
         r".*\['metadata'\]\['labels'\]\['owner-rv'\]", r".*\['status'\]",
+        r"\['metadata'\]\['deletion_grace_period_seconds'\]",
+        r"\['metadata'\]\['deletion_timestamp'\]",
         r".*\['spec'\]\['init_containers'\]\[.*\]\['volume_mounts'\]\[.*\]\['name'\]$",
         r".*\['spec'\]\['containers'\]\[.*\]\['volume_mounts'\]\[.*\]\['name'\]$",
         r".*\['spec'\]\['volumes'\]\[.*\]\['name'\]$", r".*\[.*\]\['node_name'\]$",
@@ -794,7 +796,11 @@ def compare_system_equality(curr_system_state: Dict,
         r".*\['endpoints'\]\[.*\]\['addresses'\]\[.*\]\['ip'\]", r".*\['cluster_ip'\]$",
         r".*\['cluster_i_ps'\].*$", r".*\['deployment_pods'\].*\['metadata'\]\['name'\]$",
         r"\[\'config_map\'\]\[\'kube\-root\-ca\.crt\'\]\[\'data\'\]\[\'ca\.crt\'\]$",
-        r".*\['secret'\].*$", r"\['secrets'\]\[.*\]\['name'\]"
+        r".*\['secret'\].*$", r"\['secrets'\]\[.*\]\['name'\]",
+        r".*\['node_port'\]",
+        r".*\['metadata'\]\['generate_name'\]",
+        r".*\['metadata'\]\['labels'\]\['pod\-template\-hash'\]",
+        r"\['deployment_pods'\].*\['metadata'\]\['owner_references'\]\[.*\]\['name'\]",
     ]
 
     exclude_paths.extend(additional_exclude_paths)
