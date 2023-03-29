@@ -16,6 +16,7 @@
 | cockroachdb/cockroach-operator      | [https://github.com/cockroachdb/cockroach-operator/issues/920](https://github.com/cockroachdb/cockroach-operator/issues/920)     | confirmed |
 | cockroachdb/cockroach-operator      | [https://github.com/cockroachdb/cockroach-operator/issues/927](https://github.com/cockroachdb/cockroach-operator/issues/927)     | confirmed |
 | cockroachdb/cockroach-operator      | [https://github.com/cockroachdb/cockroach-operator/issues/953](https://github.com/cockroachdb/cockroach-operator/issues/953)     | confirmed |
+| cockroachdb/cockroach-operator      | [cockroachdb/cockroach-operator#919](cockroachdb/cockroach-operator#919)                                                         |           |
 | knative-operator                    | [https://github.com/knative/operator/issues/1158](https://github.com/knative/operator/issues/1158)                               | fixed     |
 | mongodb/mongodb-kubernetes-operator | [mongodb/mongodb-kubernetes-operator#1054](https://github.com/mongodb/mongodb-kubernetes-operator/issues/1054)                   | fixed     |
 | mongodb/mongodb-kubernetes-operator | [mongodb/mongodb-kubernetes-operator#1055](https://github.com/mongodb/mongodb-kubernetes-operator/issues/1055)                   | fixed     |
@@ -48,6 +49,8 @@
 | OT-CONTAINER-KIT/redis-operator     | [https://github.com/OT-CONTAINER-KIT/redis-operator/pull/292](https://github.com/OT-CONTAINER-KIT/redis-operator/pull/292)       | fixed     |
 | OT-CONTAINER-KIT/redis-operator     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/297](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/297)   | fixed     |
 | OT-CONTAINER-KIT/redis-operator     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/279](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/279)   | fixed     |
+| OT-CONTAINER-KIT/redis-operator     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/474](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/474)   |           |
+| OT-CONTAINER-KIT/redis-operator     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/474](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/474)   |           |
 | pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/issues/4613](https://github.com/pingcap/tidb-operator/issues/4613)                     | fixed     |
 | pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/issues/4632](https://github.com/pingcap/tidb-operator/issues/4632)                     | fixed     |
 | pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/issues/4637](https://github.com/pingcap/tidb-operator/issues/4637)                     | fixed     |
@@ -60,6 +63,8 @@
 | pravega/zookeeper-operator          | [https://github.com/pravega/zookeeper-operator/issues/474](https://github.com/pravega/zookeeper-operator/issues/474)             | fixed     |
 | pravega/zookeeper-operator          | [https://github.com/pravega/zookeeper-operator/issues/454](https://github.com/pravega/zookeeper-operator/issues/454)             | confirmed |
 | pravega/zookeeper-operator          | [https://github.com/pravega/zookeeper-operator/issues/513](https://github.com/pravega/zookeeper-operator/issues/513)             |           |
+| pravega/zookeeper-operator          | [https://github.com/pravega/zookeeper-operator/issues/540](https://github.com/pravega/zookeeper-operator/issues/540)             |           |
+| pravega/zookeeper-operator          | [https://github.com/pravega/zookeeper-operator/issues/541](https://github.com/pravega/zookeeper-operator/issues/541)             |           |
 | kubernetes-sigs/controller-tools    | [https://github.com/kubernetes-sigs/controller-tools/issues/665](https://github.com/kubernetes-sigs/controller-tools/issues/665) | confirmed |
 | kubernetes/kubernetes               | [https://github.com/kubernetes/kubernetes/issues/109839](https://github.com/kubernetes/kubernetes/issues/109839)                 | confirmed |
 | kubernetes/kubernetes               | [https://github.com/kubernetes/kubernetes/issues/110653](https://github.com/kubernetes/kubernetes/issues/110653)                 | confirmed |
@@ -74,14 +79,13 @@
 | -------- | ---- | ------ |
 
 # Unrelated
-| Operator                       | Link                                                                                                                           | Status |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ | ------ |
-| k8ssandra/cass-operator        | [https://github.com/k8ssandra/cass-operator/issues/324](https://github.com/k8ssandra/cass-operator/issues/324)                 |        |
-| cockroachdb/cockroach-operator | [https://github.com/cockroachdb/cockroach-operator/issues/919](https://github.com/cockroachdb/cockroach-operator/issues/919)   |        |
-| pingcap/tidb-operator          | [https://github.com/pingcap/tidb-operator/pull/4608](https://github.com/pingcap/tidb-operator/pull/4608)                       | fixed  |
-| pingcap/tidb-operator          | [https://github.com/pingcap/tidb-operator/issues/4634](https://github.com/pingcap/tidb-operator/issues/4634)                   |        |
-| pingcap/tidb-operator          | [https://github.com/pingcap/tidb-operator/issues/4637](https://github.com/pingcap/tidb-operator/issues/4637)                   | fixed  |
-| pingcap/tidb-operator          | [https://github.com/pingcap/tidb-operator/issues/4942](https://github.com/pingcap/tidb-operator/issues/4942)                   |        |
-| knative-operator               | [https://github.com/knative/operator/issues/1157](https://github.com/knative/operator/issues/1157)                             | fixed  |
-|                                | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/289](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/289) | fixed  |
-|                                | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/310](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/310) | fixed  |
+| Operator                | Link                                                                                                                           | Status |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------ |
+| k8ssandra/cass-operator | [https://github.com/k8ssandra/cass-operator/issues/324](https://github.com/k8ssandra/cass-operator/issues/324)                 |        |
+| pingcap/tidb-operator   | [https://github.com/pingcap/tidb-operator/pull/4608](https://github.com/pingcap/tidb-operator/pull/4608)                       | fixed  |
+| pingcap/tidb-operator   | [https://github.com/pingcap/tidb-operator/issues/4634](https://github.com/pingcap/tidb-operator/issues/4634)                   |        |
+| pingcap/tidb-operator   | [https://github.com/pingcap/tidb-operator/issues/4637](https://github.com/pingcap/tidb-operator/issues/4637)                   | fixed  |
+| pingcap/tidb-operator   | [https://github.com/pingcap/tidb-operator/issues/4942](https://github.com/pingcap/tidb-operator/issues/4942)                   |        |
+| knative-operator        | [https://github.com/knative/operator/issues/1157](https://github.com/knative/operator/issues/1157)                             | fixed  |
+|                         | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/289](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/289) | fixed  |
+|                         | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/310](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/310) | fixed  |
