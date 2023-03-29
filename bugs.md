@@ -16,13 +16,16 @@
 | cockroachdb/cockroach-operator      | [https://github.com/cockroachdb/cockroach-operator/issues/920](https://github.com/cockroachdb/cockroach-operator/issues/920)     | confirmed |
 | cockroachdb/cockroach-operator      | [https://github.com/cockroachdb/cockroach-operator/issues/927](https://github.com/cockroachdb/cockroach-operator/issues/927)     | confirmed |
 | cockroachdb/cockroach-operator      | [https://github.com/cockroachdb/cockroach-operator/issues/953](https://github.com/cockroachdb/cockroach-operator/issues/953)     | confirmed |
-| cockroachdb/cockroach-operator      | [cockroachdb/cockroach-operator#919](cockroachdb/cockroach-operator#919)                                                         |           |
+| cockroachdb/cockroach-operator      | [https://github.com/cockroachdb/cockroach-operator/issues/919](https://github.com/cockroachdb/cockroach-operator/issues/919)     |           |
 | knative-operator                    | [https://github.com/knative/operator/issues/1158](https://github.com/knative/operator/issues/1158)                               | fixed     |
+| knative-operator                    | [https://github.com/knative/operator/issues/1157](https://github.com/knative/operator/issues/1157)                               | fixed     |
 | mongodb/mongodb-kubernetes-operator | [mongodb/mongodb-kubernetes-operator#1054](https://github.com/mongodb/mongodb-kubernetes-operator/issues/1054)                   | fixed     |
 | mongodb/mongodb-kubernetes-operator | [mongodb/mongodb-kubernetes-operator#1055](https://github.com/mongodb/mongodb-kubernetes-operator/issues/1055)                   | fixed     |
 | mongodb/mongodb-kubernetes-operator | [mongodb/mongodb-kubernetes-operator#1072](https://github.com/mongodb/mongodb-kubernetes-operator/issues/1072)                   | fixed     |
 | mongodb/mongodb-kubernetes-operator | [mongodb/mongodb-kubernetes-operator#1074](https://github.com/mongodb/mongodb-kubernetes-operator/issues/1074)                   | fixed     |
 | mongodb/mongodb-kubernetes-operator | [mongodb/mongodb-kubernetes-operator#1245](https://github.com/mongodb/mongodb-kubernetes-operator/issues/1245)                   | fixed     |
+| mongodb/mongodb-kubernetes-operator | [mongodb/mongodb-kubernetes-operator#1251](https://github.com/mongodb/mongodb-kubernetes-operator/issues/1251)                   |           |
+| mongodb/mongodb-kubernetes-operator | [mongodb/mongodb-kubernetes-operator#1252](https://github.com/mongodb/mongodb-kubernetes-operator/issues/1252)                   |           |
 | mongodb/mongodb-kubernetes-operator | [https://github.com/mongodb/helm-charts/pull/123](https://github.com/mongodb/helm-charts/pull/123)                               | fixed     |
 | percona-server-mongodb-operator     | [https://jira.percona.com/browse/K8SPSMDB-696](https://jira.percona.com/browse/K8SPSMDB-696)                                     | fixed     |
 | percona-server-mongodb-operator     | [https://jira.percona.com/browse/K8SPSMDB-697](https://jira.percona.com/browse/K8SPSMDB-697)                                     | fixed     |
@@ -51,7 +54,6 @@
 | OT-CONTAINER-KIT/redis-operator     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/279](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/279)   | fixed     |
 | OT-CONTAINER-KIT/redis-operator     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/474](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/474)   |           |
 | pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/issues/4613](https://github.com/pingcap/tidb-operator/issues/4613)                     | fixed     |
-| pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/issues/4632](https://github.com/pingcap/tidb-operator/issues/4632)                     | fixed     |
 | pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/issues/4637](https://github.com/pingcap/tidb-operator/issues/4637)                     | fixed     |
 | pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/issues/4649](https://github.com/pingcap/tidb-operator/issues/4649)                     | confirmed |
 | pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/issues/4684](https://github.com/pingcap/tidb-operator/issues/4684)                     |           |
@@ -85,6 +87,5 @@
 | pingcap/tidb-operator   | [https://github.com/pingcap/tidb-operator/issues/4634](https://github.com/pingcap/tidb-operator/issues/4634)                   |        |
 | pingcap/tidb-operator   | [https://github.com/pingcap/tidb-operator/issues/4637](https://github.com/pingcap/tidb-operator/issues/4637)                   | fixed  |
 | pingcap/tidb-operator   | [https://github.com/pingcap/tidb-operator/issues/4942](https://github.com/pingcap/tidb-operator/issues/4942)                   |        |
-| knative-operator        | [https://github.com/knative/operator/issues/1157](https://github.com/knative/operator/issues/1157)                             | fixed  |
 |                         | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/289](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/289) | fixed  |
 |                         | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/310](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/310) | fixed  |
