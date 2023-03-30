@@ -11,7 +11,6 @@
 | k8ssandra/cass-operator             | [https://github.com/k8ssandra/cass-operator/issues/330](https://github.com/k8ssandra/cass-operator/issues/330)                   | fixed     |
 | k8ssandra/cass-operator             | [https://github.com/k8ssandra/cass-operator/issues/334](https://github.com/k8ssandra/cass-operator/issues/334)                   | confirmed |
 | k8ssandra/cass-operator             | [https://github.com/k8ssandra/cass-operator/issues/471](https://github.com/k8ssandra/cass-operator/issues/471)                   |           |
-| k8ssandra/cass-operator             | [https://github.com/k8ssandra/k8ssandra/issues/1380](https://github.com/k8ssandra/k8ssandra/issues/1380)                         | fixed     |
 | cockroachdb/cockroach-operator      | [https://github.com/cockroachdb/cockroach-operator/issues/918](https://github.com/cockroachdb/cockroach-operator/issues/918)     | confirmed |
 | cockroachdb/cockroach-operator      | [https://github.com/cockroachdb/cockroach-operator/issues/920](https://github.com/cockroachdb/cockroach-operator/issues/920)     | confirmed |
 | cockroachdb/cockroach-operator      | [https://github.com/cockroachdb/cockroach-operator/issues/927](https://github.com/cockroachdb/cockroach-operator/issues/927)     | confirmed |
@@ -26,9 +25,7 @@
 | mongodb/mongodb-kubernetes-operator | [mongodb/mongodb-kubernetes-operator#1245](https://github.com/mongodb/mongodb-kubernetes-operator/issues/1245)                   | fixed     |
 | mongodb/mongodb-kubernetes-operator | [mongodb/mongodb-kubernetes-operator#1251](https://github.com/mongodb/mongodb-kubernetes-operator/issues/1251)                   |           |
 | mongodb/mongodb-kubernetes-operator | [mongodb/mongodb-kubernetes-operator#1252](https://github.com/mongodb/mongodb-kubernetes-operator/issues/1252)                   |           |
-| mongodb/mongodb-kubernetes-operator | [https://github.com/mongodb/helm-charts/pull/123](https://github.com/mongodb/helm-charts/pull/123)                               | fixed     |
 | percona-server-mongodb-operator     | [https://jira.percona.com/browse/K8SPSMDB-696](https://jira.percona.com/browse/K8SPSMDB-696)                                     | fixed     |
-| percona-server-mongodb-operator     | [https://jira.percona.com/browse/K8SPSMDB-697](https://jira.percona.com/browse/K8SPSMDB-697)                                     | fixed     |
 | percona-server-mongodb-operator     | [https://jira.percona.com/browse/K8SPSMDB-738](https://jira.percona.com/browse/K8SPSMDB-738)                                     | fixed     |
 | percona-server-mongodb-operator     | [https://jira.percona.com/browse/K8SPSMDB-742](https://jira.percona.com/browse/K8SPSMDB-742)                                     | fixed     |
 | percona-server-mongodb-operator     | [https://jira.percona.com/browse/K8SPSMDB-895](https://jira.percona.com/browse/K8SPSMDB-895)                                     |           |
@@ -51,13 +48,9 @@
 | OT-CONTAINER-KIT/redis-operator     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/290](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/290)   | fixed     |
 | OT-CONTAINER-KIT/redis-operator     | [https://github.com/OT-CONTAINER-KIT/redis-operator/pull/292](https://github.com/OT-CONTAINER-KIT/redis-operator/pull/292)       | fixed     |
 | OT-CONTAINER-KIT/redis-operator     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/297](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/297)   | fixed     |
-| OT-CONTAINER-KIT/redis-operator     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/279](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/279)   | fixed     |
 | OT-CONTAINER-KIT/redis-operator     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/474](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/474)   |           |
 | pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/issues/4613](https://github.com/pingcap/tidb-operator/issues/4613)                     | fixed     |
-| pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/issues/4649](https://github.com/pingcap/tidb-operator/issues/4649)                     | confirmed |
 | pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/issues/4684](https://github.com/pingcap/tidb-operator/issues/4684)                     |           |
-| pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/issues/4705](https://github.com/pingcap/tidb-operator/issues/4705)                     |           |
-| pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/issues/4614](https://github.com/pingcap/tidb-operator/issues/4614)                     | fixed     |
 | pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/issues/4945](https://github.com/pingcap/tidb-operator/issues/4945)                     |           |
 | pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/issues/4946](https://github.com/pingcap/tidb-operator/issues/4946)                     |           |
 | pravega/zookeeper-operator          | [https://github.com/pravega/zookeeper-operator/issues/474](https://github.com/pravega/zookeeper-operator/issues/474)             | fixed     |
@@ -75,8 +68,15 @@
 
 # Byproduct bugs
 
-| Operator | Link | Status |
-| -------- | ---- | ------ |
+| Operator                            | Link                                                                                                                           | Status    |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | --------- |
+| k8ssandra/cass-operator             | [https://github.com/k8ssandra/k8ssandra/issues/1380](https://github.com/k8ssandra/k8ssandra/issues/1380)                       | fixed     |
+| mongodb/mongodb-kubernetes-operator | [https://github.com/mongodb/helm-charts/pull/123](https://github.com/mongodb/helm-charts/pull/123)                             | fixed     |
+| percona-server-mongodb-operator     | [https://jira.percona.com/browse/K8SPSMDB-697](https://jira.percona.com/browse/K8SPSMDB-697)                                   | fixed     |
+| OT-CONTAINER-KIT/redis-operator     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/279](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/279) | fixed     |
+| pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/issues/4649](https://github.com/pingcap/tidb-operator/issues/4649)                   | confirmed |
+| pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/issues/4705](https://github.com/pingcap/tidb-operator/issues/4705)                   |           |
+| pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/issues/4614](https://github.com/pingcap/tidb-operator/issues/4614)                   | fixed     |
 
 # Unrelated
 | Operator                | Link                                                                                                                           | Status |
