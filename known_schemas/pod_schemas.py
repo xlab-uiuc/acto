@@ -580,7 +580,7 @@ class TolerationsSchema(K8sArraySchema):
     item = TolerationSchema
 
     def tolerations_pop_precondition(prev) -> bool:
-        return len(prev) > 0
+        return prev != None and len(prev) > 0
 
     def tolerations_pop(prev) -> list:
         return []
