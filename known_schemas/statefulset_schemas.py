@@ -34,6 +34,8 @@ class ReplicasSchema(K8sIntegerSchema):
             return True
 
     def scaleDownUp(prev) -> int:
+        if prev == None:
+            return 4
         return prev + 2
 
     def scaleDownUpSetup(prev) -> int:
@@ -49,6 +51,8 @@ class ReplicasSchema(K8sIntegerSchema):
             return True
 
     def scaleUpDown(prev) -> int:
+        if prev == None:
+            return 1
         return prev - 2
 
     def scaleUpDownSetup(prev) -> int:
