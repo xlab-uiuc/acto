@@ -1,7 +1,32 @@
 from typing import List, Tuple
-from schema import BaseSchema, ObjectSchema
+from schema import BaseSchema, IntegerSchema, ObjectSchema
 from known_schemas.base import K8sBooleanSchema, K8sStringSchema, K8sObjectSchema, K8sArraySchema, K8sIntegerSchema
 from test_case import TestCase, K8sTestCase
+
+class PortSchema(K8sIntegerSchema):
+
+    def port_privilege_precondition(prev):
+        return prev == 26257
+    
+    def port_privilege(prev):
+        return 8888
+    
+    def port_privilege_setup(prev):
+        return 26257
+
+    def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
+        if exclude_value == None:
+            return 26257
+        elif exclude_value == 26257:
+            return 26258
+        else:
+            return 26257
+
+    def Match(schema: ObjectSchema) -> bool:
+        return isinstance(schema, IntegerSchema)
+
+    def __str__(self) -> str:
+        return "Port"
 
 class ServiceTypeSchema(K8sStringSchema):
 

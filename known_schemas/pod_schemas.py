@@ -7,6 +7,27 @@ from test_case import TestCase, K8sTestCase
 from .resource_schemas import ComputeResourceRequirementsSchema, ResourceRequirementsSchema
 
 
+class EnvVarSchema(K8sObjectSchema):
+
+    fields = {"name": K8sStringSchema, "value": K8sStringSchema}
+
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        for field, field_schema in EnvVarSchema.fields.items():
+            if field in schema_obj.properties:
+                self.properties[field] = field_schema(schema_obj.properties[field])
+
+    def Match(schema: ObjectSchema) -> bool:
+        if not K8sObjectSchema.Match(schema):
+            return False
+        for field, field_schema in EnvVarSchema.fields.items():
+            if field not in schema.properties:
+                return False
+            elif not field_schema.Match(schema.properties[field]):
+                return False
+        return True
+
+
 class NodeSelectorSchema(K8sObjectSchema):
 
     def Match(schema: ObjectSchema) -> bool:
@@ -291,12 +312,24 @@ class AffinitySchema(K8sObjectSchema):
     def invalid_affinity_setup(prev) -> dict:
         return AffinitySchema.NormalAffinity
 
+    def null_affinity_precondition(prev) -> bool:
+        return prev != None
+
+    def null_affinity(prev) -> dict:
+        return None
+
+    def null_affinity_setup(prev) -> dict:
+        return AffinitySchema.NormalAffinity
+
     AllOnOneNodeTestCase = K8sTestCase(all_on_one_node_precondition, all_on_one_node,
                                        all_on_one_node_setup)
     AllOnDifferentNodesTestCase = K8sTestCase(all_on_different_nodes_precondition,
                                               all_on_different_nodes, all_on_different_nodes_setup)
     InvalidAffinityTestCase = K8sTestCase(invalid_affinity_precondition, invalid_affinity,
                                           invalid_affinity_setup)
+
+    NullAffinityTestCase = K8sTestCase(null_affinity_precondition, null_affinity,
+                                       null_affinity_setup)
 
     def __init__(self, schema_obj: BaseSchema) -> None:
         super().__init__(schema_obj)
@@ -321,7 +354,7 @@ class AffinitySchema(K8sObjectSchema):
         base_test_cases = super().test_cases()
         base_test_cases[1].extend([
             AffinitySchema.AllOnOneNodeTestCase, AffinitySchema.AllOnDifferentNodesTestCase,
-            AffinitySchema.InvalidAffinityTestCase
+            AffinitySchema.InvalidAffinityTestCase, AffinitySchema.NullAffinityTestCase
         ])
         return base_test_cases
 
@@ -546,6 +579,18 @@ class TolerationsSchema(K8sArraySchema):
 
     item = TolerationSchema
 
+    def tolerations_pop_precondition(prev) -> bool:
+        return len(prev) > 0
+
+    def tolerations_pop(prev) -> list:
+        return []
+
+    def tolerations_pop_setup(prev) -> list:
+        return [TolerationSchema.PlainToleration]
+
+    TolerationsPopTestCase = K8sTestCase(tolerations_pop_precondition, tolerations_pop,
+                                         tolerations_pop_setup)
+
     def __init__(self, schema_obj: BaseSchema) -> None:
         super().__init__(schema_obj)
         self.item_schema = TolerationSchema(schema_obj.item_schema)
@@ -561,6 +606,11 @@ class TolerationsSchema(K8sArraySchema):
             return [TolerationSchema.PlainToleration]
         else:
             return [TolerationSchema.PlainToleration, TolerationSchema.ControlPlaneToleration]
+
+    def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
+        base_testcases = super().test_cases()
+        base_testcases[1].extend([TolerationsSchema.TolerationsPopTestCase])
+        return base_testcases
 
     def __str__(self) -> str:
         return "Tolerations"
@@ -650,6 +700,56 @@ class GRPCSchema(K8sObjectSchema):
 
 class LivenessProbeSchema(K8sObjectSchema):
 
+    def tcp_probe_precondition(prev) -> bool:
+        return True
+
+    def tcp_probe(prev) -> dict:
+        return {"tcpSocket": {"port": 8500}, "initialDelaySeconds": 10}
+
+    def tcp_probe_setup(prev) -> dict:
+        return {"tcpSocket": {"port": 12345}, "initialDelaySeconds": 10}
+
+    def http_probe_precondition(prev) -> bool:
+        return True
+
+    def http_probe(prev) -> dict:
+        return {"httpGet": {"port": 8500}, "initialDelaySeconds": 10}
+
+    def http_probe_setup(prev) -> dict:
+        return {"httpGet": {"port": 12345}, "initialDelaySeconds": 10}
+
+    def grpc_probe_precondition(prev) -> bool:
+        return True
+
+    def grpc_probe(prev) -> dict:
+        return {"grpc": {"port": 8500}, "initialDelaySeconds": 10}
+
+    def grpc_probe_setup(prev) -> dict:
+        return {"grpc": {"port": 12345}, "initialDelaySeconds": 10}
+
+    def exec_probe_precondition(prev) -> bool:
+        return True
+
+    def exec_probe(prev) -> dict:
+        return {"exec": {"command": ["/liveness.sh"]}, "initialDelaySeconds": 10}
+
+    def exec_probe_setup(prev) -> dict:
+        return {"exec": {"command": ["/liveness.sh"]}, "initialDelaySeconds": 10}
+
+    def invalid_probe_precondition(prev) -> bool:
+        return True
+
+    def invalid_probe(prev) -> dict:
+        return {"invalid": {"port": 8500}, "initialDelaySeconds": 10}
+
+    def invalid_probe_setup(prev) -> dict:
+        return {"invalid": {"port": 12345}, "initialDelaySeconds": 10}
+
+    TCP_PROBE_TESTCASE = K8sTestCase(tcp_probe_precondition, tcp_probe, tcp_probe_setup)
+    HTTP_PROBE_TESTCASE = K8sTestCase(http_probe_precondition, http_probe, http_probe_setup)
+    GRPC_PROBE_TESTCASE = K8sTestCase(grpc_probe_precondition, grpc_probe, grpc_probe_setup)
+    EXEC_PROBE_TESTCASE = K8sTestCase(exec_probe_precondition, exec_probe, exec_probe_setup)
+
     fields = {
         "exec": K8sObjectSchema,
         "httpGet": K8sObjectSchema,
@@ -672,17 +772,55 @@ class LivenessProbeSchema(K8sObjectSchema):
                 return False
         return True
 
+    def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
+        base_testcases = super().test_cases()
+        base_testcases[1].append(LivenessProbeSchema.TCP_PROBE_TESTCASE)
+        base_testcases[1].append(LivenessProbeSchema.HTTP_PROBE_TESTCASE)
+        base_testcases[1].append(LivenessProbeSchema.GRPC_PROBE_TESTCASE)
+        base_testcases[1].append(LivenessProbeSchema.EXEC_PROBE_TESTCASE)
+        return base_testcases
+
     def __str__(self) -> str:
         return "LivenessProbe"
 
 
+class ArgsSchema(K8sArraySchema):
+
+    item = K8sStringSchema
+
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        self.item_schema = K8sStringSchema(schema_obj.item_schema)
+
+    def Match(schema: ObjectSchema) -> bool:
+        if not K8sArraySchema.Match(schema):
+            return False
+        else:
+            return ArgsSchema.item.Match(schema.get_item_schema())
+
+    def __str__(self) -> str:
+        return "Args"
+
+
 class ContainerSchema(K8sObjectSchema):
+
+    def container_invalid_name_precondition(prev) -> bool:
+        return True
+
+    def container_invalid_name(prev) -> dict:
+        return {"name": "INVALIDNAME", "image": "ubuntu"}
+
+    def container_invalid_name_setup(prev) -> dict:
+        return {"name": "INVALIDNAME", "image": "ubuntu"}
+
+    ContainerInvalidNameTestCase = K8sTestCase(container_invalid_name_precondition,
+                                               container_invalid_name, container_invalid_name_setup)
 
     fields = {
         "name": K8sStringSchema,
         "image": ImageSchema,
         "command": K8sArraySchema,
-        "args": K8sArraySchema,
+        "args": ArgsSchema,
         "workingDir": K8sStringSchema,
         "ports": K8sArraySchema,
         "env": K8sArraySchema,
@@ -715,6 +853,11 @@ class ContainerSchema(K8sObjectSchema):
             elif not field_schema.Match(schema.properties[field]):
                 return False
         return True
+
+    def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
+        base_testcases = super().test_cases()
+        base_testcases[1].extend([ContainerSchema.ContainerInvalidNameTestCase])
+        return super().test_cases()
 
     def __str__(self) -> str:
         return "Container"
@@ -949,6 +1092,35 @@ class VolumesSchema(K8sArraySchema):
 
     def __str__(self) -> str:
         return "Volumes"
+
+
+class WhenUnsatifiableSchema(K8sStringSchema):
+
+    def invalid_value_precondition(prev):
+        return prev is not None
+
+    def invalid_value(prev):
+        return "INVALID"
+
+    def invalid_value_setup(prev):
+        return "DoNotSchedule"
+
+    InvalidValueTestcase = K8sTestCase(invalid_value_precondition, invalid_value,
+                                       invalid_value_setup)
+
+    def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
+        return "ScheduleAnyway"
+
+    def Match(schema: ObjectSchema) -> bool:
+        return K8sStringSchema.Match(schema)
+
+    def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
+        base_testcases = super().test_cases()
+        base_testcases[1].extend([WhenUnsatifiableSchema.InvalidValueTestcase])
+        return super().test_cases()
+
+    def __str__(self) -> str:
+        return "WhenUnsatifiable"
 
 
 class TopologySpreadConstraintSchema(K8sObjectSchema):

@@ -4,9 +4,8 @@ bugs:
   - symptoms:
     - state_result:
         field:
-          regex: '["spec", "additionalServiceConfig", ".*", "additionalLabels", ".*"]'
-        prev: '*'
-        curr: 'NotPresent'
+          regex: 'additionalLabels'
+        curr: '"NotPresent"'
   - symptoms:
     - state_result:
         field:
@@ -50,7 +49,7 @@ false_positives:
   - name: forceUpgradeRacks
     type: control-flow
     field:
-      regex: '["spec", "forceUpgradeRacks", *]'
+      regex: '\"spec\", \"forceUpgradeRacks\"'
 misconfigurations:
 - name: EphemeralContainer
   signatures:
@@ -99,7 +98,7 @@ misconfigurations:
   signatures:
   - input:
       field:
-        regex: '"additionalVolumes"'
+        regex: 'additionalVolumes'
     symptoms:
     - health_result: true
 - name: InvalidSecurityContext
