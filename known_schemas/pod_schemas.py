@@ -857,7 +857,7 @@ class ContainerSchema(K8sObjectSchema):
     def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
         base_testcases = super().test_cases()
         base_testcases[1].extend([ContainerSchema.ContainerInvalidNameTestCase])
-        return super().test_cases()
+        return base_testcases
 
     def __str__(self) -> str:
         return "Container"
@@ -908,7 +908,7 @@ class PreemptionPolicySchema(K8sStringSchema):
     def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
         base_testcases = super().test_cases()
         base_testcases[1].extend([PreemptionPolicySchema.PreemptionPolicyChangeTestcase])
-        return super().test_cases()
+        return base_testcases
 
     def Match(schema: ObjectSchema) -> bool:
         return K8sStringSchema.Match(schema)
@@ -943,7 +943,7 @@ class RestartPolicySchema(K8sStringSchema):
     def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
         base_testcases = super().test_cases()
         base_testcases[1].extend([RestartPolicySchema.RestartPolicyChangeTestcase])
-        return super().test_cases()
+        return base_testcases
 
     def Match(schema: ObjectSchema) -> bool:
         return K8sStringSchema.Match(schema)
@@ -979,7 +979,7 @@ class PriorityClassNameSchema(K8sStringSchema):
     def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
         base_testcases = super().test_cases()
         base_testcases[1].extend([PriorityClassNameSchema.PriorityClassNameChangeTestcase])
-        return super().test_cases()
+        return base_testcases
 
     def Match(schema: ObjectSchema) -> bool:
         return K8sStringSchema.Match(schema)
@@ -1012,7 +1012,7 @@ class ServiceAccountNameSchema(K8sStringSchema):
     def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
         base_testcases = super().test_cases()
         base_testcases[1].extend([ServiceAccountNameSchema.ServiceAccountNameChangeTestcase])
-        return super().test_cases()
+        return base_testcases
 
     def Match(schema: ObjectSchema) -> bool:
         return K8sStringSchema.Match(schema)
@@ -1117,7 +1117,7 @@ class WhenUnsatifiableSchema(K8sStringSchema):
     def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
         base_testcases = super().test_cases()
         base_testcases[1].extend([WhenUnsatifiableSchema.InvalidValueTestcase])
-        return super().test_cases()
+        return base_testcases
 
     def __str__(self) -> str:
         return "WhenUnsatifiable"

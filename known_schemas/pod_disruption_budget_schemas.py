@@ -1,4 +1,4 @@
-from known_schemas.base import K8sIntegerSchema, K8sObjectSchema
+from known_schemas.base import K8sAnyOfSchema, K8sIntegerSchema, K8sObjectSchema
 from schema import BaseSchema, ObjectSchema\
 
 class LabelSelectorSchema(K8sObjectSchema):
@@ -30,8 +30,8 @@ class LabelSelectorSchema(K8sObjectSchema):
 class PodDisruptionBudgetSpecSchema(K8sObjectSchema):
 
     fields = {
-        'minAvailable': K8sIntegerSchema,
-        'maxUnavailable': K8sIntegerSchema,
+        'minAvailable': K8sAnyOfSchema,
+        'maxUnavailable': K8sAnyOfSchema,
         'selector': K8sObjectSchema
     }
 

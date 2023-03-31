@@ -134,7 +134,7 @@ class UpdateStrategySchema(K8sStringSchema):
     def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
         base_testcases = super().test_cases()
         base_testcases[1].extend([UpdateStrategySchema.UpdateStrategyChangeTestcase])
-        return super().test_cases()
+        return base_testcases
 
     def Match(schema: ObjectSchema) -> bool:
         return K8sStringSchema.Match(schema)
