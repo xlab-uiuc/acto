@@ -622,7 +622,7 @@ class Acto:
 
         if blackbox:
             pruned_list = []
-            module = importlib.import_module(operator_config.blackbox_custom_fields)
+            module = importlib.import_module(operator_config.custom_fields)
             for custom_field in module.custom_fields:
                 pruned_list.append(custom_field.path)
                 self.input_model.apply_custom_field(custom_field)
