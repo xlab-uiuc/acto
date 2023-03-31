@@ -180,6 +180,7 @@ class Yaml(Deploy):
         kubectl(['apply', '--server-side', '-f', self.path, '-n', context['namespace']], kubeconfig=kubeconfig,
                 context_name=context_name)
         self.check_status(context, kubeconfig=kubeconfig, context_name=context_name)
+        time.sleep(20)
 
         # TODO: Return True if deploy successfully
         return True
