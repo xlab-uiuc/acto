@@ -531,16 +531,17 @@ class Checker(object):
                 continue
             unhealthy_resources['pod'].append(pod['metadata']['name'])
 
-        for pod in system_state['deployment_pods']:
-            if pod['status']['phase'] in ['Running', 'Completed', 'Succeeded']:
-                continue
-            unhealthy_resources['pod'].append(pod['metadata']['name'])
+        for deployment in system_state['deployment_pods'].values():
+            for pod in deployment:
+                if pod['status']['phase'] in ['Running', 'Completed', 'Succeeded']:
+                    continue
+                unhealthy_resources['pod'].append(pod['metadata']['name'])
 
-            for container in pod['status']['container_statuses']:
-                if container['restart_count'] > 0:
-                    unhealthy_resources['pod'].append(
-                        '%s container [%s] restart_count [%s]' %
-                        (pod['metadata']['name'], container['name'], container['restart_count']))
+                for container in pod['status']['container_statuses']:
+                    if container['restart_count'] > 0:
+                        unhealthy_resources['pod'].append(
+                            '%s container [%s] restart_count [%s]' %
+                            (pod['metadata']['name'], container['name'], container['restart_count']))
 
         # check Health of CRs
         unhealthy_resources['cr'] = []
