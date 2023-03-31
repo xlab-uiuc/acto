@@ -2,6 +2,7 @@ from builtins import TypeError
 from copy import deepcopy
 import sys
 import logging
+import threading
 from typing import Dict, List
 from deepdiff import DeepDiff
 from deepdiff.model import DiffLevel
@@ -20,6 +21,7 @@ from snapshot import EmptySnapshot, Snapshot
 from thread_logger import get_thread_logger
 from parse_log.parse_log import parse_log
 
+thread_var = threading.local()
 
 class Checker(object):
 
@@ -528,6 +530,17 @@ class Checker(object):
             if pod['status']['phase'] in ['Running', 'Completed', 'Succeeded']:
                 continue
             unhealthy_resources['pod'].append(pod['metadata']['name'])
+
+        for pod in system_state['deployment_pods']:
+            if pod['status']['phase'] in ['Running', 'Completed', 'Succeeded']:
+                continue
+            unhealthy_resources['pod'].append(pod['metadata']['name'])
+
+            for container in pod['status']['container_statuses']:
+                if container['restart_count'] > 0:
+                    unhealthy_resources['pod'].append(
+                        '%s container [%s] restart_count [%s]' %
+                        (pod['metadata']['name'], container['name'], container['restart_count']))
 
         # check Health of CRs
         unhealthy_resources['cr'] = []
