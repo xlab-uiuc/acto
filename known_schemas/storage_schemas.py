@@ -7,6 +7,11 @@ from test_case import TestCase, K8sTestCase
 
 class HostPathTypeSchema(K8sStringSchema):
 
+    def directory_or_create(prev):
+        return "DirectoryOrCreate"
+
+    DirectoryOrCreateTestcase = K8sTestCase(lambda prev: prev != "DirectoryOrCreate", directory_or_create, lambda prev: "Directory")
+
     def gen(self, exclude_value=None, **kwargs):
         if exclude_value == None:
             return "DirectoryOrCreate"
@@ -23,6 +28,11 @@ class HostPathTypeSchema(K8sStringSchema):
 
 
 class FilePathSchema(K8sStringSchema):
+
+    def tmp_file(prev):
+        return "/tmp/test"
+
+    TmpFileTestcase = K8sTestCase(lambda prev: prev != "/tmp/test", tmp_file, lambda prev: "/tmp/test2")
 
     def gen(self, exclude_value=None, **kwargs):
         if exclude_value == None:
@@ -103,6 +113,14 @@ class AccessModeSchema(K8sStringSchema):
 
 
 class StorageClassNameSchema(K8sStringSchema):
+
+    def change_storage_class_name(prev):
+        if prev == 'standard':
+            return 'ssd'
+        else:
+            return 'standard'
+
+    ChangeStorageClassNameTestcase = K8sTestCase(lambda prev: prev != "ssd", change_storage_class_name, lambda prev: "ssd")
 
     def __init__(self, schema_obj: BaseSchema) -> None:
         super().__init__(schema_obj)

@@ -1,5 +1,5 @@
 
-from .base import K8sField
+from .base import *
 from .cronjob_schemas import *
 from .deployment_schemas import *
 from .pod_disruption_budget_schemas import *

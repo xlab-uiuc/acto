@@ -14,6 +14,8 @@ class PortSchema(K8sIntegerSchema):
     def port_privilege_setup(prev):
         return 26257
 
+    PortPrivilegeTestcase = K8sTestCase(port_privilege_precondition, port_privilege, port_privilege_setup)
+
     def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
         if exclude_value == None:
             return 26257
@@ -127,3 +129,48 @@ class ServiceSchema(K8sObjectSchema):
 
     def __str__(self) -> str:
         return "ServiceSchema"
+    
+class IngressTLSSchema(K8sObjectSchema):
+
+    def non_existent_secret_precondition(prev):
+        return True
+
+    def non_existent_secret(prev):
+        return {
+            "hosts": ["test.com"],
+            "secretName": "non-existent-secret"
+        }
+
+    def non_existent_secret_setup(prev):
+        return None
+
+    NonExistentSecretTestcase = K8sTestCase(non_existent_secret_precondition, non_existent_secret, non_existent_secret_setup)
+
+    fields = {
+        "hosts": K8sArraySchema,
+        "secretName": K8sStringSchema
+    }
+
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        for field, field_schema in IngressTLSSchema.fields.items():
+            if field in schema_obj.properties:
+                self.properties[field] = field_schema(schema_obj.properties[field])
+    
+    def Match(schema: ObjectSchema) -> bool:
+        if not K8sObjectSchema.Match(schema):
+            return False
+        for field, field_schema in IngressTLSSchema.fields.items():
+            if field not in schema.properties:
+                return False
+            elif not field_schema.Match(schema.properties[field]):
+                return False
+        return True
+
+    def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
+        base_testcases = super().test_cases()
+        base_testcases[1].extend([IngressTLSSchema.NonExistentSecretTestcase])
+        return base_testcases
+    
+    def __str__(self) -> str:
+        return "IngressTLSSchema"

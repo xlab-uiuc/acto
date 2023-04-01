@@ -8,6 +8,18 @@ from test_case import Store, TestCase, K8sTestCase
 
 class PodManagementPolicySchema(K8sStringSchema):
 
+    def change_pod_management_policy(prev) -> str:
+        if prev == "Parallel":
+            return "OrderedReady"
+        else:
+            return "Parallel"
+
+    ChangePodManagementPolicy = K8sTestCase(
+        lambda prev: prev is not None,
+        change_pod_management_policy,
+        lambda prev: "Parallel"
+    )
+
     def gen(self, exclude_value=None, **kwargs):
         if exclude_value == None:
             return "OrderedReady"
