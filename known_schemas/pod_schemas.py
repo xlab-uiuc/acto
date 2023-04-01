@@ -1125,6 +1125,30 @@ class WhenUnsatifiableSchema(K8sStringSchema):
 
 class TopologySpreadConstraintSchema(K8sObjectSchema):
 
+    bad_topology_spread_constraint = {
+        "maxSkew": 1,
+        "topologyKey": "kubernetes.io/hostname",
+        "whenUnsatisfiable": "INVALID",
+        "labelSelector": {
+            "matchLabels": {
+                "foo": "bar"
+            }
+        }
+    }
+
+    def invalid_topology_spread_constraint_precondition(prev):
+        return True
+
+    def invalid_topology_spread_constraint(prev):
+        return TopologySpreadConstraintSchema.bad_topology_spread_constraint
+
+    def invalid_topology_spread_constraint_setup(prev):
+        return None
+
+    InvalidTopologySpreadConstraintTestcase = K8sTestCase(
+        invalid_topology_spread_constraint_precondition, invalid_topology_spread_constraint,
+        invalid_topology_spread_constraint_setup)
+
     fields = {
         "maxSkew": K8sIntegerSchema,
         "topologyKey": K8sStringSchema,
@@ -1147,6 +1171,11 @@ class TopologySpreadConstraintSchema(K8sObjectSchema):
             elif not field_schema.Match(schema.properties[field]):
                 return False
         return True
+
+    def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
+        base_testcases = super().test_cases()
+        base_testcases[1].extend([TopologySpreadConstraintSchema.InvalidTopologySpreadConstraintTestcase])
+        return base_testcases
 
     def __str__(self) -> str:
         return "TopologySpreadConstraint"
