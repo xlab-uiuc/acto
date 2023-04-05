@@ -450,10 +450,10 @@ class IntegerSchema(NumberSchema):
         return prev != None
     
     def change(self, prev):
-        return prev + 1
+        return prev + 2
     
     def change_setup(self, prev):
-        return prev - 1
+        return 2
 
 
 class ObjectSchema(BaseSchema):
