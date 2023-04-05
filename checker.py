@@ -1,5 +1,6 @@
 from builtins import TypeError
 from copy import deepcopy
+import importlib
 import sys
 import logging
 import threading
@@ -15,13 +16,15 @@ from functools import reduce
 
 from common import *
 from compare import CompareMethods
+from get_matched_schemas import find_matched_schema
 from input import InputModel
-from schema import ArraySchema, BooleanSchema, ObjectSchema
+from schema import ArraySchema, BooleanSchema, ObjectSchema, extract_schema
 from snapshot import EmptySnapshot, Snapshot
 from thread_logger import get_thread_logger
 from parse_log.parse_log import parse_log
 
 thread_var = threading.local()
+
 
 class Checker(object):
 
@@ -44,6 +47,10 @@ class Checker(object):
         # logging.info('Field condition map: %s' %
         #              json.dumps(self.field_conditions_map, indent=6))
         # logging.debug(self.context['analysis_result']['paths'])
+
+        self.crd = extract_schema(
+            [], context['crd']['body']['spec']['versions'][-1]['schema']['openAPIV3Schema'])
+        self.k8s_paths = find_matched_schema(self.crd)
 
     def helper(self, schema: ObjectSchema):
         if not isinstance(schema, ObjectSchema):
@@ -262,46 +269,58 @@ class Checker(object):
 
         for delta_list in input_delta.values():
             for delta in delta_list.values():
+                logger.debug('Checking input delta [%s]' % delta.path)
                 if self.compare_method.input_compare(delta.prev, delta.curr):
                     # if the input delta is considered as equivalent, skip
+                    logger.debug('Input delta [%s] is equivalent' % delta.path)
                     continue
 
                 if self.should_skip_input_delta(delta, snapshot):
+                    logger.debug('Input delta [%s] is skipped' % delta.path)
                     continue
 
                 # Find the longest matching field, compare the delta change
-                match_deltas = self._list_matched_fields(delta.path, system_delta_without_cr)
+                match_deltas, should_compare = self._list_matched_fields(
+                    delta.path, system_delta_without_cr)
 
                 # TODO: should the delta match be inclusive?
                 # Policy: pass if any of the matched deltas is equivalent
+                found = False
                 for match_delta in match_deltas:
                     logger.debug('Input delta [%s] matched with [%s]' %
                                  (delta.path, match_delta.path))
-                    if not self.compare_method.compare(delta.prev, delta.curr, match_delta.prev,
-                                                       match_delta.curr):
-                        logger.error('Matched delta inconsistent with input delta')
-                        logger.error('Input delta: %s -> %s' % (delta.prev, delta.curr))
-                        logger.error('Matched delta: %s -> %s' %
-                                     (match_delta.prev, match_delta.curr))
-                        return StateResult(Oracle.SYSTEM_STATE,
-                                           'Matched delta inconsistent with input delta', delta,
-                                           match_delta)
+                    if self.compare_method.compare(delta.prev, delta.curr, match_delta.prev,
+                                                   match_delta.curr):
+                        found = True
+                        break
 
-                if len(match_deltas) == 0:
-                    # if prev and curr of the delta are the same, also consider it as a match
-                    found = False
-                    for resource_delta_list in system_delta_without_cr.values():
-                        for type_delta_list in resource_delta_list.values():
-                            for state_delta in type_delta_list.values():
-                                if self.compare_method.compare(delta.prev, delta.curr,
-                                                               state_delta.prev, state_delta.curr):
-                                    found = True
-                    if found:
-                        continue
-                    logger.error('Found no matching fields for input delta')
-                    logger.error('Input delta [%s]' % delta.path)
-                    return StateResult(Oracle.SYSTEM_STATE, 'Found no matching fields for input',
-                                       delta)
+                if not found and should_compare:
+                    if len(match_deltas) == 0:
+                        # if prev and curr of the delta are the same, also consider it as a match
+                        found = False
+                        for resource_delta_list in system_delta_without_cr.values():
+                            for type_delta_list in resource_delta_list.values():
+                                for state_delta in type_delta_list.values():
+                                    if self.compare_method.compare(delta.prev, delta.curr,
+                                                                   state_delta.prev,
+                                                                   state_delta.curr):
+                                        found = True
+                        if found:
+                            logger.info('Found match by comparing prev and curr of input delta')
+                            continue
+                        logger.error('Found no matching fields for input delta')
+                        logger.error('Input delta [%s]' % delta.path)
+                        return StateResult(Oracle.SYSTEM_STATE,
+                                           'Found no matching fields for input', delta)
+                    else:
+                        logger.error('Found no matching fields for input delta')
+                        logger.error('Input delta [%s]' % delta.path)
+                        return StateResult(Oracle.SYSTEM_STATE,
+                                           'Found no matching fields for input', delta)
+                elif not should_compare:
+                    logger.debug('Input delta [%s] is skipped' % delta.path)
+
+        logger.info('All input deltas are matched')
         return PassResult()
 
     def check_condition_group(self, input: dict, condition_group: dict,
@@ -333,15 +352,31 @@ class Checker(object):
         '''
         logger = get_thread_logger(with_prefix=True)
 
+        if 'ephemeralContainers' in input_delta.path:
+            return True
+
         if self.feature_gate.default_value_comparison_enabled():
             try:
                 default_value = self.input_model.get_schema_by_path(input_delta.path).default
-                if input_delta.prev == default_value and (input_delta.curr == None or
-                                                          isinstance(input_delta.curr, NotPresent)):
-                    return True
-                elif input_delta.curr == default_value and (input_delta.prev == None or isinstance(
-                        input_delta.prev, NotPresent)):
-                    return True
+                logging.info(f"Default value for {input_delta.path} is {default_value}")
+                if str(input_delta.prev) == str(default_value):
+                    if (input_delta.curr == None or isinstance(input_delta.curr, NotPresent)):
+                        return True
+                    elif isinstance(input_delta.curr, list) and len(input_delta.curr) == 0:
+                        return True
+                    elif isinstance(input_delta.curr, dict) and len(input_delta.curr) == 0:
+                        return True
+                    elif isinstance(input_delta.curr, str) and len(input_delta.curr) == 0:
+                        return True
+                elif str(input_delta.curr) == str(default_value):
+                    if (input_delta.prev == None or isinstance(input_delta.prev, NotPresent)):
+                        return True
+                    elif isinstance(input_delta.prev, list) and len(input_delta.prev) == 0:
+                        return True
+                    elif isinstance(input_delta.prev, dict) and len(input_delta.prev) == 0:
+                        return True
+                    elif isinstance(input_delta.prev, str) and len(input_delta.prev) == 0:
+                        return True
             except Exception as e:
                 # print error message
                 logger.warning(f"{e} happened when trying to fetch default value")
@@ -388,6 +423,17 @@ class Checker(object):
 
         return False
 
+    def should_compare(self, path: List[str], snapshot: Snapshot):
+        if path[-1] == 'ACTOKEY':
+            return True
+
+        for k8s_path in self.k8s_paths:
+            if is_prefix(k8s_path, path):
+                return True
+
+        logging.info('Skip comparing %s' % path)
+        return False
+
     def find_nearest_parent(path: list, encoded_path_list: list) -> list:
         length = 0
         ret = None
@@ -423,7 +469,7 @@ class Checker(object):
 
         try:
             value = reduce(operator.getitem, path, input)
-        except (KeyError, TypeError, IndexError) as e:
+        except (KeyError, TypeError) as e:
             if translate_op(condition['op']) == operator.eq and condition['value'] == None:
                 return True
             else:
@@ -542,14 +588,16 @@ class Checker(object):
                         if container['restart_count'] > 0:
                             unhealthy_resources['pod'].append(
                                 '%s container [%s] restart_count [%s]' %
-                                (pod['metadata']['name'], container['name'], container['restart_count']))
+                                (pod['metadata']['name'], container['name'],
+                                 container['restart_count']))
 
         # check Health of CRs
         unhealthy_resources['cr'] = []
         if system_state['custom_resource_status'] != None and 'conditions' in system_state[
                 'custom_resource_status']:
             for condition in system_state['custom_resource_status']['conditions']:
-                if condition['type'] == 'Ready' and condition['status'] != 'True':
+                if condition['type'] == 'Ready' and condition[
+                        'status'] != 'True' and 'is forbidden' in condition['message'].lower():
                     unhealthy_resources['cr'].append('%s condition [%s] status [%s] message [%s]' %
                                                      ('CR status unhealthy', condition['type'],
                                                       condition['status'], condition['message']))
@@ -586,7 +634,7 @@ class Checker(object):
 
         return None
 
-    def _list_matched_fields(self, path: list, delta_dict: dict) -> list:
+    def _list_matched_fields(self, path: list, delta_dict: dict) -> Tuple[list, bool]:
         '''Search through the entire system delta to find longest matching field
 
         Args:
@@ -599,7 +647,7 @@ class Checker(object):
         # if the name of the field is generic, don't match using the path
         for regex in GENERIC_FIELDS:
             if re.search(regex, str(path[-1])):
-                return []
+                return [], False
 
         results = []
         max_match = 0
@@ -620,7 +668,12 @@ class Checker(object):
                     else:
                         pass
 
-        return results
+        if max_match > 1:
+            return results, True
+        elif self.should_compare(path, delta_dict):
+            return results, True
+        else:
+            return [], False
 
     def get_deltas(self, snapshot: Snapshot, prev_snapshot: Snapshot):
         curr_input, curr_system_state = snapshot.input, snapshot.system_state
@@ -695,31 +748,47 @@ class Checker(object):
         prev_system_state.pop('custom_resource_spec', None)
         curr_system_state.pop('custom_resource_status', None)
         prev_system_state.pop('custom_resource_status', None)
+        curr_system_state.pop('pvc', None)
+        prev_system_state.pop('pvc', None)
 
         # remove fields that are not deterministic
         exclude_paths = [
             r".*\['metadata'\]\['managed_fields'\]",
+            r".*\['metadata'\]\['cluster_name'\]",
             r".*\['metadata'\]\['creation_timestamp'\]",
             r".*\['metadata'\]\['resource_version'\]",
             r".*\['metadata'\].*\['uid'\]",
-            r".*\['metadata'\]\['generation'\]",
+            r".*\['metadata'\]\['generation'\]$",
             r".*\['metadata'\]\['annotations'\]",
             r".*\['metadata'\]\['annotations'\]\['.*last-applied.*'\]",
             r".*\['metadata'\]\['annotations'\]\['.*\.kubernetes\.io.*'\]",
             r".*\['metadata'\]\['labels'\]\['.*revision.*'\]",
             r".*\['metadata'\]\['labels'\]\['owner-rv'\]",
             r".*\['status'\]",
-            r".*\['spec'\]\['init_containers'\]\[.*\]\['volume_mounts'\]\[.*\]\['name'\]",
-            r".*\['spec'\]\['containers'\]\[.*\]\['volume_mounts'\]\[.*\]\['name'\]",
-            r".*\['spec'\]\['volumes'\]\[.*\]\['name'\]",
-            r".*\[.*\]\['node_name'\]",
-            r".*\['version'\]",
-            r".*\['endpoints'\]\[.*\]\['addresses'\]\[.*\]\['target_ref'\]\['uid'\]",
-            r".*\['endpoints'\]\[.*\]\['addresses'\]\[.*\]\['target_ref'\]\['resource_version'\]",
+            r"\['metadata'\]\['deletion_grace_period_seconds'\]",
+            r"\['metadata'\]\['deletion_timestamp'\]",
+            r".*\['spec'\]\['init_containers'\]\[.*\]\['volume_mounts'\]\[.*\]\['name'\]$",
+            r".*\['spec'\]\['containers'\]\[.*\]\['volume_mounts'\]\[.*\]\['name'\]$",
+            r".*\['spec'\]\['volumes'\]\[.*\]\['name'\]$",
+            r".*\[.*\]\['node_name'\]$",
+            r".*\[\'spec\'\]\[\'host_users\'\]$",
+            r".*\[\'spec\'\]\[\'os\'\]$",
+            r".*\[\'grpc\'\]$",
+            r".*\[\'spec\'\]\[\'volume_name\'\]$",
+            r".*\['version'\]$",
+            r".*\['endpoints'\]\[.*\]\['addresses'\]\[.*\]\['target_ref'\]\['uid'\]$",
+            r".*\['endpoints'\]\[.*\]\['addresses'\]\[.*\]\['target_ref'\]\['resource_version'\]$",
             r".*\['endpoints'\]\[.*\]\['addresses'\]\[.*\]\['ip'\]",
-            r".*\['cluster_ip'\]",
-            r".*\['cluster_i_ps'\].*",
-            r".*\['deployment_pods'\].*\['metadata'\]\['name'\]",
+            r".*\['cluster_ip'\]$",
+            r".*\['cluster_i_ps'\].*$",
+            r".*\['deployment_pods'\].*\['metadata'\]\['name'\]$",
+            r"\[\'config_map\'\]\[\'kube\-root\-ca\.crt\'\]\[\'data\'\]\[\'ca\.crt\'\]$",
+            r".*\['secret'\].*$",
+            r"\['secrets'\]\[.*\]\['name'\]",
+            r".*\['node_port'\]",
+            r".*\['metadata'\]\['generate_name'\]",
+            r".*\['metadata'\]\['labels'\]\['pod\-template\-hash'\]",
+            r"\['deployment_pods'\].*\['metadata'\]\['owner_references'\]\[.*\]\['name'\]",
         ]
 
         diff = DeepDiff(prev_system_state, curr_system_state, exclude_regex_paths=exclude_paths)
@@ -791,27 +860,38 @@ def compare_system_equality(curr_system_state: Dict,
 
     # remove fields that are not deterministic
     exclude_paths = [
-        r".*\['metadata'\]\['managed_fields'\]", r".*\['metadata'\]\['cluster_name'\]",
-        r".*\['metadata'\]\['creation_timestamp'\]", r".*\['metadata'\]\['resource_version'\]",
-        r".*\['metadata'\].*\['uid'\]", r".*\['metadata'\]\['generation'\]$",
+        r".*\['metadata'\]\['managed_fields'\]",
+        r".*\['metadata'\]\['cluster_name'\]",
+        r".*\['metadata'\]\['creation_timestamp'\]",
+        r".*\['metadata'\]\['resource_version'\]",
+        r".*\['metadata'\].*\['uid'\]",
+        r".*\['metadata'\]\['generation'\]$",
         r".*\['metadata'\]\['annotations'\]",
         r".*\['metadata'\]\['annotations'\]\['.*last-applied.*'\]",
         r".*\['metadata'\]\['annotations'\]\['.*\.kubernetes\.io.*'\]",
         r".*\['metadata'\]\['labels'\]\['.*revision.*'\]",
-        r".*\['metadata'\]\['labels'\]\['owner-rv'\]", r".*\['status'\]",
+        r".*\['metadata'\]\['labels'\]\['owner-rv'\]",
+        r".*\['status'\]",
         r"\['metadata'\]\['deletion_grace_period_seconds'\]",
         r"\['metadata'\]\['deletion_timestamp'\]",
         r".*\['spec'\]\['init_containers'\]\[.*\]\['volume_mounts'\]\[.*\]\['name'\]$",
         r".*\['spec'\]\['containers'\]\[.*\]\['volume_mounts'\]\[.*\]\['name'\]$",
-        r".*\['spec'\]\['volumes'\]\[.*\]\['name'\]$", r".*\[.*\]\['node_name'\]$",
-        r".*\[\'spec\'\]\[\'host_users\'\]$", r".*\[\'spec\'\]\[\'os\'\]$", r".*\[\'grpc\'\]$",
-        r".*\[\'spec\'\]\[\'volume_name\'\]$", r".*\['version'\]$",
+        r".*\['spec'\]\['volumes'\]\[.*\]\['name'\]$",
+        r".*\[.*\]\['node_name'\]$",
+        r".*\[\'spec\'\]\[\'host_users\'\]$",
+        r".*\[\'spec\'\]\[\'os\'\]$",
+        r".*\[\'grpc\'\]$",
+        r".*\[\'spec\'\]\[\'volume_name\'\]$",
+        r".*\['version'\]$",
         r".*\['endpoints'\]\[.*\]\['addresses'\]\[.*\]\['target_ref'\]\['uid'\]$",
         r".*\['endpoints'\]\[.*\]\['addresses'\]\[.*\]\['target_ref'\]\['resource_version'\]$",
-        r".*\['endpoints'\]\[.*\]\['addresses'\]\[.*\]\['ip'\]", r".*\['cluster_ip'\]$",
-        r".*\['cluster_i_ps'\].*$", r".*\['deployment_pods'\].*\['metadata'\]\['name'\]$",
+        r".*\['endpoints'\]\[.*\]\['addresses'\]\[.*\]\['ip'\]",
+        r".*\['cluster_ip'\]$",
+        r".*\['cluster_i_ps'\].*$",
+        r".*\['deployment_pods'\].*\['metadata'\]\['name'\]$",
         r"\[\'config_map\'\]\[\'kube\-root\-ca\.crt\'\]\[\'data\'\]\[\'ca\.crt\'\]$",
-        r".*\['secret'\].*$", r"\['secrets'\]\[.*\]\['name'\]",
+        r".*\['secret'\].*$",
+        r"\['secrets'\]\[.*\]\['name'\]",
         r".*\['node_port'\]",
         r".*\['metadata'\]\['generate_name'\]",
         r".*\['metadata'\]\['labels'\]\['pod\-template\-hash'\]",
@@ -888,6 +968,10 @@ class BlackBoxChecker(Checker):
         self.field_conditions_map = {}
         self.helper(self.input_model.get_root_schema())
 
+        self.crd = extract_schema(
+            [], context['crd']['body']['spec']['versions'][-1]['schema']['openAPIV3Schema'])
+        self.k8s_paths = find_matched_schema(self.crd)
+
         schemas_tuple = input_model.get_all_schemas()
         all_schemas = schemas_tuple[0] + schemas_tuple[1] + schemas_tuple[2]
         self.control_flow_fields = [
@@ -944,6 +1028,11 @@ if __name__ == "__main__":
                 original_result = json.load(original_result_file)
 
             input_model = InputModel(context['crd']['body'], [], config.example_dir, 1, 1, [])
+
+            module = importlib.import_module(config.k8s_fields)
+
+            for k8s_field in module.WHITEBOX:
+                input_model.apply_k8s_schema(k8s_field)
 
             input_model.apply_default_value(context['analysis_result']['default_value_map'])
 
@@ -1104,9 +1193,6 @@ if __name__ == "__main__":
            FeatureGate.DEPENDENCY_ANALYSIS | FeatureGate.TAINT_ANALYSIS |
            FeatureGate.CANONICALIZATION)
     F = {
-        'baseline': BASELINE,
-        'canonicalization': CANONICALIZATION,
-        'taint_analysis': TAINT_ANALYSIS,
         'dependency_analysis': DEPENDENCY_ANALYSIS,
     }
 

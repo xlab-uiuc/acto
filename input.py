@@ -1,4 +1,5 @@
 from functools import partial, reduce
+import inspect
 import json
 import logging
 import operator
@@ -8,15 +9,28 @@ from typing import List, Tuple
 from deepdiff import DeepDiff
 import glob
 import yaml
+from get_matched_schemas import find_matched_schema
 from known_schemas import K8sField
+import known_schemas
 
-from schema import OpaqueSchema, StringSchema, extract_schema, BaseSchema, ObjectSchema, ArraySchema
+from schema import IntegerSchema, OpaqueSchema, StringSchema, extract_schema, BaseSchema, ObjectSchema, ArraySchema
 from test_case import TestCase
 from testplan import DeterministicTestPlan, TestGroup, TestPlan
 from value_with_schema import attach_schema_to_value
-from common import random_string
+from common import is_prefix, random_string
 from thread_logger import get_thread_logger
 from testplan import TreeNode
+
+
+def covered_by_k8s(k8s_fields: List[K8sField], path: List[str]) -> bool:
+    if path[-1] == 'additional_properties':
+        return True
+
+    for k8s_field in k8s_fields:
+        for k8s_path in k8s_fields:
+            if is_prefix(k8s_path, path):
+                return True
+    return False
 
 
 class CustomField:
@@ -62,6 +76,7 @@ class InputModel:
     OVERSPECIFIED = 'OVERSPECIFIED'
     COPIED_OVER = 'COPIED_OVER'
     SEMANTIC = 'SEMANTIC'
+    ADDITIONAL_SEMANTIC = 'ADDITIONAL_SEMANTIC'
 
     def __init__(self,
                  crd: dict,
@@ -130,21 +145,7 @@ class InputModel:
         self.thread_vars.copiedover_test_plan = TestPlan(self.root_schema.to_tree())
         self.thread_vars.semantic_test_plan = TestPlan(self.root_schema.to_tree())
 
-        for key, value in self.normal_test_plan_partitioned[id]:
-            path = json.loads(key)
-            self.thread_vars.normal_test_plan.add_testcases_by_path(value, path)
-
-        for key, value in self.overspecified_test_plan_partitioned[id]:
-            path = json.loads(key)
-            self.thread_vars.overspecified_test_plan.add_testcases_by_path(value, path)
-
-        for key, value in self.copiedover_test_plan_partitioned[id]:
-            path = json.loads(key)
-            self.thread_vars.copiedover_test_plan.add_testcases_by_path(value, path)
-
-        for key, value in self.semantic_test_plan_partitioned[id]:
-            path = json.loads(key)
-            self.thread_vars.semantic_test_plan.add_testcases_by_path(value, path)
+        raise NotImplementedError()
 
     def set_mode(self, mode: str):
         if mode == 'NORMAL':
@@ -155,6 +156,8 @@ class InputModel:
             self.thread_vars.test_plan: TestPlan = self.thread_vars.copiedover_test_plan
         elif mode == InputModel.SEMANTIC:
             self.thread_vars.test_plan: TestPlan = self.thread_vars.semantic_test_plan
+        elif mode == InputModel.ADDITIONAL_SEMANTIC:
+            self.thread_vars.test_plan: TestPlan = self.thread_vars.additional_semantic_test_plan
         else:
             raise ValueError(mode)
 
@@ -477,7 +480,15 @@ class InputModel:
         '''
         for key, value in default_value_result.items():
             path = json.loads(key)[1:]  # get rid of leading "root"
-            self.get_schema_by_path(path).set_default(value)
+            decoded_value = json.loads(value)
+            if isinstance(decoded_value, dict):
+                for k, v in decoded_value.items():
+                    decoded_value[k] = json.loads(v)
+                    logging.info('Setting default value for %s to %s' % (path + [k], decoded_value[k]))
+                    self.get_schema_by_path(path + [k]).set_default(decoded_value[k])
+            else:
+                logging.info('Setting default value for %s to %s' % (path, decoded_value))
+                self.get_schema_by_path(path).set_default(value)
 
     def candidates_dict_to_list(self, candidates: dict, path: list) -> list:
         if 'candidates' in candidates:
@@ -504,6 +515,7 @@ class DeterministicInputModel(InputModel):
         self.thread_vars.normal_test_plan = DeterministicTestPlan()
         self.thread_vars.overspecified_test_plan = DeterministicTestPlan()
         self.thread_vars.copiedover_test_plan = DeterministicTestPlan()
+        self.thread_vars.additional_semantic_test_plan = DeterministicTestPlan()
         self.thread_vars.semantic_test_plan = TestPlan(self.root_schema.to_tree())
 
         for group in self.normal_test_plan_partitioned[id]:
@@ -514,6 +526,9 @@ class DeterministicInputModel(InputModel):
 
         for group in self.copiedover_test_plan_partitioned[id]:
             self.thread_vars.copiedover_test_plan.add_testcase_group(TestGroup(group))
+
+        for group in self.additional_semantic_test_plan_partitioned[id]:
+            self.thread_vars.additional_semantic_test_plan.add_testcase_group(TestGroup(group))
 
         for key, value in self.semantic_test_plan_partitioned[id]:
             path = json.loads(key)
@@ -568,19 +583,49 @@ class DeterministicInputModel(InputModel):
             logger.info('Overspecified field: %s', field)
         for field in unused_fields:
             logger.info('Unused field: %s', field)
+
+        ########################################
+        # Get all K8s schemas
+        ########################################
+        k8s_int_tests = []
+        k8s_str_tests = []
+        for name, obj in inspect.getmembers(known_schemas):
+            if inspect.isclass(obj):
+                if issubclass(obj, known_schemas.K8sIntegerSchema):
+                    for _, class_member in inspect.getmembers(obj):
+                        if isinstance(class_member, known_schemas.K8sTestCase):
+                            k8s_int_tests.append(class_member)
+                elif issubclass(obj, known_schemas.K8sStringSchema):
+                    for _, class_member in inspect.getmembers(obj):
+                        if isinstance(class_member, known_schemas.K8sTestCase):
+                            k8s_str_tests.append(class_member)
+
+        logger.info(f'Got {len(k8s_int_tests)} K8s integer tests')
+        logger.info(f'Got {len(k8s_str_tests)} K8s string tests')
+
+        self.k8s_paths = find_matched_schema(self.root_schema)
+
+        ########################################
+        # Generate test plan
         ########################################
 
         planned_normal_testcases = {}
         normal_testcases = {}
         semantic_testcases = {}
+        additional_semantic_testcases = {}
         overspecified_testcases = {}
         copiedover_testcases = {}
         num_normal_testcases = 0
         num_overspecified_testcases = 0
         num_copiedover_testcases = 0
         num_semantic_testcases = 0
+        num_additional_semantic_testcases = 0
 
         mounted_schema = self.get_schema_by_path(self.mount)
+        normal_schemas, semantic_schemas = mounted_schema.get_normal_semantic_schemas()
+        logger.info(f'Got {len(normal_schemas)} normal schemas')
+        logger.info(f'Got {len(semantic_schemas)} semantic schemas')
+
         normal_schemas, pruned_by_overspecified, pruned_by_copied = mounted_schema.get_all_schemas()
         for schema in normal_schemas:
             path = json.dumps(schema.path).replace('\"ITEM\"',
@@ -594,6 +639,14 @@ class DeterministicInputModel(InputModel):
                 continue
             normal_testcases[path] = testcases
             num_normal_testcases += len(testcases)
+
+            if not isinstance(schema, known_schemas.K8sSchema) and not covered_by_k8s(self.k8s_paths, list(schema.path)):
+                if isinstance(schema, IntegerSchema):
+                    additional_semantic_testcases[path] = list(k8s_int_tests)
+                    num_additional_semantic_testcases += len(k8s_int_tests)
+                # elif isinstance(schema, StringSchema):
+                #     additional_semantic_testcases[path] = list(k8s_str_tests)
+                #     num_additional_semantic_testcases += len(k8s_str_tests)
 
         for schema in pruned_by_overspecified:
             testcases, semantic_testcases_ = schema.test_cases()
@@ -626,6 +679,8 @@ class DeterministicInputModel(InputModel):
                     num_overspecified_testcases)
         logger.info('Generated [%d] test cases for copiedover schemas', num_copiedover_testcases)
         logger.info('Generated [%d] test cases for semantic schemas', num_semantic_testcases)
+        logger.info('Generated [%d] test cases for additional semantic schemas',
+                    num_additional_semantic_testcases)
 
         self.metadata['pruned_by_overspecified'] = len(pruned_by_overspecified)
         self.metadata['pruned_by_copied'] = len(pruned_by_copied)
@@ -634,15 +689,18 @@ class DeterministicInputModel(InputModel):
         self.metadata['num_overspecified_testcases'] = num_overspecified_testcases
         self.metadata['num_copiedover_testcases'] = num_copiedover_testcases
         self.metadata['num_semantic_testcases'] = num_semantic_testcases
+        self.metadata['num_additional_semantic_testcases'] = num_additional_semantic_testcases
 
         normal_test_plan_items = list(normal_testcases.items())
         overspecified_test_plan_items = list(overspecified_testcases.items())
         copiedover_test_plan_items = list(copiedover_testcases.items())
         semantic_test_plan_items = list(semantic_testcases.items())
+        additional_semantic_test_plan_items = list(additional_semantic_testcases.items())
         random.shuffle(normal_test_plan_items)  # randomize to reduce skewness among workers
         random.shuffle(overspecified_test_plan_items)
         random.shuffle(copiedover_test_plan_items)
         random.shuffle(semantic_test_plan_items)
+        random.shuffle(additional_semantic_test_plan_items)
 
         normal_test_plan_items.extend(semantic_test_plan_items)  # run semantic testcases anyway
 
@@ -658,10 +716,11 @@ class DeterministicInputModel(InputModel):
             for i in range(0, len(all_testcases), CHUNK_SIZE):
                 subgroups.append(all_testcases[i:i + CHUNK_SIZE])
             return subgroups
-        
+
         normal_subgroups = split_into_subgroups(normal_test_plan_items)
         overspecified_subgroups = split_into_subgroups(overspecified_test_plan_items)
         copiedover_subgroups = split_into_subgroups(copiedover_test_plan_items)
+        additional_semantic_testcases = split_into_subgroups(additional_semantic_testcases.items())
 
         # Initialize the three test plans, and assign test cases to them according to the number of
         # workers
@@ -669,12 +728,14 @@ class DeterministicInputModel(InputModel):
         self.overspecified_test_plan_partitioned = []
         self.copiedover_test_plan_partitioned = []
         self.semantic_test_plan_partitioned = []
+        self.additional_semantic_test_plan_partitioned = []
 
         for i in range(self.num_workers):
             self.normal_test_plan_partitioned.append([])
             self.overspecified_test_plan_partitioned.append([])
             self.copiedover_test_plan_partitioned.append([])
             self.semantic_test_plan_partitioned.append([])
+            self.additional_semantic_test_plan_partitioned.append([])
 
         for i in range(0, len(normal_subgroups)):
             self.normal_test_plan_partitioned[i % self.num_workers].append(normal_subgroups[i])
@@ -682,7 +743,7 @@ class DeterministicInputModel(InputModel):
         for i in range(0, len(overspecified_subgroups)):
             self.overspecified_test_plan_partitioned[i % self.num_workers].append(
                 overspecified_subgroups[i])
-            
+
         for i in range(0, len(copiedover_subgroups)):
             self.copiedover_test_plan_partitioned[i % self.num_workers].append(
                 copiedover_subgroups[i])
@@ -690,6 +751,10 @@ class DeterministicInputModel(InputModel):
         for i in range(0, len(semantic_test_plan_items)):
             self.semantic_test_plan_partitioned[i % self.num_workers].append(
                 semantic_test_plan_items[i])
+
+        for i in range(0, len(additional_semantic_test_plan_items)):
+            self.additional_semantic_test_plan_partitioned[i % self.num_workers].append(
+                additional_semantic_test_plan_items[i])
 
         # appending empty lists to avoid no test cases distributed to certain work nodes
         assert (self.num_workers == len(self.normal_test_plan_partitioned))
@@ -703,6 +768,7 @@ class DeterministicInputModel(InputModel):
             'overspecified_testcases': overspecified_testcases,
             'copiedover_testcases': copiedover_testcases,
             'semantic_testcases': semantic_testcases,
+            'additional_semantic_testcases': additional_semantic_testcases,
             'planned_normal_testcases': planned_normal_testcases,
             'normal_subgroups': normal_subgroups,
             'overspecified_subgroups': overspecified_subgroups,
@@ -732,6 +798,7 @@ class DeterministicInputModel(InputModel):
         else:
             testcase = selected_group.get_next_testcase()
             return [(selected_group, testcase)]
+
 
 if __name__ == '__main__':
     import time

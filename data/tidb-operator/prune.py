@@ -63,5 +63,14 @@ custom_fields = [
     ]),
     input.CopiedOverField(['spec', 'tikv', 'tolerations'], array=True),
     input.CopiedOverField(['spec', 'tikv', 'podSecurityContext']),
-    input.CopiedOverField(['spec', 'tolerations'], array=True)
+    input.CopiedOverField(['spec', 'tolerations'], array=True),
+
+    input.ProblematicField(['spec', 'pd']),
+    input.ProblematicField(['spec', 'tikv']),
+    input.ProblematicField(['spec', 'tiflash']),
+    input.ProblematicField(['spec', 'ticdc']),
+    input.ProblematicField(['spec', 'pump']),
+    input.ProblematicField(['spec', 'helper']),
+    input.ProblematicField(['spec', 'paused']),
+    input.ProblematicField(['spec', 'tlsCluster']),
 ]

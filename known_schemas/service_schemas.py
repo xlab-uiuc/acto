@@ -63,6 +63,68 @@ class ServiceTypeSchema(K8sStringSchema):
 
     def __str__(self) -> str:
         return "ServiceType"
+    
+
+class ExternalTrafficPolicySchema(K8sStringSchema):
+
+    def external_traffic_policy_change_precondition(prev):
+        return prev is not None
+
+    def external_traffic_policy_change(prev):
+        if prev == 'Cluster':
+            return 'Local'
+        else:
+            return 'Cluster'
+
+    def external_traffic_policy_change_setup(prev):
+        return 'Cluster'
+
+    ExternalTrafficPolicyChangeTestcase = K8sTestCase(external_traffic_policy_change_precondition, external_traffic_policy_change,
+                                         external_traffic_policy_change_setup)
+
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        self.default = 'Cluster'
+
+    def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
+        if exclude_value == 'Local':
+            return 'Cluster'
+        else:
+            return 'Local'
+
+    def Match(schema: ObjectSchema) -> bool:
+        return K8sStringSchema.Match(schema)
+
+    def __str__(self) -> str:
+        return "ExternalTrafficPolicy"
+    
+
+class IpRangeSchema(K8sStringSchema):
+
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        self.pattern = r'^(\d{1,3}\.){3}\d{1,3}/\d{1,2}$'
+
+    def Match(schema: ObjectSchema) -> bool:
+        return K8sStringSchema.Match(schema)
+    
+    def __str__(self) -> str:
+        return "IpRange"
+    
+
+class LoadBalancerSourceRangesSchema(K8sArraySchema):
+
+    item = IpRangeSchema
+
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        self.item_schema = LoadBalancerSourceRangesSchema.item(schema_obj.item_schema)
+
+    def Match(schema: ObjectSchema) -> bool:
+        return K8sArraySchema.Match(schema) and IpRangeSchema.Match(schema.items)
+    
+    def __str__(self) -> str:
+        return "LoadBalancerSourceRanges"
 
 
 class ServiceSpecSchema(K8sObjectSchema):
@@ -77,7 +139,7 @@ class ServiceSpecSchema(K8sObjectSchema):
         "healthCheckNodePort": K8sIntegerSchema,
         "ipFamilies": K8sArraySchema,
         "loadBalancerIP": K8sStringSchema,
-        "loadBalancerSourceRanges": K8sArraySchema,
+        "loadBalancerSourceRanges": LoadBalancerSourceRangesSchema,
         "ports": K8sArraySchema,
         "publishNotReadyAddresses": K8sBooleanSchema,
         "selector": K8sObjectSchema,

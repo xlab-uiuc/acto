@@ -1,7 +1,7 @@
 from typing import List, Tuple
-from schema import BaseSchema, ObjectSchema
+from schema import BaseSchema, ObjectSchema, StringSchema
 from known_schemas.base import K8sBooleanSchema, K8sStringSchema, K8sObjectSchema, K8sArraySchema, K8sIntegerSchema
-from .resource_schemas import StorageResourceRequirementsSchema
+from .resource_schemas import QuantitySchema, StorageResourceRequirementsSchema
 from test_case import TestCase, K8sTestCase
 
 
@@ -10,7 +10,8 @@ class HostPathTypeSchema(K8sStringSchema):
     def directory_or_create(prev):
         return "DirectoryOrCreate"
 
-    DirectoryOrCreateTestcase = K8sTestCase(lambda prev: prev != "DirectoryOrCreate", directory_or_create, lambda prev: "Directory")
+    DirectoryOrCreateTestcase = K8sTestCase(lambda prev: prev != "DirectoryOrCreate",
+                                            directory_or_create, lambda prev: "Directory")
 
     def gen(self, exclude_value=None, **kwargs):
         if exclude_value == None:
@@ -32,7 +33,8 @@ class FilePathSchema(K8sStringSchema):
     def tmp_file(prev):
         return "/tmp/test"
 
-    TmpFileTestcase = K8sTestCase(lambda prev: prev != "/tmp/test", tmp_file, lambda prev: "/tmp/test2")
+    TmpFileTestcase = K8sTestCase(lambda prev: prev != "/tmp/test", tmp_file,
+                                  lambda prev: "/tmp/test2")
 
     def gen(self, exclude_value=None, **kwargs):
         if exclude_value == None:
@@ -120,7 +122,8 @@ class StorageClassNameSchema(K8sStringSchema):
         else:
             return 'standard'
 
-    ChangeStorageClassNameTestcase = K8sTestCase(lambda prev: prev != "ssd", change_storage_class_name, lambda prev: "ssd")
+    ChangeStorageClassNameTestcase = K8sTestCase(lambda prev: prev != "ssd",
+                                                 change_storage_class_name, lambda prev: "ssd")
 
     def __init__(self, schema_obj: BaseSchema) -> None:
         super().__init__(schema_obj)
@@ -190,3 +193,41 @@ class PersistentVolumeClaimSchema(K8sObjectSchema):
 
     def __str__(self) -> str:
         return "PersistentVolumeClaimSchema"
+
+
+class MediumSchema(K8sStringSchema):
+
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        self.enum = ['Memory', '']
+        self.default = ''
+
+    def Match(schema: StringSchema) -> bool:
+        return super().Match()
+
+    def __str__(self) -> str:
+        return "Medium"
+
+
+class EmptyDirVolumeSourceSchema(K8sObjectSchema):
+
+    fields = {"medium": MediumSchema, "sizeLimit": QuantitySchema}
+
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        for field, field_schema in EmptyDirVolumeSourceSchema.fields.items():
+            if field in schema_obj.properties:
+                self.properties[field] = field_schema(schema_obj.properties[field])
+
+    def Match(schema: ObjectSchema) -> bool:
+        if not K8sObjectSchema.Match(schema):
+            return False
+        for field, field_schema in EmptyDirVolumeSourceSchema.fields.items():
+            if field not in schema.properties:
+                return False
+            elif not field_schema.Match(schema.properties[field]):
+                return False
+        return True
+
+    def __str__(self) -> str:
+        return "EmptyDirVolumeSourceSchema"

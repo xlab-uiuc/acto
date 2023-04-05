@@ -7,6 +7,50 @@ from test_case import TestCase, K8sTestCase
 from .resource_schemas import ComputeResourceRequirementsSchema, ResourceRequirementsSchema
 
 
+class HandlerSchema(K8sObjectSchema):
+
+    fields = {"exec": K8sObjectSchema, "httpGet": K8sObjectSchema, "tcpSocket": K8sObjectSchema}
+
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        for field, field_schema in HandlerSchema.fields.items():
+            if field in schema_obj.properties:
+                self.properties[field] = field_schema(schema_obj.properties[field])
+
+    def Match(schema: ObjectSchema) -> bool:
+        if not K8sObjectSchema.Match(schema):
+            return False
+        for field, field_schema in HandlerSchema.fields.items():
+            if field not in schema.properties:
+                return False
+            elif not field_schema.Match(schema.properties[field]):
+                return False
+        return True
+    
+    def __str__(self) -> str:
+        return "Handler"
+
+
+class LifecycleSchema(K8sObjectSchema):
+
+    fields = {"postStart": HandlerSchema, "preStop": HandlerSchema}
+
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        for field, field_schema in LifecycleSchema.fields.items():
+            if field in schema_obj.properties:
+                self.properties[field] = field_schema(schema_obj.properties[field])
+
+    def Match(schema: ObjectSchema) -> bool:
+        if not K8sObjectSchema.Match(schema):
+            return False
+        for field, field_schema in LifecycleSchema.fields.items():
+            if field not in schema.properties:
+                return False
+            elif not field_schema.Match(schema.properties[field]):
+                return False
+        return True
+
 class EnvVarSchema(K8sObjectSchema):
 
     fields = {"name": K8sStringSchema, "value": K8sStringSchema}
@@ -313,7 +357,7 @@ class AffinitySchema(K8sObjectSchema):
         return AffinitySchema.NormalAffinity
 
     def null_affinity_precondition(prev) -> bool:
-        return prev != None
+        return True
 
     def null_affinity(prev) -> dict:
         return None
@@ -642,6 +686,10 @@ class ImagePullPolicySchema(K8sStringSchema):
     ChangeImagePullPolicyTestCase = K8sTestCase(change_image_pull_policy_precondition,
                                                 change_image_pull_policy,
                                                 change_image_pull_policy_setup)
+    
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        self.default = "IfNotPresent"
 
     def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
         base_testcases = super().test_cases()
@@ -782,6 +830,91 @@ class LivenessProbeSchema(K8sObjectSchema):
 
     def __str__(self) -> str:
         return "LivenessProbe"
+    
+class ReadinessProbeSchema(K8sObjectSchema):
+
+    def tcp_probe_precondition(prev) -> bool:
+        return True
+
+    def tcp_probe(prev) -> dict:
+        return {"tcpSocket": {"port": 8500}, "initialDelaySeconds": 10}
+
+    def tcp_probe_setup(prev) -> dict:
+        return {"tcpSocket": {"port": 12345}, "initialDelaySeconds": 10}
+
+    def http_probe_precondition(prev) -> bool:
+        return True
+
+    def http_probe(prev) -> dict:
+        return {"httpGet": {"port": 8500}, "initialDelaySeconds": 10}
+
+    def http_probe_setup(prev) -> dict:
+        return {"httpGet": {"port": 12345}, "initialDelaySeconds": 10}
+
+    def grpc_probe_precondition(prev) -> bool:
+        return True
+
+    def grpc_probe(prev) -> dict:
+        return {"grpc": {"port": 8500}, "initialDelaySeconds": 10}
+
+    def grpc_probe_setup(prev) -> dict:
+        return {"grpc": {"port": 12345}, "initialDelaySeconds": 10}
+
+    def exec_probe_precondition(prev) -> bool:
+        return True
+
+    def exec_probe(prev) -> dict:
+        return {"exec": {"command": ["/liveness.sh"]}, "initialDelaySeconds": 10}
+
+    def exec_probe_setup(prev) -> dict:
+        return {"exec": {"command": ["/liveness.sh"]}, "initialDelaySeconds": 10}
+
+    def invalid_probe_precondition(prev) -> bool:
+        return True
+
+    def invalid_probe(prev) -> dict:
+        return {"invalid": {"port": 8500}, "initialDelaySeconds": 10}
+
+    def invalid_probe_setup(prev) -> dict:
+        return {"invalid": {"port": 12345}, "initialDelaySeconds": 10}
+
+    TCP_PROBE_TESTCASE = K8sTestCase(tcp_probe_precondition, tcp_probe, tcp_probe_setup)
+    HTTP_PROBE_TESTCASE = K8sTestCase(http_probe_precondition, http_probe, http_probe_setup)
+    GRPC_PROBE_TESTCASE = K8sTestCase(grpc_probe_precondition, grpc_probe, grpc_probe_setup)
+    EXEC_PROBE_TESTCASE = K8sTestCase(exec_probe_precondition, exec_probe, exec_probe_setup)
+
+    fields = {
+        "exec": K8sObjectSchema,
+        "httpGet": K8sObjectSchema,
+        "tcpSocket": K8sObjectSchema,
+        "grpc": GRPCSchema,
+        "initialDelaySeconds": K8sIntegerSchema,
+        "timeoutSeconds": K8sIntegerSchema,
+        "periodSeconds": K8sIntegerSchema,
+        "successThreshold": K8sIntegerSchema,
+        "failureThreshold": K8sIntegerSchema,
+    }
+
+    def Match(schema: ObjectSchema) -> bool:
+        if not K8sObjectSchema.Match(schema):
+            return False
+        for field, field_schema in ReadinessProbeSchema.fields.items():
+            if field not in schema.properties:
+                return False
+            elif not field_schema.Match(schema.properties[field]):
+                return False
+        return True
+
+    def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
+        base_testcases = super().test_cases()
+        base_testcases[1].append(ReadinessProbeSchema.TCP_PROBE_TESTCASE)
+        base_testcases[1].append(ReadinessProbeSchema.HTTP_PROBE_TESTCASE)
+        base_testcases[1].append(ReadinessProbeSchema.GRPC_PROBE_TESTCASE)
+        base_testcases[1].append(ReadinessProbeSchema.EXEC_PROBE_TESTCASE)
+        return base_testcases
+
+    def __str__(self) -> str:
+        return "ReadinessProbe"
 
 
 class ArgsSchema(K8sArraySchema):
@@ -800,6 +933,22 @@ class ArgsSchema(K8sArraySchema):
 
     def __str__(self) -> str:
         return "Args"
+    
+
+class NameSchema(K8sStringSchema):
+
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        self.pattern = "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
+
+    def gen(self, exclude_value=None, **kwargs):
+        return super().gen(exclude_value, **kwargs)
+
+    def Match(schema: ObjectSchema) -> bool:
+        return K8sStringSchema.Match(schema)
+
+    def __str__(self) -> str:
+        return "Name"
 
 
 class ContainerSchema(K8sObjectSchema):
@@ -817,7 +966,7 @@ class ContainerSchema(K8sObjectSchema):
                                                container_invalid_name, container_invalid_name_setup)
 
     fields = {
-        "name": K8sStringSchema,
+        "name": NameSchema,
         "image": ImageSchema,
         "command": K8sArraySchema,
         "args": ArgsSchema,
@@ -933,6 +1082,10 @@ class RestartPolicySchema(K8sStringSchema):
 
     RestartPolicyChangeTestcase = K8sTestCase(restart_policy_change_precondition,
                                               restart_policy_change, restart_policy_change_setup)
+    
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        self.default = 'Always'
 
     def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
         if exclude_value == 'OnFailure':
@@ -1198,6 +1351,28 @@ class TopologySpreadConstraintsSchema(K8sArraySchema):
     def __str__(self) -> str:
         return "TopologySpreadConstraint"
 
+class RuntimeClassNameSchema(K8sStringSchema):
+
+    def invalid_runtime_class_name_precondition(prev):
+        return prev is not None
+
+    def invalid_runtime_class_name(prev):
+        return "INVALID"
+
+    def invalid_runtime_class_name_setup(prev):
+        return "foo"
+
+    InvalidRuntimeClassNameTestcase = K8sTestCase(invalid_runtime_class_name_precondition, invalid_runtime_class_name,
+                                       invalid_runtime_class_name_setup)
+
+    def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
+        return "foo"
+
+    def Match(schema: ObjectSchema) -> bool:
+        return K8sStringSchema.Match(schema)
+
+    def __str__(self) -> str:
+        return "RuntimeClassName"
 
 class PodSpecSchema(K8sObjectSchema):
 
@@ -1215,7 +1390,7 @@ class PodSpecSchema(K8sObjectSchema):
         "priority": K8sIntegerSchema,
         "priorityClassName": PriorityClassNameSchema,
         "restartPolicy": RestartPolicySchema,
-        "runtimeClassName": K8sStringSchema,  # hard to support, need cluster support
+        "runtimeClassName": RuntimeClassNameSchema,  # hard to support, need cluster support
         "schedulerName": K8sStringSchema,  # hard to support, need scheduler
         "securityContext": PodSecurityContextSchema,
         "serviceAccountName": ServiceAccountNameSchema,

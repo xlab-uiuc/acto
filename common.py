@@ -589,6 +589,8 @@ def invalid_input_message(log_msg: str, input_delta: dict) -> Tuple[bool, list]:
 
 def canonicalize(s: str):
     '''Replace all upper case letters with _lowercase'''
+    if isinstance(s, int):
+        return 'ITEM'
     s = str(s)
     return re.sub(r"(?=[A-Z])", '_', s).lower()
 
@@ -604,6 +606,18 @@ def is_subfield(subpath: list, path: list) -> bool:
         return False
     for i in range(len(path)):
         if path[i] != subpath[i]:
+            return False
+    return True
+
+def is_prefix(prefix: list, path: list) -> bool:
+    '''Checks if subpath is a subfield of path
+    '''
+    if len(path) < len(prefix):
+        return False
+    for i in range(len(prefix)):
+        if isinstance(path[i], int):
+            continue
+        if path[i] != prefix[i]:
             return False
     return True
 
@@ -721,6 +735,7 @@ INVALID_INPUT_LOG_REGEX = [
     r"are not available",
     r"must include",
     r"must have",
+    r"can't be empty",
 ]
 
 GENERIC_FIELDS = [
@@ -728,7 +743,6 @@ GENERIC_FIELDS = [
     r"^effect$",
     r"^key$",
     r"^operator$",
-    r"^value$",
     r"\d",
     r"^claimName$",
     r"^host$",

@@ -52,6 +52,11 @@ class BaseSchema:
         '''Returns a tuple of normal schemas, schemas pruned by over-specified, schemas pruned by 
         copied-over'''
         return None
+    
+    @abstractmethod
+    def get_normal_semantic_schemas(self) -> Tuple[List['BaseSchema'], List['BaseSchema']]:
+        '''Returns a tuple of normal schemas, semantic schemas'''
+        return None
 
     @abstractmethod
     def to_tree(self) -> TreeNode:
@@ -145,6 +150,11 @@ class StringSchema(BaseSchema):
         if self.problematic:
             return [], [], []
         return [self], [], []
+    
+    def get_normal_semantic_schemas(self) -> Tuple[List['BaseSchema'], List['BaseSchema']]:
+        if self.problematic:
+            return [], []
+        return [self], []
 
     def to_tree(self) -> TreeNode:
         return TreeNode(self.path)
@@ -219,6 +229,7 @@ class NumberSchema(BaseSchema):
     INCREASE_TEST = 'number-increase'
     DECREASE_TEST = 'number-decrease'
     EMPTY_TEST = 'number-empty'
+    CHANGE_TEST = 'number-change'
 
     def __init__(self, path: list, schema: dict) -> None:
         super().__init__(path, schema)
@@ -245,15 +256,18 @@ class NumberSchema(BaseSchema):
             for case in self.enum:
                 ret.append(EnumTestCase(case))
         else:
-            ret.append(TestCase(NumberSchema.INCREASE_TEST, self.increase_precondition, self.increase, self.increase_setup))
-            ret.append(TestCase(NumberSchema.DECREASE_TEST, self.decrease_precondition, self.decrease, self.decrease_setup))
-            ret.append(TestCase(NumberSchema.EMPTY_TEST, self.empty_precondition, self.empty_mutator, self.empty_setup))
+            ret.append(TestCase(NumberSchema.CHANGE_TEST, self.change_precondition, self.change, self.change_setup))
         return ret, []
 
     def get_all_schemas(self) -> Tuple[list, list, list]:
         if self.problematic:
             return [], [], []
         return [self], [], []
+    
+    def get_normal_semantic_schemas(self) -> Tuple[List['BaseSchema'], List['BaseSchema']]:
+        if self.problematic:
+            return [], []
+        return [self], []
 
     def to_tree(self) -> TreeNode:
         return TreeNode(self.path)
@@ -318,6 +332,25 @@ class NumberSchema(BaseSchema):
 
     def empty_setup(self, prev):
         return 1
+    
+    def change_precondition(self, prev):
+        return prev != None
+    
+    def change(self, prev):
+        '''Test case to change the value to another one'''
+        logger = get_thread_logger(with_prefix=True)
+        if self.enum != None:
+            logger.fatal('Number field with enum should not call change to mutate')
+        if self.multiple_of != None:
+            new_number = random.randrange(self.minimum, self.maximum + 1, self.multiple_of)
+        else:
+            new_number = random.uniform(self.minimum, self.maximum)
+        if prev == new_number:
+            logger.error('Failed to change, generated the same number with previous one')
+        return new_number
+    
+    def change_setup(self, prev):
+        return 2
 
 
 class IntegerSchema(NumberSchema):
@@ -352,6 +385,11 @@ class IntegerSchema(NumberSchema):
         if self.problematic:
             return [], [], []
         return [self], [], []
+    
+    def get_normal_semantic_schemas(self) -> Tuple[List['BaseSchema'], List['BaseSchema']]:
+        if self.problematic:
+            return [], []
+        return [self], []
 
     def to_tree(self) -> TreeNode:
         return TreeNode(self.path)
@@ -407,6 +445,15 @@ class IntegerSchema(NumberSchema):
 
     def decrease_setup(self, prev):
         return self.maximum
+    
+    def change_precondition(self, prev):
+        return prev != None
+    
+    def change(self, prev):
+        return prev + 1
+    
+    def change_setup(self, prev):
+        return prev - 1
 
 
 class ObjectSchema(BaseSchema):
@@ -539,6 +586,25 @@ class ObjectSchema(BaseSchema):
             normal_schemas.append(self)
 
         return normal_schemas, pruned_by_overspecified, pruned_by_copiedover
+    
+    def get_normal_semantic_schemas(self) -> Tuple[List['BaseSchema'], List['BaseSchema']]:
+        if self.problematic:
+            return [], []
+        
+        normal_schemas: List[BaseSchema] = [self]
+        semantic_schemas: List[BaseSchema] = []
+
+        if self.properties != None:
+            for value in self.properties.values():
+                child_schema_tuple = value.get_normal_semantic_schemas()
+                normal_schemas.extend(child_schema_tuple[0])
+                semantic_schemas.extend(child_schema_tuple[1])
+
+        if self.additional_properties != None:
+            normal_schemas.append(self.additional_properties)
+
+        return normal_schemas, semantic_schemas
+
 
     def to_tree(self) -> TreeNode:
         node = TreeNode(self.path)
@@ -716,6 +782,16 @@ class ArraySchema(BaseSchema):
             normal_schemas.append(self)
 
         return normal_schemas, pruned_by_overspecified, pruned_by_copiedover
+    
+    def get_normal_semantic_schemas(self) -> Tuple[List['BaseSchema'], List['BaseSchema']]:
+        normal_schemas = [self]
+        semantic_schemas = []
+
+        child_schema_tuple = self.item_schema.get_normal_semantic_schemas()
+        normal_schemas.extend(child_schema_tuple[0])
+        semantic_schemas.extend(child_schema_tuple[1])
+
+        return normal_schemas, semantic_schemas
 
     def to_tree(self) -> TreeNode:
         node = TreeNode(self.path)
@@ -844,6 +920,17 @@ class AnyOfSchema(BaseSchema):
         if self.problematic:
             return [], [], []
         return [self], [], []
+    
+    def get_normal_semantic_schemas(self) -> Tuple[List['BaseSchema'], List['BaseSchema']]:
+        normal_schemas = [self]
+        semantic_schemas = []
+
+        for possibility in self.possibilities:
+            possibility_tuple = possibility.get_normal_semantic_schemas()
+            normal_schemas.extend(possibility_tuple[0])
+            semantic_schemas.extend(possibility_tuple[1])
+
+        return normal_schemas, semantic_schemas
 
     def empty_value(self):
         return None
@@ -917,6 +1004,17 @@ class OneOfSchema(BaseSchema):
         if self.problematic:
             return [], [], []
         return [self], [], []
+    
+    def get_normal_semantic_schemas(self) -> Tuple[List['BaseSchema'], List['BaseSchema']]:
+        normal_schemas = [self]
+        semantic_schemas = []
+
+        for possibility in self.possibilities:
+            possibility_tuple = possibility.get_normal_semantic_schemas()
+            normal_schemas.extend(possibility_tuple[0])
+            semantic_schemas.extend(possibility_tuple[1])
+
+        return normal_schemas, semantic_schemas
 
     def empty_value(self):
         return None
@@ -986,6 +1084,9 @@ class BooleanSchema(BaseSchema):
         if self.problematic:
             return [], [], []
         return [self], [], []
+    
+    def get_normal_semantic_schemas(self) -> Tuple[List['BaseSchema'], List['BaseSchema']]:
+        return [self], []
 
     def to_tree(self) -> TreeNode:
         return TreeNode(self.path)
@@ -1055,6 +1156,9 @@ class OpaqueSchema(BaseSchema):
 
     def get_all_schemas(self) -> Tuple[list, list, list]:
         return [], [], []
+    
+    def get_normal_semantic_schemas(self) -> Tuple[List['BaseSchema'], List['BaseSchema']]:
+        return [], []
 
     def to_tree(self) -> TreeNode:
         return TreeNode(self.path)

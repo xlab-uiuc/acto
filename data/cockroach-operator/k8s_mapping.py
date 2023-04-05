@@ -17,7 +17,7 @@ WHITEBOX = [
 
 BLACKBOX = [
     K8sField(['spec', 'affinity'], AffinitySchema),
-    K8sField(['spec', 'dataStore', 'pvc', 'spec', 'resources'], ResourceRequirementsSchema),
+    K8sField(['spec', 'dataStore', 'pvc', 'spec'], PersistentVolumeClaimSpecSchema),
     K8sField(['spec', 'resources'], ResourceRequirementsSchema),
     K8sField(['spec', 'tolerations'], TolerationsSchema),
     K8sField(['spec', 'topologySpreadConstraints'], TopologySpreadConstraintsSchema),

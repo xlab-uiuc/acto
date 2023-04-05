@@ -11,7 +11,7 @@ WHITEBOX = [
     K8sField(['spec', 'override', 'statefulSet'], StatefulSetSchema),
     K8sField(['spec', 'tolerations'], TolerationsSchema),
     K8sField(['spec', 'replicas'], ReplicasSchema),
-    K8sField(['spec', 'TerminationGracePeriodSeconds'], K8sIntegerSchema),
+    K8sField(['spec', 'terminationGracePeriodSeconds'], K8sIntegerSchema),
 ]
 
 BLACKBOX = [

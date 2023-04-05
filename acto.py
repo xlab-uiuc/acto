@@ -796,10 +796,12 @@ class Acto:
             for t in threads:
                 t.join()
 
-        if 'semantic' in modes:
+        additional_semantic_time = time.time()
+
+        if InputModel.ADDITIONAL_SEMANTIC in modes:
             threads = []
             for runner in runners:
-                t = threading.Thread(target=runner.run, args=([InputModel.SEMANTIC]))
+                t = threading.Thread(target=runner.run, args=([InputModel.ADDITIONAL_SEMANTIC]))
                 t.start()
                 threads.append(t)
 
@@ -816,7 +818,8 @@ class Acto:
         testrun_info = {
             'normal_duration': normal_time - start_time,
             'overspecified_duration': overspecified_time - normal_time,
-            'copied_over_duration': end_time - overspecified_time,
+            'copied_over_duration': additional_semantic_time - overspecified_time,
+            'additional_semantic_duration': end_time - additional_semantic_time,
             'num_workers': self.num_workers,
             'num_total_testcases': self.input_model.metadata,
             'num_total_failed': num_total_failed,
@@ -921,6 +924,8 @@ if __name__ == '__main__':
                         dest='k8s_fields',
                         action='store_true',
                         help='Run k8s fields testcases')
+
+    parser.add_argument('--additional-semantic', dest='additional_semantic', action='store_true', help='Run additional semantic testcases')
     parser.add_argument('--delta-from', dest='delta_from', help='Delta from')
     parser.add_argument('--notify-crash',
                         dest='notify_crash',
@@ -1002,8 +1007,8 @@ if __name__ == '__main__':
                 delta_from=args.delta_from)
     generation_time = datetime.now()
     logger.info('Acto generation finished in %s', generation_time - start_time)
-    if args.k8s_fields:
-        acto.run(modes=['semantic'])
+    if args.additional_semantic:
+        acto.run(modes=[InputModel.ADDITIONAL_SEMANTIC])
     elif not args.learn:
         acto.run(modes=['normal'])
     end_time = datetime.now()
