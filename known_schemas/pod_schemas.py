@@ -7,8 +7,6 @@ from test_case import K8sInvalidTestCase, TestCase, K8sTestCase
 
 from .resource_schemas import ComputeResourceRequirementsSchema, ResourceRequirementsSchema
 
-threading.local
-
 class HandlerSchema(K8sObjectSchema):
 
     fields = {"exec": K8sObjectSchema, "httpGet": K8sObjectSchema, "tcpSocket": K8sObjectSchema}
@@ -317,7 +315,7 @@ class AffinitySchema(K8sObjectSchema):
     }
 
     AllOnOneNodeAffinity = {
-        "nodeAffinity": NodeAffinitySchema.OneNodeAffinity,
+        "nodeAffinity": PodAffinitySchema.AllOnOneNodeAffinity,
     }
 
     AllOnDifferentNodesAntiAffinity = {
@@ -336,12 +334,6 @@ class AffinitySchema(K8sObjectSchema):
         return prev != AffinitySchema.AllOnOneNodeAffinity
 
     def all_on_one_node(prev) -> dict:
-        global thread_var
-        all_on_one_node = AffinitySchema.AllOnOneNodeAffinity
-        all_on_one_node["nodeAffinity"]["requiredDuringSchedulingIgnoredDuringExecution"][
-            "nodeSelectorTerms"][0]["matchExpressions"][0]["values"] = [
-                f"acto-cluster-{thread_var.worker_id}-worker"
-            ]
         return AffinitySchema.AllOnOneNodeAffinity
 
     def all_on_one_node_setup(prev) -> dict:

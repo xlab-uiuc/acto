@@ -125,9 +125,6 @@ class TrialRunner:
         self.cluster = cluster
         self.images_archive = os.path.join(workdir, 'images.tar')
         self.worker_id = worker_id
-        global thread_var
-        thread_var = threading.local()
-        thread_var.worker_id = worker_id
         self.sequence_base = sequence_base  # trial number to start with
         self.context_name = cluster.get_context_name(f"acto-cluster-{worker_id}")
         self.kubeconfig = os.path.join(os.path.expanduser('~'), '.kube', self.context_name)
