@@ -315,7 +315,7 @@ class AffinitySchema(K8sObjectSchema):
     }
 
     AllOnOneNodeAffinity = {
-        "nodeAffinity": PodAffinitySchema.AllOnOneNodeAffinity,
+        "podAffinity": PodAffinitySchema.AllOnOneNodeAffinity,
     }
 
     AllOnDifferentNodesAntiAffinity = {
