@@ -106,7 +106,7 @@ class CompareMethods:
     def input_compare(self, prev, curr) -> bool:
         if prev is None:
             return True
-        elif isinstance(prev, NotPresent) or isinstance(curr, NotPresent):
+        elif isinstance(prev, NotPresent):
             return True
         elif isinstance(prev, str) and prev == '':
             return True

@@ -270,6 +270,11 @@ class Checker(object):
         for delta_list in input_delta.values():
             for delta in delta_list.values():
                 logger.debug('Checking input delta [%s]' % delta.path)
+
+                if self.skip_default_input_delta(delta):
+                    logger.debug('Input delta [%s] is skipped' % delta.path)
+                    continue
+
                 if self.compare_method.input_compare(delta.prev, delta.curr):
                     # if the input delta is considered as equivalent, skip
                     logger.debug('Input delta [%s] is equivalent' % delta.path)
@@ -339,6 +344,34 @@ class Checker(object):
                 return False
         else:
             return self.check_condition(input, condition_group, input_delta_path)
+
+    def skip_default_input_delta(self, diff: Diff) -> bool:
+        if diff.path[-1] == 'ACTOKEY':
+            return False
+        
+        prev = diff.prev
+        curr = diff.curr
+
+        if prev is None:
+            return True
+        elif isinstance(prev, NotPresent):
+            return True
+        elif isinstance(prev, str) and prev == '':
+            return True
+        elif isinstance(prev, int) and prev == 0:
+            return True
+        elif isinstance(prev, float) and prev == 0:
+            return True
+        
+        if curr is None:
+            return True
+        elif isinstance(curr, NotPresent):
+            return True
+        elif isinstance(curr, str) and curr == '':
+            return True
+        elif isinstance(curr, int) and curr == 0:
+            return True
+        
 
     def should_skip_input_delta(self, input_delta: Diff, snapshot: Snapshot) -> bool:
         '''Determines if the input delta should be skipped or not
@@ -1193,9 +1226,6 @@ if __name__ == "__main__":
            FeatureGate.DEPENDENCY_ANALYSIS | FeatureGate.TAINT_ANALYSIS |
            FeatureGate.CANONICALIZATION)
     F = {
-        'baseline': BASELINE,
-        'canonicalization': CANONICALIZATION,
-        'taint_analysis': TAINT_ANALYSIS,
         'dependency_analysis': DEPENDENCY_ANALYSIS,
     }
 
