@@ -469,11 +469,11 @@ class TrialRunner:
 
             if runResult.is_connection_refused():
                 # Connection refused due to webhook not ready, let's wait for a bit
-                logger.info('Connection failed. Retry the test after 20 seconds')
-                time.sleep(20)
+                logger.info('Connection failed. Retry the test after 60 seconds')
+                time.sleep(60)
                 retry += 1
 
-                if retry > 5:
+                if retry > 2:
                     logger.error('Connection failed too many times. Abort')
                     break
             else:
