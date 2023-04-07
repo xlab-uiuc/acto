@@ -663,13 +663,11 @@ class DeterministicInputModel(InputModel):
                 for testcase in testcases:
                     if isinstance(testcase, known_schemas.K8sInvalidTestCase):
                         num_total_invalid_tests += 1
-                        print(semantic_testcase)
                     num_total_semantic_tests += 1
 
                 for semantic_testcase in semantic_testcases_:
                     if isinstance(semantic_testcase, known_schemas.K8sInvalidTestCase):
                         num_total_invalid_tests += 1
-                        print(semantic_testcase)
                     num_total_semantic_tests += 1
 
             if not isinstance(schema, known_schemas.K8sSchema) and not covered_by_k8s(self.k8s_paths, list(schema.path)):
@@ -696,12 +694,10 @@ class DeterministicInputModel(InputModel):
                     if isinstance(testcase, known_schemas.K8sInvalidTestCase):
                         num_total_invalid_tests += 1
                         num_total_semantic_tests += 1
-                        print(semantic_testcase)
 
                 for semantic_testcase in semantic_testcases_:
                     if isinstance(semantic_testcase, known_schemas.K8sInvalidTestCase):
                         num_total_invalid_tests += 1
-                        print(semantic_testcase)
                     num_total_semantic_tests += 1
 
         for schema in pruned_by_copied:
