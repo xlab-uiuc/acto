@@ -537,10 +537,10 @@ class Checker(object):
         # check Health of Statefulsets
         unhealthy_resources['statefulset'] = []
         for sfs in system_state['stateful_set'].values():
-            if sfs['status']['ready_replicas'] == None and sfs['status']['replicas'] == 0:
+            if sfs['status']['ready_replicas'] == None and sfs['spec']['replicas'] == 0:
                 # replicas could be 0
                 continue
-            if sfs['status']['replicas'] != sfs['status']['ready_replicas']:
+            if sfs['spec']['replicas'] != sfs['status']['ready_replicas']:
                 unhealthy_resources['statefulset'].append(
                     '%s replicas [%s] ready_replicas [%s]' %
                     (sfs['metadata']['name'], sfs['status']['replicas'],
@@ -552,7 +552,7 @@ class Checker(object):
             if dp['spec']['replicas'] == 0:
                 continue
 
-            if dp['status']['replicas'] != dp['status']['ready_replicas']:
+            if dp['spec']['replicas'] != dp['status']['ready_replicas']:
                 unhealthy_resources['deployment'].append(
                     '%s replicas [%s] ready_replicas [%s]' %
                     (dp['metadata']['name'], dp['status']['replicas'],
@@ -1193,6 +1193,9 @@ if __name__ == "__main__":
            FeatureGate.DEPENDENCY_ANALYSIS | FeatureGate.TAINT_ANALYSIS |
            FeatureGate.CANONICALIZATION)
     F = {
+        'baseline': BASELINE,
+        'canonicalization': CANONICALIZATION,
+        'taint_analysis': TAINT_ANALYSIS,
         'dependency_analysis': DEPENDENCY_ANALYSIS,
     }
 

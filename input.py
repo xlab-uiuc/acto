@@ -182,7 +182,7 @@ class InputModel:
     def get_discarded_tests(self) -> dict:
         return self.discarded_tests
 
-    def generate_test_plan(self, delta_from: str = None) -> dict:
+    def generate_test_plan(self, delta_from: str = None, focus_fields: list = None) -> dict:
         '''Generate test plan based on CRD'''
         logger = get_thread_logger(with_prefix=False)
 
@@ -246,6 +246,9 @@ class InputModel:
         mounted_schema = self.get_schema_by_path(self.mount)
         normal_schemas, pruned_by_overspecified, pruned_by_copied = mounted_schema.get_all_schemas()
         for schema in normal_schemas:
+            if focus_fields is not None:
+                if schema.path not in focus_fields:
+                    continue
             path = json.dumps(schema.path).replace('\"ITEM\"',
                                                    '0').replace('additional_properties', 'ACTOKEY')
             testcases, semantic_testcases_ = schema.test_cases()
@@ -534,7 +537,7 @@ class DeterministicInputModel(InputModel):
             path = json.loads(key)
             self.thread_vars.semantic_test_plan.add_testcases_by_path(value, path)
 
-    def generate_test_plan(self, delta_from: str = None) -> dict:
+    def generate_test_plan(self, delta_from: str = None, focus_fields: list = None) -> dict:
         '''Generate test plan based on CRD'''
         logger = get_thread_logger(with_prefix=False)
 
@@ -621,6 +624,9 @@ class DeterministicInputModel(InputModel):
         num_semantic_testcases = 0
         num_additional_semantic_testcases = 0
 
+        num_total_semantic_tests = 0
+        num_total_invalid_tests = 0
+
         mounted_schema = self.get_schema_by_path(self.mount)
         normal_schemas, semantic_schemas = mounted_schema.get_normal_semantic_schemas()
         logger.info(f'Got {len(normal_schemas)} normal schemas')
@@ -628,6 +634,19 @@ class DeterministicInputModel(InputModel):
 
         normal_schemas, pruned_by_overspecified, pruned_by_copied = mounted_schema.get_all_schemas()
         for schema in normal_schemas:
+
+            # Skip if the schema is not in the focus fields
+            if focus_fields is not None:
+                logger.info(f'focusing on {focus_fields}')
+                focused = False
+                for focus_field in focus_fields:
+                    logger.info(f'Comparing {schema.path} with {focus_field}')
+                    if focus_field == schema.path:
+                        focused = True
+                        break
+                if not focused:
+                    continue
+
             path = json.dumps(schema.path).replace('\"ITEM\"',
                                                    '0').replace('additional_properties', 'ACTOKEY')
             testcases, semantic_testcases_ = schema.test_cases()
@@ -639,6 +658,19 @@ class DeterministicInputModel(InputModel):
                 continue
             normal_testcases[path] = testcases
             num_normal_testcases += len(testcases)
+
+            if isinstance(schema, known_schemas.K8sSchema):
+                for testcase in testcases:
+                    if isinstance(testcase, known_schemas.K8sInvalidTestCase):
+                        num_total_invalid_tests += 1
+                        print(semantic_testcase)
+                    num_total_semantic_tests += 1
+
+                for semantic_testcase in semantic_testcases_:
+                    if isinstance(semantic_testcase, known_schemas.K8sInvalidTestCase):
+                        num_total_invalid_tests += 1
+                        print(semantic_testcase)
+                    num_total_semantic_tests += 1
 
             if not isinstance(schema, known_schemas.K8sSchema) and not covered_by_k8s(self.k8s_paths, list(schema.path)):
                 if isinstance(schema, IntegerSchema):
@@ -659,6 +691,19 @@ class DeterministicInputModel(InputModel):
             overspecified_testcases[path] = testcases
             num_overspecified_testcases += len(testcases)
 
+            if isinstance(schema, known_schemas.K8sSchema):
+                for testcase in testcases:
+                    if isinstance(testcase, known_schemas.K8sInvalidTestCase):
+                        num_total_invalid_tests += 1
+                        num_total_semantic_tests += 1
+                        print(semantic_testcase)
+
+                for semantic_testcase in semantic_testcases_:
+                    if isinstance(semantic_testcase, known_schemas.K8sInvalidTestCase):
+                        num_total_invalid_tests += 1
+                        print(semantic_testcase)
+                    num_total_semantic_tests += 1
+
         for schema in pruned_by_copied:
             testcases, semantic_testcases_ = schema.test_cases()
             path = json.dumps(schema.path).replace('\"ITEM\"',
@@ -669,6 +714,17 @@ class DeterministicInputModel(InputModel):
                 num_semantic_testcases += len(semantic_testcases_)
             copiedover_testcases[path] = testcases
             num_copiedover_testcases += len(testcases)
+
+            if isinstance(schema, known_schemas.K8sSchema):
+                for testcase in testcases:
+                    if isinstance(testcase, known_schemas.K8sInvalidTestCase):
+                        num_total_invalid_tests += 1
+                        num_total_semantic_tests += 1
+
+                for semantic_testcase in semantic_testcases_:
+                    if isinstance(semantic_testcase, known_schemas.K8sInvalidTestCase):
+                        num_total_invalid_tests += 1
+                    num_total_semantic_tests += 1
 
         logger.info('Parsed [%d] fields from normal schema' % len(normal_schemas))
         logger.info('Parsed [%d] fields from over-specified schema' % len(pruned_by_overspecified))
@@ -681,6 +737,9 @@ class DeterministicInputModel(InputModel):
         logger.info('Generated [%d] test cases for semantic schemas', num_semantic_testcases)
         logger.info('Generated [%d] test cases for additional semantic schemas',
                     num_additional_semantic_testcases)
+        
+        logger.info('Generated [%d] semantic tests' % num_total_semantic_tests)
+        logger.info('Generated [%d] invalid tests' % num_total_invalid_tests)
 
         self.metadata['pruned_by_overspecified'] = len(pruned_by_overspecified)
         self.metadata['pruned_by_copied'] = len(pruned_by_copied)
@@ -690,6 +749,8 @@ class DeterministicInputModel(InputModel):
         self.metadata['num_copiedover_testcases'] = num_copiedover_testcases
         self.metadata['num_semantic_testcases'] = num_semantic_testcases
         self.metadata['num_additional_semantic_testcases'] = num_additional_semantic_testcases
+
+        logger.info(f'Generated {num_normal_testcases + num_semantic_testcases} normal testcases')
 
         normal_test_plan_items = list(normal_testcases.items())
         overspecified_test_plan_items = list(overspecified_testcases.items())

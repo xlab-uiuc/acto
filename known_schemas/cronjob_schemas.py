@@ -18,9 +18,16 @@ class ConcurrencyPolicySchema(K8sStringSchema):
     def concurrency_policy_change_setup(prev):
         return 'Forbid'
 
+    def invalid_concurrency_policy_change(prev):
+        return 'InvalidConcurrencyPolicy'
+
     ConcurrencyPolicyChangeTestcase = K8sTestCase(concurrency_policy_change_precondition,
                                                   concurrency_policy_change,
                                                   concurrency_policy_change_setup)
+
+    InvalidConcurrencyPolicyChangeTestcase = K8sTestCase(concurrency_policy_change_precondition,
+                                                         invalid_concurrency_policy_change,
+                                                         concurrency_policy_change_setup)
 
     def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
         if exclude_value == 'Replace':
@@ -30,7 +37,10 @@ class ConcurrencyPolicySchema(K8sStringSchema):
 
     def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
         base_testcases = super().test_cases()
-        base_testcases[1].extend([ConcurrencyPolicySchema.ConcurrencyPolicyChangeTestcase])
+        base_testcases[1].extend([
+            ConcurrencyPolicySchema.ConcurrencyPolicyChangeTestcase,
+            ConcurrencyPolicySchema.InvalidConcurrencyPolicyChangeTestcase
+        ])
         return base_testcases
 
     def Match(schema: ObjectSchema) -> bool:
@@ -54,16 +64,26 @@ class CronJobScheduleSchema(K8sStringSchema):
     def cronjob_schedule_change_setup(prev):
         return '0 0 * * *'
 
+    def invalid_cronjob_schedule_change(prev):
+        return 'InvalidCronJobSchedule'
+
     CronJobScheduleChangeTestcase = K8sTestCase(cronjob_schedule_change_precondition,
                                                 cronjob_schedule_change,
                                                 cronjob_schedule_change_setup)
+
+    InvalidCronJobScheduleChangeTestcase = K8sTestCase(cronjob_schedule_change_precondition,
+                                                       invalid_cronjob_schedule_change,
+                                                       cronjob_schedule_change_setup)
 
     def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
         return "0 0 * * *"
 
     def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
         base_testcases = super().test_cases()
-        base_testcases[1].extend([CronJobScheduleSchema.CronJobScheduleChangeTestcase])
+        base_testcases[1].extend([
+            CronJobScheduleSchema.CronJobScheduleChangeTestcase,
+            CronJobScheduleSchema.InvalidCronJobScheduleChangeTestcase
+        ])
         return base_testcases
 
     def Match(schema: ObjectSchema) -> bool:

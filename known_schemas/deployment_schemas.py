@@ -4,10 +4,15 @@ from known_schemas.base import K8sBooleanSchema, K8sObjectSchema, K8sArraySchema
 from known_schemas.pod_schemas import PodSpecSchema
 from known_schemas.statefulset_schemas import PodManagementPolicySchema, ReplicasSchema, PodTemplateSchema
 from schema import BaseSchema
+from test_case import K8sInvalidTestCase, TestCase
 
 class DeploymentStrategy(K8sStringSchema):
 
+    def invalid_deployment_strategy(prev):
+        return "INVALID_DEPLOYMENT_STRATEGY"
     
+    InvalidDeploymentStrategy = K8sInvalidTestCase(lambda prev: prev is not None,
+                                            invalid_deployment_strategy, lambda prev: "RollingUpdate")
     
     def gen(self, exclude_value=None, **kwargs):
         if exclude_value == None:
@@ -16,6 +21,11 @@ class DeploymentStrategy(K8sStringSchema):
             return "Recreate"
         else:
             return "RollingUpdate"
+        
+    def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
+        base_cases = super().test_cases()
+        base_cases[1].append(DeploymentStrategy.InvalidDeploymentStrategy)
+        return base_cases
 
     def Match(schema: StringSchema) -> bool:
         return K8sStringSchema.Match(schema)
@@ -32,7 +42,7 @@ class DeploymentSpecSchema(K8sObjectSchema):
         "replicas": ReplicasSchema,
         "revisionHistoryLimit": K8sIntegerSchema,
         "selector": K8sObjectSchema,
-        "strategy": K8sObjectSchema,
+        "strategy": DeploymentStrategy,
         "template": PodTemplateSchema,
     }
 

@@ -274,7 +274,7 @@ class Runner(object):
             result_dict[cr['metadata']['name']] = cr
         return result_dict
 
-    def wait_for_system_converge(self, hard_timeout=600) -> bool:
+    def wait_for_system_converge(self, hard_timeout=480) -> bool:
         '''This function blocks until the system converges. It keeps 
            watching for incoming events. If there is no event within 
            60 seconds, the system is considered to have converged. 

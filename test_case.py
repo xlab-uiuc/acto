@@ -82,6 +82,17 @@ class K8sTestCase(TestCase):
         super().__init__(name, precondition, mutator, setup, store)
 
 
+class K8sInvalidTestCase(K8sTestCase):
+    '''Class represent a test case for k8s, purely for test case name purposes'''
+
+    def __init__(self,
+                 precondition: Callable,
+                 mutator: Callable,
+                 setup: Callable,
+                 store: Store = None) -> None:
+        super().__init__(precondition, mutator, setup, store)
+
+
 class EnumTestCase(TestCase):
 
     def __init__(self, case) -> None:

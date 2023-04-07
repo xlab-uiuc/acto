@@ -1,11 +1,13 @@
+import threading
 from typing import List, Tuple
 from schema import AnyOfSchema, ArraySchema, BaseSchema, BooleanSchema, IntegerSchema, ObjectSchema, StringSchema, extract_schema
 from known_schemas.base import K8sStringSchema, K8sObjectSchema, K8sArraySchema, K8sIntegerSchema, K8sBooleanSchema
 from schema import BaseSchema
-from test_case import TestCase, K8sTestCase
+from test_case import K8sInvalidTestCase, TestCase, K8sTestCase
 
 from .resource_schemas import ComputeResourceRequirementsSchema, ResourceRequirementsSchema
 
+threading.local
 
 class HandlerSchema(K8sObjectSchema):
 
@@ -26,7 +28,7 @@ class HandlerSchema(K8sObjectSchema):
             elif not field_schema.Match(schema.properties[field]):
                 return False
         return True
-    
+
     def __str__(self) -> str:
         return "Handler"
 
@@ -50,6 +52,7 @@ class LifecycleSchema(K8sObjectSchema):
             elif not field_schema.Match(schema.properties[field]):
                 return False
         return True
+
 
 class EnvVarSchema(K8sObjectSchema):
 
@@ -103,7 +106,7 @@ class NodeAffinitySchema(K8sObjectSchema):
                 "matchExpressions": [{
                     "key": "kubernetes.io/hostname",
                     "operator": "In",
-                    "values": ["kind-worker",]
+                    "values": ["acto-cluster-0-worker"]
                 }]
             }]
         }
@@ -118,7 +121,7 @@ class NodeAffinitySchema(K8sObjectSchema):
                     "values": [
                         "kind-worker",
                         "kind-worker2",
-                        "kind-worker3"
+                        "kind-worker3",
                         "kind-control-plane",
                     ]
                 }]
@@ -333,6 +336,12 @@ class AffinitySchema(K8sObjectSchema):
         return prev != AffinitySchema.AllOnOneNodeAffinity
 
     def all_on_one_node(prev) -> dict:
+        global thread_var
+        all_on_one_node = AffinitySchema.AllOnOneNodeAffinity
+        all_on_one_node["nodeAffinity"]["requiredDuringSchedulingIgnoredDuringExecution"][
+            "nodeSelectorTerms"][0]["matchExpressions"][0]["values"] = [
+                f"acto-cluster-{thread_var.worker_id}-worker"
+            ]
         return AffinitySchema.AllOnOneNodeAffinity
 
     def all_on_one_node_setup(prev) -> dict:
@@ -357,7 +366,7 @@ class AffinitySchema(K8sObjectSchema):
         return AffinitySchema.NormalAffinity
 
     def null_affinity_precondition(prev) -> bool:
-        return True
+        return prev != None
 
     def null_affinity(prev) -> dict:
         return None
@@ -369,10 +378,10 @@ class AffinitySchema(K8sObjectSchema):
                                        all_on_one_node_setup)
     AllOnDifferentNodesTestCase = K8sTestCase(all_on_different_nodes_precondition,
                                               all_on_different_nodes, all_on_different_nodes_setup)
-    InvalidAffinityTestCase = K8sTestCase(invalid_affinity_precondition, invalid_affinity,
+    InvalidAffinityTestCase = K8sInvalidTestCase(invalid_affinity_precondition, invalid_affinity,
                                           invalid_affinity_setup)
 
-    NullAffinityTestCase = K8sTestCase(null_affinity_precondition, null_affinity,
+    NullAffinityTestCase = K8sInvalidTestCase(null_affinity_precondition, null_affinity,
                                        null_affinity_setup)
 
     def __init__(self, schema_obj: BaseSchema) -> None:
@@ -450,7 +459,7 @@ class PodSecurityContextSchema(K8sObjectSchema):
     def normal_security_context_setup(prev) -> dict:
         return {"runAsUser": 0, "runAsGroup": 0, "fsGroup": 0, "supplementalGroups": [0]}
 
-    BadSecurityContextTestCase = K8sTestCase(bad_security_context_precondition,
+    BadSecurityContextTestCase = K8sInvalidTestCase(bad_security_context_precondition,
                                              bad_security_context, bad_security_context_setup)
     RootSecurityContextTestCase = K8sTestCase(root_security_context_precondition,
                                               root_security_context, root_security_context_setup)
@@ -581,12 +590,23 @@ class TolerationSchema(K8sObjectSchema):
 
     def control_plane_toleration_setup(prev) -> dict:
         return TolerationSchema.PlainToleration
+    
+    def invalid_toleration(prev) -> dict:
+        return {
+            "key": "test-key",
+            "operator": "Equal",
+            "value": "test-value",
+            "effect": "INVALID_EFFECT",
+            "tolerationSeconds": 0
+        }
 
     PlainTolerationTestCase = K8sTestCase(plain_toleration_precondition, plain_toleration,
                                           plain_toleration_setup)
     ControlPlaneTolerationTestCase = K8sTestCase(control_plane_toleration_precondition,
                                                  control_plane_toleration,
                                                  control_plane_toleration_setup)
+    
+    InvalidTolerationTestCase = K8sInvalidTestCase(lambda prev: True, invalid_toleration, lambda prev: {})
 
     def __init__(self, schema_obj: BaseSchema) -> None:
         super().__init__(schema_obj)
@@ -683,10 +703,17 @@ class ImagePullPolicySchema(K8sStringSchema):
     def change_image_pull_policy_setup(prev) -> str:
         return "Always"
 
+    def invalid_image_pull_policy(prev) -> str:
+        return "Invalid"
+
     ChangeImagePullPolicyTestCase = K8sTestCase(change_image_pull_policy_precondition,
                                                 change_image_pull_policy,
                                                 change_image_pull_policy_setup)
-    
+
+    InvalidImagePullPolicyTestCase = K8sInvalidTestCase(change_image_pull_policy_precondition,
+                                                 invalid_image_pull_policy,
+                                                 change_image_pull_policy_setup)
+
     def __init__(self, schema_obj: BaseSchema) -> None:
         super().__init__(schema_obj)
         self.default = "IfNotPresent"
@@ -793,10 +820,10 @@ class LivenessProbeSchema(K8sObjectSchema):
     def invalid_probe_setup(prev) -> dict:
         return {"invalid": {"port": 12345}, "initialDelaySeconds": 10}
 
-    TCP_PROBE_TESTCASE = K8sTestCase(tcp_probe_precondition, tcp_probe, tcp_probe_setup)
-    HTTP_PROBE_TESTCASE = K8sTestCase(http_probe_precondition, http_probe, http_probe_setup)
-    GRPC_PROBE_TESTCASE = K8sTestCase(grpc_probe_precondition, grpc_probe, grpc_probe_setup)
-    EXEC_PROBE_TESTCASE = K8sTestCase(exec_probe_precondition, exec_probe, exec_probe_setup)
+    TCP_PROBE_TESTCASE = K8sInvalidTestCase(tcp_probe_precondition, tcp_probe, tcp_probe_setup)
+    HTTP_PROBE_TESTCASE = K8sInvalidTestCase(http_probe_precondition, http_probe, http_probe_setup)
+    GRPC_PROBE_TESTCASE = K8sInvalidTestCase(grpc_probe_precondition, grpc_probe, grpc_probe_setup)
+    EXEC_PROBE_TESTCASE = K8sInvalidTestCase(exec_probe_precondition, exec_probe, exec_probe_setup)
 
     fields = {
         "exec": K8sObjectSchema,
@@ -830,7 +857,8 @@ class LivenessProbeSchema(K8sObjectSchema):
 
     def __str__(self) -> str:
         return "LivenessProbe"
-    
+
+
 class ReadinessProbeSchema(K8sObjectSchema):
 
     def tcp_probe_precondition(prev) -> bool:
@@ -878,10 +906,10 @@ class ReadinessProbeSchema(K8sObjectSchema):
     def invalid_probe_setup(prev) -> dict:
         return {"invalid": {"port": 12345}, "initialDelaySeconds": 10}
 
-    TCP_PROBE_TESTCASE = K8sTestCase(tcp_probe_precondition, tcp_probe, tcp_probe_setup)
-    HTTP_PROBE_TESTCASE = K8sTestCase(http_probe_precondition, http_probe, http_probe_setup)
-    GRPC_PROBE_TESTCASE = K8sTestCase(grpc_probe_precondition, grpc_probe, grpc_probe_setup)
-    EXEC_PROBE_TESTCASE = K8sTestCase(exec_probe_precondition, exec_probe, exec_probe_setup)
+    TCP_PROBE_TESTCASE = K8sInvalidTestCase(tcp_probe_precondition, tcp_probe, tcp_probe_setup)
+    HTTP_PROBE_TESTCASE = K8sInvalidTestCase(http_probe_precondition, http_probe, http_probe_setup)
+    GRPC_PROBE_TESTCASE = K8sInvalidTestCase(grpc_probe_precondition, grpc_probe, grpc_probe_setup)
+    EXEC_PROBE_TESTCASE = K8sInvalidTestCase(exec_probe_precondition, exec_probe, exec_probe_setup)
 
     fields = {
         "exec": K8sObjectSchema,
@@ -933,7 +961,7 @@ class ArgsSchema(K8sArraySchema):
 
     def __str__(self) -> str:
         return "Args"
-    
+
 
 class NameSchema(K8sStringSchema):
 
@@ -962,7 +990,7 @@ class ContainerSchema(K8sObjectSchema):
     def container_invalid_name_setup(prev) -> dict:
         return {"name": "INVALIDNAME", "image": "ubuntu"}
 
-    ContainerInvalidNameTestCase = K8sTestCase(container_invalid_name_precondition,
+    ContainerInvalidNameTestCase = K8sInvalidTestCase(container_invalid_name_precondition,
                                                container_invalid_name, container_invalid_name_setup)
 
     fields = {
@@ -1044,9 +1072,16 @@ class PreemptionPolicySchema(K8sStringSchema):
     def preemption_policy_change_setup(prev):
         return 'Never'
 
+    def invalid_preemption_policy(prev):
+        return 'InvalidPreemptionPolicy'
+
     PreemptionPolicyChangeTestcase = K8sTestCase(preemption_policy_change_precondition,
                                                  preemption_policy_change,
                                                  preemption_policy_change_setup)
+
+    InvalidPreemptionPolicyTestCase = K8sInvalidTestCase(preemption_policy_change_precondition,
+                                                  invalid_preemption_policy,
+                                                  preemption_policy_change_setup)
 
     def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
         if exclude_value == 'PreemptLowerPriority':
@@ -1080,9 +1115,15 @@ class RestartPolicySchema(K8sStringSchema):
     def restart_policy_change_setup(prev):
         return 'Always'
 
+    def invalid_restart_policy(prev):
+        return 'INVALID'
+
     RestartPolicyChangeTestcase = K8sTestCase(restart_policy_change_precondition,
                                               restart_policy_change, restart_policy_change_setup)
-    
+
+    InvalidRestartPolicyTestCase = K8sInvalidTestCase(restart_policy_change_precondition,
+                                               invalid_restart_policy, restart_policy_change_setup)
+
     def __init__(self, schema_obj: BaseSchema) -> None:
         super().__init__(schema_obj)
         self.default = 'Always'
@@ -1119,9 +1160,16 @@ class PriorityClassNameSchema(K8sStringSchema):
     def priority_class_name_change_setup(prev):
         return 'system-cluster-critical'
 
+    def invalid_priority_class_name_change(prev):
+        return 'invalid-priority-class-name'
+
     PriorityClassNameChangeTestcase = K8sTestCase(priority_class_name_change_precondition,
                                                   priority_class_name_change,
                                                   priority_class_name_change_setup)
+
+    InvalidPriorityClassNameChangeTestcase = K8sInvalidTestCase(priority_class_name_change_precondition,
+                                                         invalid_priority_class_name_change,
+                                                         priority_class_name_change_setup)
 
     def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
         if exclude_value == 'system-node-critical':
@@ -1155,7 +1203,7 @@ class ServiceAccountNameSchema(K8sStringSchema):
     def service_account_name_change_setup(prev):
         return 'default'
 
-    ServiceAccountNameChangeTestcase = K8sTestCase(service_account_name_change_precondition,
+    ServiceAccountNameChangeTestcase = K8sInvalidTestCase(service_account_name_change_precondition,
                                                    service_account_name_change,
                                                    service_account_name_change_setup)
 
@@ -1258,7 +1306,7 @@ class WhenUnsatifiableSchema(K8sStringSchema):
     def invalid_value_setup(prev):
         return "DoNotSchedule"
 
-    InvalidValueTestcase = K8sTestCase(invalid_value_precondition, invalid_value,
+    InvalidValueTestcase = K8sInvalidTestCase(invalid_value_precondition, invalid_value,
                                        invalid_value_setup)
 
     def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
@@ -1298,7 +1346,7 @@ class TopologySpreadConstraintSchema(K8sObjectSchema):
     def invalid_topology_spread_constraint_setup(prev):
         return None
 
-    InvalidTopologySpreadConstraintTestcase = K8sTestCase(
+    InvalidTopologySpreadConstraintTestcase = K8sInvalidTestCase(
         invalid_topology_spread_constraint_precondition, invalid_topology_spread_constraint,
         invalid_topology_spread_constraint_setup)
 
@@ -1327,7 +1375,8 @@ class TopologySpreadConstraintSchema(K8sObjectSchema):
 
     def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
         base_testcases = super().test_cases()
-        base_testcases[1].extend([TopologySpreadConstraintSchema.InvalidTopologySpreadConstraintTestcase])
+        base_testcases[1].extend(
+            [TopologySpreadConstraintSchema.InvalidTopologySpreadConstraintTestcase])
         return base_testcases
 
     def __str__(self) -> str:
@@ -1351,6 +1400,7 @@ class TopologySpreadConstraintsSchema(K8sArraySchema):
     def __str__(self) -> str:
         return "TopologySpreadConstraint"
 
+
 class RuntimeClassNameSchema(K8sStringSchema):
 
     def invalid_runtime_class_name_precondition(prev):
@@ -1362,8 +1412,9 @@ class RuntimeClassNameSchema(K8sStringSchema):
     def invalid_runtime_class_name_setup(prev):
         return "foo"
 
-    InvalidRuntimeClassNameTestcase = K8sTestCase(invalid_runtime_class_name_precondition, invalid_runtime_class_name,
-                                       invalid_runtime_class_name_setup)
+    InvalidRuntimeClassNameTestcase = K8sInvalidTestCase(invalid_runtime_class_name_precondition,
+                                                  invalid_runtime_class_name,
+                                                  invalid_runtime_class_name_setup)
 
     def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
         return "foo"
@@ -1373,6 +1424,7 @@ class RuntimeClassNameSchema(K8sStringSchema):
 
     def __str__(self) -> str:
         return "RuntimeClassName"
+
 
 class PodSpecSchema(K8sObjectSchema):
 

@@ -104,6 +104,17 @@ class CompareMethods:
             return False
 
     def input_compare(self, prev, curr) -> bool:
+        if prev is None:
+            return True
+        elif isinstance(prev, NotPresent) or isinstance(curr, NotPresent):
+            return True
+        elif isinstance(prev, str) and prev == '':
+            return True
+        elif isinstance(prev, int) and prev == 0:
+            return True
+        elif isinstance(prev, float) and prev == 0:
+            return True
+
         if prev == curr:
             return True
         elif prev == None and isinstance(curr, NotPresent):

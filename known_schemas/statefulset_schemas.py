@@ -3,7 +3,7 @@ from schema import BaseSchema, ObjectSchema
 from known_schemas.base import K8sStringSchema, K8sObjectSchema, K8sArraySchema, K8sIntegerSchema
 from known_schemas.pod_schemas import PodSpecSchema
 from schema import BaseSchema, IntegerSchema, StringSchema
-from test_case import Store, TestCase, K8sTestCase
+from test_case import K8sInvalidTestCase, Store, TestCase, K8sTestCase
 
 
 class PodManagementPolicySchema(K8sStringSchema):
@@ -14,11 +14,14 @@ class PodManagementPolicySchema(K8sStringSchema):
         else:
             return "Parallel"
 
-    ChangePodManagementPolicy = K8sTestCase(
-        lambda prev: prev is not None,
-        change_pod_management_policy,
-        lambda prev: "Parallel"
-    )
+    def invalid_pod_management_policy(prev) -> str:
+        return "InvalidPodManagementPolicy"
+
+    ChangePodManagementPolicy = K8sTestCase(lambda prev: prev is not None,
+                                            change_pod_management_policy, lambda prev: "Parallel")
+
+    InvalidPodManagementPolicy = K8sInvalidTestCase(lambda prev: prev is not None,
+                                             invalid_pod_management_policy, lambda prev: "Parallel")
 
     def gen(self, exclude_value=None, **kwargs):
         if exclude_value == None:
@@ -72,8 +75,12 @@ class ReplicasSchema(K8sIntegerSchema):
             return 5
         return prev + 2
 
+    def overload(prev) -> int:
+        return 1000
+
     ScaleDownUp = K8sTestCase(scaleDownUpPrecondition, scaleDownUp, scaleDownUpSetup, Store())
     ScaleUpDown = K8sTestCase(scaleUpDownPrecondition, scaleUpDown, scaleUpDownSetup, Store())
+    Overload = K8sInvalidTestCase(lambda prev: prev is not None, overload, lambda prev: prev)
 
     def gen(self, exclude_value=None, minimum: bool = False, **kwargs) -> list:
         if exclude_value is None:
@@ -86,7 +93,8 @@ class ReplicasSchema(K8sIntegerSchema):
 
     def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
         base_testcases = super().test_cases()
-        base_testcases[1].extend([ReplicasSchema.ScaleDownUp, ReplicasSchema.ScaleUpDown])
+        base_testcases[1].extend(
+            [ReplicasSchema.ScaleDownUp, ReplicasSchema.ScaleUpDown, ReplicasSchema.Overload])
         return base_testcases
 
     def __str__(self) -> str:
@@ -134,8 +142,14 @@ class UpdateStrategySchema(K8sStringSchema):
     def update_strategy_change_setup(prev):
         return 'RollingUpdate'
 
+    def invalid_update_strategy(prev):
+        return 'InvalidUpdateStrategy'
+
     UpdateStrategyChangeTestcase = K8sTestCase(update_strategy_change_precondition,
                                                update_strategy_change, update_strategy_change_setup)
+
+    InvalidUpdateStrategy = K8sInvalidTestCase(lambda prev: prev is not None, invalid_update_strategy,
+                                        lambda prev: 'RollingUpdate')
 
     def __init__(self, schema_obj: BaseSchema) -> None:
         super().__init__(schema_obj)
@@ -149,7 +163,7 @@ class UpdateStrategySchema(K8sStringSchema):
 
     def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
         base_testcases = super().test_cases()
-        base_testcases[1].extend([UpdateStrategySchema.UpdateStrategyChangeTestcase])
+        base_testcases[1].extend([UpdateStrategySchema.UpdateStrategyChangeTestcase, UpdateStrategySchema.InvalidUpdateStrategy])
         return base_testcases
 
     def Match(schema: ObjectSchema) -> bool:
@@ -157,6 +171,7 @@ class UpdateStrategySchema(K8sStringSchema):
 
     def __str__(self) -> str:
         return "UpdateStrategy"
+
 
 
 class StatefulSetSpecSchema(K8sObjectSchema):
@@ -167,8 +182,8 @@ class StatefulSetSpecSchema(K8sObjectSchema):
         'selector': K8sObjectSchema,
         'serviceName': K8sStringSchema,
         'template': PodTemplateSchema,
-        'updateStrategy': K8sObjectSchema,
-        'volumeClaimTemplates': K8sArraySchema
+        'updateStrategy': UpdateStrategySchema,
+        'volumeClaimTemplates': K8sArraySchema,
     }
 
     def __init__(self, schema_obj: BaseSchema) -> None:

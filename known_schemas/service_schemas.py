@@ -1,20 +1,22 @@
 from typing import List, Tuple
 from schema import BaseSchema, IntegerSchema, ObjectSchema
 from known_schemas.base import K8sBooleanSchema, K8sStringSchema, K8sObjectSchema, K8sArraySchema, K8sIntegerSchema
-from test_case import TestCase, K8sTestCase
+from test_case import K8sInvalidTestCase, TestCase, K8sTestCase
+
 
 class PortSchema(K8sIntegerSchema):
 
     def port_privilege_precondition(prev):
         return prev == 26257
-    
+
     def port_privilege(prev):
         return 8888
-    
+
     def port_privilege_setup(prev):
         return 26257
 
-    PortPrivilegeTestcase = K8sTestCase(port_privilege_precondition, port_privilege, port_privilege_setup)
+    PortPrivilegeTestcase = K8sTestCase(port_privilege_precondition, port_privilege,
+                                        port_privilege_setup)
 
     def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
         if exclude_value == None:
@@ -30,6 +32,7 @@ class PortSchema(K8sIntegerSchema):
     def __str__(self) -> str:
         return "Port"
 
+
 class ServiceTypeSchema(K8sStringSchema):
 
     def service_type_change_precondition(prev):
@@ -44,8 +47,15 @@ class ServiceTypeSchema(K8sStringSchema):
     def service_type_change_setup(prev):
         return 'ClusterIP'
 
+    def invalid_service_type_change(prev):
+        return 'InvalidServiceType'
+
     ServiceTypeChangeTestcase = K8sTestCase(service_type_change_precondition, service_type_change,
-                                         service_type_change_setup)
+                                            service_type_change_setup)
+
+    InvalidServiceTypeChangeTestcase = K8sInvalidTestCase(service_type_change_precondition,
+                                                          invalid_service_type_change,
+                                                          service_type_change_setup)
 
     def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
         if exclude_value == 'LoadBalancer':
@@ -56,6 +66,7 @@ class ServiceTypeSchema(K8sStringSchema):
     def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
         base_testcases = super().test_cases()
         base_testcases[1].extend([ServiceTypeSchema.ServiceTypeChangeTestcase])
+        base_testcases[1].extend([ServiceTypeSchema.InvalidServiceTypeChangeTestcase])
         return base_testcases
 
     def Match(schema: ObjectSchema) -> bool:
@@ -63,7 +74,7 @@ class ServiceTypeSchema(K8sStringSchema):
 
     def __str__(self) -> str:
         return "ServiceType"
-    
+
 
 class ExternalTrafficPolicySchema(K8sStringSchema):
 
@@ -79,8 +90,9 @@ class ExternalTrafficPolicySchema(K8sStringSchema):
     def external_traffic_policy_change_setup(prev):
         return 'Cluster'
 
-    ExternalTrafficPolicyChangeTestcase = K8sTestCase(external_traffic_policy_change_precondition, external_traffic_policy_change,
-                                         external_traffic_policy_change_setup)
+    ExternalTrafficPolicyChangeTestcase = K8sTestCase(external_traffic_policy_change_precondition,
+                                                      external_traffic_policy_change,
+                                                      external_traffic_policy_change_setup)
 
     def __init__(self, schema_obj: BaseSchema) -> None:
         super().__init__(schema_obj)
@@ -97,7 +109,7 @@ class ExternalTrafficPolicySchema(K8sStringSchema):
 
     def __str__(self) -> str:
         return "ExternalTrafficPolicy"
-    
+
 
 class IpRangeSchema(K8sStringSchema):
 
@@ -107,10 +119,10 @@ class IpRangeSchema(K8sStringSchema):
 
     def Match(schema: ObjectSchema) -> bool:
         return K8sStringSchema.Match(schema)
-    
+
     def __str__(self) -> str:
         return "IpRange"
-    
+
 
 class LoadBalancerSourceRangesSchema(K8sArraySchema):
 
@@ -122,7 +134,7 @@ class LoadBalancerSourceRangesSchema(K8sArraySchema):
 
     def Match(schema: ObjectSchema) -> bool:
         return K8sArraySchema.Match(schema) and IpRangeSchema.Match(schema.items)
-    
+
     def __str__(self) -> str:
         return "LoadBalancerSourceRanges"
 
@@ -191,34 +203,30 @@ class ServiceSchema(K8sObjectSchema):
 
     def __str__(self) -> str:
         return "ServiceSchema"
-    
+
+
 class IngressTLSSchema(K8sObjectSchema):
 
     def non_existent_secret_precondition(prev):
         return True
 
     def non_existent_secret(prev):
-        return {
-            "hosts": ["test.com"],
-            "secretName": "non-existent-secret"
-        }
+        return {"hosts": ["test.com"], "secretName": "non-existent-secret"}
 
     def non_existent_secret_setup(prev):
         return None
 
-    NonExistentSecretTestcase = K8sTestCase(non_existent_secret_precondition, non_existent_secret, non_existent_secret_setup)
+    NonExistentSecretTestcase = K8sInvalidTestCase(non_existent_secret_precondition,
+                                                   non_existent_secret, non_existent_secret_setup)
 
-    fields = {
-        "hosts": K8sArraySchema,
-        "secretName": K8sStringSchema
-    }
+    fields = {"hosts": K8sArraySchema, "secretName": K8sStringSchema}
 
     def __init__(self, schema_obj: BaseSchema) -> None:
         super().__init__(schema_obj)
         for field, field_schema in IngressTLSSchema.fields.items():
             if field in schema_obj.properties:
                 self.properties[field] = field_schema(schema_obj.properties[field])
-    
+
     def Match(schema: ObjectSchema) -> bool:
         if not K8sObjectSchema.Match(schema):
             return False
@@ -233,6 +241,6 @@ class IngressTLSSchema(K8sObjectSchema):
         base_testcases = super().test_cases()
         base_testcases[1].extend([IngressTLSSchema.NonExistentSecretTestcase])
         return base_testcases
-    
+
     def __str__(self) -> str:
         return "IngressTLSSchema"

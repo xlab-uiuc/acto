@@ -1,5 +1,5 @@
 from typing import List, Tuple
-from schema import BaseSchema, ObjectSchema, StringSchema
+from schema import BaseSchema, ObjectSchema, OpaqueSchema, StringSchema
 from known_schemas.base import K8sBooleanSchema, K8sStringSchema, K8sObjectSchema, K8sArraySchema, K8sIntegerSchema
 from .resource_schemas import QuantitySchema, StorageResourceRequirementsSchema
 from test_case import TestCase, K8sTestCase
@@ -10,8 +10,14 @@ class HostPathTypeSchema(K8sStringSchema):
     def directory_or_create(prev):
         return "DirectoryOrCreate"
 
+    def invalid_host_path_type(prev):
+        return "InvalidHostPathType"
+
     DirectoryOrCreateTestcase = K8sTestCase(lambda prev: prev != "DirectoryOrCreate",
                                             directory_or_create, lambda prev: "Directory")
+
+    InvalidHostPathTypeTestcase = K8sTestCase(lambda prev: prev != "DirectoryOrCreate",
+                                              invalid_host_path_type, lambda prev: "Directory")
 
     def gen(self, exclude_value=None, **kwargs):
         if exclude_value == None:
@@ -146,7 +152,7 @@ class PersistentVolumeClaimSpecSchema(K8sObjectSchema):
         "dataSource": K8sObjectSchema,
         "resources": StorageResourceRequirementsSchema,
         "selector": K8sObjectSchema,
-        "storageClassName": K8sStringSchema,
+        "storageClassName": StorageClassNameSchema,
         "volumeMode": K8sStringSchema,  # Filesystem or Block
         "volumeName": K8sStringSchema
     }
@@ -171,14 +177,37 @@ class PersistentVolumeClaimSpecSchema(K8sObjectSchema):
         return "PersistentVolumeClaimSpec"
 
 
+class ApiVersionSchema(K8sStringSchema):
+
+    def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
+        if exclude_value == "v1":
+            return "v2"
+        return "v1"
+
+    def Match(schema: ObjectSchema) -> bool:
+        return K8sStringSchema.Match(schema)
+
+    def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
+        return super().test_cases()
+
+    def __str__(self) -> str:
+        return "ApiVersion"
+
+
 class PersistentVolumeClaimSchema(K8sObjectSchema):
 
-    fields = {"metadata": K8sObjectSchema, "spec": PersistentVolumeClaimSpecSchema}
+    fields = {
+        "apiVersion": ApiVersionSchema,
+        "kind": OpaqueSchema,
+        "metadata": K8sObjectSchema,
+        "spec": PersistentVolumeClaimSpecSchema,
+        "status": OpaqueSchema
+    }
 
     def __init__(self, schema_obj: BaseSchema) -> None:
         super().__init__(schema_obj)
         for field, field_schema in PersistentVolumeClaimSchema.fields.items():
-            if field in schema_obj.properties:
+            if field in schema_obj.properties and field_schema != OpaqueSchema:
                 self.properties[field] = field_schema(schema_obj.properties[field])
 
     def Match(schema: ObjectSchema) -> bool:

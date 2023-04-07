@@ -532,7 +532,8 @@ class Acto:
                  blackbox: bool = False,
                  k8s_fields: bool = False,
                  delta_from: str = None,
-                 mount: list = None) -> None:
+                 mount: list = None,
+                 focus_fields: list = None) -> None:
         logger = get_thread_logger(with_prefix=False)
 
         try:
@@ -649,7 +650,7 @@ class Acto:
         testplan_path = None
         if delta_from != None:
             testplan_path = os.path.join(delta_from, 'test_plan.json')
-        self.test_plan = self.input_model.generate_test_plan(testplan_path)
+        self.test_plan = self.input_model.generate_test_plan(testplan_path, focus_fields=focus_fields)
         with open(os.path.join(self.workdir_path, 'test_plan.json'), 'w') as plan_file:
             json.dump(self.test_plan, plan_file, cls=ActoEncoder, indent=4)
 

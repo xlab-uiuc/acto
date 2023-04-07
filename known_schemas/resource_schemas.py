@@ -3,7 +3,7 @@ from schema import AnyOfSchema, BaseSchema, IntegerSchema, ObjectSchema, StringS
 from known_schemas.base import K8sObjectSchema, K8sAnyOfSchema
 from schema import BaseSchema
 from k8s_util.k8sutil import canonicalizeQuantity, double_quantity, half_quantity
-from test_case import TestCase, K8sTestCase
+from test_case import K8sInvalidTestCase, TestCase, K8sTestCase
 
 class QuantitySchema(K8sAnyOfSchema):
 
@@ -109,6 +109,20 @@ class ComputeResourceRequirementsSchema(K8sObjectSchema):
 
     fields = {"limits": ComputeResourceSchema, "requests": ComputeResourceSchema}
 
+    INVALID_COMPUTE_RESOURCE_REQUIREMENTS = {
+        "requests": {
+            "hugepages-2Mi": "1000m",
+        }
+    }
+    
+    def invalid_compute_resource(prev):
+        return ComputeResourceRequirementsSchema.INVALID_COMPUTE_RESOURCE_REQUIREMENTS
+
+    invalid_compute_resource_test = K8sInvalidTestCase(
+        lambda prev: True,
+        invalid_compute_resource,
+        lambda prev: ComputeResourceRequirementsSchema.INVALID_COMPUTE_RESOURCE_REQUIREMENTS)
+
     def __init__(self, schema_obj: BaseSchema) -> None:
         super().__init__(schema_obj)
         for field, field_schema in ComputeResourceRequirementsSchema.fields.items():
@@ -139,9 +153,15 @@ class ComputeResourceRequirementsSchema(K8sObjectSchema):
                 return False
 
         return True
+    
+    def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
+        base_test_cases = super().test_cases()
+        base_test_cases[0].clear()
+        base_test_cases[1].append(ComputeResourceRequirementsSchema.invalid_compute_resource_test)
+        return base_test_cases
 
     def __str__(self) -> str:
-        return "ResourceRequirements"
+        return "ComputeResourceRequirements"
 
 
 class StorageResourceRequirementsSchema(K8sObjectSchema):
@@ -175,7 +195,7 @@ class StorageResourceRequirementsSchema(K8sObjectSchema):
         return True
 
     def __str__(self) -> str:
-        return "ResourceRequirements"
+        return "StorageResourceRequirements"
 
 
 class ResourceRequirementsSchema(K8sObjectSchema):
