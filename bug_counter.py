@@ -35,8 +35,8 @@ class BugCounter():
         self.num_by_confirmed += self.num_by_fixed
         if '(Byproduct bugs included)' not in data[1]:
             raise Exception("The first line of bugs.md should start with '(Byproduct bugs included)'")
-        data[1] = '(Byproduct bugs included) Total bugs: **{}**, confirmed: **{}**, fixed: **{}**.<br/>\n'.format(self.num_bugs + self.num_by_bugs, self.num_confirmed + self.num_by_confirmed, self.num_fixed + self.num_by_fixed)
-        data[3] = '(Byproduct bugs excluded) Total bugs: **{}**, confirmed: **{}**, fixed: **{}**.<br/>\n'.format(self.num_bugs, self.num_confirmed, self.num_fixed)
+        data[1] = '(Byproduct bugs included) Total bugs: **{}**, confirmed: **{}**, Fixed: **{}**.<br/>\n'.format(self.num_bugs + self.num_by_bugs, self.num_confirmed + self.num_by_confirmed, self.num_fixed + self.num_by_fixed)
+        data[3] = '(Byproduct bugs excluded) Total bugs: **{}**, confirmed: **{}**, Fixed: **{}**.<br/>\n'.format(self.num_bugs, self.num_confirmed, self.num_fixed)
         self.write_data(data, './bugs.md')
         
 if __name__ == '__main__':
