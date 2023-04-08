@@ -68,7 +68,7 @@ class DeployRunner:
             cr = group.iloc[0]['input']
 
             snapshot, err = runner.run(cr, generation=generation)
-            err = runner.delete(generation=generation)
+            err = True
             difftest_result = {
                 'input_digest': group.iloc[0]['input_digest'],
                 'snapshot': snapshot.to_dict(),
