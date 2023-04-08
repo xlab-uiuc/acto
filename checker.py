@@ -612,9 +612,8 @@ class Checker(object):
 
         for deployment in system_state['deployment_pods'].values():
             for pod in deployment:
-                if pod['status']['phase'] in ['Running', 'Completed', 'Succeeded']:
+                if pod['status']['phase'] in ['Completed', 'Succeeded']:
                     continue
-                unhealthy_resources['pod'].append(pod['metadata']['name'])
 
                 if 'container_statuses' in pod['status'] and pod['status']['container_statuses']:
                     for container in pod['status']['container_statuses']:
