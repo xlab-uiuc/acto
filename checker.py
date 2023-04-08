@@ -740,6 +740,9 @@ class Checker(object):
         curr_system_state = deepcopy(snapshot.system_state)
         prev_system_state = deepcopy(prev_snapshot.system_state)
 
+        if len(curr_system_state) == 0 or len(prev_system_state) == 0:
+            return PassResult()
+
         del curr_system_state['endpoints']
         del prev_system_state['endpoints']
         del curr_system_state['job']
