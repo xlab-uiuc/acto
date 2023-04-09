@@ -4,6 +4,9 @@ custom_fields = [
     input.ProblematicField(['spec', 'pmm']),
     input.ProblematicField(['spec', 'backup']),
     input.ProblematicField(['spec', 'proxysql']),
+    input.ProblematicField(['spec', 'updateStrategy']),
+    input.ProblematicField(['spec', 'upgradeOptions']),
+    input.ProblematicField(['spec', 'allowUnsafeConfigurations']),
 
     input.CopiedOverField(['spec', 'haproxy', 'affinity', 'advanced']),
     input.CopiedOverField(['spec', 'haproxy', 'containerSecurityContext']),

@@ -42,6 +42,7 @@ spec:
         type: s3
         verifyTLS: true
   haproxy:
+    livenessDelaySec: 60
     affinity:
       antiAffinityTopologyKey: kubernetes.io/hostname
     enabled: true
@@ -93,7 +94,7 @@ spec:
             storage: 2G
   pxc:
     enabled: true
-    livenessDelaySec: 300
+    livenessDelaySec: 60
     affinity:
       antiAffinityTopologyKey: kubernetes.io/hostname
     autoRecovery: true
