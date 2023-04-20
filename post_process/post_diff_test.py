@@ -1,4 +1,5 @@
 import glob
+import hashlib
 import json
 import logging
 import multiprocessing
@@ -16,7 +17,7 @@ from acto import handle_excepthook, thread_excepthook
 from constant import CONST
 from checker import compare_system_equality
 from thread_logger import get_thread_logger
-from common import ActoEncoder, ErrorResult, OperatorConfig, PassResult, invalid_input_message_regex, kubernetes_client
+from common import ActoEncoder, ErrorResult, OperatorConfig, PassResult, RecoveryResult, invalid_input_message_regex, kubernetes_client
 from runner import Runner
 from deploy import Deploy, DeployMethod
 from k8s_cluster import base, kind
@@ -27,6 +28,66 @@ from .post_process import PostProcessor
 def dict_hash(d: dict) -> int:
     '''Hash a dict'''
     return hash(json.dumps(d, sort_keys=True))
+
+
+def get_nondeterministic_fields(s1, s2, additional_exclude_paths):
+    nondeterministic_fields = []
+    result = compare_system_equality(s1, s2, additional_exclude_paths=additional_exclude_paths)
+    if isinstance(result, RecoveryResult):
+        diff = result.delta
+        for diff_type, diffs in diff.items():
+            if diff_type == 'dictionary_item_removed':
+                for diff_field in diffs:
+                    nondeterministic_fields.append(diff_field.path(output_format='list'))
+            elif diff_type == 'dictionary_item_added':
+                for diff_field in diffs:
+                    nondeterministic_fields.append(diff_field.path(output_format='list'))
+            elif diff_type == 'values_changed':
+                for diff_field in diffs:
+                    nondeterministic_fields.append(diff_field.path(output_format='list'))
+            elif diff_type == 'type_changes':
+                for diff_field in diffs:
+                    nondeterministic_fields.append(diff_field.path(output_format='list'))
+    return nondeterministic_fields
+
+
+class AdditionalRunner:
+
+    def __init__(self, context: Dict, deploy: Deploy, workdir: str, cluster: base.KubernetesCluster,
+                 worker_id):
+
+        self._context = context
+        self._deploy = deploy
+        self._workdir = workdir
+        self._cluster = cluster
+        self._worker_id = worker_id
+        self._cluster_name = f"acto-cluster-{worker_id}"
+        self._kubeconfig = os.path.join(os.path.expanduser('~'), '.kube', self._cluster_name)
+        self._context_name = cluster.get_context_name(f"acto-cluster-{worker_id}")
+
+    def run_cr(self, cr, trial, gen, generation):
+        self._cluster.restart_cluster(self._cluster_name, self._kubeconfig, CONST.K8S_VERSION)
+        apiclient = kubernetes_client(self._kubeconfig, self._context_name)
+        deployed = self._deploy.deploy_with_retry(self._context, self._kubeconfig,
+                                                  self._context_name)
+        add_acto_label(apiclient, self._context)
+        trial_dir = os.path.join(self._workdir, 'trial-%02d' % self._worker_id)
+        os.makedirs(trial_dir, exist_ok=True)
+        runner = Runner(self._context, trial_dir, self._kubeconfig, self._context_name)
+        snapshot, err = runner.run(cr, generation=generation)
+        difftest_result = {
+            'input_digest': hashlib.md5(json.dumps(cr, sort_keys=True).encode("utf-8")).hexdigest(),
+            'snapshot': snapshot.to_dict(),
+            'originals': {
+                'trial': trial,
+                'gen': gen,
+            },
+        }
+        difftest_result_path = os.path.join(trial_dir, 'difftest-%03d.json' % generation)
+        with open(difftest_result_path, 'w') as f:
+            json.dump(difftest_result, f, cls=ActoEncoder, indent=6)
+
+        return snapshot
 
 
 class DeployRunner:
@@ -166,15 +227,21 @@ class PostDiffTest(PostProcessor):
         processes = []
         for i in range(num_workers):
             p = multiprocessing.Process(target=self.check_diff_test_result,
-                                        args=(workqueue, workdir))
+                                        args=(workqueue, workdir, i))
             p.start()
             processes.append(p)
 
         for p in processes:
             p.join()
 
-    def check_diff_test_result(self, workqueue: multiprocessing.Queue, workdir: str):
+    def check_diff_test_result(self, workqueue: multiprocessing.Queue, workdir: str,
+                               worker_id: int):
         logger = get_thread_logger(with_prefix=True)
+
+        generation = 0  # for additional runner
+        additional_runner_dir = os.path.join(workdir, f'additional-runner-{worker_id}')
+        cluster = kind.Kind()
+        cluster.configure_cluster(self.config.num_nodes, CONST.K8S_VERSION)
 
         while True:
             try:
@@ -209,18 +276,41 @@ class PostDiffTest(PostProcessor):
                 if isinstance(result, PassResult):
                     logger.info(f'Pass diff test for trial {trial} gen {gen}')
                 else:
-                    logger.error(f'Fail diff test for trial {trial} gen {gen}')
-                    error_result = result.to_dict()
-                    error_result['trial'] = trial
-                    error_result['gen'] = gen
-                    group_errs.append(error_result)
-                if len(group_errs) > 0:
-                    with open(
-                            os.path.join(
-                                workdir,
-                                f'compare-results-{diff_test_result["input_digest"]}.json'),
-                            'w') as result_f:
-                        json.dump(group_errs, result_f, cls=ActoEncoder, indent=6)
+                    deploy = Deploy(DeployMethod.YAML, self.config.deploy.file,
+                                    self.config.deploy.init).new()
+
+                    runner = AdditionalRunner(context=self.context,
+                                              deploy=deploy,
+                                              workdir=additional_runner_dir,
+                                              cluster=cluster,
+                                              worker_id=worker_id)
+                    add_snapshot = runner.run_cr(snapshot['input'], trial, gen, generation)
+                    generation += 1
+                    nondeterministic_fields = get_nondeterministic_fields(
+                        original_system_state, add_snapshot.system_state, self.config.diff_ignore_fields)
+
+                    if len(nondeterministic_fields) > 0:
+                        logger.info(f'Got additional nondeterministic fields: {nondeterministic_fields}')
+                        for delta_category in result.delta:
+                            for delta in result.delta[delta_category]:
+                                if delta.path(output_format='list') not in nondeterministic_fields:
+                                    logger.error(f'Fail diff test for trial {trial} gen {gen}')
+                                    error_result = result.to_dict()
+                                    error_result['trial'] = trial
+                                    error_result['gen'] = gen
+                                    group_errs.append(error_result)
+                    else:
+                        logger.error(f'Fail diff test for trial {trial} gen {gen}')
+                        error_result = result.to_dict()
+                        error_result['trial'] = trial
+                        error_result['gen'] = gen
+                        group_errs.append(error_result)
+            if len(group_errs) > 0:
+                with open(
+                        os.path.join(workdir,
+                                     f'compare-results-{diff_test_result["input_digest"]}.json'),
+                        'w') as result_f:
+                    json.dump(group_errs, result_f, cls=ActoEncoder, indent=6)
 
         return None
 

@@ -150,6 +150,7 @@ class PersistentVolumeClaimSpecSchema(K8sObjectSchema):
     fields = {
         "accessModes": AccessModeSchema,
         "dataSource": K8sObjectSchema,
+        "dataSourceRef": K8sObjectSchema,
         "resources": StorageResourceRequirementsSchema,
         "selector": K8sObjectSchema,
         "storageClassName": StorageClassNameSchema,

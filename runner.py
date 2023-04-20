@@ -85,7 +85,14 @@ class Runner(object):
                              context_name=self.context_name,
                              capture_output=True,
                              text=True)
-        
+        logger.debug('STDOUT: ' + cli_result.stdout)
+        logger.debug('STDERR: ' + cli_result.stderr)
+
+        if cli_result.returncode != 0:
+            logger.error('kubectl apply failed with return code %d' % cli_result.returncode)
+            logger.error('STDOUT: ' + cli_result.stdout)
+            logger.error('STDERR: ' + cli_result.stderr)
+            return Snapshot(input, cli_result, {}, ''), True
         err = None
         try:
             err = self.wait_for_system_converge()
@@ -94,9 +101,6 @@ class Runner(object):
             system_state = {}
             operator_log = 'Bug! Exception raised when waiting for converge.'
             err = True
-
-        logger.debug('STDOUT: ' + cli_result.stdout)
-        logger.debug('STDERR: ' + cli_result.stderr)
 
         # when client API raise an exception, catch it and write to log instead of crashing Acto
         try:

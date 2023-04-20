@@ -267,13 +267,14 @@ class Checker(object):
         system_delta_without_cr = copy.deepcopy(system_delta)
         system_delta_without_cr.pop('custom_resource_spec')
 
-        for delta_list in input_delta.values():
+        for diff_type, delta_list in input_delta.items():
             for delta in delta_list.values():
                 logger.debug('Checking input delta [%s]' % delta.path)
 
-                if self.skip_default_input_delta(delta):
-                    logger.debug('Input delta [%s] is skipped' % delta.path)
-                    continue
+                if diff_type != 'iterable_item_removed':
+                    if self.skip_default_input_delta(delta):
+                        logger.debug('Input delta [%s] is skipped' % delta.path)
+                        continue
 
                 if self.compare_method.input_compare(delta.prev, delta.curr):
                     # if the input delta is considered as equivalent, skip
@@ -356,20 +357,8 @@ class Checker(object):
             return True
         elif isinstance(prev, NotPresent):
             return True
-        elif isinstance(prev, str) and prev == '':
-            return True
-        elif isinstance(prev, int) and prev == 0:
-            return True
-        elif isinstance(prev, float) and prev == 0:
-            return True
         
         if curr is None:
-            return True
-        elif isinstance(curr, NotPresent):
-            return True
-        elif isinstance(curr, str) and curr == '':
-            return True
-        elif isinstance(curr, int) and curr == 0:
             return True
         
 
@@ -705,6 +694,7 @@ class Checker(object):
         elif self.should_compare(path, delta_dict):
             return results, True
         else:
+            logging.debug(f"Skipping {path} because it is not in the list of fields to compare")
             return [], False
 
     def get_deltas(self, snapshot: Snapshot, prev_snapshot: Snapshot):
@@ -826,7 +816,7 @@ class Checker(object):
             r"\['deployment_pods'\].*\['metadata'\]\['owner_references'\]\[.*\]\['name'\]",
         ]
 
-        diff = DeepDiff(prev_system_state, curr_system_state, exclude_regex_paths=exclude_paths)
+        diff = DeepDiff(prev_system_state, curr_system_state, exclude_regex_paths=exclude_paths, view='tree')
 
         if diff:
             logger.debug(f"failed attempt recovering to seed state - system state diff: {diff}")
@@ -939,19 +929,32 @@ def compare_system_equality(curr_system_state: Dict,
                     curr_system_state,
                     exclude_regex_paths=exclude_paths,
                     iterable_compare_func=compare_func,
-                    custom_operators=[NameOperator(r".*\['name'\]$")])
+                    custom_operators=[NameOperator(r".*\['name'\]$")],
+                    view='tree',)
 
     if 'dictionary_item_removed' in diff:
         new_removed_items = []
         for removed_item in diff['dictionary_item_removed']:
-            if removed_item.startswith("root['pvc']"):
-                logger.debug(f"ignoring removed pod {removed_item}")
+            if removed_item.path(output_format='list')[0] == 'pvc':
+                logger.debug(f"ignoring removed pvc {removed_item}")
             else:
                 new_removed_items.append(removed_item)
         if len(new_removed_items) == 0:
             del diff['dictionary_item_removed']
         else:
             diff['dictionary_item_removed'] = new_removed_items
+
+    if 'dictionary_item_added' in diff:
+        new_removed_items = []
+        for removed_item in diff['dictionary_item_added']:
+            if removed_item.path(output_format='list')[0] == 'pvc':
+                logger.debug(f"ignoring added pvc {removed_item}")
+            else:
+                new_removed_items.append(removed_item)
+        if len(new_removed_items) == 0:
+            del diff['dictionary_item_added']
+        else:
+            diff['dictionary_item_added'] = new_removed_items
 
     if diff:
         logger.debug(f"failed attempt recovering to seed state - system state diff: {diff}")
@@ -1228,6 +1231,9 @@ if __name__ == "__main__":
            FeatureGate.DEPENDENCY_ANALYSIS | FeatureGate.TAINT_ANALYSIS |
            FeatureGate.CANONICALIZATION)
     F = {
+        'baseline': BASELINE,
+        'canonicalization': CANONICALIZATION,
+        'taint_analysis': TAINT_ANALYSIS,
         'dependency_analysis': DEPENDENCY_ANALYSIS,
     }
 
