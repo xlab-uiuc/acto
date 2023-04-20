@@ -530,7 +530,6 @@ class Acto:
                  reproduce_dir: str = None,
                  feature_gate: FeatureGate = None,
                  blackbox: bool = False,
-                 k8s_fields: bool = False,
                  delta_from: str = None,
                  mount: list = None,
                  focus_fields: list = None) -> None:
@@ -921,10 +920,6 @@ if __name__ == '__main__':
                         help='Number of testcases to bundle each time')
     parser.add_argument('--learn', dest='learn', action='store_true', help='Learn mode')
     parser.add_argument('--blackbox', dest='blackbox', action='store_true', help='Blackbox mode')
-    parser.add_argument('--k8s-fields',
-                        dest='k8s_fields',
-                        action='store_true',
-                        help='Run k8s fields testcases')
 
     parser.add_argument('--additional-semantic', dest='additional_semantic', action='store_true', help='Run additional semantic testcases')
     parser.add_argument('--delta-from', dest='delta_from', help='Delta from')
@@ -1004,7 +999,6 @@ if __name__ == '__main__':
                 input_model=input_model,
                 apply_testcase_f=apply_testcase_f,
                 blackbox=args.blackbox,
-                k8s_fields=args.k8s_fields,
                 delta_from=args.delta_from)
     generation_time = datetime.now()
     logger.info('Acto generation finished in %s', generation_time - start_time)
