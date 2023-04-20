@@ -1,3 +1,4 @@
+import argparse
 from github import Github
 import csv
 import datetime
@@ -18,7 +19,11 @@ if __name__ == '__main__':
         'pravega/zookeeper-operator',
     ]
 
-    g = Github("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")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--token", help="access token for github")
+    args = parser.parse_args()
+
+    g = Github(args.token)
 
     textTable = Texttable()
     textTable.set_cols_align(["c"] * 4)

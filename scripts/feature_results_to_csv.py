@@ -7,6 +7,9 @@ import os
 import pandas as pd
 import re
 
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from classify.classify_alarms import classify_alarm
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Script to convert feature results to xlsx')
@@ -49,6 +52,11 @@ if __name__ == '__main__':
     canonicalization_df = pd.DataFrame()
     dependency_df = pd.DataFrame()
     taint_analysis_df = pd.DataFrame()
+
+    baseline_df_list = []
+    canonicalization_df_list = []
+    dependency_df_list = []
+    taint_analysis_df_list = []
 
     for json_path in baseline_results:
         with open(json_path, 'r') as json_file:
@@ -94,24 +102,17 @@ if __name__ == '__main__':
                 field = json_instance['post_result']['error']['testcase']['field']
                 testcase = json_instance['post_result']['error']['testcase']['testcase']
 
-                if field in normal_testplan and testcase in normal_testplan[
-                        field] or field in semantic_testplan and testcase in semantic_testplan[
-                            field]:
-                    baseline_df = baseline_df.append(
-                        {
-                            'Trial number': json_instance['post_result']['trial_num'],
-                            'testcase': json_instance['post_result']['error']['testcase'],
-                            'baseline_alarm': json_instance['alarm'],
-                            'baseline_crash_result': crash_result,
-                            'baseline_health_result': health_result,
-                            'baseline_recovery_result': recovery_result,
-                            'baseline_state_result': post_state_result,
-                            'baseline_custom_result': custom_result
-                        },
-                        ignore_index=True)
-                else:
-                    print('Testcase {} is not in test plan'.format(
-                        json_instance['post_result']['error']['testcase']))
+
+                baseline_df_list.append({
+                    'Trial number': json_instance['post_result']['trial_num'],
+                    'testcase': json_instance['post_result']['error']['testcase'],
+                    'baseline_alarm': json_instance['alarm'],
+                    'baseline_crash_result': crash_result,
+                    'baseline_health_result': health_result,
+                    'baseline_recovery_result': recovery_result,
+                    'baseline_state_result': post_state_result,
+                    'baseline_custom_result': custom_result
+                })
 
     for json_path in canonicalization_results:
         with open(json_path, 'r') as json_file:
@@ -157,21 +158,16 @@ if __name__ == '__main__':
                 field = json_instance['post_result']['error']['testcase']['field']
                 testcase = json_instance['post_result']['error']['testcase']['testcase']
 
-                if field in normal_testplan and testcase in normal_testplan[
-                        field] or field in semantic_testplan and testcase in semantic_testplan[
-                            field]:
-                    canonicalization_df = canonicalization_df.append(
-                        {
-                            'Trial number': json_instance['post_result']['trial_num'],
-                            'testcase': json_instance['post_result']['error']['testcase'],
-                            'canonicalization_alarm': json_instance['alarm'],
-                            'canonicalization_crash_result': crash_result,
-                            'canonicalization_health_result': health_result,
-                            'canonicalization_recovery_result': recovery_result,
-                            'canonicalization_state_result': post_state_result,
-                            'canonicalization_custom_result': custom_result
-                        },
-                        ignore_index=True)
+                canonicalization_df_list.append({
+                    'Trial number': json_instance['post_result']['trial_num'],
+                    'testcase': json_instance['post_result']['error']['testcase'],
+                    'canonicalization_alarm': json_instance['alarm'],
+                    'canonicalization_crash_result': crash_result,
+                    'canonicalization_health_result': health_result,
+                    'canonicalization_recovery_result': recovery_result,
+                    'canonicalization_state_result': post_state_result,
+                    'canonicalization_custom_result': custom_result
+                })
 
     for json_path in dependency_results:
         with open(json_path, 'r') as json_file:
@@ -217,22 +213,16 @@ if __name__ == '__main__':
                 field = json_instance['post_result']['error']['testcase']['field']
                 testcase = json_instance['post_result']['error']['testcase']['testcase']
 
-                if field in normal_testplan and testcase in normal_testplan[
-                        field] or field in semantic_testplan and testcase in semantic_testplan[
-                            field]:
-
-                    dependency_df = dependency_df.append(
-                        {
-                            'Trial number': json_instance['post_result']['trial_num'],
-                            'testcase': json_instance['post_result']['error']['testcase'],
-                            'dependency_alarm': json_instance['alarm'],
-                            'dependency_crash_result': crash_result,
-                            'dependency_health_result': health_result,
-                            'dependency_recovery_result': recovery_result,
-                            'dependency_state_result': post_state_result,
-                            'dependency_custom_result': custom_result
-                        },
-                        ignore_index=True)
+                dependency_df_list.append({
+                    'Trial number': json_instance['post_result']['trial_num'],
+                    'testcase': json_instance['post_result']['error']['testcase'],
+                    'dependency_alarm': json_instance['alarm'],
+                    'dependency_crash_result': crash_result,
+                    'dependency_health_result': health_result,
+                    'dependency_recovery_result': recovery_result,
+                    'dependency_state_result': post_state_result,
+                    'dependency_custom_result': custom_result
+                })
 
     for json_path in taint_analysis_results:
         with open(json_path, 'r') as json_file:
@@ -278,21 +268,21 @@ if __name__ == '__main__':
                 field = json_instance['post_result']['error']['testcase']['field']
                 testcase = json_instance['post_result']['error']['testcase']['testcase']
 
-                if field in normal_testplan and testcase in normal_testplan[
-                        field] or field in semantic_testplan and testcase in semantic_testplan[
-                            field]:
-                    taint_analysis_df = taint_analysis_df.append(
-                        {
-                            'Trial number': json_instance['post_result']['trial_num'],
-                            'testcase': json_instance['post_result']['error']['testcase'],
-                            'taint_analysis_alarm': json_instance['alarm'],
-                            'taint_analysis_crash_result': crash_result,
-                            'taint_analysis_health_result': health_result,
-                            'taint_analysis_recovery_result': recovery_result,
-                            'taint_analysis_state_result': post_state_result,
-                            'taint_analysis_custom_result': custom_result
-                        },
-                        ignore_index=True)
+                alarm_features = {
+                    'input': json_instance['post_result']['error']['testcase'],
+                    'symptom': json_instance['post_result']['error']
+                }
+                classify_alarm(alarm_features)
+                taint_analysis_df_list.append({
+                    'Trial number': json_instance['post_result']['trial_num'],
+                    'testcase': json_instance['post_result']['error']['testcase'],
+                    'taint_analysis_alarm': json_instance['alarm'],
+                    'taint_analysis_crash_result': crash_result,
+                    'taint_analysis_health_result': health_result,
+                    'taint_analysis_recovery_result': recovery_result,
+                    'taint_analysis_state_result': post_state_result,
+                    'taint_analysis_custom_result': custom_result
+                })
 
     for json_path in recovery_results:
         with open(json_path, 'r') as json_file:
@@ -310,53 +300,50 @@ if __name__ == '__main__':
 
             recovery_alarm = recovery_result != 'Pass'
 
-            baseline_df = baseline_df.append(
-                {
-                    'Trial number': json_instance['trial_num'],
-                    'baseline_alarm': recovery_alarm,
-                    'baseline_crash_result': 'Pass',
-                    'baseline_health_result': 'Pass',
-                    'baseline_recovery_result': recovery_result,
-                    'baseline_state_result': 'Pass',
-                    'baseline_custom_result': 'Pass'
-                },
-                ignore_index=True)
+            baseline_df_list.append({
+                'Trial number': json_instance['trial_num'],
+                'baseline_alarm': recovery_alarm,
+                'baseline_crash_result': 'Pass',
+                'baseline_health_result': 'Pass',
+                'baseline_recovery_result': recovery_result,
+                'baseline_state_result': 'Pass',
+                'baseline_custom_result': 'Pass'
+            })
 
-            canonicalization_df = canonicalization_df.append(
-                {
-                    'Trial number': json_instance['trial_num'],
-                    'canonicalization_alarm': recovery_alarm,
-                    'canonicalization_crash_result': 'Pass',
-                    'canonicalization_health_result': 'Pass',
-                    'canonicalization_recovery_result': recovery_result,
-                    'canonicalization_state_result': 'Pass',
-                    'canonicalization_custom_result': 'Pass'
-                },
-                ignore_index=True)
+            canonicalization_df_list.append({
+                'Trial number': json_instance['trial_num'],
+                'canonicalization_alarm': recovery_alarm,
+                'canonicalization_crash_result': 'Pass',
+                'canonicalization_health_result': 'Pass',
+                'canonicalization_recovery_result': recovery_result,
+                'canonicalization_state_result': 'Pass',
+                'canonicalization_custom_result': 'Pass',
+            })
 
-            taint_analysis_df = taint_analysis_df.append(
-                {
-                    'Trial number': json_instance['trial_num'],
-                    'taint_analysis_alarm': recovery_alarm,
-                    'taint_analysis_crash_result': 'Pass',
-                    'taint_analysis_health_result': 'Pass',
-                    'taint_analysis_recovery_result': recovery_result,
-                    'taint_analysis_state_result': 'Pass',
-                    'taint_analysis_custom_result': 'Pass'
-                },
-                ignore_index=True)
+            taint_analysis_df_list.append({
+                'Trial number': json_instance['trial_num'],
+                'taint_analysis_alarm': recovery_alarm,
+                'taint_analysis_crash_result': 'Pass',
+                'taint_analysis_health_result': 'Pass',
+                'taint_analysis_recovery_result': recovery_result,
+                'taint_analysis_state_result': 'Pass',
+                'taint_analysis_custom_result': 'Pass',
+            })
 
-            dependency_df = dependency_df.append(
-                {
-                    'Trial number': json_instance['trial_num'],
-                    'dependency_alarm': recovery_alarm,
-                    'dependency_crash_result': 'Pass',
-                    'dependency_health_result': 'Pass',
-                    'dependency_recovery_result': recovery_result,
-                    'dependency_state_result': 'Pass',
-                    'dependency_custom_result': 'Pass'
-                },
-                ignore_index=True)
+            dependency_df_list.append({
+                'Trial number': json_instance['trial_num'],
+                'dependency_alarm': recovery_alarm,
+                'dependency_crash_result': 'Pass',
+                'dependency_health_result': 'Pass',
+                'dependency_recovery_result': recovery_result,
+                'dependency_state_result': 'Pass',
+                'dependency_custom_result': 'Pass',
+            })
+
+    baseline_df = pd.DataFrame(baseline_df_list)
+    canonicalization_df = pd.DataFrame(canonicalization_df_list)
+    taint_analysis_df = pd.DataFrame(taint_analysis_df_list)
+    dependency_df = pd.DataFrame(dependency_df_list)
 
     merged = pd.merge(baseline_df,
                       canonicalization_df.drop(columns=['testcase']),
