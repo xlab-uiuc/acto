@@ -92,7 +92,7 @@ class Runner(object):
             logger.error('kubectl apply failed with return code %d' % cli_result.returncode)
             logger.error('STDOUT: ' + cli_result.stdout)
             logger.error('STDERR: ' + cli_result.stderr)
-            return Snapshot(input, cli_result, {}, ''), True
+            return Snapshot(input, self.collect_cli_result(cli_result), {}, ''), True
         err = None
         try:
             err = self.wait_for_system_converge()
