@@ -1,5 +1,5 @@
 ---
-- name: Install Docker
+- name: Install Acto
   hosts: all
 
   tasks:
@@ -28,6 +28,18 @@
       ansible.builtin.copy:
         src: /tmp/acto.tar.gz
         dest: "{{ home.stdout }}"
+
+    # - name: Ansible delete file glob
+    #   find:
+    #     paths: "{{ home.stdout }}/acto"
+    #     patterns: "*"
+    #   register: files_to_delete
+
+    # - name: Ansible remove file glob
+    #   file:
+    #     path: "{{ item.path }}"
+    #     state: absent
+    #   with_items: "{{ files_to_delete.files }}"
 
     - name: create Acto dir
       become: false

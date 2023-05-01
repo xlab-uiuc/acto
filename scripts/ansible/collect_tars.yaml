@@ -1,0 +1,22 @@
+---
+- name: Collect tars
+  hosts: all
+
+  tasks:
+    - name: Get the home directory
+      become: false
+      command: echo $HOME
+      register: home
+      
+    - name: Ansible find tars glob
+      find:
+        paths: "{{ home.stdout }}/acto"
+        patterns: "*.tar.gz"
+      register: files_to_fetch
+
+    - name: Ansible fetch tars glob
+      ansible.builtin.fetch:
+        src: "{{ item.path }}"
+        dest: "/home/tyler/acto-data/gen6/"
+        flat: true
+      with_items: "{{ files_to_fetch.files }}"

@@ -1,0 +1,16 @@
+---
+- name: File broadcast
+  hosts: all
+
+  tasks:
+
+
+    - name: Get the home directory
+      become: false
+      command: echo $HOME
+      register: home
+
+    - name: Copy archive to remote
+      ansible.builtin.copy:
+        src: /home/tyler/acto-data/gen5/all.tar.gz
+        dest: "{{ home.stdout }}"
