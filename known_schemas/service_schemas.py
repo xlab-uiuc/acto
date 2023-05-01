@@ -133,7 +133,7 @@ class LoadBalancerSourceRangesSchema(K8sArraySchema):
         self.item_schema = LoadBalancerSourceRangesSchema.item(schema_obj.item_schema)
 
     def Match(schema: ObjectSchema) -> bool:
-        return K8sArraySchema.Match(schema) and IpRangeSchema.Match(schema.items)
+        return K8sArraySchema.Match(schema) and IpRangeSchema.Match(schema.get_item_schema())
 
     def __str__(self) -> str:
         return "LoadBalancerSourceRanges"

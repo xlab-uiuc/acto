@@ -21,7 +21,8 @@ class PodManagementPolicySchema(K8sStringSchema):
                                             change_pod_management_policy, lambda prev: "Parallel")
 
     InvalidPodManagementPolicy = K8sInvalidTestCase(lambda prev: prev is not None,
-                                             invalid_pod_management_policy, lambda prev: "Parallel")
+                                                    invalid_pod_management_policy,
+                                                    lambda prev: "Parallel")
 
     def gen(self, exclude_value=None, **kwargs):
         if exclude_value == None:
@@ -128,7 +129,33 @@ class PodTemplateSchema(K8sObjectSchema):
         return "PodTemplate"
 
 
-class UpdateStrategySchema(K8sStringSchema):
+class RollingUpdateSchema(K8sObjectSchema):
+
+    fields = {
+        "partition": K8sIntegerSchema,
+    }
+
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        for field, field_schema in RollingUpdateSchema.fields.items():
+            if field in schema_obj.properties:
+                self.properties[field] = field_schema(schema_obj.properties[field])
+
+    def Match(schema: ObjectSchema) -> bool:
+        if not K8sObjectSchema.Match(schema):
+            return False
+        for field, field_schema in RollingUpdateSchema.fields.items():
+            if field not in schema.properties:
+                return False
+            elif not field_schema.Match(schema.properties[field]):
+                return False
+        return True
+
+    def __str__(self) -> str:
+        return "RollingUpdate"
+
+
+class UpdateStrategyTypeSchema(K8sStringSchema):
 
     def update_strategy_change_precondition(prev):
         return prev is not None
@@ -148,8 +175,9 @@ class UpdateStrategySchema(K8sStringSchema):
     UpdateStrategyChangeTestcase = K8sTestCase(update_strategy_change_precondition,
                                                update_strategy_change, update_strategy_change_setup)
 
-    InvalidUpdateStrategy = K8sInvalidTestCase(lambda prev: prev is not None, invalid_update_strategy,
-                                        lambda prev: 'RollingUpdate')
+    InvalidUpdateStrategy = K8sInvalidTestCase(lambda prev: prev is not None,
+                                               invalid_update_strategy,
+                                               lambda prev: 'RollingUpdate')
 
     def __init__(self, schema_obj: BaseSchema) -> None:
         super().__init__(schema_obj)
@@ -163,15 +191,44 @@ class UpdateStrategySchema(K8sStringSchema):
 
     def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
         base_testcases = super().test_cases()
-        base_testcases[1].extend([UpdateStrategySchema.UpdateStrategyChangeTestcase, UpdateStrategySchema.InvalidUpdateStrategy])
+        base_testcases[1].extend([
+            UpdateStrategyTypeSchema.UpdateStrategyChangeTestcase,
+            UpdateStrategyTypeSchema.InvalidUpdateStrategy
+        ])
         return base_testcases
 
     def Match(schema: ObjectSchema) -> bool:
         return K8sStringSchema.Match(schema)
 
     def __str__(self) -> str:
-        return "UpdateStrategy"
+        return "UpdateStrategyType"
 
+
+class UpdateStrategySchema(K8sObjectSchema):
+
+    fields = {
+        "rollingUpdate": RollingUpdateSchema,
+        "type": UpdateStrategyTypeSchema,
+    }
+
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        for field, field_schema in UpdateStrategySchema.fields.items():
+            if field in schema_obj.properties:
+                self.properties[field] = field_schema(schema_obj.properties[field])
+
+    def Match(schema: ObjectSchema) -> bool:
+        if not K8sObjectSchema.Match(schema):
+            return False
+        for field, field_schema in UpdateStrategySchema.fields.items():
+            if field not in schema.properties:
+                return False
+            elif not field_schema.Match(schema.properties[field]):
+                return False
+        return True
+
+    def __str__(self) -> str:
+        return "UpdateStrategy"
 
 
 class StatefulSetSpecSchema(K8sObjectSchema):

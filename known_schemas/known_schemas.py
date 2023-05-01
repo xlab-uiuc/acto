@@ -8,7 +8,7 @@ from .statefulset_schemas import StatefulSetSchema, StatefulSetSpecSchema, PodTe
 from .deployment_schemas import DeploymentSchema, DeploymentSpecSchema
 from .service_schemas import ServiceSchema, ServiceSpecSchema
 from .pod_disruption_budget_schemas import PodDisruptionBudgetSchema
-from .pod_schemas import AffinitySchema, PodSpecSchema, ContainerSchema, ResourceRequirementsSchema, SecurityContextSchema, PodSecurityContextSchema, TolerationsSchema, VolumeSchema, PersistentVolumeClaimSchema, PersistentVolumeClaimSpecSchema, TopologySpreadConstraintsSchema
+from .pod_schemas import AffinitySchema, PodSpecSchema, ContainerSchema, ResourceRequirementsSchema, SecurityContextSchema, PodSecurityContextSchema, TolerationsSchema, VolumeSchema, TopologySpreadConstraintsSchema
 from .resource_schemas import ResourceRequirementsSchema
 from .storage_schemas import PersistentVolumeClaimSchema, PersistentVolumeClaimSpecSchema
 

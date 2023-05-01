@@ -1,6 +1,6 @@
 from typing import List, Tuple
 from schema import BaseSchema, ObjectSchema, OpaqueSchema, StringSchema
-from known_schemas.base import K8sBooleanSchema, K8sStringSchema, K8sObjectSchema, K8sArraySchema, K8sIntegerSchema
+from known_schemas.base import K8sBooleanSchema, K8sOpaqueSchema, K8sStringSchema, K8sObjectSchema, K8sArraySchema, K8sIntegerSchema
 from .resource_schemas import QuantitySchema, StorageResourceRequirementsSchema
 from test_case import TestCase, K8sTestCase
 
@@ -199,10 +199,10 @@ class PersistentVolumeClaimSchema(K8sObjectSchema):
 
     fields = {
         "apiVersion": ApiVersionSchema,
-        "kind": OpaqueSchema,
+        "kind": K8sOpaqueSchema,
         "metadata": K8sObjectSchema,
         "spec": PersistentVolumeClaimSpecSchema,
-        "status": OpaqueSchema
+        "status": K8sOpaqueSchema
     }
 
     def __init__(self, schema_obj: BaseSchema) -> None:

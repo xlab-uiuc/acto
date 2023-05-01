@@ -821,12 +821,15 @@ class LivenessProbeSchema(K8sObjectSchema):
         "exec": K8sObjectSchema,
         "httpGet": K8sObjectSchema,
         "tcpSocket": K8sObjectSchema,
-        "grpc": GRPCSchema,
         "initialDelaySeconds": K8sIntegerSchema,
         "timeoutSeconds": K8sIntegerSchema,
         "periodSeconds": K8sIntegerSchema,
         "successThreshold": K8sIntegerSchema,
         "failureThreshold": K8sIntegerSchema,
+    }
+
+    optional_fields = {
+        "grpc": GRPCSchema,
     }
 
     def Match(schema: ObjectSchema) -> bool:
@@ -843,8 +846,11 @@ class LivenessProbeSchema(K8sObjectSchema):
         base_testcases = super().test_cases()
         base_testcases[1].append(LivenessProbeSchema.TCP_PROBE_TESTCASE)
         base_testcases[1].append(LivenessProbeSchema.HTTP_PROBE_TESTCASE)
-        base_testcases[1].append(LivenessProbeSchema.GRPC_PROBE_TESTCASE)
         base_testcases[1].append(LivenessProbeSchema.EXEC_PROBE_TESTCASE)
+
+        if "grpc" in self.properties:
+            base_testcases[1].extend(LivenessProbeSchema.GRPC_PROBE_TESTCASE)
+
         return base_testcases
 
     def __str__(self) -> str:

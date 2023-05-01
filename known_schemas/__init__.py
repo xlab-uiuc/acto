@@ -8,3 +8,4 @@ from .resource_schemas import *
 from .service_schemas import *
 from .statefulset_schemas import *
 from .storage_schemas import *
+from .known_schemas import *

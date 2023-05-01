@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from typing import List, Tuple
-from schema import AnyOfSchema, ArraySchema, BaseSchema, BooleanSchema, IntegerSchema, ObjectSchema, StringSchema, extract_schema
+from schema import AnyOfSchema, ArraySchema, BaseSchema, BooleanSchema, IntegerSchema, ObjectSchema, OpaqueSchema, StringSchema, extract_schema
 
 
 class K8sField():
@@ -78,3 +78,11 @@ class K8sAnyOfSchema(K8sSchema, AnyOfSchema):
     def get_normal_semantic_schemas(self) -> Tuple[List['BaseSchema'], List['BaseSchema']]:
         base, semantic = super().get_normal_semantic_schemas()
         return [], base + semantic
+
+class K8sOpaqueSchema(K8sSchema, OpaqueSchema):
+    
+    def Match(schema: OpaqueSchema) -> bool:
+        return True
+    
+    def get_normal_semantic_schemas(self) -> Tuple[List['BaseSchema'], List['BaseSchema']]:
+        return [], [self]
