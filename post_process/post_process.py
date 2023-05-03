@@ -29,7 +29,8 @@ class Step:
         self._trial_dir = trial_dir
         self._gen = gen
         self._input = input
-        self._input_digest = hashlib.md5(json.dumps(input, sort_keys=True).encode("utf-8")).hexdigest()
+        self._input_digest = hashlib.md5(json.dumps(input,
+                                                    sort_keys=True).encode("utf-8")).hexdigest()
         self._operator_log = operator_log
         self._system_state = system_state
         self._cli_output = cli_output
@@ -46,7 +47,7 @@ class Step:
     @property
     def input(self) -> Dict:
         return self._input
-    
+
     @property
     def input_digest(self) -> str:
         return self._input_digest
@@ -72,41 +73,48 @@ def read_trial_dir(trial_dir: str) -> List[Step]:
     '''Read a trial directory and return a list of steps'''
 
     steps: List[Step] = []
-    events_log_path = "%s/events.log" % (trial_dir)
     for generation in range(0, 20):
-        mutated_filename = '%s/mutated-%d.yaml' % (trial_dir, generation)
-        operator_log_path = "%s/operator-%d.log" % (trial_dir, generation)
-        system_state_path = "%s/system-state-%03d.json" % (trial_dir, generation)
-        cli_output_path = "%s/cli-output-%d.log" % (trial_dir, generation)
-        runtime_result_path = "%s/generation-%d-runtime.json" % (trial_dir, generation)
-
-        if not os.path.exists(mutated_filename):
+        if not os.path.exists('%s/mutated-%d.yaml' % (trial_dir, generation)):
             break
 
-        if not os.path.exists(operator_log_path):
+        step = construct_step(trial_dir, generation)
+        if step is None:
             continue
-
-        if not os.path.exists(runtime_result_path):
-            continue
-
-        with open(mutated_filename, 'r') as input_file, \
-                open(operator_log_path, 'r') as operator_log_file, \
-                open(system_state_path, 'r') as system_state_file, \
-                open(events_log_path, 'r') as events_log, \
-                open(cli_output_path, 'r') as cli_output, \
-                open(runtime_result_path, 'r') as runtime_result_file:
-
-            input = yaml.load(input_file, Loader=yaml.FullLoader)
-            operator_log = operator_log_file.read().splitlines()
-            system_state = json.load(system_state_file)
-            cli_result = json.load(cli_output)
-            runtime_result = json.load(runtime_result_file)
-
-            steps.append(
-                Step(trial_dir, generation, input, operator_log, system_state, cli_result,
-                     runtime_result))
+        else:
+            steps.append(step)
 
     return steps
+
+
+def construct_step(trial_dir, generation) -> Step:
+    events_log_path = "%s/events.log" % (trial_dir)
+    mutated_filename = '%s/mutated-%d.yaml' % (trial_dir, generation)
+    operator_log_path = "%s/operator-%d.log" % (trial_dir, generation)
+    system_state_path = "%s/system-state-%03d.json" % (trial_dir, generation)
+    cli_output_path = "%s/cli-output-%d.log" % (trial_dir, generation)
+    runtime_result_path = "%s/generation-%d-runtime.json" % (trial_dir, generation)
+
+    if not os.path.exists(operator_log_path):
+        return None
+
+    if not os.path.exists(runtime_result_path):
+        return None
+
+    with open(mutated_filename, 'r') as input_file, \
+            open(operator_log_path, 'r') as operator_log_file, \
+            open(system_state_path, 'r') as system_state_file, \
+            open(events_log_path, 'r') as events_log, \
+            open(cli_output_path, 'r') as cli_output, \
+            open(runtime_result_path, 'r') as runtime_result_file:
+
+        input = yaml.load(input_file, Loader=yaml.FullLoader)
+        operator_log = operator_log_file.read().splitlines()
+        system_state = json.load(system_state_file)
+        cli_result = json.load(cli_output)
+        runtime_result = json.load(runtime_result_file)
+
+        return Step(trial_dir, generation, input, operator_log, system_state, cli_result,
+                    runtime_result)
 
 
 class PostProcessor(object):
@@ -142,7 +150,7 @@ class PostProcessor(object):
     @property
     def trial_to_steps(self) -> Dict[str, List[Step]]:
         return self._trial_to_steps
-    
+
     @property
     def context(self) -> Dict:
         return self._context

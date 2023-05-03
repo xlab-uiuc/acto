@@ -6,10 +6,8 @@ import unittest
 import yaml
 
 from checker import Checker
-from common import FeatureGate, OperatorConfig, RecoveryResult
+from common import FeatureGate, OperatorConfig
 from input import DeterministicInputModel, InputModel
-from post_process.post_diff_test import PostDiffTest
-from post_process.post_process import construct_step
 from snapshot import Snapshot
 
 test_dir = pathlib.Path(__file__).parent.resolve()
@@ -33,7 +31,7 @@ def construct_snapshot(trial_dir: str, generation: int):
 
         return Snapshot(mutated, cli_output, system_state, operator_log)
 
-class TestCassOpBugs(unittest.TestCase):
+class TestCRDBOpBugs(unittest.TestCase):
 
     def __init__(self, methodName: str = "runTest") -> None:
         super().__init__(methodName)
@@ -74,17 +72,6 @@ class TestCassOpBugs(unittest.TestCase):
 
         runResult = checker.check(snapshot_1, snapshot_0, False, 2, {})
         self.assertTrue(runResult.is_error())
-
-    def test_cassop_330_diff(self):
-        diff_test_result_path = os.path.join(test_dir, 'cassop-330', 'difftest-006.json')
-        with open(diff_test_result_path, 'r') as f:
-            diff_test_result = json.load(f)
-
-        trial_dir = os.path.join(test_dir, 'cassop-330/trial-00-0001')
-        step = construct_step(trial_dir, 8)
-
-        result = PostDiffTest.check_diff_test_step(diff_test_result, step, self.config)
-        self.assertTrue(result != None)
 
 
 if __name__ == '__main__':

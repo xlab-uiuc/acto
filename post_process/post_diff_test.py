@@ -17,12 +17,12 @@ from acto import handle_excepthook, thread_excepthook
 from constant import CONST
 from checker import compare_system_equality
 from thread_logger import get_thread_logger
-from common import ActoEncoder, ErrorResult, OperatorConfig, PassResult, RecoveryResult, invalid_input_message_regex, kubernetes_client
+from common import ActoEncoder, ErrorResult, OperatorConfig, PassResult, RecoveryResult, RunResult, invalid_input_message_regex, kubernetes_client
 from runner import Runner
 from deploy import Deploy, DeployMethod
 from k8s_cluster import base, kind
 from preprocess import add_acto_label
-from .post_process import PostProcessor
+from .post_process import PostProcessor, Step
 
 
 def dict_hash(d: dict) -> int:
@@ -64,8 +64,9 @@ class AdditionalRunner:
         self._cluster_name = f"acto-cluster-{worker_id}"
         self._kubeconfig = os.path.join(os.path.expanduser('~'), '.kube', self._cluster_name)
         self._context_name = cluster.get_context_name(f"acto-cluster-{worker_id}")
+        self._generation = 0
 
-    def run_cr(self, cr, trial, gen, generation):
+    def run_cr(self, cr, trial, gen):
         self._cluster.restart_cluster(self._cluster_name, self._kubeconfig, CONST.K8S_VERSION)
         apiclient = kubernetes_client(self._kubeconfig, self._context_name)
         deployed = self._deploy.deploy_with_retry(self._context, self._kubeconfig,
@@ -74,7 +75,7 @@ class AdditionalRunner:
         trial_dir = os.path.join(self._workdir, 'trial-%02d' % self._worker_id)
         os.makedirs(trial_dir, exist_ok=True)
         runner = Runner(self._context, trial_dir, self._kubeconfig, self._context_name)
-        snapshot, err = runner.run(cr, generation=generation)
+        snapshot, err = runner.run(cr, generation=self._generation)
         difftest_result = {
             'input_digest': hashlib.md5(json.dumps(cr, sort_keys=True).encode("utf-8")).hexdigest(),
             'snapshot': snapshot.to_dict(),
@@ -83,7 +84,7 @@ class AdditionalRunner:
                 'gen': gen,
             },
         }
-        difftest_result_path = os.path.join(trial_dir, 'difftest-%03d.json' % generation)
+        difftest_result_path = os.path.join(trial_dir, 'difftest-%03d.json' % self._generation)
         with open(difftest_result_path, 'w') as f:
             json.dump(difftest_result, f, cls=ActoEncoder, indent=6)
 
@@ -243,6 +244,14 @@ class PostDiffTest(PostProcessor):
         cluster = kind.Kind()
         cluster.configure_cluster(self.config.num_nodes, CONST.K8S_VERSION)
 
+        deploy = Deploy(DeployMethod.YAML, config.deploy.file, config.deploy.init).new()
+
+        runner = AdditionalRunner(context=self.context,
+                                  deploy=deploy,
+                                  workdir=additional_runner_dir,
+                                  cluster=cluster,
+                                  worker_id=worker_id)
+
         while True:
             try:
                 diff_test_result_path = workqueue.get(block=False)
@@ -251,7 +260,6 @@ class PostDiffTest(PostProcessor):
 
             with open(diff_test_result_path, 'r') as f:
                 diff_test_result = json.load(f)
-            snapshot = diff_test_result['snapshot']
             originals = diff_test_result['originals']
 
             group_errs = []
@@ -263,48 +271,13 @@ class PostDiffTest(PostProcessor):
                     continue
 
                 trial_basename = os.path.basename(trial)
-                invalid, _ = self.trial_to_steps[trial_basename][gen].runtime_result.is_invalid()
-                if isinstance(self.trial_to_steps[trial_basename][gen].runtime_result.health_result,
-                              ErrorResult) or invalid:
+                original_result = self.trial_to_steps[trial_basename][gen]
+                step_result = PostDiffTest.check_diff_test_step(diff_test_result, original_result,
+                                                                self.config, False, runner)
+                if step_result is None:
                     continue
-                if invalid_input_message_regex(snapshot['operator_log']):
-                    continue
-
-                original_system_state = self.trial_to_steps[trial_basename][gen].system_state
-                result = compare_system_equality(snapshot['system_state'], original_system_state,
-                                                 self.config.diff_ignore_fields)
-                if isinstance(result, PassResult):
-                    logger.info(f'Pass diff test for trial {trial} gen {gen}')
                 else:
-                    deploy = Deploy(DeployMethod.YAML, self.config.deploy.file,
-                                    self.config.deploy.init).new()
-
-                    runner = AdditionalRunner(context=self.context,
-                                              deploy=deploy,
-                                              workdir=additional_runner_dir,
-                                              cluster=cluster,
-                                              worker_id=worker_id)
-                    add_snapshot = runner.run_cr(snapshot['input'], trial, gen, generation)
-                    generation += 1
-                    nondeterministic_fields = get_nondeterministic_fields(
-                        original_system_state, add_snapshot.system_state, self.config.diff_ignore_fields)
-
-                    if len(nondeterministic_fields) > 0:
-                        logger.info(f'Got additional nondeterministic fields: {nondeterministic_fields}')
-                        for delta_category in result.delta:
-                            for delta in result.delta[delta_category]:
-                                if delta.path(output_format='list') not in nondeterministic_fields:
-                                    logger.error(f'Fail diff test for trial {trial} gen {gen}')
-                                    error_result = result.to_dict()
-                                    error_result['trial'] = trial
-                                    error_result['gen'] = gen
-                                    group_errs.append(error_result)
-                    else:
-                        logger.error(f'Fail diff test for trial {trial} gen {gen}')
-                        error_result = result.to_dict()
-                        error_result['trial'] = trial
-                        error_result['gen'] = gen
-                        group_errs.append(error_result)
+                    group_errs.append(step_result)
             if len(group_errs) > 0:
                 with open(
                         os.path.join(workdir,
@@ -313,6 +286,59 @@ class PostDiffTest(PostProcessor):
                     json.dump(group_errs, result_f, cls=ActoEncoder, indent=6)
 
         return None
+
+    def check_diff_test_step(diff_test_result: Dict,
+                             original_result: Step,
+                             config: OperatorConfig,
+                             run_check_indeterministic: bool = False,
+                             additional_runner: AdditionalRunner = None) -> RecoveryResult:
+        logger = get_thread_logger(with_prefix=True)
+        trial_dir = original_result.trial_dir
+        gen = original_result.gen
+
+        invalid, _ = original_result.runtime_result.is_invalid()
+        if isinstance(original_result.runtime_result.health_result, ErrorResult) or invalid:
+            return
+
+        original_operator_log = original_result.operator_log
+        if invalid_input_message_regex(original_operator_log):
+            return
+
+        original_system_state = original_result.system_state
+        result = compare_system_equality(diff_test_result['snapshot']['system_state'],
+                                         original_system_state, config.diff_ignore_fields)
+        if isinstance(result, PassResult):
+            logger.info(f'Pass diff test for trial {trial_dir} gen {gen}')
+            return None
+        elif run_check_indeterministic:
+            add_snapshot = additional_runner.run_cr(diff_test_result['snapshot']['input'],
+                                                    trial_dir, gen)
+            indeterministic_fields = get_nondeterministic_fields(original_system_state,
+                                                                 add_snapshot.system_state,
+                                                                 config.diff_ignore_fields)
+
+            if len(indeterministic_fields) > 0:
+                logger.info(f'Got additional nondeterministic fields: {indeterministic_fields}')
+                for delta_category in result.delta:
+                    for delta in result.delta[delta_category]:
+                        if delta.path(output_format='list') not in indeterministic_fields:
+                            logger.error(f'Fail diff test for trial {trial_dir} gen {gen}')
+                            error_result = result.to_dict()
+                            error_result['trial'] = trial_dir
+                            error_result['gen'] = gen
+                            return error_result
+            else:
+                logger.error(f'Fail diff test for trial {trial_dir} gen {gen}')
+                error_result = result.to_dict()
+                error_result['trial'] = trial_dir
+                error_result['gen'] = gen
+                return error_result
+        else:
+            logger.error(f'Fail diff test for trial {trial_dir} gen {gen}')
+            error_result = result.to_dict()
+            error_result['trial'] = trial_dir
+            error_result['gen'] = gen
+            return error_result
 
 
 if __name__ == '__main__':
