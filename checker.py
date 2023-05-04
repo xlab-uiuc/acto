@@ -4,6 +4,7 @@ import importlib
 import sys
 import logging
 import threading
+from types import NoneType
 from typing import Dict, List
 from deepdiff import DeepDiff
 from deepdiff.model import DiffLevel
@@ -891,7 +892,6 @@ def compare_system_equality(curr_system_state: Dict,
         r".*\['metadata'\]\['resource_version'\]",
         r".*\['metadata'\].*\['uid'\]",
         r".*\['metadata'\]\['generation'\]$",
-        r".*\['metadata'\]\['annotations'\]",
         r".*\['metadata'\]\['annotations'\]\['.*last-applied.*'\]",
         r".*\['metadata'\]\['annotations'\]\['.*\.kubernetes\.io.*'\]",
         r".*\['metadata'\]\['labels'\]\['.*revision.*'\]",
@@ -929,9 +929,19 @@ def compare_system_equality(curr_system_state: Dict,
                     curr_system_state,
                     exclude_regex_paths=exclude_paths,
                     iterable_compare_func=compare_func,
-                    custom_operators=[NameOperator(r".*\['name'\]$")],
+                    custom_operators=[NameOperator(r".*\['name'\]$"), TypeChangeOperator(r".*\['annotations'\]$")],
                     view='tree',)
 
+    postprocess_deepdiff(diff)
+
+    if diff:
+        logger.debug(f"failed attempt recovering to seed state - system state diff: {diff}")
+        return RecoveryResult(delta=diff, from_=prev_system_state, to_=curr_system_state)
+
+    return PassResult()
+
+def postprocess_deepdiff(diff):
+    # ignore PVC add/removal, because PVC can be intentially left behind
     if 'dictionary_item_removed' in diff:
         new_removed_items = []
         for removed_item in diff['dictionary_item_removed']:
@@ -955,12 +965,6 @@ def compare_system_equality(curr_system_state: Dict,
             del diff['dictionary_item_added']
         else:
             diff['dictionary_item_added'] = new_removed_items
-
-    if diff:
-        logger.debug(f"failed attempt recovering to seed state - system state diff: {diff}")
-        return RecoveryResult(delta=diff, from_=prev_system_state, to_=curr_system_state)
-
-    return PassResult()
 
 
 def compare_func(x, y, level: DiffLevel = None):
@@ -988,7 +992,23 @@ class NameOperator(BaseOperator):
                                                                      y_name):
             return x_name[:5] == y_name[:5]
         return False
+    
 
+class TypeChangeOperator(BaseOperator):
+
+    def give_up_diffing(self, level, diff_instance):
+        if level.t1 == None:
+            if isinstance(level.t2, dict):
+                level.t1 = {}
+            elif isinstance(level.t2, list):
+                level.t1 = []
+        elif level.t2 == None:
+            if isinstance(level.t1, dict):
+                logging.info('t2 is None, t1 is dict')
+                level.t2 = {}
+            elif isinstance(level.t1, list):
+                level.t2 = []
+        return False
 
 class BlackBoxChecker(Checker):
 
