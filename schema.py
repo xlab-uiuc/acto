@@ -122,7 +122,7 @@ class StringSchema(BaseSchema):
             'maxLength']
         self.pattern = None if 'pattern' not in schema else schema['pattern']
 
-    def gen(self, exclude_value=None, **kwargs):
+    def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
         # TODO: Use minLength: the exrex does not support minLength
         if self.enum != None:
             if exclude_value != None:
@@ -132,6 +132,8 @@ class StringSchema(BaseSchema):
         if self.pattern != None:
             # XXX: since it's random, we don't need to exclude the value
             return exrex.getone(self.pattern, self.max_length)
+        if minimum:
+            return random_string(self.min_length)
         return 'ACTOKEY'
 
     def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:

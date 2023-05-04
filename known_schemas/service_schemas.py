@@ -244,3 +244,47 @@ class IngressTLSSchema(K8sObjectSchema):
 
     def __str__(self) -> str:
         return "IngressTLSSchema"
+
+
+class IngressTLSArraySchema(K8sArraySchema):
+
+    item = IngressTLSSchema
+
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        self.item_schema = IngressTLSArraySchema.item(schema_obj.item_schema)
+
+    def Match(schema: ObjectSchema) -> bool:
+        return K8sArraySchema.Match(schema) and IngressTLSSchema.Match(schema.get_item_schema())
+
+    def __str__(self) -> str:
+        return "IngressTLSArraySchema"
+
+
+class IngressSpecSchema(K8sObjectSchema):
+
+    fields = {
+        "backend": K8sObjectSchema,
+        "ingressClassName": K8sStringSchema,
+        "rules": K8sArraySchema,
+        "tls": IngressTLSArraySchema
+    }
+
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        for field, field_schema in IngressSpecSchema.fields.items():
+            if field in schema_obj.properties:
+                self.properties[field] = field_schema(schema_obj.properties[field])
+
+    def Match(schema: ObjectSchema) -> bool:
+        if not K8sObjectSchema.Match(schema):
+            return False
+        for field, field_schema in IngressSpecSchema.fields.items():
+            if field not in schema.properties:
+                return False
+            elif not field_schema.Match(schema.properties[field]):
+                return False
+        return True
+
+    def __str__(self) -> str:
+        return "IngressSpecSchema"
