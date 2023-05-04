@@ -1,11 +1,27 @@
 # Acto: Automatic Correctness Testing for (Kubernetes) Operators
 
-False alarm category sheet: https://docs.google.com/spreadsheets/d/1_tmdu3MBnwHizVvgNGLjUsJYM6MGa1ppNa0YRHS64w0/edit?usp=sharing
 
-## Next steps
-- [ ] Alarm grouping utility
-- [ ] Annotation support for false alarm
-- [ ] Integrate with Augeas (Augeas only support reading files, while we want to parse raw strings"
+## Overview
+Many cloud systems today have operators to manage them atop the Kubernetes platform.
+These operators automate important management
+tasks, e.g., software upgrades, configuration updates, and autoscaling.
+Even for the same cloud system, different operators
+are implemented by commercial vendors and open-source
+communities to support different practices and environments
+
+Acto is a tool to help developers test the correctness of their operators.
+It tests operation correctness by performing end-to-end (e2e) testing of cloud-native operators together with the managed systems. 
+To do so, Acto continuously generates new operations during a test campaign.
+Then, Acto’s oracles check if the operator always correctly reconciles the system from each current state to the desired state, or raises an alarm otherwise.
+
+To use Acto, developers need to port their operators by providing a way to deploy the operators.
+Acto runs in two modes, blackbox mode and whitebox mode.
+For blackbox mode, Acto only needs the deployment script for the operators.
+For whitebox mode, Acto additionally needs the source code information.
+We list detailed porting steps [here](docs/port.md).
+
+Acto generates syntactically valid desired state declarations by parsing the CRD of each operator, which contains constraints like type, min/max values(for numeric types), length (for string type), regular-expression patterns, etc.
+Acto generates values which satisfy predicates, in the form of property dependencies. In blackbox mode, Acto infers the dependencies through naming conventions. In whitebox mode, Acto infers the dependencies using control-flow analysis on the source code.
 
 ## Prerequisites
 - Golang
@@ -24,16 +40,8 @@ To run the test:
 python3 acto.py \
   --config CONFIG, -c CONFIG
                         Operator port config path
-  --duration DURATION, -d DURATION
-                        Number of hours to run
-  --preload-images [PRELOAD_IMAGES [PRELOAD_IMAGES ...]]
-                        Docker images to preload into Kind cluster
-  --helper-crd HELPER_CRD
-                        generated CRD file that helps with the input generation
-  --context CONTEXT     Cached context data
   --num-workers NUM_WORKERS
                         Number of concurrent workers to run Acto with
-  --dryrun              Only generate test cases without executing them
 ```
 
 ## Known Issues
@@ -123,3 +131,8 @@ such as `-coverpkg -cover`.
 the coverage information to a file. To do this, we need to create a shell script which exec the binary 
 with the `-test.coverprofile=/tmp/profile/cass-operator-``date +%s%N``.out` flag and make this shell 
 script the entrypoint of the docker image.
+
+## Next steps
+- [ ] Alarm grouping utility
+- [ ] Annotation support for false alarm
+- [ ] Integrate with Augeas (Augeas only support reading files, while we want to parse raw strings"
