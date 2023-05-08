@@ -17,7 +17,6 @@ class Kind(base.KubernetesCluster):
     def configure_cluster(self, num_nodes: int, version: str):
         '''Create config file for kind'''
         config_dict = {}
-        config_dict = {}
         config_dict['kind'] = 'Cluster'
         config_dict['apiVersion'] = 'kind.x-k8s.io/v1alpha4'
         config_dict['nodes'] = []
