@@ -102,7 +102,7 @@ class ReproInputModel(InputModel):
     def get_seed_input(self) -> dict:
         return self.seed_input
 
-    def generate_test_plan(self, delta_from: str = None) -> dict:
+    def generate_test_plan(self, delta_from: str = None, focus_fields: list = None) -> dict:
         return {}
 
     def next_test(self) -> list:
