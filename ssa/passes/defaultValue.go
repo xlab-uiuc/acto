@@ -1,8 +1,12 @@
 package analysis
 
 import (
+	"encoding/json"
+	"go/constant"
 	"go/token"
+	"go/types"
 	"log"
+	"strings"
 
 	. "github.com/xlab-uiuc/acto/ssa/util"
 	"golang.org/x/tools/go/ssa"
@@ -73,7 +77,62 @@ func TryResolveValue(value ssa.Value) *ssa.Const {
 			return TryGetValueForAddr(typedValue.X)
 		}
 	case *ssa.Const:
+		if typedValue.Value != nil {
+			log.Printf("Found const %s", typedValue.Value.String())
+		} else {
+			log.Printf("Found nil const")
+		}
 		return typedValue
+	case *ssa.Alloc:
+		if strings.Contains(typedValue.Type().Underlying().(*types.Pointer).Elem().String(), "IntOrString") {
+			log.Printf("Found IntOrString alloc %s", typedValue.Type().Underlying().(*types.Pointer).Elem().String())
+			return TryGetValueForAlloc(typedValue)
+		}
+		if _, ok := typedValue.Type().Underlying().(*types.Pointer).Elem().Underlying().(*types.Struct); ok {
+			log.Printf("Found struct alloc %s", typedValue.Type().Underlying().(*types.Pointer).Elem().String())
+			return TryGetValueForStructAlloc(typedValue)
+		}
+	case *ssa.Call:
+		log.Printf("Value from call %s", typedValue.Call.Value.Name())
+		if strings.Contains(typedValue.Call.Value.Name(), "FromInt") {
+			return TryResolveValue(typedValue.Call.Args[0])
+		}
+	}
+	return nil
+}
+
+func TryGetValueForStructAlloc(alloc *ssa.Alloc) *ssa.Const {
+	fields := map[string]string{}
+	for _, referrer := range *alloc.Referrers() {
+		if storeInst, ok := referrer.(*ssa.FieldAddr); ok {
+			if constValue := TryGetValueForAddr(storeInst); constValue != nil {
+				tag := alloc.Type().Underlying().(*types.Pointer).Elem().Underlying().(*types.Struct).Tag(storeInst.Field)
+				fieldName := GetFieldNameFromJsonTag(tag)
+				log.Printf("Found field %s with value %s", fieldName, constValue.Value.String())
+				fields[fieldName] = constValue.Value.String()
+			}
+		}
+	}
+	if len(fields) == 0 {
+		return nil
+	} else {
+		fields_string, err := json.Marshal(fields)
+		if err != nil {
+			log.Fatal(err)
+		}
+		return &ssa.Const{
+			Value: constant.MakeString(string(fields_string)),
+		}
+	}
+}
+
+func TryGetValueForAlloc(alloc *ssa.Alloc) *ssa.Const {
+	for _, referrer := range *alloc.Referrers() {
+		if storeInst, ok := referrer.(*ssa.Store); ok {
+			if constValue := TryResolveValue(storeInst.Val); constValue != nil {
+				return constValue
+			}
+		}
 	}
 	return nil
 }

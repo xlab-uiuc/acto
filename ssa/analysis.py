@@ -63,6 +63,14 @@ def analyze(project_path: str, seed_type: str, seed_pkg: str) -> dict:
 
         field_conditions_map[json.dumps(field_condition_groups['path'][1:])] = new_field_condition_group
 
+    for default_value in default_value_map:
+        if default_value_map[default_value] == 'null':
+            default_value_map[default_value] = None
+        elif default_value_map[default_value] == 'true':
+            default_value_map[default_value] = True
+        elif default_value_map[default_value] == 'false':
+            default_value_map[default_value] = False
+
     analysis_result = {
         'used_fields': taint_analysis_result['usedPaths'],
         'control_flow_fields': all_fields,
