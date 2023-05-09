@@ -4,11 +4,12 @@ import pathlib
 import unittest
 import yaml
 
-from checker import Checker
-from common import FeatureGate, OperatorConfig
-from input import DeterministicInputModel, InputModel
-from post_process.post_diff_test import PostDiffTest
-from post_process.post_process import construct_step
+from acto.checker import Checker
+from acto.common import FeatureGate
+from acto.utils import OperatorConfig
+from acto.input import DeterministicInputModel, InputModel
+from acto.post_process.post_diff_test import PostDiffTest
+from acto.post_process.post_process import construct_step
 from test.utils import construct_snapshot
 
 test_dir = pathlib.Path(__file__).parent.resolve()
