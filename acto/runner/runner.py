@@ -6,17 +6,23 @@ import queue
 import json
 import yaml
 import base64
+from acto.serialization import ActoEncoder
 
 import acto.utils.acto_timer as acto_timer
 from acto.kubectl_client import KubectlClient
-from snapshot import Snapshot
-from common import *
-from utils import get_thread_logger
+from acto.snapshot import Snapshot
+from acto.common import *
+from acto.utils import get_thread_logger
 
 
 class Runner(object):
 
-    def __init__(self, context: dict, trial_dir: str, kubeconfig: str, context_name: str, wait_time: int = 45):
+    def __init__(self,
+                 context: dict,
+                 trial_dir: str,
+                 kubeconfig: str,
+                 context_name: str,
+                 wait_time: int = 45):
         self.namespace = context["namespace"]
         self.crd_metainfo: dict = context['crd']
         self.trial_dir = trial_dir
@@ -80,11 +86,7 @@ class Runner(object):
 
         cmd = ['apply', '-f', mutated_filename, '-n', self.namespace]
 
-        cli_result = kubectl(cmd,
-                             kubeconfig=self.kubeconfig,
-                             context_name=self.context_name,
-                             capture_output=True,
-                             text=True)
+        cli_result = self.kubectl_client.kubectl(cmd, capture_output=True, text=True)
         logger.debug('STDOUT: ' + cli_result.stdout)
         logger.debug('STDERR: ' + cli_result.stderr)
 
@@ -118,7 +120,7 @@ class Runner(object):
 
     def run_without_collect(self, seed_file: str):
         cmd = ['apply', '-f', seed_file, '-n', self.namespace]
-        _ = kubectl(cmd, kubeconfig=self.kubeconfig, context_name=self.context_name)
+        _ = self.kubectl_client.kubectl(cmd)
 
         try:
             err = self.wait_for_system_converge()
@@ -133,10 +135,13 @@ class Runner(object):
         start = time.time()
         mutated_filename = '%s/mutated-%d.yaml' % (self.trial_dir, generation)
         logger.info('Deleting : ' + mutated_filename)
-        
+
         cmd = ['delete', '-f', mutated_filename, '-n', self.namespace]
         try:
-            cli_result = self.kubectl_client.kubectl(cmd, capture_output=True, text=True, timeout=120)
+            cli_result = self.kubectl_client.kubectl(cmd,
+                                                     capture_output=True,
+                                                     text=True,
+                                                     timeout=120)
         except subprocess.TimeoutExpired as e:
             logger.error('kubectl delete timeout.')
             return True
@@ -146,7 +151,8 @@ class Runner(object):
 
         for tick in range(0, 600):
             crs = self.__get_custom_resources(self.namespace, self.crd_metainfo['group'],
-                                        self.crd_metainfo['version'], self.crd_metainfo['plural'])
+                                              self.crd_metainfo['version'],
+                                              self.crd_metainfo['plural'])
             if len(crs) == 0:
                 break
             time.sleep(1)

@@ -1,7 +1,7 @@
 import json
 import logging
 import re
-from common import get_thread_logger
+from acto.common import get_thread_logger
 
 klog_regex = r'^\s*'
 klog_regex += r'(\w)'  # group 1: level

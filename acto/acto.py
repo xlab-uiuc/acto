@@ -3,7 +3,7 @@ import functools
 import os
 import sys
 import threading
-from types import SimpleNamespace, FunctionType
+from types import FunctionType
 import yaml
 import time
 from typing import List, Tuple
@@ -12,27 +12,30 @@ from datetime import datetime
 import signal
 import logging
 import importlib
-import traceback
 import tempfile
 import jsonpatch
-from kubectl_client import KubectlClient
-from client.oracle_handle import OracleHandle
+from acto.input.testcase import TestCase
+from acto.utils.config import OperatorConfig
+from acto.utils.error_handler import handle_excepthook, thread_excepthook
 
-from common import *
-from exception import UnknownDeployMethodError
-from k8s_helper import delete_operator_pod
-from preprocess import add_acto_label, process_crd, update_preload_images
-from input import InputModel, DeterministicInputModel
-from deploy import Deploy, DeployMethod
-from k8s_cluster import base, k3d, kind
-from constant import CONST
-from runner import Runner
-from checker import BlackBoxChecker, Checker
-from snapshot import EmptySnapshot
+from .common import *
+from .exception import UnknownDeployMethodError
+from acto.utils import delete_operator_pod
+from acto.utils import add_acto_label, process_crd, update_preload_images
+from acto.oracle_handle import OracleHandle
+from .input import InputModel, DeterministicInputModel
+from .deploy import Deploy, DeployMethod
+from acto.kubernetes_engine import base, k3d, kind
+from acto.kubectl_client import KubectlClient
+from .constant import CONST
+from .runner import Runner
+from .checker import BlackBoxChecker, Checker
+from .snapshot import EmptySnapshot
 from ssa.analysis import analyze
-from testplan import TreeNode
-from thread_logger import set_thread_logger_prefix, get_thread_logger
-from value_with_schema import ValueWithSchema, attach_schema_to_value
+from acto.input.testplan import TreeNode
+from acto.utils.thread_logger import set_thread_logger_prefix, get_thread_logger
+from acto.input.value_with_schema import ValueWithSchema, attach_schema_to_value
+from acto.serialization import ActoEncoder, ContextEncoder
 
 CONST = CONST()
 random.seed(0)
@@ -136,7 +139,7 @@ class TrialRunner:
 
     def __init__(self, context: dict, input_model: InputModel, deploy: Deploy, runner_t: type,
                  checker_t: type, wait_time: int, custom_on_init: List[callable],
-                 custom_oracle: List[callable], workdir: str, cluster: base.KubernetesCluster,
+                 custom_oracle: List[callable], workdir: str, cluster: base.KubernetesEngine,
                  worker_id: int, sequence_base: int, dryrun: bool, is_reproduce: bool,
                  apply_testcase_f: FunctionType, feature_gate: FeatureGate) -> None:
         self.context = context
@@ -849,52 +852,6 @@ class Acto:
             json.dump(testrun_info, info_file, cls=ActoEncoder, indent=4)
 
         logger.info('All tests finished')
-
-
-def handle_excepthook(type, message, stack):
-    '''Custom exception handler
-
-    Print detailed stack information with local variables
-    '''
-    logger = get_thread_logger(with_prefix=True)
-
-    if issubclass(type, KeyboardInterrupt):
-        sys.__excepthook__(type, message, stack)
-        return
-
-    global notify_crash_
-    if notify_crash_:
-        notify_crash(f'An exception occured: {type}: {message}.')
-
-    stack_info = traceback.StackSummary.extract(traceback.walk_tb(stack),
-                                                capture_locals=True).format()
-    logger.critical(f'An exception occured: {type}: {message}.')
-    for i in stack_info:
-        logger.critical(i.encode().decode('unicode-escape'))
-    return
-
-
-def thread_excepthook(args):
-    logger = get_thread_logger(with_prefix=True)
-
-    exc_type = args.exc_type
-    exc_value = args.exc_value
-    exc_traceback = args.exc_traceback
-    thread = args.thread
-    if issubclass(exc_type, KeyboardInterrupt):
-        threading.__excepthook__(args)
-        return
-
-    global notify_crash_
-    if notify_crash_:
-        notify_crash(f'An exception occured: {exc_type}: {exc_value}.')
-
-    stack_info = traceback.StackSummary.extract(traceback.walk_tb(exc_traceback),
-                                                capture_locals=True).format()
-    logger.critical(f'An exception occured: {exc_type}: {exc_value}.')
-    for i in stack_info:
-        logger.critical(i.encode().decode('unicode-escape'))
-    return
 
 
 if __name__ == '__main__':

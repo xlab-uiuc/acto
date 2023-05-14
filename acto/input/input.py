@@ -11,14 +11,15 @@ import glob
 import yaml
 
 from acto.common import random_string
+from acto.input import known_schemas
+from acto.input.valuegenerator import extract_schema_with_value_generator
 from acto.utils import get_thread_logger, is_prefix
-from acto.get_matched_schemas import find_matched_schema
-from acto.known_schemas import K8sField
+from acto.input.get_matched_schemas import find_matched_schema
+from .known_schemas import K8sField
 from acto.schema import IntegerSchema, extract_schema, BaseSchema
 from .testcase import TestCase
-from .testplan import DeterministicTestPlan, TestGroup, TestPlan
+from .testplan import DeterministicTestPlan, TestGroup, TestPlan, TreeNode
 from .value_with_schema import attach_schema_to_value
-from .testplan import TreeNode
 
 
 def covered_by_k8s(k8s_fields: List[K8sField], path: List[str]) -> bool:
@@ -89,7 +90,7 @@ class InputModel:
             self.mount = mount
         else:
             self.mount = ['spec']  # We model the cr.spec as the input
-        self.root_schema = extract_schema([],
+        self.root_schema = extract_schema_with_value_generator([],
                                           crd['spec']['versions'][-1]['schema']['openAPIV3Schema'])
 
         # Load all example documents

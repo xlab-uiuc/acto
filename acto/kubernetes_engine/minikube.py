@@ -1,4 +1,4 @@
 from . import base
 
-class MiniKube(base.KubernetesCluster):
+class MiniKube(base.KubernetesEngine):
     pass

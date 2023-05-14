@@ -10,8 +10,8 @@ import yaml
 sys.path.append('.')
 sys.path.append('..')
 
-from common import OperatorConfig, RunResult, oracle_result_from_dict
-
+from acto.common import RunResult, oracle_result_from_dict
+from acto.utils import OperatorConfig
 
 class Step:
     '''A step in a trial

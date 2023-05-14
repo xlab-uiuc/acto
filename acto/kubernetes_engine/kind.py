@@ -5,11 +5,11 @@ import logging
 import time
 import kubernetes
 
-from constant import CONST
+from acto.constant import CONST
 from . import base
 
 
-class Kind(base.KubernetesCluster):
+class Kind(base.KubernetesEngine):
 
     def __init__(self):
         self.config_path = os.path.join(CONST.CLUSTER_CONFIG_FOLDER, 'KIND.yaml')

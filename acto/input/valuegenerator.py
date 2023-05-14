@@ -3,12 +3,18 @@ import random
 from typing import List, Tuple
 import exrex
 from acto.common import random_string
+from acto.input.testplan import InputTreeNode
 from acto.schema import StringSchema, NumberSchema, IntegerSchema, ObjectSchema, ArraySchema, AnyOfSchema, OneOfSchema, BooleanSchema, OpaqueSchema
+from acto.schema import BaseSchema
 from acto.utils.thread_logger import get_thread_logger
 from .testcase import EnumTestCase, SchemaPrecondition, TestCase
 
 
-class ValueGenerator():
+class ValueGenerator(BaseSchema):
+    '''Base class for value generator
+
+    It defines the interface for value generator
+    '''
 
     @abstractmethod
     def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
@@ -28,7 +34,7 @@ class ValueGenerator():
 
 
 class StringGenerator(StringSchema, ValueGenerator):
-    '''Representation of a string node
+    '''Representation of a generic value generator for string schema
     
     It handles
         - minLength
@@ -80,6 +86,10 @@ class StringGenerator(StringSchema, ValueGenerator):
 
     def num_fields(self):
         return 1
+
+    def to_tree(self):
+        '''Override the to_tree method to return InputTreeNode'''
+        return InputTreeNode(self.path)
 
     def change_precondition(self, prev):
         return prev != None
@@ -185,6 +195,10 @@ class NumberGenerator(NumberSchema, ValueGenerator):
 
     def num_fields(self) -> int:
         return 1
+
+    def to_tree(self):
+        '''Override the to_tree method to return InputTreeNode'''
+        return InputTreeNode(self.path)
 
     def increase_precondition(self, prev):
         if prev == None:
@@ -316,6 +330,10 @@ class IntegerGenerator(IntegerSchema, ValueGenerator):
     def num_fields(self) -> int:
         return 1
 
+    def to_tree(self):
+        '''Override the to_tree method to return InputTreeNode'''
+        return InputTreeNode(self.path)
+
     def increase_precondition(self, prev):
         if prev == None:
             return False
@@ -399,6 +417,11 @@ class ObjectGenerator(ObjectSchema, ValueGenerator):
 
     def __init__(self, path: list, schema: dict) -> None:
         super().__init__(path, schema)
+        if self.properties:
+            for property_key, property_schema in self.properties.items():
+                self.properties[property_key] = get_value_generator_from_schema(property_schema)
+        if self.additional_properties:
+            self.additional_properties = get_value_generator_from_schema(self.additional_properties)
 
     def gen(self, exclude_value=None, minimum: bool = False, **kwargs) -> dict:
         # TODO: Use constraints: minProperties, maxProperties
@@ -462,6 +485,10 @@ class ObjectGenerator(ObjectSchema, ValueGenerator):
             num += i.num_fields()
         return num + 1
 
+    def to_tree(self):
+        '''Override the to_tree method to return InputTreeNode'''
+        return InputTreeNode(self.path)
+
     def empty_precondition(self, prev):
         return prev != {}
 
@@ -510,6 +537,7 @@ class ArrayGenerator(ArraySchema, ValueGenerator):
 
     def __init__(self, path: list, schema: dict) -> None:
         super().__init__(path, schema)
+        self.item_schema = get_value_generator_from_schema(self.item_schema)
 
     def gen(self, exclude_value=None, minimum: bool = False, **kwargs) -> list:
         if self.enum != None:
@@ -553,6 +581,10 @@ class ArrayGenerator(ArraySchema, ValueGenerator):
 
     def num_fields(self):
         return self.item_schema.num_fields() + 1
+
+    def to_tree(self):
+        '''Override the to_tree method to return InputTreeNode'''
+        return InputTreeNode(self.path)
 
     def push_precondition(self, prev):
         if prev == None:
@@ -668,6 +700,10 @@ class AnyOfGenerator(AnyOfSchema, ValueGenerator):
             num += i.num_fields()
         return num
 
+    def to_tree(self):
+        '''Override the to_tree method to return InputTreeNode'''
+        return InputTreeNode(self.path)
+
 
 class OneOfGenerator(OneOfSchema, ValueGenerator):
     '''Representing a schema with OneOf keyword in it
@@ -704,6 +740,10 @@ class OneOfGenerator(OneOfSchema, ValueGenerator):
         for i in self.possibilities:
             num += i.num_fields()
         return num
+
+    def to_tree(self):
+        '''Override the to_tree method to return InputTreeNode'''
+        return InputTreeNode(self.path)
 
 
 class BooleanGenerator(BooleanSchema, ValueGenerator):
@@ -744,8 +784,9 @@ class BooleanGenerator(BooleanSchema, ValueGenerator):
     def num_fields(self):
         return 1
 
-    def __str__(self) -> str:
-        return 'boolean'
+    def to_tree(self):
+        '''Override the to_tree method to return InputTreeNode'''
+        return InputTreeNode(self.path)
 
     def toggle_on_precondition(self, prev):
         if prev == None and self.default == False:
@@ -812,3 +853,75 @@ class OpaqueGenerator(OpaqueSchema, ValueGenerator):
 
     def num_fields(self):
         return 1
+    
+    def to_tree(self):
+        '''Override the to_tree method to return InputTreeNode'''
+        return InputTreeNode(self.path)
+
+
+def get_value_generator_from_schema(schema: BaseSchema):
+    '''Factory method to get the basic value generator from the schema'''
+
+    if isinstance(schema, StringSchema):
+        return StringGenerator(schema.path, schema.raw_schema)
+    elif isinstance(schema, NumberSchema):
+        return NumberGenerator(schema.path, schema.raw_schema)
+    elif isinstance(schema, IntegerSchema):
+        return IntegerGenerator(schema.path, schema.raw_schema)
+    elif isinstance(schema, ArraySchema):
+        return ArrayGenerator(schema.path, schema.raw_schema)
+    elif isinstance(schema, ObjectSchema):
+        return ObjectGenerator(schema.path, schema.raw_schema)
+    elif isinstance(schema, BooleanSchema):
+        return BooleanGenerator(schema.path, schema.raw_schema)
+    elif isinstance(schema, OneOfSchema):
+        return OneOfGenerator(schema.path, schema.raw_schema)
+    elif isinstance(schema, AnyOfSchema):
+        return AnyOfGenerator(schema.path, schema.raw_schema)
+    elif isinstance(schema, OpaqueSchema):
+        return OpaqueGenerator(schema.path, schema.raw_schema)
+    else:
+        raise NotImplementedError('Schema type [%s] is not supported' % type(schema))
+
+
+def extract_schema_with_value_generator(path: list, schema: dict) -> ValueGenerator:
+    '''Extract the schema and the value generator from the schema
+    
+    It is very similar to the `extract_schema` function, but it returns the value generator
+    instead of the schema.
+    '''
+    logger = get_thread_logger(with_prefix=True)
+
+    if 'anyOf' in schema:
+        return AnyOfGenerator(path, schema)
+    elif 'oneOf' in schema:
+        return OneOfGenerator(path, schema)
+
+    if 'type' not in schema:
+        if 'properties' in schema:
+            return ObjectGenerator(path, schema)
+        else:
+            logger.warn('No type found in schema: %s' % str(schema))
+            return OpaqueGenerator(path, schema)
+    t = schema['type']
+    if isinstance(t, list):
+        if 'null' in t:
+            t.remove('null')
+        if len(t) == 1:
+            t = t[0]
+
+    if t == 'string':
+        return StringGenerator(path, schema)
+    elif t == 'number':
+        return NumberGenerator(path, schema)
+    elif t == 'integer':
+        return IntegerGenerator(path, schema)
+    elif t == 'boolean':
+        return BooleanGenerator(path, schema)
+    elif t == 'array':
+        return ArrayGenerator(path, schema)
+    elif t == 'object':
+        return ObjectGenerator(path, schema)
+    else:
+        logger.error('Unsupported type %s' % t)
+        return None

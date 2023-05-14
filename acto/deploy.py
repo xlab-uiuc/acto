@@ -1,13 +1,13 @@
 from enum import Enum, auto, unique
-from constant import CONST
+from acto.constant import CONST
 import json
-import exception
+import acto.exception
 import time
 import kubernetes
 
-import utils
-from common import *
-from utils import get_thread_logger
+import acto.utils as utils
+from acto.common import *
+from acto.utils import get_thread_logger
 
 CONST = CONST()
 
@@ -20,6 +20,15 @@ class DeployMethod(Enum):
 
 
 class Deploy:
+
+    '''Class for different deploying methods
+
+    TODO: @Tyler: This class needs to be refactored. 
+            The deploy is better to be stateful, storing the kubernetes client and kubectl client
+            Currently the context and kubeconfig are passed to each method.
+            The `kubectl` function is currently copied to this file temporarily,
+                the plan is to switch to use the KubectlClient class
+    '''
 
     def __init__(self, deploy_method: DeployMethod, path: str, init_yaml=None):
         self.path = path
@@ -109,7 +118,7 @@ class Deploy:
         elif self.deploy_method is DeployMethod.KUSTOMIZE:
             return Kustomize(self.deploy_method, self.path, self.init_yaml)
         else:
-            raise exception.UnknownDeployMethodError
+            raise acto.exception.UnknownDeployMethodError
 
 
 class Helm(Deploy):
@@ -203,10 +212,24 @@ class Kustomize(Deploy):
         return True
 
 
-# Example:
-# if __name__ == '__main__':
-#     deploy = Deploy(DeployMethod.YAML, "data/rabbitmq-operator/operator.yaml").new()
-#     deploy.deploy()
+def kubectl(args: list,
+            kubeconfig: str,
+            context_name: str,
+            capture_output=False,
+            text=False) -> subprocess.CompletedProcess:
+    logger = get_thread_logger(with_prefix=True)
 
-#     deploy1 = Deploy(DeployMethod.HELM, "data/mongodb-operator/community-operator/").new()
-#     deploy1.deploy()
+    cmd = ['kubectl']
+    cmd.extend(args)
+
+    if kubeconfig:
+        cmd.extend(['--kubeconfig', kubeconfig])
+    else:
+        raise Exception('Kubeconfig is not set')
+
+    if context_name == None:
+        logger.error('Missing context name for kubectl')
+    cmd.extend(['--context', context_name])
+
+    p = subprocess.run(cmd, capture_output=capture_output, text=text)
+    return p

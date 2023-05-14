@@ -4,8 +4,9 @@ from typing import List, Optional
 import json
 import yaml
 
-from common import kubectl
-from thread_logger import get_thread_logger
+from acto.kubectl_client import KubectlClient
+from .thread_logger import get_thread_logger
+
 
 def update_preload_images(context: dict, worker_list):
     """Get used images from pod
@@ -39,9 +40,10 @@ def update_preload_images(context: dict, worker_list):
     ]
 
     for worker in worker_list:
-        p = subprocess.run(['docker', 'exec', worker, 'crictl', 'images', "--digests", "--no-trunc"],
-                           capture_output=True,
-                           text=True)
+        p = subprocess.run(
+            ['docker', 'exec', worker, 'crictl', 'images', "--digests", "--no-trunc"],
+            capture_output=True,
+            text=True)
         output = p.stdout.strip()
         for line in output.split('\n')[1:]:
             items = line.split()
@@ -51,7 +53,8 @@ def update_preload_images(context: dict, worker_list):
                 image = '%s:%s' % (items[0], items[1])
             else:
                 logger.warning(
-                    "image %s has no tag, acto will not preload this image for this run" % (items[0]))
+                    "image %s has no tag, acto will not preload this image for this run" %
+                    (items[0]))
                 continue
 
             context['preload_images'].add(image)
@@ -59,8 +62,7 @@ def update_preload_images(context: dict, worker_list):
 
 def process_crd(context: dict,
                 apiclient: kubernetes.client.ApiClient,
-                kubeconfig: str,
-                context_name: str,
+                kubectl_client: KubectlClient,
                 crd_name: Optional[str] = None,
                 helper_crd: Optional[str] = None):
     ''' Get crd from k8s and set context['crd']
@@ -89,13 +91,12 @@ def process_crd(context: dict,
                 logger.error('Cannot find crd %s' % crd_name)
                 quit()
         else:
-            logger.error(
-                'There are multiple crds, please specify parameter [crd_name]')
+            logger.error('There are multiple crds, please specify parameter [crd_name]')
             quit()
         if crd:
             # there is openAPIV3Schema schema issue when using python k8s client, need to fetch data from cli
-            crd_result = kubectl(['get', 'crd', crd.metadata.name, "-o", "json"], kubeconfig,
-                                 context_name, True, True)
+            crd_result = kubectl_client.kubectl(['get', 'crd', crd.metadata.name, "-o", "json"],
+                                                True, True)
             crd_obj = json.loads(crd_result.stdout)
             spec: kubernetes.client.models.V1CustomResourceDefinitionSpec = crd.spec
             crd_data = {
@@ -113,7 +114,7 @@ def process_crd(context: dict,
             'group': helper_crd_doc['spec']['group'],
             'plural': helper_crd_doc['spec']['names']['plural'],
             'version': helper_crd_doc['spec']['versions'][-1]
-            ['name'],  # TODO: Handle multiple versions
+                       ['name'],  # TODO: Handle multiple versions
             'body': helper_crd_doc
         }
         context['crd'] = crd_data

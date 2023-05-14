@@ -17,11 +17,12 @@ from functools import reduce
 
 from acto.common import *
 from acto.compare import CompareMethods
-from acto.get_matched_schemas import find_matched_schema
+from acto.input.get_matched_schemas import find_matched_schema
 from acto.input import InputModel
 from acto.schema import ArraySchema, BooleanSchema, ObjectSchema, extract_schema
+from acto.serialization import ActoEncoder
 from acto.snapshot import EmptySnapshot, Snapshot
-from acto.utils import get_thread_logger
+from acto.utils import get_thread_logger, is_prefix
 from acto.parse_log.parse_log import parse_log
 
 thread_var = threading.local()
@@ -831,7 +832,7 @@ class Checker(object):
 def compare_system_equality(curr_system_state: Dict,
                             prev_system_state: Dict,
                             additional_exclude_paths: List[str] = []):
-    logger = get_thread_logger()
+    logger = get_thread_logger(with_prefix=False)
     curr_system_state = deepcopy(curr_system_state)
     prev_system_state = deepcopy(prev_system_state)
 
@@ -951,7 +952,7 @@ def compare_system_equality(curr_system_state: Dict,
 
 def postprocess_deepdiff(diff):
     # ignore PVC add/removal, because PVC can be intentially left behind
-    logger = get_thread_logger()
+    logger = get_thread_logger(with_prefix=False)
     if 'dictionary_item_removed' in diff:
         new_removed_items = []
         for removed_item in diff['dictionary_item_removed']:

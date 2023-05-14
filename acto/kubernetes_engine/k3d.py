@@ -5,11 +5,11 @@ import time
 import kubernetes
 from . import base
 
-from constant import CONST
-from utils import get_thread_logger
+from acto.constant import CONST
+from acto.utils import get_thread_logger
 
 
-class K3D(base.KubernetesCluster):
+class K3D(base.KubernetesEngine):
 
     def __init__(self):
         self.config_path = os.path.join(CONST.CLUSTER_CONFIG_FOLDER, 'K3D.yaml')

@@ -16,29 +16,6 @@ from .utils import get_thread_logger
 from deepdiff import DeepDiff
 
 
-def notify_crash(exception: str):
-    import socket
-    import sys
-    logger = get_thread_logger(with_prefix=True)
-
-    hostname = socket.gethostname()
-
-    url = 'https://docs.google.com/forms/d/1Hxjg8TDKqBf_47H9gyP63gr3JVCGFwyqxUtSFA7OXhk/formResponse'
-    form_data = {
-        'entry.471699079': exception,
-        'entry.1614228781': f'{sys.argv}',
-        'entry.481598949': hostname
-    }
-    user_agent = {
-        'Referer':
-            'https://docs.google.com/forms/d/1Hxjg8TDKqBf_47H9gyP63gr3JVCGFwyqxUtSFA7OXhk/viewform',
-        'User-Agent':
-            "Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/28.0.1500.52 Safari/537.36"
-    }
-    r = requests.post(url, data=form_data, headers=user_agent)
-    logger.info('Send notify to google form')
-
-
 class Diff:
 
     def __init__(self, prev, curr, path) -> None:
@@ -622,29 +599,6 @@ GENERIC_FIELDS = [
     r"^host$",
     r"^type$",
 ]
-
-
-def kubectl(args: list,
-            kubeconfig: str,
-            context_name: str,
-            capture_output=False,
-            text=False) -> subprocess.CompletedProcess:
-    logger = get_thread_logger(with_prefix=True)
-
-    cmd = ['kubectl']
-    cmd.extend(args)
-
-    if kubeconfig:
-        cmd.extend(['--kubeconfig', kubeconfig])
-    else:
-        raise Exception('Kubeconfig is not set')
-
-    if context_name == None:
-        logger.error('Missing context name for kubectl')
-    cmd.extend(['--context', context_name])
-
-    p = subprocess.run(cmd, capture_output=capture_output, text=text)
-    return p
 
 
 def helm(args: list, context_name: str) -> subprocess.CompletedProcess:

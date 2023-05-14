@@ -13,15 +13,16 @@ import pandas as pd
 
 sys.path.append('.')
 sys.path.append('..')
-from acto import handle_excepthook, thread_excepthook
-from constant import CONST
-from checker import compare_system_equality
-from utils import get_thread_logger
-from common import ActoEncoder, ErrorResult, OperatorConfig, PassResult, RecoveryResult, RunResult, invalid_input_message_regex, kubernetes_client
-from runner import Runner
-from deploy import Deploy, DeployMethod
-from kubernetes_engine import base, kind
-from utils import add_acto_label
+from acto.utils import handle_excepthook, thread_excepthook
+from acto.constant import CONST
+from acto.checker import compare_system_equality
+from acto.utils import get_thread_logger, OperatorConfig
+from acto.common import ErrorResult, PassResult, RecoveryResult, RunResult, invalid_input_message_regex, kubernetes_client
+from acto.serialization import ActoEncoder
+from acto.runner import Runner
+from acto.deploy import Deploy, DeployMethod
+from acto.kubernetes_engine import base, kind
+from acto.utils import add_acto_label
 from .post_process import PostProcessor, Step
 
 
@@ -53,7 +54,7 @@ def get_nondeterministic_fields(s1, s2, additional_exclude_paths):
 
 class AdditionalRunner:
 
-    def __init__(self, context: Dict, deploy: Deploy, workdir: str, cluster: base.KubernetesCluster,
+    def __init__(self, context: Dict, deploy: Deploy, workdir: str, cluster: base.KubernetesEngine,
                  worker_id):
 
         self._context = context
@@ -94,7 +95,7 @@ class AdditionalRunner:
 class DeployRunner:
 
     def __init__(self, workqueue: multiprocessing.Queue, context: Dict, deploy: Deploy,
-                 workdir: str, cluster: base.KubernetesCluster, worker_id):
+                 workdir: str, cluster: base.KubernetesEngine, worker_id):
         self._workqueue = workqueue
         self._context = context
         self._deploy = deploy

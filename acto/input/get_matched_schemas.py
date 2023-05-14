@@ -1,6 +1,9 @@
 import inspect
-from acto.known_schemas import *
-from acto.known_schemas.base import K8sSchema
+from typing import List
+import acto.input.known_schemas
+from acto.input.known_schemas.base import K8sSchema
+from acto.input.testcase import K8sInvalidTestCase
+from acto.schema import ObjectSchema, BaseSchema, ArraySchema, extract_schema
 
 
 def field_matched(schema: ObjectSchema, k8s_schema: K8sSchema) -> bool:
@@ -17,7 +20,7 @@ def field_matched(schema: ObjectSchema, k8s_schema: K8sSchema) -> bool:
 
 def find_matched_schema(schema: BaseSchema) -> List[List[str]]:
     matched_schemas = []
-    for name, obj in inspect.getmembers(known_schemas):
+    for name, obj in inspect.getmembers(acto.input.known_schemas):
         if inspect.isclass(obj) and issubclass(obj, K8sSchema):
             if hasattr(obj, 'fields') and isinstance(schema, ObjectSchema):
                 if field_matched(schema, obj):

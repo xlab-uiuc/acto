@@ -3,8 +3,8 @@ import kubernetes
 from kubernetes.client.models.v1_stateful_set import V1StatefulSet
 from kubernetes.client.models.v1_pod import V1Pod
 
-from snapshot import Snapshot
-from kubectl_client import KubectlClient
+from acto.snapshot import Snapshot
+from acto.kubectl_client import KubectlClient
 
 
 class OracleHandle:

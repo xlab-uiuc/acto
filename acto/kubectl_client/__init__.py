@@ -1,1 +1,1 @@
-from kubectl import KubectlClient
+from .kubectl import KubectlClient

@@ -1,12 +1,13 @@
 import random
 import json
 from typing import List, Tuple
+from acto.schema.base import TreeNode
 
 from acto.utils import get_thread_logger
 from .testcase import TestCase
 
 
-class TreeNode():
+class InputTreeNode(TreeNode):
 
     def __init__(self, path: list) -> None:
         self.path = list(path)
