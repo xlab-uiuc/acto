@@ -1,5 +1,5 @@
 lib:
-	(cd k8s_util/lib && make)
+	(cd acto/k8s_util/lib && make)
 	(cd ssa && make)
 
 clean:
