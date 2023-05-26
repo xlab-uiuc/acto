@@ -1,6 +1,13 @@
 from abc import abstractmethod
 from typing import List, Tuple
-from acto.schema import AnyOfSchema, ArraySchema, BaseSchema, BooleanSchema, IntegerSchema, ObjectSchema, OpaqueSchema, StringSchema, extract_schema
+
+from acto.input.valuegenerator import (AnyOfGenerator, ArrayGenerator,
+                                       BooleanGenerator, IntegerGenerator,
+                                       ObjectGenerator, OpaqueGenerator,
+                                       StringGenerator)
+from acto.schema import (AnyOfSchema, ArraySchema, BaseSchema, BooleanSchema,
+                         IntegerSchema, ObjectSchema, OpaqueSchema,
+                         StringSchema, extract_schema)
 
 
 class K8sField():
@@ -10,7 +17,7 @@ class K8sField():
         self.custom_schema = schema
 
 
-class K8sSchema:
+class K8sSchema():
 
     def __init__(self, path: list, schema: dict) -> None:
         super().__init__(path, schema)
@@ -23,7 +30,7 @@ class K8sSchema:
         pass
 
 
-class K8sStringSchema(K8sSchema, StringSchema):
+class K8sStringSchema(K8sSchema, StringGenerator):
 
     def Match(schema: StringSchema) -> bool:
         return isinstance(schema, StringSchema)
@@ -32,7 +39,7 @@ class K8sStringSchema(K8sSchema, StringSchema):
         return [], [self]
 
 
-class K8sObjectSchema(K8sSchema, ObjectSchema):
+class K8sObjectSchema(K8sSchema, ObjectGenerator):
 
     def Match(schema: ObjectSchema) -> bool:
         return isinstance(schema, ObjectSchema)
@@ -42,7 +49,7 @@ class K8sObjectSchema(K8sSchema, ObjectSchema):
         return [], base + semantic
 
 
-class K8sArraySchema(K8sSchema, ArraySchema):
+class K8sArraySchema(K8sSchema, ArrayGenerator):
 
     def Match(schema: ArraySchema) -> bool:
         return isinstance(schema, ArraySchema)
@@ -52,7 +59,7 @@ class K8sArraySchema(K8sSchema, ArraySchema):
         return [], base + semantic
 
 
-class K8sIntegerSchema(K8sSchema, IntegerSchema):
+class K8sIntegerSchema(K8sSchema, IntegerGenerator):
 
     def Match(schema: IntegerSchema) -> bool:
         return isinstance(schema, IntegerSchema)
@@ -61,7 +68,7 @@ class K8sIntegerSchema(K8sSchema, IntegerSchema):
         return [], [self]
 
 
-class K8sBooleanSchema(K8sSchema, BooleanSchema):
+class K8sBooleanSchema(K8sSchema, BooleanGenerator):
 
     def Match(schema: BooleanSchema) -> bool:
         return isinstance(schema, BooleanSchema)
@@ -70,7 +77,7 @@ class K8sBooleanSchema(K8sSchema, BooleanSchema):
         return [], [self]
 
 
-class K8sAnyOfSchema(K8sSchema, AnyOfSchema):
+class K8sAnyOfSchema(K8sSchema, AnyOfGenerator):
 
     def Match(schema: AnyOfSchema) -> bool:
         return isinstance(schema, AnyOfSchema)
@@ -79,7 +86,7 @@ class K8sAnyOfSchema(K8sSchema, AnyOfSchema):
         base, semantic = super().get_normal_semantic_schemas()
         return [], base + semantic
 
-class K8sOpaqueSchema(K8sSchema, OpaqueSchema):
+class K8sOpaqueSchema(K8sSchema, OpaqueGenerator):
     
     def Match(schema: OpaqueSchema) -> bool:
         return True

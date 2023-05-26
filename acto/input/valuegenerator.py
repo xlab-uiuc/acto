@@ -1,13 +1,35 @@
-from abc import abstractmethod
 import random
+from abc import abstractmethod
 from typing import List, Tuple
+
 import exrex
+
 from acto.common import random_string
 from acto.input.testplan import InputTreeNode
-from acto.schema import StringSchema, NumberSchema, IntegerSchema, ObjectSchema, ArraySchema, AnyOfSchema, OneOfSchema, BooleanSchema, OpaqueSchema
-from acto.schema import BaseSchema
+from acto.schema import (AnyOfSchema, ArraySchema, BaseSchema, BooleanSchema,
+                         IntegerSchema, NumberSchema, ObjectSchema,
+                         OneOfSchema, OpaqueSchema, StringSchema)
 from acto.utils.thread_logger import get_thread_logger
+
 from .testcase import EnumTestCase, SchemaPrecondition, TestCase
+
+
+class ValueGeneratorInterface():
+    @abstractmethod
+    def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
+        raise NotImplementedError
+
+    @abstractmethod
+    def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def num_cases(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def num_fields(self):
+        raise NotImplementedError
 
 
 class ValueGenerator(BaseSchema):
@@ -282,7 +304,7 @@ class NumberGenerator(NumberSchema, ValueGenerator):
             return self.gen(exclude_value=self.default)
 
 
-class IntegerGenerator(IntegerSchema, ValueGenerator):
+class IntegerGenerator(IntegerSchema, NumberGenerator):
     '''Representation of a integer node
     
     It handles
@@ -670,6 +692,7 @@ class AnyOfGenerator(AnyOfSchema, ValueGenerator):
 
     def __init__(self, path: list, schema: dict) -> None:
         super().__init__(path, schema)
+        self.possibilities = [extract_schema_with_value_generator(path, x.raw_schema) for x in self.possibilities]
 
     def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
         schema = random.choice(self.possibilities)

@@ -1,7 +1,8 @@
 from copy import deepcopy
 from typing import List, Tuple
-from .schema import extract_schema
+
 from .base import BaseSchema, TreeNode
+from .schema import extract_schema
 
 
 class AnyOfSchema(BaseSchema):
@@ -10,7 +11,7 @@ class AnyOfSchema(BaseSchema):
 
     def __init__(self, path: list, schema: dict) -> None:
         super().__init__(path, schema)
-        self.possibilities = []
+        self.possibilities: List[BaseSchema] = []
         for index, v in enumerate(schema['anyOf']):
             base_schema = deepcopy(schema)
             del base_schema['anyOf']

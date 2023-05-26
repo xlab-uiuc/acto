@@ -1,41 +1,45 @@
 import argparse
 import functools
-import os
-import sys
-import threading
-from types import FunctionType
-import yaml
-import time
-from typing import List, Tuple
-import random
-from datetime import datetime
-import signal
-import logging
 import importlib
+import logging
+import os
+import random
+import signal
+import sys
 import tempfile
+import threading
+import time
+from datetime import datetime
+from types import FunctionType
+from typing import List, Tuple
+
 import jsonpatch
+import yaml
+
 from acto.input.testcase import TestCase
+from acto.input.testplan import TreeNode
+from acto.input.value_with_schema import (ValueWithSchema,
+                                          attach_schema_to_value)
+from acto.kubectl_client import KubectlClient
+from acto.kubernetes_engine import base, k3d, kind
+from acto.oracle_handle import OracleHandle
+from acto.serialization import ActoEncoder, ContextEncoder
+from acto.utils import (add_acto_label, delete_operator_pod, process_crd,
+                        update_preload_images)
 from acto.utils.config import OperatorConfig
 from acto.utils.error_handler import handle_excepthook, thread_excepthook
-
-from .common import *
-from .exception import UnknownDeployMethodError
-from acto.utils import delete_operator_pod
-from acto.utils import add_acto_label, process_crd, update_preload_images
-from acto.oracle_handle import OracleHandle
-from .input import InputModel, DeterministicInputModel
-from .deploy import Deploy, DeployMethod
-from acto.kubernetes_engine import base, k3d, kind
-from acto.kubectl_client import KubectlClient
-from .constant import CONST
-from .runner import Runner
-from .checker import BlackBoxChecker, Checker
-from .snapshot import EmptySnapshot
+from acto.utils.thread_logger import (get_thread_logger,
+                                      set_thread_logger_prefix)
 from ssa.analysis import analyze
-from acto.input.testplan import TreeNode
-from acto.utils.thread_logger import set_thread_logger_prefix, get_thread_logger
-from acto.input.value_with_schema import ValueWithSchema, attach_schema_to_value
-from acto.serialization import ActoEncoder, ContextEncoder
+
+from acto.checker import BlackBoxChecker, Checker
+from acto.common import *
+from acto.constant import CONST
+from acto.deploy import Deploy, DeployMethod
+from acto.exception import UnknownDeployMethodError
+from acto.input import DeterministicInputModel, InputModel
+from acto.runner import Runner
+from acto.snapshot import EmptySnapshot
 
 CONST = CONST()
 random.seed(0)

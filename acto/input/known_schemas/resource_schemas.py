@@ -1,9 +1,12 @@
 from typing import List, Tuple
-from acto.schema import AnyOfSchema, BaseSchema, IntegerSchema, ObjectSchema, StringSchema, extract_schema
-from acto.schema import BaseSchema
-from acto.k8s_util.k8sutil import canonicalizeQuantity, double_quantity, half_quantity
-from acto.input.testcase import K8sInvalidTestCase, TestCase, K8sTestCase
-from .base import K8sObjectSchema, K8sAnyOfSchema
+
+from acto.input.testcase import K8sInvalidTestCase, K8sTestCase, TestCase
+from acto.k8s_util.k8sutil import (canonicalizeQuantity, double_quantity,
+                                   half_quantity)
+from acto.schema import (AnyOfSchema, BaseSchema, IntegerSchema, ObjectSchema,
+                         StringSchema, extract_schema)
+
+from .base import K8sAnyOfSchema, K8sObjectSchema
 
 
 class QuantitySchema(K8sAnyOfSchema):

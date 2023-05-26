@@ -1,7 +1,10 @@
 from typing import List, Tuple
+
+from acto.input.testcase import K8sTestCase, TestCase
 from acto.schema import ObjectSchema
-from . import K8sBooleanSchema, K8sStringSchema, K8sObjectSchema, K8sIntegerSchema
-from acto.input.testcase import TestCase, K8sTestCase
+
+from . import (K8sBooleanSchema, K8sIntegerSchema, K8sObjectSchema,
+               K8sStringSchema)
 
 
 class ConcurrencyPolicySchema(K8sStringSchema):

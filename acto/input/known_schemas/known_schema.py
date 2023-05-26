@@ -1,15 +1,25 @@
 from typing import List, Tuple
-from acto.schema import AnyOfSchema, ArraySchema, BaseSchema, BooleanSchema, IntegerSchema, ObjectSchema, StringSchema, extract_schema
-from acto.input.testcase import TestCase, K8sTestCase
 
-from .base import K8sSchema, K8sStringSchema, K8sObjectSchema, K8sArraySchema, K8sIntegerSchema, K8sBooleanSchema, K8sAnyOfSchema
-from .statefulset_schemas import StatefulSetSchema, StatefulSetSpecSchema, PodTemplateSchema
+from acto.input.testcase import K8sTestCase, TestCase
+from acto.schema import (AnyOfSchema, ArraySchema, BaseSchema, BooleanSchema,
+                         IntegerSchema, ObjectSchema, StringSchema,
+                         extract_schema)
+
+from .base import (K8sAnyOfSchema, K8sArraySchema, K8sBooleanSchema,
+                   K8sIntegerSchema, K8sObjectSchema, K8sSchema,
+                   K8sStringSchema)
 from .deployment_schemas import DeploymentSchema, DeploymentSpecSchema
-from .service_schemas import ServiceSchema, ServiceSpecSchema
 from .pod_disruption_budget_schemas import PodDisruptionBudgetSchema
-from .pod_schemas import AffinitySchema, PodSpecSchema, ContainerSchema, ResourceRequirementsSchema, SecurityContextSchema, PodSecurityContextSchema, TolerationsSchema, VolumeSchema, TopologySpreadConstraintsSchema
+from .pod_schemas import (AffinitySchema, ContainerSchema,
+                          PodSecurityContextSchema, PodSpecSchema,
+                          SecurityContextSchema, TolerationsSchema,
+                          TopologySpreadConstraintsSchema, VolumeSchema)
 from .resource_schemas import ResourceRequirementsSchema
-from .storage_schemas import PersistentVolumeClaimSchema, PersistentVolumeClaimSpecSchema
+from .service_schemas import ServiceSchema, ServiceSpecSchema
+from .statefulset_schemas import (PodTemplateSchema, StatefulSetSchema,
+                                  StatefulSetSpecSchema)
+from .storage_schemas import (PersistentVolumeClaimSchema,
+                              PersistentVolumeClaimSpecSchema)
 
 
 class NodeNameSchema(K8sStringSchema):
@@ -90,8 +100,8 @@ def find_all_matched_schemas(schema: BaseSchema) -> List[Tuple[BaseSchema, K8sSc
 
 
 if __name__ == '__main__':
-    import json
     import glob
+    import json
 
     files = glob.glob('data/*/context.json')
     files.sort()

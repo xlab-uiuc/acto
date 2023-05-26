@@ -1,11 +1,12 @@
-import threading
 from typing import List, Tuple
-from acto.schema import BaseSchema
-from acto.schema import ArraySchema, BaseSchema, ObjectSchema, extract_schema
-from acto.input.testcase import K8sInvalidTestCase, TestCase, K8sTestCase
 
-from .base import K8sStringSchema, K8sObjectSchema, K8sArraySchema, K8sIntegerSchema, K8sBooleanSchema
-from .resource_schemas import ComputeResourceRequirementsSchema, ResourceRequirementsSchema
+from acto.input.testcase import K8sInvalidTestCase, K8sTestCase, TestCase
+from acto.schema import ArraySchema, BaseSchema, ObjectSchema
+
+from .base import (K8sArraySchema, K8sBooleanSchema, K8sIntegerSchema,
+                   K8sObjectSchema, K8sStringSchema)
+from .resource_schemas import ComputeResourceRequirementsSchema
+
 
 class HandlerSchema(K8sObjectSchema):
 
@@ -849,7 +850,7 @@ class LivenessProbeSchema(K8sObjectSchema):
         base_testcases[1].append(LivenessProbeSchema.EXEC_PROBE_TESTCASE)
 
         if "grpc" in self.properties:
-            base_testcases[1].extend(LivenessProbeSchema.GRPC_PROBE_TESTCASE)
+            base_testcases[1].append(LivenessProbeSchema.GRPC_PROBE_TESTCASE)
 
         return base_testcases
 

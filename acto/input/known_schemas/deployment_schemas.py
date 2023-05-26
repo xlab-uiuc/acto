@@ -1,9 +1,14 @@
+
 from typing import List, Tuple
-from acto.schema import BaseSchema, ObjectSchema, StringSchema
-from acto.schema import BaseSchema
+
 from acto.input.testcase import K8sInvalidTestCase, TestCase
-from .base import K8sBooleanSchema, K8sObjectSchema, K8sArraySchema, K8sIntegerSchema, K8sStringSchema
-from .statefulset_schemas import PodManagementPolicySchema, ReplicasSchema, PodTemplateSchema
+from acto.schema import BaseSchema, ObjectSchema, StringSchema
+
+from .base import (K8sArraySchema, K8sBooleanSchema, K8sIntegerSchema,
+                   K8sObjectSchema, K8sStringSchema)
+from .statefulset_schemas import (PodManagementPolicySchema, PodTemplateSchema,
+                                  ReplicasSchema)
+
 
 class DeploymentStrategy(K8sStringSchema):
 

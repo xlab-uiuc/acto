@@ -1,22 +1,24 @@
-from functools import partial, reduce
+import glob
 import inspect
 import json
 import logging
 import operator
 import random
 import threading
+from functools import partial, reduce
 from typing import List, Tuple
-from deepdiff import DeepDiff
-import glob
+
 import yaml
+from deepdiff import DeepDiff
 
 from acto.common import random_string
 from acto.input import known_schemas
-from acto.input.valuegenerator import extract_schema_with_value_generator
-from acto.utils import get_thread_logger, is_prefix
 from acto.input.get_matched_schemas import find_matched_schema
+from acto.input.valuegenerator import extract_schema_with_value_generator
+from acto.schema import BaseSchema, IntegerSchema, extract_schema
+from acto.utils import get_thread_logger, is_prefix
+
 from .known_schemas import K8sField
-from acto.schema import IntegerSchema, extract_schema, BaseSchema
 from .testcase import TestCase
 from .testplan import DeterministicTestPlan, TestGroup, TestPlan, TreeNode
 from .value_with_schema import attach_schema_to_value
@@ -549,44 +551,44 @@ class DeterministicInputModel(InputModel):
 
         # Calculate the unused fields using used_fields from static analysis
         tree: TreeNode = self.root_schema.to_tree()
-        for field in self.used_fields:
-            field = field[1:]
-            node = tree.get_node_by_path(field)
-            if node is None:
-                logger.warning(f'Field {field} not found in CRD')
-                continue
+        # for field in self.used_fields:
+        #     field = field[1:]
+        #     node = tree.get_node_by_path(field)
+        #     if node is None:
+        #         logger.warning(f'Field {field} not found in CRD')
+        #         continue
 
-            node.set_used()
+        #     node.set_used()
 
-        def func(overspecified_fields: list, unused_fields: list, node: TreeNode) -> bool:
-            if len(node.children) == 0:
-                return False
+        # def func(overspecified_fields: list, unused_fields: list, node: TreeNode) -> bool:
+        #     if len(node.children) == 0:
+        #         return False
 
-            if not node.used:
-                return False
+        #     if not node.used:
+        #         return False
 
-            used_child = []
-            for child in node.children.values():
-                if child.used:
-                    used_child.append(child)
-                else:
-                    unused_fields.append(child.path)
+        #     used_child = []
+        #     for child in node.children.values():
+        #         if child.used:
+        #             used_child.append(child)
+        #         else:
+        #             unused_fields.append(child.path)
 
-            if len(used_child) == 0:
-                overspecified_fields.append(node.path)
-                return False
-            elif len(used_child) == len(node.children):
-                return True
-            else:
-                return True
+        #     if len(used_child) == 0:
+        #         overspecified_fields.append(node.path)
+        #         return False
+        #     elif len(used_child) == len(node.children):
+        #         return True
+        #     else:
+        #         return True
 
-        overspecified_fields = []
-        unused_fields = []
-        tree.traverse_func(partial(func, overspecified_fields, unused_fields))
-        for field in overspecified_fields:
-            logger.info('Overspecified field: %s', field)
-        for field in unused_fields:
-            logger.info('Unused field: %s', field)
+        # overspecified_fields = []
+        # unused_fields = []
+        # tree.traverse_func(partial(func, overspecified_fields, unused_fields))
+        # for field in overspecified_fields:
+        #     logger.info('Overspecified field: %s', field)
+        # for field in unused_fields:
+        #     logger.info('Unused field: %s', field)
 
         ########################################
         # Get all K8s schemas
@@ -860,12 +862,13 @@ class DeterministicInputModel(InputModel):
 
 
 if __name__ == '__main__':
-    import time
     import argparse
-    from datetime import datetime
-    import os
     import importlib
-    from common import OperatorConfig, ActoEncoder
+    import os
+    import time
+    from datetime import datetime
+
+    from common import ActoEncoder, OperatorConfig
 
     start_time = time.time()
     workdir_path = 'testrun-%s' % datetime.now().strftime('%Y-%m-%d-%H-%M')

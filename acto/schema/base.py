@@ -1,6 +1,7 @@
-from abc import abstractmethod
 import random
+from abc import abstractmethod
 from typing import List, Tuple
+
 from jsonschema import validate
 
 from acto.utils.thread_logger import get_thread_logger
@@ -85,7 +86,38 @@ class TreeNode():
         return ret
 
 
-class BaseSchema:
+class SchemaInterface():
+    @abstractmethod
+    def get_all_schemas(self) -> Tuple[List['BaseSchema'], List['BaseSchema'], List['BaseSchema']]:
+        '''Returns a tuple of normal schemas, schemas pruned by over-specified, schemas pruned by 
+        copied-over'''
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_normal_semantic_schemas(self) -> Tuple[List['BaseSchema'], List['BaseSchema']]:
+        '''Returns a tuple of normal schemas, semantic schemas'''
+        raise NotImplementedError
+
+    @abstractmethod
+    def to_tree(self) -> TreeNode:
+        '''Returns tree structure, used for input generation'''
+        raise NotImplementedError
+
+    @abstractmethod
+    def load_examples(self, example):
+        '''Load example into schema and subschemas'''
+        raise NotImplementedError
+
+    @abstractmethod
+    def set_default(self, instance):
+        raise NotImplementedError
+
+    @abstractmethod
+    def empty_value(self):
+        raise NotImplementedError
+
+
+class BaseSchema(SchemaInterface):
     '''Base class for schemas
     
     Handles some keywords used for any types
@@ -105,34 +137,6 @@ class BaseSchema:
 
     def get_path(self) -> list:
         return self.path
-
-    @abstractmethod
-    def get_all_schemas(self) -> Tuple[List['BaseSchema'], List['BaseSchema'], List['BaseSchema']]:
-        '''Returns a tuple of normal schemas, schemas pruned by over-specified, schemas pruned by 
-        copied-over'''
-        return None
-
-    @abstractmethod
-    def get_normal_semantic_schemas(self) -> Tuple[List['BaseSchema'], List['BaseSchema']]:
-        '''Returns a tuple of normal schemas, semantic schemas'''
-        return None
-
-    @abstractmethod
-    def to_tree(self) -> TreeNode:
-        '''Returns tree structure, used for input generation'''
-        return TreeNode(self.path)
-
-    @abstractmethod
-    def load_examples(self, example):
-        '''Load example into schema and subschemas'''
-
-    @abstractmethod
-    def set_default(self, instance):
-        pass
-
-    @abstractmethod
-    def empty_value(self):
-        return None
 
     def validate(self, instance) -> bool:
         try:
