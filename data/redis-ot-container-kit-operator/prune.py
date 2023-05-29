@@ -1,7 +1,4 @@
-import input
-import sys
-
-sys.path.append('../..')
+import acto.input.input as input
 
 custom_fields = [
     input.CopiedOverField(['spec', 'kubernetesConfig', 'resources']),

@@ -1,8 +1,4 @@
-import sys
-
-sys.path.append('../..')
-import input
-
+import acto.input.input as input
 
 custom_fields = [
     input.OverSpecifiedField(['spec', 'override', 'service']),
