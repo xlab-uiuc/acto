@@ -16,6 +16,7 @@ from typing import List, Tuple
 import jsonpatch
 import yaml
 
+import acto.common as common
 from acto.checker import BlackBoxChecker, Checker
 from acto.common import *
 from acto.constant import CONST
@@ -42,9 +43,6 @@ from ssa.analysis import analyze
 
 CONST = CONST()
 random.seed(0)
-
-global NOTIFY_CRASH
-NOTIFY_CRASH = False
 
 
 def construct_candidate_helper(node, node_path, result: dict):
@@ -940,7 +938,7 @@ if __name__ == '__main__':
     threading.excepthook = thread_excepthook
 
     if args.notify_crash:
-        NOTIFY_CRASH = True
+        common.NOTIFY_CRASH = True
 
     with open(args.config, 'r') as config_file:
         config = OperatorConfig(**json.load(config_file))

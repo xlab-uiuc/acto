@@ -1,20 +1,21 @@
-from abc import abstractmethod
 import enum
 import json
-from typing import List, Tuple
-from deepdiff.helper import NotPresent
-from datetime import datetime
+import operator
+import random
 import re
 import string
-import random
 import subprocess
+from abc import abstractmethod
+from datetime import datetime
+from typing import List, Tuple
+
 import kubernetes
-import requests
-import operator
+from deepdiff import DeepDiff
+from deepdiff.helper import NotPresent
 
 from .utils import get_thread_logger
-from deepdiff import DeepDiff
 
+NOTIFY_CRASH = False # Configuration for crash notification
 
 class Diff:
 

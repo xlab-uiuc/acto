@@ -1,15 +1,15 @@
+import socket
 import sys
 import threading
 import traceback
 
 import requests
 
+from acto import common
 from acto.utils.thread_logger import get_thread_logger
 
 
 def notify_crash(exception: str):
-    import socket
-    import sys
     logger = get_thread_logger(with_prefix=True)
 
     hostname = socket.gethostname()
@@ -41,8 +41,7 @@ def handle_excepthook(type, message, stack):
         sys.__excepthook__(type, message, stack)
         return
 
-    global NOTIFY_CRASH
-    if NOTIFY_CRASH:
+    if common.NOTIFY_CRASH:
         notify_crash(f'An exception occured: {type}: {message}.')
 
     stack_info = traceback.StackSummary.extract(traceback.walk_tb(stack),
@@ -64,8 +63,7 @@ def thread_excepthook(args):
         threading.__excepthook__(args)
         return
 
-    global NOTIFY_CRASH
-    if NOTIFY_CRASH:
+    if common.NOTIFY_CRASH:
         notify_crash(f'An exception occured: {exc_type}: {exc_value}.')
 
     stack_info = traceback.StackSummary.extract(traceback.walk_tb(exc_traceback),
