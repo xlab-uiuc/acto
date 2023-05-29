@@ -184,8 +184,8 @@ class InputTreeNode(TreeNode):
 
         return ret
 
-    def deepcopy(self, path: list):
-        ret = TreeNode(path)
+    def deepcopy(self, path: list) -> 'InputTreeNode':
+        ret = InputTreeNode(path)
         for key, child in self.children.items():
             ret.add_child(key, child.deepcopy(path + [key]))
 
