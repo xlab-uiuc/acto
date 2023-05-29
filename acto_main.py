@@ -16,6 +16,12 @@ from typing import List, Tuple
 import jsonpatch
 import yaml
 
+from acto.checker import BlackBoxChecker, Checker
+from acto.common import *
+from acto.constant import CONST
+from acto.deploy import Deploy, DeployMethod
+from acto.exception import UnknownDeployMethodError
+from acto.input import DeterministicInputModel, InputModel
 from acto.input.testcase import TestCase
 from acto.input.testplan import TreeNode
 from acto.input.value_with_schema import (ValueWithSchema,
@@ -23,7 +29,9 @@ from acto.input.value_with_schema import (ValueWithSchema,
 from acto.kubectl_client import KubectlClient
 from acto.kubernetes_engine import base, k3d, kind
 from acto.oracle_handle import OracleHandle
+from acto.runner import Runner
 from acto.serialization import ActoEncoder, ContextEncoder
+from acto.snapshot import EmptySnapshot
 from acto.utils import (add_acto_label, delete_operator_pod, process_crd,
                         update_preload_images)
 from acto.utils.config import OperatorConfig
@@ -32,19 +40,11 @@ from acto.utils.thread_logger import (get_thread_logger,
                                       set_thread_logger_prefix)
 from ssa.analysis import analyze
 
-from acto.checker import BlackBoxChecker, Checker
-from acto.common import *
-from acto.constant import CONST
-from acto.deploy import Deploy, DeployMethod
-from acto.exception import UnknownDeployMethodError
-from acto.input import DeterministicInputModel, InputModel
-from acto.runner import Runner
-from acto.snapshot import EmptySnapshot
-
 CONST = CONST()
 random.seed(0)
 
-notify_crash_ = False
+global NOTIFY_CRASH
+NOTIFY_CRASH = False
 
 
 def construct_candidate_helper(node, node_path, result: dict):
@@ -940,7 +940,7 @@ if __name__ == '__main__':
     threading.excepthook = thread_excepthook
 
     if args.notify_crash:
-        notify_crash_ = True
+        NOTIFY_CRASH = True
 
     with open(args.config, 'r') as config_file:
         config = OperatorConfig(**json.load(config_file))
