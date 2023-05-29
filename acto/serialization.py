@@ -1,10 +1,11 @@
-from datetime import datetime, date
 import json
-from deepdiff.helper import NotPresent
-from deepdiff import DeepDiff
+from datetime import date, datetime
 
-from acto.input import TestCase
+from deepdiff import DeepDiff
+from deepdiff.helper import NotPresent
+
 from acto.common import Diff
+from acto.input import TestCase
 
 
 class ActoEncoder(json.JSONEncoder):

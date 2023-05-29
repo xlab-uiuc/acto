@@ -1,29 +1,31 @@
+import copy
+import importlib
+import logging
+import operator
+import re
+import sys
+import threading
 from builtins import TypeError
 from copy import deepcopy
-import importlib
-import sys
-import logging
-import threading
+from functools import reduce
 from types import NoneType
 from typing import Dict, List
+
 from deepdiff import DeepDiff
+from deepdiff.helper import CannotCompare
 from deepdiff.model import DiffLevel
 from deepdiff.operator import BaseOperator
-from deepdiff.helper import CannotCompare
-import re
-import copy
-import operator
-from functools import reduce
 
 from acto.common import *
 from acto.compare import CompareMethods
-from acto.input.get_matched_schemas import find_matched_schema
 from acto.input import InputModel
-from acto.schema import ArraySchema, BooleanSchema, ObjectSchema, extract_schema
+from acto.input.get_matched_schemas import find_matched_schema
+from acto.parse_log.parse_log import parse_log
+from acto.schema import (ArraySchema, BooleanSchema, ObjectSchema,
+                         extract_schema)
 from acto.serialization import ActoEncoder
 from acto.snapshot import EmptySnapshot, Snapshot
 from acto.utils import get_thread_logger, is_prefix
-from acto.parse_log.parse_log import parse_log
 
 thread_var = threading.local()
 
@@ -1050,16 +1052,17 @@ class BlackBoxChecker(Checker):
 
 
 if __name__ == "__main__":
-    import glob
-    import os
-    import yaml
-    import traceback
     import argparse
-    from types import SimpleNamespace
-    import typing
-    import pandas
+    import glob
     import multiprocessing
+    import os
     import queue
+    import traceback
+    import typing
+    from types import SimpleNamespace
+
+    import pandas
+    import yaml
 
     def checker_save_result(trial_dir: str, original_result: dict, runResult: RunResult,
                             alarm: bool, mode: str):

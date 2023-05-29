@@ -1,8 +1,10 @@
-from kubernetes.client.models import V1Deployment, V1StatefulSet, V1Namespace, V1ObjectMeta, V1Pod
-import kubernetes
-from typing import Optional
-import yaml
 import time
+from typing import Optional
+
+import kubernetes
+import yaml
+from kubernetes.client.models import (V1Deployment, V1Namespace, V1ObjectMeta,
+                                      V1Pod, V1StatefulSet)
 
 from .thread_logger import get_thread_logger
 

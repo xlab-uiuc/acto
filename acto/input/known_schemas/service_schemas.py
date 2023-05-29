@@ -1,7 +1,10 @@
 from typing import List, Tuple
+
+from acto.input.testcase import K8sInvalidTestCase, K8sTestCase, TestCase
 from acto.schema import BaseSchema, IntegerSchema, ObjectSchema
-from acto.input.testcase import K8sInvalidTestCase, TestCase, K8sTestCase
-from .base import K8sBooleanSchema, K8sStringSchema, K8sObjectSchema, K8sArraySchema, K8sIntegerSchema
+
+from .base import (K8sArraySchema, K8sBooleanSchema, K8sIntegerSchema,
+                   K8sObjectSchema, K8sStringSchema)
 
 
 class PortSchema(K8sIntegerSchema):

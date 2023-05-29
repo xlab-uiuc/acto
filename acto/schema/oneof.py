@@ -1,8 +1,8 @@
 from copy import deepcopy
 from typing import List, Tuple
 
-from .schema import extract_schema
 from .base import BaseSchema, TreeNode
+from .schema import extract_schema
 
 
 class OneOfSchema(BaseSchema):

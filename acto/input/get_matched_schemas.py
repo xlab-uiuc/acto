@@ -1,9 +1,10 @@
 import inspect
 from typing import List
+
 import acto.input.known_schemas
 from acto.input.known_schemas.base import K8sSchema
 from acto.input.testcase import K8sInvalidTestCase
-from acto.schema import ObjectSchema, BaseSchema, ArraySchema, extract_schema
+from acto.schema import ArraySchema, BaseSchema, ObjectSchema, extract_schema
 
 
 def field_matched(schema: ObjectSchema, k8s_schema: K8sSchema) -> bool:
@@ -44,8 +45,8 @@ def get_testcase_breakdown():
 
 
 if __name__ == '__main__':
-    import json
     import glob
+    import json
     import sys
     sys.path.append('..')
     import known_schemas

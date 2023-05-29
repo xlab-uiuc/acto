@@ -509,7 +509,15 @@ class ObjectGenerator(ObjectSchema, ValueGenerator):
 
     def to_tree(self):
         '''Override the to_tree method to return InputTreeNode'''
-        return InputTreeNode(self.path)
+        node = InputTreeNode(self.path)
+        if self.properties != None:
+            for key, value in self.properties.items():
+                node.add_child(key, value.to_tree())
+
+        if self.additional_properties != None:
+            node.add_child('additional_properties', self.additional_properties.to_tree())
+
+        return node
 
     def empty_precondition(self, prev):
         return prev != {}
@@ -606,7 +614,9 @@ class ArrayGenerator(ArraySchema, ValueGenerator):
 
     def to_tree(self):
         '''Override the to_tree method to return InputTreeNode'''
-        return InputTreeNode(self.path)
+        node = InputTreeNode(self.path)
+        node.add_child('ITEM', self.item_schema.to_tree())
+        return node
 
     def push_precondition(self, prev):
         if prev == None:

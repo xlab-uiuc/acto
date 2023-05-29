@@ -1,2 +1,2 @@
-from .input import InputModel, DeterministicInputModel
+from .input import DeterministicInputModel, InputModel
 from .testcase import TestCase

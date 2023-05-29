@@ -1,1 +1,1 @@
-from .checker import Checker, BlackBoxChecker, compare_system_equality
+from .checker import BlackBoxChecker, Checker, compare_system_equality

@@ -9,20 +9,22 @@ import sys
 import threading
 import time
 from typing import Dict, List
+
 import pandas as pd
 
 sys.path.append('.')
 sys.path.append('..')
-from acto.utils import handle_excepthook, thread_excepthook
-from acto.constant import CONST
 from acto.checker import compare_system_equality
-from acto.utils import get_thread_logger, OperatorConfig
-from acto.common import ErrorResult, PassResult, RecoveryResult, RunResult, invalid_input_message_regex, kubernetes_client
-from acto.serialization import ActoEncoder
-from acto.runner import Runner
+from acto.common import (ErrorResult, PassResult, RecoveryResult, RunResult,
+                         invalid_input_message_regex, kubernetes_client)
+from acto.constant import CONST
 from acto.deploy import Deploy, DeployMethod
 from acto.kubernetes_engine import base, kind
-from acto.utils import add_acto_label
+from acto.runner import Runner
+from acto.serialization import ActoEncoder
+from acto.utils import (OperatorConfig, add_acto_label, get_thread_logger,
+                        handle_excepthook, thread_excepthook)
+
 from .post_process import PostProcessor, Step
 
 

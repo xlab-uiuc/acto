@@ -1,12 +1,13 @@
-from enum import Enum, auto, unique
-from acto.constant import CONST
 import json
-import acto.exception
 import time
+from enum import Enum, auto, unique
+
 import kubernetes
 
+import acto.exception
 import acto.utils as utils
 from acto.common import *
+from acto.constant import CONST
 from acto.utils import get_thread_logger
 
 CONST = CONST()

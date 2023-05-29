@@ -1,6 +1,7 @@
-from multiprocessing.sharedctypes import Value
-from threading import Thread, Event
 from multiprocessing import Queue
+from multiprocessing.sharedctypes import Value
+from threading import Event, Thread
+
 
 class ActoTimer(Thread):
     '''A resettable timer'''

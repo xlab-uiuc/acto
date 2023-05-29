@@ -1,7 +1,9 @@
 from typing import List, Tuple
+
+from acto.input.testcase import K8sTestCase, TestCase
 from acto.schema import BaseSchema, ObjectSchema, OpaqueSchema, StringSchema
-from acto.input.testcase import TestCase, K8sTestCase
-from .base import K8sOpaqueSchema, K8sStringSchema, K8sObjectSchema
+
+from .base import K8sObjectSchema, K8sOpaqueSchema, K8sStringSchema
 from .resource_schemas import QuantitySchema, StorageResourceRequirementsSchema
 
 

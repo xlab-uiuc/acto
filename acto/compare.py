@@ -1,9 +1,10 @@
-from deepdiff.helper import NotPresent
 import configparser
 
+from deepdiff.helper import NotPresent
+
+from acto.common import FeatureGate
 from acto.k8s_util.k8sutil import canonicalizeQuantity
 from acto.utils import get_thread_logger
-from acto.common import FeatureGate
 
 
 class CompareMethods:

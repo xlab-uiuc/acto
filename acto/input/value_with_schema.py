@@ -1,10 +1,13 @@
-from abc import abstractmethod
-import yaml
 import random
 import string
+from abc import abstractmethod
 
+import yaml
+
+from acto.schema import (AnyOfSchema, ArraySchema, BooleanSchema,
+                         IntegerSchema, NumberSchema, ObjectSchema,
+                         OpaqueSchema, StringSchema)
 from acto.utils import get_thread_logger
-from acto.schema import AnyOfSchema, ObjectSchema, ArraySchema, StringSchema, NumberSchema, IntegerSchema, BooleanSchema, OpaqueSchema
 
 
 class ValueWithSchema():

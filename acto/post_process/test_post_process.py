@@ -1,11 +1,13 @@
-import unittest
-import sys
-import yaml
 import json
+import sys
+import unittest
 
+import yaml
 from common import OperatorConfig
-from .post_process import PostProcessor
+
 from .post_diff_test import PostDiffTest
+from .post_process import PostProcessor
+
 
 class TestPostProcessor(unittest.TestCase):
 

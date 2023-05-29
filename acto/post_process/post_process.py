@@ -1,10 +1,11 @@
-from abc import abstractmethod
 import glob
 import hashlib
 import json
 import os
 import sys
+from abc import abstractmethod
 from typing import Dict, List
+
 import yaml
 
 sys.path.append('.')
@@ -12,6 +13,7 @@ sys.path.append('..')
 
 from acto.common import RunResult, oracle_result_from_dict
 from acto.utils import OperatorConfig
+
 
 class Step:
     '''A step in a trial

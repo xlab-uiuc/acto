@@ -1,16 +1,18 @@
 from acto.utils import get_thread_logger
+
 from .base import BaseSchema
-from .string import StringSchema
-from .number import NumberSchema
-from .opaque import OpaqueSchema
 from .boolean import BooleanSchema
 from .integer import IntegerSchema
+from .number import NumberSchema
+from .opaque import OpaqueSchema
+from .string import StringSchema
+
 
 def extract_schema(path: list, schema: dict) -> BaseSchema:
-    from .object import ObjectSchema
     from .anyof import AnyOfSchema
-    from .oneof import OneOfSchema
     from .array import ArraySchema
+    from .object import ObjectSchema
+    from .oneof import OneOfSchema
     logger = get_thread_logger(with_prefix=True)
 
     if 'anyOf' in schema:

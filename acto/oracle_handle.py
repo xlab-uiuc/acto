@@ -1,10 +1,11 @@
 from typing import List
-import kubernetes
-from kubernetes.client.models.v1_stateful_set import V1StatefulSet
-from kubernetes.client.models.v1_pod import V1Pod
 
-from acto.snapshot import Snapshot
+import kubernetes
+from kubernetes.client.models.v1_pod import V1Pod
+from kubernetes.client.models.v1_stateful_set import V1StatefulSet
+
 from acto.kubectl_client import KubectlClient
+from acto.snapshot import Snapshot
 
 
 class OracleHandle:

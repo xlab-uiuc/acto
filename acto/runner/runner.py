@@ -1,17 +1,18 @@
-import kubernetes
-import subprocess
-from multiprocessing import Process, Queue
-import time
-import queue
-import json
-import yaml
 import base64
-from acto.serialization import ActoEncoder
+import json
+import queue
+import subprocess
+import time
+from multiprocessing import Process, Queue
+
+import kubernetes
+import yaml
 
 import acto.utils.acto_timer as acto_timer
-from acto.kubectl_client import KubectlClient
-from acto.snapshot import Snapshot
 from acto.common import *
+from acto.kubectl_client import KubectlClient
+from acto.serialization import ActoEncoder
+from acto.snapshot import Snapshot
 from acto.utils import get_thread_logger
 
 
@@ -438,8 +439,8 @@ def group_pods(all_pods: dict) -> Tuple[dict, dict]:
 # standalone runner for acto
 if __name__ == "__main__":
     import argparse
-    import sys
     import logging
+    import sys
 
     parser = argparse.ArgumentParser(description="Standalone runner for acto")
     parser.add_argument('-m',

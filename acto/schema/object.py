@@ -1,6 +1,8 @@
 from typing import List, Tuple
+
 from acto.schema.schema import extract_schema
 from acto.utils.thread_logger import get_thread_logger
+
 from .base import BaseSchema, TreeNode
 from .opaque import OpaqueSchema
 

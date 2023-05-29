@@ -1,6 +1,6 @@
+import sys
 from multiprocessing import Process
 from sys import excepthook
-import sys
 
 
 class MyProcess(Process):

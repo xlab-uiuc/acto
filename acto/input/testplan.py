@@ -1,9 +1,10 @@
-import random
 import json
+import random
 from typing import List, Tuple
-from acto.schema.base import TreeNode
 
+from acto.schema.base import TreeNode
 from acto.utils import get_thread_logger
+
 from .testcase import TestCase
 
 
