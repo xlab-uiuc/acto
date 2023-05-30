@@ -2,13 +2,13 @@ import copy
 import importlib
 import logging
 import operator
+import os
 import re
 import sys
 import threading
 from builtins import TypeError
 from copy import deepcopy
 from functools import reduce
-from types import NoneType
 from typing import Dict, List
 
 from deepdiff import DeepDiff
