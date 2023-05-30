@@ -2,13 +2,15 @@ import json
 import os
 import pathlib
 import unittest
+
 import yaml
 
 from acto.checker import Checker
 from acto.common import FeatureGate
-from acto.utils import OperatorConfig
 from acto.input import DeterministicInputModel, InputModel
-from test.utils import construct_snapshot
+from acto.utils import OperatorConfig
+
+from .utils import construct_snapshot
 
 test_dir = pathlib.Path(__file__).parent.resolve()
 
