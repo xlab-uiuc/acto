@@ -91,6 +91,7 @@ class SchemaInterface():
     def get_all_schemas(self) -> Tuple[List['BaseSchema'], List['BaseSchema'], List['BaseSchema']]:
         '''Returns a tuple of normal schemas, schemas pruned by over-specified, schemas pruned by 
         copied-over'''
+        #FIXME: this method needs to be redefined. Its return type is a legacy from previous abandoned design
         raise NotImplementedError
 
     @abstractmethod
@@ -133,6 +134,7 @@ class BaseSchema(SchemaInterface):
         self.copied_over = False
         self.over_specified = False
         self.problematic = False
+        self.patch = False
         self.used_fields = []
 
     def get_path(self) -> list:

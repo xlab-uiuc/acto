@@ -21,11 +21,23 @@ class Diff:
 
     def __init__(self, prev, curr, path) -> None:
         # self.path = path
-        self.prev = prev
-        self.curr = curr
-        self.path = path
+        self._prev = prev
+        self._curr = curr
+        self._path = path
 
-    def to_dict(self):
+    @property
+    def prev(self) -> object:
+        return self._prev
+
+    @property
+    def curr(self) -> object:
+        return self._curr
+
+    @property
+    def path(self) -> List[str]:
+        return self._path
+
+    def to_dict(self) -> dict:
         '''serialize Diff object
         '''
         return {'prev': self.prev, 'curr': self.curr, 'path': self.path}

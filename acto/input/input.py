@@ -72,6 +72,16 @@ class ProblematicField(CustomField):
         super().__init__(path, [])
 
 
+class PatchField(CustomField):
+    '''For pruning the field that can not be simply generated using Acto's current generation mechanism.
+    
+    All the subfields of this field (including this field itself) will be pruned
+    '''
+
+    def __init__(self, path) -> None:
+        super().__init__(path)
+
+
 class InputModel:
 
     NORMAL = 'NORMAL'
@@ -446,6 +456,16 @@ class InputModel:
         curr = self.root_schema
         for idx in path:
             curr = curr[idx]
+
+        if isinstance(custom_field, PatchField):
+            curr.patch = True
+            s1, s2, s3 = curr.get_all_schemas()
+            for s in s1:
+                s.patch = True
+            for s in s2:
+                s.patch = True
+            for s in s3:
+                s.patch = True
 
         if isinstance(custom_field, CopiedOverField):
             curr.copied_over = True

@@ -365,7 +365,7 @@ class AffinitySchema(K8sObjectSchema):
         return None
 
     def null_affinity_setup(prev) -> dict:
-        return AffinitySchema.NormalAffinity
+        return AffinitySchema.AllOnDifferentNodesAntiAffinity
 
     AllOnOneNodeTestCase = K8sTestCase(all_on_one_node_precondition, all_on_one_node,
                                        all_on_one_node_setup)

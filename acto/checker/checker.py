@@ -272,11 +272,13 @@ class Checker(object):
         system_delta_without_cr.pop('custom_resource_spec')
 
         for diff_type, delta_list in input_delta.items():
+            delta: Diff
             for delta in delta_list.values():
                 logger.debug('Checking input delta [%s]' % delta.path)
+                corresonding_schema = self.input_model.get_schema_by_path(delta.path)
 
                 if diff_type != 'iterable_item_removed':
-                    if self.skip_default_input_delta(delta):
+                    if not corresonding_schema.patch and self.skip_default_input_delta(delta):
                         logger.debug('Input delta [%s] is skipped' % delta.path)
                         continue
 
