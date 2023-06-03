@@ -35,7 +35,8 @@ class OperatorConfig:
                  wait_time: int = 60,
                  context: str = None,
                  custom_oracle: str = None,
-                 diff_ignore_fields: List[str] = None) -> None:
+                 diff_ignore_fields: List[str] = None,
+                 focus_fields: List[List[str]] = None) -> None:
         self.deploy = DeployConfig(**deploy)
         self.crd_name = crd_name
         self.custom_fields = custom_fields
@@ -55,6 +56,7 @@ class OperatorConfig:
 
         self.num_nodes = num_nodes
         self.wait_time = wait_time
+        self.focus_fields = focus_fields
 
 
 def OperatorConfigDecoder(obj) -> OperatorConfig:

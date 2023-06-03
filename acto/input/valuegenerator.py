@@ -580,6 +580,8 @@ class ArrayGenerator(ArraySchema, ValueGenerator):
             result = []
             if 'size' in kwargs and kwargs['size'] != None:
                 num = kwargs['size']
+            elif minimum:
+                num = self.min_items
             else:
                 num = random.randint(self.min_items, self.max_items)
             for _ in range(num):

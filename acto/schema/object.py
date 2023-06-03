@@ -75,7 +75,7 @@ class ObjectSchema(BaseSchema):
             normal_schemas = keep
         elif self.over_specified:
             if len(self.used_fields) == 0:
-                keep = [normal_schemas.pop()]
+                keep = []
             else:
                 keep = []
             for schema in normal_schemas:

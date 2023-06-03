@@ -79,7 +79,7 @@ class PatchField(CustomField):
     '''
 
     def __init__(self, path) -> None:
-        super().__init__(path)
+        super().__init__(path, None)
 
 
 class InputModel:
@@ -471,8 +471,17 @@ class InputModel:
             curr.copied_over = True
         elif isinstance(custom_field, OverSpecifiedField):
             curr.over_specified = True
+            s1, s2, s3 = curr.get_all_schemas()
+            for s in s1:
+                s.over_specified = True
+            for s in s2:
+                s.over_specified = True
+            for s in s3:
+                s.over_specified = True
         elif isinstance(custom_field, ProblematicField):
             curr.problematic = True
+        elif isinstance(custom_field, PatchField):
+            pass # do nothing, already handled above
         else:
             raise Exception('Unknown custom field type')
 
@@ -785,7 +794,7 @@ class DeterministicInputModel(InputModel):
 
         normal_test_plan_items.extend(semantic_test_plan_items)  # run semantic testcases anyway
 
-        CHUNK_SIZE = 10
+        CHUNK_SIZE = 1
 
         def split_into_subgroups(test_plan_items) -> List[List[Tuple[str, List[TestCase]]]]:
             all_testcases = []
