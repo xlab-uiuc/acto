@@ -73,6 +73,16 @@ class TestCassOpBugs(unittest.TestCase):
         result = PostDiffTest.check_diff_test_step(diff_test_result, step, self.config)
         self.assertTrue(result != None)
 
+    def test_cassop_928(self):
+        diff_test_result_path = os.path.join(test_dir, 'cassop-315', 'difftest-002.json')
+        with open(diff_test_result_path, 'r') as f:
+            diff_test_result = json.load(f)
+
+        trial_dir = os.path.join(test_dir, 'cassop-315/trial-04-0000')
+        step = construct_step(trial_dir, 2)
+
+        result = PostDiffTest.check_diff_test_step(diff_test_result, step, self.config)
+        self.assertTrue(result != None)
 
 if __name__ == '__main__':
     unittest.main()
