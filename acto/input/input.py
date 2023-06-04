@@ -794,7 +794,7 @@ class DeterministicInputModel(InputModel):
 
         normal_test_plan_items.extend(semantic_test_plan_items)  # run semantic testcases anyway
 
-        CHUNK_SIZE = 1
+        CHUNK_SIZE = 10
 
         def split_into_subgroups(test_plan_items) -> List[List[Tuple[str, List[TestCase]]]]:
             all_testcases = []
