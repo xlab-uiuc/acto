@@ -1,4 +1,4 @@
-import input
+import acto.input.input as input
 
 custom_fields = [
     input.OverSpecifiedField(['spec', 'deployments', 'INDEX', 'tolerations'], array=True),

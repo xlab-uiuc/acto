@@ -1,8 +1,12 @@
-from known_schemas import K8sField, ResourceRequirementsSchema, PodTemplateSchema, TolerationsSchema
-from known_schemas import ServiceAccountNameSchema, ImageSchema
-from known_schemas.pod_schemas import NodeSelectorSchema
-from known_schemas.resource_schemas import ComputeResourceRequirementsSchema, StorageResourceRequirementsSchema
-from known_schemas.storage_schemas import PersistentVolumeClaimSpecSchema
+from acto.input.known_schemas import (ImageSchema, K8sField, PodTemplateSchema,
+                                      ResourceRequirementsSchema,
+                                      ServiceAccountNameSchema,
+                                      TolerationsSchema)
+from acto.input.known_schemas.pod_schemas import NodeSelectorSchema
+from acto.input.known_schemas.resource_schemas import (
+    ComputeResourceRequirementsSchema, StorageResourceRequirementsSchema)
+from acto.input.known_schemas.storage_schemas import \
+    PersistentVolumeClaimSpecSchema
 
 WHITEBOX = [
     K8sField(['spec', 'serverImage'], ImageSchema),

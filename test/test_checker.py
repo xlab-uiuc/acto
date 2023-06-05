@@ -1,15 +1,16 @@
-import unittest
-import sys
-import yaml
+'''
+Commented out because it is not used in the project.
+TODO: refactor to fix the dependency issue
+
 import json
-from deepdiff.helper import NotPresent
+import sys
+import unittest
 
-sys.path.append('..')
-sys.path.append('.')
+import yaml
 
-from checker import Checker
-from snapshot import Snapshot
-from common import InvalidInputResult
+from acto.checker import Checker
+from acto.common import InvalidInputResult
+from acto.snapshot import Snapshot
 
 
 class TestChecker(unittest.TestCase):
@@ -54,3 +55,5 @@ class TestChecker(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+'''

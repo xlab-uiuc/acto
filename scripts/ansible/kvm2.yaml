@@ -1,0 +1,47 @@
+---
+- name: Install kvm2
+  hosts: all
+  become: true
+
+  tasks:
+
+    - name: install qemu-kvm
+      apt:
+        name: qemu-kvm
+        state: present
+        update_cache: yes
+
+    - name: install libvirt-daemon-system
+      apt:
+        name: libvirt-daemon-system
+        state: present
+        update_cache: yes
+
+    - name: install libvirt-clients
+      apt:
+        name: libvirt-clients
+        state: present
+        update_cache: yes
+
+    - name: install bridge-utils
+      apt:
+        name: bridge-utils
+        state: present
+        update_cache: yes
+
+    - name: Get user
+      command: echo $USER
+      register: user
+      become: false
+
+    - name: Adding user {{ user.stdout }} to libvirt group
+      user:
+        name: "{{ user.stdout }}"
+        groups: "libvirt"
+        append: "yes"
+
+    - name: Adding user {{ user.stdout }} to kvm group
+      user:
+        name: "{{ user.stdout }}"
+        groups: "kvm"
+        append: "yes"

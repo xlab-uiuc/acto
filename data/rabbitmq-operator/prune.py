@@ -1,8 +1,4 @@
-import sys
-
-sys.path.append('../..')
-import input
-
+import acto.input.input as input
 
 custom_fields = [
     input.OverSpecifiedField(['spec', 'override', 'service']),
@@ -12,5 +8,6 @@ custom_fields = [
     input.OverSpecifiedField(['spec', 'override', 'statefulSet', 'spec', 'template']),
     input.OverSpecifiedField(['spec', 'override', 'service', 'spec']),
     input.CopiedOverField(['spec', 'affinity']),
-    input.CopiedOverField(['spec', 'tolerations'], array=True)
+    input.CopiedOverField(['spec', 'tolerations'], array=True),
+    input.PatchField(['spec', 'override', 'statefulSet', 'spec'])
 ]

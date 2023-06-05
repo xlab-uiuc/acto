@@ -1,7 +1,8 @@
 import json
+
 import yaml
 
-from snapshot import Snapshot
+from acto.snapshot import Snapshot
 
 
 def construct_snapshot(trial_dir: str, generation: int):

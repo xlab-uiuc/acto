@@ -1,17 +1,12 @@
-import inspect
 import os
 import pathlib
-import sys
 import unittest
+
 import yaml
-from get_matched_schemas import field_matched, find_matched_schema
-import known_schemas
 
-sys.path.append('..')
-sys.path.append('.')
-
-from known_schemas import *
-from schema import extract_schema
+from acto.input.get_matched_schemas import field_matched, find_matched_schema
+from acto.input.known_schemas import *
+from acto.schema import extract_schema
 
 test_dir = pathlib.Path(__file__).parent.resolve()
 
