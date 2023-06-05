@@ -47,7 +47,7 @@ jobs:
     - name: Check if bugs.md is changed by the script
       id: verify_diff
       run: |
-        git diff --quiet bugs.md || echo "::set-output name=are_bugs_changed::true"
+        git diff --quiet docs/bugs.md || echo "::set-output name=are_bugs_changed::true"
 
     - name: Commit files
       if: steps.verify_diff.outputs.are_bugs_changed == 'true'
