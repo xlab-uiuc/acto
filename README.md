@@ -49,7 +49,7 @@ python3 acto.py \
 ## Example
 For example, to run Acto to test the cass-operator, just run
 ```sh
-python3 acto.py --config data/cass-operator/config.json --num-workers 4 --workdir testrun-cass
+python3 acto_main.py --config data/cass-operator/config.json --num-workers 4 --workdir testrun-cass
 ```
 
 Acto will first generate a test plan using the operator's CRD and the semantic information. The test plan is serialized at `testrun-cass/testplan.json`. Note that Acto does not run the tests according to the order in the `testplan.json`, the tests are run in a random order at runtime.
@@ -116,7 +116,7 @@ You can easily inspect the alarms by importing it into Google Sheet or Excel
 ## Example:   
 **rabbitmq-operator**:  
 ```console
-python3 acto.py --config data/rabbitmq-operator/config.json
+python3 acto_main.py --config data/rabbitmq-operator/config.json
                 --num-workers 4
 ```
 
