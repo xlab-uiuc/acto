@@ -6,7 +6,7 @@ import re
 def canonicalizeQuantity(value):
     if not isinstance(value, str) or not bool(re.match('^[-+]?((\.[0-9]+)|([0-9]+(\.[0-9]+)?)|([0-9]+\.))(([KMGTPE]i)|([eE][-+]?((\.[0-9]+)|([0-9]+(\.[0-9]+)?)|([0-9]+\.)))|([mnkMGTPE]|))$', value)):
         return value
-    k8sutil = ctypes.cdll.LoadLibrary('k8s_util/lib/k8sutil.so')
+    k8sutil = ctypes.cdll.LoadLibrary('acto/k8s_util/lib/k8sutil.so')
     parse = k8sutil.parse
     parse.argtypes = [ctypes.c_char_p]
     parse.restype = ctypes.c_void_p
@@ -23,7 +23,7 @@ def double_quantity(value):
     value = str(value)
     if not isinstance(value, str) or not bool(re.match('^[-+]?((\.[0-9]+)|([0-9]+(\.[0-9]+)?)|([0-9]+\.))(([KMGTPE]i)|([eE][-+]?((\.[0-9]+)|([0-9]+(\.[0-9]+)?)|([0-9]+\.)))|([mnkMGTPE]|))$', value)):
         return value
-    k8sutil = ctypes.cdll.LoadLibrary('k8s_util/lib/k8sutil.so')
+    k8sutil = ctypes.cdll.LoadLibrary('acto/k8s_util/lib/k8sutil.so')
     double_func = k8sutil.doubleIt
     double_func.argtypes = [ctypes.c_char_p]
     double_func.restype = ctypes.c_void_p
@@ -41,7 +41,7 @@ def half_quantity(value):
     value = str(value)
     if not isinstance(value, str) or not bool(re.match('^[-+]?((\.[0-9]+)|([0-9]+(\.[0-9]+)?)|([0-9]+\.))(([KMGTPE]i)|([eE][-+]?((\.[0-9]+)|([0-9]+(\.[0-9]+)?)|([0-9]+\.)))|([mnkMGTPE]|))$', value)):
         return value
-    k8sutil = ctypes.cdll.LoadLibrary('k8s_util/lib/k8sutil.so')
+    k8sutil = ctypes.cdll.LoadLibrary('acto/k8s_util/lib/k8sutil.so')
     half_func = k8sutil.halfIt
     half_func.argtypes = [ctypes.c_char_p]
     half_func.restype = ctypes.c_void_p
