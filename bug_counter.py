@@ -18,7 +18,7 @@ class BugCounter():
             f.writelines(data)
     
     def update_number(self) -> list:
-        data = self.read_file('./docs/bugs.md')
+        data = self.read_file('./bugs.md')
         for line in data:
             if '# Byproduct bugs' in line:
                 self.by_flag = True
@@ -37,7 +37,7 @@ class BugCounter():
             raise Exception("The first line of bugs.md should start with '(Byproduct bugs included)'")
         data[1] = '(Byproduct bugs included) Total bugs: **{}**, confirmed: **{}**, Fixed: **{}**.<br/>\n'.format(self.num_bugs + self.num_by_bugs, self.num_confirmed + self.num_by_confirmed, self.num_fixed + self.num_by_fixed)
         data[3] = '(Byproduct bugs excluded) Total bugs: **{}**, confirmed: **{}**, Fixed: **{}**.<br/>\n'.format(self.num_bugs, self.num_confirmed, self.num_fixed)
-        self.write_data(data, './docs/bugs.md')
+        self.write_data(data, './bugs.md')
         
 if __name__ == '__main__':
     bug_counter = BugCounter()
