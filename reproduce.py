@@ -8,6 +8,9 @@ import jsonpatch
 import yaml
 from glob import glob
 import os
+
+from acto.input.valuegenerator import extract_schema_with_value_generator
+
 from acto.schema import BaseSchema, OpaqueSchema
 from acto.input.testplan import TestGroup, TreeNode
 
@@ -65,7 +68,10 @@ class ReproInputModel(InputModel):
                  reproduce_dir: str,
                  mount: list = None) -> None:
         logger = get_thread_logger(with_prefix=True)
-        self.root_schema = OpaqueSchema([], {})
+        # WARNING: Not sure the initialization is correct
+        # TODO: The line below need to be reviewed.
+        self.root_schema = extract_schema_with_value_generator([],
+                                          crd['spec']['versions'][-1]['schema']['openAPIV3Schema'])
         self.testcases = []
         cr_list = load_cr_from_trial(reproduce_dir)
         if cr_list == []:
