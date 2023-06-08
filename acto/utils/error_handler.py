@@ -5,7 +5,7 @@ import traceback
 
 import requests
 
-from acto import common
+from acto import config
 from acto.utils.thread_logger import get_thread_logger
 
 
@@ -41,7 +41,7 @@ def handle_excepthook(type, message, stack):
         sys.__excepthook__(type, message, stack)
         return
 
-    if common.NOTIFY_CRASH:
+    if config.NOTIFY_CRASH:
         notify_crash(f'An exception occured: {type}: {message}.')
 
     stack_info = traceback.StackSummary.extract(traceback.walk_tb(stack),
@@ -63,7 +63,7 @@ def thread_excepthook(args):
         threading.__excepthook__(args)
         return
 
-    if common.NOTIFY_CRASH:
+    if config.NOTIFY_CRASH:
         notify_crash(f'An exception occured: {exc_type}: {exc_value}.')
 
     stack_info = traceback.StackSummary.extract(traceback.walk_tb(exc_traceback),

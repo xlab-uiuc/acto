@@ -8,14 +8,14 @@ import jsonpatch
 import yaml
 from glob import glob
 import os
-from schema import BaseSchema, OpaqueSchema
-from testplan import TestGroup, TreeNode
+from acto.schema import BaseSchema, OpaqueSchema
+from acto.input.testplan import TestGroup, TreeNode
 
-from value_with_schema import ValueWithSchema
-from test_case import TestCase
-from common import OperatorConfig, get_thread_logger
-from input import InputModel
-from acto import Acto
+from acto.input.value_with_schema import ValueWithSchema
+from acto.input import TestCase
+from acto.utils import OperatorConfig, get_thread_logger
+from acto.input import InputModel
+from acto_main import Acto
 
 
 def apply_repro_testcase(value_with_schema: ValueWithSchema,
