@@ -15,8 +15,6 @@ from deepdiff.helper import NotPresent
 
 from .utils import get_thread_logger
 
-NOTIFY_CRASH = False # Configuration for crash notification
-
 class Diff:
 
     def __init__(self, prev, curr, path) -> None:
