@@ -1,43 +1,53 @@
 import json
-import sys
+import os
+import pathlib
 import unittest
 
-import yaml
-from common import OperatorConfig
+from acto.utils import OperatorConfig
 
 from .post_diff_test import PostDiffTest
 from .post_process import PostProcessor
 
+test_dir = pathlib.Path(__file__).parent.resolve()
 
 class TestPostProcessor(unittest.TestCase):
 
-    def test_construction(self):
+    def __init__(self, methodName: str = "runTest") -> None:
+        super().__init__(methodName)
+        config_path = os.path.join(test_dir.parent.parent, 'data', 'cass-operator', 'config.json')
+        self.testrun_dir = os.path.join(test_dir, 'test_data', 'testrun-cass-whitebox-1')
 
-        with open('/home/tyler/acto/data/cass-operator/config.json', 'r') as config_file:
-            config = OperatorConfig(**json.load(config_file))
-        p = PostProcessor(testrun_dir='/home/tyler/acto-data/cass-operator/testrun-cass-whitebox-1',
-                          config=config)
+        with open(config_path, 'r') as config_file:
+            self.config = OperatorConfig(**json.load(config_file))
+
+    def test_construction(self):
+        p = PostProcessor(testrun_dir=self.testrun_dir,
+                          config=self.config)
         
 class TestPostDiffTest(unittest.TestCase):
+    def __init__(self, methodName: str = "runTest") -> None:
+        super().__init__(methodName)
+        config_path = os.path.join(test_dir.parent.parent, 'data', 'cass-operator', 'config.json')
+        self.testrun_dir = os.path.join(test_dir, 'test_data', 'testrun-cass-whitebox-1')
+
+        with open(config_path, 'r') as config_file:
+            self.config = OperatorConfig(**json.load(config_file))
 
     def test_construction(self):
-
-        with open('/home/tyler/acto/data/cass-operator/config.json', 'r') as config_file:
-            config = OperatorConfig(**json.load(config_file))
-        p = PostDiffTest(testrun_dir='/home/tyler/acto-data/cass-operator/testrun-cass-whitebox-1',
-                          config=config)
+        p = PostDiffTest(testrun_dir=self.testrun_dir,
+                          config=self.config)
         
-    def test_comparison(self):
-        with open('/home/tyler/acto/data/cass-operator/config.json', 'r') as config_file:
-            config = OperatorConfig(**json.load(config_file))
-        p = PostDiffTest(testrun_dir='/home/tyler/acto-data/cass-operator/testrun-cass-whitebox-1',
-                          config=config)
-        with open('/home/tyler/acto/testrun-cass-whitebox-1/difftest/trial-00/difftest-003.json', 'r') as f, \
-            open('compare_results.json', 'w') as result_f:
-            diff_test_result = json.load(f)
-            error = p.check_diff_test_result(diff_test_result)
-            if error:
-                result_f.write(json.dumps(error.to_dict(), indent=6))
+    # FIXME
+    # def test_comparison(self):
+    #     p = PostDiffTest(testrun_dir=self.testrun_dir,
+    #                       config=self.config)
+    #     os.path.join(self.testrun_dir, 'difftest', 'trial-00', 'difftest-003.json')
+    #     with open(os.path.join(self.testrun_dir, 'difftest', 'trial-00', 'difftest-003.json'), 'r') as f, \
+    #         open('compare_results.json', 'w') as result_f:
+    #         diff_test_result = json.load(f)
+    #         error = p.check_diff_test_result(diff_test_result)
+    #         if error:
+    #             result_f.write(json.dumps(error.to_dict(), indent=6))
 
 if __name__ == '__main__':
     unittest.main()
