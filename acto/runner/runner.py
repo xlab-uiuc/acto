@@ -78,8 +78,9 @@ class Runner(object):
 
         self.operator_log_path = "%s/operator-%d.log" % (self.trial_dir, generation)
         self.system_state_path = "%s/system-state-%03d.json" % (self.trial_dir, generation)
-        self.events_log_path = "%s/events.log" % (self.trial_dir)
+        self.events_log_path = "%s/events-%d.json" % (self.trial_dir, generation)
         self.cli_output_path = "%s/cli-output-%d.log" % (self.trial_dir, generation)
+        self.not_ready_pod_log_path = "{}/not-ready-pod-{}-{{}}.log".format(self.trial_dir, generation)
 
         mutated_filename = '%s/mutated-%d.yaml' % (self.trial_dir, generation)
         with open(mutated_filename, 'w') as mutated_cr_file:
@@ -110,6 +111,7 @@ class Runner(object):
             system_state = self.collect_system_state()
             operator_log = self.collect_operator_log()
             self.collect_events()
+            self.collect_not_ready_pods_logs()
         except (KeyError, ValueError) as e:
             logger.error('Bug! Exception raised when waiting for converge.', exc_info=e)
             system_state = {}
@@ -234,15 +236,28 @@ class Runner(object):
     def collect_events(self):
         events = self.coreV1Api.list_namespaced_event(self.namespace,
                                                       pretty=True,
-                                                      _preload_content=True,
+                                                      _preload_content=False,
                                                       watch=False)
 
-        with open(self.events_log_path, 'w') as f:
-            for event in events.items:
-                f.write("%s %s %s %s:\t%s\n" %
-                        (event.first_timestamp.strftime("%H:%M:%S") if event.first_timestamp != None
-                         else "None", event.involved_object.kind, event.involved_object.name,
-                         event.involved_object.resource_version, event.message))
+        with open(self.events_log_path, 'wb') as f:
+            f.write(events.data)
+
+    def collect_not_ready_pods_logs(self):
+        pods = self.coreV1Api.list_namespaced_pod(self.namespace)
+        for pod in pods.items:
+            for container_statuses in [pod.status.container_statuses or [], pod.status.init_container_statuses or []]:
+                for container_status in container_statuses:
+                    if not container_status.ready:
+                        log = self.coreV1Api.read_namespaced_pod_log(pod.metadata.name, self.namespace,
+                                                                     container=container_status.name)
+                        if len(log) != 0:
+                            with open(self.not_ready_pod_log_path.format(container_status.name), 'w') as f:
+                                f.write(log)
+                        log = self.coreV1Api.read_namespaced_pod_log(pod.metadata.name, self.namespace,
+                                                                     container=container_status.name, previous=True)
+                        if len(log) != 0:
+                            with open(self.not_ready_pod_log_path.format('prev-'+container_status.name), 'w') as f:
+                                f.write(log)
 
     def collect_cli_result(self, p: subprocess.CompletedProcess):
         cli_output = {}

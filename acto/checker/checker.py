@@ -1125,7 +1125,7 @@ if __name__ == "__main__":
                 mutated_filename = '%s/mutated-%d.yaml' % (trial_dir, generation)
                 operator_log_path = "%s/operator-%d.log" % (trial_dir, generation)
                 system_state_path = "%s/system-state-%03d.json" % (trial_dir, generation)
-                events_log_path = "%s/events.log" % (trial_dir)
+                events_log_path = "%s/events-%d.json" % (trial_dir, generation)
                 cli_output_path = "%s/cli-output-%d.log" % (trial_dir, generation)
                 runtime_result_path = "%s/generation-%d-runtime.json" % (trial_dir, generation)
 
@@ -1138,9 +1138,9 @@ if __name__ == "__main__":
                 with open(mutated_filename, 'r') as input_file, \
                         open(operator_log_path, 'r') as operator_log, \
                         open(system_state_path, 'r') as system_state, \
-                        open(events_log_path, 'r') as events_log, \
                         open(cli_output_path, 'r') as cli_output, \
                         open(runtime_result_path, 'r') as runtime_result_file:
+                    # open(events_log_path, 'r') as events_log, \
                     input = yaml.load(input_file, Loader=yaml.FullLoader)
                     cli_result = json.load(cli_output)
                     logging.info(cli_result)
