@@ -5,6 +5,7 @@ import logging
 import multiprocessing
 import os
 import queue
+import subprocess
 import sys
 import threading
 import time
@@ -107,6 +108,7 @@ class DeployRunner:
         self._cluster_name = f"acto-cluster-{worker_id}"
         self._kubeconfig = os.path.join(os.path.expanduser('~'), '.kube', self._cluster_name)
         self._context_name = cluster.get_context_name(f"acto-cluster-{worker_id}")
+        self._images_archive = os.path.join(workdir, 'images.tar')
 
     def run(self):
         logger = get_thread_logger(with_prefix=True)
@@ -116,6 +118,7 @@ class DeployRunner:
 
         # Start the cluster and deploy the operator
         self._cluster.restart_cluster(self._cluster_name, self._kubeconfig, CONST.K8S_VERSION)
+        self._cluster.load_images(self._images_archive, self._cluster_name)
         apiclient = kubernetes_client(self._kubeconfig, self._context_name)
         deployed = self._deploy.deploy_with_retry(self._context, self._kubeconfig,
                                                   self._context_name)
@@ -200,6 +203,15 @@ class PostDiffTest(PostProcessor):
         cluster = kind.Kind()
         cluster.configure_cluster(self.config.num_nodes, CONST.K8S_VERSION)
         deploy = Deploy(DeployMethod.YAML, self.config.deploy.file, self.config.deploy.init).new()
+        # Build an archive to be preloaded
+        images_archive = os.path.join(workdir, 'images.tar')
+        if len(self.context['preload_images']) > 0:
+            # first make sure images are present locally
+            for image in self.context['preload_images']:
+                subprocess.run(['docker', 'pull', image])
+            subprocess.run(['docker', 'image', 'save', '-o', images_archive] +
+                           list(self.context['preload_images']))
+            
         workqueue = multiprocessing.Queue()
         for unique_input_group in self.unique_inputs.values():
             workqueue.put(unique_input_group)

@@ -30,6 +30,7 @@ from acto.input.value_with_schema import (ValueWithSchema,
 from acto.kubectl_client import KubectlClient
 from acto.kubernetes_engine import base, k3d, kind
 from acto.oracle_handle import OracleHandle
+from acto.post_process import PostDiffTest
 from acto.runner import Runner
 from acto.serialization import ActoEncoder, ContextEncoder
 from acto.snapshot import EmptySnapshot
@@ -989,5 +990,16 @@ if __name__ == '__main__':
         acto.run(modes=[InputModel.ADDITIONAL_SEMANTIC])
     elif not args.learn:
         acto.run(modes=['normal'])
+    normal_finish_time = datetime.now()
+    logger.info('Acto normal run finished in %s', normal_finish_time - start_time)
+    logger.info('Start post processing steps')
+    
+    # Post processing
+    post_diff_test_dir = os.path.join(args.workdir_path, 'post_diff_test')
+    p = PostDiffTest(testrun_dir=post_diff_test_dir, config=config)
+    if not args.checkonly:
+        p.post_process(post_diff_test_dir, num_workers=args.num_workers)
+    p.check(post_diff_test_dir, num_workers=args.num_workers)
+
     end_time = datetime.now()
-    logger.info('Acto finished in %s', end_time - start_time)
+    logger.info('Acto totally finished in %s', end_time - start_time)

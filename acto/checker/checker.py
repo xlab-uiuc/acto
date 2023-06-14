@@ -255,6 +255,7 @@ class Checker(object):
             f.write('\n---------- SYSTEM DELTA ----------\n')
             f.write(json.dumps(system_delta, cls=ActoEncoder, indent=6))
 
+        # check if the input is valid
         status_delta = system_delta['custom_resource_status']
         if status_delta is not None:
             for delta_list in status_delta.values():
