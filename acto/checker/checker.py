@@ -1244,7 +1244,7 @@ if __name__ == "__main__":
 
     sys.excepthook = handle_excepthook
 
-    trial_dirs = glob.glob(testrun_dir + '/*')
+    trial_dirs = glob.glob(testrun_dir + '/trial-??-????')
     with open(context_cache, 'r') as context_fin:
         context = json.load(context_fin)
         context['preload_images'] = set(context['preload_images'])

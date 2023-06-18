@@ -89,7 +89,7 @@ def read_trial_dir(trial_dir: str) -> List[Step]:
 
 
 def construct_step(trial_dir, generation) -> Step:
-    events_log_path = "%s/events-%d.json" % (self.trial_dir, generation)
+    events_log_path = "%s/events-%d.json" % (trial_dir, generation)
     mutated_filename = '%s/mutated-%d.yaml' % (trial_dir, generation)
     operator_log_path = "%s/operator-%d.log" % (trial_dir, generation)
     system_state_path = "%s/system-state-%03d.json" % (trial_dir, generation)
