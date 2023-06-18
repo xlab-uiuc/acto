@@ -6,6 +6,7 @@ import sys
 import os
 import pandas as pd
 import re
+import datetime
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from classify.classify_alarms import classify_alarm
@@ -33,14 +34,14 @@ if __name__ == '__main__':
                                         index_col=0,
                                         usecols=['Trial number', 'testcase_x', 'True/False'])
 
-    baseline_results = glob.glob(os.path.join(result_folder, '*', 'post-result-*-baseline.json'))
+    baseline_results = glob.glob(os.path.join(result_folder, 'trial-??-????', 'post-result-*-baseline.json'))
     canonicalization_results = glob.glob(
-        os.path.join(result_folder, '*', 'post-result-*-canonicalization.json'))
+        os.path.join(result_folder, 'trial-??-????', 'post-result-*-canonicalization.json'))
     dependency_results = glob.glob(
-        os.path.join(result_folder, '*', 'post-result-*-dependency_analysis.json'))
+        os.path.join(result_folder, 'trial-??-????', 'post-result-*-dependency_analysis.json'))
     taint_analysis_results = glob.glob(
-        os.path.join(result_folder, '*', 'post-result-*-taint_analysis.json'))
-    recovery_results = glob.glob(os.path.join(result_folder, '*', 'result.json'))
+        os.path.join(result_folder, 'trial-??-????', 'post-result-*-taint_analysis.json'))
+    recovery_results = glob.glob(os.path.join(result_folder, 'trial-??-????', 'result.json'))
 
     with open(test_plan_path, 'r') as f:
         test_plan = json.load(f)
@@ -213,6 +214,22 @@ if __name__ == '__main__':
                 field = json_instance['post_result']['error']['testcase']['field']
                 testcase = json_instance['post_result']['error']['testcase']['testcase']
 
+                # TODO, NodeDown is a event emit by rabbitmq operator, should be removed
+                excluded_event_reasons = {'NodeDown', 'FailedToUpdateEndpoint'}
+                event_info = {'reason': '', 'message': ''}
+                try:
+                    with open(os.path.join(os.path.dirname(json_path),'events-{}.json'.format(json_instance['post_result']['trial_num'][8:])),'r') as events:
+                        events = json.load(events)
+                        abnormalities = filter(lambda e: e["type"] != 'Normal', events['items'])
+                        abnormalities = filter(lambda e: e['reason'] not in excluded_event_reasons, abnormalities)
+                        abnormalities = filter(lambda e: e['lastTimestamp'] is not None, abnormalities)
+                        abnormalities = list(abnormalities)
+                        abnormalities = sorted(abnormalities, key=lambda e: (datetime.datetime.fromisoformat(e['lastTimestamp']), e['count']))
+                        if len(abnormalities) != 0:
+                            event_info['reason'] = abnormalities[-1]['reason']
+                            event_info['message'] = abnormalities[-1]['message'].removeprefix("(combined from similar events): ")
+                except Exception as e:
+                    print('Warning: an error occurred: {}'.format(e))
                 dependency_df_list.append({
                     'Trial number': json_instance['post_result']['trial_num'],
                     'testcase': json_instance['post_result']['error']['testcase'],
@@ -222,7 +239,7 @@ if __name__ == '__main__':
                     'dependency_recovery_result': recovery_result,
                     'dependency_state_result': post_state_result,
                     'dependency_custom_result': custom_result
-                })
+                }|event_info)
 
     for json_path in taint_analysis_results:
         with open(json_path, 'r') as json_file:
@@ -272,7 +289,7 @@ if __name__ == '__main__':
                     'input': json_instance['post_result']['error']['testcase'],
                     'symptom': json_instance['post_result']['error']
                 }
-                classify_alarm(alarm_features)
+                #classify_alarm(alarm_features)
                 taint_analysis_df_list.append({
                     'Trial number': json_instance['post_result']['trial_num'],
                     'testcase': json_instance['post_result']['error']['testcase'],
