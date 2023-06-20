@@ -674,7 +674,7 @@ class Acto:
             runner.run_without_collect(self.operator_config.seed_custom_resource)
 
             update_preload_images(self.context, self.cluster.get_node_list('learn'))
-            process_crd(self.context, apiclient, learn_kubeconfig, learn_context_name,
+            process_crd(self.context, apiclient, KubectlClient(learn_kubeconfig, learn_context_name),
                         self.crd_name, helper_crd)
             self.cluster.delete_cluster('learn', learn_kubeconfig)
 
