@@ -5,6 +5,7 @@ import time
 
 import kubernetes
 import yaml
+from acto.common import print_event
 
 from acto.constant import CONST
 
@@ -62,6 +63,7 @@ class Kind(base.KubernetesEngine):
             config: path of the config file for cluster
             version: k8s version
         '''
+        print_event('Creating kind cluster...')
         cmd = ['kind', 'create', 'cluster']
 
         if name:
@@ -80,7 +82,7 @@ class Kind(base.KubernetesEngine):
         if version:
             cmd.extend(['--image', f"kindest/node:v{version}"])
 
-        p = subprocess.run(cmd)
+        p = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         while p.returncode != 0:
             logging.error('Failed to create kind cluster, retrying')
             self.delete_cluster(name, kubeconfig)

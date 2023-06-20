@@ -772,11 +772,12 @@ class Acto:
         # Build an archive to be preloaded
         if len(self.context['preload_images']) > 0:
             logger.info('Creating preload images archive')
+            print_event('Preparing required images...')
             # first make sure images are present locally
             for image in self.context['preload_images']:
-                subprocess.run(['docker', 'pull', image])
+                subprocess.run(['docker', 'pull', image], stdout=subprocess.DEVNULL)
             subprocess.run(['docker', 'image', 'save', '-o', self.images_archive] +
-                           list(self.context['preload_images']))
+                           list(self.context['preload_images']), stdout=subprocess.DEVNULL)
 
         start_time = time.time()
 

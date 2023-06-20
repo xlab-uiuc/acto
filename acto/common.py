@@ -629,6 +629,8 @@ def kubernetes_client(kubeconfig: str, context_name: str) -> kubernetes.client.A
     return kubernetes.config.kube_config.new_client_from_config(config_file=kubeconfig,
                                                                 context=context_name)
 
+def print_event(msg: str):
+    print(msg)
 
 if __name__ == '__main__':
     line = "sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.9.6/pkg/internal/controller/controller.go:214"

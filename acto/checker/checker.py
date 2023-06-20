@@ -323,11 +323,13 @@ class Checker(object):
                             continue
                         logger.error('Found no matching fields for input delta')
                         logger.error('Input delta [%s]' % delta.path)
+                        print_event(f'Found bug: {delta.path} changed from [{delta.prev}] to [{delta.curr}]')
                         return StateResult(Oracle.SYSTEM_STATE,
                                            'Found no matching fields for input', delta)
                     else:
                         logger.error('Found no matching fields for input delta')
                         logger.error('Input delta [%s]' % delta.path)
+                        print_event(f'Found bug: {delta.path} changed from [{delta.prev}] to [{delta.curr}]')
                         return StateResult(Oracle.SYSTEM_STATE,
                                            'Found no matching fields for input', delta)
                 elif not should_compare:

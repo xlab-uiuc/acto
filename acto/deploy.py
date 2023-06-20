@@ -176,6 +176,7 @@ class Yaml(Deploy):
            match the namespace "acto-namespace". You must pass '--namespace=rabbitmq-system' to perform this operation.
         '''
         logger = get_thread_logger(with_prefix=True)
+        print_event('Deploying operator...')
 
         namespace = utils.get_yaml_existing_namespace(
             self.path) or CONST.ACTO_NAMESPACE
@@ -194,6 +195,7 @@ class Yaml(Deploy):
         time.sleep(20)
 
         # TODO: Return True if deploy successfully
+        print_event('Operator deployed')
         return True
 
 
@@ -232,5 +234,8 @@ def kubectl(args: list,
         logger.error('Missing context name for kubectl')
     cmd.extend(['--context', context_name])
 
-    p = subprocess.run(cmd, capture_output=capture_output, text=text)
+    if capture_output:
+        p = subprocess.run(cmd, capture_output=capture_output, text=text)
+    else:
+        p = subprocess.run(cmd, stdout=subprocess.DEVNULL)
     return p
