@@ -52,7 +52,7 @@ parser.add_argument('--num-workers',
                     dest='num_workers',
                     type=int,
                     default=1,
-                    help='Number of concurrent workers to run Kato with')
+                    help='Number of concurrent workers to run Acto with')
 parser.add_argument('--num-cases',
                     dest='num_cases',
                     type=int,
@@ -103,7 +103,7 @@ if args.notify_crash:
 
 with open(args.config, 'r') as config_file:
     config = OperatorConfig(**json.load(config_file))
-logger.info('Kato started with [%s]' % sys.argv)
+logger.info('Acto started with [%s]' % sys.argv)
 logger.info('Operator config: %s', config)
 
 # Preload frequently used images to amid ImagePullBackOff
@@ -145,13 +145,13 @@ acto = Acto(workdir_path=args.workdir_path,
             blackbox=args.blackbox,
             delta_from=args.delta_from)
 generation_time = datetime.now()
-logger.info('Kato initialization finished in %s', generation_time - start_time)
+logger.info('Acto initialization finished in %s', generation_time - start_time)
 if args.additional_semantic:
     acto.run(modes=[InputModel.ADDITIONAL_SEMANTIC])
 elif not args.learn:
     acto.run(modes=['normal'])
 normal_finish_time = datetime.now()
-logger.info('Kato normal run finished in %s', normal_finish_time - start_time)
+logger.info('Acto normal run finished in %s', normal_finish_time - start_time)
 logger.info('Start post processing steps')
 
 # Post processing
@@ -162,4 +162,4 @@ if not args.checkonly:
 p.check(post_diff_test_dir, num_workers=args.num_workers)
 
 end_time = datetime.now()
-logger.info('Kato end to end finished in %s', end_time - start_time)
+logger.info('Acto end to end finished in %s', end_time - start_time)
