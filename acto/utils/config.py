@@ -25,12 +25,12 @@ class OperatorConfig:
     def __init__(self,
                  deploy: dict,
                  crd_name: str,
-                 custom_fields: str,
-                 blackbox_custom_fields: str,
-                 k8s_fields: str,
-                 example_dir: str,
                  seed_custom_resource: str,
-                 analysis: dict,
+                 custom_fields: str = None,
+                 blackbox_custom_fields: str = None,
+                 k8s_fields: str = None,
+                 example_dir: str = None,
+                 analysis: dict = None,
                  num_nodes: int = 4,
                  wait_time: int = 60,
                  context: str = None,
@@ -46,7 +46,7 @@ class OperatorConfig:
         self.example_dir = example_dir
         self.context = context
         self.seed_custom_resource = seed_custom_resource
-        self.analysis = AnalysisConfig(**analysis)
+        self.analysis = AnalysisConfig(**analysis) if analysis else None
 
         self.diff_ignore_fields = []
         if diff_ignore_fields is not None:

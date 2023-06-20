@@ -108,11 +108,12 @@ class InputModel:
         # Load all example documents
         self.example_dir = example_dir
         example_docs = []
-        for example_filepath in glob.glob(example_dir + '*.yaml'):
-            with open(example_filepath, 'r') as example_file:
-                docs = yaml.load_all(example_file, Loader=yaml.FullLoader)
-                for doc in docs:
-                    example_docs.append(doc)
+        if self.example_dir is not None:
+            for example_filepath in glob.glob(self.example_dir + '*.yaml'):
+                with open(example_filepath, 'r') as example_file:
+                    docs = yaml.load_all(example_file, Loader=yaml.FullLoader)
+                    for doc in docs:
+                        example_docs.append(doc)
 
         for example_doc in example_docs:
             self.root_schema.load_examples(example_doc)

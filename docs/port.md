@@ -16,8 +16,9 @@ Then, specify the deployment in the configuration file through the `deploy` prop
 ```json
 {
   "deploy": {
-      "method": "YAML",
-      "file": "data/rabbitmq-operator/operator.yaml"
+    "method": "YAML",
+    "file": "data/cass-operator/bundle.yaml",
+    "init": "data/cass-operator/init.yaml"
   }
 }
 ```
@@ -27,13 +28,9 @@ Specify the name of the CRD to be tested in the configuration through the `crd_n
 E.g.:
 ```json
 {
-  "crd_name": "RabbitmqCluster"
+  "crd_name": "cassandradatacenters.cassandra.datastax.com"
 }
 ```
-
-### Providing the mapping from CR to Kubernetes resources
-Run `python3 -m acto.input.known_schemas.known_schemas` which would automatically generate mappings from the properties in the CRD to the corresponding fields in the Kubernetes resources, e.g. `K8sField(['spec', 'affinity'], AffinitySchema)`
-Create a file and copy the mapping into it, and specify the file through the `k8s_mapping` property in the configuration.
 
 ### Providing a seed CR for Acto to start with
 Provide a sample CR which will be used by Acto as the seed. This can be any valid CR, usually operator repos contain multiple sample CRs. Specify this through the `seed_custom_resource` property in the configuration.
@@ -44,19 +41,19 @@ To provide the source code information to Acto, users need to specify the follow
 - `github_link`: the Github link to the operator repo
 - `commit`: the commit hash to test
 - `entrypoint`: [optional] the location of the operator's main function if it is not at the root
-- `type`: the type name of the managed resource (e.g. `RabbitmqCluster` for the rabbitmq's cluster-operator)
-- `package`: the package name where the type of the managed resource is defined (e.g. `github.com/rabbitmq/cluster-operator/api/v1beta1`)
+- `type`: the type name of the managed resource (e.g. `CassandraDatacenter` for the rabbitmq's cluster-operator)
+- `package`: the package name where the type of the managed resource is defined (e.g. `github.com/k8ssandra/cass-operator/apis/cassandra/v1beta1`)
 Acto uses these information to accurately find the type in the source corresponding to the tested CR.
 
 Example:
 ```json
 {
   "analysis": {
-      "github_link": "https://github.com/rabbitmq/cluster-operator.git",
-      "commit": "f2ab5cecca7fa4bbba62ba084bfa4ae1b25d15ff",
+      "github_link": "https://github.com/k8ssandra/cass-operator.git",
+      "commit": "241e71cdd32bd9f8a7e5c00d5427cdcaf9f55497",
       "entrypoint": null,
-      "type": "RabbitmqCluster",
-      "package": "github.com/rabbitmq/cluster-operator/api/v1beta1"
+      "type": "CassandraDatacenter",
+      "package": "github.com/k8ssandra/cass-operator/apis/cassandra/v1beta1"
   }
 }
 ```
@@ -64,6 +61,12 @@ Example:
 ## Testing
 After creating the configuration file for the operator,
   users can start the test campaign by invoking Acto:
+First run `make` to build the required shared object:
+```sh
+make
+```
+
+Then invoke `acto`
 ```sh
 python3 -m acto
   --config CONFIG, -c CONFIG

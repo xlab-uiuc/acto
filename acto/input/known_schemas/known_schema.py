@@ -73,7 +73,7 @@ KUBERNETES_SCHEMA = {
     'persistentVolumeClaim': PersistentVolumeClaimSchema,
     'persistentVolumeClaimSpec': PersistentVolumeClaimSpecSchema,
     'volume': VolumeSchema,
-    'topologySpreadConstraints': TopologySpreadConstraintsSchema
+    'topologySpreadConstraints': TopologySpreadConstraintsSchema,
 }
 
 
@@ -95,6 +95,20 @@ def find_all_matched_schemas(schema: BaseSchema) -> List[Tuple[BaseSchema, K8sSc
             matched_schemas.extend(find_all_matched_schemas(sub_schema))
     elif isinstance(schema, ArraySchema):
         matched_schemas.extend(find_all_matched_schemas(schema.get_item_schema()))
+
+    return matched_schemas
+
+def find_all_matched_schemas_type(schema: BaseSchema) -> List[Tuple[BaseSchema, type[K8sSchema]]]:
+    matched_schemas = []
+    for schema_name, schema_class in KUBERNETES_SCHEMA.items():
+        if schema_class.Match(schema):
+            matched_schemas.append((schema, schema_class))
+            return matched_schemas
+    if isinstance(schema, ObjectSchema):
+        for sub_schema in schema.properties.values():
+            matched_schemas.extend(find_all_matched_schemas_type(sub_schema))
+    elif isinstance(schema, ArraySchema):
+        matched_schemas.extend(find_all_matched_schemas_type(schema.get_item_schema()))
 
     return matched_schemas
 

@@ -899,10 +899,10 @@ def get_value_generator_from_schema(schema: BaseSchema):
 
     if isinstance(schema, StringSchema):
         return StringGenerator(schema.path, schema.raw_schema)
-    elif isinstance(schema, NumberSchema):
-        return NumberGenerator(schema.path, schema.raw_schema)
     elif isinstance(schema, IntegerSchema):
         return IntegerGenerator(schema.path, schema.raw_schema)
+    elif isinstance(schema, NumberSchema):
+        return NumberGenerator(schema.path, schema.raw_schema)
     elif isinstance(schema, ArraySchema):
         return ArrayGenerator(schema.path, schema.raw_schema)
     elif isinstance(schema, ObjectSchema):

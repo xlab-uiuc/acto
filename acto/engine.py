@@ -16,10 +16,14 @@ from acto.constant import CONST
 from acto.deploy import Deploy, DeployMethod
 from acto.exception import UnknownDeployMethodError
 from acto.input import InputModel
+from acto.input.input import OverSpecifiedField
+from acto.input.known_schemas.base import K8sField
+from acto.input.known_schemas.known_schema import find_all_matched_schemas, find_all_matched_schemas_type
 from acto.input.testcase import TestCase
 from acto.input.testplan import TreeNode
 from acto.input.value_with_schema import (ValueWithSchema,
                                           attach_schema_to_value)
+from acto.input.valuegenerator import ArrayGenerator
 from acto.kubectl_client import KubectlClient
 from acto.kubernetes_engine import base, k3d, kind
 from acto.oracle_handle import OracleHandle
@@ -562,42 +566,57 @@ class Acto:
 
         self.__learn(context_file=context_file, helper_crd=helper_crd, analysis_only=analysis_only)
 
-        self.context['enable_analysis'] = enable_analysis
-
         # Add additional preload images from arguments
         if preload_images_ != None:
             self.context['preload_images'].update(preload_images_)
 
         # Apply custom fields
+        if operator_config.analysis != None:
+            used_fields = self.context['analysis_result']['used_fields']
+        else:
+            used_fields = None
         self.input_model: InputModel = input_model(self.context['crd']['body'],
-                                                   self.context['analysis_result']['used_fields'],
+                                                   used_fields,
                                                    operator_config.example_dir, num_workers,
                                                    num_cases, self.reproduce_dir, mount)
         self.input_model.initialize(self.seed)
 
-        module = importlib.import_module(operator_config.k8s_fields)
-
-        if blackbox:
-            for k8s_field in module.BLACKBOX:
-                self.input_model.apply_k8s_schema(k8s_field)
+        if operator_config.k8s_fields != None:
+            module = importlib.import_module(operator_config.k8s_fields)
+            if blackbox:
+                for k8s_field in module.BLACKBOX:
+                    self.input_model.apply_k8s_schema(k8s_field)
+            else:
+                for k8s_field in module.WHITEBOX:
+                    self.input_model.apply_k8s_schema(k8s_field)
         else:
-            for k8s_field in module.WHITEBOX:
-                self.input_model.apply_k8s_schema(k8s_field)
+            # default to use the known_schema module to automatically find the mapping
+            # from CRD to K8s schema
+            tuples = find_all_matched_schemas_type(self.input_model.root_schema)
+            for tuple in tuples:
+                logger.debug(f'Found matched schema: {tuple[0].path} -> {tuple[1]}')
+                k8s_schema = K8sField(tuple[0].path, tuple[1])
+                self.input_model.apply_k8s_schema(k8s_schema)
 
-        if blackbox:
-            pruned_list = []
-            module = importlib.import_module(operator_config.custom_fields)
-            for custom_field in module.custom_fields:
-                pruned_list.append(custom_field.path)
-                self.input_model.apply_custom_field(custom_field)
+        if operator_config.custom_fields != None:
+            if blackbox:
+                pruned_list = []
+                module = importlib.import_module(operator_config.custom_fields)
+                for custom_field in module.custom_fields:
+                    pruned_list.append(custom_field.path)
+                    self.input_model.apply_custom_field(custom_field)
+            else:
+                pruned_list = []
+                module = importlib.import_module(operator_config.custom_fields)
+                for custom_field in module.custom_fields:
+                    pruned_list.append(custom_field.path)
+                    self.input_model.apply_custom_field(custom_field)
         else:
             pruned_list = []
-            module = importlib.import_module(operator_config.custom_fields)
-            for custom_field in module.custom_fields:
-                pruned_list.append(custom_field.path)
+            tuples = find_all_matched_schemas_type(self.input_model.root_schema)
+            for tuple in tuples:
+                custom_field = OverSpecifiedField(tuple[0].path, array=isinstance(tuple[1], ArrayGenerator))
                 self.input_model.apply_custom_field(custom_field)
-
-            logger.info("Applied custom fields: %s", json.dumps(pruned_list))
 
         self.sequence_base = 20 if delta_from else 0
 

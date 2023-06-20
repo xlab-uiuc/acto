@@ -43,10 +43,18 @@ class Checker(object):
 
         self.feature_gate = feature_gate
 
-        self.control_flow_fields = self.context['analysis_result']['control_flow_fields']
+        if 'analysis_result' in self.context and 'control_flow_fields' in self.context[
+                'analysis_result']:
+            self.control_flow_fields = self.context['analysis_result']['control_flow_fields']
+        else:
+            self.control_flow_fields = []
 
-        self.field_conditions_map = {}
-        self.field_conditions_map = self.context['analysis_result']['field_conditions_map']
+        if 'analysis_result' in self.context and 'field_conditions_map' in self.context[
+                'analysis_result']:
+            self.field_conditions_map = self.context['analysis_result']['field_conditions_map']
+        else:
+            self.field_conditions_map = {}
+
         self.helper(self.input_model.get_root_schema())
         # logging.info('Field condition map: %s' %
         #              json.dumps(self.field_conditions_map, indent=6))
@@ -1112,7 +1120,8 @@ if __name__ == "__main__":
             for k8s_field in module.WHITEBOX:
                 input_model.apply_k8s_schema(k8s_field)
 
-            input_model.apply_default_value(context['analysis_result']['default_value_map'])
+            if 'analysis_result' in context and 'default_value_map' in context['analysis_result']:
+                input_model.apply_default_value(context['analysis_result']['default_value_map'])
 
             checker: Checker = checker_class(context=context,
                                              trial_dir=trial_dir,
