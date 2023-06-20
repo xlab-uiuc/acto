@@ -6,6 +6,7 @@ import yaml
 
 from acto.input.get_matched_schemas import field_matched, find_matched_schema
 from acto.input.known_schemas import *
+from acto.input.valuegenerator import extract_schema_with_value_generator
 from acto.schema import extract_schema
 
 test_dir = pathlib.Path(__file__).parent.resolve()
@@ -98,6 +99,18 @@ class TestSchema(unittest.TestCase):
         self.assertTrue(IngressTLSSchema.Match(tls_schema))
 
         self.assertTrue(field_matched(tls_schema, IngressTLSSchema))
+
+    def test_pod_spec_match(self):
+        with open(os.path.join(test_dir, 'cassop_crd.yaml'), 'r') as operator_yaml:
+            crd = yaml.load(operator_yaml, Loader=yaml.FullLoader)
+
+            spec_schema = extract_schema_with_value_generator([],
+                                         crd['spec']['versions'][0]['schema']['openAPIV3Schema']['properties']['spec']['properties']['podTemplateSpec']['properties']['spec']['properties']['containers']['items']['properties']['livenessProbe'])
+            # tuples = find_all_matched_schemas_type(spec_schema)
+            # for tuple in tuples:
+            #     print(f'Found matched schema: {tuple[0].path} -> {tuple[1]}')
+            #     k8s_schema = K8sField(tuple[0].path, tuple[1])
+            print(LivenessProbeSchema.Match(spec_schema))
 
     def test_find_matches(self):
         with open(os.path.join(test_dir, 'rabbitmq_crd.yaml'), 'r') as operator_yaml:

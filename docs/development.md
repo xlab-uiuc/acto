@@ -27,7 +27,7 @@ The file stores the result of different oracles in Acto.
 We provide a post-processing script to gather all the alarms into a csv file for alarm inspection.
 After all tests finish, run
 ```sh
-python3 checker.py --config data/cass-operator/config.json --num-workers 8 --testrun-dir testrun-cass
+python3 -m acto.checker.checker --config data/cass-operator/config.json --num-workers 8 --testrun-dir testrun-cass
 ```
 to post-process all the results.
 We run this post-process step because previously we wanted to test the false alarm

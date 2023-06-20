@@ -289,7 +289,8 @@ if __name__ == '__main__':
                     'input': json_instance['post_result']['error']['testcase'],
                     'symptom': json_instance['post_result']['error']
                 }
-                #classify_alarm(alarm_features)
+                # TODO: implement classify_alarm
+                # classify_alarm(alarm_features)
                 taint_analysis_df_list.append({
                     'Trial number': json_instance['post_result']['trial_num'],
                     'testcase': json_instance['post_result']['error']['testcase'],

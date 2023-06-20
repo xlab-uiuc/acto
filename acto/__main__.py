@@ -78,6 +78,7 @@ parser.add_argument('--dryrun',
                     dest='dryrun',
                     action='store_true',
                     help='Only generate test cases without executing them')
+parser.add_argument('--checkonly', action='store_true')
 
 args = parser.parse_args()
 
@@ -155,7 +156,7 @@ logger.info('Start post processing steps')
 
 # Post processing
 post_diff_test_dir = os.path.join(args.workdir_path, 'post_diff_test')
-p = PostDiffTest(testrun_dir=post_diff_test_dir, config=config)
+p = PostDiffTest(testrun_dir=args.workdir_path, config=config)
 if not args.checkonly:
     p.post_process(post_diff_test_dir, num_workers=args.num_workers)
 p.check(post_diff_test_dir, num_workers=args.num_workers)
