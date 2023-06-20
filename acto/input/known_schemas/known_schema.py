@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Tuple, Type
 
 from acto.input.testcase import K8sTestCase, TestCase
 from acto.schema import (AnyOfSchema, ArraySchema, BaseSchema, BooleanSchema,
@@ -98,7 +98,7 @@ def find_all_matched_schemas(schema: BaseSchema) -> List[Tuple[BaseSchema, K8sSc
 
     return matched_schemas
 
-def find_all_matched_schemas_type(schema: BaseSchema) -> List[Tuple[BaseSchema, type[K8sSchema]]]:
+def find_all_matched_schemas_type(schema: BaseSchema) -> List[Tuple[BaseSchema, Type[K8sSchema]]]:
     matched_schemas = []
     for schema_name, schema_class in KUBERNETES_SCHEMA.items():
         if schema_class.Match(schema):
