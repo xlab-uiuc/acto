@@ -41,6 +41,11 @@ We are actively working on simplifying the process to make it more user-friendly
 ## Demo
 To show Acto's bug finding capability, we reproduce one of the previous bugs Acto found automatically.
 
+First, run `make` to build Acto's shared objects:
+```sh
+make
+```
+
 To reproduce the bug, run the following command:
 ```sh
 python3 -m Acto.reproduce --reproduce-dir test/cassop-330/trial-demo --config data/cass-operator/config.json
