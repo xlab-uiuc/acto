@@ -10,7 +10,7 @@ from types import FunctionType
 import yaml
 import jsonpatch
 
-from acto.checker.checker import CheckerSet
+from acto.checker.checker_set import CheckerSet
 from acto.common import *
 from acto.constant import CONST
 from acto.deploy import Deploy, DeployMethod

@@ -31,12 +31,9 @@ class StateCheckerConfig(BaseModel):
 class CheckersConfig(BaseModel):
     state: StateCheckerConfig
 
-class ModeConfig(BaseModel):
-    mode: Literal['whitebox', 'blackbox'] = 'whitebox'
-
 class Config(BaseModel):
     alarms: AlarmsConfig
     checkers: CheckersConfig
-    mode: ModeConfig
+    mode: Literal['whitebox', 'blackbox'] = 'whitebox'
     notifications: NotificationsConfig
     io: IOConfig

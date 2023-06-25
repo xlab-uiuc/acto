@@ -7,7 +7,7 @@ import unittest
 import yaml
 
 import acto.config as acto_config
-from acto.checker.checker import CheckerSet
+from acto.checker.checker_set import CheckerSet
 from acto.input import DeterministicInputModel, InputModel
 from acto.utils import OperatorConfig
 

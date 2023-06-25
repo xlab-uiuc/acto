@@ -6,7 +6,7 @@ import unittest
 import yaml
 
 from acto import config as acto_config
-from acto.checker.checker import CheckerSet
+from acto.checker.checker_set import CheckerSet
 from acto.input import DeterministicInputModel, InputModel
 from acto.post_process.post_diff_test import PostDiffTest
 from acto.post_process.post_process import construct_step

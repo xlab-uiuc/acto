@@ -5,12 +5,13 @@ from deepdiff import DeepDiff
 from deepdiff.helper import NotPresent
 
 from acto.common import Diff
-from acto.input import TestCase
 
 
 class ActoEncoder(json.JSONEncoder):
 
     def default(self, obj):
+        from acto.input import TestCase
+
         if isinstance(obj, Diff):
             return obj.to_dict()
         elif isinstance(obj, NotPresent):

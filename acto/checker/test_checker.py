@@ -3,7 +3,7 @@ import json
 import logging
 import sys
 
-from acto.checker.checker import CheckerSet
+from acto.checker.checker_set import CheckerSet
 from acto.common import RunResult, RecoveryResult, ErrorResult, Oracle
 from acto.input import InputModel
 from acto.serialization import ActoEncoder

@@ -44,7 +44,8 @@ def skip_default_input_delta(diff: Diff) -> bool:
 
     # the original code will return None, which is not a boolean value
     # add a failed assertion to mark as a potential bug
-    assert False
+    # TODO: check if the function should return false here
+    return False
 
 
 def find_nearest_parent(path: list, encoded_path_list: list) -> list:
