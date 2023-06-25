@@ -5,17 +5,22 @@ import logging
 import multiprocessing
 import os
 import queue
+import re
 import subprocess
 import sys
 import threading
 import time
+from copy import deepcopy
 from typing import Dict, List
 
 import pandas as pd
+from deepdiff import DeepDiff
+from deepdiff.helper import CannotCompare
+from deepdiff.model import DiffLevel
+from deepdiff.operator import BaseOperator
 
 sys.path.append('.')
 sys.path.append('..')
-from acto.checker import compare_system_equality
 from acto.common import (ErrorResult, PassResult, RecoveryResult, RunResult,
                          invalid_input_message_regex, kubernetes_client)
 from acto.constant import CONST
@@ -32,6 +37,199 @@ from .post_process import PostProcessor, Step
 def dict_hash(d: dict) -> int:
     '''Hash a dict'''
     return hash(json.dumps(d, sort_keys=True))
+
+def compare_system_equality(curr_system_state: Dict,
+                            prev_system_state: Dict,
+                            additional_exclude_paths: List[str] = []):
+    logger = get_thread_logger(with_prefix=False)
+    curr_system_state = deepcopy(curr_system_state)
+    prev_system_state = deepcopy(prev_system_state)
+
+    try:
+        del curr_system_state['endpoints']
+        del prev_system_state['endpoints']
+        del curr_system_state['job']
+        del prev_system_state['job']
+    except:
+        return PassResult()
+
+    # remove pods that belong to jobs from both states to avoid observability problem
+    curr_pods = curr_system_state['pod']
+    prev_pods = prev_system_state['pod']
+
+    new_pods = {}
+    for k, v in curr_pods.items():
+        if 'metadata' in v and 'owner_references' in v[
+            'metadata'] and v['metadata']['owner_references'] != None and v['metadata'][
+            'owner_references'][0]['kind'] != 'Job':
+            new_pods[k] = v
+    curr_system_state['pod'] = new_pods
+
+    new_pods = {}
+    for k, v in prev_pods.items():
+        if 'metadata' in v and 'owner_references' in v[
+            'metadata'] and v['metadata']['owner_references'] != None and v['metadata'][
+            'owner_references'][0]['kind'] != 'Job':
+            new_pods[k] = v
+    prev_system_state['pod'] = new_pods
+
+    for name, obj in prev_system_state['secret'].items():
+        if 'data' in obj and obj['data'] != None:
+            for key, data in obj['data'].items():
+                try:
+                    obj['data'][key] = json.loads(data)
+                except:
+                    pass
+
+    for name, obj in curr_system_state['secret'].items():
+        if 'data' in obj and obj['data'] != None:
+            for key, data in obj['data'].items():
+                try:
+                    obj['data'][key] = json.loads(data)
+                except:
+                    pass
+
+    # remove custom resource from both states
+    curr_system_state.pop('custom_resource_spec', None)
+    prev_system_state.pop('custom_resource_spec', None)
+    curr_system_state.pop('custom_resource_status', None)
+    prev_system_state.pop('custom_resource_status', None)
+    curr_system_state.pop('pvc', None)
+    prev_system_state.pop('pvc', None)
+
+    # remove fields that are not deterministic
+    exclude_paths = [
+        r".*\['metadata'\]\['managed_fields'\]",
+        r".*\['metadata'\]\['cluster_name'\]",
+        r".*\['metadata'\]\['creation_timestamp'\]",
+        r".*\['metadata'\]\['resource_version'\]",
+        r".*\['metadata'\].*\['uid'\]",
+        r".*\['metadata'\]\['generation'\]$",
+        r".*\['metadata'\]\['annotations'\]\['.*last-applied.*'\]",
+        r".*\['metadata'\]\['annotations'\]\['.*\.kubernetes\.io.*'\]",
+        r".*\['metadata'\]\['labels'\]\['.*revision.*'\]",
+        r".*\['metadata'\]\['labels'\]\['owner-rv'\]",
+        r".*\['status'\]",
+        r"\['metadata'\]\['deletion_grace_period_seconds'\]",
+        r"\['metadata'\]\['deletion_timestamp'\]",
+        r".*\['spec'\]\['init_containers'\]\[.*\]\['volume_mounts'\]\[.*\]\['name'\]$",
+        r".*\['spec'\]\['containers'\]\[.*\]\['volume_mounts'\]\[.*\]\['name'\]$",
+        r".*\['spec'\]\['volumes'\]\[.*\]\['name'\]$",
+        r".*\[.*\]\['node_name'\]$",
+        r".*\[\'spec\'\]\[\'host_users\'\]$",
+        r".*\[\'spec\'\]\[\'os\'\]$",
+        r".*\[\'grpc\'\]$",
+        r".*\[\'spec\'\]\[\'volume_name\'\]$",
+        r".*\['version'\]$",
+        r".*\['endpoints'\]\[.*\]\['addresses'\]\[.*\]\['target_ref'\]\['uid'\]$",
+        r".*\['endpoints'\]\[.*\]\['addresses'\]\[.*\]\['target_ref'\]\['resource_version'\]$",
+        r".*\['endpoints'\]\[.*\]\['addresses'\]\[.*\]\['ip'\]",
+        r".*\['cluster_ip'\]$",
+        r".*\['cluster_i_ps'\].*$",
+        r".*\['deployment_pods'\].*\['metadata'\]\['name'\]$",
+        r"\[\'config_map\'\]\[\'kube\-root\-ca\.crt\'\]\[\'data\'\]\[\'ca\.crt\'\]$",
+        r".*\['secret'\].*$",
+        r"\['secrets'\]\[.*\]\['name'\]",
+        r".*\['node_port'\]",
+        r".*\['metadata'\]\['generate_name'\]",
+        r".*\['metadata'\]\['labels'\]\['pod\-template\-hash'\]",
+        r"\['deployment_pods'\].*\['metadata'\]\['owner_references'\]\[.*\]\['name'\]",
+    ]
+
+    exclude_paths.extend(additional_exclude_paths)
+
+    diff = DeepDiff(
+        prev_system_state,
+        curr_system_state,
+        exclude_regex_paths=exclude_paths,
+        iterable_compare_func=compare_func,
+        custom_operators=[
+            NameOperator(r".*\['name'\]$"),
+            TypeChangeOperator(r".*\['annotations'\]$")
+        ],
+        view='tree',
+    )
+
+    postprocess_deepdiff(diff)
+
+    if diff:
+        logger.debug(f"failed attempt recovering to seed state - system state diff: {diff}")
+        return RecoveryResult(delta=diff, from_=prev_system_state, to_=curr_system_state)
+
+    return PassResult()
+
+
+def postprocess_deepdiff(diff):
+    # ignore PVC add/removal, because PVC can be intentially left behind
+    logger = get_thread_logger(with_prefix=False)
+    if 'dictionary_item_removed' in diff:
+        new_removed_items = []
+        for removed_item in diff['dictionary_item_removed']:
+            if removed_item.path(output_format='list')[0] == 'pvc':
+                logger.debug(f"ignoring removed pvc {removed_item}")
+            else:
+                new_removed_items.append(removed_item)
+        if len(new_removed_items) == 0:
+            del diff['dictionary_item_removed']
+        else:
+            diff['dictionary_item_removed'] = new_removed_items
+
+    if 'dictionary_item_added' in diff:
+        new_removed_items = []
+        for removed_item in diff['dictionary_item_added']:
+            if removed_item.path(output_format='list')[0] == 'pvc':
+                logger.debug(f"ignoring added pvc {removed_item}")
+            else:
+                new_removed_items.append(removed_item)
+        if len(new_removed_items) == 0:
+            del diff['dictionary_item_added']
+        else:
+            diff['dictionary_item_added'] = new_removed_items
+
+
+def compare_func(x, y, level: DiffLevel = None):
+    try:
+        if 'name' not in x or 'name' not in y:
+            return x['key'] == y['key'] and x['operator'] == y['operator']
+        x_name = x['name']
+        y_name = y['name']
+        if len(x_name) < 5 or len(y_name) < 5:
+            return x_name == y_name
+        else:
+            return x_name[:5] == y_name[:5]
+    except:
+        raise CannotCompare() from None
+
+
+class NameOperator(BaseOperator):
+
+    def give_up_diffing(self, level, diff_instance):
+        x_name = level.t1
+        y_name = level.t2
+        if x_name == None or y_name == None:
+            return False
+        if re.search(r"^.+-([A-Za-z0-9]{5})$", x_name) and re.search(r"^.+-([A-Za-z0-9]{5})$",
+                                                                     y_name):
+            return x_name[:5] == y_name[:5]
+        return False
+
+
+class TypeChangeOperator(BaseOperator):
+
+    def give_up_diffing(self, level, diff_instance):
+        if level.t1 == None:
+            if isinstance(level.t2, dict):
+                level.t1 = {}
+            elif isinstance(level.t2, list):
+                level.t1 = []
+        elif level.t2 == None:
+            if isinstance(level.t1, dict):
+                logging.info('t2 is None, t1 is dict')
+                level.t2 = {}
+            elif isinstance(level.t1, list):
+                level.t2 = []
+        return False
+
 
 
 def get_nondeterministic_fields(s1, s2, additional_exclude_paths):

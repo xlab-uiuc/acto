@@ -1,7 +1,7 @@
 from typing import List, Tuple
 
 from acto.input.testcase import K8sInvalidTestCase, K8sTestCase, TestCase
-from acto.k8s_util.k8sutil import (canonicalizeQuantity, double_quantity,
+from acto.k8s_util.k8sutil import (canonicalize_quantity, double_quantity,
                                    half_quantity)
 from acto.schema import (AnyOfSchema, BaseSchema, IntegerSchema, ObjectSchema,
                          StringSchema, extract_schema)
@@ -14,7 +14,7 @@ class QuantitySchema(K8sAnyOfSchema):
     def increase_precondition(prev) -> bool:
         if prev == None:
             return False
-        elif canonicalizeQuantity(prev) == 'INVALID':
+        elif canonicalize_quantity(prev) == 'INVALID':
             return False
         return True
 
@@ -27,7 +27,7 @@ class QuantitySchema(K8sAnyOfSchema):
     def decrease_precondition(prev) -> bool:
         if prev == None:
             return False
-        elif canonicalizeQuantity(prev) == 'INVALID':
+        elif canonicalize_quantity(prev) == 'INVALID':
             return False
         return True
 

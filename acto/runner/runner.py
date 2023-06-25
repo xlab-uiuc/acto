@@ -50,7 +50,6 @@ class Runner(object):
             'deployment': self.appV1Api.list_namespaced_deployment,
             'config_map': self.coreV1Api.list_namespaced_config_map,
             'service': self.coreV1Api.list_namespaced_service,
-            'service_account': self.coreV1Api.list_namespaced_service_account,
             'pvc': self.coreV1Api.list_namespaced_persistent_volume_claim,
             'cronjob': self.batchV1Api.list_namespaced_cron_job,
             'ingress': self.networkingV1Api.list_namespaced_ingress,

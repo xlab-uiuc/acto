@@ -5,8 +5,8 @@ import unittest
 
 import yaml
 
-from acto.checker import Checker
-from acto.common import FeatureGate
+from acto import config as acto_config
+from acto.checker.checker import CheckerSet
 from acto.input import DeterministicInputModel, InputModel
 from acto.utils import OperatorConfig
 
@@ -33,9 +33,7 @@ class TestCRDBOpBugs(unittest.TestCase):
             self.context['preload_images'] = set(self.context['preload_images'])
 
         # prepare feature gate
-        self.feature_gate = FeatureGate(FeatureGate.INVALID_INPUT_FROM_LOG |
-                                        FeatureGate.DEFAULT_VALUE_COMPARISON |
-                                        FeatureGate.CANONICALIZATION)
+        acto_config.load_config(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'crdb_bugs_config.yaml'))
 
         # prepare input model
         with open(self.config.seed_custom_resource, 'r') as cr_file:
@@ -49,10 +47,9 @@ class TestCRDBOpBugs(unittest.TestCase):
         # https://github.com/cockroachdb/cockroach-operator/issues/920
 
         trial_dir = os.path.join(test_dir, 'crdbop-920')
-        checker = Checker(self.context,
+        checker = CheckerSet(self.context,
                           trial_dir,
-                          self.input_model, [],
-                          feature_gate=self.feature_gate)
+                          self.input_model, [])
 
         snapshot_0 = construct_snapshot(trial_dir, 1)
         snapshot_1 = construct_snapshot(trial_dir, 2)

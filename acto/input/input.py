@@ -16,7 +16,8 @@ from acto.input import known_schemas
 from acto.input.get_matched_schemas import find_matched_schema
 from acto.input.valuegenerator import extract_schema_with_value_generator
 from acto.schema import BaseSchema, IntegerSchema, extract_schema
-from acto.utils import get_thread_logger, is_prefix
+from acto.serialization import ActoEncoder
+from acto.utils import get_thread_logger, is_prefix, OperatorConfig
 
 from .known_schemas import K8sField
 from .testcase import TestCase
@@ -897,8 +898,6 @@ if __name__ == '__main__':
     import os
     import time
     from datetime import datetime
-
-    from common import ActoEncoder, OperatorConfig
 
     start_time = time.time()
     workdir_path = 'testrun-%s' % datetime.now().strftime('%Y-%m-%d-%H-%M')

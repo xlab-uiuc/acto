@@ -56,6 +56,7 @@ def parse_log(line: str) -> dict:
 
     Returns:
         a dict containing 'level' and 'message'
+        'level' will always be a lowercase string
     '''
     logger = get_thread_logger(with_prefix=True)
 
@@ -95,8 +96,9 @@ def parse_log(line: str) -> dict:
                 log_line['level'] = log_line['severity']
 
                 del log_line['severity']
+            log_line['level'] = log_line['level'].lower()
         except Exception as e:
-            # logger.warning(f"parse_log() cannot parse line {line} due to {e}")
+            logger.debug(f"parse_log() cannot parse line {line} due to {e}")
             pass
 
     return log_line

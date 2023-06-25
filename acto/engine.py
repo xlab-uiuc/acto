@@ -4,13 +4,13 @@ import os
 import tempfile
 import threading
 import time
+from copy import deepcopy
 from types import FunctionType
-from typing import List, Tuple
 
 import yaml
 import jsonpatch
 
-from acto.checker import BlackBoxChecker, Checker
+from acto.checker.checker import CheckerSet
 from acto.common import *
 from acto.constant import CONST
 from acto.deploy import Deploy, DeployMethod
@@ -29,7 +29,7 @@ from acto.kubernetes_engine import base, k3d, kind
 from acto.oracle_handle import OracleHandle
 from acto.runner import Runner
 from acto.serialization import ActoEncoder, ContextEncoder
-from acto.snapshot import EmptySnapshot
+from acto.snapshot import EmptySnapshot, Snapshot
 from acto.utils import (add_acto_label, delete_operator_pod, process_crd,
                         update_preload_images)
 from acto.utils.config import OperatorConfig
@@ -79,6 +79,118 @@ def apply_testcase(value_with_schema: ValueWithSchema,
     logger.info('JSON patch: %s' % patch)
     return patch
 
+def check_state_equality(snapshot: Snapshot, prev_snapshot: Snapshot) -> OracleResult:
+    '''Check whether two system state are semantically equivalent
+
+    Args:
+        - snapshot: a reference to a system state
+        - prev_snapshot: a reference to another system state
+
+    Return value:
+        - a dict of diff results, empty if no diff found
+    '''
+    logger = get_thread_logger(with_prefix=True)
+
+    curr_system_state = deepcopy(snapshot.system_state)
+    prev_system_state = deepcopy(prev_snapshot.system_state)
+
+    if len(curr_system_state) == 0 or len(prev_system_state) == 0:
+        return PassResult()
+
+    del curr_system_state['endpoints']
+    del prev_system_state['endpoints']
+    del curr_system_state['job']
+    del prev_system_state['job']
+
+    # remove pods that belong to jobs from both states to avoid observability problem
+    curr_pods = curr_system_state['pod']
+    prev_pods = prev_system_state['pod']
+    curr_system_state['pod'] = {
+        k: v
+        for k, v in curr_pods.items()
+        if v['metadata']['owner_references'][0]['kind'] != 'Job'
+    }
+    prev_system_state['pod'] = {
+        k: v
+        for k, v in prev_pods.items()
+        if v['metadata']['owner_references'][0]['kind'] != 'Job'
+    }
+
+    for name, obj in prev_system_state['secret'].items():
+        if 'data' in obj and obj['data'] != None:
+            for key, data in obj['data'].items():
+                try:
+                    obj['data'][key] = json.loads(data)
+                except:
+                    pass
+
+    for name, obj in curr_system_state['secret'].items():
+        if 'data' in obj and obj['data'] != None:
+            for key, data in obj['data'].items():
+                try:
+                    obj['data'][key] = json.loads(data)
+                except:
+                    pass
+
+    # remove custom resource from both states
+    curr_system_state.pop('custom_resource_spec', None)
+    prev_system_state.pop('custom_resource_spec', None)
+    curr_system_state.pop('custom_resource_status', None)
+    prev_system_state.pop('custom_resource_status', None)
+    curr_system_state.pop('pvc', None)
+    prev_system_state.pop('pvc', None)
+
+    # remove fields that are not deterministic
+    exclude_paths = [
+        r".*\['metadata'\]\['managed_fields'\]",
+        r".*\['metadata'\]\['cluster_name'\]",
+        r".*\['metadata'\]\['creation_timestamp'\]",
+        r".*\['metadata'\]\['resource_version'\]",
+        r".*\['metadata'\].*\['uid'\]",
+        r".*\['metadata'\]\['generation'\]$",
+        r".*\['metadata'\]\['annotations'\]",
+        r".*\['metadata'\]\['annotations'\]\['.*last-applied.*'\]",
+        r".*\['metadata'\]\['annotations'\]\['.*\.kubernetes\.io.*'\]",
+        r".*\['metadata'\]\['labels'\]\['.*revision.*'\]",
+        r".*\['metadata'\]\['labels'\]\['owner-rv'\]",
+        r".*\['status'\]",
+        r"\['metadata'\]\['deletion_grace_period_seconds'\]",
+        r"\['metadata'\]\['deletion_timestamp'\]",
+        r".*\['spec'\]\['init_containers'\]\[.*\]\['volume_mounts'\]\[.*\]\['name'\]$",
+        r".*\['spec'\]\['containers'\]\[.*\]\['volume_mounts'\]\[.*\]\['name'\]$",
+        r".*\['spec'\]\['volumes'\]\[.*\]\['name'\]$",
+        r".*\[.*\]\['node_name'\]$",
+        r".*\[\'spec\'\]\[\'host_users\'\]$",
+        r".*\[\'spec\'\]\[\'os\'\]$",
+        r".*\[\'grpc\'\]$",
+        r".*\[\'spec\'\]\[\'volume_name\'\]$",
+        r".*\['version'\]$",
+        r".*\['endpoints'\]\[.*\]\['addresses'\]\[.*\]\['target_ref'\]\['uid'\]$",
+        r".*\['endpoints'\]\[.*\]\['addresses'\]\[.*\]\['target_ref'\]\['resource_version'\]$",
+        r".*\['endpoints'\]\[.*\]\['addresses'\]\[.*\]\['ip'\]",
+        r".*\['cluster_ip'\]$",
+        r".*\['cluster_i_ps'\].*$",
+        r".*\['deployment_pods'\].*\['metadata'\]\['name'\]$",
+        r"\[\'config_map\'\]\[\'kube\-root\-ca\.crt\'\]\[\'data\'\]\[\'ca\.crt\'\]$",
+        r".*\['secret'\].*$",
+        r"\['secrets'\]\[.*\]\['name'\]",
+        r".*\['node_port'\]",
+        r".*\['metadata'\]\['generate_name'\]",
+        r".*\['metadata'\]\['labels'\]\['pod\-template\-hash'\]",
+        r"\['deployment_pods'\].*\['metadata'\]\['owner_references'\]\[.*\]\['name'\]",
+    ]
+
+    diff = DeepDiff(prev_system_state,
+                    curr_system_state,
+                    exclude_regex_paths=exclude_paths,
+                    view='tree')
+
+    if diff:
+        logger.debug(f"failed attempt recovering to seed state - system state diff: {diff}")
+        return RecoveryResult(delta=diff, from_=prev_system_state, to_=curr_system_state)
+
+    return PassResult()
+
 
 class TrialRunner:
 
@@ -86,7 +198,7 @@ class TrialRunner:
                  checker_t: type, wait_time: int, custom_on_init: List[callable],
                  custom_oracle: List[callable], workdir: str, cluster: base.KubernetesEngine,
                  worker_id: int, sequence_base: int, dryrun: bool, is_reproduce: bool,
-                 apply_testcase_f: FunctionType, feature_gate: FeatureGate) -> None:
+                 apply_testcase_f: FunctionType) -> None:
         self.context = context
         self.workdir = workdir
         self.base_workdir = workdir
@@ -107,7 +219,6 @@ class TrialRunner:
         self.custom_oracle = custom_oracle
         self.dryrun = dryrun
         self.is_reproduce = is_reproduce
-        self.feature_gate = feature_gate
 
         self.snapshots = []
         self.discarded_testcases = {}  # List of test cases failed to run
@@ -193,8 +304,7 @@ class TrialRunner:
             custom_oracle = []
         runner: Runner = self.runner_t(self.context, trial_dir, self.kubeconfig, self.context_name,
                                        self.wait_time)
-        checker: Checker = self.checker_t(self.context, trial_dir, self.input_model, custom_oracle,
-                                          self.feature_gate)
+        checker: CheckerSet = self.checker_t(self.context, trial_dir, self.input_model, custom_oracle)
 
         curr_input = self.input_model.get_seed_input()
         self.snapshots.append(EmptySnapshot(curr_input))
@@ -415,7 +525,7 @@ class TrialRunner:
             return runResult, generation
 
     def run_and_check(runner: Runner,
-                      checker: Checker,
+                      checker: CheckerSet,
                       input: dict,
                       snapshots: list,
                       generation: int,
@@ -449,7 +559,7 @@ class TrialRunner:
 
         return runResult
 
-    def run_recovery(self, runner: Runner, checker: Checker, generation: int) -> OracleResult:
+    def run_recovery(self, runner: Runner, checker: CheckerSet, generation: int) -> OracleResult:
         '''Runs the recovery test case after an error is reported'''
         logger = get_thread_logger(with_prefix=True)
         RECOVERY_SNAPSHOT = -2  # the immediate snapshot before the error
@@ -457,7 +567,7 @@ class TrialRunner:
         logger.debug('Running recovery')
         recovery_input = self.snapshots[RECOVERY_SNAPSHOT].input
         snapshot, err = runner.run(recovery_input, generation=-1)
-        result = checker.check_state_equality(snapshot, self.snapshots[RECOVERY_SNAPSHOT])
+        result = check_state_equality(snapshot, self.snapshots[RECOVERY_SNAPSHOT])
 
         return result
 
@@ -496,8 +606,6 @@ class Acto:
                  input_model: type,
                  apply_testcase_f: FunctionType,
                  reproduce_dir: str = None,
-                 feature_gate: FeatureGate = None,
-                 blackbox: bool = False,
                  delta_from: str = None,
                  mount: list = None,
                  focus_fields: list = None) -> None:
@@ -543,22 +651,8 @@ class Acto:
         self.apply_testcase_f = apply_testcase_f
         self.reproduce_dir = reproduce_dir
 
-        if feature_gate is None:
-            self.feature_gate = FeatureGate(FeatureGate.INVALID_INPUT_FROM_LOG |
-                                            FeatureGate.DEFAULT_VALUE_COMPARISON |
-                                            FeatureGate.CANONICALIZATION |
-                                            FeatureGate.WRITE_RESULT_EACH_GENERATION)
-        else:
-            self.feature_gate = feature_gate
-
-        if blackbox:
-            logger.info('Running in blackbox mode')
-            self.runner_type = Runner
-            self.checker_type = BlackBoxChecker
-        else:
-            self.runner_type = Runner
-            self.checker_type = Checker
-
+        self.runner_type = Runner
+        self.checker_type = CheckerSet
         self.snapshots = []
 
         # generate configuration files for the cluster runtime
@@ -583,7 +677,7 @@ class Acto:
 
         if operator_config.k8s_fields != None:
             module = importlib.import_module(operator_config.k8s_fields)
-            if blackbox:
+            if actoConfig.mode == 'blackbox':
                 for k8s_field in module.BLACKBOX:
                     self.input_model.apply_k8s_schema(k8s_field)
             else:
@@ -599,7 +693,7 @@ class Acto:
                 self.input_model.apply_k8s_schema(k8s_schema)
 
         if operator_config.custom_fields != None:
-            if blackbox:
+            if actoConfig.mode == 'blackbox':
                 pruned_list = []
                 module = importlib.import_module(operator_config.custom_fields)
                 for custom_field in module.custom_fields:
@@ -744,7 +838,7 @@ class Acto:
                                  self.checker_type, self.operator_config.wait_time,
                                  self.custom_on_init, self.custom_oracle, self.workdir_path,
                                  self.cluster, i, self.sequence_base, self.dryrun,
-                                 self.is_reproduce, self.apply_testcase_f, self.feature_gate)
+                                 self.is_reproduce, self.apply_testcase_f)
             runners.append(runner)
 
         if 'normal' in modes:

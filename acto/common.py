@@ -7,12 +7,13 @@ import string
 import subprocess
 from abc import abstractmethod
 from datetime import datetime
-from typing import List, Tuple
+from typing import List, Tuple, Any, Dict
 
 import kubernetes
 from deepdiff import DeepDiff
 from deepdiff.helper import NotPresent
 
+from acto.config import actoConfig
 from .utils import get_thread_logger
 
 class Diff:
@@ -24,11 +25,11 @@ class Diff:
         self._path = path
 
     @property
-    def prev(self) -> object:
+    def prev(self) -> Any:
         return self._prev
 
     @property
-    def curr(self) -> object:
+    def curr(self) -> Any:
         return self._curr
 
     @property
@@ -55,40 +56,9 @@ class Oracle(str, enum.Enum):
     CUSTOM = 'Custom'
 
 
-class FeatureGate:
-    INVALID_INPUT_FROM_LOG = 0x1
-    DEFAULT_VALUE_COMPARISON = 0x2
-    DEPENDENCY_ANALYSIS = 0x4
-    TAINT_ANALYSIS = 0x8
-    CANONICALIZATION = 0x10
-    WRITE_RESULT_EACH_GENERATION = 0x20
+class RunResult:
 
-    def __init__(self, feature_gate: hex) -> None:
-        self._feature_gate = feature_gate
-
-    def invalid_input_from_log_enabled(self) -> bool:
-        return self._feature_gate & FeatureGate.INVALID_INPUT_FROM_LOG
-
-    def default_value_comparison_enabled(self) -> bool:
-        return self._feature_gate & FeatureGate.DEFAULT_VALUE_COMPARISON
-
-    def dependency_analysis_enabled(self) -> bool:
-        return self._feature_gate & FeatureGate.DEPENDENCY_ANALYSIS
-
-    def taint_analysis_enabled(self) -> bool:
-        return self._feature_gate & FeatureGate.TAINT_ANALYSIS
-
-    def canonicalization_enabled(self) -> bool:
-        return self._feature_gate & FeatureGate.CANONICALIZATION
-
-    def write_result_each_generation_enabled(self) -> bool:
-        return self._feature_gate & FeatureGate.WRITE_RESULT_EACH_GENERATION
-
-
-class RunResult():
-
-    def __init__(self, revert, generation: int, feature_gate: FeatureGate,
-                 testcase_signature: dict) -> None:
+    def __init__(self, revert, generation: int, testcase_signature: dict) -> None:
         self.crash_result: OracleResult = None
         self.input_result: OracleResult = None
         self.health_result: OracleResult = None
@@ -97,13 +67,29 @@ class RunResult():
         self.custom_result: OracleResult = None
         self.misc_result: OracleResult = None
         self.recovery_result: OracleResult = None
+        self.other_results: Dict[str, OracleResult] = {}
 
         self.generation = generation
 
-        self.feature_gate = feature_gate
-
         self.revert = revert
         self.testcase_signature = testcase_signature
+
+    def set_result(self, result_name:str, value: 'OracleResult'):
+        # TODO, store all results in a dict
+        if result_name == 'crash':
+            self.crash_result = value
+        elif result_name == 'input':
+            self.input_result = value
+        elif result_name == 'health':
+            self.health_result = value
+        elif result_name == 'state':
+            self.state_result = value
+        elif result_name == 'log':
+            self.log_result = value
+        else:
+            self.other_results[result_name] = value
+            self.custom_result = value
+
 
     def is_pass(self) -> bool:
         if not isinstance(self.crash_result, PassResult) and self.crash_result is not None:
@@ -116,7 +102,7 @@ class RunResult():
         if isinstance(self.state_result, PassResult):
             return True
         else:
-            if self.feature_gate.invalid_input_from_log_enabled and isinstance(
+            if actoConfig.alarms.invalid_input and isinstance(
                     self.log_result, InvalidInputResult):
                 return True
             else:
@@ -150,7 +136,7 @@ class RunResult():
         elif not isinstance(self.state_result, ErrorResult):
             return False
         else:
-            if self.feature_gate.invalid_input_from_log_enabled and isinstance(
+            if actoConfig.alarms.invalid_input and isinstance(
                     self.log_result, InvalidInputResult):
                 return False
             else:
@@ -175,7 +161,6 @@ class RunResult():
             'revert': self.revert,
             'generation': self.generation,
             'testcase': self.testcase_signature,
-            'feature_gate': self.feature_gate._feature_gate,
             'crash_result': self.crash_result.to_dict() if self.crash_result else None,
             'input_result': self.input_result.to_dict() if self.input_result else None,
             'health_result': self.health_result.to_dict() if self.health_result else None,
@@ -190,11 +175,7 @@ class RunResult():
         '''deserialize RunResult object
         '''
 
-        result = RunResult(
-            d['revert'], d['generation'],
-            FeatureGate((FeatureGate.INVALID_INPUT_FROM_LOG | FeatureGate.DEFAULT_VALUE_COMPARISON |
-                         FeatureGate.DEPENDENCY_ANALYSIS | FeatureGate.TAINT_ANALYSIS |
-                         FeatureGate.CANONICALIZATION)), d['testcase'])
+        result = RunResult(d['revert'], d['generation'], d['testcase'])
         result.crash_result = oracle_result_from_dict(d['crash_result'])
         result.input_result = oracle_result_from_dict(d['input_result'])
         result.health_result = oracle_result_from_dict(d['health_result'])
@@ -242,7 +223,7 @@ class ConnectionRefusedResult(OracleResult):
         return 'ConnectionRefused'
 
 
-class ErrorResult(OracleResult):
+class ErrorResult(OracleResult, Exception):
 
     def __init__(self, oracle: Oracle, msg: str) -> None:
         self.oracle = oracle
@@ -257,13 +238,8 @@ class ErrorResult(OracleResult):
 
 class StateResult(ErrorResult):
 
-    def __init__(self,
-                 oracle: Oracle,
-                 msg: str,
-                 input_delta: Diff = None,
-                 matched_system_delta: Diff = None) -> None:
-        self.oracle = oracle
-        self.message = msg
+    def __init__(self, oracle: Oracle, msg: str, input_delta: Diff = None, matched_system_delta: Diff = None) -> None:
+        super().__init__(oracle, msg)
         self.input_delta = input_delta
         self.matched_system_delta = matched_system_delta
 
@@ -290,8 +266,7 @@ class StateResult(ErrorResult):
 class UnhealthyResult(ErrorResult):
 
     def __init__(self, oracle: Oracle, msg: str) -> None:
-        self.oracle = oracle
-        self.message = msg
+        super().__init__(oracle, msg)
 
     def to_dict(self):
         return {'oracle': self.oracle, 'message': self.message}
@@ -399,7 +374,6 @@ def flatten_dict(d: dict, curr_path: list) -> list:
 def postprocess_diff(diff):
     '''Postprocess diff from DeepDiff tree view
     '''
-    logger = get_thread_logger(with_prefix=True)
 
     diff_dict = {}
     for category, changes in diff.items():
