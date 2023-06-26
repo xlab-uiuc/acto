@@ -95,7 +95,7 @@ class Runner(object):
             logger.error('kubectl apply failed with return code %d' % cli_result.returncode)
             logger.error('STDOUT: ' + cli_result.stdout)
             logger.error('STDERR: ' + cli_result.stderr)
-            return Snapshot(input, self.collect_cli_result(cli_result), {}, ''), True
+            return Snapshot(input, self.collect_cli_result(cli_result), {}, []), True
         err = None
         try:
             err = self.wait_for_system_converge()
@@ -260,8 +260,8 @@ class Runner(object):
 
     def collect_cli_result(self, p: subprocess.CompletedProcess):
         cli_output = {}
-        cli_output["stdout"] = p.stdout
-        cli_output["stderr"] = p.stderr
+        cli_output["stdout"] = p.stdout.strip()
+        cli_output["stderr"] = p.stderr.strip()
         with open(self.cli_output_path, 'w') as f:
             f.write(json.dumps(cli_output, cls=ActoEncoder, indent=6))
         return cli_output
