@@ -1,5 +1,5 @@
 from functools import lru_cache
-from typing import Tuple, Dict
+from typing import Tuple, Dict, List
 
 from deepdiff import DeepDiff
 
@@ -7,7 +7,7 @@ from acto.common import postprocess_diff, EXCLUDE_PATH_REGEX, Diff
 
 
 class Snapshot:
-    def __init__(self, input: dict, cli_result: dict, system_state: dict, operator_log: list[str]):
+    def __init__(self, input: dict, cli_result: dict, system_state: dict, operator_log: List[str]):
         self.input = input
         self.cli_result = cli_result
         self.system_state = system_state

@@ -388,7 +388,7 @@ class PostDiffTest(PostProcessor):
                                ])
 
         self.unique_inputs: Dict[str, object] = {}  # input digest -> group of steps
-        groups = self.df.groupby(['input_digest'])
+        groups = self.df.groupby('input_digest')
         for digest, group in groups:
             self.unique_inputs[digest] = group
 

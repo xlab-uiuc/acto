@@ -1,5 +1,6 @@
 import ctypes
 import logging
+import os
 import re
 
 k8s_value_regex = re.compile(r'^[-+]?((\.[0-9]+)|([0-9]+(\.[0-9]+)?)|([0-9]+\.))(([KMGTPE]i)|([eE][-+]?((\.[0-9]+)|([0-9]+(\.[0-9]+)?)|([0-9]+\.)))|([mnkMGTPE]|))$')
@@ -22,7 +23,7 @@ def call_k8s_util(func_name):
         ok = False
         if not k8s_value_regex.fullmatch(value):
             return value, ok
-        k8sutil = ctypes.cdll.LoadLibrary('acto/k8s_util/lib/k8sutil.so')
+        k8sutil = ctypes.cdll.LoadLibrary(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lib/k8sutil.so'))
         func = k8sutil[func_name]
         func.argtypes = [ctypes.c_char_p]
         func.restype = ctypes.c_void_p
