@@ -22,11 +22,6 @@ class CrashChecker(Checker):
     name = 'crash'
 
     def check(self, _: int, snapshot: Snapshot, __: Snapshot) -> OracleResult:
-        if snapshot.operator_log is not None:
-            for line in snapshot.operator_log:
-                if 'Bug!' in line:
-                    return ErrorResult(Oracle.CRASH, line)
-
         pods = snapshot.system_state['pod']
         deployment_pods = snapshot.system_state['deployment_pods']
 

@@ -11,8 +11,8 @@ class Checker(ABC):
     def name(self):
         raise NotImplementedError
 
-    def __init__(self, trial_dir: str, **kwargs):
-        self.trial_dir = trial_dir
+    def __init__(self, **kwargs):
+        pass
 
     @abstractmethod
     def check(self, generation: int, snapshot: Snapshot, prev_snapshot: Snapshot) -> OracleResult:

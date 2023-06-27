@@ -1,5 +1,8 @@
+import logging
+
 from acto.checker.checker import Checker
 from acto.common import OracleResult, PassResult, InvalidInputResult, UnchangedInputResult, ConnectionRefusedResult, invalid_input_message
+from acto.config import actoConfig
 from acto.snapshot import Snapshot
 from acto.utils import get_thread_logger
 
@@ -17,16 +20,20 @@ class KubectlCliChecker(Checker):
 
         stdout, stderr = snapshot.cli_result['stdout'], snapshot.cli_result['stderr']
 
-        if stderr.find('connection refused') != -1 or stderr.find('deadline exceeded') != -1:
+        if "unchanged" in stdout or "unchanged" in stderr:
+            logger.info('CR unchanged, continue')
+            return UnchangedInputResult()
+
+        if stderr == '':
+            logger.info('No stderr, continue')
+            return PassResult()
+
+        if 'connection refused' in stderr or 'deadline exceeded' in stderr:
             logger.info('Connection refused, reject mutation')
             return ConnectionRefusedResult()
 
         input_delta, _ = snapshot.delta(prev_snapshot)
         is_invalid, invalid_field_path = invalid_input_message(stderr, input_delta)
-
-        # the stderr should indicate the invalid input
-        if len(stderr) > 0:
-            is_invalid = True
 
         if is_invalid:
             logger.info('Invalid input, reject mutation')
@@ -34,8 +41,6 @@ class KubectlCliChecker(Checker):
             logger.info('STDERR: ' + stderr)
             return InvalidInputResult(invalid_field_path)
 
-        if stdout.find('unchanged') != -1 or stderr.find('unchanged') != -1:
-            logger.info('CR unchanged, continue')
-            return UnchangedInputResult()
-
+        logger.log(logging.CRITICAL if actoConfig.strict else logging.ERROR,
+                   f'stderr is not empty, but invalid_input_message mark it as valid: {stderr}')
         return PassResult()

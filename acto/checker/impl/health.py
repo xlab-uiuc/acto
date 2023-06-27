@@ -8,7 +8,7 @@ class HealthChecker(Checker):
     name = 'health'
 
     def check(self, _: int, snapshot: Snapshot, prev_snapshot: Snapshot) -> OracleResult:
-        '''System health oracle'''
+        """System health oracle"""
         logger = get_thread_logger(with_prefix=True)
 
         system_state = snapshot.system_state

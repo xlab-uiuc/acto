@@ -268,7 +268,8 @@ class StateChecker(Checker):
     name = 'state'
 
     def __init__(self, trial_dir: str, input_model: InputModel, context: dict, **kwargs):
-        super().__init__(trial_dir, **kwargs)
+        super().__init__(**kwargs)
+        self.trial_dir = trial_dir
         self.input_model = input_model
         self.context = context
         crd = extract_schema([], context['crd']['body']['spec']['versions'][-1]['schema']['openAPIV3Schema'])

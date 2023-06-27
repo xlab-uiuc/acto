@@ -1,4 +1,4 @@
-from typing import Literal, List
+from typing import Literal
 
 from pydantic import BaseModel
 
@@ -31,9 +31,11 @@ class StateCheckerConfig(BaseModel):
 class CheckersConfig(BaseModel):
     state: StateCheckerConfig
 
+
 class Config(BaseModel):
     alarms: AlarmsConfig
     checkers: CheckersConfig
     mode: Literal['whitebox', 'blackbox'] = 'whitebox'
     notifications: NotificationsConfig
+    strict: bool = True
     io: IOConfig
