@@ -12,7 +12,7 @@ from acto.checker.impl.compare_state import is_nullish, CompareMethods
         ("", True),
         ([], True),
         ({}, True),
-        pytest.param(False, False, marks=pytest.mark.xfail(reason="Not sure about the right answer here")),
+        (False, True),
         (True, False),
         (1, False),
         (1.0, False),

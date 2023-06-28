@@ -1,11 +1,8 @@
 import base64
-import json
 import queue
-import subprocess
 import time
 from multiprocessing import Process, Queue
 
-import kubernetes
 import yaml
 
 import acto.utils.acto_timer as acto_timer
@@ -68,7 +65,6 @@ class Runner(object):
            The function blocks until system converges.
 
         Args:
-            cmd: subprocess command to be executed using subprocess.run
 
         Returns:
             result, err
@@ -170,7 +166,6 @@ class Runner(object):
         '''Queries resources in the test namespace, computes delta
 
         Args:
-            result: includes the path to the resource state file
         '''
         logger = get_thread_logger(with_prefix=True)
 
@@ -205,7 +200,6 @@ class Runner(object):
         '''Queries operator log in the test namespace
 
         Args:
-            result: includes the path to the operator log file
         '''
         logger = get_thread_logger(with_prefix=True)
 

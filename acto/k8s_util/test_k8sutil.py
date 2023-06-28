@@ -23,12 +23,14 @@ testcases = [
     ("99", "99.000"),
     (".2316344e999842", "inf"),
     (".6064887", "0.607"),
+    # See https://github.com/kubernetes/kubernetes/blob/960830bc660872ff5679f84e676474e3cb536e12/staging/src/k8s.io/apimachinery/pkg/api/resource/quantity.go#L548
+    ("-.484785E-7466", "-0.001")
 ]
 
 
 @pytest.mark.parametrize(
     ("value", "canonicalized_value"),
-    testcases + [pytest.param("-.484785E-7466", "0.000", marks=pytest.mark.xfail(reason="Not sure about the right answer here"))]
+    testcases
 )
 def test_canonicalize_quantity(value, canonicalized_value):
     assert canonicalize_quantity(value) == canonicalized_value
