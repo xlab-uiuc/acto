@@ -1,13 +1,14 @@
 from abc import abstractmethod
 from typing import List, Tuple
 
+from acto.monkey_patch.monkey_patch import MonkeyPatchSupportMetaClass
 from acto.input.valuegenerator import (AnyOfGenerator, ArrayGenerator,
                                        BooleanGenerator, IntegerGenerator,
                                        ObjectGenerator, OpaqueGenerator,
                                        StringGenerator)
 from acto.schema import (AnyOfSchema, ArraySchema, BaseSchema, BooleanSchema,
                          IntegerSchema, ObjectSchema, OpaqueSchema,
-                         StringSchema, extract_schema)
+                         StringSchema)
 
 
 class K8sField():
@@ -17,10 +18,7 @@ class K8sField():
         self.custom_schema = schema
 
 
-class K8sSchema():
-
-    def __init__(self, path: list, schema: dict) -> None:
-        super().__init__(path, schema)
+class K8sSchema(metaclass=MonkeyPatchSupportMetaClass):
 
     def __init__(self, schema_obj: BaseSchema) -> None:
         super().__init__(schema_obj.path, schema_obj.raw_schema)
