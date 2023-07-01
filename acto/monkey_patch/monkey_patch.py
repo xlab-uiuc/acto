@@ -1,4 +1,4 @@
-from typing import Callable, Any, Type, List
+from typing import Callable, Any, Type, List, Dict
 
 
 def init_override(name, old_init):
@@ -12,12 +12,12 @@ def init_override(name, old_init):
 
 
 class MonkeyPatchSupportMetaClass(type):
-    override_class_methods: dict[str, dict[str, Callable]] = {}
-    override_class_mro: dict[str, list[str]] = {}
+    override_class_methods: Dict[str, Dict[str, Callable]] = {}
+    override_class_mro: Dict[str, List[str]] = {}
 
-    patched_class_instance_attrs: dict[int, dict[str, Any]] = {}
-    patched_class_instance_names: dict[int, str] = {}
-    patched_classname_to_instance: dict[str, Type] = {}
+    patched_class_instance_attrs: Dict[int, Dict[str, Any]] = {}
+    patched_class_instance_names: Dict[int, str] = {}
+    patched_classname_to_instance: Dict[str, Type] = {}
 
     def __getattr__(self, attr_name):
         instance_id = id(self)
