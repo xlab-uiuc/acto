@@ -7,14 +7,7 @@ import signal
 import sys
 import threading
 import time
-from acto import common, config
-from acto.engine import Acto, apply_testcase
-from acto.input.input import DeterministicInputModel, InputModel
-from acto.post_process import PostDiffTest
-from acto.utils.config import OperatorConfig
-from acto.utils.error_handler import handle_excepthook, thread_excepthook
-
-from acto.utils.thread_logger import get_thread_logger
+import importlib
 
 
 start_time = time.time()
@@ -92,6 +85,20 @@ logging.basicConfig(
 logging.getLogger("kubernetes").setLevel(logging.ERROR)
 logging.getLogger("sh").setLevel(logging.ERROR)
 
+with open(args.config, 'r') as config_file:
+    config = json.load(config_file)
+    if 'monkey_patch' in config:
+        importlib.import_module(config['monkey_patch'])
+
+from acto import common, config
+from acto.engine import Acto, apply_testcase
+from acto.input.input import DeterministicInputModel, InputModel
+from acto.post_process import PostDiffTest
+from acto.utils.config import OperatorConfig
+from acto.utils.error_handler import handle_excepthook, thread_excepthook
+
+from acto.utils.thread_logger import get_thread_logger
+
 logger = get_thread_logger(with_prefix=False)
 
 # Register custom exception hook
@@ -102,7 +109,10 @@ if args.notify_crash:
     config.NOTIFY_CRASH = True
 
 with open(args.config, 'r') as config_file:
-    config = OperatorConfig(**json.load(config_file))
+    config = json.load(config_file)
+    if 'monkey_patch' in config:
+        del config['monkey_patch']
+    config = OperatorConfig(**config)
 logger.info('Acto started with [%s]' % sys.argv)
 logger.info('Operator config: %s', config)
 

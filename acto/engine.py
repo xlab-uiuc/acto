@@ -581,15 +581,19 @@ class Acto:
                                                    num_cases, self.reproduce_dir, mount)
         self.input_model.initialize(self.seed)
 
-        if operator_config.k8s_fields != None:
+        applied_custom_k8s_fields = False
+
+        if operator_config.k8s_fields is not None:
             module = importlib.import_module(operator_config.k8s_fields)
-            if blackbox:
+            if hasattr(module,'BLACKBOX') and blackbox:
+                applied_custom_k8s_fields = True
                 for k8s_field in module.BLACKBOX:
                     self.input_model.apply_k8s_schema(k8s_field)
-            else:
+            elif hasattr(module,'WHITEBOX') and not blackbox:
+                applied_custom_k8s_fields = True
                 for k8s_field in module.WHITEBOX:
                     self.input_model.apply_k8s_schema(k8s_field)
-        else:
+        if not applied_custom_k8s_fields:
             # default to use the known_schema module to automatically find the mapping
             # from CRD to K8s schema
             tuples = find_all_matched_schemas_type(self.input_model.root_schema)
