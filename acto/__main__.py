@@ -52,7 +52,6 @@ parser.add_argument('--num-cases',
                     default=1,
                     help='Number of testcases to bundle each time')
 parser.add_argument('--learn', dest='learn', action='store_true', help='Learn mode')
-parser.add_argument('--blackbox', dest='blackbox', action='store_true', help='Blackbox mode')
 
 parser.add_argument('--additional-semantic',
                     dest='additional_semantic',
@@ -90,7 +89,7 @@ with open(args.config, 'r') as config_file:
     if 'monkey_patch' in config:
         importlib.import_module(config['monkey_patch'])
 
-from acto import common, config
+from acto import common
 from acto.engine import Acto, apply_testcase
 from acto.input.input import DeterministicInputModel, InputModel
 from acto.post_process import PostDiffTest
@@ -106,7 +105,7 @@ sys.excepthook = handle_excepthook
 threading.excepthook = thread_excepthook
 
 if args.notify_crash:
-    config.NOTIFY_CRASH = True
+    logger.critical('Crash notification should be enabled in config.yaml')
 
 with open(args.config, 'r') as config_file:
     config = json.load(config_file)
@@ -152,7 +151,6 @@ acto = Acto(workdir_path=args.workdir_path,
             is_reproduce=is_reproduce,
             input_model=input_model,
             apply_testcase_f=apply_testcase_f,
-            blackbox=args.blackbox,
             delta_from=args.delta_from)
 generation_time = datetime.now()
 logger.info('Acto initialization finished in %s', generation_time - start_time)

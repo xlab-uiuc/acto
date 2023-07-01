@@ -1,11 +1,8 @@
 import base64
-import json
 import queue
-import subprocess
 import time
 from multiprocessing import Process, Queue
 
-import kubernetes
 import yaml
 
 import acto.utils.acto_timer as acto_timer
@@ -50,7 +47,6 @@ class Runner(object):
             'deployment': self.appV1Api.list_namespaced_deployment,
             'config_map': self.coreV1Api.list_namespaced_config_map,
             'service': self.coreV1Api.list_namespaced_service,
-            'service_account': self.coreV1Api.list_namespaced_service_account,
             'pvc': self.coreV1Api.list_namespaced_persistent_volume_claim,
             'cronjob': self.batchV1Api.list_namespaced_cron_job,
             'ingress': self.networkingV1Api.list_namespaced_ingress,
@@ -69,7 +65,6 @@ class Runner(object):
            The function blocks until system converges.
 
         Args:
-            cmd: subprocess command to be executed using subprocess.run
 
         Returns:
             result, err
@@ -96,7 +91,7 @@ class Runner(object):
             logger.error('kubectl apply failed with return code %d' % cli_result.returncode)
             logger.error('STDOUT: ' + cli_result.stdout)
             logger.error('STDERR: ' + cli_result.stderr)
-            return Snapshot(input, self.collect_cli_result(cli_result), {}, ''), True
+            return Snapshot(input, self.collect_cli_result(cli_result), {}, []), True
         err = None
         try:
             err = self.wait_for_system_converge()
@@ -171,7 +166,6 @@ class Runner(object):
         '''Queries resources in the test namespace, computes delta
 
         Args:
-            result: includes the path to the resource state file
         '''
         logger = get_thread_logger(with_prefix=True)
 
@@ -206,7 +200,6 @@ class Runner(object):
         '''Queries operator log in the test namespace
 
         Args:
-            result: includes the path to the operator log file
         '''
         logger = get_thread_logger(with_prefix=True)
 
@@ -261,8 +254,8 @@ class Runner(object):
 
     def collect_cli_result(self, p: subprocess.CompletedProcess):
         cli_output = {}
-        cli_output["stdout"] = p.stdout
-        cli_output["stderr"] = p.stderr
+        cli_output["stdout"] = p.stdout.strip()
+        cli_output["stderr"] = p.stderr.strip()
         with open(self.cli_output_path, 'w') as f:
             f.write(json.dumps(cli_output, cls=ActoEncoder, indent=6))
         return cli_output

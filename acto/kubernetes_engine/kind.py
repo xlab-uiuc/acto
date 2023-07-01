@@ -145,7 +145,7 @@ class Kind(base.KubernetesEngine):
 
         if len(res) == 0:
             # no worker node can be found
-            logging.CRITICAL(f"No node for cluster {name} can be found")
+            logging.critical(f"No node for cluster {name} can be found")
             raise RuntimeError
 
         return res
