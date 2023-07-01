@@ -1,5 +1,4 @@
-from typing import Callable, Any
-from patch_mro import patch
+from typing import Callable, Any, Type, List
 
 
 def init_override(name, old_init):
@@ -14,9 +13,11 @@ def init_override(name, old_init):
 
 class MonkeyPatchSupportMetaClass(type):
     override_class_methods: dict[str, dict[str, Callable]] = {}
+    override_class_mro: dict[str, list[str]] = {}
 
     patched_class_instance_attrs: dict[int, dict[str, Any]] = {}
     patched_class_instance_names: dict[int, str] = {}
+    patched_classname_to_instance: dict[str, Type] = {}
 
     def __getattr__(self, attr_name):
         instance_id = id(self)
@@ -43,27 +44,40 @@ class MonkeyPatchSupportMetaClass(type):
             MonkeyPatchSupportMetaClass.patched_class_instance_attrs[instance_id][attr_name] = value
 
     def __new__(cls, name, bases, attrs):
-        old_init = attrs['__init__'] if '__init__' in attrs else None
+        existed_init = attrs['__init__'] if '__init__' in attrs else None
+        patched_class = None
 
         def init_func(self, *args, **kwargs):
-            if old_init:
-                old_init(self, *args, **kwargs)
+            if existed_init:
+                existed_init(self, *args, **kwargs)
             else:
-                super(cls).__init__(self, *args, **kwargs)
+                if patched_class.__mro__[1:] == (object,):
+                    object.__init__(self)
+                else:
+                    super(patched_class, self).__init__(*args, **kwargs)
 
         attrs['__init__'] = init_override(name, init_func)
 
         proxy_attrs = {}
         for (key, value) in attrs.items():
-            if key.startswith('__') and key.endswith('__') and key != '__init__':
+            if key.startswith('__') and key.endswith('__'):
                 proxy_attrs[key] = value
+
+        if name in MonkeyPatchSupportMetaClass.override_class_mro:
+            bases = ()
+            new_base_name = MonkeyPatchSupportMetaClass.override_class_mro[name]
+            for base_name in new_base_name:
+                if base_name not in MonkeyPatchSupportMetaClass.patched_classname_to_instance:
+                    raise AttributeError(f"Unable to patch {name} because {base_name} is not patched yet")
+                bases = (*bases, MonkeyPatchSupportMetaClass.patched_classname_to_instance[base_name])
 
         patched_class = (super(MonkeyPatchSupportMetaClass, cls).__new__(cls, name, bases, proxy_attrs))
 
         MonkeyPatchSupportMetaClass.patched_class_instance_attrs[id(patched_class)] = attrs
         MonkeyPatchSupportMetaClass.patched_class_instance_names[id(patched_class)] = name
+        MonkeyPatchSupportMetaClass.patched_classname_to_instance[name] = patched_class
         return patched_class
 
 
-def patch_mro(current_class, override_class):
-    patch(current_class, override_class)
+def patch_mro(current_class, override_class_base: List[str]):
+    MonkeyPatchSupportMetaClass.override_class_mro[current_class] = override_class_base
