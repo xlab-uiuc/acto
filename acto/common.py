@@ -343,7 +343,11 @@ def flatten_list(l: list, curr_path: list) -> list:
         if isinstance(value, dict):
             result.extend(flatten_dict(value, path))
         elif isinstance(value, list):
-            result.extend(flatten_list(value, path))
+            # do not flatten empty list
+            if not value:
+                result.append((path, value))
+            else:
+                result.extend(flatten_list(value, path))
         else:
             result.append((path, value))
     return result
@@ -363,7 +367,11 @@ def flatten_dict(d: dict, curr_path: list) -> list:
     for key, value in d.items():
         path = curr_path + [key]
         if isinstance(value, dict):
-            result.extend(flatten_dict(value, path))
+            # do not flatten empty dict
+            if value == {}:
+                result.append((path, value))
+            else:
+                result.extend(flatten_dict(value, path))
         elif isinstance(value, list):
             result.extend(flatten_list(value, path))
         else:
