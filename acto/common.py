@@ -456,7 +456,7 @@ def invalid_input_message(log_msg: str, input_delta: dict) -> Tuple[bool, list]:
     for regex in INVALID_INPUT_LOG_REGEX:
         if re.search(regex, log_msg):
             logger.info('Recognized invalid input through regex: %s' % log_msg)
-            return True, None
+            return True, []
 
     # Check if the log line contains the field or value
     # If so, also return True
@@ -482,7 +482,7 @@ def invalid_input_message(log_msg: str, input_delta: dict) -> Tuple[bool, list]:
                             (str(delta.curr), log_msg))
                 return True, delta.path
 
-    return False, None
+    return False, []
 
 
 def canonicalize(s: str):

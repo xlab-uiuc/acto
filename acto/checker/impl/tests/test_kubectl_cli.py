@@ -17,7 +17,7 @@ def checker_func(s: Snapshot, s_prev: Snapshot) -> OracleResult:
 
 
 @pytest.mark.parametrize("test_case_id,result_dict", list(enumerate([
-    {'responsible_field': None},
+    {'responsible_field': []},
     UnchangedInputResult().to_dict(),
     PassResult().to_dict(),
 ])))

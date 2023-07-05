@@ -20,6 +20,11 @@ def field_matched(schema: ObjectSchema, k8s_schema: K8sSchema) -> bool:
 
 
 def find_matched_schema(schema: BaseSchema) -> List[List[str]]:
+    """
+    Find all the matched schemas in acto.input.known_schemas
+    @param schema: the schema to be matched, usually is a CustomResourceDefinition schema
+    @return: A list of paths to the matched schemas, eg [['Deployment', 'spec', 'template', 'spec', 'containers']]
+    """
     matched_schemas = []
     for name, obj in inspect.getmembers(acto.input.known_schemas):
         if inspect.isclass(obj) and issubclass(obj, K8sSchema):

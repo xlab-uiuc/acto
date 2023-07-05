@@ -9,10 +9,11 @@ from deepdiff.helper import NotPresent
 
 from acto.checker.checker import Checker
 from acto.common import OracleResult, PassResult, invalid_input_message, Diff, print_event, StateResult, Oracle, InvalidInputResult, is_subfield, translate_op, GENERIC_FIELDS
-from acto.checker.impl.compare_state import delta_equals, CompareMethods
+from acto.checker.impl.compare_state import delta_equals, CompareMethods, is_none_or_not_present
 from acto.config import actoConfig
 from acto.input import InputModel
 from acto.input.get_matched_schemas import find_matched_schema
+from acto.k8s_util.k8sutil import canonicalize_quantity
 from acto.schema import extract_schema, BooleanSchema, ObjectSchema, ArraySchema
 from acto.serialization import ActoEncoder
 from acto.snapshot import Snapshot
@@ -124,88 +125,51 @@ def check_condition_group(input: dict, condition_group: dict,
         return check_condition(input, condition_group, input_delta_path)
 
 
-def should_skip_input_delta(input_model: InputModel, field_conditions_map: dict, control_flow_fields: list, input_delta: Diff, snapshot: Snapshot) -> bool:
-    '''Determines if the input delta should be skipped or not
-
-    Args:
-        input_delta: Diff
-        snapshot: current snapshot of the system state
-
-    Returns:
-        if the arg input_delta should be skipped in oracle
-    '''
+def check_field_dependencies_are_satisfied(input_delta: Diff, snapshot: Snapshot, field_conditions_map: dict) -> bool:
     logger = get_thread_logger(with_prefix=True)
 
-    if 'ephemeralContainers' in input_delta.path:
-        return True
+    encoded_path = json.dumps(input_delta.path)
+    condition_group = None
+    if encoded_path in field_conditions_map:
+        condition_group = field_conditions_map[encoded_path]
+    else:
+        # if no exact match, try to find parent field
+        parent = find_nearest_parent(input_delta.path, list(field_conditions_map.keys()))
+        if parent is not None:
+            condition_group = field_conditions_map[json.dumps(parent)]
+    if condition_group and not check_condition_group(snapshot.input, condition_group, input_delta.path):
+        # if one condition does not satisfy, skip this testcase
+        logger.info('Field precondition %s does not satisfy' % condition_group)
+        return False
+    return True
 
-    if actoConfig.checkers.state.enable_default_value_comparison:
-        try:
-            default_value = input_model.get_schema_by_path(input_delta.path).default
-            logger.info(f"Default value for {input_delta.path} is {default_value}")
-            if str(input_delta.prev) == str(default_value):
-                if (input_delta.curr == None or isinstance(input_delta.curr, NotPresent)):
-                    return True
-                elif isinstance(input_delta.curr, list) and len(input_delta.curr) == 0:
-                    return True
-                elif isinstance(input_delta.curr, dict) and len(input_delta.curr) == 0:
-                    return True
-                elif isinstance(input_delta.curr, str) and len(input_delta.curr) == 0:
-                    return True
-            elif str(input_delta.curr) == str(default_value):
-                if (input_delta.prev == None or isinstance(input_delta.prev, NotPresent)):
-                    return True
-                elif isinstance(input_delta.prev, list) and len(input_delta.prev) == 0:
-                    return True
-                elif isinstance(input_delta.prev, dict) and len(input_delta.prev) == 0:
-                    return True
-                elif isinstance(input_delta.prev, str) and len(input_delta.prev) == 0:
-                    return True
-        except Exception as e:
-            # print error message
-            logger.warning(f"{e} happened when trying to fetch default value")
 
-    if actoConfig.checkers.state.analysis.dependency:
-        # dependency checking
-        encoded_path = json.dumps(input_delta.path)
-        if encoded_path in field_conditions_map:
-            condition_group = field_conditions_map[encoded_path]
-            if not check_condition_group(snapshot.input, condition_group,
-                                         input_delta.path):
-                # if one condition does not satisfy, skip this testcase
-                logger.info('Field precondition %s does not satisfy, skip this testcase' %
-                            condition_group)
-                return True
-        else:
-            # if no exact match, try to find parent field
-            parent = find_nearest_parent(input_delta.path, list(field_conditions_map.keys()))
-            if parent is not None:
-                condition_group = field_conditions_map[json.dumps(parent)]
-                if not check_condition_group(snapshot.input, condition_group,
-                                             input_delta.path):
-                    # if one condition does not satisfy, skip this testcase
-                    logger.info('Field precondition %s does not satisfy, skip this testcase' %
-                                condition_group)
-                    return True
+def check_field_has_default_value(input_delta: Diff, input_model: InputModel) -> Tuple[bool, bool]:
+    logger = get_thread_logger(with_prefix=True)
 
-    if actoConfig.checkers.state.analysis.taint:
-
-        for control_flow_field in control_flow_fields:
-            if len(input_delta.path) == len(control_flow_field):
-                not_match = False
-                for i in range(len(input_delta.path)):
-                    if control_flow_field[i] == 'INDEX' and re.match(
-                            r"^\d$", str(input_delta.path[i])):
-                        continue
-                    elif input_delta.path[i] != control_flow_field[i]:
-                        not_match = True
-                        break
-                if not_match:
-                    continue
-                else:
-                    return True
-
-    return False
+    try:
+        default_value = input_model.get_schema_by_path(input_delta.path).default
+        prev = input_delta.prev
+        curr = input_delta.curr
+        if actoConfig.checkers.state.enable_canonicalization:
+            default_value = canonicalize_quantity(default_value)
+            prev = canonicalize_quantity(prev)
+            curr = canonicalize_quantity(curr)
+        prev_has_default = False
+        curr_has_default = False
+        if default_value == prev:
+            logger.debug(f'Field {input_delta.path}(prev) has default value {default_value}')
+            prev_has_default = True
+        if default_value == curr:
+            logger.debug(f'Field {input_delta.path}(curr) has default value {default_value}')
+            curr_has_default = True
+        return prev_has_default, curr_has_default
+    except AttributeError:
+        logger.debug(f'No default value for field {input_delta.path}')
+        return False, False
+    except Exception as e:
+        logger.error(f'Exception {e} when getting default value for field {input_delta.path}')
+        return False, False
 
 
 def should_compare(k8s_paths: List[List[str]], path: List[str]) -> bool:
@@ -294,13 +258,14 @@ class StateChecker(Checker):
 
         self.helper(self.input_model.get_root_schema())
 
-    def write_delta_log(self, generation:int, input_delta, system_delta):
+    def write_delta_log(self, generation: int, input_delta, system_delta):
         delta_log_path = f'{self.trial_dir}/delta-{generation}.log'
         with open(delta_log_path, 'w') as f:
             f.write('---------- INPUT DELTA  ----------\n')
             f.write(json.dumps(input_delta, cls=ActoEncoder, indent=6))
             f.write('\n---------- SYSTEM DELTA ----------\n')
             f.write(json.dumps(system_delta, cls=ActoEncoder, indent=6))
+
     def helper(self, schema: ObjectSchema):
         if not isinstance(schema, ObjectSchema):
             return
@@ -339,6 +304,7 @@ class StateChecker(Checker):
                         'value': True
                     }]
                 })
+
     def check(self, generation: int, snapshot: Snapshot, prev_snapshot: Snapshot) -> OracleResult:
         """
           System state oracle
@@ -379,24 +345,38 @@ class StateChecker(Checker):
         for (diff_type, delta_list) in input_delta.items():
             for delta in delta_list.values():
                 logger.debug('Checking input delta [%s]' % delta.path)
-                corresponding_schema = self.input_model.get_schema_by_path(delta.path)
 
-                if diff_type != 'iterable_item_removed':
-                    if not corresponding_schema.patch and skip_default_input_delta(delta):
-                        logger.debug('Input delta [%s] is skipped' % delta.path)
-                        continue
+                # whether we expect the system to produce a delta
+                must_produce_delta = True
 
-                if delta_equals(delta.prev, delta.curr):
-                    # if the input delta is considered as equivalent, skip
-                    logger.debug('Input delta [%s] is equivalent' % delta.path)
-                    continue
+                if 'ephemeralContainers' in delta.path:
+                    must_produce_delta = False
 
-                if should_skip_input_delta(self.input_model, self.field_conditions_map, self.control_flow_fields, delta, snapshot):
-                    logger.debug('Input delta [%s] is skipped' % delta.path)
-                    continue
+                if not check_field_dependencies_are_satisfied(delta, snapshot, self.field_conditions_map):
+                    must_produce_delta = False
+
+                # check curr and prev is the default value
+                prev_is_default, curr_is_default = check_field_has_default_value(delta, self.input_model)
+
+                # if the field is changed from default to null or null to default
+                # we don't expect the system to produce a delta
+                if prev_is_default and is_none_or_not_present(delta.curr):
+                    must_produce_delta = False
+                if curr_is_default and is_none_or_not_present(delta.prev):
+                    must_produce_delta = False
+
+                if is_none_or_not_present(delta.prev) and is_none_or_not_present(delta.curr):
+                    must_produce_delta = False
+
+                if actoConfig.checkers.state.enable_canonicalization:
+                    canonicalized_prev = canonicalize(delta.prev)
+                    canonicalized_curr = canonicalize(delta.curr)
+                    if canonicalized_prev == canonicalized_curr:
+                        must_produce_delta = False
 
                 # Find the longest matching field, compare the delta change
                 match_deltas, should_compare = list_matched_fields(self.k8s_paths, delta.path, system_delta_without_cr)
+                should_compare = should_compare and must_produce_delta
 
                 # TODO: should the delta match be inclusive?
                 # Policy: pass if any of the matched deltas is equivalent
@@ -413,6 +393,7 @@ class StateChecker(Checker):
                     if len(match_deltas) == 0:
                         # if prev and curr of the delta are the same, also consider it as a match
                         found = False
+                        state_delta = None
                         for resource_delta_list in system_delta_without_cr.values():
                             for type_delta_list in resource_delta_list.values():
                                 for state_delta in type_delta_list.values():
@@ -422,6 +403,9 @@ class StateChecker(Checker):
                                         found = True
                         if found:
                             logger.info('Found match by comparing prev and curr of input delta')
+                            logger.info(f'Input delta {delta.path}, Matched delta {state_delta.path}')
+                            logger.info(f'Input delta prev {delta.prev}, curr {delta.curr}')
+                            logger.info(f'Matched delta prev {state_delta.prev}, curr {state_delta.curr}')
                             continue
                         logger.error('Found no matching fields for input delta')
                         logger.error('Input delta [%s]' % delta.path)
@@ -430,7 +414,12 @@ class StateChecker(Checker):
                                            'Found no matching fields for input', delta)
                     else:
                         logger.error('Found no matching fields for input delta')
-                        logger.error('Input delta [%s]' % delta.path)
+                        logger.error(f'Input delta {delta.path}')
+                        logger.error(f'Input delta prev {delta.prev}, curr {delta.curr}')
+                        for match_delta in match_deltas:
+                            logger.error(f'Matched delta {match_delta.path}')
+                            logger.error(f'Matched delta prev {match_delta.prev}, curr {match_delta.curr}')
+                        logger.error('Failed to match input delta with mtached system state delta')
                         print_event(f'Found bug: {delta.path} changed from [{delta.prev}] to [{delta.curr}]')
                         return StateResult(Oracle.SYSTEM_STATE,
                                            'Found no matching fields for input', delta)

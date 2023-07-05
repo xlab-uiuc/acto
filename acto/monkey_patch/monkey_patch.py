@@ -1,10 +1,10 @@
-from typing import Callable, Any, Type, List, Dict
+from typing import Any, Type, List, Dict
 
 
 def init_override(name, old_init):
     def r(self, *args, **kwargs):
-        if name in MonkeyPatchSupportMetaClass.override_class_methods and '__init__' in MonkeyPatchSupportMetaClass.override_class_methods[name]:
-            MonkeyPatchSupportMetaClass.override_class_methods[name]['__init__'](self, *args, **kwargs)
+        if name in MonkeyPatchSupportMetaClass.override_class_attrs and '__init__' in MonkeyPatchSupportMetaClass.override_class_attrs[name]:
+            MonkeyPatchSupportMetaClass.override_class_attrs[name]['__init__'](self, *args, **kwargs)
         else:
             old_init(self, *args, **kwargs)
 
@@ -12,7 +12,7 @@ def init_override(name, old_init):
 
 
 class MonkeyPatchSupportMetaClass(type):
-    override_class_methods: Dict[str, Dict[str, Callable]] = {}
+    override_class_attrs: Dict[str, Dict[str, Any]] = {}
     override_class_mro: Dict[str, List[str]] = {}
 
     patched_class_instance_attrs: Dict[int, Dict[str, Any]] = {}
@@ -23,8 +23,8 @@ class MonkeyPatchSupportMetaClass(type):
         instance_id = id(self)
         if instance_id in MonkeyPatchSupportMetaClass.patched_class_instance_names:
             classname = MonkeyPatchSupportMetaClass.patched_class_instance_names[instance_id]
-            if classname in MonkeyPatchSupportMetaClass.override_class_methods and attr_name in MonkeyPatchSupportMetaClass.override_class_methods[classname]:
-                return MonkeyPatchSupportMetaClass.override_class_methods[classname][attr_name]
+            if classname in MonkeyPatchSupportMetaClass.override_class_attrs and attr_name in MonkeyPatchSupportMetaClass.override_class_attrs[classname]:
+                return MonkeyPatchSupportMetaClass.override_class_attrs[classname][attr_name]
 
         if instance_id not in MonkeyPatchSupportMetaClass.patched_class_instance_attrs:
             raise AttributeError(f"Attribute {attr_name} not found")
@@ -38,7 +38,7 @@ class MonkeyPatchSupportMetaClass(type):
             MonkeyPatchSupportMetaClass.patched_class_instance_attrs[instance_id] = {}
         if instance_id in MonkeyPatchSupportMetaClass.patched_class_instance_names:
             classname = MonkeyPatchSupportMetaClass.patched_class_instance_names[instance_id]
-            if classname in MonkeyPatchSupportMetaClass.override_class_methods and attr_name in MonkeyPatchSupportMetaClass.override_class_methods[classname]:
+            if classname in MonkeyPatchSupportMetaClass.override_class_attrs and attr_name in MonkeyPatchSupportMetaClass.override_class_attrs[classname]:
                 raise AttributeError(f"Attribute {attr_name} is read-only")
         else:
             MonkeyPatchSupportMetaClass.patched_class_instance_attrs[instance_id][attr_name] = value
