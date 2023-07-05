@@ -9,18 +9,19 @@ from acto.snapshot import Snapshot, EmptySnapshot
 checker = OperatorLogChecker()
 
 
-def checker_func(s: Snapshot) -> OracleResult:
+def checker_func(s: Snapshot, prev_s: Snapshot) -> OracleResult:
     assert s.operator_log != []
-    return checker.check(0, s, EmptySnapshot({}))
+    return checker.check(0, s, prev_s)
 
 
-# TODO: Add test cases that have a responsible field
 @pytest.mark.parametrize("test_case_id,result_dict", list(enumerate([
     {'responsible_field': []},
     PassResult().to_dict(),
     {'responsible_field': []},
+    {'responsible_field': ['spec', 'affinity', 'podAntiAffinity', 'requiredDuringSchedulingIgnoredDuringExecution', 0, 'labelSelector', 'matchExpressions', 0, 'operator']},
 ])))
 def test_check(test_case_id, result_dict):
     snapshot = load_snapshot("operator_log", test_case_id)
-    oracle_result = checker_func(snapshot)
+    snapshot_prev = load_snapshot("operator_log", test_case_id, load_prev=True)
+    oracle_result = checker_func(snapshot, snapshot_prev)
     assert oracle_result.to_dict() == result_dict
