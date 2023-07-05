@@ -5,11 +5,9 @@ import re
 from functools import reduce
 from typing import List, Tuple
 
-from deepdiff.helper import NotPresent
-
 from acto.checker.checker import Checker
 from acto.common import OracleResult, PassResult, invalid_input_message, Diff, print_event, StateResult, Oracle, InvalidInputResult, is_subfield, translate_op, GENERIC_FIELDS
-from acto.checker.impl.compare_state import delta_equals, CompareMethods, is_none_or_not_present
+from acto.checker.impl.compare_state import CompareMethods, is_none_or_not_present
 from acto.config import actoConfig
 from acto.input import InputModel
 from acto.input.get_matched_schemas import find_matched_schema
@@ -26,28 +24,6 @@ def canonicalize(s: str):
         return 'ITEM'
     s = str(s)
     return re.sub(r"(?=[A-Z])", '_', s).lower()
-
-
-def skip_default_input_delta(diff: Diff) -> bool:
-    if diff.path[-1] == 'ACTOKEY':
-        return False
-
-    prev = diff.prev
-    curr = diff.curr
-
-    if prev is None:
-        return True
-    elif isinstance(prev, NotPresent):
-        return True
-
-    if curr is None:
-        return True
-
-    # the original code will return None, which is not a boolean value
-    # add a failed assertion to mark as a potential bug
-    # TODO: check if the function should return false here
-    return False
-
 
 def find_nearest_parent(path: list, encoded_path_list: list) -> list:
     length = 0
@@ -369,8 +345,8 @@ class StateChecker(Checker):
                     must_produce_delta = False
 
                 if actoConfig.checkers.state.enable_canonicalization:
-                    canonicalized_prev = canonicalize(delta.prev)
-                    canonicalized_curr = canonicalize(delta.curr)
+                    canonicalized_prev = canonicalize_quantity(delta.prev)
+                    canonicalized_curr = canonicalize_quantity(delta.curr)
                     if canonicalized_prev == canonicalized_curr:
                         must_produce_delta = False
 

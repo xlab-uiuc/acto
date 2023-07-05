@@ -143,18 +143,3 @@ class CompareMethods:
 
         # return original values
         return in_prev, in_curr, out_prev, out_curr
-
-
-def delta_equals(prev, curr) -> bool:
-    if prev is None:
-        return True
-    if isinstance(prev, NotPresent):
-        return True
-
-    if prev == curr:
-        return True
-
-    # prev will neither be None nor NotPresent here
-    if curr is None or isinstance(curr, NotPresent):
-        return is_nullish(prev)
-    return False
