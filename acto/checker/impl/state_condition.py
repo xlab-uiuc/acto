@@ -32,13 +32,9 @@ def check_condition(snapshot_input: dict, condition: dict, input_delta_path: lis
     elif isinstance(value, float):
         condition_value = float(condition_value) if condition_value is not None else None
     try:
-        if translate_op(condition['op'])(value, condition_value):
-            return True
+        return translate_op(condition['op'])(value, condition_value)
     except TypeError:
         return False
-    # the original code will return None, which is not a boolean value
-    # add a failed assertion to mark as a potential bug
-    assert False
 
 
 def check_condition_group(snapshot_input: dict, condition_group: dict,

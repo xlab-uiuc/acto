@@ -208,6 +208,9 @@ class PassResult(OracleResult):
     def to_dict(self):
         return 'Pass'
 
+    def __eq__(self, other):
+        return isinstance(other, PassResult)
+
 
 class InvalidInputResult(OracleResult):
 
@@ -216,6 +219,9 @@ class InvalidInputResult(OracleResult):
 
     def to_dict(self):
         return {'responsible_field': self.responsible_field}
+
+    def __eq__(self, other):
+        return isinstance(other, InvalidInputResult) and self.responsible_field == other.responsible_field
 
 
 class UnchangedInputResult(OracleResult):
@@ -268,6 +274,9 @@ class StateResult(ErrorResult):
         result.matched_system_delta = Diff.from_dict(
             d['matched_system_delta']) if d['matched_system_delta'] else None
         return result
+
+    def __eq__(self, other):
+        return isinstance(other, StateResult) and self.oracle == other.oracle and self.message == other.message and self.input_delta == other.input_delta and self.matched_system_delta == other.matched_system_delta
 
 
 class UnhealthyResult(ErrorResult):
