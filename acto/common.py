@@ -46,6 +46,13 @@ class Diff:
         '''
         return Diff(**dict)
 
+    def __eq__(self, other):
+        def value_eq_with_not_present(foo, bar):
+            if isinstance(foo, NotPresent):
+                return isinstance(bar, NotPresent)
+            return foo == bar
+        return value_eq_with_not_present(self.prev, other.prev) and value_eq_with_not_present(self.curr, other.curr) and self.path == other.path
+
 
 class Oracle(str, enum.Enum):
     ERROR_LOG = 'ErrorLog'

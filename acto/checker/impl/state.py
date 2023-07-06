@@ -1,29 +1,29 @@
 import copy
 import json
-import operator
 import re
-from functools import reduce
 from typing import List, Tuple
 
 from acto.checker.checker import Checker
-from acto.common import OracleResult, PassResult, invalid_input_message, Diff, print_event, StateResult, Oracle, InvalidInputResult, is_subfield, translate_op, GENERIC_FIELDS
-from acto.checker.impl.compare_state import CompareMethods, is_none_or_not_present
+from acto.checker.impl.state_condition import check_condition_group
+from acto.common import OracleResult, PassResult, invalid_input_message, Diff, print_event, StateResult, Oracle, InvalidInputResult, is_subfield, GENERIC_FIELDS
+from acto.checker.impl.state_compare import CompareMethods, is_none_or_not_present
 from acto.config import actoConfig
 from acto.input import InputModel
 from acto.input.get_matched_schemas import find_matched_schema
 from acto.k8s_util.k8sutil import canonicalize_quantity
-from acto.schema import extract_schema, BooleanSchema, ObjectSchema, ArraySchema
+from acto.schema import extract_schema, ObjectSchema, ArraySchema, BaseSchema
 from acto.serialization import ActoEncoder
 from acto.snapshot import Snapshot
 from acto.utils import get_thread_logger, is_prefix
 
 
-def canonicalize(s: str):
-    '''Replace all upper case letters with _lowercase'''
+def canonicalize_field_name(s: str):
+    """Replace all uppercase letters with lowercase ones"""
     if isinstance(s, int):
         return 'ITEM'
     s = str(s)
     return re.sub(r"(?=[A-Z])", '_', s).lower()
+
 
 def find_nearest_parent(path: list, encoded_path_list: list) -> list:
     length = 0
@@ -44,61 +44,6 @@ def find_nearest_parent(path: list, encoded_path_list: list) -> list:
         elif len(p) > length:
             ret = p
     return ret
-
-
-def check_condition(input: dict, condition: dict, input_delta_path: list) -> bool:
-    path = condition['field']
-
-    # corner case: skip if condition is simply checking if the path is not nil
-    if is_subfield(input_delta_path,
-                   path) and condition['op'] == '!=' and condition['value'] is None:
-        return True
-
-    # hack: convert 'INDEX' to int 0
-    for i in range(len(path)):
-        if path[i] == 'INDEX':
-            path[i] = 0
-
-    try:
-        value = reduce(operator.getitem, path, input)
-    except (KeyError, TypeError) as e:
-        if translate_op(condition['op']) == operator.eq and condition['value'] is None:
-            return True
-        else:
-            return False
-
-    # the condition_value is stored as string in the json file
-    condition_value = condition['value']
-    if isinstance(value, int):
-        condition_value = int(condition_value) if condition_value is not None else None
-    elif isinstance(value, float):
-        condition_value = float(condition_value) if condition_value is not None else None
-    try:
-        if translate_op(condition['op'])(value, condition_value):
-            return True
-    except TypeError as e:
-        return False
-    # the original code will return None, which is not a boolean value
-    # add a failed assertion to mark as a potential bug
-    assert False
-
-
-def check_condition_group(input: dict, condition_group: dict,
-                          input_delta_path: list) -> bool:
-    if 'type' in condition_group:
-        typ = condition_group['type']
-        if typ == 'AND':
-            for condition in condition_group['conditions']:
-                if not check_condition_group(input, condition, input_delta_path):
-                    return False
-            return True
-        elif typ == 'OR':
-            for condition in condition_group['conditions']:
-                if check_condition_group(input, condition, input_delta_path):
-                    return True
-            return False
-    else:
-        return check_condition(input, condition_group, input_delta_path)
 
 
 def check_field_dependencies_are_satisfied(input_delta: Diff, snapshot: Snapshot, field_conditions_map: dict) -> bool:
@@ -148,7 +93,7 @@ def check_field_has_default_value(input_delta: Diff, input_model: InputModel) ->
         return False, False
 
 
-def should_compare(k8s_paths: List[List[str]], path: List[str]) -> bool:
+def should_compare_path(k8s_paths: List[List[str]], path: List[str]) -> bool:
     if path[-1] == 'ACTOKEY':
         return True
 
@@ -161,15 +106,16 @@ def should_compare(k8s_paths: List[List[str]], path: List[str]) -> bool:
 
 
 def list_matched_fields(k8s_paths: List[List[str]], path: list, delta_dict: dict) -> Tuple[list, bool]:
-    '''Search through the entire system delta to find the longest matching field
+    """Search through the entire system delta to find the longest matching field
 
     Args:
         path: path of input delta as list
         delta_dict: dict of system delta
+        k8s_paths: A list of paths to the matched schemas
 
     Returns:
         list of system delta with the longest matching field path with input delta
-    '''
+    """
     # if the name of the field is generic, don't match using the path
     for regex in GENERIC_FIELDS:
         if re.search(regex, str(path[-1])):
@@ -181,8 +127,7 @@ def list_matched_fields(k8s_paths: List[List[str]], path: list, delta_dict: dict
         for type_delta_list in resource_delta_list.values():
             for delta in type_delta_list.values():
                 position = 0
-                while canonicalize(path[-position - 1]) == canonicalize(delta.path[-position -
-                                                                                   1]):
+                while canonicalize_field_name(path[-position - 1]) == canonicalize_field_name(delta.path[-position - 1]):
                     position += 1
                     if position == min(len(path), len(delta.path)):
                         break
@@ -196,7 +141,7 @@ def list_matched_fields(k8s_paths: List[List[str]], path: list, delta_dict: dict
 
     if max_match > 1:
         return results, True
-    elif should_compare(k8s_paths, path):
+    elif should_compare_path(k8s_paths, path):
         return results, True
     else:
         logger = get_thread_logger(with_prefix=True)
@@ -215,24 +160,12 @@ class StateChecker(Checker):
         crd = extract_schema([], context['crd']['body']['spec']['versions'][-1]['schema']['openAPIV3Schema'])
         self.k8s_paths = find_matched_schema(crd)
 
-        if actoConfig.mode == 'whitebox':
-            if 'analysis_result' in context and 'control_flow_fields' in context['analysis_result']:
-                self.control_flow_fields = context['analysis_result']['control_flow_fields']
-            else:
-                self.control_flow_fields = []
-        else:
-            schemas_tuple = input_model.get_all_schemas()
-            all_schemas = schemas_tuple[0] + schemas_tuple[1] + schemas_tuple[2]
-            self.control_flow_fields = [
-                schema.get_path() for schema in all_schemas if isinstance(schema, BooleanSchema)
-            ]
-
         if actoConfig.mode == 'whitebox' and 'analysis_result' in context and 'field_conditions_map' in context['analysis_result']:
             self.field_conditions_map = context['analysis_result']['field_conditions_map']
         else:
             self.field_conditions_map = {}
 
-        self.helper(self.input_model.get_root_schema())
+        self.update_dependency(self.input_model.get_root_schema())
 
     def write_delta_log(self, generation: int, input_delta, system_delta):
         delta_log_path = f'{self.trial_dir}/delta-{generation}.log'
@@ -242,24 +175,24 @@ class StateChecker(Checker):
             f.write('\n---------- SYSTEM DELTA ----------\n')
             f.write(json.dumps(system_delta, cls=ActoEncoder, indent=6))
 
-    def helper(self, schema: ObjectSchema):
+    def update_dependency(self, schema: BaseSchema):
         if not isinstance(schema, ObjectSchema):
             return
         for key, value in schema.get_properties().items():
             if key == 'enabled':
                 self.encode_dependency(schema.path, schema.path + [key])
             if isinstance(value, ObjectSchema):
-                self.helper(value)
+                self.update_dependency(value)
             elif isinstance(value, ArraySchema):
-                self.helper(value.get_item_schema())
+                self.update_dependency(value.get_item_schema())
 
     def encode_dependency(self, depender: list, dependee: list):
-        '''Encode dependency of dependant on dependee
+        """Encode dependency of dependant on dependee
 
         Args:
             depender: path of the depender
             dependee: path of the dependee
-        '''
+        """
         logger = get_thread_logger(with_prefix=True)
 
         logger.info('Encode dependency of %s on %s' % (depender, dependee))
@@ -267,7 +200,7 @@ class StateChecker(Checker):
         if encoded_path not in self.field_conditions_map:
             self.field_conditions_map[encoded_path] = {'conditions': [], 'type': 'AND'}
 
-        # Add dependency to the subfields, idealy we should have a B tree for this
+        # Add dependency to the subfields, ideally we should have a B tree for this
         for key, value in self.field_conditions_map.items():
             path = json.loads(key)
             if is_subfield(path, depender):
@@ -395,7 +328,7 @@ class StateChecker(Checker):
                         for match_delta in match_deltas:
                             logger.error(f'Matched delta {match_delta.path}')
                             logger.error(f'Matched delta prev {match_delta.prev}, curr {match_delta.curr}')
-                        logger.error('Failed to match input delta with mtached system state delta')
+                        logger.error('Failed to match input delta with matched system state delta')
                         print_event(f'Found bug: {delta.path} changed from [{delta.prev}] to [{delta.curr}]')
                         return StateResult(Oracle.SYSTEM_STATE,
                                            'Found no matching fields for input', delta)

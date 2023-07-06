@@ -1,6 +1,6 @@
 import pytest
 
-from acto.checker.impl.compare_state import is_nullish, CompareMethods
+from acto.checker.impl.state_compare import is_nullish, CompareMethods
 
 
 @pytest.mark.parametrize(
