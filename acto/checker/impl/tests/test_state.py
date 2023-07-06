@@ -15,8 +15,7 @@ from acto.lib.dict import visit_dict
 from acto.snapshot import Snapshot
 
 
-@lambda _: _()
-def input_model_and_context_mapping():
+def input_model_and_context_mapping() -> Dict[str, Tuple[Dict, DeterministicInputModel]]:
     configs = glob.glob('./data/**/config.json')
     mapping = {}
     for config_path in configs:
@@ -39,14 +38,14 @@ def input_model_and_context_mapping():
     return mapping
 
 
-input_model_and_context_mapping: Dict[str, Tuple[Dict, DeterministicInputModel]]
+mapping = input_model_and_context_mapping()
 
 
 def checker_func(s: Snapshot, prev_s: Snapshot) -> OracleResult:
     api_version = s.input['apiVersion']
     checker = StateChecker(trial_dir="",
-                           input_model=input_model_and_context_mapping[api_version][1],
-                           context=input_model_and_context_mapping[api_version][0])
+                           input_model=mapping[api_version][1],
+                           context=mapping[api_version][0])
     checker.write_delta_log = lambda *args: None
     return checker.check(0, s, prev_s)
 
