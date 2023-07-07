@@ -212,7 +212,7 @@ class NumberGenerator(NumberSchema, ValueGenerator):
                          self.change_setup))
         return ret, []
 
-    def num_cases() -> int:
+    def num_cases(self) -> int:
         return 3
 
     def num_fields(self) -> int:

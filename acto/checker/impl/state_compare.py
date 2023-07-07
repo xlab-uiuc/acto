@@ -6,15 +6,26 @@ from deepdiff.helper import NotPresent
 from acto.k8s_util.k8sutil import canonicalize_quantity
 
 
-def is_nullish(value: Any) -> bool:
+def is_none_or_not_present(value: Any) -> bool:
     """
-    Check if value is None, NotPresent, empty string, empty list, empty dict, or 0
+    Check if value is None or NotPresent
     @param value:
     @return:
     """
     if value is None:
         return True
     if isinstance(value, NotPresent):
+        return True
+    return False
+
+
+def is_nullish(value: Any) -> bool:
+    """
+    Check if value is None, NotPresent, empty string, empty list, empty dict, or 0
+    @param value:
+    @return:
+    """
+    if is_none_or_not_present(value):
         return True
 
     if isinstance(value, str) and value == '':
@@ -132,18 +143,3 @@ class CompareMethods:
 
         # return original values
         return in_prev, in_curr, out_prev, out_curr
-
-
-def delta_equals(prev, curr) -> bool:
-    if prev is None:
-        return True
-    if isinstance(prev, NotPresent):
-        return True
-
-    if prev == curr:
-        return True
-
-    # prev will neither be None nor NotPresent here
-    if curr is None or isinstance(curr, NotPresent):
-        return is_nullish(prev)
-    return False

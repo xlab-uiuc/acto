@@ -7,7 +7,7 @@ from acto.utils import get_thread_logger
 class HealthChecker(Checker):
     name = 'health'
 
-    def check(self, _: int, snapshot: Snapshot, prev_snapshot: Snapshot) -> OracleResult:
+    def check(self, _: int, snapshot: Snapshot, __: Snapshot) -> OracleResult:
         """System health oracle"""
         logger = get_thread_logger(with_prefix=True)
 
@@ -82,13 +82,13 @@ class HealthChecker(Checker):
                                                      ('CR status unhealthy', condition['type'],
                                                       condition['status'], condition['message']))
 
-        error_msg = ''
+        error_msgs = []
         for kind, resources in unhealthy_resources.items():
             if len(resources) != 0:
-                error_msg += f"{kind}: {', '.join(resources)}\n"
+                error_msgs.append(f"{kind}: {', '.join(resources)}")
                 logger.error(f"Found {kind}: {', '.join(resources)} with unhealthy status")
 
-        if error_msg != '':
-            return UnhealthyResult(Oracle.SYSTEM_HEALTH, error_msg)
+        if error_msgs:
+            return UnhealthyResult(Oracle.SYSTEM_HEALTH, '\n'.join(error_msgs))
 
         return PassResult()

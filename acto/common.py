@@ -46,6 +46,13 @@ class Diff:
         '''
         return Diff(**dict)
 
+    def __eq__(self, other):
+        def value_eq_with_not_present(foo, bar):
+            if isinstance(foo, NotPresent):
+                return isinstance(bar, NotPresent)
+            return foo == bar
+        return value_eq_with_not_present(self.prev, other.prev) and value_eq_with_not_present(self.curr, other.curr) and self.path == other.path
+
 
 class Oracle(str, enum.Enum):
     ERROR_LOG = 'ErrorLog'
@@ -201,6 +208,9 @@ class PassResult(OracleResult):
     def to_dict(self):
         return 'Pass'
 
+    def __eq__(self, other):
+        return isinstance(other, PassResult)
+
 
 class InvalidInputResult(OracleResult):
 
@@ -209,6 +219,9 @@ class InvalidInputResult(OracleResult):
 
     def to_dict(self):
         return {'responsible_field': self.responsible_field}
+
+    def __eq__(self, other):
+        return isinstance(other, InvalidInputResult) and self.responsible_field == other.responsible_field
 
 
 class UnchangedInputResult(OracleResult):
@@ -261,6 +274,9 @@ class StateResult(ErrorResult):
         result.matched_system_delta = Diff.from_dict(
             d['matched_system_delta']) if d['matched_system_delta'] else None
         return result
+
+    def __eq__(self, other):
+        return isinstance(other, StateResult) and self.oracle == other.oracle and self.message == other.message and self.input_delta == other.input_delta and self.matched_system_delta == other.matched_system_delta
 
 
 class UnhealthyResult(ErrorResult):
@@ -343,7 +359,11 @@ def flatten_list(l: list, curr_path: list) -> list:
         if isinstance(value, dict):
             result.extend(flatten_dict(value, path))
         elif isinstance(value, list):
-            result.extend(flatten_list(value, path))
+            # do not flatten empty list
+            if not value:
+                result.append((path, value))
+            else:
+                result.extend(flatten_list(value, path))
         else:
             result.append((path, value))
     return result
@@ -363,7 +383,11 @@ def flatten_dict(d: dict, curr_path: list) -> list:
     for key, value in d.items():
         path = curr_path + [key]
         if isinstance(value, dict):
-            result.extend(flatten_dict(value, path))
+            # do not flatten empty dict
+            if value == {}:
+                result.append((path, value))
+            else:
+                result.extend(flatten_dict(value, path))
         elif isinstance(value, list):
             result.extend(flatten_list(value, path))
         else:
@@ -456,7 +480,7 @@ def invalid_input_message(log_msg: str, input_delta: dict) -> Tuple[bool, list]:
     for regex in INVALID_INPUT_LOG_REGEX:
         if re.search(regex, log_msg):
             logger.info('Recognized invalid input through regex: %s' % log_msg)
-            return True, None
+            return True, []
 
     # Check if the log line contains the field or value
     # If so, also return True
@@ -482,7 +506,7 @@ def invalid_input_message(log_msg: str, input_delta: dict) -> Tuple[bool, list]:
                             (str(delta.curr), log_msg))
                 return True, delta.path
 
-    return False, None
+    return False, []
 
 
 def canonicalize(s: str):

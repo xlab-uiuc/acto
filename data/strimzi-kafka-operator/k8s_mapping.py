@@ -1,4 +1,4 @@
-from acto.input.known_schemas import QuantitySchema, K8sObjectSchema, ResourceRequirementsSchema, ResourceSchema
+from acto.input.known_schemas import QuantitySchema, K8sObjectSchema, ResourceRequirementsSchema, ResourceSchema, AffinitySchema, K8sStringSchema, K8sBooleanSchema, PriorityClassNameSchema, PodSecurityContextSchema, K8sIntegerSchema, TolerationsSchema, TopologySpreadConstraintsSchema
 from acto.monkey_patch.monkey_patch import MonkeyPatchSupportMetaClass
 from acto.schema import ObjectSchema, BaseSchema
 
@@ -14,7 +14,7 @@ def InitResourceSchema(self, schema_obj: BaseSchema):
     self.additional_properties = QuantitySchema(schema_obj)
 
 
-MonkeyPatchSupportMetaClass.override_class_methods['ResourceSchema'] = {
+MonkeyPatchSupportMetaClass.override_class_attrs['ResourceSchema'] = {
     'Match': MatchResourceSchema,
     '__init__': InitResourceSchema
 }
@@ -34,6 +34,22 @@ def MatchResourceRequirementsSchema(schema: ObjectSchema) -> bool:
     return True
 
 
-MonkeyPatchSupportMetaClass.override_class_methods['ResourceRequirementsSchema'] = {
+MonkeyPatchSupportMetaClass.override_class_attrs['ResourceRequirementsSchema'] = {
     'Match': MatchResourceRequirementsSchema
+}
+
+MonkeyPatchSupportMetaClass.override_class_attrs['PodSpecSchema'] = {
+    'fields': {
+        "metadata": K8sObjectSchema,
+        "affinity": AffinitySchema,
+        "enableServiceLinks": K8sBooleanSchema,
+        "schedulerName": K8sStringSchema,
+        "priorityClassName": PriorityClassNameSchema,
+        # "hostAliases": ,
+        # "tmpDirSizeLimit": ,
+        "securityContext": PodSecurityContextSchema,
+        "terminationGracePeriodSeconds": K8sIntegerSchema,
+        "tolerations": TolerationsSchema,
+        "topologySpreadConstraints": TopologySpreadConstraintsSchema,
+    }
 }
