@@ -35,6 +35,7 @@ script the entrypoint of the docker image.
 
 ### Mount host's directory into the operator container's file system
 ![Alt text](coverage_mount.png)
+
 The goal of this step is to let the operator binary we produce in the first step to be able to
     write directly to host's file system.
 Because Pods in Kubernetes are disposable instances and their files are all deleted once they
