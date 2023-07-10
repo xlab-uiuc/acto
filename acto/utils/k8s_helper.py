@@ -1,5 +1,5 @@
 import time
-from typing import Optional
+from typing import Optional, List
 
 import kubernetes
 import yaml
@@ -7,6 +7,7 @@ from kubernetes.client.models import (V1Deployment, V1Namespace, V1ObjectMeta,
                                       V1Pod, V1StatefulSet)
 
 from .thread_logger import get_thread_logger
+from ..lib.dict import visit_dict
 
 
 def is_pod_ready(pod: V1Pod) -> bool:
@@ -61,21 +62,19 @@ def get_stateful_set_available_status(stateful_set: V1StatefulSet) -> bool:
     return False
 
 
-def get_yaml_existing_namespace(fn: str) -> Optional[str]:
-    '''Get yaml's existing namespace
+def get_yaml_existing_namespace(operator_documents: List[dict]) -> Optional[str]:
+    """Get yaml's existing namespace
 
     Args:
-        fn (str): Yaml file path
+        operator_documents: loaded yaml documents
 
     Returns:
         bool: True if yaml has namespace
-    '''
-    with open(fn, 'r') as operator_yaml:
-        parsed_operator_documents = yaml.load_all(operator_yaml,
-                                                  Loader=yaml.FullLoader)
-        for document in parsed_operator_documents:
-            if document != None and 'metadata' in document and 'namespace' in document['metadata']:
-                return document['metadata']['namespace']
+    """
+    for document in operator_documents:
+        _, namespace = visit_dict(document, ['metadata', 'namespace'])
+        if namespace is not None:
+            return namespace
     return None
 
 

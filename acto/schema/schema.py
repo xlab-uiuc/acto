@@ -24,7 +24,7 @@ def extract_schema(path: list, schema: dict) -> BaseSchema:
         if 'properties' in schema:
             return ObjectSchema(path, schema)
         else:
-            logger.warn('No type found in schema: %s' % str(schema))
+            logger.warning('No type found in schema: %s' % str(schema))
             return OpaqueSchema(path, schema)
     t = schema['type']
     if isinstance(t, list):

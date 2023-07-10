@@ -2,7 +2,9 @@ import pytest
 
 from acto.checker.impl.health import HealthChecker
 from acto.checker.impl.tests import load_snapshot
-from acto.common import OracleResult, PassResult, UnhealthyResult, Oracle
+from acto.common import Oracle
+from acto.checker.checker_result import PassResult, UnhealthyResult
+from acto.checker.checker import OracleResult
 from acto.snapshot import Snapshot, EmptySnapshot
 
 # Crash checker is stateless, so we can use the same instance for all tests
@@ -11,7 +13,7 @@ checker = HealthChecker()
 
 def checker_func(s: Snapshot) -> OracleResult:
     assert s.system_state != {}
-    return checker.check(0, s, EmptySnapshot({}))
+    return checker.check(s, Snapshot({}))
 
 
 @pytest.mark.parametrize("test_case_id,result_dict", list(enumerate([

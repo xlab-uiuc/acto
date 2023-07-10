@@ -1,16 +1,32 @@
-from acto.checker.checker import Checker
-from acto.common import OracleResult, PassResult, Oracle, UnhealthyResult
+from dataclasses import dataclass, field
+from typing import Dict, List
+
+from acto.checker.checker import Checker, OracleControlFlow, OracleResult
 from acto.snapshot import Snapshot
 from acto.utils import get_thread_logger
+
+
+@dataclass
+class HealthResult(OracleResult):
+    unhealthy_resources: Dict[str, List[str]] = field(default_factory=dict)
+
+    def __init__(self, unhealthy_resources: Dict[str, List[str]]):
+        logger = get_thread_logger(with_prefix=True)
+        error_msgs = []
+        for kind, resources in unhealthy_resources.items():
+            if len(resources) != 0:
+                error_msgs.append(f"{kind}: {', '.join(resources)}")
+                logger.error(f"Found {kind}: {', '.join(resources)} with unhealthy status")
+        if len(error_msgs) == 0:
+            error_msgs = [OracleControlFlow.ok]
+        super().__init__('\n'.join(error_msgs))
 
 
 class HealthChecker(Checker):
     name = 'health'
 
-    def check(self, _: int, snapshot: Snapshot, __: Snapshot) -> OracleResult:
+    def _check(self, snapshot: Snapshot, __: Snapshot) -> OracleResult:
         """System health oracle"""
-        logger = get_thread_logger(with_prefix=True)
-
         system_state = snapshot.system_state
         unhealthy_resources = {
             'statefulset': [],
@@ -73,22 +89,11 @@ class HealthChecker(Checker):
                                  container['restart_count']))
 
         # check Health of CRs
-        if system_state['custom_resource_status'] is not None and 'conditions' in system_state[
-            'custom_resource_status']:
+        if system_state['custom_resource_status'] is not None and 'conditions' in system_state['custom_resource_status']:
             for condition in system_state['custom_resource_status']['conditions']:
-                if condition['type'] == 'Ready' and condition[
-                    'status'] != 'True' and 'is forbidden' in condition['message'].lower():
+                if condition['type'] == 'Ready' and condition['status'] != 'True' and 'is forbidden' in condition['message'].lower():
                     unhealthy_resources['cr'].append('%s condition [%s] status [%s] message [%s]' %
                                                      ('CR status unhealthy', condition['type'],
                                                       condition['status'], condition['message']))
 
-        error_msgs = []
-        for kind, resources in unhealthy_resources.items():
-            if len(resources) != 0:
-                error_msgs.append(f"{kind}: {', '.join(resources)}")
-                logger.error(f"Found {kind}: {', '.join(resources)} with unhealthy status")
-
-        if error_msgs:
-            return UnhealthyResult(Oracle.SYSTEM_HEALTH, '\n'.join(error_msgs))
-
-        return PassResult()
+        return HealthResult(unhealthy_resources)

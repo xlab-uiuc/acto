@@ -1,25 +1,28 @@
+from dataclasses import dataclass, field
 from functools import lru_cache
-from typing import Tuple, Dict, List
+from typing import Tuple, Dict, List, TypedDict, Optional, Literal
 
 from deepdiff import DeepDiff
 
 from acto.common import postprocess_diff, EXCLUDE_PATH_REGEX, Diff
 
 
-class Snapshot:
-    def __init__(self, input: dict, cli_result: dict, system_state: dict, operator_log: List[str]):
-        self.input = input
-        self.cli_result = cli_result
-        self.system_state = system_state
-        self.operator_log = operator_log
+class PodLog(TypedDict):
+    log: Optional[List[str]]
+    previous_log: Optional[List[str]]
 
-    def to_dict(self):
-        return {
-            'input': self.input,
-            'cli_result': self.cli_result,
-            'system_state': self.system_state,
-            'operator_log': self.operator_log
-        }
+
+@dataclass
+class Snapshot:
+    input: dict = field(default_factory=dict)
+    cli_result: dict = field(default_factory=dict)
+    system_state: dict = field(default_factory=dict)
+    operator_log: List[str] = field(default_factory=list)
+    events: dict = field(default_factory=dict)
+    not_ready_pods_logs: dict = field(default_factory=dict)
+    generation: int = 0
+    trial_state: Literal['normal', 'recovering', 'terminated', 'runtime_exception'] = 'normal'
+    snapshot_before_applied_input: Optional['Snapshot'] = None
 
     @lru_cache
     def delta(self, prev: 'Snapshot') -> Tuple[Dict[str, Dict[str, Dict[str, Diff]]], Dict[str, Dict[str, Dict[str, Diff]]]]:
@@ -40,6 +43,5 @@ class Snapshot:
 
         return input_delta, system_state_delta
 
-
-def EmptySnapshot(input: dict):
-    return Snapshot(input, {}, {}, [])
+    def set_snapshot_before_applied_input(self, snapshot: 'Snapshot'):
+        self.snapshot_before_applied_input = snapshot

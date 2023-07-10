@@ -1,20 +1,26 @@
 import copy
 import json
 import re
-from typing import List, Tuple
+from dataclasses import dataclass
+from typing import List, Tuple, Optional
 
-from acto.checker.checker import Checker
+from acto.checker.checker import Checker, OracleResult
 from acto.checker.impl.state_condition import check_condition_group
-from acto.common import OracleResult, PassResult, invalid_input_message, Diff, print_event, StateResult, Oracle, InvalidInputResult, is_subfield, GENERIC_FIELDS
+from acto.common import invalid_input_message, Diff, print_event, is_subfield, GENERIC_FIELDS
 from acto.checker.impl.state_compare import CompareMethods, is_none_or_not_present
 from acto.config import actoConfig
 from acto.input import InputModel
 from acto.input.get_matched_schemas import find_matched_schema
 from acto.k8s_util.k8sutil import canonicalize_quantity
 from acto.schema import extract_schema, ObjectSchema, ArraySchema, BaseSchema
-from acto.serialization import ActoEncoder
 from acto.snapshot import Snapshot
 from acto.utils import get_thread_logger, is_prefix
+
+
+@dataclass
+class StateResult(OracleResult):
+    invalid_field_path: Optional[List[str]] = None
+    diff: Optional[Diff] = None
 
 
 def canonicalize_field_name(s: str):
@@ -152,9 +158,8 @@ def list_matched_fields(k8s_paths: List[List[str]], path: list, delta_dict: dict
 class StateChecker(Checker):
     name = 'state'
 
-    def __init__(self, trial_dir: str, input_model: InputModel, context: dict, **kwargs):
+    def __init__(self, input_model: InputModel, context: dict, **kwargs):
         super().__init__(**kwargs)
-        self.trial_dir = trial_dir
         self.input_model = input_model
         self.context = context
         crd = extract_schema([], context['crd']['body']['spec']['versions'][-1]['schema']['openAPIV3Schema'])
@@ -166,14 +171,6 @@ class StateChecker(Checker):
             self.field_conditions_map = {}
 
         self.update_dependency(self.input_model.get_root_schema())
-
-    def write_delta_log(self, generation: int, input_delta, system_delta):
-        delta_log_path = f'{self.trial_dir}/delta-{generation}.log'
-        with open(delta_log_path, 'w') as f:
-            f.write('---------- INPUT DELTA  ----------\n')
-            f.write(json.dumps(input_delta, cls=ActoEncoder, indent=6))
-            f.write('\n---------- SYSTEM DELTA ----------\n')
-            f.write(json.dumps(system_delta, cls=ActoEncoder, indent=6))
 
     def update_dependency(self, schema: BaseSchema):
         if not isinstance(schema, ObjectSchema):
@@ -214,7 +211,7 @@ class StateChecker(Checker):
                     }]
                 })
 
-    def check(self, generation: int, snapshot: Snapshot, prev_snapshot: Snapshot) -> OracleResult:
+    def _check(self, snapshot: Snapshot, prev_snapshot: Snapshot) -> OracleResult:
         """
           System state oracle
 
@@ -230,7 +227,6 @@ class StateChecker(Checker):
         logger = get_thread_logger(with_prefix=True)
 
         input_delta, system_delta = snapshot.delta(prev_snapshot)
-        self.write_delta_log(generation, input_delta, system_delta)
 
         # check if the input is valid
         # we can know this by checking the status message
@@ -243,7 +239,7 @@ class StateChecker(Checker):
                         is_invalid, responsible_path = invalid_input_message(delta.curr, input_delta)
                         if is_invalid:
                             logger.info('Invalid input from status message: %s' % delta.curr)
-                            return InvalidInputResult(responsible_path)
+                            return StateResult('Invalid input from status message: %s' % delta.curr, invalid_field_path=responsible_path, diff=delta)
 
         # cr_spec_diff is same as input delta, so it is excluded
         system_delta_without_cr = copy.deepcopy(system_delta)
@@ -319,8 +315,7 @@ class StateChecker(Checker):
                         logger.error('Found no matching fields for input delta')
                         logger.error('Input delta [%s]' % delta.path)
                         print_event(f'Found bug: {delta.path} changed from [{delta.prev}] to [{delta.curr}]')
-                        return StateResult(Oracle.SYSTEM_STATE,
-                                           'Found no matching fields for input', delta)
+                        return StateResult('Found no matching fields for input', diff=delta)
                     else:
                         logger.error('Found no matching fields for input delta')
                         logger.error(f'Input delta {delta.path}')
@@ -330,10 +325,9 @@ class StateChecker(Checker):
                             logger.error(f'Matched delta prev {match_delta.prev}, curr {match_delta.curr}')
                         logger.error('Failed to match input delta with matched system state delta')
                         print_event(f'Found bug: {delta.path} changed from [{delta.prev}] to [{delta.curr}]')
-                        return StateResult(Oracle.SYSTEM_STATE,
-                                           'Found no matching fields for input', delta)
+                        return StateResult('Found no matching fields for input', diff=delta)
                 elif not should_compare:
                     logger.debug('Input delta [%s] is skipped' % delta.path)
 
         logger.info('All input deltas are matched')
-        return PassResult()
+        return StateResult()

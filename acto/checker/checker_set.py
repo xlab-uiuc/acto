@@ -1,61 +1,37 @@
-import json
-import os
+from typing import List
 
+from acto.checker.checker import OracleResult
 from acto.checker.impl.crash import CrashChecker
 from acto.checker.impl.health import HealthChecker
 from acto.checker.impl.kubectl_cli import KubectlCliChecker
 from acto.checker.impl.operator_log import OperatorLogChecker
+from acto.checker.impl.recovery import RecoveryChecker
 from acto.checker.impl.state import StateChecker
-from acto.common import RunResult, InvalidInputResult, flatten_dict
-from acto.config import actoConfig
 from acto.input import InputModel
-from acto.serialization import ActoEncoder
 from acto.snapshot import Snapshot
-from acto.utils import get_thread_logger
 
 
 class CheckerSet:
-    def __init__(self, context: dict, trial_dir: str, input_model: InputModel, checker_generators: list = None):
+    def __init__(self, context: dict, input_model: InputModel, checker_generators: list = None):
         if checker_generators is None or checker_generators == []:
-            checker_generators = [CrashChecker, HealthChecker, KubectlCliChecker, OperatorLogChecker, StateChecker]
+            checker_generators = [CrashChecker, HealthChecker, KubectlCliChecker, OperatorLogChecker, StateChecker, RecoveryChecker]
         self.context = context
         self.input_model = input_model
-        self.trial_dir = trial_dir
 
         checker_args = {
-            'trial_dir': self.trial_dir,
             'input_model': self.input_model,
             'context': self.context
         }
         self.checkers = [checkerGenerator(**checker_args) for checkerGenerator in checker_generators]
 
-    def check(self, snapshot: Snapshot, prev_snapshot: Snapshot, revert: bool, generation: int, testcase_signature: dict) -> RunResult:
-        logger = get_thread_logger(with_prefix=True)
+    def check(self, snapshot: Snapshot, prev_snapshot: Snapshot) -> List[OracleResult]:
+        return list(map(lambda checker: checker.check(snapshot, prev_snapshot), self.checkers))
 
-        run_result = RunResult(revert, generation, testcase_signature)
-
-        if snapshot.system_state == {}:
-            run_result.misc_result = InvalidInputResult([])
-            return run_result
-
-        for checker in self.checkers:
-            checker_result = checker.check(generation, snapshot, prev_snapshot)
-            run_result.set_result(checker.name, checker_result)
-
-        input_delta, system_delta = snapshot.delta(prev_snapshot)
-        flattened_system_state = flatten_dict(snapshot.system_state, [])
-
-        if len(input_delta) > 0:
-            num_delta = 0
-            for resource_delta_list in system_delta.values():
-                for type_delta_list in resource_delta_list.values():
-                    num_delta += len(type_delta_list)
-            logger.info('Number of system state fields: [%d] Number of delta: [%d]' %
-                        (len(flattened_system_state), num_delta))
-
-        if actoConfig.io.write_result_each_generation:
-            generation_result_path = os.path.join(self.trial_dir, 'generation-%d-runtime.json' % generation)
-            with open(generation_result_path, 'w') as f:
-                json.dump(run_result.to_dict(), f, cls=ActoEncoder, indent=4)
-
-        return run_result
+# If we want to decouple the checkers from the Snapshot structure, we can use the following code:
+#
+# from typing import Protocol
+# class Snapshot(Protocol):
+#     system_state: dict
+#     other_attributes_needed ...
+#     def __some_method__(self):
+#         pass

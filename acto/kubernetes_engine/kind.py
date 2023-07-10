@@ -60,7 +60,7 @@ class Kind(base.KubernetesEngine):
         '''Use subprocess to create kind cluster
         Args:
             name: name of the kind cluster
-            config: path of the config file for cluster
+            kubeconfig: path of the config file for cluster
             version: k8s version
         '''
         print_event('Creating kind cluster...')

@@ -4,32 +4,32 @@ import os
 import tempfile
 import threading
 import time
-from copy import deepcopy
 from types import FunctionType
 
 import yaml
-import jsonpatch
 
 from acto.checker.checker_set import CheckerSet
 from acto.common import *
+from acto.config import actoConfig
 from acto.constant import CONST
 from acto.deploy import Deploy, DeployMethod
 from acto.exception import UnknownDeployMethodError
 from acto.input import InputModel
 from acto.input.input import OverSpecifiedField
 from acto.input.known_schemas.base import K8sField
-from acto.input.known_schemas.known_schema import find_all_matched_schemas, find_all_matched_schemas_type
+from acto.input.known_schemas.known_schema import find_all_matched_schemas_type
 from acto.input.testcase import TestCase
 from acto.input.testplan import TreeNode
 from acto.input.value_with_schema import (ValueWithSchema,
                                           attach_schema_to_value)
 from acto.input.valuegenerator import ArrayGenerator
 from acto.kubectl_client import KubectlClient
+from acto.kubectl_client.kubectl import kubernetes_client
 from acto.kubernetes_engine import base, k3d, kind
 from acto.oracle_handle import OracleHandle
 from acto.runner import Runner
 from acto.serialization import ActoEncoder, ContextEncoder
-from acto.snapshot import EmptySnapshot, Snapshot
+from acto.snapshot import Snapshot
 from acto.utils import (add_acto_label, delete_operator_pod, process_crd,
                         update_preload_images)
 from acto.utils.config import OperatorConfig
@@ -56,140 +56,6 @@ def save_result(trial_dir: str, trial_result: RunResult, num_tests: int, trial_e
     with open(result_path, 'w') as result_file:
         json.dump(result_dict, result_file, cls=ActoEncoder, indent=6)
 
-
-def apply_testcase(value_with_schema: ValueWithSchema,
-                   path: list,
-                   testcase: TestCase,
-                   setup: bool = False) -> jsonpatch.JsonPatch:
-    logger = get_thread_logger(with_prefix=True)
-
-    prev = value_with_schema.raw_value()
-    field_curr_value = value_with_schema.get_value_by_path(list(path))
-    if setup:
-        value_with_schema.create_path(list(path))
-        value_with_schema.set_value_by_path(testcase.setup(field_curr_value), list(path))
-        curr = value_with_schema.raw_value()
-    else:
-        if testcase.test_precondition(field_curr_value):
-            value_with_schema.create_path(list(path))
-            value_with_schema.set_value_by_path(testcase.mutator(field_curr_value), list(path))
-            curr = value_with_schema.raw_value()
-
-    patch = jsonpatch.make_patch(prev, curr)
-    logger.info('JSON patch: %s' % patch)
-    return patch
-
-def check_state_equality(snapshot: Snapshot, prev_snapshot: Snapshot) -> OracleResult:
-    '''Check whether two system state are semantically equivalent
-
-    Args:
-        - snapshot: a reference to a system state
-        - prev_snapshot: a reference to another system state
-
-    Return value:
-        - a dict of diff results, empty if no diff found
-    '''
-    logger = get_thread_logger(with_prefix=True)
-
-    curr_system_state = deepcopy(snapshot.system_state)
-    prev_system_state = deepcopy(prev_snapshot.system_state)
-
-    if len(curr_system_state) == 0 or len(prev_system_state) == 0:
-        return PassResult()
-
-    del curr_system_state['endpoints']
-    del prev_system_state['endpoints']
-    del curr_system_state['job']
-    del prev_system_state['job']
-
-    # remove pods that belong to jobs from both states to avoid observability problem
-    curr_pods = curr_system_state['pod']
-    prev_pods = prev_system_state['pod']
-    curr_system_state['pod'] = {
-        k: v
-        for k, v in curr_pods.items()
-        if v['metadata']['owner_references'][0]['kind'] != 'Job'
-    }
-    prev_system_state['pod'] = {
-        k: v
-        for k, v in prev_pods.items()
-        if v['metadata']['owner_references'][0]['kind'] != 'Job'
-    }
-
-    for name, obj in prev_system_state['secret'].items():
-        if 'data' in obj and obj['data'] != None:
-            for key, data in obj['data'].items():
-                try:
-                    obj['data'][key] = json.loads(data)
-                except:
-                    pass
-
-    for name, obj in curr_system_state['secret'].items():
-        if 'data' in obj and obj['data'] != None:
-            for key, data in obj['data'].items():
-                try:
-                    obj['data'][key] = json.loads(data)
-                except:
-                    pass
-
-    # remove custom resource from both states
-    curr_system_state.pop('custom_resource_spec', None)
-    prev_system_state.pop('custom_resource_spec', None)
-    curr_system_state.pop('custom_resource_status', None)
-    prev_system_state.pop('custom_resource_status', None)
-    curr_system_state.pop('pvc', None)
-    prev_system_state.pop('pvc', None)
-
-    # remove fields that are not deterministic
-    exclude_paths = [
-        r".*\['metadata'\]\['managed_fields'\]",
-        r".*\['metadata'\]\['cluster_name'\]",
-        r".*\['metadata'\]\['creation_timestamp'\]",
-        r".*\['metadata'\]\['resource_version'\]",
-        r".*\['metadata'\].*\['uid'\]",
-        r".*\['metadata'\]\['generation'\]$",
-        r".*\['metadata'\]\['annotations'\]",
-        r".*\['metadata'\]\['annotations'\]\['.*last-applied.*'\]",
-        r".*\['metadata'\]\['annotations'\]\['.*\.kubernetes\.io.*'\]",
-        r".*\['metadata'\]\['labels'\]\['.*revision.*'\]",
-        r".*\['metadata'\]\['labels'\]\['owner-rv'\]",
-        r".*\['status'\]",
-        r"\['metadata'\]\['deletion_grace_period_seconds'\]",
-        r"\['metadata'\]\['deletion_timestamp'\]",
-        r".*\['spec'\]\['init_containers'\]\[.*\]\['volume_mounts'\]\[.*\]\['name'\]$",
-        r".*\['spec'\]\['containers'\]\[.*\]\['volume_mounts'\]\[.*\]\['name'\]$",
-        r".*\['spec'\]\['volumes'\]\[.*\]\['name'\]$",
-        r".*\[.*\]\['node_name'\]$",
-        r".*\[\'spec\'\]\[\'host_users\'\]$",
-        r".*\[\'spec\'\]\[\'os\'\]$",
-        r".*\[\'grpc\'\]$",
-        r".*\[\'spec\'\]\[\'volume_name\'\]$",
-        r".*\['version'\]$",
-        r".*\['endpoints'\]\[.*\]\['addresses'\]\[.*\]\['target_ref'\]\['uid'\]$",
-        r".*\['endpoints'\]\[.*\]\['addresses'\]\[.*\]\['target_ref'\]\['resource_version'\]$",
-        r".*\['endpoints'\]\[.*\]\['addresses'\]\[.*\]\['ip'\]",
-        r".*\['cluster_ip'\]$",
-        r".*\['cluster_i_ps'\].*$",
-        r".*\['deployment_pods'\].*\['metadata'\]\['name'\]$",
-        r"\[\'config_map\'\]\[\'kube\-root\-ca\.crt\'\]\[\'data\'\]\[\'ca\.crt\'\]$",
-        r".*\['secret'\].*$",
-        r"\['secrets'\]\[.*\]\['name'\]",
-        r".*\['node_port'\]",
-        r".*\['metadata'\]\['generate_name'\]",
-        r".*\['metadata'\]\['labels'\]\['pod\-template\-hash'\]",
-        r"\['deployment_pods'\].*\['metadata'\]\['owner_references'\]\[.*\]\['name'\]",
-    ]
-
-    diff = DeepDiff(prev_system_state,
-                    curr_system_state,
-                    exclude_regex_paths=exclude_paths,
-                    view='tree')
-
-    if diff:
-        logger.debug(f"failed attempt recovering to seed state - system state diff: {diff}")
-        return RecoveryResult(delta=diff, from_=prev_system_state, to_=curr_system_state)
-
-    return PassResult()
 
 
 class TrialRunner:
@@ -307,7 +173,7 @@ class TrialRunner:
         checker: CheckerSet = self.checker_t(self.context, trial_dir, self.input_model, custom_oracle)
 
         curr_input = self.input_model.get_seed_input()
-        self.snapshots.append(EmptySnapshot(curr_input))
+        self.snapshots.append(Snapshot(curr_input))
 
         generation = 0
         while generation < num_mutation:  # every iteration gets a new list of next tests
@@ -541,7 +407,6 @@ class TrialRunner:
             runResult = checker.check(snapshot,
                                       snapshots[-1],
                                       revert,
-                                      generation,
                                       testcase_signature=testcase_signature)
             snapshots.append(snapshot)
 
@@ -695,7 +560,7 @@ class Acto:
                 k8s_schema = K8sField(tuple[0].path, tuple[1])
                 self.input_model.apply_k8s_schema(k8s_schema)
 
-        if operator_config.custom_fields != None:
+        if operator_config.custom_fields is not None:
             if actoConfig.mode == 'blackbox':
                 pruned_list = []
                 module = importlib.import_module(operator_config.custom_fields)

@@ -65,6 +65,13 @@ class TestCase:
         }
         return ret
 
+    def signature(self, field: str, **kwargs) -> dict:
+        return {
+            'field': field,
+            'testcase': str(self),
+            **kwargs
+        }
+
 
 class K8sTestCase(TestCase):
     """Class represent a test case for k8s, purely for test case name purposes"""

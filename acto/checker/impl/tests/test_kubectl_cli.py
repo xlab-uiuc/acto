@@ -2,7 +2,8 @@ import pytest
 
 from acto.checker.impl.kubectl_cli import KubectlCliChecker
 from acto.checker.impl.tests import load_snapshot
-from acto.common import OracleResult, UnchangedInputResult, PassResult
+from acto.checker.checker_result import PassResult, UnchangedInputResult
+from acto.checker.checker import OracleResult
 from acto.snapshot import Snapshot
 
 # Crash checker is stateless, so we can use the same instance for all tests
@@ -13,7 +14,7 @@ def checker_func(s: Snapshot, s_prev: Snapshot) -> OracleResult:
     assert s.input != {}
     assert s_prev.input != {}
     assert s.cli_result != {}
-    return checker.check(0, s, s_prev)
+    return checker.check(s, s_prev)
 
 
 @pytest.mark.parametrize("test_case_id,result_dict", list(enumerate([

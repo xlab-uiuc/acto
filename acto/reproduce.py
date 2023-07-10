@@ -93,12 +93,6 @@ class ReproInputModel(InputModel):
     def initialize(self, initial_value: dict):
         pass
 
-    def set_worker_id(self, id: int):
-        pass
-
-    def set_mode(self, mode: str):
-        pass
-
     def is_empty(self):
         '''If testcases are empty'''
         logger = get_thread_logger(with_prefix=True)

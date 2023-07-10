@@ -44,40 +44,44 @@ class CustomField:
 
 
 class CopiedOverField(CustomField):
-    '''For pruning the fields that are simply copied over to other resources
-    
+    """
+    For pruning the fields that are simply copied over to other resources
+
     All the subfields of this field (excluding this field) will be pruned
-    '''
+    """
 
     def __init__(self, path, used_fields: list = None, array: bool = False) -> None:
         super().__init__(path, used_fields)
 
 
 class OverSpecifiedField(CustomField):
-    '''For pruning the fields that are simply copied over to other resources
-    
+    """
+    For pruning the fields that are simply copied over to other resources
+
     All the subfields of this field (excluding this field) will be pruned
-    '''
+    """
 
     def __init__(self, path, used_fields: list = None, array: bool = False) -> None:
         super().__init__(path, used_fields)
 
 
 class ProblematicField(CustomField):
-    '''For pruning the field that can not be simply generated using Acto's current generation mechanism.
-    
+    """
+    For pruning the field that can not be simply generated using Acto's current generation mechanism.
+
     All the subfields of this field (including this field itself) will be pruned
-    '''
+    """
 
     def __init__(self, path, array: bool = False, string: bool = False) -> None:
         super().__init__(path, [])
 
 
 class PatchField(CustomField):
-    '''For pruning the field that can not be simply generated using Acto's current generation mechanism.
-    
+    """
+    For pruning the field that can not be simply generated using Acto's current generation mechanism.
+
     All the subfields of this field (including this field itself) will be pruned
-    '''
+    """
 
     def __init__(self, path) -> None:
         super().__init__(path, None)
@@ -123,12 +127,6 @@ class InputModel:
         self.num_workers = num_workers
         self.num_cases = num_cases  # number of test cases to run at a time
         self.seed_input = None
-        self.normal_test_plan_partitioned = None
-        self.overspecified_test_plan_partitioned = None
-        self.copiedover_test_plan_partitioned = None
-        self.semantic_test_plan_partitioned = None
-
-        self.thread_vars = threading.local()
 
         self.metadata = {
             'normal_schemas': 0,
@@ -143,41 +141,6 @@ class InputModel:
         initial_value['metadata']['name'] = 'test-cluster'
         self.initial_value = initial_value
         self.seed_input = attach_schema_to_value(initial_value, self.root_schema)
-
-    def set_worker_id(self, id: int):
-        '''Claim this thread's id, so that we can split the test plan among threads'''
-
-        if hasattr(self.thread_vars, 'id'):
-            # Avoid initialize twice
-            return
-
-        # Thread local variables
-        self.thread_vars.id = id
-        # so that we can run the test case itself right after the setup
-        self.thread_vars.normal_test_plan = TestPlan(self.root_schema.to_tree())
-        self.thread_vars.overspecified_test_plan = TestPlan(self.root_schema.to_tree())
-        self.thread_vars.copiedover_test_plan = TestPlan(self.root_schema.to_tree())
-        self.thread_vars.semantic_test_plan = TestPlan(self.root_schema.to_tree())
-
-        raise NotImplementedError()
-
-    def set_mode(self, mode: str):
-        if mode == 'NORMAL':
-            self.thread_vars.test_plan: TestPlan = self.thread_vars.normal_test_plan
-        elif mode == 'OVERSPECIFIED':
-            self.thread_vars.test_plan: TestPlan = self.thread_vars.overspecified_test_plan
-        elif mode == 'COPIED_OVER':
-            self.thread_vars.test_plan: TestPlan = self.thread_vars.copiedover_test_plan
-        elif mode == InputModel.SEMANTIC:
-            self.thread_vars.test_plan: TestPlan = self.thread_vars.semantic_test_plan
-        elif mode == InputModel.ADDITIONAL_SEMANTIC:
-            self.thread_vars.test_plan: TestPlan = self.thread_vars.additional_semantic_test_plan
-        else:
-            raise ValueError(mode)
-
-    def is_empty(self):
-        '''if test plan is empty'''
-        return len(self.thread_vars.test_plan) == 0
 
     def get_seed_input(self) -> dict:
         '''Get the raw value of the seed input'''
@@ -414,36 +377,6 @@ class InputModel:
 
         return ret
 
-    def get_input_delta(self):
-        '''Compare the current input with the previous input
-        
-        Returns
-            a delta object in tree view
-        '''
-        cr_diff = DeepDiff(self.thread_vars.previous_input.raw_value(),
-                           self.thread_vars.current_input.raw_value(),
-                           ignore_order=True,
-                           report_repetition=True,
-                           view='tree')
-        return cr_diff
-
-    def discard_test_case(self):
-        '''Discard the test case that was selected'''
-        logger = get_thread_logger(with_prefix=True)
-
-        discarded_case = self.thread_vars.test_plan[self.thread_vars.curr_field].pop()
-
-        # Log it to discarded_tests
-        if self.thread_vars.curr_field in self.discarded_tests:
-            self.discarded_tests[self.thread_vars.curr_field].append(discarded_case)
-        else:
-            self.discarded_tests[self.thread_vars.curr_field] = [discarded_case]
-        logger.info('Setup failed due to invalid, discard this testcase %s' % discarded_case)
-
-        if len(self.thread_vars.test_plan[self.thread_vars.curr_field]) == 0:
-            del self.thread_vars.test_plan[self.thread_vars.curr_field]
-        self.thread_vars.curr_field = None
-
     def apply_custom_field(self, custom_field: CustomField):
         '''Applies custom field to the input model
         
@@ -539,38 +472,6 @@ class InputModel:
 
 class DeterministicInputModel(InputModel):
 
-    def set_worker_id(self, id: int):
-        '''Claim this thread's id, so that we can split the test plan among threads'''
-
-        if hasattr(self.thread_vars, 'id'):
-            # Avoid initialize twice
-            return
-
-        # Thread local variables
-        self.thread_vars.id = id
-        # so that we can run the test case itself right after the setup
-        self.thread_vars.normal_test_plan = DeterministicTestPlan()
-        self.thread_vars.overspecified_test_plan = DeterministicTestPlan()
-        self.thread_vars.copiedover_test_plan = DeterministicTestPlan()
-        self.thread_vars.additional_semantic_test_plan = DeterministicTestPlan()
-        self.thread_vars.semantic_test_plan = TestPlan(self.root_schema.to_tree())
-
-        for group in self.normal_test_plan_partitioned[id]:
-            self.thread_vars.normal_test_plan.add_testcase_group(TestGroup(group))
-
-        for group in self.overspecified_test_plan_partitioned[id]:
-            self.thread_vars.overspecified_test_plan.add_testcase_group(TestGroup(group))
-
-        for group in self.copiedover_test_plan_partitioned[id]:
-            self.thread_vars.copiedover_test_plan.add_testcase_group(TestGroup(group))
-
-        for group in self.additional_semantic_test_plan_partitioned[id]:
-            self.thread_vars.additional_semantic_test_plan.add_testcase_group(TestGroup(group))
-
-        for key, value in self.semantic_test_plan_partitioned[id]:
-            path = json.loads(key)
-            self.thread_vars.semantic_test_plan.add_testcases_by_path(value, path)
-
     def generate_test_plan(self, delta_from: str = None, focus_fields: list = None) -> dict:
         '''Generate test plan based on CRD'''
         logger = get_thread_logger(with_prefix=False)
@@ -581,7 +482,7 @@ class DeterministicInputModel(InputModel):
                 existing_testcases = json.load(delta_from_file)['normal_testcases']
 
         # Calculate the unused fields using used_fields from static analysis
-        tree: TreeNode = self.root_schema.to_tree()
+        # tree: TreeNode = self.root_schema.to_tree()
         # for field in self.used_fields:
         #     field = field[1:]
         #     node = tree.get_node_by_path(field)
@@ -812,46 +713,7 @@ class DeterministicInputModel(InputModel):
         normal_subgroups = split_into_subgroups(normal_test_plan_items)
         overspecified_subgroups = split_into_subgroups(overspecified_test_plan_items)
         copiedover_subgroups = split_into_subgroups(copiedover_test_plan_items)
-        additional_semantic_testcases = split_into_subgroups(additional_semantic_testcases.items())
-
-        # Initialize the three test plans, and assign test cases to them according to the number of
-        # workers
-        self.normal_test_plan_partitioned = []
-        self.overspecified_test_plan_partitioned = []
-        self.copiedover_test_plan_partitioned = []
-        self.semantic_test_plan_partitioned = []
-        self.additional_semantic_test_plan_partitioned = []
-
-        for i in range(self.num_workers):
-            self.normal_test_plan_partitioned.append([])
-            self.overspecified_test_plan_partitioned.append([])
-            self.copiedover_test_plan_partitioned.append([])
-            self.semantic_test_plan_partitioned.append([])
-            self.additional_semantic_test_plan_partitioned.append([])
-
-        for i in range(0, len(normal_subgroups)):
-            self.normal_test_plan_partitioned[i % self.num_workers].append(normal_subgroups[i])
-
-        for i in range(0, len(overspecified_subgroups)):
-            self.overspecified_test_plan_partitioned[i % self.num_workers].append(
-                overspecified_subgroups[i])
-
-        for i in range(0, len(copiedover_subgroups)):
-            self.copiedover_test_plan_partitioned[i % self.num_workers].append(
-                copiedover_subgroups[i])
-
-        for i in range(0, len(semantic_test_plan_items)):
-            self.semantic_test_plan_partitioned[i % self.num_workers].append(
-                semantic_test_plan_items[i])
-
-        for i in range(0, len(additional_semantic_test_plan_items)):
-            self.additional_semantic_test_plan_partitioned[i % self.num_workers].append(
-                additional_semantic_test_plan_items[i])
-
-        # appending empty lists to avoid no test cases distributed to certain work nodes
-        assert (self.num_workers == len(self.normal_test_plan_partitioned))
-        assert (self.num_workers == len(self.overspecified_test_plan_partitioned))
-        assert (self.num_workers == len(self.copiedover_test_plan_partitioned))
+        additional_semantic_subgroups = split_into_subgroups(additional_semantic_testcases.items())
 
         return {
             'delta_from': delta_from,
@@ -865,6 +727,7 @@ class DeterministicInputModel(InputModel):
             'normal_subgroups': normal_subgroups,
             'overspecified_subgroups': overspecified_subgroups,
             'copiedover_subgroups': copiedover_subgroups,
+            'additional_semantic_subgroups': additional_semantic_subgroups,
         }
 
     def next_test(self) -> List[Tuple[TestGroup, TestCase]]:

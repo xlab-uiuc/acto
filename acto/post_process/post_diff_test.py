@@ -21,8 +21,9 @@ from deepdiff.operator import BaseOperator
 
 sys.path.append('.')
 sys.path.append('..')
-from acto.common import (ErrorResult, PassResult, RecoveryResult, RunResult,
-                         invalid_input_message_regex, kubernetes_client)
+from acto.common import (invalid_input_message_regex)
+from acto.kubectl_client.kubectl import kubernetes_client
+from acto.checker.checker_result import PassResult, ErrorResult, RecoveryResult
 from acto.constant import CONST
 from acto.deploy import Deploy, DeployMethod
 from acto.kubernetes_engine import base, kind

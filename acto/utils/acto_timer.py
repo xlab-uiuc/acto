@@ -1,5 +1,4 @@
 from multiprocessing import Queue
-from multiprocessing.sharedctypes import Value
 from threading import Event, Thread
 
 
@@ -38,10 +37,3 @@ class ActoTimer(Thread):
         self.resetted = True
         self.finished.set()
         self.finished.clear()
-
-
-if __name__ == '__main__':
-    timer = ActoTimer(10)
-    timer.start()
-    timer.reset()
-    timer.join()

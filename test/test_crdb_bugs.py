@@ -54,7 +54,7 @@ class TestCRDBOpBugs(unittest.TestCase):
         snapshot_0 = construct_snapshot(trial_dir, 1)
         snapshot_1 = construct_snapshot(trial_dir, 2)
 
-        runResult = checker.check(snapshot_1, snapshot_0, False, 2, {})
+        runResult = checker.check(snapshot_1, snapshot_0, False, {})
         self.assertTrue(runResult.is_error())
 
 

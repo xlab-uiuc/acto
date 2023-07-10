@@ -9,7 +9,9 @@ from deepdiff.helper import NotPresent
 
 from acto.checker.impl.state import StateChecker
 from acto.checker.impl.tests import load_snapshot
-from acto.common import PassResult, OracleResult, StateResult, Oracle, Diff, InvalidInputResult
+from acto.common import Oracle, Diff
+from acto.checker.checker_result import PassResult, InvalidInputResult, StateResult
+from acto.checker.checker import OracleResult
 from acto.input import DeterministicInputModel
 from acto.lib.dict import visit_dict
 from acto.snapshot import Snapshot
@@ -47,7 +49,7 @@ def checker_func(s: Snapshot, prev_s: Snapshot) -> OracleResult:
                            input_model=mapping[api_version][1],
                            context=mapping[api_version][0])
     checker.write_delta_log = lambda *args: None
-    return checker.check(0, s, prev_s)
+    return checker.check(s, prev_s)
 
 
 @pytest.mark.parametrize("test_case_id,result_dict", list(enumerate([

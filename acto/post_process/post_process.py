@@ -11,7 +11,7 @@ import yaml
 sys.path.append('.')
 sys.path.append('..')
 
-from acto.common import RunResult, oracle_result_from_dict
+from acto.common import RunResult
 from acto.utils import OperatorConfig
 
 

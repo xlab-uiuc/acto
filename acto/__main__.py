@@ -8,7 +8,10 @@ import sys
 import threading
 import time
 import importlib
+import random
 
+# for debugging, set random seed to 0
+random.seed(0)
 
 start_time = time.time()
 workdir_path = 'testrun-%s' % datetime.now().strftime('%Y-%m-%d-%H-%M')
@@ -90,9 +93,9 @@ with open(args.config, 'r') as config_file:
         importlib.import_module(config['monkey_patch'])
 
 from acto import common
-from acto.engine import Acto, apply_testcase
+from acto.engine_new import Acto
 from acto.input.input import DeterministicInputModel, InputModel
-from acto.post_process import PostDiffTest
+# from acto.post_process import PostDiffTest
 from acto.utils.config import OperatorConfig
 from acto.utils.error_handler import handle_excepthook, thread_excepthook
 
@@ -133,7 +136,6 @@ else:
 # input_model = InputModel(context_cache['crd']['body'], config.example_dir,
 #   args.num_workers, args.num_cases, None)
 input_model = DeterministicInputModel
-apply_testcase_f = apply_testcase
 is_reproduce = False
 
 start_time = datetime.now()
@@ -149,8 +151,6 @@ acto = Acto(workdir_path=args.workdir_path,
             dryrun=args.dryrun,
             analysis_only=args.learn_analysis_only,
             is_reproduce=is_reproduce,
-            input_model=input_model,
-            apply_testcase_f=apply_testcase_f,
             delta_from=args.delta_from)
 generation_time = datetime.now()
 logger.info('Acto initialization finished in %s', generation_time - start_time)
@@ -163,11 +163,11 @@ logger.info('Acto normal run finished in %s', normal_finish_time - start_time)
 logger.info('Start post processing steps')
 
 # Post processing
-post_diff_test_dir = os.path.join(args.workdir_path, 'post_diff_test')
-p = PostDiffTest(testrun_dir=args.workdir_path, config=config)
-if not args.checkonly:
-    p.post_process(post_diff_test_dir, num_workers=args.num_workers)
-p.check(post_diff_test_dir, num_workers=args.num_workers)
+# post_diff_test_dir = os.path.join(args.workdir_path, 'post_diff_test')
+# p = PostDiffTest(testrun_dir=args.workdir_path, config=config)
+# if not args.checkonly:
+#     p.post_process(post_diff_test_dir, num_workers=args.num_workers)
+# p.check(post_diff_test_dir, num_workers=args.num_workers)
 
 end_time = datetime.now()
 logger.info('Acto end to end finished in %s', end_time - start_time)

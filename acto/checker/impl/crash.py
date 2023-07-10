@@ -1,7 +1,6 @@
-from acto.checker.checker import Checker
-from acto.common import OracleResult, ErrorResult, Oracle, PassResult
-from acto.snapshot import Snapshot
+from acto.checker.checker import Checker, OracleResult
 from acto.lib.dict import visit_dict
+from acto.snapshot import Snapshot
 
 
 def check_pod_status(pod):
@@ -13,15 +12,15 @@ def check_pod_status(pod):
         if 'state' not in container_status:
             continue
         if visit_dict(container_status['state'], ['terminated', 'reason']) == (True, 'Error'):
-            raise ErrorResult(Oracle.CRASH, 'Pod %s crashed' % pod_name)
+            raise OracleResult('Pod %s crashed' % pod_name)
         if visit_dict(container_status['state'], ['waiting', 'reason']) == (True, 'CrashLoopBackOff'):
-            raise ErrorResult(Oracle.CRASH, 'Pod %s crashed' % pod_name)
+            raise OracleResult('Pod %s crashed' % pod_name)
 
 
 class CrashChecker(Checker):
     name = 'crash'
 
-    def check(self, _: int, snapshot: Snapshot, __: Snapshot) -> OracleResult:
+    def _check(self, snapshot: Snapshot, __: Snapshot) -> OracleResult:
         pods = snapshot.system_state['pod']
         deployment_pods = snapshot.system_state['deployment_pods']
 
@@ -33,7 +32,7 @@ class CrashChecker(Checker):
                 for pod in deployment:
                     check_pod_status(pod)
 
-        except ErrorResult as e:
+        except OracleResult as e:
             return e
 
-        return PassResult()
+        return OracleResult()
