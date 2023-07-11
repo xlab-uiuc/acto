@@ -120,7 +120,6 @@ def process_crd(context: dict,
             'body': helper_crd_doc
         }
         context['crd'] = crd_data
-    logger.debug('CRD data: %s' % crd_data)
 
 
 def add_acto_label(apiclient: kubernetes.client.ApiClient, context: dict):

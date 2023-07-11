@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from typing import Dict, List
 
 from acto.checker.checker import Checker, OracleControlFlow, OracleResult
+from acto.lib.dict import visit_dict
 from acto.snapshot import Snapshot
 from acto.utils import get_thread_logger
 
@@ -89,7 +90,8 @@ class HealthChecker(Checker):
                                  container['restart_count']))
 
         # check Health of CRs
-        if system_state['custom_resource_status'] is not None and 'conditions' in system_state['custom_resource_status']:
+        _, conditions = visit_dict(system_state, ['custom_resource_status', 'conditions'])
+        if conditions is not None:
             for condition in system_state['custom_resource_status']['conditions']:
                 if condition['type'] == 'Ready' and condition['status'] != 'True' and 'is forbidden' in condition['message'].lower():
                     unhealthy_resources['cr'].append('%s condition [%s] status [%s] message [%s]' %

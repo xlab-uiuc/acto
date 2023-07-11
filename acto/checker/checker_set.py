@@ -13,7 +13,7 @@ from acto.snapshot import Snapshot
 
 class CheckerSet:
     def __init__(self, context: dict, input_model: InputModel, checker_generators: list = None):
-        if checker_generators is None or checker_generators == []:
+        if checker_generators is None:
             checker_generators = [CrashChecker, HealthChecker, KubectlCliChecker, OperatorLogChecker, StateChecker, RecoveryChecker]
         self.context = context
         self.input_model = input_model

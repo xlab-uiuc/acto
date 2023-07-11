@@ -1,5 +1,5 @@
-from enum import Enum, auto, unique
-from functools import wraps
+from enum import auto, unique
+from functools import wraps, partial
 from typing import TypeVar, Callable
 
 import yaml
@@ -38,8 +38,8 @@ class Deploy:
     """
 
     def __init__(self, file_path: str, init_yaml=None):
-        self.crd_yaml_files = list(yaml.load_all(open(file_path, 'r').read(), Loader=yaml.FullLoader))
-        self.init_yaml_files = list(yaml.load_all(open(init_yaml, 'r').read(), Loader=yaml.FullLoader)) if init_yaml else None
+        self.crd_yaml_files = list(yaml.safe_load_all(open(file_path, 'r').read()))
+        self.init_yaml_files = list(yaml.safe_load_all(open(init_yaml, 'r').read())) if init_yaml else None
         self.wait = 20  # sec
 
     def deploy(self, runner: Runner) -> str:
@@ -66,8 +66,8 @@ class Deploy:
         crash later when running oracle if operator hasn't been ready
         """
         collector_context = CollectorContext(namespace='kube-system', timeout=self.wait)
-        kube_snapshot_collector = with_context(collector_context, snapshot_collector)
-        trial = Trial(TrialInputIterator.__new__(TrialInputIterator), CheckerSet({}, InputModel.__new__(InputModel)), [])
+        kube_snapshot_collector = partial(with_context(collector_context, snapshot_collector), ignore_cli_error=True)
+        trial = Trial(TrialInputIterator.__new__(TrialInputIterator), CheckerSet({}, InputModel.__new__(InputModel), []))
 
         for i in range(5):
             kube_snapshot = kube_snapshot_collector(runner, trial, {
@@ -158,10 +158,11 @@ class YamDeploy(Deploy):
         ret = utils.create_namespace(kubectl_client.api_client, namespace)
         if ret is None:
             logger.critical('Failed to create namespace')
+        # use server side apply to avoid last-applied-configuration
         if self.init_yaml_files:
-            kubectl_client.apply(self.init_yaml_files)
+            kubectl_client.apply(self.init_yaml_files, server_side=None)
         self.check_status(runner)
-        kubectl_client.apply(self.crd_yaml_files, namespace=namespace)
+        kubectl_client.apply(self.crd_yaml_files, namespace=namespace, server_side=None)
         self.check_status(runner)
         print_event('Operator deployed')
         return namespace

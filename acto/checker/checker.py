@@ -74,7 +74,7 @@ class Checker(ABC):
             result = self._check(snapshot, prev_snapshot)
         except Exception as e:
             result = OracleResult(message=str(e), exception=e)
-        result.set_emitter(self.name)
+        result.set_emitter(self)
         return result
 
     @abstractmethod

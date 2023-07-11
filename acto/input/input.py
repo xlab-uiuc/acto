@@ -116,7 +116,7 @@ class InputModel:
         if self.example_dir is not None:
             for example_filepath in glob.glob(self.example_dir + '*.yaml'):
                 with open(example_filepath, 'r') as example_file:
-                    docs = yaml.load_all(example_file, Loader=yaml.FullLoader)
+                    docs = yaml.safe_load_all(example_file)
                     for doc in docs:
                         example_docs.append(doc)
 

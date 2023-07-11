@@ -1,3 +1,4 @@
+import asyncio
 import importlib
 import json
 import os
@@ -21,7 +22,7 @@ from acto.input.valuegenerator import ArrayGenerator
 from acto.kubernetes_engine.kind import Kind
 from acto.lib.fp import drop_first_parameter
 from acto.runner.ray_runner import Runner
-from acto.runner.snapshot_collector import apply_system_input_and_wait, CollectorContext, with_context, snapshot_collector
+from acto.runner.snapshot_collector import CollectorContext, with_context, snapshot_collector, wait_for_system_converge
 from acto.runner.trial import Trial, TrialInputIterator
 from acto.schema import ObjectSchema
 from acto.serialization import ContextEncoder
@@ -75,9 +76,10 @@ class Acto:
         self.__learn_context(context_file=context_file,
                              crd_name=operator_config.crd_name,
                              helper_crd=helper_crd,
-                             analysis_config=operator_config.analysis)
+                             analysis_config=operator_config.analysis,
+                             seed_file_path=operator_config.seed_custom_resource)
 
-        if operator_config.analysis != None:
+        if operator_config.analysis is not None:
             used_fields = self.context['analysis_result']['used_fields']
         else:
             used_fields = None
@@ -139,7 +141,7 @@ class Acto:
         self.checkers = checkers
         self.num_of_mutations = num_of_mutations
 
-    def __learn_context(self, context_file, crd_name, helper_crd, analysis_config):
+    def __learn_context(self, context_file, crd_name, helper_crd, analysis_config, seed_file_path):
         logger = get_thread_logger(with_prefix=False)
         context_file_up_to_date = os.path.exists(context_file)
 
@@ -157,25 +159,32 @@ class Acto:
         class LearnCompleteException(Exception):
             context: dict
 
+            def __init__(self, ctx: dict):
+                self.context = ctx
+
         def collect_learn_context(namespace_discovered: str, runner: Runner, trial: Trial, seed_input: dict):
             logger.info('Starting learning run to collect information')
-            learn_task_context.namespace = namespace_discovered
-            apply_system_input_and_wait(learn_task_context, runner, seed_input)
+            context['namespace'] = namespace_discovered
+            runner.kubectl_client.apply(seed_input, namespace=namespace_discovered)
 
-            update_preload_images(context, runner.cluster.get_node_list(runner.kubectl_client.context_name))
+            learn_task_context.set_collector_if_none(runner.kubectl_client)
+            asyncio.run(wait_for_system_converge(learn_task_context.kubectl_collector, learn_task_context.timeout))
+
+            update_preload_images(context, runner.cluster.get_node_list(runner.cluster_name))
             process_crd(context, runner.kubectl_client.api_client, runner.kubectl_client, crd_name, helper_crd)
 
             raise LearnCompleteException(context)
 
         task = self.deploy.chain_with(collect_learn_context)
         # TODO, add protocols to Trial to suppress type error
-        runner_trial = Trial((), None)
+        runner_trial = Trial(TrialInputIterator(iter(()), None, yaml.safe_load(open(seed_file_path))), None)
         self.runners.submit(lambda runner, trial: runner.run.remote(trial, task), runner_trial)
         runner_trial = self.runners.get_next()
         assert isinstance(runner_trial.error, LearnCompleteException)
 
         self.context = runner_trial.error.context
-        self.context['analysis_result'] = do_static_analysis(analysis_config)
+        if analysis_config:
+            self.context['analysis_result'] = do_static_analysis(analysis_config)
 
         with open(context_file, 'w') as context_fout:
             json.dump(self.context, context_fout, cls=ContextEncoder, indent=4, sort_keys=True)

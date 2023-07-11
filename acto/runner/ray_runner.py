@@ -1,5 +1,6 @@
 import os
 import threading
+import traceback
 import uuid
 from typing import Type, TypeVar, Callable
 
@@ -32,13 +33,14 @@ class Runner:
                 snapshot = snapshot_collector(self, trial, system_input)
             except Exception as e:
                 error = e
+                # TODO: do not use print
+                print(traceback.format_exc())
             trial.send_snapshot(snapshot, error)
         self.cluster_ok_event.clear()
         threading.Thread(target=self.__reset_cluster_and_set_available).start()
         return trial
 
     def __reset_cluster_and_set_available(self):
-        ray.util.pdb.set_trace()
         self.__teardown_cluster()
         self.__setup_cluster()
         self.cluster_ok_event.set()
@@ -48,17 +50,19 @@ class Runner:
         self.cluster_ok_event.set()
 
     def __setup_cluster(self):
-        context_name = str(uuid.uuid4())
-        os.makedirs('.kube', exist_ok=True)
-        kubeconfig = os.path.join(os.path.expanduser('~'), '.kube', context_name)
+        self.cluster_name = str(uuid.uuid4())
+        kube_dir = os.path.join(os.path.expanduser('~'), '.kube')
+        os.makedirs(kube_dir, exist_ok=True)
 
         self.cluster = self.kubernetes_engine_class()
         self.cluster.configure_cluster(self.num_nodes, self.engine_version)
-        self.cluster.create_cluster(context_name, kubeconfig, self.engine_version)
+        context_name = self.cluster.get_context_name(self.cluster_name)
+        kubeconfig = os.path.join(kube_dir, context_name)
+        self.cluster.create_cluster(self.cluster_name, kubeconfig, self.engine_version)
 
         self.kubectl_client = KubectlClient(kubeconfig, context_name)
 
-
     def __teardown_cluster(self):
-        self.cluster.delete_cluster(self.kubectl_client.context_name, self.kubectl_client.kubeconfig)
+        self.cluster.delete_cluster(self.cluster_name, self.kubectl_client.kubeconfig)
+        self.cluster_name = None
         os.remove(self.kubectl_client.kubeconfig)

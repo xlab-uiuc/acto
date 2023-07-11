@@ -51,16 +51,22 @@ class KubectlClient:
     def apply(self, file_content: dict, **kwargs) -> subprocess.CompletedProcess:
         args = {
             'namespace': '-n',
+            'server_side': '--server-side',
         }
         with tempfile.NamedTemporaryFile(mode='w+', suffix='.yaml') as f:
-            yaml.dump(file_content, f)
+            if isinstance(file_content, list):
+                yaml.safe_dump_all(file_content, f)
+            else:
+                yaml.safe_dump(file_content, f)
             cmd = ['apply', '-f', f.name]
             for k, v in kwargs.items():
                 if k in args:
-                    cmd.extend([args[k], v])
+                    cmd.extend([args[k]])
+                    if v:
+                        cmd.extend([v])
                 else:
                     raise ValueError(f'Invalid argument {k}')
-            return self.kubectl(cmd, **kwargs)
+            return self.kubectl(cmd)
 
 
 def kubernetes_client(kubeconfig: str, context_name: str) -> kubernetes.client.ApiClient:
