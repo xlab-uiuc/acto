@@ -11,13 +11,16 @@ from acto.utils import get_thread_logger
 class HealthResult(OracleResult):
     unhealthy_resources: Dict[str, List[str]] = field(default_factory=dict)
 
-    def __init__(self, unhealthy_resources: Dict[str, List[str]]):
+    def __init__(self, unhealthy_resources: Dict[str, List[str]] = None):
+        if unhealthy_resources is None:
+            unhealthy_resources = {}
         logger = get_thread_logger(with_prefix=True)
         error_msgs = []
         for kind, resources in unhealthy_resources.items():
             if len(resources) != 0:
                 error_msgs.append(f"{kind}: {', '.join(resources)}")
                 logger.error(f"Found {kind}: {', '.join(resources)} with unhealthy status")
+        self.unhealthy_resources = unhealthy_resources
         if len(error_msgs) == 0:
             error_msgs = [OracleControlFlow.ok]
         super().__init__('\n'.join(error_msgs))

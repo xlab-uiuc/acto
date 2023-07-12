@@ -129,7 +129,7 @@ class ValueWithObjectSchema(ValueWithSchema):
             return None
         if len(path) == 0:
             return self.raw_value()
-        key = path.pop(0)
+        key, path = path[0], path[1:]
         if key not in self.store:
             # path does not exist yet
             return None
@@ -140,7 +140,7 @@ class ValueWithObjectSchema(ValueWithSchema):
         '''Ensures the path exists'''
         if len(path) == 0:
             return
-        key = path.pop(0)
+        key, path = path[0], path[1:]
         if self.store == None:
             self.update(self.schema.gen(minimum=True))
             self.__setitem__(key, None)
@@ -152,7 +152,7 @@ class ValueWithObjectSchema(ValueWithSchema):
         if len(path) == 0:
             self.update(value)
         else:
-            key = path.pop(0)
+            key, path = path[0], path[1:]
             self.store[key].set_value_by_path(value, path)
 
     def __getitem__(self, key):
@@ -248,7 +248,7 @@ class ValueWithArraySchema(ValueWithSchema):
             return None
         if len(path) == 0:
             return self.raw_value()
-        key = path.pop(0)
+        key, path = path[0], path[1:]
         if key >= len(self.store):
             # path does not exist yet
             return None
@@ -259,7 +259,7 @@ class ValueWithArraySchema(ValueWithSchema):
         '''Ensures the path exists'''
         if len(path) == 0:
             return
-        key = path.pop(0)
+        key, path = path[0], path[1:]
         if self.store == None:
             self.store = []
             for i in range(0, key):
@@ -275,7 +275,7 @@ class ValueWithArraySchema(ValueWithSchema):
         if len(path) == 0:
             self.update(value)
         else:
-            key = path.pop(0)
+            key, path = path[0], path[1:]
             self.store[key].set_value_by_path(value, path)
 
     def __getitem__(self, key):
@@ -379,7 +379,6 @@ class ValueWithAnyOfSchema(ValueWithSchema):
         '''Ensures the path exists'''
         if len(path) == 0:
             return
-        key = path.pop(0)
 
         # XXX: Complicated, no use case yet, let's implement later
         raise NotImplementedError

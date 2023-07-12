@@ -274,7 +274,7 @@ class AdditionalRunner:
         apiclient = kubernetes_client(self._kubeconfig, self._context_name)
         deployed = self._deploy.deploy_with_retry(self._context, self._kubeconfig,
                                                   self._context_name)
-        add_acto_label(apiclient, self._context)
+        add_acto_label(apiclient, self._context['namespace'])
         trial_dir = os.path.join(self._workdir, 'trial-%02d' % self._worker_id)
         os.makedirs(trial_dir, exist_ok=True)
         runner = Runner(self._context, trial_dir, self._kubeconfig, self._context_name)
@@ -321,7 +321,7 @@ class DeployRunner:
         apiclient = kubernetes_client(self._kubeconfig, self._context_name)
         deployed = self._deploy.deploy_with_retry(self._context, self._kubeconfig,
                                                   self._context_name)
-        add_acto_label(apiclient, self._context)
+        add_acto_label(apiclient, self._context['namespace'])
 
         trial_dir = os.path.join(self._workdir, 'trial-%02d' % self._worker_id)
         os.makedirs(trial_dir, exist_ok=True)
@@ -353,7 +353,7 @@ class DeployRunner:
                 apiclient = kubernetes_client(self._kubeconfig, self._context_name)
                 deployed = self._deploy.deploy_with_retry(self._context, self._kubeconfig,
                                                           self._context_name)
-                add_acto_label(apiclient, self._context)
+                add_acto_label(apiclient, self._context['namespace'])
                 runner = Runner(self._context, trial_dir, self._kubeconfig, self._context_name)
 
             generation += 1

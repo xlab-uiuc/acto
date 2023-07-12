@@ -14,7 +14,7 @@ from acto.input import InputModel
 from acto.runner.ray_runner import Runner
 from acto.runner.snapshot_collector import CollectorContext, with_context, snapshot_collector
 from acto.runner.trial import Trial, TrialInputIterator
-from acto.utils import get_thread_logger
+from acto.utils import get_thread_logger, add_acto_label
 
 CONST = CONST()
 Snapshot = TypeVar('Snapshot')
@@ -89,6 +89,7 @@ class Deploy:
             namespace = None
             if not cluster_setup:
                 namespace = self.deploy(runner)
+                add_acto_label(runner.kubectl_client.api_client, namespace)
                 cluster_setup = True
             return collector(namespace, runner, trial, context)
 

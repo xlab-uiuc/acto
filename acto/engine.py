@@ -118,7 +118,7 @@ class TrialRunner:
                 logger.info('Not deployed. Try again!')
                 continue
 
-            add_acto_label(apiclient, self.context)
+            add_acto_label(apiclient, self.context['namespace'])
 
             trial_dir = os.path.join(
                 self.workdir,

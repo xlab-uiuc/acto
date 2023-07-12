@@ -122,13 +122,13 @@ def process_crd(context: dict,
         context['crd'] = crd_data
 
 
-def add_acto_label(apiclient: kubernetes.client.ApiClient, context: dict):
+def add_acto_label(apiclient: kubernetes.client.ApiClient, namespace: str):
     '''Add acto label to deployment, stateful_state and corresponding pods.
     '''
     appv1Api = kubernetes.client.AppsV1Api(apiclient)
-    operator_deployments = appv1Api.list_namespaced_deployment(context['namespace'],
+    operator_deployments = appv1Api.list_namespaced_deployment(namespace,
                                                                watch=False).items
-    operator_stateful_states = appv1Api.list_namespaced_stateful_set(context['namespace'],
+    operator_stateful_states = appv1Api.list_namespaced_stateful_set(namespace,
                                                                      watch=False).items
     for deployment in operator_deployments:
         patches = [{

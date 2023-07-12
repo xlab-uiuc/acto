@@ -1,7 +1,9 @@
+import json
+import os
 from dataclasses import dataclass, field
-from functools import lru_cache
 from typing import Tuple, Dict, List, TypedDict, Optional, Literal
 
+import yaml
 from deepdiff import DeepDiff
 
 from acto.common import postprocess_diff, EXCLUDE_PATH_REGEX, Diff
@@ -24,7 +26,6 @@ class Snapshot:
     trial_state: Literal['normal', 'recovering', 'terminated', 'runtime_exception'] = 'normal'
     snapshot_before_applied_input: Optional['Snapshot'] = None
 
-    @lru_cache
     def delta(self, prev: 'Snapshot') -> Tuple[Dict[str, Dict[str, Dict[str, Diff]]], Dict[str, Dict[str, Dict[str, Diff]]]]:
         curr_input, curr_system_state = self.input, self.system_state
         prev_input, prev_system_state = prev.input, prev.system_state
@@ -45,3 +46,12 @@ class Snapshot:
 
     def set_snapshot_before_applied_input(self, snapshot: 'Snapshot'):
         self.snapshot_before_applied_input = snapshot
+
+    def save(self, base_dir: str):
+        yaml.safe_dump(self.input, open(os.path.join(base_dir, f'mutated-{self.generation}.yaml'),'w'))
+        json.dump(self.cli_result, open(os.path.join(base_dir, f'cli-output-{self.generation}.log'),'w'))
+        json.dump(self.system_state, open(os.path.join(base_dir, f'system-state-{self.generation}.json'), 'w'), default=str)
+        open(os.path.join(base_dir, f'operator-{self.generation}.json'), 'w').write('\n'.join(self.operator_log))
+        json.dump(self.events, open(os.path.join(base_dir, f'events-{self.generation}.json'), 'w'))
+        json.dump(self.not_ready_pods_logs, open(os.path.join(base_dir, f'not-ready-pods-logs-{self.generation}.json'), 'w'))
+        open(os.path.join(base_dir, f'trial-state-{self.generation}.txt'), 'w').write('\n'.join(self.trial_state))

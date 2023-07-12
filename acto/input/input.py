@@ -697,23 +697,18 @@ class DeterministicInputModel(InputModel):
 
         normal_test_plan_items.extend(semantic_test_plan_items)  # run semantic testcases anyway
 
-        CHUNK_SIZE = 10
-
-        def split_into_subgroups(test_plan_items) -> List[List[Tuple[str, List[TestCase]]]]:
+        def extract_test_cases(test_plan_items) -> List[Tuple[str, List[TestCase]]]:
             all_testcases = []
             for path, testcases in test_plan_items:
                 for testcase in testcases:
-                    all_testcases.append((path, testcase))
+                    all_testcases.append((json.loads(path), testcase))
 
-            subgroups = []
-            for i in range(0, len(all_testcases), CHUNK_SIZE):
-                subgroups.append(all_testcases[i:i + CHUNK_SIZE])
-            return subgroups
+            return all_testcases
 
-        normal_subgroups = split_into_subgroups(normal_test_plan_items)
-        overspecified_subgroups = split_into_subgroups(overspecified_test_plan_items)
-        copiedover_subgroups = split_into_subgroups(copiedover_test_plan_items)
-        additional_semantic_subgroups = split_into_subgroups(additional_semantic_testcases.items())
+        normal_subgroups = extract_test_cases(normal_test_plan_items)
+        overspecified_subgroups = extract_test_cases(overspecified_test_plan_items)
+        copiedover_subgroups = extract_test_cases(copiedover_test_plan_items)
+        additional_semantic_subgroups = extract_test_cases(additional_semantic_testcases.items())
 
         return {
             'delta_from': delta_from,

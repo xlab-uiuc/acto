@@ -13,6 +13,9 @@ class Snapshot(Protocol):
     def set_snapshot_before_applied_input(self, snapshot: 'Snapshot'):
         pass
 
+    def save(self, dir_path: str):
+        pass
+
 
 class TrialInputIterator:
     def __init__(self, next_testcase: Iterator[Tuple[List[str], TestCase]], root_schema: ObjectSchema, seed_input: dict):
@@ -39,22 +42,24 @@ class TrialInputIterator:
                 self.history.append(system_input)
                 yield system_input
 
-            for (field_path, testcase) in self.next_testcase:
-                signature = testcase.signature(field_path)
-                # history[-1] is the last applied system input
-                input_with_schema = attach_schema_to_value(self.history[-1], self.root_schema)
-                # get the value of the field that we want to mutate and check if it satisfies the precondition
-                field_curr_value = input_with_schema.get_value_by_path(field_path)
-                if not testcase.test_precondition(field_curr_value):
-                    # if the precondition is not satisfied, we use setup to make it satisfied
-                    input_with_schema.create_path(field_path)
-                    field_curr_value = testcase.setup(field_curr_value)
-                    input_with_schema.set_value_by_path(field_curr_value, field_path)
-                    # and generate the setup test case
-                    self.queuing_tests.append((input_with_schema.raw_value(), {**signature, 'testcase': f'{str(testcase)}-setup'}))
-                # then mutate the field and generate the test case
-                input_with_schema.set_value_by_path(testcase.mutator(field_curr_value), field_path)
-                self.queuing_tests.append((input_with_schema.raw_value(), signature))
+            (field_path, testcase) = next(self.next_testcase, (None, None))
+            if (field_path, testcase) == (None, None):
+                continue
+            signature = testcase.signature(field_path)
+            # history[-1] is the last applied system input
+            input_with_schema = attach_schema_to_value(self.history[-1][0], self.root_schema)
+            input_with_schema.create_path(field_path)
+            # get the value of the field that we want to mutate and check if it satisfies the precondition
+            field_curr_value = input_with_schema.get_value_by_path(field_path)
+            if not testcase.test_precondition(field_curr_value):
+                # if the precondition is not satisfied, we use setup to make it satisfied
+                field_curr_value = testcase.setup(field_curr_value)
+                input_with_schema.set_value_by_path(field_curr_value, field_path)
+                # and generate the setup test case
+                self.queuing_tests.append((input_with_schema.raw_value(), {**signature, 'testcase': f'{str(testcase)}-setup'}))
+            # then mutate the field and generate the test case
+            input_with_schema.set_value_by_path(testcase.mutator(field_curr_value), field_path)
+            self.queuing_tests.append((input_with_schema.raw_value(), signature))
 
     def flush(self):
         """

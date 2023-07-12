@@ -2,9 +2,9 @@ import asyncio
 import importlib
 import json
 import os
+import pickle
 import subprocess
 import tempfile
-import time
 from typing import List, Tuple
 
 import yaml
@@ -52,6 +52,7 @@ class Acto:
                  num_of_mutations=10
                  ) -> None:
         logger = get_thread_logger(with_prefix=False)
+        self.workdir_path = workdir_path
         self.images_archive = os.path.join(workdir_path, 'images.tar')
 
         try:
@@ -138,7 +139,8 @@ class Acto:
 
         if checkers is None:
             self.checkers = CheckerSet(self.context, self.input_model)
-        self.checkers = checkers
+        else:
+            self.checkers = checkers
         self.num_of_mutations = num_of_mutations
 
     def __learn_context(self, context_file, crd_name, helper_crd, analysis_config, seed_file_path):
@@ -205,11 +207,10 @@ class Acto:
             subprocess.run(['docker', 'image', 'save', '-o', self.images_archive] +
                            list(self.context['preload_images']), stdout=subprocess.DEVNULL)
 
-        start_time = time.time()
-
         def run_test_plan(test_case_list: List[Tuple[List[str], TestCase]]):
             active_runner_count = 0
-            while active_runner_count != 0 and len(test_case_list) != 0:
+            trial_id = 0
+            while active_runner_count != 0 or len(test_case_list) != 0:
                 def task(runner: Runner, test_cases: List[Tuple[List[str], TestCase]]) -> Trial:
                     collector = with_context(CollectorContext(
                         namespace=self.context['namespace'],
@@ -221,8 +222,7 @@ class Acto:
                     iterator = TrialInputIterator(iter(test_cases), self.input_model.get_root_schema(), self.input_model.get_seed_input())
 
                     trial = Trial(iterator, self.checkers, num_mutation=self.num_of_mutations)
-                    runner.run(trial, collector)
-                    return trial
+                    return runner.run.remote(trial, collector)
 
                 while self.runners.has_free() and len(test_case_list) != 0:
                     test_cases, test_case_list = test_case_list[:self.num_of_mutations], test_case_list[self.num_of_mutations:]
@@ -233,6 +233,14 @@ class Acto:
                 active_runner_count -= 1
                 for test_case in trial.next_input.next_testcase:
                     test_case_list.append(test_case)
+                trial_save_dir = os.path.join(self.workdir_path, f'trial-{trial_id:05}')
+                os.makedirs(trial_save_dir, exist_ok=True)
+                # TODO: improve saving snapshots
+                for snapshot in trial.snapshots:
+                    snapshot.save(trial_save_dir)
+                pickle.dump(trial, open(os.path.join(trial_save_dir, 'trial.pkl'), 'wb'))
+                trial_id += 1
+
 
         if 'normal' in modes:
             run_test_plan(self.test_plan['normal_subgroups'])

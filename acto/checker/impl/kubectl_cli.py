@@ -1,6 +1,5 @@
 import logging
 from dataclasses import dataclass
-from functools import cached_property
 from typing import List, Optional
 
 from acto.checker.checker import Checker, OracleResult
@@ -19,15 +18,12 @@ If kubectl reject the mutation, an error result will be returned.
 class KubectlCliResult(OracleResult):
     invalid_field_path: Optional[List[str]] = None
 
-    @cached_property
     def means_flush(self):
         return self.message == 'Custom resource remain unchanged'
 
-    @cached_property
     def means_revert(self):
         return self.message.startswith('Invalid input, field path:')
 
-    @cached_property
     def means_terminate(self):
         return self.message.startswith('Connection refused, stderr: ')
 
