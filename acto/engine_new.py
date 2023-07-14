@@ -1,20 +1,25 @@
 import asyncio
 import importlib
+import inspect
 import json
 import os
 import pickle
 import subprocess
 import tempfile
-from typing import List, Tuple
+from typing import List, Tuple, Callable
+
+import ray
 
 import yaml
+from acto.checker.checker import Checker
 from ray.util import ActorPool
 
-from acto.checker.checker_set import CheckerSet
+from acto.checker.checker_set import CheckerSet, default_checker_generators
 from acto.common import print_event
 from acto.config import actoConfig
 from acto.constant import CONST
 from acto.deploy import DeployMethod, YamDeploy
+from acto.snapshot import Snapshot
 from acto.input import InputModel, TestCase, DeterministicInputModel
 from acto.input.input import OverSpecifiedField
 from acto.input.known_schemas import find_all_matched_schemas_type, K8sField
@@ -48,7 +53,7 @@ class Acto:
                  delta_from: str = None,
                  mount: list = None,
                  focus_fields: list = None,
-                 checkers: CheckerSet = None,
+                 checker_generators: list = None,
                  num_of_mutations=10
                  ) -> None:
         logger = get_thread_logger(with_prefix=False)
@@ -72,13 +77,16 @@ class Acto:
             logger.error('Only KIND cluster runtime is supported, aborting')
             quit()
 
-        self.runners = ActorPool([Runner.remote(Kind, CONST.K8S_VERSION, operator_config.num_nodes) for _ in range(num_workers)])
-
-        self.__learn_context(context_file=context_file,
+        self.__learn_context(runner=lambda :Runner.remote(Kind, CONST.K8S_VERSION, operator_config.num_nodes),
+                             context_file=context_file,
                              crd_name=operator_config.crd_name,
                              helper_crd=helper_crd,
                              analysis_config=operator_config.analysis,
                              seed_file_path=operator_config.seed_custom_resource)
+
+
+
+        self.runners = ActorPool([Runner.remote(Kind, CONST.K8S_VERSION, operator_config.num_nodes, self.context['preload_images']) for _ in range(num_workers)])
 
         if operator_config.analysis is not None:
             used_fields = self.context['analysis_result']['used_fields']
@@ -137,13 +145,18 @@ class Acto:
         self.test_plan = self.input_model.generate_test_plan(testplan_path,
                                                              focus_fields=focus_fields)
 
-        if checkers is None:
-            self.checkers = CheckerSet(self.context, self.input_model)
-        else:
-            self.checkers = checkers
+        if checker_generators is None:
+            checker_generators = default_checker_generators
+        for oracle_modules in operator_config.custom_oracles:
+            module = importlib.import_module(oracle_modules)
+            for name, obj in inspect.getmembers(module):
+                if inspect.isclass(obj) and issubclass(obj, Checker) and obj != Checker:
+                    checker_generators.append(obj)
+
+        self.checkers = CheckerSet(self.context, self.input_model, checker_generators)
         self.num_of_mutations = num_of_mutations
 
-    def __learn_context(self, context_file, crd_name, helper_crd, analysis_config, seed_file_path):
+    def __learn_context(self, runner: Callable[[],Runner], context_file, crd_name, helper_crd, analysis_config, seed_file_path):
         logger = get_thread_logger(with_prefix=False)
         context_file_up_to_date = os.path.exists(context_file)
 
@@ -179,9 +192,10 @@ class Acto:
 
         task = self.deploy.chain_with(collect_learn_context)
         # TODO, add protocols to Trial to suppress type error
+        learn_runner = runner()
         runner_trial = Trial(TrialInputIterator(iter(()), None, yaml.safe_load(open(seed_file_path))), None)
-        self.runners.submit(lambda runner, trial: runner.run.remote(trial, task), runner_trial)
-        runner_trial = self.runners.get_next()
+        runner_trial = learn_runner.run.remote(runner_trial, task)
+        runner_trial = ray.get(runner_trial)
         assert isinstance(runner_trial.error, LearnCompleteException)
 
         self.context = runner_trial.error.context
@@ -196,16 +210,6 @@ class Acto:
             modes = ['normal', 'overspecified', 'copiedover']
 
         logger = get_thread_logger(with_prefix=True)
-
-        # Build an archive to be preloaded
-        if len(self.context['preload_images']) > 0:
-            logger.info('Creating preload images archive')
-            print_event('Preparing required images...')
-            # first make sure images are present locally
-            for image in self.context['preload_images']:
-                subprocess.run(['docker', 'pull', image], stdout=subprocess.DEVNULL)
-            subprocess.run(['docker', 'image', 'save', '-o', self.images_archive] +
-                           list(self.context['preload_images']), stdout=subprocess.DEVNULL)
 
         def run_test_plan(test_case_list: List[Tuple[List[str], TestCase]]):
             active_runner_count = 0
@@ -243,7 +247,7 @@ class Acto:
 
 
         if 'normal' in modes:
-            run_test_plan(self.test_plan['normal_subgroups'])
+            run_test_plan(self.test_plan['normal_subgroups'][:])
 
         if 'overspecified' in modes:
             run_test_plan(self.test_plan['overspecified_subgroups'])

@@ -34,7 +34,7 @@ class OperatorConfig:
                  num_nodes: int = 4,
                  wait_time: int = 60,
                  context: str = None,
-                 custom_oracle: str = None,
+                 custom_oracles: List[str] = None,
                  diff_ignore_fields: List[str] = None,
                  focus_fields: List[List[str]] = None) -> None:
         self.deploy = DeployConfig(**deploy)
@@ -42,7 +42,7 @@ class OperatorConfig:
         self.custom_fields = custom_fields
         self.blackbox_custom_fields = blackbox_custom_fields
         self.k8s_fields = k8s_fields
-        self.custom_oracle = custom_oracle
+        self.custom_oracles = custom_oracles if custom_oracles else []
         self.example_dir = example_dir
         self.context = context
         self.seed_custom_resource = seed_custom_resource

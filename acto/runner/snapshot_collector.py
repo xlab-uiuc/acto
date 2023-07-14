@@ -43,13 +43,16 @@ def snapshot_collector(ctx: CollectorContext, runner: Runner, trial: Trial, syst
     cli_result = runner.kubectl_client.apply(system_input, namespace=ctx.namespace)
     if cli_result.returncode != 0 and not ignore_cli_error:
         logging.error(f'Failed to apply system input to namespace {ctx.namespace}.\n{system_input}')
-        raise RuntimeError(f'Failed to apply system input to namespace {ctx.namespace}.\n{system_input}')
+
+    skip_waiting_for_converge = cli_result.returncode != 0 and not ignore_cli_error
 
     cli_result = {
         "stdout": "" if cli_result.stdout is None else cli_result.stdout.strip(),
         "stderr": "" if cli_result.stderr is None else cli_result.stderr.strip(),
     }
-    asyncio.run(wait_for_system_converge(ctx.kubectl_collector, ctx.timeout))
+
+    if not skip_waiting_for_converge:
+        asyncio.run(wait_for_system_converge(ctx.kubectl_collector, ctx.timeout))
 
     system_state = ctx.kubectl_collector.collect_system_state()
     operator_log = ctx.kubectl_collector.collect_operator_log()
@@ -78,6 +81,7 @@ async def wait_until_no_future_events(core_api: kubernetes.client.CoreV1Api, tim
     @param timeout: timeout in seconds
     @return:
     """
+    await asyncio.sleep(timeout / 2)
     while True:
         events: CoreV1EventList = core_api.list_event_for_all_namespaces()
         events_last_time: List[datetime] = [extract_event_time(event) for event in events.items]

@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 from typing import Dict, List
 
 from acto.checker.checker import Checker, OracleControlFlow, OracleResult
@@ -16,13 +16,16 @@ class HealthResult(OracleResult):
             unhealthy_resources = {}
         logger = get_thread_logger(with_prefix=True)
         error_msgs = []
+        filtered_unhealthy_resources = {}
         for kind, resources in unhealthy_resources.items():
             if len(resources) != 0:
                 error_msgs.append(f"{kind}: {', '.join(resources)}")
                 logger.error(f"Found {kind}: {', '.join(resources)} with unhealthy status")
-        self.unhealthy_resources = unhealthy_resources
+                filtered_unhealthy_resources[kind] = resources
+        self.unhealthy_resources = filtered_unhealthy_resources
         if len(error_msgs) == 0:
             error_msgs = [OracleControlFlow.ok]
+        error_msgs = sorted(error_msgs)
         super().__init__('\n'.join(error_msgs))
 
 

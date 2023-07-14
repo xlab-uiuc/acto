@@ -3,15 +3,15 @@ import json
 import os
 from typing import Dict, Tuple
 
+from acto.common import Diff
+
 import pytest
 import yaml
 from deepdiff.helper import NotPresent
 
-from acto.checker.impl.state import StateChecker
+from acto.checker.impl.state import StateChecker, StateResult
 from acto.checker.impl.tests import load_snapshot
-from acto.common import Oracle, Diff
-from acto.checker.checker_result import PassResult, InvalidInputResult, StateResult
-from acto.checker.checker import OracleResult
+from acto.checker.checker import OracleResult, OracleControlFlow
 from acto.input import DeterministicInputModel
 from acto.lib.dict import visit_dict
 from acto.snapshot import Snapshot
@@ -52,19 +52,56 @@ def checker_func(s: Snapshot, prev_s: Snapshot) -> OracleResult:
     return checker.check(s, prev_s)
 
 
-@pytest.mark.parametrize("test_case_id,result_dict", list(enumerate([
-    StateResult(Oracle.SYSTEM_STATE, 'Found no matching fields for input', Diff(NotPresent(), "ACTOKEY", ['spec', 'additionalServiceConfig', 'nodePortService', 'additionalAnnotations', 'ACTOKEY'])),
-    PassResult(),
-    InvalidInputResult([]),
-    PassResult(),
-    PassResult(),
-    PassResult(),
-    PassResult(),
-    PassResult(),
-    StateResult(Oracle.SYSTEM_STATE, 'Found no matching fields for input', Diff(NotPresent(), ".399015Gi", ['spec', 'sidecars', 0, 'env', 1, 'valueFrom', 'resourceFieldRef', 'divisor'])),
+@pytest.mark.parametrize("test_case_id,expected", list(enumerate([
+    (StateResult(message='Found no matching fields for input',
+                 diff=Diff(prev=NotPresent(),
+                           curr='ACTOKEY',
+                           path=['spec',
+                                 'additionalServiceConfig',
+                                 'nodePortService',
+                                 'additionalAnnotations',
+                                 'ACTOKEY'])
+                 ), OracleControlFlow.revert),
+    (StateResult(), OracleControlFlow.ok),
+    (StateResult(message='Invalid input from status message: StatefulSet.apps '
+                         '"test-cluster-server" is invalid: '
+                         'spec.template.spec.restartPolicy: Unsupported value: '
+                         '"OnFailure": supported values: "Always"',
+                 diff=Diff(prev='Finish reconciling',
+                           curr='StatefulSet.apps "test-cluster-server" is invalid: '
+                                'spec.template.spec.restartPolicy: Unsupported '
+                                'value: "OnFailure": supported values: "Always"',
+                           path=['conditions', 3, 'message']),
+                 invalid_field_path=[]
+                 ), OracleControlFlow.revert),
+    (StateResult(), OracleControlFlow.ok),
+    (StateResult(), OracleControlFlow.ok),
+    (StateResult(), OracleControlFlow.ok),
+    (StateResult(), OracleControlFlow.ok),
+    (StateResult(), OracleControlFlow.ok),
+    (StateResult(message='Found no matching fields for input',
+                 diff=Diff(prev=NotPresent(),
+                           curr='.399015Gi',
+                           path=['spec',
+                                 'sidecars',
+                                 0,
+                                 'env',
+                                 1,
+                                 'valueFrom',
+                                 'resourceFieldRef',
+                                 'divisor'])
+                 ), OracleControlFlow.revert),
+
 ])))
-def test_check(test_case_id, result_dict):
+def test_check(test_case_id, expected):
+    expected, expected_control_flow = expected
+    expected.emit_by = "state"
     snapshot = load_snapshot("state", test_case_id)
     snapshot_prev = load_snapshot("state", test_case_id, load_prev=True)
     oracle_result = checker_func(snapshot, snapshot_prev)
-    assert oracle_result == result_dict
+    assert oracle_result == expected
+    for control_flow in OracleControlFlow:
+        if control_flow == expected_control_flow:
+            assert expected.means(control_flow)
+        else:
+            assert not expected.means(control_flow)

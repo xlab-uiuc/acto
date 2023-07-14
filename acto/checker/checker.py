@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import auto
 from functools import wraps
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 
 from strenum import StrEnum
 
@@ -36,7 +36,7 @@ class OracleResult(Exception):
     exception: Optional[Exception] = None
     emit_by: str = '<None>'
 
-    def means(self, control_flow: OracleControlFlow):
+    def means(self, control_flow: Union[OracleControlFlow, str]):
         method_name = f'means_{control_flow.name}'
         return getattr(self, method_name)()
 

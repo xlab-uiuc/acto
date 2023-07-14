@@ -1,3 +1,4 @@
+import inspect
 import json
 import os.path
 from typing import List
@@ -6,7 +7,12 @@ import yaml
 
 from acto.snapshot import Snapshot
 
-base_dir = os.path.dirname(os.path.abspath(__file__))
+try:
+    base_file_path = [f for f in inspect.stack() if 'test_' in f.filename][1].filename
+except:
+    base_file_path = __file__
+
+base_dir = os.path.dirname(os.path.abspath(base_file_path))
 
 
 def get_filename(checker_name: str, test_case_id: int, file_type: str, file_format: str, load_prev=False) -> str:

@@ -54,4 +54,4 @@ class Snapshot:
         open(os.path.join(base_dir, f'operator-{self.generation}.json'), 'w').write('\n'.join(self.operator_log))
         json.dump(self.events, open(os.path.join(base_dir, f'events-{self.generation}.json'), 'w'))
         json.dump(self.not_ready_pods_logs, open(os.path.join(base_dir, f'not-ready-pods-logs-{self.generation}.json'), 'w'))
-        open(os.path.join(base_dir, f'trial-state-{self.generation}.txt'), 'w').write('\n'.join(self.trial_state))
+        open(os.path.join(base_dir, f'trial-state-{self.generation}.txt'), 'w').write(self.trial_state)

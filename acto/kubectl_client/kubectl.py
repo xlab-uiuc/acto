@@ -66,7 +66,7 @@ class KubectlClient:
                         cmd.extend([v])
                 else:
                     raise ValueError(f'Invalid argument {k}')
-            return self.kubectl(cmd)
+            return self.kubectl(cmd, capture_output=True, text=True)
 
 
 def kubernetes_client(kubeconfig: str, context_name: str) -> kubernetes.client.ApiClient:

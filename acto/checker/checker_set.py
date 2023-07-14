@@ -10,11 +10,12 @@ from acto.checker.impl.state import StateChecker
 from acto.input import InputModel
 from acto.snapshot import Snapshot
 
+default_checker_generators = [CrashChecker, HealthChecker, KubectlCliChecker, OperatorLogChecker, StateChecker, RecoveryChecker]
 
 class CheckerSet:
     def __init__(self, context: dict, input_model: InputModel, checker_generators: list = None):
         if checker_generators is None:
-            checker_generators = [CrashChecker, HealthChecker, KubectlCliChecker, OperatorLogChecker, StateChecker, RecoveryChecker]
+            checker_generators = default_checker_generators
         self.context = context
         self.input_model = input_model
 

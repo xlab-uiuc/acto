@@ -73,10 +73,10 @@ class TrialInputIterator:
         """
         # prevent all the tests in the queuing_tests from being applied
         self.flush()
-        # pop the faulty test
-        self.history.pop()
+        # get the faulty test
+        faulty_test = self.history[-1]
         # re-apply the last valid test
-        self.queuing_tests.append(self.history.pop())
+        self.queuing_tests.append((self.history[-2], {'testcase': f'revert-{faulty_test[1]["testcase"]}', 'field': None}))
 
 
 class Trial:

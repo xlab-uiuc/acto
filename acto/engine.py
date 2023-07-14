@@ -582,8 +582,8 @@ class Acto:
 
         self.sequence_base = 20 if delta_from else 0
 
-        if operator_config.custom_oracle != None:
-            module = importlib.import_module(operator_config.custom_oracle)
+        if operator_config.custom_oracles is not None:
+            module = importlib.import_module(operator_config.custom_oracles)
             self.custom_oracle = module.CUSTOM_CHECKER
             self.custom_on_init = module.ON_INIT
         else:

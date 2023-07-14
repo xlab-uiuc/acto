@@ -37,5 +37,5 @@ class OperatorLogChecker(Checker):
             # But it turned out the result was too fragile
             # So we disable it by default
             if actoConfig.alarms.warning_in_operator_logs:
-                return OracleResult(f'Operator log contains error message: {line}')
-        return OracleResult()
+                return OperatorLogResult(f'Operator log contains error message: {line}')
+        return OperatorLogResult()

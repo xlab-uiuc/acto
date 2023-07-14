@@ -273,6 +273,7 @@ INVALID_INPUT_LOG_REGEX = [
     r"invalid",
     r"not valid",
     r"no valid",
+    r"not supported",
     r"unsupported",
     r"but expected",
     r"are not available",
