@@ -12,7 +12,7 @@ from acto.checker.checker import OracleControlFlow
 from acto.checker.impl.health import HealthChecker
 from acto.kubectl_client import KubectlClient
 from acto.kubectl_client.collector import Collector
-from acto.runner.ray_runner import Runner
+from acto.runner.runner import Runner
 from acto.runner.trial import Trial
 from acto.snapshot import Snapshot
 

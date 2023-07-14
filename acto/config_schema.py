@@ -31,6 +31,8 @@ class StateCheckerConfig(BaseModel):
 class CheckersConfig(BaseModel):
     state: StateCheckerConfig
 
+class RayConfig(BaseModel):
+    enabled: bool = True
 
 class Config(BaseModel):
     alarms: AlarmsConfig
@@ -39,3 +41,4 @@ class Config(BaseModel):
     notifications: NotificationsConfig
     strict: bool = True
     io: IOConfig
+    ray: RayConfig

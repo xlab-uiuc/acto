@@ -11,7 +11,7 @@ from acto.checker.impl.health import HealthChecker
 from acto.common import *
 from acto.constant import CONST
 from acto.input import InputModel
-from acto.runner.ray_runner import Runner
+from acto.runner.runner import Runner
 from acto.runner.snapshot_collector import CollectorContext, with_context, snapshot_collector
 from acto.runner.trial import Trial, TrialInputIterator
 from acto.utils import get_thread_logger, add_acto_label

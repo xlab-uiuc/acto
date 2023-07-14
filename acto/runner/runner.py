@@ -6,8 +6,7 @@ import traceback
 import uuid
 from typing import Type, TypeVar, Callable, List
 
-import ray
-
+from acto import ray
 from acto.kubectl_client import KubectlClient
 from acto.kubernetes_engine.base import KubernetesEngine
 from acto.runner.trial import Trial
@@ -20,7 +19,8 @@ Snapshot = TypeVar('Snapshot')
 @ray.remote
 class Runner:
 
-    def __init__(self, engine_class: Type[Engine], engine_version: str, num_nodes: int, preload_images: List[str] = None, preload_images_store: Callable[[str], str] = None):
+    def __init__(self, engine_class: Type[Engine], engine_version: str, num_nodes: int,
+                 preload_images: List[str] = None, preload_images_store: Callable[[str], str] = None):
         if preload_images_store is None:
             preload_images_store = lambda image_hash: f'/tmp/acto_image_{image_hash}.tar'
         preload_images_store = preload_images_store(hash(frozenset(preload_images)))
@@ -88,7 +88,7 @@ class Runner:
             for image in self.preload_images:
                 subprocess.run(['docker', 'pull', image], stdout=subprocess.DEVNULL)
             subprocess.run(['docker', 'image', 'save', '-o', self.preload_images_store] +
-                               list(self.preload_images), stdout=subprocess.DEVNULL)
+                           list(self.preload_images), stdout=subprocess.DEVNULL)
 
     def __teardown_cluster(self):
         self.cluster.delete_cluster(self.cluster_name, self.kubectl_client.kubeconfig)

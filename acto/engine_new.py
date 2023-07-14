@@ -8,12 +8,12 @@ import subprocess
 import tempfile
 from typing import List, Tuple, Callable
 
-import ray
 
 import yaml
 from acto.checker.checker import Checker
-from ray.util import ActorPool
 
+from acto import ray
+from acto.ray.util import ActorPool
 from acto.checker.checker_set import CheckerSet, default_checker_generators
 from acto.common import print_event
 from acto.config import actoConfig
@@ -26,7 +26,7 @@ from acto.input.known_schemas import find_all_matched_schemas_type, K8sField
 from acto.input.valuegenerator import ArrayGenerator
 from acto.kubernetes_engine.kind import Kind
 from acto.lib.fp import drop_first_parameter
-from acto.runner.ray_runner import Runner
+from acto.runner.runner import Runner
 from acto.runner.snapshot_collector import CollectorContext, with_context, snapshot_collector, wait_for_system_converge
 from acto.runner.trial import Trial, TrialInputIterator
 from acto.schema import ObjectSchema
@@ -235,6 +235,7 @@ class Acto:
 
                 trial: Trial = self.runners.get_next_unordered()
                 active_runner_count -= 1
+
                 for test_case in trial.next_input.next_testcase:
                     test_case_list.append(test_case)
                 trial_save_dir = os.path.join(self.workdir_path, f'trial-{trial_id:05}')
