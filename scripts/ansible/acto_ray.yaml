@@ -15,18 +15,18 @@
       src: "{{ playbook_dir }}/../../"
       dest: ~/acto
       rsync_opts:
-        - "--include='poetry.lock'"
+        - "--include='*.lock'"
         - "--include='pyproject.toml'"
         - "--include='config.yaml'"
         - "--include='README.md'"
-        - "--include='shell.nix'"
+        - "--include='*.nix'"
         - "--exclude='*'"
     notify:
     - Install Acto python dependencies
 
   handlers:
   - name: Install Acto python dependencies
-    ansible.builtin.shell: source ~/.profile && nix-shell --run 'echo'
+    ansible.builtin.shell: source ~/.profile && nix develop --command 'echo'
     args:
       executable: /bin/bash
       chdir: ~/acto

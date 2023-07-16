@@ -1,5 +1,6 @@
 import logging
 import os
+import hashlib
 import subprocess
 import threading
 import traceback
@@ -16,14 +17,22 @@ Engine = TypeVar('Engine', bound=KubernetesEngine)
 Snapshot = TypeVar('Snapshot')
 
 
-@ray.remote
+def hash_preload_images(preload_images: List[str]) -> str:
+    preload_images = sorted(preload_images)
+    m = hashlib.sha1()
+    for image in preload_images:
+        m.update(image.encode('ascii'))
+    return m.hexdigest()
+
+
+@ray.remote(scheduling_strategy="SPREAD", num_cpus=0, resources={"disk": 20})
 class Runner:
 
     def __init__(self, engine_class: Type[Engine], engine_version: str, num_nodes: int,
                  preload_images: List[str] = None, preload_images_store: Callable[[str], str] = None):
         if preload_images_store is None:
             preload_images_store = lambda image_hash: f'/tmp/acto_image_{image_hash}.tar'
-        preload_images_store = preload_images_store(hash(frozenset(preload_images)))
+        preload_images_store = preload_images_store(hash_preload_images(preload_images))
         self.preload_images = preload_images
         self.preload_images_store = preload_images_store
         self.kubernetes_engine_class = engine_class

@@ -14,12 +14,14 @@
     - Restart ray
 
   - name: Start ray worker
+    become: true
     ansible.builtin.service:
       name: ray
       state: started
 
   handlers:
     - name: Restart ray
+      become: true
       ansible.builtin.systemd:
         daemon_reload: true
         name: ray

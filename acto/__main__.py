@@ -94,12 +94,11 @@ if actoConfig.ray.enabled:
 
     ansible_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'scripts', 'ansible')
     ansible_runner.run(inventory=actoConfig.ray.ansible_inventory, playbook=os.path.join(ansible_dir, 'acto_ray.yaml'))
-    head_result = ansible_runner.run(inventory=actoConfig.ray.ansible_inventory,
+    ansible_runner.run(inventory=actoConfig.ray.ansible_inventory,
                        playbook=os.path.join(ansible_dir, 'ray_head.yaml'))
     ansible_runner.run(inventory=actoConfig.ray.ansible_inventory,
                        playbook=os.path.join(ansible_dir, 'ray_worker.yaml'))
-    head_host = list(head_result.stats['ok'].keys())[0]
-    ray.init(address=f'ray://{head_host}:6379')
+    ray.init(address='auto', dashboard_host='0.0.0.0')
 
 
 with open(args.config, 'r') as config_file:
@@ -108,13 +107,14 @@ with open(args.config, 'r') as config_file:
     if 'monkey_patch' in config:
         with open(monkey_patch_load_path, 'w') as f:
             f.write(config['monkey_patch'])
-        if actoConfig.ray.enabled:
-            import ansible_runner
-            ansible_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'scripts', 'ansible')
-            ansible_runner.run(inventory=actoConfig.ray.ansible_inventory,playbook=os.path.join(ansible_dir, 'monkey_patch.yaml'))
+    else:
+        open(monkey_patch_load_path, 'w').write('')
+    if actoConfig.ray.enabled:
+        import ansible_runner
 
-    elif os.path.exists(monkey_patch_load_path):
-        os.remove(monkey_patch_load_path)
+        ansible_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'scripts', 'ansible')
+        ansible_runner.run(inventory=actoConfig.ray.ansible_inventory,
+                           playbook=os.path.join(ansible_dir, 'monkey_patch.yaml'))
 
 from acto import common
 from acto.engine_new import Acto

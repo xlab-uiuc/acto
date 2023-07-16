@@ -14,6 +14,7 @@ If you haven't installed `ansible playbook` on your control node, run
 poetry install -E ray
 ansible-galaxy install geerlingguy.docker
 ansible-galaxy install ableton.nix
+ansible-galaxy collection install ansible.posix
 ``` 
 
 Then just run 
