@@ -1,0 +1,16 @@
+---
+- name: Install Nix on hosts
+  hosts: all
+  roles:
+    - role: ableton.nix
+      vars:
+        nix_flakes: true
+  tasks:
+    - name: Lock nixpkgs version
+      ansible.builtin.shell: source .profile && nix-channel --add https://nixos.org/channels/nixos-23.05 nixpkgs
+      args:
+        executable: /bin/bash
+    - name: Update nixpkgs channel
+      ansible.builtin.shell: source .profile && nix-channel --update
+      args:
+        executable: /bin/bash

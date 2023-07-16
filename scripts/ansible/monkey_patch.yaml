@@ -1,0 +1,8 @@
+---
+- name: Upload monkey patch to all nodes
+  hosts: all
+  tasks:
+  - name: Copy monkey patch
+    ansible.posix.synchronize:
+      src: ~/.acto_monkey_patch.rc
+      dest: ~/.acto_monkey_patch.rc

@@ -166,11 +166,9 @@ class Trial:
             return
 
         if any(map(lambda x: x.means(OracleControlFlow.flush), result)):
-            if self.state == 'recovering':
-                # TODO: what if we encounter a flush when we are recovering?
-                self.state = 'terminated'
-            else:
-                self.next_input.flush()
+            # TODO: What should the behavior be when the oracles mean a flush?
+            # See the only checker that will produce a flush
+            self.state = 'normal'
             return
 
         assert False, "unreachable"

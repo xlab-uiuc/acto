@@ -1,0 +1,15 @@
+---
+- name: Install everything by nix
+  hosts: all
+
+- name: Install docker
+  import_playbook: docker.yaml
+
+- name: Install sysctl
+  import_playbook: sysctl.yaml
+
+- name: Install nix
+  import_playbook: nix.yaml
+
+- name: Install acto
+  import_playbook: acto_ray.yaml

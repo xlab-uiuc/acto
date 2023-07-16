@@ -6,7 +6,7 @@ import traceback
 import uuid
 from typing import Type, TypeVar, Callable, List
 
-from acto import ray
+from acto import ray_acto as ray
 from acto.kubectl_client import KubectlClient
 from acto.kubernetes_engine.base import KubernetesEngine
 from acto.runner.trial import Trial

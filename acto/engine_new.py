@@ -12,8 +12,8 @@ from typing import List, Tuple, Callable
 import yaml
 from acto.checker.checker import Checker
 
-from acto import ray
-from acto.ray.util import ActorPool
+from acto import ray_acto as ray
+from acto.ray_acto.util import ActorPool
 from acto.checker.checker_set import CheckerSet, default_checker_generators
 from acto.common import print_event
 from acto.config import actoConfig

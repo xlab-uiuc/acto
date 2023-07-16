@@ -1,0 +1,26 @@
+---
+- name: Start Ray Worker
+  hosts: all[1:]
+  vars:
+    user_home: "{{ ansible_env.HOME }}"
+  tasks:
+  - name: Create worker service
+    become: true
+    ansible.builtin.template:
+      src: ray-worker.service
+      dest: /lib/systemd/system/ray.service
+      mode: 644
+    notify:
+    - Restart ray
+
+  - name: Start ray worker
+    ansible.builtin.service:
+      name: ray
+      state: started
+
+  handlers:
+    - name: Restart ray
+      ansible.builtin.systemd:
+        daemon_reload: true
+        name: ray
+        state: restarted

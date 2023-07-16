@@ -1,0 +1,32 @@
+---
+- name: Upload Acto to nodes and set up Ray
+  hosts: all
+  tasks:
+  - name: Copy acto
+    ansible.posix.synchronize:
+      src: "{{ playbook_dir }}/../../acto"
+      dest: ~/acto
+  - name: Copy acto data
+    ansible.posix.synchronize:
+      src: "{{ playbook_dir }}/../../data"
+      dest: ~/acto
+  - name: Copy acto project metadata
+    ansible.posix.synchronize:
+      src: "{{ playbook_dir }}/../../"
+      dest: ~/acto
+      rsync_opts:
+        - "--include='poetry.lock'"
+        - "--include='pyproject.toml'"
+        - "--include='config.yaml'"
+        - "--include='README.md'"
+        - "--include='shell.nix'"
+        - "--exclude='*'"
+    notify:
+    - Install Acto python dependencies
+
+  handlers:
+  - name: Install Acto python dependencies
+    ansible.builtin.shell: source ~/.profile && nix-shell --run 'echo'
+    args:
+      executable: /bin/bash
+      chdir: ~/acto

@@ -1,3 +1,5 @@
+import importlib
+import os.path
 from typing import Any, Type, List, Dict
 
 
@@ -23,7 +25,8 @@ class MonkeyPatchSupportMetaClass(type):
         instance_id = id(self)
         if instance_id in MonkeyPatchSupportMetaClass.patched_class_instance_names:
             classname = MonkeyPatchSupportMetaClass.patched_class_instance_names[instance_id]
-            if classname in MonkeyPatchSupportMetaClass.override_class_attrs and attr_name in MonkeyPatchSupportMetaClass.override_class_attrs[classname]:
+            if classname in MonkeyPatchSupportMetaClass.override_class_attrs and attr_name in \
+                    MonkeyPatchSupportMetaClass.override_class_attrs[classname]:
                 return MonkeyPatchSupportMetaClass.override_class_attrs[classname][attr_name]
 
         if instance_id not in MonkeyPatchSupportMetaClass.patched_class_instance_attrs:
@@ -38,7 +41,8 @@ class MonkeyPatchSupportMetaClass(type):
             MonkeyPatchSupportMetaClass.patched_class_instance_attrs[instance_id] = {}
         if instance_id in MonkeyPatchSupportMetaClass.patched_class_instance_names:
             classname = MonkeyPatchSupportMetaClass.patched_class_instance_names[instance_id]
-            if classname in MonkeyPatchSupportMetaClass.override_class_attrs and attr_name in MonkeyPatchSupportMetaClass.override_class_attrs[classname]:
+            if classname in MonkeyPatchSupportMetaClass.override_class_attrs and attr_name in \
+                    MonkeyPatchSupportMetaClass.override_class_attrs[classname]:
                 raise AttributeError(f"Attribute {attr_name} is read-only")
         else:
             MonkeyPatchSupportMetaClass.patched_class_instance_attrs[instance_id][attr_name] = value
@@ -81,3 +85,11 @@ class MonkeyPatchSupportMetaClass(type):
 
 def patch_mro(current_class, override_class_base: List[str]):
     MonkeyPatchSupportMetaClass.override_class_mro[current_class] = override_class_base
+
+
+monkey_patch_load_path = os.path.expanduser('~/.acto_monkey_patch.rc')
+if os.path.exists(monkey_patch_load_path):
+
+    with open(monkey_patch_load_path) as f:
+        for line in f.readlines():
+            importlib.import_module(line.strip())
