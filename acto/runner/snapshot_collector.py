@@ -26,6 +26,7 @@ class CollectorContext:
 
     def set_collector_if_none(self, kubectl_client: KubectlClient):
         if self.kubectl_collector is None:
+            # TODO: also add kubernetes client
             self.kubectl_collector = Collector(self.namespace, kubectl_client, self.crd_meta_info)
 
 
@@ -40,6 +41,8 @@ def with_context(ctx: CollectorContext, collector):
 
 
 def snapshot_collector(ctx: CollectorContext, runner: Runner, trial: Trial, system_input: dict, ignore_cli_error=False) -> Snapshot:
+    '''Snapshot collector is responsible for applying the system_input and collecting the snapshot
+    '''
     cli_result = runner.kubectl_client.apply(system_input, namespace=ctx.namespace)
     if cli_result.returncode != 0 and not ignore_cli_error:
         logging.error(f'Failed to apply system input to namespace {ctx.namespace}.\n{system_input}')

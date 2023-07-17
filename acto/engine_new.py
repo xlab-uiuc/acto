@@ -215,12 +215,15 @@ class Acto:
             active_runner_count = 0
             trial_id = 0
             while active_runner_count != 0 or len(test_case_list) != 0:
+                # As long as there are still runners running, or we have remaining test cases
+                # we keep running
                 def task(runner: Runner, test_cases: List[Tuple[List[str], TestCase]]) -> Trial:
                     collector = with_context(CollectorContext(
                         namespace=self.context['namespace'],
                         crd_meta_info=self.context['crd'],
                     ), snapshot_collector)
 
+                    # Inject the deploy step into the collector, to deploy the operator before running the test
                     collector = self.deploy.chain_with(drop_first_parameter(collector))
                     assert isinstance(self.input_model.get_root_schema(), ObjectSchema)
                     iterator = TrialInputIterator(iter(test_cases), self.input_model.get_root_schema(), self.input_model.get_seed_input())

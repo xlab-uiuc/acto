@@ -42,6 +42,8 @@ class Runner:
         threading.Thread(target=self.__setup_cluster_and_set_available).start()
 
     def run(self, trial: Trial, snapshot_collector: Callable[['Runner', Trial, dict], Snapshot]) -> Trial:
+        '''This method uses the snapshot_collector to execute the trial
+        '''
         self.cluster_ok_event.wait()
         for system_input in trial:
             snapshot = None
