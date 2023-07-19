@@ -187,11 +187,11 @@ logger.info('Acto normal run finished in %s', normal_finish_time - start_time)
 logger.info('Start post processing steps')
 
 # Post processing
-# post_diff_test_dir = os.path.join(args.workdir_path, 'post_diff_test')
-# p = PostDiffTest(testrun_dir=args.workdir_path, config=config)
-# if not args.checkonly:
-#     p.post_process(post_diff_test_dir, num_workers=args.num_workers)
-# p.check(post_diff_test_dir, num_workers=args.num_workers)
+post_diff_test_dir = os.path.join(args.workdir_path, 'post_diff_test')
+p = PostDiffTest(testrun_dir=args.workdir_path, config=config)
+if not args.checkonly:
+    p.post_process(post_diff_test_dir, num_workers=args.num_workers)
+p.check(post_diff_test_dir, num_workers=args.num_workers)
 
 end_time = datetime.now()
 logger.info('Acto end to end finished in %s', end_time - start_time)

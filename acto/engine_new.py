@@ -18,7 +18,7 @@ from acto.checker.checker_set import CheckerSet, default_checker_generators
 from acto.common import print_event
 from acto.config import actoConfig
 from acto.constant import CONST
-from acto.deploy import DeployMethod, YamDeploy
+from acto.deploy import DeployMethod, YamlDeploy
 from acto.snapshot import Snapshot
 from acto.input import InputModel, TestCase, DeterministicInputModel
 from acto.input.input import OverSpecifiedField
@@ -71,7 +71,7 @@ class Acto:
             logger.error('Only YAML deploy method is supported, aborting')
             quit()
 
-        self.deploy = YamDeploy(operator_config.deploy.file, operator_config.deploy.init)
+        self.deploy = YamlDeploy(operator_config.deploy.file, operator_config.deploy.init)
 
         if cluster_runtime != "KIND":
             logger.error('Only KIND cluster runtime is supported, aborting')
@@ -239,13 +239,15 @@ class Acto:
                 trial: Trial = self.runners.get_next_unordered()
                 active_runner_count -= 1
 
-                for test_case in trial.next_input.next_testcase:
+                for test_case in trial.recycle_testcases():
                     test_case_list.append(test_case)
                 trial_save_dir = os.path.join(self.workdir_path, f'trial-{trial_id:05}')
                 os.makedirs(trial_save_dir, exist_ok=True)
                 # TODO: improve saving snapshots
-                for snapshot in trial.snapshots:
-                    snapshot.save(trial_save_dir)
+                for (_, exception_or_snapshot_plus_oracle_result) in trial.history_iterator():
+                    if not isinstance(exception_or_snapshot_plus_oracle_result, Exception):
+                        (snapshot, _) = exception_or_snapshot_plus_oracle_result
+                        snapshot.save(trial_save_dir)
                 pickle.dump(trial, open(os.path.join(trial_save_dir, 'trial.pkl'), 'wb'))
                 trial_id += 1
 

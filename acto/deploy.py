@@ -141,7 +141,7 @@ class Deploy:
 #             return True
 
 
-class YamDeploy(Deploy):
+class YamlDeploy(Deploy):
 
     def deploy(self, runner: Runner) -> str:
         # TODO: We cannot specify namespace ACTO_NAMESPACE here.

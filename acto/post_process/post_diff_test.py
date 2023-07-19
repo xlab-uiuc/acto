@@ -1,163 +1,47 @@
+import concurrent
 import glob
 import hashlib
 import json
 import logging
-import multiprocessing
 import os
-import queue
+import pickle
 import re
-import subprocess
 import sys
 import threading
 import time
-from copy import deepcopy
-from typing import Dict, List
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import asdict
+from functools import partial
+from typing import Dict, List, Tuple, Generator, Iterator
 
 import pandas as pd
-from deepdiff import DeepDiff
 from deepdiff.helper import CannotCompare
 from deepdiff.model import DiffLevel
 from deepdiff.operator import BaseOperator
+from pandas import DataFrame
 
-sys.path.append('.')
-sys.path.append('..')
-from acto.common import (invalid_input_message_regex)
-from acto.kubectl_client.kubectl import kubernetes_client
-from acto.checker.checker_result import PassResult, ErrorResult, RecoveryResult
+from acto.checker.checker import OracleResult, OracleControlFlow
+from acto.checker.impl import recovery
+from acto.checker.impl.recovery import RecoveryResult
+
 from acto.constant import CONST
-from acto.deploy import Deploy, DeployMethod
-from acto.kubernetes_engine import base, kind
-from acto.runner import Runner
+from acto.input import TestCase
+from acto.kubernetes_engine.kind import Kind
+from acto.runner.trial import Trial
 from acto.serialization import ActoEncoder
+from acto.snapshot import Snapshot
 from acto.utils import (OperatorConfig, add_acto_label, get_thread_logger,
                         handle_excepthook, thread_excepthook)
+from acto.lib.fp import drop_first_parameter, create_constant_function, unreachable
+from acto.ray_acto.util import ActorPool
+from acto.runner.runner import Runner
+from acto.runner.snapshot_collector import CollectorContext, with_context, snapshot_collector
 
-from .post_process import PostProcessor, Step
+from .post_process import PostProcessor
 
 
-def dict_hash(d: dict) -> int:
-    '''Hash a dict'''
-    return hash(json.dumps(d, sort_keys=True))
-
-def compare_system_equality(curr_system_state: Dict,
-                            prev_system_state: Dict,
-                            additional_exclude_paths: List[str] = []):
-    logger = get_thread_logger(with_prefix=False)
-    curr_system_state = deepcopy(curr_system_state)
-    prev_system_state = deepcopy(prev_system_state)
-
-    try:
-        del curr_system_state['endpoints']
-        del prev_system_state['endpoints']
-        del curr_system_state['job']
-        del prev_system_state['job']
-    except:
-        return PassResult()
-
-    # remove pods that belong to jobs from both states to avoid observability problem
-    curr_pods = curr_system_state['pod']
-    prev_pods = prev_system_state['pod']
-
-    new_pods = {}
-    for k, v in curr_pods.items():
-        if 'metadata' in v and 'owner_references' in v[
-            'metadata'] and v['metadata']['owner_references'] != None and v['metadata'][
-            'owner_references'][0]['kind'] != 'Job':
-            new_pods[k] = v
-    curr_system_state['pod'] = new_pods
-
-    new_pods = {}
-    for k, v in prev_pods.items():
-        if 'metadata' in v and 'owner_references' in v[
-            'metadata'] and v['metadata']['owner_references'] != None and v['metadata'][
-            'owner_references'][0]['kind'] != 'Job':
-            new_pods[k] = v
-    prev_system_state['pod'] = new_pods
-
-    for name, obj in prev_system_state['secret'].items():
-        if 'data' in obj and obj['data'] != None:
-            for key, data in obj['data'].items():
-                try:
-                    obj['data'][key] = json.loads(data)
-                except:
-                    pass
-
-    for name, obj in curr_system_state['secret'].items():
-        if 'data' in obj and obj['data'] != None:
-            for key, data in obj['data'].items():
-                try:
-                    obj['data'][key] = json.loads(data)
-                except:
-                    pass
-
-    # remove custom resource from both states
-    curr_system_state.pop('custom_resource_spec', None)
-    prev_system_state.pop('custom_resource_spec', None)
-    curr_system_state.pop('custom_resource_status', None)
-    prev_system_state.pop('custom_resource_status', None)
-    curr_system_state.pop('pvc', None)
-    prev_system_state.pop('pvc', None)
-
-    # remove fields that are not deterministic
-    exclude_paths = [
-        r".*\['metadata'\]\['managed_fields'\]",
-        r".*\['metadata'\]\['cluster_name'\]",
-        r".*\['metadata'\]\['creation_timestamp'\]",
-        r".*\['metadata'\]\['resource_version'\]",
-        r".*\['metadata'\].*\['uid'\]",
-        r".*\['metadata'\]\['generation'\]$",
-        r".*\['metadata'\]\['annotations'\]\['.*last-applied.*'\]",
-        r".*\['metadata'\]\['annotations'\]\['.*\.kubernetes\.io.*'\]",
-        r".*\['metadata'\]\['labels'\]\['.*revision.*'\]",
-        r".*\['metadata'\]\['labels'\]\['owner-rv'\]",
-        r".*\['status'\]",
-        r"\['metadata'\]\['deletion_grace_period_seconds'\]",
-        r"\['metadata'\]\['deletion_timestamp'\]",
-        r".*\['spec'\]\['init_containers'\]\[.*\]\['volume_mounts'\]\[.*\]\['name'\]$",
-        r".*\['spec'\]\['containers'\]\[.*\]\['volume_mounts'\]\[.*\]\['name'\]$",
-        r".*\['spec'\]\['volumes'\]\[.*\]\['name'\]$",
-        r".*\[.*\]\['node_name'\]$",
-        r".*\[\'spec\'\]\[\'host_users\'\]$",
-        r".*\[\'spec\'\]\[\'os\'\]$",
-        r".*\[\'grpc\'\]$",
-        r".*\[\'spec\'\]\[\'volume_name\'\]$",
-        r".*\['version'\]$",
-        r".*\['endpoints'\]\[.*\]\['addresses'\]\[.*\]\['target_ref'\]\['uid'\]$",
-        r".*\['endpoints'\]\[.*\]\['addresses'\]\[.*\]\['target_ref'\]\['resource_version'\]$",
-        r".*\['endpoints'\]\[.*\]\['addresses'\]\[.*\]\['ip'\]",
-        r".*\['cluster_ip'\]$",
-        r".*\['cluster_i_ps'\].*$",
-        r".*\['deployment_pods'\].*\['metadata'\]\['name'\]$",
-        r"\[\'config_map\'\]\[\'kube\-root\-ca\.crt\'\]\[\'data\'\]\[\'ca\.crt\'\]$",
-        r".*\['secret'\].*$",
-        r"\['secrets'\]\[.*\]\['name'\]",
-        r".*\['node_port'\]",
-        r".*\['metadata'\]\['generate_name'\]",
-        r".*\['metadata'\]\['labels'\]\['pod\-template\-hash'\]",
-        r"\['deployment_pods'\].*\['metadata'\]\['owner_references'\]\[.*\]\['name'\]",
-    ]
-
-    exclude_paths.extend(additional_exclude_paths)
-
-    diff = DeepDiff(
-        prev_system_state,
-        curr_system_state,
-        exclude_regex_paths=exclude_paths,
-        iterable_compare_func=compare_func,
-        custom_operators=[
-            NameOperator(r".*\['name'\]$"),
-            TypeChangeOperator(r".*\['annotations'\]$")
-        ],
-        view='tree',
-    )
-
-    postprocess_deepdiff(diff)
-
-    if diff:
-        logger.debug(f"failed attempt recovering to seed state - system state diff: {diff}")
-        return RecoveryResult(delta=diff, from_=prev_system_state, to_=curr_system_state)
-
-    return PassResult()
+def digest_input(system_input: dict):
+    return hashlib.md5(json.dumps(system_input, sort_keys=True).encode("utf-8")).hexdigest()
 
 
 def postprocess_deepdiff(diff):
@@ -207,7 +91,7 @@ class NameOperator(BaseOperator):
     def give_up_diffing(self, level, diff_instance):
         x_name = level.t1
         y_name = level.t2
-        if x_name == None or y_name == None:
+        if x_name is None or y_name is None:
             return False
         if re.search(r"^.+-([A-Za-z0-9]{5})$", x_name) and re.search(r"^.+-([A-Za-z0-9]{5})$",
                                                                      y_name):
@@ -218,12 +102,12 @@ class NameOperator(BaseOperator):
 class TypeChangeOperator(BaseOperator):
 
     def give_up_diffing(self, level, diff_instance):
-        if level.t1 == None:
+        if level.t1 is None:
             if isinstance(level.t2, dict):
                 level.t1 = {}
             elif isinstance(level.t2, list):
                 level.t1 = []
-        elif level.t2 == None:
+        elif level.t2 is None:
             if isinstance(level.t1, dict):
                 logging.info('t2 is None, t1 is dict')
                 level.t2 = {}
@@ -232,12 +116,30 @@ class TypeChangeOperator(BaseOperator):
         return False
 
 
+compare_system_equality = partial(recovery.compare_system_equality, diff_operators=[
+    NameOperator(r".*\['name'\]$"),
+    TypeChangeOperator(r".*\['annotations'\]$")
+], iterable_compare_func=compare_func)
+
+
+def apply_postprocess_deepdiff(compare_system_equality_old):
+    def compare_system_equality_new(*args, **kwargs):
+        oracle_result = compare_system_equality_old(*args, **kwargs)
+        if isinstance(oracle_result, RecoveryResult):
+            postprocess_deepdiff(oracle_result.diff)
+        return oracle_result
+
+    return compare_system_equality_new
+
+
+compare_system_equality = apply_postprocess_deepdiff(compare_system_equality)
+
 
 def get_nondeterministic_fields(s1, s2, additional_exclude_paths):
     nondeterministic_fields = []
     result = compare_system_equality(s1, s2, additional_exclude_paths=additional_exclude_paths)
     if isinstance(result, RecoveryResult):
-        diff = result.delta
+        diff = result.diff
         for diff_type, diffs in diff.items():
             if diff_type == 'dictionary_item_removed':
                 for diff_field in diffs:
@@ -254,307 +156,202 @@ def get_nondeterministic_fields(s1, s2, additional_exclude_paths):
     return nondeterministic_fields
 
 
-class AdditionalRunner:
+class TrialSingleInputIterator:
+    def __init__(self, testcase_input: dict, testcase_hash: str):
+        self.__history: List[Tuple[dict, dict]] = []
+        self.__queuing_tests: List[Tuple[dict, dict]] = [
+            (testcase_input, {'testcase': f'post_test_{testcase_hash}', 'field': None})]
 
-    def __init__(self, context: Dict, deploy: Deploy, workdir: str, cluster: base.KubernetesEngine,
-                 worker_id):
+    def __iter__(self) -> Generator[Tuple[dict, dict], None, None]:
+        self.__history.append(self.__queuing_tests.pop())
+        yield self.__history[0]
 
-        self._context = context
-        self._deploy = deploy
-        self._workdir = workdir
-        self._cluster = cluster
-        self._worker_id = worker_id
-        self._cluster_name = f"acto-cluster-{worker_id}"
-        self._kubeconfig = os.path.join(os.path.expanduser('~'), '.kube', self._cluster_name)
-        self._context_name = cluster.get_context_name(f"acto-cluster-{worker_id}")
-        self._generation = 0
+    @staticmethod
+    def flush():
+        unreachable()
 
-    def run_cr(self, cr, trial, gen):
-        self._cluster.restart_cluster(self._cluster_name, self._kubeconfig, CONST.K8S_VERSION)
-        apiclient = kubernetes_client(self._kubeconfig, self._context_name)
-        deployed = self._deploy.deploy_with_retry(self._context, self._kubeconfig,
-                                                  self._context_name)
-        add_acto_label(apiclient, self._context['namespace'])
-        trial_dir = os.path.join(self._workdir, 'trial-%02d' % self._worker_id)
-        os.makedirs(trial_dir, exist_ok=True)
-        runner = Runner(self._context, trial_dir, self._kubeconfig, self._context_name)
-        snapshot, err = runner.run(cr, generation=self._generation)
-        difftest_result = {
-            'input_digest': hashlib.md5(json.dumps(cr, sort_keys=True).encode("utf-8")).hexdigest(),
-            'snapshot': snapshot.to_dict(),
-            'originals': {
-                'trial': trial,
-                'gen': gen,
-            },
-        }
-        difftest_result_path = os.path.join(trial_dir, 'difftest-%03d.json' % self._generation)
-        with open(difftest_result_path, 'w') as f:
-            json.dump(difftest_result, f, cls=ActoEncoder, indent=6)
+    @staticmethod
+    def revert():
+        unreachable()
 
-        return snapshot
+    @staticmethod
+    def swap_iterator(_: Iterator[Tuple[List[str], TestCase]]) -> Iterator[
+        Tuple[List[str], TestCase]]:
+        return iter(())
 
-
-class DeployRunner:
-
-    def __init__(self, workqueue: multiprocessing.Queue, context: Dict, deploy: Deploy,
-                 workdir: str, cluster: base.KubernetesEngine, worker_id):
-        self._workqueue = workqueue
-        self._context = context
-        self._deploy = deploy
-        self._workdir = workdir
-        self._cluster = cluster
-        self._worker_id = worker_id
-        self._cluster_name = f"acto-cluster-{worker_id}"
-        self._kubeconfig = os.path.join(os.path.expanduser('~'), '.kube', self._cluster_name)
-        self._context_name = cluster.get_context_name(f"acto-cluster-{worker_id}")
-        self._images_archive = os.path.join(workdir, 'images.tar')
-
-    def run(self):
-        logger = get_thread_logger(with_prefix=True)
-        generation = 0
-        trial_dir = os.path.join(self._workdir, 'trial-%02d' % self._worker_id)
-        os.makedirs(trial_dir, exist_ok=True)
-
-        # Start the cluster and deploy the operator
-        self._cluster.restart_cluster(self._cluster_name, self._kubeconfig, CONST.K8S_VERSION)
-        self._cluster.load_images(self._images_archive, self._cluster_name)
-        apiclient = kubernetes_client(self._kubeconfig, self._context_name)
-        deployed = self._deploy.deploy_with_retry(self._context, self._kubeconfig,
-                                                  self._context_name)
-        add_acto_label(apiclient, self._context['namespace'])
-
-        trial_dir = os.path.join(self._workdir, 'trial-%02d' % self._worker_id)
-        os.makedirs(trial_dir, exist_ok=True)
-        runner = Runner(self._context, trial_dir, self._kubeconfig, self._context_name)
-        while True:
-            try:
-                group = self._workqueue.get(block=False)
-            except queue.Empty:
-                break
-
-            cr = group.iloc[0]['input']
-
-            snapshot, err = runner.run(cr, generation=generation)
-            err = True
-            difftest_result = {
-                'input_digest': group.iloc[0]['input_digest'],
-                'snapshot': snapshot.to_dict(),
-                'originals': group[['trial', 'gen']].to_dict('records'),
-            }
-            difftest_result_path = os.path.join(trial_dir, 'difftest-%03d.json' % generation)
-            with open(difftest_result_path, 'w') as f:
-                json.dump(difftest_result, f, cls=ActoEncoder, indent=6)
-
-            if err:
-                logger.error(f'Restart cluster due to error: {err}')
-                # Start the cluster and deploy the operator
-                self._cluster.restart_cluster(self._cluster_name, self._kubeconfig,
-                                              CONST.K8S_VERSION)
-                apiclient = kubernetes_client(self._kubeconfig, self._context_name)
-                deployed = self._deploy.deploy_with_retry(self._context, self._kubeconfig,
-                                                          self._context_name)
-                add_acto_label(apiclient, self._context['namespace'])
-                runner = Runner(self._context, trial_dir, self._kubeconfig, self._context_name)
-
-            generation += 1
+    @property
+    def history(self) -> List[Tuple[dict, dict]]:
+        return self.__history
 
 
 class PostDiffTest(PostProcessor):
 
-    def __init__(self, testrun_dir: str, config: OperatorConfig):
+    def __init__(self, testrun_dir: str, config: OperatorConfig, num_workers: int = 1):
         super().__init__(testrun_dir, config)
         logger = get_thread_logger(with_prefix=True)
 
         self.all_inputs = []
-        for trial, steps in self.trial_to_steps.items():
-            for step in steps:
-                invalid, _ = step.runtime_result.is_invalid()
-                if invalid:
+        for trial_path, trial in self._trials:
+            for (gen, ((system_input, testcase_sig), exception_or_snapshot_plus_oracle_result)) in enumerate(
+                    trial.history_iterator()):
+                if isinstance(exception_or_snapshot_plus_oracle_result, Exception):
                     continue
+                (snapshot, run_result) = exception_or_snapshot_plus_oracle_result
                 self.all_inputs.append({
-                    'trial': trial,
-                    'gen': step.gen,
-                    'input': step.input,
-                    'input_digest': step.input_digest,
-                    'operator_log': step.operator_log,
-                    'system_state': step.system_state,
-                    'cli_output': step.cli_output,
-                    'runtime_result': step.runtime_result
+                    'trial': trial_path,
+                    'trial_object': trial,
+                    'gen': gen,
+                    'input': system_input,
+                    'input_digest': digest_input(system_input),
+                    'snapshot': snapshot,
+                    'test_case_signature': testcase_sig,
+                    'runtime_result': run_result,
                 })
 
         self.df = pd.DataFrame(self.all_inputs,
                                columns=[
-                                   'trial', 'gen', 'input', 'input_digest', 'operator_log',
-                                   'system_state', 'cli_output', 'runtime_result'
+                                   'trial', 'trial_object', 'gen', 'input', 'input_digest', 'snapshot',
+                                   'test_case_signature', 'runtime_result'
                                ])
 
-        self.unique_inputs: Dict[str, object] = {}  # input digest -> group of steps
+        self.unique_inputs: Dict[str, DataFrame] = {}  # input digest -> group of steps
         groups = self.df.groupby('input_digest')
         for digest, group in groups:
             self.unique_inputs[digest] = group
 
         logger.info(f'Found {len(self.unique_inputs)} unique inputs')
         print(groups.count())
-        series = groups.count().sort_values('trial', ascending=False)
+        series = groups.count().sort_values(('trial', 'gen'), ascending=False)
         print(series.head())
+        self._runners = ActorPool(
+            [Runner.remote(Kind, CONST.K8S_VERSION, num_workers, self._context['preload_images']) for _ in
+             range(num_workers)])
+        self.num_workers = num_workers
 
-    def post_process(self, workdir: str, num_workers: int = 1):
+    def post_process_task(self, runner: Runner, data: Tuple[dict, str]) -> Trial:
+        system_input, system_input_hash = data
+        collector = with_context(CollectorContext(
+            namespace=self._context['namespace'],
+            crd_meta_info=self._context['crd'],
+        ), snapshot_collector)
+
+        # Inject the deploy step into the collector, to deploy the operator before running the test
+        collector = self._deploy.chain_with(drop_first_parameter(collector))
+
+        trial = Trial(TrialSingleInputIterator(system_input, system_input_hash), None, num_mutation=10)
+        return runner.run.remote(trial, collector)
+
+    def post_process(self, workdir: str):
         if not os.path.exists(workdir):
             os.mkdir(workdir)
-        cluster = kind.Kind()
-        cluster.configure_cluster(self.config.num_nodes, CONST.K8S_VERSION)
-        deploy = Deploy(DeployMethod.YAML, self.config.deploy.file, self.config.deploy.init).new()
-        # Build an archive to be preloaded
-        images_archive = os.path.join(workdir, 'images.tar')
-        if len(self.context['preload_images']) > 0:
-            # first make sure images are present locally
-            for image in self.context['preload_images']:
-                subprocess.run(['docker', 'pull', image])
-            subprocess.run(['docker', 'image', 'save', '-o', images_archive] +
-                           list(self.context['preload_images']))
-            
-        workqueue = multiprocessing.Queue()
-        for unique_input_group in self.unique_inputs.values():
-            workqueue.put(unique_input_group)
 
-        runners: List[DeployRunner] = []
-        for i in range(num_workers):
-            runner = DeployRunner(workqueue, self.context, deploy, workdir, cluster, i)
-            runners.append(runner)
+        test_case_list = list(self.unique_inputs.items())
+        active_runner_count = 0
+        while active_runner_count != 0 or len(test_case_list) != 0:
+            # As long as there are still runners running, or we have remaining test cases
+            # we keep running
 
-        processes = []
-        for runner in runners:
-            p = multiprocessing.Process(target=runner.run)
-            p.start()
-            processes.append(p)
+            while self._runners.has_free() and len(test_case_list) != 0:
+                (digest, group) = test_case_list.pop()
+                self._runners.submit(self.post_process_task, (group.iloc[0]['input'], group.iloc[0]['input_digest']))
+                active_runner_count += 1
 
-        for p in processes:
-            p.join()
+            trial = self._runners.get_next_unordered()
+            active_runner_count -= 1
 
-    def check(self, workdir: str, num_workers: int = 1):
-        logger = get_thread_logger(with_prefix=True)
-        logger.info('Additional exclude paths: %s' % self.config.diff_ignore_fields)
-        trial_dirs = glob.glob(os.path.join(workdir, 'trial-*'))
+            history_iterator = trial.history_iterator()
+            testcase = next(history_iterator, None)
+            if not testcase:
+                continue
+            ((system_input, _), exception_or_snapshot) = testcase
+            if isinstance(exception_or_snapshot, Exception):
+                continue
+            snapshot, _ = exception_or_snapshot
+            snapshot: Snapshot
+            digest = digest_input(system_input)
 
-        workqueue = multiprocessing.Queue()
-        for trial_dir in trial_dirs:
-            for diff_test_result_path in glob.glob(os.path.join(trial_dir, 'difftest-*.json')):
-                workqueue.put(diff_test_result_path)
+            trial_save_dir = self.unique_inputs[digest].iloc[0]['trial']
+            os.makedirs(trial_save_dir, exist_ok=True)
 
-        processes = []
-        for i in range(num_workers):
-            p = multiprocessing.Process(target=self.check_diff_test_result,
-                                        args=(workqueue, workdir, i))
-            p.start()
-            processes.append(p)
+            difftest_result = {
+                'input_digest': digest,
+                'snapshot': asdict(snapshot),
+                'originals': self.unique_inputs[digest][['trial', 'gen']].to_dict('records'),
+            }
+            difftest_result_path = os.path.join(trial_save_dir, f'difftest-{digest}.json')
+            with open(difftest_result_path, 'w') as f:
+                json.dump(difftest_result, f, cls=ActoEncoder, indent=6)
+            pickle.dump(trial, open(os.path.join(trial_save_dir, f'difftest-{digest}.pkl'), 'wb'))
 
-        for p in processes:
-            p.join()
+    def check(self, workdir: str, run_check_indeterministic: bool = False, ):
+        diff_files = glob.glob(os.path.join(workdir, '**', 'difftest-*.pkl'))
+        pool = ThreadPoolExecutor(max_workers=self.num_workers)
+        futures = [pool.submit(self.check_for_a_file, diff_file, run_check_indeterministic) for diff_file in diff_files]
+        for future in concurrent.futures.as_completed(futures):
+            pass
 
-    def check_diff_test_result(self, workqueue: multiprocessing.Queue, workdir: str,
-                               worker_id: int):
-        logger = get_thread_logger(with_prefix=True)
+    def check_for_a_file(self, diff_file: str, run_check_indeterministic: bool = False):
+        group_errs = []
+        diff_test_trial: Trial = pickle.load(open(diff_file, 'rb'))
+        trial_history = next(diff_test_trial.history_iterator(), None)
+        if trial_history is None:
+            logging.error(f"it should produce at lease a trial step")
+            return group_errs
+        ((diff_system_input, _), exception_or_data) = trial_history
+        if isinstance(exception_or_data, Exception):
+            logging.error(f"it should collect system status successfully")
+            return group_errs
+        (diff_snapshot, diff_run_result) = exception_or_data
+        diff_snapshot: Snapshot
 
-        generation = 0  # for additional runner
-        additional_runner_dir = os.path.join(workdir, f'additional-runner-{worker_id}')
-        cluster = kind.Kind()
-        cluster.configure_cluster(self.config.num_nodes, CONST.K8S_VERSION)
+        digest = digest_input(diff_system_input)
+        originals = self.unique_inputs[digest]
+        for _, original in originals.iterrows():
+            run_result: List[OracleResult] = original['runtime_result']
+            snapshot: Snapshot = original['snapshot']
+            gen = original['gen']
 
-        deploy = Deploy(DeployMethod.YAML, self.config.deploy.file, self.config.deploy.init).new()
+            if gen == 0:
+                continue
+            if not all(map(lambda x: x.means(OracleControlFlow.ok), run_result)):
+                continue
 
-        runner = AdditionalRunner(context=self.context,
-                                  deploy=deploy,
-                                  workdir=additional_runner_dir,
-                                  cluster=cluster,
-                                  worker_id=worker_id)
+            result = compare_system_equality(diff_snapshot.system_state,
+                                             snapshot.system_state, self.diff_ignore_fields)
+            if result.means(OracleControlFlow.ok):
+                continue
+            errored = False
+            if run_check_indeterministic:
+                runner = self._runners.pop_idle()
+                assert runner is not None
+                runner: Runner
+                additional_trial = self.post_process_task(runner, (diff_system_input, digest))
+                self._runners.push(runner)
 
-        while True:
-            try:
-                diff_test_result_path = workqueue.get(block=False)
-            except queue.Empty:
-                break
-
-            with open(diff_test_result_path, 'r') as f:
-                diff_test_result = json.load(f)
-            originals = diff_test_result['originals']
-
-            group_errs = []
-            for original in originals:
-                trial = original['trial']
-                gen = original['gen']
-
-                if gen == 0:
+                additional_trial_history = next(additional_trial.history_iterator(), None)
+                if additional_trial_history is None:
+                    logging.error(f"it should produce at lease a trial step")
                     continue
-
-                trial_basename = os.path.basename(trial)
-                original_result = self.trial_to_steps[trial_basename][gen]
-                step_result = PostDiffTest.check_diff_test_step(diff_test_result, original_result,
-                                                                self.config, False, runner)
-                if step_result is None:
+                (_, exception_or_data) = trial_history
+                if isinstance(exception_or_data, Exception):
+                    logging.error(f"it should collect system status successfully")
                     continue
-                else:
-                    group_errs.append(step_result)
-            if len(group_errs) > 0:
-                with open(
-                        os.path.join(workdir,
-                                     f'compare-results-{diff_test_result["input_digest"]}.json'),
-                        'w') as result_f:
-                    json.dump(group_errs, result_f, cls=ActoEncoder, indent=6)
-
-        return None
-
-    def check_diff_test_step(diff_test_result: Dict,
-                             original_result: Step,
-                             config: OperatorConfig,
-                             run_check_indeterministic: bool = False,
-                             additional_runner: AdditionalRunner = None) -> RecoveryResult:
-        logger = get_thread_logger(with_prefix=True)
-        trial_dir = original_result.trial_dir
-        gen = original_result.gen
-
-        invalid, _ = original_result.runtime_result.is_invalid()
-        if isinstance(original_result.runtime_result.health_result, ErrorResult) or invalid:
-            return
-
-        original_operator_log = original_result.operator_log
-        if invalid_input_message_regex(original_operator_log):
-            return
-
-        original_system_state = original_result.system_state
-        result = compare_system_equality(diff_test_result['snapshot']['system_state'],
-                                         original_system_state, config.diff_ignore_fields)
-        if isinstance(result, PassResult):
-            logger.info(f'Pass diff test for trial {trial_dir} gen {gen}')
-            return None
-        elif run_check_indeterministic:
-            add_snapshot = additional_runner.run_cr(diff_test_result['snapshot']['input'],
-                                                    trial_dir, gen)
-            indeterministic_fields = get_nondeterministic_fields(original_system_state,
-                                                                 add_snapshot.system_state,
-                                                                 config.diff_ignore_fields)
-
-            if len(indeterministic_fields) > 0:
-                logger.info(f'Got additional nondeterministic fields: {indeterministic_fields}')
-                for delta_category in result.delta:
-                    for delta in result.delta[delta_category]:
+                (additional_snapshot, _) = exception_or_data
+                additional_snapshot: Snapshot
+                indeterministic_fields = get_nondeterministic_fields(snapshot.system_state,
+                                                                     additional_snapshot.system_state,
+                                                                     self.diff_ignore_fields)
+                result: RecoveryResult
+                for delta_category in result.diff:
+                    for delta in result.diff[delta_category]:
                         if delta.path(output_format='list') not in indeterministic_fields:
-                            logger.error(f'Fail diff test for trial {trial_dir} gen {gen}')
-                            error_result = result.to_dict()
-                            error_result['trial'] = trial_dir
-                            error_result['gen'] = gen
-                            return error_result
+                            errored = True
+                            break
             else:
-                logger.error(f'Fail diff test for trial {trial_dir} gen {gen}')
-                error_result = result.to_dict()
-                error_result['trial'] = trial_dir
-                error_result['gen'] = gen
-                return error_result
-        else:
-            logger.error(f'Fail diff test for trial {trial_dir} gen {gen}')
-            error_result = result.to_dict()
-            error_result['trial'] = trial_dir
-            error_result['gen'] = gen
-            return error_result
+                errored = True
+            if errored:
+                group_errs.append(result)
+        return group_errs
 
 
 if __name__ == '__main__':

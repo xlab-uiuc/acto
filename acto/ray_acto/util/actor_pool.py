@@ -43,3 +43,19 @@ else:
         def get_next_unordered(self):
             self._result_count.acquire()
             return self._result.pop()
+
+        def pop_idle(self):
+            """Removes an idle actor from the pool.
+
+            Returns:
+                An idle actor if one is available.
+                None if no actor was free to be removed.
+            """
+            if self.has_free():
+                return self._idle_actors.pop()
+            return None
+
+        def push(self, actor):
+            """Pushes a new actor into the current list of idle actors.
+            """
+            self._idle_actors.append(actor)
