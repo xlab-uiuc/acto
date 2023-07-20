@@ -1,22 +1,20 @@
-import glob
 import json
 import logging
 import os
-import pickle
 from typing import Dict, TypeVar, Generic, Type
 
 import yaml
 
 from acto.utils import OperatorConfig
 from acto.deploy import Deploy, YamlDeploy
-from runner.trial import Trial
+from acto.runner.trial import Trial
 
 SomeDeploy = TypeVar('SomeDeploy', bound=Deploy)
 
 
 class PostProcessor(Generic[SomeDeploy]):
 
-    def __init__(self, testrun_dir: str, config: OperatorConfig, deploy_class: Type[SomeDeploy] = YamlDeploy):
+    def __init__(self, trials: Dict[str, Trial], config: OperatorConfig, deploy_class: Type[SomeDeploy] = YamlDeploy):
         # Set config and context
         self.diff_ignore_fields = config.diff_ignore_fields
         context_cache = os.path.join(os.path.dirname(config.seed_custom_resource), 'context.json')
@@ -31,11 +29,7 @@ class PostProcessor(Generic[SomeDeploy]):
             logging.error('Failed to read seed yaml, aborting')
             quit()
         # Initialize trials
-        self._trials: Dict[str, Trial] = {}
-        trial_paths = glob.glob(os.path.join(testrun_dir, '**', 'trial.pkl'))
-        common_prefix = os.path.commonprefix(trial_paths)
-        for trial_path in trial_paths:
-            self._trials[trial_path[len(common_prefix):]] = pickle.load(open(trial_path, 'rb'))
+        self._trials: Dict[str, Trial] = trials
 
     @property
     def trials(self):

@@ -14,7 +14,7 @@ java_exception_regex = re.compile(r'(^\S.*$)\n((?:^\s+at .*$\n?)+)', flags=re.MU
 @dataclass(frozen=True, eq=True)
 class JavaException:
     reason: str
-    stack: FrozenList[str]
+    stack: FrozenList
 
 
 @dataclass

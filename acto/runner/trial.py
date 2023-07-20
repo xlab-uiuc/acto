@@ -1,6 +1,5 @@
 import logging
-from collections.abc import Iterator
-from typing import Literal, Optional, Tuple, List, Generator, Protocol, Union
+from typing import Literal, Optional, Tuple, List, Generator, Protocol, Union, Iterator
 
 from acto.checker.checker import OracleControlFlow, OracleResult
 from acto.checker.checker_set import CheckerSet

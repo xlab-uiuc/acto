@@ -6,11 +6,12 @@ import unittest
 import yaml
 
 from acto import config as acto_config
+from acto.checker.checker import OracleControlFlow
 from acto.checker.checker_set import CheckerSet
 from acto.input import DeterministicInputModel, InputModel
 from acto.post_process.post_diff_test import PostDiffTest
-from acto.post_process.post_process import construct_step
 from acto.utils import OperatorConfig
+from test.post_diff_test_helper import FileBasedTrial, DiffTestResultTrial
 
 from .utils import construct_snapshot
 
@@ -50,36 +51,37 @@ class TestCassOpBugs(unittest.TestCase):
 
         trial_dir = os.path.join(test_dir, 'cassop-330')
         checker = CheckerSet(self.context,
-                          trial_dir,
-                          self.input_model, [])
+                          self.input_model)
 
         snapshot_0 = construct_snapshot(trial_dir, 1)
         snapshot_1 = construct_snapshot(trial_dir, 2)
 
-        runResult = checker.check(snapshot_1, snapshot_0, False, {})
-        self.assertTrue(runResult.is_error())
+        runResult = checker.check(snapshot_1, snapshot_0)
+        self.assertFalse(all(map(lambda test: test.means(OracleControlFlow.ok), runResult)))
 
     def test_cassop_330_diff(self):
         diff_test_result_path = os.path.join(test_dir, 'cassop-330', 'difftest-006.json')
         with open(diff_test_result_path, 'r') as f:
             diff_test_result = json.load(f)
 
-        trial_dir = os.path.join(test_dir, 'cassop-330/trial-00-0001')
-        step = construct_step(trial_dir, 8)
+        diff_test = PostDiffTest({
+            'trial-00-0001': FileBasedTrial(os.path.join(test_dir, 'cassop-330', 'trial-00-0001'))
+        }, self.config, num_workers=0)
 
-        result = PostDiffTest.check_diff_test_step(diff_test_result, step, self.config)
-        self.assertTrue(result != None)
+        result = diff_test.check_for_a_trial(DiffTestResultTrial(diff_test_result))
+        self.assertFalse(result[0].means(OracleControlFlow.ok))
 
     def test_cassop_928(self):
         diff_test_result_path = os.path.join(test_dir, 'cassop-315', 'difftest-002.json')
         with open(diff_test_result_path, 'r') as f:
             diff_test_result = json.load(f)
 
-        trial_dir = os.path.join(test_dir, 'cassop-315/trial-04-0000')
-        step = construct_step(trial_dir, 2)
+        diff_test = PostDiffTest({
+            'trial-04-0000': FileBasedTrial(os.path.join(test_dir, 'cassop-315', 'trial-04-0000'))
+        }, self.config, num_workers=0)
 
-        result = PostDiffTest.check_diff_test_step(diff_test_result, step, self.config)
-        self.assertTrue(result != None)
+        result = diff_test.check_for_a_trial(DiffTestResultTrial(diff_test_result))
+        self.assertFalse(result[0].means(OracleControlFlow.ok))
 
 if __name__ == '__main__':
     unittest.main()

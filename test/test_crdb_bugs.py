@@ -6,6 +6,7 @@ import unittest
 import yaml
 
 from acto import config as acto_config
+from acto.checker.checker import OracleControlFlow
 from acto.checker.checker_set import CheckerSet
 from acto.input import DeterministicInputModel, InputModel
 from acto.utils import OperatorConfig
@@ -48,14 +49,13 @@ class TestCRDBOpBugs(unittest.TestCase):
 
         trial_dir = os.path.join(test_dir, 'crdbop-920')
         checker = CheckerSet(self.context,
-                          trial_dir,
-                          self.input_model, [])
+                          self.input_model)
 
         snapshot_0 = construct_snapshot(trial_dir, 1)
         snapshot_1 = construct_snapshot(trial_dir, 2)
 
-        runResult = checker.check(snapshot_1, snapshot_0, False, {})
-        self.assertTrue(runResult.is_error())
+        runResult = checker.check(snapshot_1, snapshot_0)
+        self.assertFalse(all(map(lambda test: test.means(OracleControlFlow.ok), runResult)))
 
 
 if __name__ == '__main__':

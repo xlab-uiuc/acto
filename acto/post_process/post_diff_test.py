@@ -186,12 +186,12 @@ class TrialSingleInputIterator:
 
 class PostDiffTest(PostProcessor):
 
-    def __init__(self, testrun_dir: str, config: OperatorConfig, num_workers: int = 1):
-        super().__init__(testrun_dir, config)
+    def __init__(self, trials: Dict[str, Trial], config: OperatorConfig, num_workers: int = 1):
+        super().__init__(trials, config)
         logger = get_thread_logger(with_prefix=True)
 
         self.all_inputs = []
-        for trial_path, trial in self._trials:
+        for trial_path, trial in self._trials.items():
             for (gen, ((system_input, testcase_sig), exception_or_snapshot_plus_oracle_result)) in enumerate(
                     trial.history_iterator()):
                 if isinstance(exception_or_snapshot_plus_oracle_result, Exception):
@@ -221,11 +221,14 @@ class PostDiffTest(PostProcessor):
 
         logger.info(f'Found {len(self.unique_inputs)} unique inputs')
         print(groups.count())
-        series = groups.count().sort_values(('trial', 'gen'), ascending=False)
+        series = groups.count().sort_values('trial', ascending=False)
         print(series.head())
-        self._runners = ActorPool(
-            [Runner.remote(Kind, CONST.K8S_VERSION, num_workers, self._context['preload_images']) for _ in
-             range(num_workers)])
+        if num_workers > 0:
+            self._runners = ActorPool(
+                [Runner.remote(Kind, CONST.K8S_VERSION, num_workers, self._context['preload_images']) for _ in
+                 range(num_workers)])
+        else:
+            self._runners = None
         self.num_workers = num_workers
 
     def post_process_task(self, runner: Runner, data: Tuple[dict, str]) -> Trial:
@@ -283,16 +286,15 @@ class PostDiffTest(PostProcessor):
                 json.dump(difftest_result, f, cls=ActoEncoder, indent=6)
             pickle.dump(trial, open(os.path.join(trial_save_dir, f'difftest-{digest}.pkl'), 'wb'))
 
-    def check(self, workdir: str, run_check_indeterministic: bool = False, ):
+    def check(self, workdir: str, run_check_indeterministic: bool = False):
         diff_files = glob.glob(os.path.join(workdir, '**', 'difftest-*.pkl'))
         pool = ThreadPoolExecutor(max_workers=self.num_workers)
-        futures = [pool.submit(self.check_for_a_file, diff_file, run_check_indeterministic) for diff_file in diff_files]
+        futures = [pool.submit(self.check_for_a_trial, pickle.load(open(diff_file, 'rb')), run_check_indeterministic) for diff_file in diff_files]
         for future in concurrent.futures.as_completed(futures):
             pass
 
-    def check_for_a_file(self, diff_file: str, run_check_indeterministic: bool = False):
+    def check_for_a_trial(self, diff_test_trial: Trial, run_check_indeterministic: bool = False):
         group_errs = []
-        diff_test_trial: Trial = pickle.load(open(diff_file, 'rb'))
         trial_history = next(diff_test_trial.history_iterator(), None)
         if trial_history is None:
             logging.error(f"it should produce at lease a trial step")
@@ -317,7 +319,8 @@ class PostDiffTest(PostProcessor):
                 continue
 
             result = compare_system_equality(diff_snapshot.system_state,
-                                             snapshot.system_state, self.diff_ignore_fields)
+                                             snapshot.system_state,
+                                             additional_exclude_paths=self.diff_ignore_fields)
             if result.means(OracleControlFlow.ok):
                 continue
             errored = False
@@ -386,9 +389,14 @@ if __name__ == '__main__':
 
     with open(args.config, 'r') as config_file:
         config = OperatorConfig(**json.load(config_file))
-    p = PostDiffTest(testrun_dir=args.testrun_dir, config=config)
+    trials = {}
+    trial_paths = glob.glob(os.path.join(args.testrun_dir, '**', 'trial.pkl'))
+    common_prefix = os.path.commonprefix(trial_paths)
+    for trial_path in trial_paths:
+        trials[trial_path[len(common_prefix):]] = pickle.load(open(trial_path, 'rb'))
+    p = PostDiffTest(trials=trials, config=config, num_workers=args.num_workers)
     if not args.checkonly:
-        p.post_process(args.workdir_path, num_workers=args.num_workers)
-    p.check(args.workdir_path, num_workers=args.num_workers)
+        p.post_process(args.workdir_path)
+    p.check(args.workdir_path)
 
     logging.info(f'Total time: {time.time() - start} seconds')
