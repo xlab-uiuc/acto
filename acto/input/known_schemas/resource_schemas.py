@@ -64,11 +64,11 @@ class QuantitySchema(K8sAnyOfSchema):
 
 class ResourceSchema(K8sObjectSchema):
 
-    additional_properties = QuantitySchema
+    default_additional_properties = QuantitySchema
 
     def __init__(self, schema_obj: BaseSchema) -> None:
         super().__init__(schema_obj)
-        self.additional_properties = ResourceSchema.additional_properties(
+        self.additional_properties = ResourceSchema.default_additional_properties(
             self.additional_properties)
 
     def Match(schema: ObjectSchema) -> bool:
@@ -76,7 +76,7 @@ class ResourceSchema(K8sObjectSchema):
             return False
         if schema.additional_properties is None:
             return False
-        return ResourceSchema.additional_properties.Match(schema.additional_properties)
+        return ResourceSchema.default_additional_properties.Match(schema.additional_properties)
 
     def __str__(self) -> str:
         return "Resource"
