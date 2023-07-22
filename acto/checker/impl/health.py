@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 from typing import Dict, List
 
 from acto.checker.checker import Checker, OracleControlFlow, OracleResult

@@ -358,7 +358,7 @@ class PostDiffTest(PostProcessor):
                     'gen': gen,
                     'diff_test': asdict(result),
                     'diff_test_status': ','.join(result.all_meanings()),
-                    'input': original['snapshot'].system_input
+                    'input': original['snapshot'].input
                 })
         return group_errs
 

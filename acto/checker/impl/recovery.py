@@ -13,7 +13,7 @@ from acto.utils import get_thread_logger
 
 @dataclass
 class RecoveryResult(OracleResult):
-    diff: DeepDiff = field(default_factory=lambda: DeepDiff({}, {}))
+    diff: dict = field(default_factory=dict)
 
 
 class RecoveryChecker(Checker):
@@ -146,6 +146,6 @@ def compare_system_equality(curr_system_state: dict,
     if diff:
         message = f"failed attempt recovering to seed state - system state diff: {diff}"
         logging.debug(message)
-        return RecoveryResult(message=message, diff=diff)
+        return RecoveryResult(message=message, diff=diff.to_dict())
 
     return OracleResult()

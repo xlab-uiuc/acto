@@ -51,7 +51,7 @@ class TestCassOpBugs(unittest.TestCase):
 
         trial_dir = os.path.join(test_dir, 'cassop-330')
         checker = CheckerSet(self.context,
-                          self.input_model)
+                             self.input_model)
 
         snapshot_0 = construct_snapshot(trial_dir, 1)
         snapshot_1 = construct_snapshot(trial_dir, 2)
@@ -69,7 +69,10 @@ class TestCassOpBugs(unittest.TestCase):
         }, self.config, num_workers=0)
 
         result = diff_test.check_for_a_trial(DiffTestResultTrial(diff_test_result))
-        self.assertFalse(result[0].means(OracleControlFlow.ok))
+        self.assertEquals(result[0]['diff_test']['message'],
+                          "failed attempt recovering to seed state - system state diff: "
+                          "{'dictionary_item_removed': [<root['service']['cluster1-seed-service']['metadata']['labels']['ACTOKEY'] "
+                          "t1:'ACTOKEY', t2:not present>]}")
 
     def test_cassop_928(self):
         diff_test_result_path = os.path.join(test_dir, 'cassop-315', 'difftest-002.json')
@@ -81,7 +84,11 @@ class TestCassOpBugs(unittest.TestCase):
         }, self.config, num_workers=0)
 
         result = diff_test.check_for_a_trial(DiffTestResultTrial(diff_test_result))
-        self.assertFalse(result[0].means(OracleControlFlow.ok))
+        self.assertEquals(result[0]['diff_test']['message'],
+                          "failed attempt recovering to seed state - system state diff: "
+                          "{'dictionary_item_removed': [<root['pod_disruption_budget']['test-cluster-pdb'] "
+                          "t1:{'api_versio...}, t2:not present>]}")
+
 
 if __name__ == '__main__':
     unittest.main()
