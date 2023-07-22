@@ -20,3 +20,4 @@ def load_monkey_patch(config: str):
                                        'ansible')
             ansible_runner.run(inventory=actoConfig.ray.ansible_inventory,
                                playbook=os.path.join(ansible_dir, 'monkey_patch.yaml'))
+    import acto.monkey_patch.monkey_patch

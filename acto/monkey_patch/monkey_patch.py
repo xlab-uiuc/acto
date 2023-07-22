@@ -110,7 +110,6 @@ def patch_mro(current_class, override_class_base: List[str]):
 
 monkey_patch_load_path = os.path.expanduser('~/.acto_monkey_patch.rc')
 if os.path.exists(monkey_patch_load_path):
-
     with open(monkey_patch_load_path) as f:
         for line in f.readlines():
             importlib.import_module(line.strip())
