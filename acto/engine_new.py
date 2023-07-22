@@ -6,8 +6,7 @@ import os
 import pickle
 import subprocess
 import tempfile
-from typing import List, Tuple, Callable
-
+from typing import List, Tuple, Callable, Sequence
 
 import yaml
 from acto.checker.checker import Checker
@@ -15,7 +14,6 @@ from acto.checker.checker import Checker
 from acto import ray_acto as ray
 from acto.ray_acto.util import ActorPool
 from acto.checker.checker_set import CheckerSet, default_checker_generators
-from acto.common import print_event
 from acto.config import actoConfig
 from acto.constant import CONST
 from acto.deploy import DeployMethod, YamlDeploy
@@ -28,7 +26,7 @@ from acto.kubernetes_engine.kind import Kind
 from acto.lib.fp import drop_first_parameter
 from acto.runner.runner import Runner
 from acto.runner.snapshot_collector import CollectorContext, with_context, snapshot_collector, wait_for_system_converge
-from acto.runner.trial import Trial, TrialInputIterator
+from acto.runner.trial import Trial, TrialInputIterator, TrialInputIteratorLike
 from acto.schema import ObjectSchema
 from acto.serialization import ContextEncoder
 from acto.utils import OperatorConfig, get_thread_logger, AnalysisConfig, update_preload_images, process_crd
@@ -54,7 +52,7 @@ class Acto:
                  mount: list = None,
                  focus_fields: list = None,
                  checker_generators: list = None,
-                 num_of_mutations=10
+                 num_of_mutations=9
                  ) -> None:
         logger = get_thread_logger(with_prefix=False)
         self.workdir_path = workdir_path
@@ -84,9 +82,10 @@ class Acto:
                              analysis_config=operator_config.analysis,
                              seed_file_path=operator_config.seed_custom_resource)
 
-
-
-        self.runners = ActorPool([Runner.remote(Kind, CONST.K8S_VERSION, operator_config.num_nodes, self.context['preload_images']) for _ in range(num_workers)])
+        if num_workers == 0:
+            self.runners = None
+        else:
+            self.runners = ActorPool([Runner.remote(Kind, CONST.K8S_VERSION, operator_config.num_nodes, self.context['preload_images']) for _ in range(num_workers)])
 
         if operator_config.analysis is not None:
             used_fields = self.context['analysis_result']['used_fields']
@@ -132,7 +131,6 @@ class Acto:
                     pruned_list.append(custom_field.path)
                     self.input_model.apply_custom_field(custom_field)
         else:
-            pruned_list = []
             tuples = find_all_matched_schemas_type(self.input_model.root_schema)
             for tuple in tuples:
                 custom_field = OverSpecifiedField(tuple[0].path, array=isinstance(tuple[1], ArrayGenerator))
@@ -155,6 +153,7 @@ class Acto:
 
         self.checkers = CheckerSet(self.context, self.input_model, checker_generators)
         self.num_of_mutations = num_of_mutations
+        self.trial_id = 0
 
     def __learn_context(self, runner: Callable[[],Runner], context_file, crd_name, helper_crd, analysis_config, seed_file_path):
         logger = get_thread_logger(with_prefix=False)
@@ -205,6 +204,38 @@ class Acto:
         with open(context_file, 'w') as context_fout:
             json.dump(self.context, context_fout, cls=ContextEncoder, indent=4, sort_keys=True)
 
+    def run_trials(self, iterators: Sequence[TrialInputIteratorLike], _collector: Callable[[Runner, Trial, dict], Snapshot] = None):
+        def task(runner: Runner, iterator: TrialInputIteratorLike) -> Trial:
+            if _collector is None:
+                collector = with_context(CollectorContext(
+                    namespace=self.context['namespace'],
+                    crd_meta_info=self.context['crd'],
+                ), snapshot_collector)
+            else:
+                collector = _collector
+            # Inject the deploy step into the collector, to deploy the operator before running the test
+            collector = self.deploy.chain_with(drop_first_parameter(collector))
+            assert isinstance(self.input_model.get_root_schema(), ObjectSchema)
+
+            trial = Trial(iterator, self.checkers, num_mutation=self.num_of_mutations)
+            return runner.run.remote(trial, collector)
+
+        for it in iterators:
+            self.runners.submit(task, it)
+
+        while self.runners.has_next():
+            # As long as we have remaining test cases
+            trial: Trial = self.runners.get_next_unordered()
+            trial_save_dir = os.path.join(self.workdir_path, f'trial-{self.trial_id:05}')
+            os.makedirs(trial_save_dir, exist_ok=True)
+            # TODO: improve saving snapshots
+            for (_, exception_or_snapshot_plus_oracle_result) in trial.history_iterator():
+                if not isinstance(exception_or_snapshot_plus_oracle_result, Exception):
+                    (snapshot, _) = exception_or_snapshot_plus_oracle_result
+                    snapshot.save(trial_save_dir)
+            pickle.dump(trial, open(os.path.join(trial_save_dir, 'trial.pkl'), 'wb'))
+            self.trial_id += 1
+
     def run(self, modes=None):
         if modes is None:
             modes = ['normal', 'overspecified', 'copiedover']
@@ -212,48 +243,16 @@ class Acto:
         logger = get_thread_logger(with_prefix=True)
 
         def run_test_plan(test_case_list: List[Tuple[List[str], TestCase]]):
-            active_runner_count = 0
-            trial_id = 0
-            while active_runner_count != 0 or len(test_case_list) != 0:
-                # As long as there are still runners running, or we have remaining test cases
-                # we keep running
-                def task(runner: Runner, test_cases: List[Tuple[List[str], TestCase]]) -> Trial:
-                    collector = with_context(CollectorContext(
-                        namespace=self.context['namespace'],
-                        crd_meta_info=self.context['crd'],
-                    ), snapshot_collector)
+            iterators = []
 
-                    # Inject the deploy step into the collector, to deploy the operator before running the test
-                    collector = self.deploy.chain_with(drop_first_parameter(collector))
-                    assert isinstance(self.input_model.get_root_schema(), ObjectSchema)
-                    iterator = TrialInputIterator(iter(test_cases), self.input_model.get_root_schema(), self.input_model.get_seed_input())
+            while len(test_case_list) != 0:
+                test_cases, test_case_list = test_case_list[:self.num_of_mutations], test_case_list[self.num_of_mutations:]
+                iterators.append(TrialInputIterator(iter(test_cases), self.input_model.get_root_schema(), self.input_model.get_seed_input()))
 
-                    trial = Trial(iterator, self.checkers, num_mutation=self.num_of_mutations)
-                    return runner.run.remote(trial, collector)
-
-                while self.runners.has_free() and len(test_case_list) != 0:
-                    test_cases, test_case_list = test_case_list[:self.num_of_mutations], test_case_list[self.num_of_mutations:]
-                    self.runners.submit(task, test_cases)
-                    active_runner_count += 1
-
-                trial: Trial = self.runners.get_next_unordered()
-                active_runner_count -= 1
-
-                for test_case in trial.recycle_testcases():
-                    test_case_list.append(test_case)
-                trial_save_dir = os.path.join(self.workdir_path, f'trial-{trial_id:05}')
-                os.makedirs(trial_save_dir, exist_ok=True)
-                # TODO: improve saving snapshots
-                for (_, exception_or_snapshot_plus_oracle_result) in trial.history_iterator():
-                    if not isinstance(exception_or_snapshot_plus_oracle_result, Exception):
-                        (snapshot, _) = exception_or_snapshot_plus_oracle_result
-                        snapshot.save(trial_save_dir)
-                pickle.dump(trial, open(os.path.join(trial_save_dir, 'trial.pkl'), 'wb'))
-                trial_id += 1
-
+            self.run_trials(iterators)
 
         if 'normal' in modes:
-            run_test_plan(self.test_plan['normal_subgroups'][:])
+            run_test_plan(self.test_plan['normal_subgroups'])
 
         if 'overspecified' in modes:
             run_test_plan(self.test_plan['overspecified_subgroups'])
@@ -265,6 +264,13 @@ class Acto:
             run_test_plan(self.test_plan['additional_semantic_subgroups'])
 
         logger.info('All tests finished')
+
+    def teardown(self):
+        while True:
+            runner = self.runners.pop_idle()
+            if not runner:
+                break
+            runner.teardown_cluster.remote()
 
 
 def do_static_analysis(analysis: AnalysisConfig):

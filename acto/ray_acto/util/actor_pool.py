@@ -13,6 +13,7 @@ else:
     class ActorPool:
         def __init__(self, actors: list):
             self._idle_actors = actors
+            self._total_actors = len(actors)
             self._pending_submits = []
             self._result = []
             self._pool = ThreadPoolExecutor(max_workers=len(actors))
@@ -20,6 +21,9 @@ else:
 
         def has_free(self) -> bool:
             return len(self._idle_actors) > 0
+
+        def has_next(self) -> bool:
+            return len(self._idle_actors) != self._total_actors or len(self._result) != 0
 
         def submit(self, fn, value):
             if self._idle_actors:
@@ -52,6 +56,7 @@ else:
                 None if no actor was free to be removed.
             """
             if self.has_free():
+                self._total_actors -= 1
                 return self._idle_actors.pop()
             return None
 
@@ -59,3 +64,4 @@ else:
             """Pushes a new actor into the current list of idle actors.
             """
             self._idle_actors.append(actor)
+            self._total_actors += 1

@@ -1,3 +1,5 @@
+import types
+
 from acto.config import actoConfig
 
 if actoConfig.ray.enabled:
@@ -6,12 +8,22 @@ if actoConfig.ray.enabled:
     remote = ray.remote
     get = ray.get
 else:
+    class MethodTypeWithRemote:
+        def __init__(self, func, bound):
+            self.__bound = bound
+            self.__func = func
+            self.remote = self
+
+        def __call__(self, *args, **kwargs):
+            return self.__func(self.__bound, *args, **kwargs)
+
     def _make_remote(runner):
         old_init = runner.__init__
 
         def __init__(self, *arg, **kwargs):
             old_init(self, *arg, **kwargs)
-            setattr(self.run.__func__, 'remote', self.run)
+            self.run = MethodTypeWithRemote(self.run.__func__, self)
+            self.teardown_cluster = MethodTypeWithRemote(self.teardown_cluster.__func__, self)
 
         setattr(runner, 'remote', runner)
         runner.__init__ = __init__

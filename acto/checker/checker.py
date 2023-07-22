@@ -58,6 +58,9 @@ class OracleResult(Exception):
     def means_terminate(self):
         return self.exception is not None
 
+    def all_meanings(self):
+        return [meaning for meaning in OracleControlFlow if self.means(meaning)]
+
 
 class Checker(ABC):
 

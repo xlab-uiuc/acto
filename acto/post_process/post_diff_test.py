@@ -197,6 +197,8 @@ class PostDiffTest(PostProcessor):
                 if isinstance(exception_or_snapshot_plus_oracle_result, Exception):
                     continue
                 (snapshot, run_result) = exception_or_snapshot_plus_oracle_result
+                if not all(map(lambda x: x.means(OracleControlFlow.ok), run_result)):
+                    continue
                 self.all_inputs.append({
                     'trial': trial_path,
                     'trial_object': trial,
@@ -225,7 +227,7 @@ class PostDiffTest(PostProcessor):
         print(series.head())
         if num_workers > 0:
             self._runners = ActorPool(
-                [Runner.remote(Kind, CONST.K8S_VERSION, num_workers, self._context['preload_images']) for _ in
+                [Runner.remote(Kind, CONST.K8S_VERSION, config.num_nodes, self._context['preload_images']) for _ in
                  range(num_workers)])
         else:
             self._runners = None
@@ -249,18 +251,14 @@ class PostDiffTest(PostProcessor):
             os.mkdir(workdir)
 
         test_case_list = list(self.unique_inputs.items())
-        active_runner_count = 0
-        while active_runner_count != 0 or len(test_case_list) != 0:
+        while len(test_case_list) != 0:
+            (digest, group) = test_case_list.pop()
+            self._runners.submit(self.post_process_task, (group.iloc[0]['input'], group.iloc[0]['input_digest']))
+
+        while self._runners.has_next():
             # As long as there are still runners running, or we have remaining test cases
             # we keep running
-
-            while self._runners.has_free() and len(test_case_list) != 0:
-                (digest, group) = test_case_list.pop()
-                self._runners.submit(self.post_process_task, (group.iloc[0]['input'], group.iloc[0]['input_digest']))
-                active_runner_count += 1
-
             trial = self._runners.get_next_unordered()
-            active_runner_count -= 1
 
             history_iterator = trial.history_iterator()
             testcase = next(history_iterator, None)
@@ -274,6 +272,7 @@ class PostDiffTest(PostProcessor):
             digest = digest_input(system_input)
 
             trial_save_dir = self.unique_inputs[digest].iloc[0]['trial']
+            trial_save_dir = os.path.join(workdir, trial_save_dir)
             os.makedirs(trial_save_dir, exist_ok=True)
 
             difftest_result = {
@@ -290,8 +289,11 @@ class PostDiffTest(PostProcessor):
         diff_files = glob.glob(os.path.join(workdir, '**', 'difftest-*.pkl'))
         pool = ThreadPoolExecutor(max_workers=self.num_workers)
         futures = [pool.submit(self.check_for_a_trial, pickle.load(open(diff_file, 'rb')), run_check_indeterministic) for diff_file in diff_files]
+        results = []
         for future in concurrent.futures.as_completed(futures):
-            pass
+            results.extend(future.result())
+        results_df = pd.DataFrame(results)
+        results_df.to_csv(os.path.join(workdir, 'diff_test.csv'))
 
     def check_for_a_trial(self, diff_test_trial: Trial, run_check_indeterministic: bool = False):
         group_errs = []
@@ -309,13 +311,10 @@ class PostDiffTest(PostProcessor):
         digest = digest_input(diff_system_input)
         originals = self.unique_inputs[digest]
         for _, original in originals.iterrows():
-            run_result: List[OracleResult] = original['runtime_result']
             snapshot: Snapshot = original['snapshot']
             gen = original['gen']
 
             if gen == 0:
-                continue
-            if not all(map(lambda x: x.means(OracleControlFlow.ok), run_result)):
                 continue
 
             result = compare_system_equality(diff_snapshot.system_state,
@@ -353,8 +352,22 @@ class PostDiffTest(PostProcessor):
             else:
                 errored = True
             if errored:
-                group_errs.append(result)
+                group_errs.append({
+                    'digest': digest,
+                    'id': original['trial'],
+                    'gen': gen,
+                    'diff_test': asdict(result),
+                    'diff_test_status': ','.join(result.all_meanings()),
+                    'input': original['snapshot'].system_input
+                })
         return group_errs
+
+    def teardown(self):
+        while True:
+            runner = self._runners.pop_idle()
+            if not runner:
+                break
+            runner.teardown_cluster.remote()
 
 
 if __name__ == '__main__':

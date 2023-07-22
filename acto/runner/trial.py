@@ -160,6 +160,7 @@ class Trial:
         if len(self.__snapshots) < 2:
             # As the seed input will always be valid, we do not need to check it.
             # Therefore, we need at least two snapshots to check.
+            self.__run_results.append([])
             return
 
         prev_snapshot = self.__snapshots[-2]
@@ -219,7 +220,7 @@ class Trial:
         the first dict is the system input, and the second dict is the test case signature
 
         The second element of the tuple is a Union[Exception, Tuple[Snapshot, List[OracleResult]]]
-        If it is a exception, then it means the runner encountered an exception during the execution,
+        If it is an exception, then it means the runner encountered an exception during the execution,
         and no snapshots can be provided.
         
         If it is a Tuple[Snapshot, List[OracleResult]], 

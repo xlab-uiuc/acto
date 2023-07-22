@@ -43,6 +43,11 @@ def with_context(ctx: CollectorContext, collector):
 def snapshot_collector(ctx: CollectorContext, runner: Runner, trial: Trial, system_input: dict, ignore_cli_error=False) -> Snapshot:
     '''Snapshot collector is responsible for applying the system_input and collecting the snapshot
     '''
+    # flush old logs
+    try:
+        ctx.kubectl_collector.collect_operator_log()
+    except:
+        pass
     cli_result = runner.kubectl_client.apply(system_input, namespace=ctx.namespace)
     if cli_result.returncode != 0 and not ignore_cli_error:
         logging.error(f'Failed to apply system input to namespace {ctx.namespace}.\n{system_input}')

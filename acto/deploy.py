@@ -162,7 +162,7 @@ class YamlDeploy(Deploy):
         # use server side apply to avoid last-applied-configuration
         if self.init_yaml_files:
             kubectl_client.apply(self.init_yaml_files, server_side=None)
-        self.check_status(runner)
+            self.check_status(runner)
         kubectl_client.apply(self.crd_yaml_files, namespace=namespace, server_side=None)
         self.check_status(runner)
         print_event('Operator deployed')

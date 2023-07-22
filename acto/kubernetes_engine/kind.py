@@ -63,7 +63,7 @@ class Kind(base.KubernetesEngine):
             kubeconfig: path of the config file for cluster
             version: k8s version
         '''
-        print_event('Creating kind cluster...')
+        print_event(f'Creating kind cluster {name}...')
         cmd = ['kind', 'create', 'cluster']
 
         if name:
@@ -115,6 +115,7 @@ class Kind(base.KubernetesEngine):
 
     def delete_cluster(self, name: str, kubeconfig: str):
         cmd = ['kind', 'delete', 'cluster']
+        print_event(f'Deleting kind cluster {name}...')
 
         if name:
             cmd.extend(['--name', name])

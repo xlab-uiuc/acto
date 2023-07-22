@@ -1,4 +1,6 @@
 import argparse
+import glob
+import pickle
 from datetime import datetime
 import json
 import logging
@@ -9,7 +11,9 @@ import threading
 import time
 import random
 
-from config import actoConfig
+from acto.config import actoConfig
+
+from acto.lib.monkey_patch_loader import load_monkey_patch
 
 # for debugging, set random seed to 0
 random.seed(0)
@@ -78,6 +82,8 @@ parser.add_argument('--checkonly', action='store_true')
 
 args = parser.parse_args()
 
+load_monkey_patch(args.config)
+
 os.makedirs(args.workdir_path, exist_ok=True)
 # Setting up log infra
 logging.basicConfig(
@@ -101,25 +107,10 @@ if actoConfig.ray.enabled:
     ray.init(address='auto', dashboard_host='0.0.0.0')
 
 
-with open(args.config, 'r') as config_file:
-    config = json.load(config_file)
-    monkey_patch_load_path = os.path.expanduser('~/.acto_monkey_patch.rc')
-    if 'monkey_patch' in config:
-        with open(monkey_patch_load_path, 'w') as f:
-            f.write(config['monkey_patch'])
-    else:
-        open(monkey_patch_load_path, 'w').write('')
-    if actoConfig.ray.enabled:
-        import ansible_runner
-
-        ansible_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'scripts', 'ansible')
-        ansible_runner.run(inventory=actoConfig.ray.ansible_inventory,
-                           playbook=os.path.join(ansible_dir, 'monkey_patch.yaml'))
-
 from acto import common
 from acto.engine_new import Acto
 from acto.input.input import DeterministicInputModel, InputModel
-# from acto.post_process import PostDiffTest
+from acto.post_process import PostDiffTest
 from acto.utils.config import OperatorConfig
 from acto.utils.error_handler import handle_excepthook, thread_excepthook
 
@@ -183,15 +174,22 @@ if args.additional_semantic:
 elif not args.learn:
     acto.run(modes=['normal'])
 normal_finish_time = datetime.now()
+acto.teardown()
 logger.info('Acto normal run finished in %s', normal_finish_time - start_time)
 logger.info('Start post processing steps')
 
 # Post processing
 post_diff_test_dir = os.path.join(args.workdir_path, 'post_diff_test')
-p = PostDiffTest(testrun_dir=args.workdir_path, config=config)
+trials = {}
+trial_paths = glob.glob(os.path.join(args.workdir_path, '**', 'trial.pkl'))
+common_prefix = trial_paths[0][trial_paths[0].find('trial-'):] if len(trial_paths) == 1 else os.path.commonpath(trial_paths)+os.path.sep
+for trial_path in trial_paths:
+    trials[trial_path[len(common_prefix):][:-len('/trial.pkl')]] = pickle.load(open(trial_path, 'rb'))
+p = PostDiffTest(trials=trials, config=config, num_workers=args.num_workers)
 if not args.checkonly:
-    p.post_process(post_diff_test_dir, num_workers=args.num_workers)
-p.check(post_diff_test_dir, num_workers=args.num_workers)
+    p.post_process(post_diff_test_dir)
+p.check(post_diff_test_dir)
 
 end_time = datetime.now()
 logger.info('Acto end to end finished in %s', end_time - start_time)
+p.teardown()

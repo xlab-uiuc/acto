@@ -33,12 +33,14 @@ class Runner:
         if preload_images_store is None:
             preload_images_store = lambda image_hash: f'/tmp/acto_image_{image_hash}.tar'
         preload_images_store = preload_images_store(hash_preload_images(preload_images))
+        self.cluster_name = None
         self.preload_images = preload_images
         self.preload_images_store = preload_images_store
         self.kubernetes_engine_class = engine_class
         self.engine_version = engine_version
         self.num_nodes = num_nodes
         self.cluster_ok_event: threading.Event = threading.Event()
+        self.cluster_started_event: threading.Event = threading.Event()
         threading.Thread(target=self.__setup_cluster_and_set_available).start()
 
     def run(self, trial: Trial, snapshot_collector: Callable[['Runner', Trial, dict], Snapshot]) -> Trial:
@@ -60,7 +62,7 @@ class Runner:
         return trial
 
     def __reset_cluster_and_set_available(self):
-        self.__teardown_cluster()
+        self.teardown_cluster()
         self.__setup_cluster()
         self.cluster_ok_event.set()
 
@@ -85,6 +87,7 @@ class Runner:
             self.cluster.load_images(self.preload_images_store, self.cluster_name)
 
         self.kubectl_client = KubectlClient(kubeconfig, context_name)
+        self.cluster_started_event.set()
 
     def __prefetch_image(self):
         if not self.preload_images:
@@ -101,7 +104,12 @@ class Runner:
             subprocess.run(['docker', 'image', 'save', '-o', self.preload_images_store] +
                            list(self.preload_images), stdout=subprocess.DEVNULL)
 
-    def __teardown_cluster(self):
+    def teardown_cluster(self):
+        self.cluster_started_event.wait()
+        self.cluster_started_event.clear()
         self.cluster.delete_cluster(self.cluster_name, self.kubectl_client.kubeconfig)
         self.cluster_name = None
-        os.remove(self.kubectl_client.kubeconfig)
+        try:
+            os.remove(self.kubectl_client.kubeconfig)
+        except OSError:
+            pass

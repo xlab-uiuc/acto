@@ -224,6 +224,8 @@ class StateChecker(Checker):
           Returns:
               RunResult of the checking
         """
+        if snapshot.trial_state == 'recovering':
+            return StateResult()
         logger = get_thread_logger(with_prefix=True)
 
         input_delta, system_delta = snapshot.delta(prev_snapshot)
