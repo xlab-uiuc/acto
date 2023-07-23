@@ -96,7 +96,6 @@ def check_field_has_default_value(input_delta: Diff, input_model: InputModel) ->
 def should_compare_path(k8s_paths: List[List[str]], path: List[str]) -> bool:
     logger = get_thread_logger(with_prefix=True)
     if path[-1] == 'ACTOKEY':
-        logger.info('Compare because ACTOKEY')
         return True
 
     for k8s_path in k8s_paths:
