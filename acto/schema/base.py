@@ -135,6 +135,7 @@ class BaseSchema(SchemaInterface):
         self.over_specified = False
         self.problematic = False
         self.patch = False
+        self.mapped = False
         self.used_fields = []
 
     def get_path(self) -> list:

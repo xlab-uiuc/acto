@@ -94,13 +94,14 @@ def check_field_has_default_value(input_delta: Diff, input_model: InputModel) ->
 
 
 def should_compare_path(k8s_paths: List[List[str]], path: List[str]) -> bool:
+    logger = get_thread_logger(with_prefix=True)
     if path[-1] == 'ACTOKEY':
+        logger.info('Compare because ACTOKEY')
         return True
 
     for k8s_path in k8s_paths:
         if is_prefix(k8s_path, path):
             return True
-    logger = get_thread_logger(with_prefix=True)
     logger.info('Skip comparing %s' % path)
     return False
 
@@ -264,17 +265,21 @@ class StateChecker(Checker):
                 if not check_field_dependencies_are_satisfied(delta, snapshot, self.field_conditions_map):
                     must_produce_delta = False
 
-                # check curr and prev is the default value
-                prev_is_default, curr_is_default = check_field_has_default_value(delta, self.input_model)
+                # # check curr and prev is the default value
+                # prev_is_default, curr_is_default = check_field_has_default_value(delta, self.input_model)
 
-                # if the field is changed from default to null or null to default
-                # we don't expect the system to produce a delta
-                if prev_is_default and is_none_or_not_present(delta.curr):
-                    must_produce_delta = False
-                if curr_is_default and is_none_or_not_present(delta.prev):
-                    must_produce_delta = False
+                # # if the field is changed from default to null or null to default
+                # # we don't expect the system to produce a delta
+                # if prev_is_default and is_none_or_not_present(delta.curr):
+                #     must_produce_delta = False
+                # if curr_is_default and is_none_or_not_present(delta.prev):
+                #     must_produce_delta = False
 
-                if is_none_or_not_present(delta.prev) and is_none_or_not_present(delta.curr):
+                # skip system oracle if the field is changed to/from empty
+                corresponding_schema = self.input_model.get_schema_by_path(delta.path)
+                if diff_type == 'iterable_item_removed' or corresponding_schema.patch or delta.path[-1] == 'ACTOKEY':
+                    pass
+                elif is_none_or_not_present(delta.prev) or is_none_or_not_present(delta.curr):
                     must_produce_delta = False
 
                 if actoConfig.checkers.state.enable_canonicalization:
@@ -285,7 +290,8 @@ class StateChecker(Checker):
 
                 # Find the longest matching field, compare the delta change
                 match_deltas, should_compare = list_matched_fields(self.k8s_paths, delta.path, system_delta_without_cr)
-                should_compare = should_compare and must_produce_delta
+
+                should_compare = (should_compare or corresponding_schema.mapped) and must_produce_delta
 
                 # TODO: should the delta match be inclusive?
                 # Policy: pass if any of the matched deltas is equivalent

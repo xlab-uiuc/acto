@@ -83,6 +83,14 @@ class PatchField(CustomField):
         super().__init__(path, None)
 
 
+class MappedField(CustomField):
+    '''For annotating the field to be checked against the system state
+    '''
+
+    def __init__(self, path) -> None:
+        super().__init__(path, None)
+
+
 class InputModel:
 
     NORMAL = 'NORMAL'
@@ -469,6 +477,16 @@ class InputModel:
             for s in s3:
                 s.patch = True
 
+        if isinstance(custom_field, MappedField):
+            curr.mapped = True
+            s1, s2, s3 = curr.get_all_schemas()
+            for s in s1:
+                s.mapped = True
+            for s in s2:
+                s.mapped = True
+            for s in s3:
+                s.mapped = True
+
         if isinstance(custom_field, CopiedOverField):
             curr.copied_over = True
         elif isinstance(custom_field, OverSpecifiedField):
@@ -482,7 +500,7 @@ class InputModel:
                 s.over_specified = True
         elif isinstance(custom_field, ProblematicField):
             curr.problematic = True
-        elif isinstance(custom_field, PatchField):
+        elif isinstance(custom_field, PatchField) or isinstance(custom_field, MappedField):
             pass # do nothing, already handled above
         else:
             raise Exception('Unknown custom field type')
