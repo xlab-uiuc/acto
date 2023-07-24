@@ -12,6 +12,7 @@ from acto.snapshot import Snapshot
 
 default_checker_generators = [CrashChecker, HealthChecker, KubectlCliChecker, OperatorLogChecker, StateChecker, RecoveryChecker]
 
+
 class CheckerSet:
     def __init__(self, context: dict, input_model: InputModel, checker_generators: list = None):
         if checker_generators is None:
@@ -25,8 +26,8 @@ class CheckerSet:
         }
         self.checkers = [checkerGenerator(**checker_args) for checkerGenerator in checker_generators]
 
-    def check(self, snapshot: Snapshot, prev_snapshot: Snapshot) -> List[OracleResult]:
-        return list(map(lambda checker: checker.check(snapshot, prev_snapshot), self.checkers))
+    def check(self, snapshot: Snapshot) -> List[OracleResult]:
+        return list(filter(lambda r: r is not None, map(lambda checker: checker.check(snapshot), self.checkers)))
 
 # If we want to decouple the checkers from the Snapshot structure, we can use the following code:
 #

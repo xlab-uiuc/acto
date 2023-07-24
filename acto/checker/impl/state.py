@@ -4,7 +4,7 @@ import re
 from dataclasses import dataclass
 from typing import List, Tuple, Optional
 
-from acto.checker.checker import Checker, OracleResult
+from acto.checker.checker import BinaryChecker, OracleResult
 from acto.checker.impl.state_condition import check_condition_group
 from acto.common import invalid_input_message, Diff, print_event, is_subfield, GENERIC_FIELDS
 from acto.checker.impl.state_compare import CompareMethods, is_none_or_not_present
@@ -155,7 +155,7 @@ def list_matched_fields(k8s_paths: List[List[str]], path: list, delta_dict: dict
         return [], False
 
 
-class StateChecker(Checker):
+class StateChecker(BinaryChecker):
     name = 'state'
 
     def __init__(self, input_model: InputModel, context: dict, **kwargs):
@@ -211,7 +211,10 @@ class StateChecker(Checker):
                     }]
                 })
 
-    def _check(self, snapshot: Snapshot, prev_snapshot: Snapshot) -> OracleResult:
+    def enabled(self, snapshot: Snapshot) -> bool:
+        return snapshot.trial_state != 'recovering'
+
+    def _binary_check(self, snapshot: Snapshot, prev_snapshot: Snapshot) -> OracleResult:
         """
           System state oracle
 
@@ -224,8 +227,6 @@ class StateChecker(Checker):
           Returns:
               RunResult of the checking
         """
-        if snapshot.trial_state == 'recovering':
-            return StateResult()
         logger = get_thread_logger(with_prefix=True)
 
         input_delta, system_delta = snapshot.delta(prev_snapshot)

@@ -11,7 +11,7 @@ checker = JavaExceptionLogChecker()
 
 def checker_func(s: Snapshot) -> OracleResult:
     assert s.operator_log != []
-    return checker.check(s, Snapshot())
+    return checker.check(s)
 
 
 @pytest.mark.parametrize("test_case_id,expected_control_flow", list(enumerate([

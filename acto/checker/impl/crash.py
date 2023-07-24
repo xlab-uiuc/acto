@@ -1,4 +1,4 @@
-from acto.checker.checker import Checker, OracleResult
+from acto.checker.checker import UnaryChecker, OracleResult
 from acto.lib.dict import visit_dict
 from acto.snapshot import Snapshot
 
@@ -17,10 +17,10 @@ def check_pod_status(pod):
             raise OracleResult('Pod %s crashed' % pod_name)
 
 
-class CrashChecker(Checker):
+class CrashChecker(UnaryChecker):
     name = 'crash'
 
-    def _check(self, snapshot: Snapshot, __: Snapshot) -> OracleResult:
+    def _unary_check(self, snapshot: Snapshot) -> OracleResult:
         pods = snapshot.system_state['pod']
         deployment_pods = snapshot.system_state['deployment_pods']
 

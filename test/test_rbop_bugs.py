@@ -59,8 +59,9 @@ class TestRabbitMQOpBugs(unittest.TestCase):
 
         snapshot_0 = construct_snapshot(trial_dir, 1)
         snapshot_1 = construct_snapshot(trial_dir, 2)
+        snapshot_1.parent = snapshot_0
 
-        runResult = checker.check(snapshot_1, snapshot_0)
+        runResult = checker.check(snapshot_1)
         print(runResult)
         self.assertFalse(all(map(lambda test: test.means(OracleControlFlow.ok), runResult)))
 

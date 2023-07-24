@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Dict, List
 
-from acto.checker.checker import Checker, OracleControlFlow, OracleResult
+from acto.checker.checker import UnaryChecker, OracleControlFlow, OracleResult
 from acto.lib.dict import visit_dict
 from acto.snapshot import Snapshot
 from acto.utils import get_thread_logger
@@ -29,10 +29,10 @@ class HealthResult(OracleResult):
         super().__init__('\n'.join(error_msgs))
 
 
-class HealthChecker(Checker):
+class HealthChecker(UnaryChecker):
     name = 'health'
 
-    def _check(self, snapshot: Snapshot, __: Snapshot) -> OracleResult:
+    def _unary_check(self, snapshot: Snapshot) -> OracleResult:
         """System health oracle"""
         system_state = snapshot.system_state
         unhealthy_resources = {

@@ -48,8 +48,8 @@ def checker_func(s: Snapshot, prev_s: Snapshot) -> OracleResult:
     checker = StateChecker(trial_dir="",
                            input_model=mapping[api_version][1],
                            context=mapping[api_version][0])
-    checker.write_delta_log = lambda *args: None
-    return checker.check(s, prev_s)
+    s.parent = prev_s
+    return checker.check(s)
 
 
 @pytest.mark.parametrize("test_case_id,expected", list(enumerate([
@@ -105,3 +105,11 @@ def test_check(test_case_id, expected):
             assert expected.means(control_flow)
         else:
             assert not expected.means(control_flow)
+
+
+def test_enable():
+    snapshot = Snapshot(trial_state='recovering', input={
+        'apiVersion': 'rabbitmq.com/v1beta1'
+    })
+    oracle_result = checker_func(snapshot, snapshot)
+    assert oracle_result is None

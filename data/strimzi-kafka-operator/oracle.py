@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 
 from acto.snapshot import Snapshot
 
-from acto.checker.checker import Checker, OracleResult
+from acto.checker.checker import UnaryChecker, OracleResult
 from typing import List
 
 from frozenlist import FrozenList
@@ -32,10 +32,10 @@ def regex_match_to_java_exception(reason: str, stack: str):
     return JavaException(reason.strip(), stacks)
 
 
-class JavaExceptionLogChecker(Checker):
+class JavaExceptionLogChecker(UnaryChecker):
     name = 'java_log'
 
-    def _check(self, snapshot: Snapshot, _: Snapshot) -> OracleResult:
+    def _unary_check(self, snapshot: Snapshot) -> OracleResult:
         exceptions = java_exception_regex.findall('\n'.join(snapshot.operator_log))
         exceptions = set(map(lambda e: regex_match_to_java_exception(*e), exceptions))
         return JavaExceptionLogResult(operator_exceptions=list(exceptions))

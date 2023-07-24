@@ -14,6 +14,7 @@ class OracleControlFlow(StrEnum):
     flush = auto()
     revert = auto()
     terminate = auto()
+    redo = auto()
 
 
 def means_first(condition: Callable[['Checker'], bool]):
@@ -35,6 +36,7 @@ class OracleResult(Exception):
     message: str = OracleControlFlow.ok
     exception: Optional[Exception] = None
     emit_by: str = '<None>'
+    time_to_wait_until_next_step: int | float = 0
 
     def means(self, control_flow: Union[OracleControlFlow, str]):
         method_name = f'means_{control_flow.name}'
@@ -58,6 +60,10 @@ class OracleResult(Exception):
     def means_terminate(self):
         return self.exception is not None
 
+    @staticmethod
+    def means_redo():
+        return False
+
     def all_meanings(self):
         return [meaning for meaning in OracleControlFlow if self.means(meaning)]
 
@@ -72,14 +78,42 @@ class Checker(ABC):
     def __init__(self, **kwargs):
         pass
 
-    def check(self, snapshot: Snapshot, prev_snapshot: Snapshot) -> OracleResult:
+    def check(self, snapshot: Snapshot) -> Optional[OracleResult]:
+        if not self.enabled(snapshot):
+            return None
         try:
-            result = self._check(snapshot, prev_snapshot)
+            result = self._check(snapshot)
         except Exception as e:
             result = OracleResult(message=str(e), exception=e)
         result.set_emitter(self)
         return result
 
+    @staticmethod
+    def enabled(snapshot: Snapshot) -> bool:
+        return True
+
     @abstractmethod
-    def _check(self, snapshot: Snapshot, prev_snapshot: Snapshot) -> OracleResult:
-        raise NotImplementedError()
+    def _check(self, snapshot: Snapshot) -> OracleResult:
+        raise NotImplementedError
+
+
+class UnaryChecker(Checker, ABC):
+    def _check(self, snapshot: Snapshot) -> OracleResult:
+        return self._unary_check(snapshot)
+
+    @abstractmethod
+    def _unary_check(self, snapshot: Snapshot) -> OracleResult:
+        pass
+
+
+class BinaryChecker(Checker, ABC):
+    @staticmethod
+    def enabled(snapshot: Snapshot) -> bool:
+        return snapshot.parent is not None
+
+    def _check(self, snapshot: Snapshot) -> OracleResult:
+        return self._binary_check(snapshot, snapshot.parent)
+
+    @abstractmethod
+    def _binary_check(self, snapshot: Snapshot, prev_snapshot: Snapshot) -> OracleResult:
+        pass

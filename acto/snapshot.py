@@ -1,7 +1,7 @@
 import json
 import os
 from dataclasses import dataclass, field
-from typing import Tuple, Dict, List, TypedDict, Optional, Literal
+from typing import Tuple, Dict, List, TypedDict, Optional, Literal, Any
 
 import yaml
 from deepdiff import DeepDiff
@@ -24,7 +24,8 @@ class Snapshot:
     not_ready_pods_logs: dict = field(default_factory=dict)
     generation: int = 0
     trial_state: Literal['normal', 'recovering', 'terminated', 'runtime_exception'] = 'normal'
-    snapshot_before_applied_input: Optional['Snapshot'] = None
+    parent: Optional['Snapshot'] = None
+    __context: Dict[str, Any] = field(default_factory=dict)
 
     def delta(self, prev: 'Snapshot') -> Tuple[Dict[str, Dict[str, Dict[str, Diff]]], Dict[str, Dict[str, Dict[str, Diff]]]]:
         curr_input, curr_system_state = self.input, self.system_state
@@ -44,9 +45,6 @@ class Snapshot:
 
         return input_delta, system_state_delta
 
-    def set_snapshot_before_applied_input(self, snapshot: 'Snapshot'):
-        self.snapshot_before_applied_input = snapshot
-
     def save(self, base_dir: str):
         yaml.safe_dump(self.input, open(os.path.join(base_dir, f'mutated-{self.generation}.yaml'),'w'))
         json.dump(self.cli_result, open(os.path.join(base_dir, f'cli-output-{self.generation}.log'),'w'))
@@ -55,3 +53,13 @@ class Snapshot:
         json.dump(self.events, open(os.path.join(base_dir, f'events-{self.generation}.json'), 'w'))
         json.dump(self.not_ready_pods_logs, open(os.path.join(base_dir, f'not-ready-pods-logs-{self.generation}.json'), 'w'))
         open(os.path.join(base_dir, f'trial-state-{self.generation}.txt'), 'w').write(self.trial_state)
+
+    def get_context_value(self, key: str):
+        if key in self.__context:
+            return self.__context[key]
+        if self.parent:
+            return self.parent.get_context_value(key)
+        return None
+
+    def set_context_value(self, key: str, value: Any):
+        self.__context[key] = value

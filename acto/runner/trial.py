@@ -1,4 +1,5 @@
 import logging
+import time
 from itertools import zip_longest
 from typing import Literal, Optional, Tuple, List, Generator, Protocol, Union, Iterator
 
@@ -10,11 +11,11 @@ from acto.schema import ObjectSchema
 
 
 class Snapshot(Protocol):
-    def set_snapshot_before_applied_input(self, snapshot: 'Snapshot'):
-        pass
+    parent: 'Snapshot'
 
     def save(self, dir_path: str):
         pass
+
 
 class TrialInputIteratorLike(Protocol):
     def __iter__(self) -> Generator[Tuple[dict, dict], None, None]:
@@ -24,6 +25,9 @@ class TrialInputIteratorLike(Protocol):
         pass
 
     def revert(self):
+        pass
+
+    def redo(self):
         pass
 
     def swap_iterator(self, next_testcase: Iterator[Tuple[List[str], TestCase]]) -> Iterator[
@@ -96,6 +100,13 @@ class TrialInputIterator:
         # re-apply the last valid test
         self.__queuing_tests.append((self.__history[-2][0], {'testcase': f'revert-{faulty_test[1]["testcase"]}', 'field': None}))
 
+    def redo(self):
+        """
+        Redo the last testcase
+        """
+        redo_test = self.__history.pop()
+        self.__queuing_tests.insert(0, redo_test)
+
     def swap_iterator(self, next_testcase: Iterator[Tuple[List[str], TestCase]])->Iterator[Tuple[List[str], TestCase]]:
         next_testcase, self.__next_testcase = next_testcase, self.__next_testcase
         return next_testcase
@@ -103,8 +114,6 @@ class TrialInputIterator:
     @property
     def history(self):
         return self.__history
-
-
 
 
 class Trial:
@@ -148,13 +157,14 @@ class Trial:
             logging.error(f"Runtime error: {runtime_error}")
             return
         assert snapshot is not None
-
+        if self.__snapshots:
+            snapshot.parent = self.__snapshots[-1]
         self.__snapshots.append(snapshot)
         self.__generation += 1
         self.__waiting_for_snapshot = False
-        self.check_snapshot()
+        self.__check_snapshot()
 
-    def check_snapshot(self):
+    def __check_snapshot(self):
         assert self.__state != 'runtime_exception'
         assert self.__state != 'terminated'
 
@@ -164,10 +174,12 @@ class Trial:
             self.__run_results.append([])
             return
 
-        prev_snapshot = self.__snapshots[-2]
         snapshot = self.__snapshots[-1]
-        result = self.__checker_set.check(snapshot, prev_snapshot)
+        result = self.__checker_set.check(snapshot)
         self.__run_results.append(result)
+
+        # Wait if a result requires extra wait time
+        self.__wait_according_to_oracle_results(result)
 
         # If all the checkers return ok, we can move on to the next __generation
         if all(map(lambda x: x.means(OracleControlFlow.ok), result)):
@@ -177,6 +189,13 @@ class Trial:
         # If any of the checkers return terminate, we terminate the trial
         if any(map(lambda x: x.means(OracleControlFlow.terminate), result)):
             self.__state = 'terminated'
+            return
+
+        # If any of the checkers return redo, we pretend as if the last run did not exist
+        if any(map(lambda x: x.means(OracleControlFlow.redo), result)):
+            self.__generation -= 1
+            self.__snapshots.pop()
+            self.__run_results.pop()
             return
 
         if any(map(lambda x: x.means(OracleControlFlow.revert), result)):
@@ -190,17 +209,22 @@ class Trial:
             else:
                 # if current state is normal, we revert the last applied test case
                 self.__state = 'recovering'
-                snapshot.set_snapshot_before_applied_input(prev_snapshot)
                 self.__next_input.revert()
             return
 
         if any(map(lambda x: x.means(OracleControlFlow.flush), result)):
             # TODO: What should the behavior be when the oracles mean a flush?
-            # See the only checker that will produce a flush
             self.__state = 'normal'
             return
 
         assert False, "unreachable"
+
+    @staticmethod
+    def __wait_according_to_oracle_results(oracle_results: List[OracleResult]):
+        if len(oracle_results) == 0:
+            return
+        max_sleep_duration = max(map(lambda x: x.time_to_wait_until_next_step, oracle_results))
+        time.sleep(max_sleep_duration)
 
     @property
     def generation(self):
@@ -239,4 +263,3 @@ class Trial:
 
     def recycle_testcases(self) -> Iterator[Tuple[List[str], TestCase]]:
         return self.__next_input.swap_iterator(iter(()))
-

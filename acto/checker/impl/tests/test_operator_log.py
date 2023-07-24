@@ -11,7 +11,8 @@ checker = OperatorLogChecker()
 
 def checker_func(s: Snapshot, prev_s: Snapshot) -> OracleResult:
     assert s.operator_log != []
-    return checker.check(s, prev_s)
+    s.parent = prev_s
+    return checker.check(s)
 
 
 @pytest.mark.parametrize("test_case_id,expected", list(enumerate([

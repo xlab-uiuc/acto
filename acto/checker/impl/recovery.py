@@ -8,7 +8,6 @@ from deepdiff import DeepDiff
 
 from acto.checker.checker import Checker, OracleResult
 from acto.snapshot import Snapshot
-from acto.utils import get_thread_logger
 
 
 @dataclass
@@ -19,7 +18,10 @@ class RecoveryResult(OracleResult):
 class RecoveryChecker(Checker):
     name = 'recovery'
 
-    def _check(self, snapshot: Snapshot, prev_snapshot: Snapshot) -> OracleResult:
+    def enabled(self, snapshot: Snapshot) -> bool:
+        return snapshot.trial_state == 'recovering'
+
+    def _check(self, snapshot: Snapshot) -> OracleResult:
         """
         Check whether two system state are semantically equivalent
 
@@ -31,11 +33,9 @@ class RecoveryChecker(Checker):
             - a dict of diff results, empty if no diff found
         """
 
-        if snapshot.trial_state != 'recovery':
-            return OracleResult()
-        prev_snapshot = prev_snapshot.snapshot_before_applied_input
-        assert prev_snapshot is not None
-        return compare_system_equality(snapshot.system_state, prev_snapshot.system_state)
+        snapshot_to_compare = snapshot.parent.parent
+        assert snapshot_to_compare is not None
+        return compare_system_equality(snapshot.system_state, snapshot_to_compare.system_state)
 
 
 def compare_system_equality(curr_system_state: dict,

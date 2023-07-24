@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List, Optional
 
-from acto.checker.checker import Checker, OracleResult
+from acto.checker.checker import BinaryChecker, OracleResult
 from acto.common import invalid_input_message
 from acto.config import actoConfig
 from acto.parse_log import parse_log
@@ -14,10 +14,10 @@ class OperatorLogResult(OracleResult):
     invalid_field_path: Optional[List[str]] = None
 
 
-class OperatorLogChecker(Checker):
+class OperatorLogChecker(BinaryChecker):
     name = 'log'
 
-    def _check(self, snapshot: Snapshot, prev_snapshot: Snapshot) -> OracleResult:
+    def _binary_check(self, snapshot: Snapshot, prev_snapshot: Snapshot) -> OracleResult:
         input_delta, _ = snapshot.delta(prev_snapshot)
 
         for line in snapshot.operator_log:
