@@ -29,7 +29,8 @@ from acto.runner.snapshot_collector import CollectorContext, with_context, snaps
 from acto.runner.trial import Trial, TrialInputIterator, TrialInputIteratorLike
 from acto.schema import ObjectSchema
 from acto.serialization import ContextEncoder
-from acto.utils import OperatorConfig, get_thread_logger, AnalysisConfig, update_preload_images, process_crd
+from acto.lib.operator_config import OperatorConfig, AnalysisConfig
+from acto.utils import get_thread_logger, update_preload_images, process_crd
 from ssa.analysis import analyze
 
 
@@ -154,6 +155,7 @@ class Acto:
         self.checkers = CheckerSet(self.context, self.input_model, checker_generators)
         self.num_of_mutations = num_of_mutations
         self.trial_id = 0
+        self.collect_coverage = operator_config.collect_coverage
 
     def __learn_context(self, runner: Callable[[],Runner], context_file, crd_name, helper_crd, analysis_config, seed_file_path):
         logger = get_thread_logger(with_prefix=False)
@@ -210,6 +212,7 @@ class Acto:
                 collector = with_context(CollectorContext(
                     namespace=self.context['namespace'],
                     crd_meta_info=self.context['crd'],
+                    collect_coverage=self.collect_coverage,
                 ), snapshot_collector)
             else:
                 collector = _collector

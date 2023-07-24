@@ -10,7 +10,7 @@ from acto.checker.checker import OracleControlFlow
 from acto.checker.checker_set import CheckerSet
 from acto.input import DeterministicInputModel, InputModel
 from acto.post_process.post_diff_test import PostDiffTest
-from acto.utils import OperatorConfig
+from acto.lib.operator_config import OperatorConfig
 from test.post_diff_test_helper import FileBasedTrial, DiffTestResultTrial
 
 from .utils import construct_snapshot

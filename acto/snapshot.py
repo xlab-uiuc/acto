@@ -22,6 +22,7 @@ class Snapshot:
     operator_log: List[str] = field(default_factory=list)
     events: dict = field(default_factory=dict)
     not_ready_pods_logs: dict = field(default_factory=dict)
+    coverage_files: Dict[str, bytes] = field(default_factory=dict)
     generation: int = 0
     trial_state: Literal['normal', 'recovering', 'terminated', 'runtime_exception'] = 'normal'
     parent: Optional['Snapshot'] = None
@@ -53,6 +54,21 @@ class Snapshot:
         json.dump(self.events, open(os.path.join(base_dir, f'events-{self.generation}.json'), 'w'))
         json.dump(self.not_ready_pods_logs, open(os.path.join(base_dir, f'not-ready-pods-logs-{self.generation}.json'), 'w'))
         open(os.path.join(base_dir, f'trial-state-{self.generation}.txt'), 'w').write(self.trial_state)
+        # dump coverage info
+        # converge_index is a dict to map from filename to its generation
+        coverage_index_path = os.path.join(base_dir, f'coverage-index.json')
+        if not os.path.exists(coverage_index_path):
+            open(coverage_index_path, 'w').write('{}')
+            coverage_index = {}
+        else:
+            coverage_index = json.load(open(coverage_index_path))
+
+        for filename, content in self.coverage_files.items():
+            if filename not in coverage_index:
+                with open(os.path.join(base_dir, filename), 'wb') as f:
+                    f.write(content)
+                coverage_index[filename] = self.generation
+        json.dump(coverage_index, open(coverage_index_path, 'w'))
 
     def get_context_value(self, key: str):
         if key in self.__context:

@@ -17,7 +17,9 @@ from acto.input.get_matched_schemas import find_matched_schema
 from acto.input.valuegenerator import extract_schema_with_value_generator
 from acto.schema import BaseSchema, IntegerSchema, extract_schema
 from acto.serialization import ActoEncoder
-from acto.utils import get_thread_logger, is_prefix, OperatorConfig
+from acto.utils import get_thread_logger
+from acto.lib.operator_config import OperatorConfig
+from acto.lib import is_prefix
 
 from .known_schemas import K8sField
 from .testcase import TestCase

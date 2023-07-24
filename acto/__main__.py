@@ -14,6 +14,7 @@ import random
 from acto.config import actoConfig
 
 from acto.lib.monkey_patch_loader import load_monkey_patch
+from acto.lib.operator_config import OperatorConfig
 
 # for debugging, set random seed to 0
 random.seed(0)
@@ -82,7 +83,9 @@ parser.add_argument('--checkonly', action='store_true')
 
 args = parser.parse_args()
 
-load_monkey_patch(args.config)
+with open(args.config, 'r') as config_file:
+    config = OperatorConfig(**json.load(config_file))
+load_monkey_patch(config)
 
 os.makedirs(args.workdir_path, exist_ok=True)
 # Setting up log infra
@@ -111,7 +114,6 @@ from acto import common
 from acto.engine_new import Acto
 from acto.input.input import DeterministicInputModel, InputModel
 from acto.post_process import PostDiffTest
-from acto.utils.config import OperatorConfig
 from acto.utils.error_handler import handle_excepthook, thread_excepthook
 
 from acto.utils.thread_logger import get_thread_logger
@@ -125,11 +127,6 @@ threading.excepthook = thread_excepthook
 if args.notify_crash:
     logger.critical('Crash notification should be enabled in config.yaml')
 
-with open(args.config, 'r') as config_file:
-    config = json.load(config_file)
-    if 'monkey_patch' in config:
-        del config['monkey_patch']
-    config = OperatorConfig(**config)
 logger.info('Acto started with [%s]' % sys.argv)
 logger.info('Operator config: %s', config)
 

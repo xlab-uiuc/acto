@@ -5,7 +5,7 @@ from typing import Dict, TypeVar, Generic, Type
 
 import yaml
 
-from acto.utils import OperatorConfig
+from acto.lib.operator_config import OperatorConfig
 from acto.deploy import Deploy, YamlDeploy
 from acto.runner.trial import Trial
 

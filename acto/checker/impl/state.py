@@ -14,7 +14,8 @@ from acto.input.get_matched_schemas import find_matched_schema
 from acto.k8s_util.k8sutil import canonicalize_quantity
 from acto.schema import extract_schema, ObjectSchema, ArraySchema, BaseSchema
 from acto.snapshot import Snapshot
-from acto.utils import get_thread_logger, is_prefix
+from acto.utils import get_thread_logger
+from acto.lib import is_prefix
 
 
 @dataclass

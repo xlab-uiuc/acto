@@ -21,6 +21,7 @@ from acto.snapshot import Snapshot
 class CollectorContext:
     namespace: Optional[str] = None
     timeout: int = 45
+    collect_coverage: bool = False
     crd_meta_info: Optional[dict] = None
     kubectl_collector: Optional[Collector] = None
 
@@ -67,10 +68,16 @@ def snapshot_collector(ctx: CollectorContext, runner: Runner, trial: Trial, syst
     events = ctx.kubectl_collector.collect_events()
     not_ready_pods_logs = ctx.kubectl_collector.collect_not_ready_pods_logs()
 
+    if ctx.collect_coverage:
+        coverage_files = ctx.kubectl_collector.collect_operator_coverage()
+    else:
+        coverage_files = {}
+
     return Snapshot(input=system_input, system_state=system_state,
                     operator_log=operator_log, cli_result=cli_result,
                     events=events, not_ready_pods_logs=not_ready_pods_logs,
-                    generation=trial.generation, trial_state=trial.state)
+                    coverage_files=coverage_files,generation=trial.generation,
+                    trial_state=trial.state)
 
 
 def extract_event_time(event: CoreV1Event) -> Optional[datetime]:

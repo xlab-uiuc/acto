@@ -1,8 +1,11 @@
 import base64
+import io
 import json
+import tarfile
 from typing import Optional, Dict
 
 import kubernetes
+from kubernetes.stream import stream
 
 from acto.common import *
 from acto.kubectl_client import KubectlClient
@@ -129,6 +132,37 @@ class Collector:
                         logs[pod.metadata.name] = PodLog(log=log, previous_log=log_prev)
 
         return logs
+
+    def collect_operator_coverage(self):
+        logger = get_thread_logger(with_prefix=True)
+
+        operator_pod_list = self.coreV1Api.list_namespaced_pod(
+            namespace=self.namespace, watch=False, label_selector="acto/tag=operator-pod").items
+
+        if len(operator_pod_list) >= 1:
+            logger.debug('Got operator pod: pod name:' + operator_pod_list[0].metadata.name)
+        else:
+            logger.error('Failed to find operator pod')
+            # TODO: refine what should be done if no operator pod can be found
+            return {}
+        # Calling exec and waiting for response
+        exec_command = ['sh', '-c', 'curl -s localhost:45678/coverage | base64 -w 0']
+        # When calling a pod with multiple containers running the target container
+        # has to be specified with a keyword argument container=<name>.
+        resp = stream(self.coreV1Api.connect_get_namespaced_pod_exec,
+                      operator_pod_list[0].metadata.name,
+                      self.namespace,
+                      command=exec_command,
+                      stderr=True, stdin=False,
+                      stdout=True, tty=False)
+        decoded_tar = base64.b64decode(resp)
+        decoded_tar_file = io.BytesIO(decoded_tar)
+        files = {}
+        with tarfile.open(fileobj=decoded_tar_file, mode='r:') as tar:
+            for tarinfo in tar:
+                if tarinfo.isreg():
+                    files[tarinfo.name] = tar.extractfile(tarinfo).read()
+        return files
 
     def __get_all_objects(self, method) -> dict:
         """

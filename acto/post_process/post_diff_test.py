@@ -30,8 +30,8 @@ from acto.kubernetes_engine.kind import Kind
 from acto.runner.trial import Trial
 from acto.serialization import ActoEncoder
 from acto.snapshot import Snapshot
-from acto.utils import (OperatorConfig, add_acto_label, get_thread_logger,
-                        handle_excepthook, thread_excepthook)
+from acto.utils import get_thread_logger, handle_excepthook, thread_excepthook
+from acto.lib.operator_config import OperatorConfig
 from acto.lib.fp import drop_first_parameter, create_constant_function, unreachable
 from acto.ray_acto.util import ActorPool
 from acto.runner.runner import Runner

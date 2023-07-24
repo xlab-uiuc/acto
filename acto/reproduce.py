@@ -33,7 +33,8 @@ if __name__ == '__main__':
 
     from acto.engine_new import Acto
     from acto.input import TestCase
-    from acto.utils import OperatorConfig, get_thread_logger
+    from acto.utils import get_thread_logger
+    from acto.lib.operator_config import OperatorConfig
 
 
     class ReproduceTrialInputIterator:
@@ -65,9 +66,6 @@ if __name__ == '__main__':
 
     def reproduce(workdir_path: str, reproduce_dir: str, operator_config: str, **kwargs):
         with open(operator_config, 'r') as config_file:
-            config = json.load(config_file)
-            if 'monkey_patch' in config:
-                del config['monkey_patch']
             config = OperatorConfig(**json.load(config_file))
         context_cache = os.path.join(os.path.dirname(config.seed_custom_resource), 'context.json')
 
