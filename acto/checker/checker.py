@@ -36,7 +36,7 @@ class OracleResult(Exception):
     message: str = OracleControlFlow.ok
     exception: Optional[Exception] = None
     emit_by: str = '<None>'
-    time_to_wait_until_next_step: int | float = 0
+    time_to_wait_until_next_step: Union[int, float] = 0
 
     def means(self, control_flow: Union[OracleControlFlow, str]):
         method_name = f'means_{control_flow.name}'
