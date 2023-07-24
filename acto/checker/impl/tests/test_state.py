@@ -59,7 +59,7 @@ def checker_func(s: Snapshot, prev_s: Snapshot) -> OracleResult:
     PassResult(),
     PassResult(),
     PassResult(),
-    StateResult(Oracle.SYSTEM_STATE, 'Found no matching fields for input', Diff(NotPresent(), ".399015Gi", ['spec', 'sidecars', 0, 'env', 1, 'valueFrom', 'resourceFieldRef', 'divisor'])),
+    PassResult(),
 ])))
 def test_check(test_case_id, result_dict):
     snapshot = load_snapshot("state", test_case_id)

@@ -60,4 +60,5 @@ custom_fields = [
     input.ProblematicField(['spec', 'mongod', 'security']),
     input.ProblematicField(['spec', 'mongod', 'replication']),
     input.ProblematicField(['spec', 'mongod', 'operationProfiling']),
+    input.MappedField(['spec', 'mongod', 'storage'])
 ]
