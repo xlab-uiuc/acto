@@ -75,7 +75,7 @@ class Deploy:
                 'items': [],
                 'kind': 'List'
             })
-            health_result = HealthChecker().check(kube_snapshot, kube_snapshot)
+            health_result = HealthChecker().check(kube_snapshot)
             if health_result.means_ok():
                 return True
         return False

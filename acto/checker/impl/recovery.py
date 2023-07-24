@@ -32,7 +32,8 @@ class RecoveryChecker(Checker):
         Return value:
             - a dict of diff results, empty if no diff found
         """
-
+        if snapshot.parent is None or snapshot.parent.parent is None:
+            return RecoveryResult(message='Unable check recovery because there is no snapshot to compare with.')
         snapshot_to_compare = snapshot.parent.parent
         assert snapshot_to_compare is not None
         return compare_system_equality(snapshot.system_state, snapshot_to_compare.system_state)
@@ -148,4 +149,4 @@ def compare_system_equality(curr_system_state: dict,
         logging.debug(message)
         return RecoveryResult(message=message, diff=diff.to_dict())
 
-    return OracleResult()
+    return RecoveryResult()

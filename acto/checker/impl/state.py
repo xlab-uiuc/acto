@@ -212,7 +212,7 @@ class StateChecker(BinaryChecker):
                 })
 
     def enabled(self, snapshot: Snapshot) -> bool:
-        return snapshot.trial_state != 'recovering'
+        return super().enabled(snapshot) and snapshot.trial_state != 'recovering'
 
     def _binary_check(self, snapshot: Snapshot, prev_snapshot: Snapshot) -> OracleResult:
         """

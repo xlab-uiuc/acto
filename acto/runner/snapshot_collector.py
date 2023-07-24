@@ -125,7 +125,7 @@ async def wait_for_system_converge_expect_more_events(collector: Collector, no_e
             # hard timeout
             return False
         system_state = collector.collect_system_state()
-        health_result = HealthChecker().check(Snapshot(system_state=system_state), Snapshot())
+        health_result = HealthChecker().check(Snapshot(system_state=system_state))
         if health_result.means(OracleControlFlow.ok):
             return True
         # TODO: if the system is not healthy, but we have no events, do we need to wait more?
