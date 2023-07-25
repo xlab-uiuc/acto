@@ -10,6 +10,8 @@ from acto.schema import ArraySchema, BaseSchema, ObjectSchema, extract_schema
 def field_matched(schema: ObjectSchema, k8s_schema: K8sSchema) -> bool:
     if not isinstance(schema, ObjectSchema):
         return False
+    if k8s_schema.Match(schema):
+        return True
     for property_name in schema.properties:
         if property_name == "apiVersion":
             # avoid matching if it is a Kind, which is too generic
@@ -42,7 +44,7 @@ def find_matched_schema(schema: BaseSchema) -> List[List[str]]:
 
 
 def get_testcase_breakdown():
-    for name, obj in inspect.getmembers(known_schemas):
+    for name, obj in inspect.getmembers(acto.input.known_schemas):
         if inspect.isclass(obj) and issubclass(obj, K8sSchema):
             for _, class_member in inspect.getmembers(obj):
                 if class_member == K8sInvalidTestCase:
@@ -54,7 +56,6 @@ if __name__ == '__main__':
     import json
     import sys
     sys.path.append('..')
-    import known_schemas
 
     files = glob.glob('data/*/context.json')
     files.sort()
