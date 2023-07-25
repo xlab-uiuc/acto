@@ -3,7 +3,7 @@ from typing import List, Tuple
 from acto.input.testcase import K8sTestCase, TestCase
 from acto.schema import BaseSchema, ObjectSchema, OpaqueSchema, StringSchema
 
-from .base import K8sObjectSchema, K8sOpaqueSchema, K8sStringSchema
+from .base import K8sArraySchema, K8sObjectSchema, K8sOpaqueSchema, K8sStringSchema
 from .resource_schemas import QuantitySchema, StorageResourceRequirementsSchema
 
 
@@ -122,6 +122,23 @@ class AccessModeSchema(K8sStringSchema):
         return "AccessMode"
 
 
+class AccessModesSchema(K8sArraySchema):
+
+    item = AccessModeSchema
+
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        self.item_schema = AccessModeSchema(schema_obj.item_schema)
+
+    def Match(schema: ObjectSchema) -> bool:
+        if not K8sArraySchema.Match(schema):
+            return False
+        else:
+            return AccessModesSchema.item.Match(schema.get_item_schema())
+
+    def __str__(self) -> str:
+        return "Containers"
+
 class StorageClassNameSchema(K8sStringSchema):
 
     def change_storage_class_name(prev):
@@ -150,7 +167,7 @@ class StorageClassNameSchema(K8sStringSchema):
 class PersistentVolumeClaimSpecSchema(K8sObjectSchema):
 
     fields = {
-        "accessModes": AccessModeSchema,
+        "accessModes": AccessModesSchema,
         "dataSource": K8sObjectSchema,
         "dataSourceRef": K8sObjectSchema,
         "resources": StorageResourceRequirementsSchema,
@@ -235,7 +252,7 @@ class MediumSchema(K8sStringSchema):
         self.default = ''
 
     def Match(schema: StringSchema) -> bool:
-        return super().Match()
+        return K8sStringSchema.Match(schema)
 
     def __str__(self) -> str:
         return "Medium"

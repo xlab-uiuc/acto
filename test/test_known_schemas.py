@@ -119,6 +119,15 @@ class TestSchema(unittest.TestCase):
                                          crd['spec']['versions'][0]['schema']['openAPIV3Schema'])
             print(find_all_matched_schemas(spec_schema))
 
+    def test_pvc_match(self):
+        with open(os.path.join(test_dir, 'databases.spotahome.com_redisfailovers.yaml'), 'r') as operator_yaml:
+            crd = yaml.load(operator_yaml, Loader=yaml.FullLoader)
+            spec_schema = ObjectSchema(
+                ['root'], crd['spec']['versions'][0]['schema']['openAPIV3Schema']['properties']
+                ['spec']['properties']['redis']['properties']['storage']['properties']['persistentVolumeClaim'])
+
+        self.assertTrue(PersistentVolumeClaimSchema.Match(spec_schema))
+
 
 if __name__ == '__main__':
     unittest.main()

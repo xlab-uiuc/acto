@@ -557,13 +557,15 @@ class TolerationSchema(K8sObjectSchema):
         "key": "test-key",
         "operator": "Equal",
         "value": "test-value",
-        "effect": "NoSchedule"
+        "effect": "NoExecute",
+        "tolerationSeconds": 3600
     }
 
     ControlPlaneToleration = {
         "key": "node-role.kubernetes.io/control-plane",
         "operator": "Exists",
-        "effect": "NoSchedule"
+        "effect": "NoExecute",
+        "tolerationSeconds": 3600
     }
 
     def plain_toleration_precondition(prev) -> bool:
