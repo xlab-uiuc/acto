@@ -252,8 +252,6 @@ class TrialRunner:
                 logger.info('Not deployed. Try again!')
                 continue
 
-            add_acto_label(apiclient, self.context)
-
             trial_dir = os.path.join(
                 self.workdir,
                 'trial-%02d-%04d' % (self.worker_id + self.sequence_base, self.curr_trial))

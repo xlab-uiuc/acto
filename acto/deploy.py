@@ -9,6 +9,7 @@ import acto.utils as utils
 from acto.common import *
 from acto.constant import CONST
 from acto.utils import get_thread_logger
+from acto.utils.preprocess import add_acto_label
 
 CONST = CONST()
 
@@ -191,6 +192,8 @@ class Yaml(Deploy):
         self.check_status(context, kubeconfig=kubeconfig, context_name=context_name)
         kubectl(['apply', '--server-side', '-f', self.path, '-n', context['namespace']], kubeconfig=kubeconfig,
                 context_name=context_name)
+        self.check_status(context, kubeconfig=kubeconfig, context_name=context_name)
+        add_acto_label(kubernetes_client(kubeconfig, context_name), context)
         self.check_status(context, kubeconfig=kubeconfig, context_name=context_name)
         time.sleep(20)
 
