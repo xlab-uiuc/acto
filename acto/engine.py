@@ -298,13 +298,9 @@ class TrialRunner:
             for on_init in self.custom_on_init:
                 on_init(oracle_handle)
 
-        if self.custom_oracle is not None:
-            custom_oracle = [functools.partial(i, oracle_handle) for i in self.custom_oracle]
-        else:
-            custom_oracle = []
         runner: Runner = self.runner_t(self.context, trial_dir, self.kubeconfig, self.context_name,
                                        self.wait_time)
-        checker: CheckerSet = self.checker_t(self.context, trial_dir, self.input_model, custom_oracle)
+        checker: CheckerSet = self.checker_t(self.context, trial_dir, self.input_model, oracle_handle, self.custom_oracle)
 
         curr_input = self.input_model.get_seed_input()
         self.snapshots.append(EmptySnapshot(curr_input))

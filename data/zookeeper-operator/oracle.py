@@ -1,72 +1,49 @@
 import json
 from typing import List
-from client.oracle_handle import OracleHandle
-from common import ErrorResult, Oracle, PassResult, RunResult, canonicalize
-from thread_logger import get_thread_logger
+from acto.checker.checker import Checker
+from acto.oracle_handle import OracleHandle
+from acto.common import ErrorResult, Oracle, PassResult, RunResult, canonicalize
 
 
-def zookeeper_checker(handle: OracleHandle) -> RunResult:
-    '''Checks the health of the Zookeeper cluster'''
+class ZookeeperOracle(Checker):
+    name = 'custom'
 
-    cr = handle.get_cr()
-    if 'config' in cr['spec']:
-        config = cr['spec']['config']
-        if 'additionalConfig' in config and config['additionalConfig'] != None:
-            for key, value in config['additionalConfig'].items():
-                config[key] = value
-            del config['additionalConfig']
-    else:
-        config = None
+    def __init__(self, oracle_handle: OracleHandle, **kwargs):
+        super().__init__(**kwargs)
+        self.oracle_handle = oracle_handle
 
-    sts_list = handle.get_stateful_sets()
+    def check(self, **kwargs) -> RunResult:
+        '''Checks the health of the Zookeeper cluster'''
+        handle = self.oracle_handle
 
-    if len(sts_list) != 1:
-        return ErrorResult(oracle=Oracle.CUSTOM,
-                           msg='Zookeeper cluster has more than one stateful set')
+        cr = handle.get_cr()
+        if 'config' in cr['spec']:
+            config = cr['spec']['config']
+            if 'additionalConfig' in config and config['additionalConfig'] != None:
+                for key, value in config['additionalConfig'].items():
+                    config[key] = value
+                del config['additionalConfig']
+        else:
+            config = None
 
-    pod_list = handle.get_pods_in_stateful_set(sts_list[0])
+        sts_list = handle.get_stateful_sets()
 
-    leaders = 0
-    for pod in pod_list:
-        if pod.status.pod_ip == None:
+        if len(sts_list) != 1:
             return ErrorResult(oracle=Oracle.CUSTOM,
-                               msg='Zookeeper pod does not have an IP assigned')
-        p = handle.kubectl_client.exec(
-            pod.metadata.name,
-            pod.metadata.namespace, ['curl', 'http://' + pod.status.pod_ip + ':8080/commands/ruok'],
-            capture_output=True,
-            text=True)
-        if p.returncode != 0:
-            return ErrorResult(oracle=Oracle.CUSTOM, msg='Zookeeper pod is not responding')
-        else:
-            result = json.loads(p.stdout)
-            if result['error'] != None:
-                return ErrorResult(oracle=Oracle.CUSTOM,
-                                msg='Zookeeper cluster curl has error ' + result['error'])
+                            msg='Zookeeper cluster has more than one stateful set')
 
-        p = handle.kubectl_client.exec(
-            pod.metadata.name,
-            pod.metadata.namespace, ['curl', 'http://' + pod.status.pod_ip + ':8080/commands/stat'],
-            capture_output=True,
-            text=True)
-        if p.returncode != 0:
-            return ErrorResult(oracle=Oracle.CUSTOM, msg='Zookeeper pod is not responding')
-        else:
-            result = json.loads(p.stdout)
-            if result['error'] != None:
-                return ErrorResult(oracle=Oracle.CUSTOM,
-                                msg='Zookeeper cluster curl has error ' + result['error'])
-            elif result['server_stats']['server_state'] == 'leader':
-                leaders += 1
+        pod_list = handle.get_pods_in_stateful_set(sts_list[0])
 
-        if config != None:
+        leaders = 0
+        for pod in pod_list:
+            if pod.status.pod_ip == None:
+                return ErrorResult(oracle=Oracle.CUSTOM,
+                                msg='Zookeeper pod does not have an IP assigned')
             p = handle.kubectl_client.exec(
                 pod.metadata.name,
-                pod.metadata.namespace,
-                ['curl', 'http://' + pod.status.pod_ip + ':8080/commands/conf'],
+                pod.metadata.namespace, ['curl', 'http://' + pod.status.pod_ip + ':8080/commands/ruok'],
                 capture_output=True,
                 text=True)
-
             if p.returncode != 0:
                 return ErrorResult(oracle=Oracle.CUSTOM, msg='Zookeeper pod is not responding')
             else:
@@ -75,29 +52,60 @@ def zookeeper_checker(handle: OracleHandle) -> RunResult:
                     return ErrorResult(oracle=Oracle.CUSTOM,
                                     msg='Zookeeper cluster curl has error ' + result['error'])
 
-                for key, value in config.items():
-                    canonicalize_key = canonicalize(key)
-                    if canonicalize_key not in result:
+            p = handle.kubectl_client.exec(
+                pod.metadata.name,
+                pod.metadata.namespace, ['curl', 'http://' + pod.status.pod_ip + ':8080/commands/stat'],
+                capture_output=True,
+                text=True)
+            if p.returncode != 0:
+                return ErrorResult(oracle=Oracle.CUSTOM, msg='Zookeeper pod is not responding')
+            else:
+                result = json.loads(p.stdout)
+                if result['error'] != None:
+                    return ErrorResult(oracle=Oracle.CUSTOM,
+                                    msg='Zookeeper cluster curl has error ' + result['error'])
+                elif result['server_stats']['server_state'] == 'leader':
+                    leaders += 1
+
+            if config != None:
+                p = handle.kubectl_client.exec(
+                    pod.metadata.name,
+                    pod.metadata.namespace,
+                    ['curl', 'http://' + pod.status.pod_ip + ':8080/commands/conf'],
+                    capture_output=True,
+                    text=True)
+
+                if p.returncode != 0:
+                    return ErrorResult(oracle=Oracle.CUSTOM, msg='Zookeeper pod is not responding')
+                else:
+                    result = json.loads(p.stdout)
+                    if result['error'] != None:
                         return ErrorResult(oracle=Oracle.CUSTOM,
-                                        msg='Zookeeper config does not contain key ' + key)
-                    elif result[canonicalize_key] != value:
-                        return ErrorResult(oracle=Oracle.CUSTOM,
-                                        msg='Zookeeper cluster has incorrect config')
+                                        msg='Zookeeper cluster curl has error ' + result['error'])
 
-    if leaders > 1:
-        return ErrorResult(oracle=Oracle.CUSTOM, msg='Zookeeper cluster has more than one leader')
+                    for key, value in config.items():
+                        canonicalize_key = canonicalize(key)
+                        if canonicalize_key not in result:
+                            return ErrorResult(oracle=Oracle.CUSTOM,
+                                            msg='Zookeeper config does not contain key ' + key)
+                        elif result[canonicalize_key] != value:
+                            return ErrorResult(oracle=Oracle.CUSTOM,
+                                            msg='Zookeeper cluster has incorrect config')
 
-    p = handle.kubectl_client.exec('zkapp',
-                                   handle.namespace, ['request'],
-                                   capture_output=True,
-                                   text=True)
-    if p.returncode != 0:
-        return ErrorResult(oracle=Oracle.CUSTOM, msg='Zookeeper app request failed')
-    elif p.stdout != 'test':
-        return ErrorResult(oracle=Oracle.CUSTOM,
-                           msg='Zookeeper app request result wrong %s' % p.stdout)
+        if leaders > 1:
+            return ErrorResult(oracle=Oracle.CUSTOM, msg='Zookeeper cluster has more than one leader')
 
-    return PassResult()
+        p = handle.kubectl_client.exec('zkapp',
+                                    handle.namespace, ['request'],
+                                    capture_output=True,
+                                    text=True)
+        if p.returncode != 0:
+            return ErrorResult(oracle=Oracle.CUSTOM, msg='Zookeeper app request failed')
+        elif p.stdout != 'test':
+            return ErrorResult(oracle=Oracle.CUSTOM,
+                            msg='Zookeeper app request result wrong %s' % p.stdout)
+
+        return PassResult()
 
 
 def deploy_zk_app(handle: OracleHandle):
@@ -107,5 +115,5 @@ def deploy_zk_app(handle: OracleHandle):
     ])
 
 
-CUSTOM_CHECKER: List[callable] = [zookeeper_checker]
+CUSTOM_CHECKER: List[callable] = [ZookeeperOracle]
 ON_INIT: List[callable] = [deploy_zk_app]

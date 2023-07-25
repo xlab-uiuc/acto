@@ -6,18 +6,20 @@ from acto.checker.impl.health import HealthChecker
 from acto.checker.impl.kubectl_cli import KubectlCliChecker
 from acto.checker.impl.operator_log import OperatorLogChecker
 from acto.checker.impl.state import StateChecker
-from acto.common import RunResult, InvalidInputResult, flatten_dict
+from acto.common import PassResult, RunResult, InvalidInputResult, flatten_dict
 from acto.config import actoConfig
 from acto.input import InputModel
+from acto.oracle_handle import OracleHandle
 from acto.serialization import ActoEncoder
 from acto.snapshot import Snapshot
 from acto.utils import get_thread_logger
 
 
 class CheckerSet:
-    def __init__(self, context: dict, trial_dir: str, input_model: InputModel, checker_generators: list = None):
-        if checker_generators is None or checker_generators == []:
-            checker_generators = [CrashChecker, HealthChecker, KubectlCliChecker, OperatorLogChecker, StateChecker]
+    def __init__(self, context: dict, trial_dir: str, input_model: InputModel, oracle_handle: OracleHandle, checker_generators: list = None):
+        checker_generators = [CrashChecker, HealthChecker, KubectlCliChecker, OperatorLogChecker, StateChecker]
+        if checker_generators:
+            checker_generators.extend(checker_generators)
         self.context = context
         self.input_model = input_model
         self.trial_dir = trial_dir
@@ -25,7 +27,8 @@ class CheckerSet:
         checker_args = {
             'trial_dir': self.trial_dir,
             'input_model': self.input_model,
-            'context': self.context
+            'context': self.context,
+            'oracle_handle': oracle_handle,
         }
         self.checkers = [checkerGenerator(**checker_args) for checkerGenerator in checker_generators]
 
@@ -59,3 +62,17 @@ class CheckerSet:
                 json.dump(run_result.to_dict(), f, cls=ActoEncoder, indent=4)
 
         return run_result
+    
+    def count_num_fields(self, snapshot: Snapshot, prev_snapshot: Snapshot):
+        input_delta, system_delta = snapshot.delta(prev_snapshot)
+        flattened_system_state = flatten_dict(snapshot.system_state, [])
+
+        if len(input_delta) > 0:
+            num_delta = 0
+            for resource_delta_list in system_delta.values():
+                for type_delta_list in resource_delta_list.values():
+                    for state_delta in type_delta_list.values():
+                        num_delta += 1
+            return len(flattened_system_state), num_delta
+
+        return None
