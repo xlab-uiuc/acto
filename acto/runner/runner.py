@@ -241,21 +241,21 @@ class Runner(object):
             for container_statuses in [pod.status.container_statuses or [], pod.status.init_container_statuses or []]:
                 for container_status in container_statuses:
                     if not container_status.ready:
-                        log = self.coreV1Api.read_namespaced_pod_log(pod.metadata.name, self.namespace,
-                                                                     container=container_status.name)
-                        if len(log) != 0:
-                            with open(self.not_ready_pod_log_path.format(container_status.name), 'w') as f:
-                                f.write(log)
-                        if container_status.last_state.terminated is not None:
-                            try:
+                        try:
+                            log = self.coreV1Api.read_namespaced_pod_log(pod.metadata.name, self.namespace,
+                                                                        container=container_status.name)
+                            if len(log) != 0:
+                                with open(self.not_ready_pod_log_path.format(container_status.name), 'w') as f:
+                                    f.write(log)
+                            if container_status.last_state.terminated is not None:
                                 log = self.coreV1Api.read_namespaced_pod_log(pod.metadata.name, self.namespace,
                                                                             container=container_status.name, previous=True)
                                 if len(log) != 0:
                                     with open(self.not_ready_pod_log_path.format('prev-'+container_status.name), 'w') as f:
                                         f.write(log)
-                            except kubernetes.client.rest.ApiException as e:
-                                logger = get_thread_logger(with_prefix=True)
-                                logger.error('Failed to get previous log of pod %s' % pod.metadata.name, exc_info=e)
+                        except kubernetes.client.rest.ApiException as e:
+                            logger = get_thread_logger(with_prefix=True)
+                            logger.error('Failed to get previous log of pod %s' % pod.metadata.name, exc_info=e)
 
     def collect_cli_result(self, p: subprocess.CompletedProcess):
         cli_output = {}
