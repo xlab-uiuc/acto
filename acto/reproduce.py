@@ -10,10 +10,9 @@ from glob import glob
 import os
 
 from acto.engine import Acto
+from acto.input.testplan import TestGroup
 from acto.input.valuegenerator import extract_schema_with_value_generator
-
-from acto.schema import BaseSchema, OpaqueSchema
-from acto.input.testplan import TestGroup, TreeNode
+from acto.post_process.post_diff_test import PostDiffTest
 
 from acto.input.value_with_schema import ValueWithSchema
 from acto.input import TestCase
@@ -123,9 +122,6 @@ class ReproInputModel(InputModel):
     def apply_k8s_schema(self, k8s_field):
         pass
 
-    def apply_custom_field(self, custom_field: CustomField):
-        pass
-
 
 def repro_precondition(v):
     return True
@@ -139,8 +135,17 @@ def repro_setup(v):
     return None
 
 
-def reproduce(workdir_path: str, reproduce_dir: str, operator_config: OperatorConfig, **kwargs):
-
+def reproduce(workdir_path: str, reproduce_dir: str, operator_config: OperatorConfig, **kwargs) -> bool:
+    os.makedirs(workdir_path, exist_ok=True)
+    # Setting up log infra
+    logging.basicConfig(
+        filename=os.path.join(workdir_path, 'test.log'),
+        level=logging.DEBUG,
+        filemode='w',
+        format='%(asctime)s %(levelname)-7s, %(name)s, %(filename)-9s:%(lineno)d, %(message)s')
+    logging.getLogger("kubernetes").setLevel(logging.ERROR)
+    logging.getLogger("sh").setLevel(logging.ERROR)
+    
     with open(operator_config, 'r') as config_file:
         config = OperatorConfig(**json.load(config_file))
     context_cache = os.path.join(os.path.dirname(config.seed_custom_resource), 'context.json')
@@ -158,15 +163,30 @@ def reproduce(workdir_path: str, reproduce_dir: str, operator_config: OperatorCo
                 num_cases=1,
                 dryrun=False,
                 analysis_only=False,
-                is_reproduce=is_reproduce,
+                is_reproduce=True,
                 input_model=input_model,
                 apply_testcase_f=apply_testcase_f,
                 reproduce_dir=reproduce_dir)
 
-    acto.run(modes=['normal'])
+    errors = acto.run(modes=['normal'])
+    if any(x is not None for x in errors):
+        return True
+    else:
+        return False
 
+def reproduce_postdiff(workdir_path: str, operator_config: OperatorConfig, **kwargs) -> bool:
+    with open(operator_config, 'r') as config_file:
+        config = OperatorConfig(**json.load(config_file))
+    post_diff_test_dir = os.path.join(workdir_path, 'post_diff_test')
+    logs = glob(workdir_path + '/*/operator-*.log')
+    for log in logs:
+        open(log, 'w').close()
+    p = PostDiffTest(testrun_dir=workdir_path, config=config, ignore_invalid=True)
+    p.post_process(post_diff_test_dir, num_workers=1)
+    p.check(post_diff_test_dir, num_workers=1)
 
-# TODO add main function
+    return len(glob(os.path.join(post_diff_test_dir, 'compare-results-*.json'))) > 0
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Automatic, Continuous Testing for k8s/openshift Operators')
@@ -188,17 +208,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     workdir_path = 'testrun-%s' % datetime.now().strftime('%Y-%m-%d-%H-%M')
-    os.makedirs(workdir_path, exist_ok=True)
-    # Setting up log infra
-    logging.basicConfig(
-        filename=os.path.join(workdir_path, 'test.log'),
-        level=logging.DEBUG,
-        filemode='w',
-        format='%(asctime)s %(levelname)-7s, %(name)s, %(filename)-9s:%(lineno)d, %(message)s')
-    logging.getLogger("kubernetes").setLevel(logging.ERROR)
-    logging.getLogger("sh").setLevel(logging.ERROR)
-
-    logger = get_thread_logger(with_prefix=False)
 
     is_reproduce = True
     start_time = datetime.now()
@@ -207,4 +216,3 @@ if __name__ == '__main__':
               operator_config=args.config,
               cluster_runtime=args.cluster_runtime)
     end_time = datetime.now()
-    logger.info('Acto finished in %s', end_time - start_time)

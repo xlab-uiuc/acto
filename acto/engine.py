@@ -226,7 +226,7 @@ class TrialRunner:
 
         self.curr_trial = 0
 
-    def run(self, mode: str = InputModel.NORMAL):
+    def run(self, errors: List[RunResult], mode: str = InputModel.NORMAL):
         logger = get_thread_logger(with_prefix=True)
 
         self.input_model.set_worker_id(self.worker_id)
@@ -267,6 +267,7 @@ class TrialRunner:
             delete_operator_pod(apiclient, self.context['namespace'])
             save_result(trial_dir, trial_err, num_tests, trial_elapsed)
             self.curr_trial = self.curr_trial + 1
+            errors.append(trial_err)
 
             if self.input_model.is_empty():
                 logger.info('Test finished')
@@ -674,6 +675,7 @@ class Acto:
         if operator_config.k8s_fields is not None:
             module = importlib.import_module(operator_config.k8s_fields)
             if hasattr(module,'BLACKBOX') and actoConfig.mode == 'blackbox':
+                applied_custom_k8s_fields = True
                 for k8s_field in module.BLACKBOX:
                     self.input_model.apply_k8s_schema(k8s_field)
             elif hasattr(module,'WHITEBOX') and actoConfig.mode == 'whitebox':
@@ -814,7 +816,8 @@ class Acto:
             with open(context_file, 'w') as context_fout:
                 json.dump(self.context, context_fout, cls=ContextEncoder, indent=4, sort_keys=True)
 
-    def run(self, modes: list = ['normal', 'overspecified', 'copiedover']):
+    def run(self, modes: list = ['normal', 'overspecified', 'copiedover']) -> List[RunResult]:
+        # TODO: return the alarms here
         logger = get_thread_logger(with_prefix=True)
 
         # Build an archive to be preloaded
@@ -829,6 +832,7 @@ class Acto:
 
         start_time = time.time()
 
+        errors: List[RunResult] = []
         runners: List[TrialRunner] = []
         for i in range(self.num_workers):
             runner = TrialRunner(self.context, self.input_model, self.deploy, self.runner_type,
@@ -841,7 +845,7 @@ class Acto:
         if 'normal' in modes:
             threads = []
             for runner in runners:
-                t = threading.Thread(target=runner.run, args=([]))
+                t = threading.Thread(target=runner.run, args=([errors]))
                 t.start()
                 threads.append(t)
 
@@ -853,7 +857,7 @@ class Acto:
         if 'overspecified' in modes:
             threads = []
             for runner in runners:
-                t = threading.Thread(target=runner.run, args=([InputModel.OVERSPECIFIED]))
+                t = threading.Thread(target=runner.run, args=([errors, InputModel.OVERSPECIFIED]))
                 t.start()
                 threads.append(t)
 
@@ -865,7 +869,7 @@ class Acto:
         if 'copiedover' in modes:
             threads = []
             for runner in runners:
-                t = threading.Thread(target=runner.run, args=([InputModel.COPIED_OVER]))
+                t = threading.Thread(target=runner.run, args=([errors, InputModel.COPIED_OVER]))
                 t.start()
                 threads.append(t)
 
@@ -877,7 +881,7 @@ class Acto:
         if InputModel.ADDITIONAL_SEMANTIC in modes:
             threads = []
             for runner in runners:
-                t = threading.Thread(target=runner.run, args=([InputModel.ADDITIONAL_SEMANTIC]))
+                t = threading.Thread(target=runner.run, args=([errors, InputModel.ADDITIONAL_SEMANTIC]))
                 t.start()
                 threads.append(t)
 
@@ -904,3 +908,4 @@ class Acto:
             json.dump(testrun_info, info_file, cls=ActoEncoder, indent=4)
 
         logger.info('All tests finished')
+        return errors

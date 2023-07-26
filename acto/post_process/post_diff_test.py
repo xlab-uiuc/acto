@@ -88,6 +88,12 @@ def compare_system_equality(curr_system_state: Dict,
                     obj['data'][key] = json.loads(data)
                 except:
                     pass
+    
+    if len(curr_system_state['secret']) != len(prev_system_state['secret']):
+        logger.debug(f"failed attempt recovering to seed state - secret count mismatch")
+        return RecoveryResult(
+            delta=DeepDiff(len(curr_system_state['secret']), len(prev_system_state['secret'])), 
+            from_=prev_system_state, to_=curr_system_state)
 
     # remove custom resource from both states
     curr_system_state.pop('custom_resource_spec', None)
@@ -264,8 +270,8 @@ class AdditionalRunner:
         self._cluster = cluster
         self._worker_id = worker_id
         self._cluster_name = f"acto-cluster-{worker_id}"
-        self._kubeconfig = os.path.join(os.path.expanduser('~'), '.kube', self._cluster_name)
         self._context_name = cluster.get_context_name(f"acto-cluster-{worker_id}")
+        self._kubeconfig = os.path.join(os.path.expanduser('~'), '.kube', self._context_name)
         self._generation = 0
 
     def run_cr(self, cr, trial, gen):
@@ -304,8 +310,8 @@ class DeployRunner:
         self._cluster = cluster
         self._worker_id = worker_id
         self._cluster_name = f"acto-cluster-{worker_id}"
-        self._kubeconfig = os.path.join(os.path.expanduser('~'), '.kube', self._cluster_name)
         self._context_name = cluster.get_context_name(f"acto-cluster-{worker_id}")
+        self._kubeconfig = os.path.join(os.path.expanduser('~'), '.kube', self._context_name)
         self._images_archive = os.path.join(workdir, 'images.tar')
 
     def run(self):
@@ -360,7 +366,7 @@ class DeployRunner:
 
 class PostDiffTest(PostProcessor):
 
-    def __init__(self, testrun_dir: str, config: OperatorConfig):
+    def __init__(self, testrun_dir: str, config: OperatorConfig, ignore_invalid: bool = False):
         super().__init__(testrun_dir, config)
         logger = get_thread_logger(with_prefix=True)
 
@@ -368,7 +374,7 @@ class PostDiffTest(PostProcessor):
         for trial, steps in self.trial_to_steps.items():
             for step in steps:
                 invalid, _ = step.runtime_result.is_invalid()
-                if invalid:
+                if invalid and not ignore_invalid:
                     continue
                 self.all_inputs.append({
                     'trial': trial,
@@ -511,8 +517,7 @@ class PostDiffTest(PostProcessor):
         trial_dir = original_result.trial_dir
         gen = original_result.gen
 
-        invalid, _ = original_result.runtime_result.is_invalid()
-        if isinstance(original_result.runtime_result.health_result, ErrorResult) or invalid:
+        if isinstance(original_result.runtime_result.health_result, ErrorResult):
             return
 
         original_operator_log = original_result.operator_log
