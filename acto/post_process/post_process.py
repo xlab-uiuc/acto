@@ -71,10 +71,10 @@ class Step:
         return self._runtime_result
 
 
-def read_trial_dir(trial_dir: str) -> List[Step]:
+def read_trial_dir(trial_dir: str) -> Dict[str, Step]:
     '''Read a trial directory and return a list of steps'''
 
-    steps: List[Step] = []
+    steps: Dict[str, Step] = []
     for generation in range(0, 20):
         if not os.path.exists('%s/mutated-%d.yaml' % (trial_dir, generation)):
             break
@@ -83,7 +83,7 @@ def read_trial_dir(trial_dir: str) -> List[Step]:
         if step is None:
             continue
         else:
-            steps.append(step)
+            steps[str(generation)] = step
 
     return steps
 
@@ -132,7 +132,7 @@ class PostProcessor(object):
         # Initliaze trial dirs
         self._trials: List[str] = []
         self._trial_to_steps: Dict[str,
-                                   List[Step]] = {}  # trial_dir -> steps, key by trial_dir string
+                                   Dict[str, Step]] = {}  # trial_dir -> steps, key by trial_dir string
         trial_dirs = glob.glob(testrun_dir + '/*')
         for trial_dir in trial_dirs:
             if not os.path.isdir(trial_dir):
@@ -150,7 +150,7 @@ class PostProcessor(object):
         self._trials = value
 
     @property
-    def trial_to_steps(self) -> Dict[str, List[Step]]:
+    def trial_to_steps(self) -> Dict[str, Dict[str, Step]]:
         return self._trial_to_steps
 
     @property
