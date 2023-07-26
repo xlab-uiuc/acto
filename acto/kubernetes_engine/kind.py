@@ -14,8 +14,8 @@ from . import base
 
 class Kind(base.KubernetesEngine):
 
-    def __init__(self):
-        self.config_path = os.path.join(CONST.CLUSTER_CONFIG_FOLDER, 'KIND.yaml')
+    def __init__(self, acto_namespace: int):
+        self.config_path = os.path.join(CONST.CLUSTER_CONFIG_FOLDER, f'KIND-{acto_namespace}.yaml')
 
     def configure_cluster(self, num_nodes: int, version: str):
         '''Create config file for kind'''

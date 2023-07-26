@@ -637,13 +637,13 @@ class Acto:
             raise UnknownDeployMethodError()
 
         if cluster_runtime == "KIND":
-            cluster = kind.Kind()
+            cluster = kind.Kind(acto_namespace=acto_namespace)
         elif cluster_runtime == "K3D":
             cluster = k3d.K3D()
         else:
             logger.warning(
                 f"Cluster Runtime {cluster_runtime} is not supported, defaulted to use kind")
-            cluster = kind.Kind()
+            cluster = kind.Kind(acto_namespace=acto_namespace)
 
         self.cluster = cluster
         self.deploy = deploy

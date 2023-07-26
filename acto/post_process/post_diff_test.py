@@ -419,7 +419,7 @@ class PostDiffTest(PostProcessor):
     def post_process(self, workdir: str, num_workers: int = 1):
         if not os.path.exists(workdir):
             os.mkdir(workdir)
-        cluster = kind.Kind()
+        cluster = kind.Kind(acto_namespace=self.acto_namespace)
         cluster.configure_cluster(self.config.num_nodes, CONST.K8S_VERSION)
         deploy = Deploy(DeployMethod.YAML, self.config.deploy.file, self.config.deploy.init).new()
         # Build an archive to be preloaded
@@ -475,7 +475,7 @@ class PostDiffTest(PostProcessor):
 
         generation = 0  # for additional runner
         additional_runner_dir = os.path.join(workdir, f'additional-runner-{worker_id}')
-        cluster = kind.Kind()
+        cluster = kind.Kind(acto_namespace=self.acto_namespace)
         cluster.configure_cluster(self.config.num_nodes, CONST.K8S_VERSION)
 
         deploy = Deploy(DeployMethod.YAML, self.config.deploy.file, self.config.deploy.init).new()
