@@ -135,7 +135,7 @@ def repro_setup(v):
     return None
 
 
-def reproduce(workdir_path: str, reproduce_dir: str, operator_config: OperatorConfig, **kwargs) -> bool:
+def reproduce(workdir_path: str, reproduce_dir: str, operator_config: OperatorConfig, acto_namespace: int, **kwargs) -> bool:
     os.makedirs(workdir_path, exist_ok=True)
     # Setting up log infra
     logging.basicConfig(
@@ -166,7 +166,8 @@ def reproduce(workdir_path: str, reproduce_dir: str, operator_config: OperatorCo
                 is_reproduce=True,
                 input_model=input_model,
                 apply_testcase_f=apply_testcase_f,
-                reproduce_dir=reproduce_dir)
+                reproduce_dir=reproduce_dir,
+                acto_namespace=acto_namespace)
 
     errors = acto.run(modes=['normal'])
     if any(x is not None for x in errors):
@@ -174,14 +175,14 @@ def reproduce(workdir_path: str, reproduce_dir: str, operator_config: OperatorCo
     else:
         return False
 
-def reproduce_postdiff(workdir_path: str, operator_config: OperatorConfig, **kwargs) -> bool:
+def reproduce_postdiff(workdir_path: str, operator_config: OperatorConfig, acto_namespace: int, **kwargs) -> bool:
     with open(operator_config, 'r') as config_file:
         config = OperatorConfig(**json.load(config_file))
     post_diff_test_dir = os.path.join(workdir_path, 'post_diff_test')
     logs = glob(workdir_path + '/*/operator-*.log')
     for log in logs:
         open(log, 'w').close()
-    p = PostDiffTest(testrun_dir=workdir_path, config=config, ignore_invalid=True)
+    p = PostDiffTest(testrun_dir=workdir_path, config=config, ignore_invalid=True, acto_namespace=acto_namespace)
     p.post_process(post_diff_test_dir, num_workers=1)
     p.check(post_diff_test_dir, num_workers=1)
 

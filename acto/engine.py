@@ -37,7 +37,7 @@ from acto.utils.thread_logger import (get_thread_logger,
                                       set_thread_logger_prefix)
 from ssa.analysis import analyze
 
-def save_result(trial_dir: str, trial_result: RunResult, num_tests: int, trial_elapsed):
+def save_result(trial_dir: str, trial_result: RunResult, num_tests: int, trial_elapsed, time_breakdown):
     logger = get_thread_logger(with_prefix=False)
 
     result_dict = {}
@@ -47,6 +47,7 @@ def save_result(trial_dir: str, trial_result: RunResult, num_tests: int, trial_e
     except:
         result_dict['trial_num'] = trial_dir
     result_dict['duration'] = trial_elapsed
+    result_dict['time_breakdown'] = time_breakdown
     result_dict['num_tests'] = num_tests
     if trial_result == None:
         logger.info('Trial %s completed without error', trial_dir)
@@ -198,7 +199,7 @@ class TrialRunner:
                  checker_t: type, wait_time: int, custom_on_init: List[callable],
                  custom_oracle: List[callable], workdir: str, cluster: base.KubernetesEngine,
                  worker_id: int, sequence_base: int, dryrun: bool, is_reproduce: bool,
-                 apply_testcase_f: FunctionType) -> None:
+                 apply_testcase_f: FunctionType, acto_namespace: int) -> None:
         self.context = context
         self.workdir = workdir
         self.base_workdir = workdir
@@ -206,9 +207,9 @@ class TrialRunner:
         self.images_archive = os.path.join(workdir, 'images.tar')
         self.worker_id = worker_id
         self.sequence_base = sequence_base  # trial number to start with
-        self.context_name = cluster.get_context_name(f"acto-cluster-{worker_id}")
+        self.context_name = cluster.get_context_name(f"acto-{acto_namespace}-cluster-{worker_id}")
         self.kubeconfig = os.path.join(os.path.expanduser('~'), '.kube', self.context_name)
-        self.cluster_name = f"acto-cluster-{worker_id}"
+        self.cluster_name = f"acto-{acto_namespace}-cluster-{worker_id}"
         self.input_model = input_model
         self.deploy = deploy
         self.runner_t = runner_t
@@ -246,12 +247,13 @@ class TrialRunner:
             self.cluster.restart_cluster(self.cluster_name, self.kubeconfig, CONST.K8S_VERSION)
             apiclient = kubernetes_client(self.kubeconfig, self.context_name)
             self.cluster.load_images(self.images_archive, self.cluster_name)
+            trial_k8s_bootstrap_time = time.time()
             deployed = self.deploy.deploy_with_retry(self.context, self.kubeconfig,
                                                      self.context_name)
             if not deployed:
                 logger.info('Not deployed. Try again!')
                 continue
-
+            operator_deploy_time = time.time()
             trial_dir = os.path.join(
                 self.workdir,
                 'trial-%02d-%04d' % (self.worker_id + self.sequence_base, self.curr_trial))
@@ -260,12 +262,20 @@ class TrialRunner:
             trial_err, num_tests = self.run_trial(trial_dir=trial_dir, curr_trial=self.curr_trial)
             self.snapshots = []
 
-            trial_elapsed = time.strftime("%H:%M:%S", time.gmtime(time.time() - trial_start_time))
+            trial_finished_time = time.time()
+            trial_elapsed = time.strftime("%H:%M:%S", time.gmtime(trial_finished_time - trial_start_time))
             logger.info('Trial %d finished, completed in %s' % (self.curr_trial, trial_elapsed))
+            logger.info(f'Kubernetes bootstrap: {trial_k8s_bootstrap_time - trial_start_time}')
+            logger.info(f'Operator deploy: {operator_deploy_time - trial_k8s_bootstrap_time}')
+            logger.info(f'Trial run: {trial_finished_time - operator_deploy_time}')
             logger.info('---------------------------------------\n')
 
             delete_operator_pod(apiclient, self.context['namespace'])
-            save_result(trial_dir, trial_err, num_tests, trial_elapsed)
+            save_result(trial_dir, trial_err, num_tests, trial_elapsed, {
+                'k8s_bootstrap': trial_k8s_bootstrap_time - trial_start_time,
+                'operator_deploy': operator_deploy_time - trial_k8s_bootstrap_time,
+                'trial_run': trial_finished_time - operator_deploy_time
+            })
             self.curr_trial = self.curr_trial + 1
             errors.append(trial_err)
 
@@ -603,7 +613,8 @@ class Acto:
                  reproduce_dir: str = None,
                  delta_from: str = None,
                  mount: list = None,
-                 focus_fields: list = None) -> None:
+                 focus_fields: list = None,
+                 acto_namespace: int = 0) -> None:
         logger = get_thread_logger(with_prefix=False)
 
         try:
@@ -645,6 +656,7 @@ class Acto:
         self.is_reproduce = is_reproduce
         self.apply_testcase_f = apply_testcase_f
         self.reproduce_dir = reproduce_dir
+        self.acto_namespace = acto_namespace
 
         self.runner_type = Runner
         self.checker_type = CheckerSet
@@ -839,7 +851,7 @@ class Acto:
                                  self.checker_type, self.operator_config.wait_time,
                                  self.custom_on_init, self.custom_oracle, self.workdir_path,
                                  self.cluster, i, self.sequence_base, self.dryrun,
-                                 self.is_reproduce, self.apply_testcase_f)
+                                 self.is_reproduce, self.apply_testcase_f, self.acto_namespace)
             runners.append(runner)
 
         if 'normal' in modes:
