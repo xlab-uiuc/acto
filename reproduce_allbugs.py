@@ -13,6 +13,7 @@ from acto.reproduce import reproduce, reproduce_postdiff
 from acto.snapshot import EmptySnapshot
 from test.utils import BugConfig, all_bugs
 
+
 class BugCateogry(str, Enum):
     UNDESIRED_STATE = 'undesired_state'
     SYSTEM_ERROR = 'system_error'
@@ -25,7 +26,7 @@ class BugCateogry(str, Enum):
 
 def check_postdiff_runtime_error(workdir_path: str) -> bool:
     post_diff_test_dir = os.path.join(workdir_path, 'post_diff_test')
-    compare_results = glob(os.path.join(post_diff_test_dir, 'compare-results-*.json'))
+    compare_results = glob.glob(os.path.join(post_diff_test_dir, 'compare-results-*.json'))
     if len(compare_results) == 0:
         return False
     else:
@@ -33,11 +34,14 @@ def check_postdiff_runtime_error(workdir_path: str) -> bool:
             with open(compare_result) as f:
                 result = json.load(f)[0]
                 to_state = result['to']
-                snapshot = EmptySnapshot()
+                snapshot = EmptySnapshot({})
                 snapshot.system_state = to_state
                 health_result = HealthChecker().check(0, snapshot, {})
                 if not isinstance(health_result, PassResult):
                     return True
+                
+    return False
+
 
 class ReproWorker:
 
@@ -60,12 +64,23 @@ class ReproWorker:
 
                 reproduced: bool = False
                 normal_run_result = reproduce(work_dir,
-                                            repro_dir,
-                                            operator_config,
-                                            cluster_runtime='KIND',
-                                            acto_namespace=self._acto_namespace)
+                                              repro_dir,
+                                              operator_config,
+                                              cluster_runtime='KIND',
+                                              acto_namespace=self._acto_namespace)
                 if bug_config.difftest:
-                    if reproduce_postdiff(work_dir, operator_config, cluster_runtime='KIND', acto_namespace=self._acto_namespace):
+                    if bug_config.diffdir != None:
+                        diff_repro_dir = bug_config.diffdir
+                        work_dir = f'testrun-{bug_id}-diff'
+                        reproduce(work_dir,
+                                  diff_repro_dir,
+                                  operator_config,
+                                  cluster_runtime='KIND',
+                                  acto_namespace=self._acto_namespace)
+                    if reproduce_postdiff(work_dir,
+                                          operator_config,
+                                          cluster_runtime='KIND',
+                                          acto_namespace=self._acto_namespace):
                         reproduced = True
                         table_7_results['diff_oracle'] += 1
                     else:
@@ -75,7 +90,12 @@ class ReproWorker:
                 if bug_config.declaration:
                     if len(normal_run_result) != 0:
                         last_error = normal_run_result[-1]
-                        if last_error.state_result != None and not isinstance(last_error.state_result, PassResult):
+                        if last_error.state_result != None and not isinstance(
+                                last_error.state_result, PassResult):
+                            reproduced = True
+                            table_7_results['declaration_oracle'] += 1
+                        elif last_error.recovery_result != None and not isinstance(
+                                last_error.recovery_result, PassResult):
                             reproduced = True
                             table_7_results['declaration_oracle'] += 1
                     else:
@@ -85,10 +105,12 @@ class ReproWorker:
                 if bug_config.recovery:
                     if len(normal_run_result) != 0:
                         last_error = normal_run_result[-1]
-                        if last_error.recovery_result != None and not isinstance(last_error.recovery_result, PassResult):
+                        if last_error.recovery_result != None and not isinstance(
+                                last_error.recovery_result, PassResult):
                             reproduced = True
                             table_7_results['recovery_oracle'] += 1
-                        elif last_error.state_result != None and not isinstance(last_error.state_result, PassResult):
+                        elif last_error.state_result != None and not isinstance(
+                                last_error.state_result, PassResult):
                             reproduced = True
                             table_7_results['recovery_oracle'] += 1
                     else:
@@ -101,7 +123,8 @@ class ReproWorker:
                         table_7_results['runtime_oracle'] += 1
                     elif len(normal_run_result) != 0:
                         last_error = normal_run_result[-1]
-                        if last_error.health_result != None and not isinstance(last_error.health_result, PassResult):
+                        if last_error.health_result != None and not isinstance(
+                                last_error.health_result, PassResult):
                             reproduced = True
                             table_7_results['runtime_oracle'] += 1
                     else:
@@ -137,11 +160,7 @@ if __name__ == '__main__':
     if args.bug_id:
         (operator, bug_config) = bug_id_map[args.bug_id]
         print(f"Reproducing bug {args.bug_id} in {operator}!")
-        to_reproduce = {
-            operator: {
-                args.bug_id: bug_config
-            }
-        }
+        to_reproduce = {operator: {args.bug_id: bug_config}}
     else:
         print(f"Reproducing all bugs!")
         to_reproduce = all_bugs
@@ -165,7 +184,7 @@ if __name__ == '__main__':
         reproduce_results[operator][BugCateogry.SYSTEM_ERROR] = 0
         reproduce_results[operator][BugCateogry.OPERATOR_ERROR] = 0
         reproduce_results[operator][BugCateogry.RECOVERY_FAILURE] = 0
-        
+
         for bug_id, bug_config in bugs.items():
             workqueue.put((operator, bug_id, bug_config))
 
@@ -191,14 +210,36 @@ if __name__ == '__main__':
 
     table5 = []
     for operator, reproduce_result in reproduce_results.items():
-        table5.append([operator, reproduce_result[BugCateogry.UNDESIRED_STATE], reproduce_result[BugCateogry.SYSTEM_ERROR], reproduce_result[BugCateogry.OPERATOR_ERROR], reproduce_result[BugCateogry.RECOVERY_FAILURE]])
+        table5.append([
+            operator, reproduce_result[BugCateogry.UNDESIRED_STATE],
+            reproduce_result[BugCateogry.SYSTEM_ERROR],
+            reproduce_result[BugCateogry.OPERATOR_ERROR],
+            reproduce_result[BugCateogry.RECOVERY_FAILURE]
+        ])
 
-    print(tabulate(table5, headers=['Operator', 'Undesired State', 'System Error', 'Operator Error', 'Recovery Failure']))
+    print(
+        tabulate(table5,
+                 headers=[
+                     'Operator', 'Undesired State', 'System Error', 'Operator Error',
+                     'Recovery Failure'
+                 ]))
 
     print(f"Total reproduced: {total_reproduced}")
     table7 = []
-    table7.append(['Consistency oracle', f"{table_7_results['declaration_oracle']} ({table_7_results['declaration_oracle']/total_reproduced:.2f})"])
-    table7.append(['Differential oracle for normal state transition', f"{table_7_results['diff_oracle']} ({table_7_results['diff_oracle']/total_reproduced:.2f})"])
-    table7.append(['Differential oracle for rollback state transition', f"{table_7_results['recovery_oracle']} ({table_7_results['recovery_oracle']/total_reproduced:.2f})"])
-    table7.append(['Regular error check (e.g., exceptions, error codes)', f"{table_7_results['runtime_oracle']} ({table_7_results['runtime_oracle']/total_reproduced:.2f})"])
+    table7.append([
+        'Consistency oracle',
+        f"{table_7_results['declaration_oracle']} ({table_7_results['declaration_oracle']/total_reproduced:.2f})"
+    ])
+    table7.append([
+        'Differential oracle for normal state transition',
+        f"{table_7_results['diff_oracle']} ({table_7_results['diff_oracle']/total_reproduced:.2f})"
+    ])
+    table7.append([
+        'Differential oracle for rollback state transition',
+        f"{table_7_results['recovery_oracle']} ({table_7_results['recovery_oracle']/total_reproduced:.2f})"
+    ])
+    table7.append([
+        'Regular error check (e.g., exceptions, error codes)',
+        f"{table_7_results['runtime_oracle']} ({table_7_results['runtime_oracle']/total_reproduced:.2f})"
+    ])
     print(tabulate(table7, headers=['Test Oracle', '# Bugs (Percentage)']))
