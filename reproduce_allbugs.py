@@ -54,66 +54,69 @@ class ReproWorker:
             except queue.Empty:
                 break
 
-            operator, bug_id, bug_config = bug_tuple
-            repro_dir = bug_config.dir
-            work_dir = f'testrun-{bug_id}'
-            operator_config = f'data/{operator}/config.json'
+            for i in range(3):
+                operator, bug_id, bug_config = bug_tuple
+                repro_dir = bug_config.dir
+                work_dir = f'testrun-{bug_id}'
+                operator_config = f'data/{operator}/config.json'
 
-            reproduced: bool = False
-            normal_run_result = reproduce(work_dir,
-                                          repro_dir,
-                                          operator_config,
-                                          cluster_runtime='KIND',
-                                          acto_namespace=self._acto_namespace)
-            if bug_config.difftest:
-                if reproduce_postdiff(work_dir, operator_config, cluster_runtime='KIND', acto_namespace=self._acto_namespace):
-                    reproduced = True
-                    table_7_results['diff_oracle'] += 1
-                else:
-                    print(f"Bug {bug_id} not reproduced!")
-                    failed_reproductions[bug_id] = True
-
-            if bug_config.declaration:
-                if len(normal_run_result) != 0:
-                    last_error = normal_run_result[-1]
-                    if last_error.state_result != None and isinstance(last_error.state_result, PassResult):
+                reproduced: bool = False
+                normal_run_result = reproduce(work_dir,
+                                            repro_dir,
+                                            operator_config,
+                                            cluster_runtime='KIND',
+                                            acto_namespace=self._acto_namespace)
+                if bug_config.difftest:
+                    if reproduce_postdiff(work_dir, operator_config, cluster_runtime='KIND', acto_namespace=self._acto_namespace):
                         reproduced = True
-                        table_7_results['declaration_oracle'] += 1
-                else:
-                    print(f"Bug {bug_id} not reproduced!")
-                    failed_reproductions[bug_id] = True
+                        table_7_results['diff_oracle'] += 1
+                    else:
+                        print(f"Bug {bug_id} not reproduced!")
+                        failed_reproductions[bug_id] = True
 
-            if bug_config.recovery:
-                if len(normal_run_result) != 0:
-                    last_error = normal_run_result[-1]
-                    if last_error.recovery_result != None and isinstance(last_error.recovery_result, PassResult):
-                        reproduced = True
-                        table_7_results['recovery_oracle'] += 1
-                else:
-                    print(f"Bug {bug_id} not reproduced!")
-                    failed_reproductions[bug_id] = True
+                if bug_config.declaration:
+                    if len(normal_run_result) != 0:
+                        last_error = normal_run_result[-1]
+                        if last_error.state_result != None and not isinstance(last_error.state_result, PassResult):
+                            reproduced = True
+                            table_7_results['declaration_oracle'] += 1
+                    else:
+                        print(f"Bug {bug_id} not reproduced!")
+                        failed_reproductions[bug_id] = True
 
-            if bug_config.runtime_error:
-                if bug_config.difftest and check_postdiff_runtime_error(work_dir):
-                    reproduced = True
-                    table_7_results['runtime_oracle'] += 1
-                elif len(normal_run_result) != 0:
-                    last_error = normal_run_result[-1]
-                    if last_error.health_result != None and not isinstance(last_error.health_result, PassResult):
+                if bug_config.recovery:
+                    if len(normal_run_result) != 0:
+                        last_error = normal_run_result[-1]
+                        if last_error.recovery_result != None and not isinstance(last_error.recovery_result, PassResult):
+                            reproduced = True
+                            table_7_results['recovery_oracle'] += 1
+                    else:
+                        print(f"Bug {bug_id} not reproduced!")
+                        failed_reproductions[bug_id] = True
+
+                if bug_config.runtime_error:
+                    if bug_config.difftest and check_postdiff_runtime_error(work_dir):
                         reproduced = True
                         table_7_results['runtime_oracle'] += 1
-                else:
-                    print(f"Bug {bug_id} not reproduced!")
-                    failed_reproductions[bug_id] = True
+                    elif len(normal_run_result) != 0:
+                        last_error = normal_run_result[-1]
+                        if last_error.health_result != None and not isinstance(last_error.health_result, PassResult):
+                            reproduced = True
+                            table_7_results['runtime_oracle'] += 1
+                    else:
+                        print(f"Bug {bug_id} not reproduced!")
+                        failed_reproductions[bug_id] = True
 
-            # check if reproduced for table 5, and write results
-            if reproduced:
-                print(f"Bug {bug_id} reproduced!")
-                print(f"Bug category: {bug_config.category}")
-                reproduce_results[operator][bug_config.category] += 1
-            else:
-                print(f"Bug {bug_id} not reproduced!")
-                failed_reproductions[bug_id] = True
+                # check if reproduced for table 5, and write results
+                if reproduced:
+                    print(f"Bug {bug_id} reproduced!")
+                    print(f"Bug category: {bug_config.category}")
+                    reproduce_results[operator][bug_config.category] += 1
+                    break
+                elif i < 2:
+                    print(f"Bug {bug_id} not reproduced! Trying ({i+1}/3)")
+                else:
+                    failed_reproductions[bug_id] = True
 
         print(f"Worker {self._acto_namespace} finished!")
         print(f"Local reproduce results: {reproduce_results}")
