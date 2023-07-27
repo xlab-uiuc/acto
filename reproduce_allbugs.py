@@ -39,7 +39,7 @@ def check_postdiff_runtime_error(workdir_path: str) -> bool:
                 health_result = HealthChecker().check(0, snapshot, {})
                 if not isinstance(health_result, PassResult):
                     return True
-                
+
     return False
 
 
@@ -220,11 +220,22 @@ if __name__ == '__main__':
 
     table5.append([
         'Total',
-        sum([reproduce_result[BugCateogry.UNDESIRED_STATE] for reproduce_result in reproduce_results.values()]),
-        sum([reproduce_result[BugCateogry.SYSTEM_ERROR] for reproduce_result in reproduce_results.values()]),
-        sum([reproduce_result[BugCateogry.OPERATOR_ERROR] for reproduce_result in reproduce_results.values()]),
-        sum([reproduce_result[BugCateogry.RECOVERY_FAILURE] for reproduce_result in reproduce_results.values()]),
-        total_reproduced
+        sum([
+            reproduce_result[BugCateogry.UNDESIRED_STATE]
+            for reproduce_result in reproduce_results.values()
+        ]),
+        sum([
+            reproduce_result[BugCateogry.SYSTEM_ERROR]
+            for reproduce_result in reproduce_results.values()
+        ]),
+        sum([
+            reproduce_result[BugCateogry.OPERATOR_ERROR]
+            for reproduce_result in reproduce_results.values()
+        ]),
+        sum([
+            reproduce_result[BugCateogry.RECOVERY_FAILURE]
+            for reproduce_result in reproduce_results.values()
+        ]), total_reproduced
     ])
 
     print(
@@ -233,23 +244,32 @@ if __name__ == '__main__':
                      'Operator', 'Undesired State', 'System Error', 'Operator Error',
                      'Recovery Failure', 'Total'
                  ]))
+    with open('table5.txt', 'w') as table5_f:
+        table5_f.write(
+            tabulate(table5,
+                     headers=[
+                         'Operator', 'Undesired State', 'System Error', 'Operator Error',
+                         'Recovery Failure', 'Total'
+                     ]))
 
     print(f"Total reproduced: {total_reproduced}")
     table7 = []
     table7.append([
         'Consistency oracle',
-        f"{table_7_results['declaration_oracle']} ({table_7_results['declaration_oracle']/total_reproduced:.2f})"
+        f"{table_7_results['declaration_oracle']} ({table_7_results['declaration_oracle']/total_reproduced:.2%})"
     ])
     table7.append([
         'Differential oracle for normal state transition',
-        f"{table_7_results['diff_oracle']} ({table_7_results['diff_oracle']/total_reproduced:.2f})"
+        f"{table_7_results['diff_oracle']} ({table_7_results['diff_oracle']/total_reproduced:.2%})"
     ])
     table7.append([
         'Differential oracle for rollback state transition',
-        f"{table_7_results['recovery_oracle']} ({table_7_results['recovery_oracle']/total_reproduced:.2f})"
+        f"{table_7_results['recovery_oracle']} ({table_7_results['recovery_oracle']/total_reproduced:.2%})"
     ])
     table7.append([
         'Regular error check (e.g., exceptions, error codes)',
-        f"{table_7_results['runtime_oracle']} ({table_7_results['runtime_oracle']/total_reproduced:.2f})"
+        f"{table_7_results['runtime_oracle']} ({table_7_results['runtime_oracle']/total_reproduced:.2%})"
     ])
     print(tabulate(table7, headers=['Test Oracle', '# Bugs (Percentage)']))
+    with open('table7.txt', 'w') as table7_f:
+        table7_f.write(tabulate(table7, headers=['Test Oracle', '# Bugs (Percentage)']))

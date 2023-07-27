@@ -413,6 +413,7 @@ all_bugs = {
                 category=BugCateogry.UNDESIRED_STATE,
                 dir='test/zkop-474',
                 declaration=True,
+                difftest=True,
             ),
         'zkop-513':
             BugConfig(

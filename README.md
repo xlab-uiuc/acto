@@ -3,6 +3,32 @@
 [![Regression Test](https://github.com/xlab-uiuc/acto/actions/workflows/unittest.yaml/badge.svg)](https://github.com/xlab-uiuc/acto/actions/workflows/unittest.yaml)
 
 
+## Artifact goals
+The instructions will reproduce the key results in Table 5, 6, 7, and 8 in section 6.
+This is, the following instructions will lead you to (1) reproduce all 56 bugs found by Acto,
+along with their categories and oracles needed to find them, (2) generate test inputs
+
+## Getting Started
+
+TODO: set up the environment
+TODO: cloudlab machine instructions
+
+## Kick-the-tire Instructions
+
+We prepared a simple example (i.e., reproducing a bug found by Acto) to help detect any obvious 
+problem during the kick-the-tires phase. Please run the following command:
+
+First build the dependant modules:
+```
+make
+```
+
+Then reproduce the redis-operator-287 bug:
+```
+python3 reproduce_allbugs.py --bug-id rdoptwo-287
+```
+
+
 ## Overview
 
 Acto is a fully automatic end-to-end testing tool for Kubernetes operators. 

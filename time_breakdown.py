@@ -35,7 +35,7 @@ for bug_testrun in bug_testruns:
             bug_running_time[bug_id]['operator_deploy'] += operator_deploy
             bug_running_time[bug_id]['trial_run'] += trial_run
             bug_running_time[bug_id]['total'] += k8s_bootstrap + operator_deploy + trial_run
-    
+
     if os.path.exists(f'{bug_testrun}/post_diff_test'):
         post_diff_trials = glob.glob(f'{bug_testrun}/post_diff_test/trial-*')
         for post_diff_trial in post_diff_trials:
@@ -55,19 +55,23 @@ for bug_testrun in bug_testruns:
 
 bug_running_time_df = pandas.DataFrame.from_dict(bug_running_time, orient='index')
 print(bug_running_time_df)
-print(f"Total time: {bug_running_time_df['total'].sum()}")
-print(f"Total bootstrap time: {bug_running_time_df['k8s_bootstrap'].sum()}, "
-      f"average: {bug_running_time_df['k8s_bootstrap'].mean()}, "
-      f"min: {bug_running_time_df['k8s_bootstrap'].min()}, "
-      f"max: {bug_running_time_df['k8s_bootstrap'].max()}")
-print(f"Total operator deploy time: {bug_running_time_df['operator_deploy'].sum()}, "
-      f"average: {bug_running_time_df['operator_deploy'].mean()}, "
-        f"min: {bug_running_time_df['operator_deploy'].min()}, "
-        f"max: {bug_running_time_df['operator_deploy'].max()}")
-print(f"Total trial run time: {bug_running_time_df['trial_run'].sum()}",
-      f"average: {bug_running_time_df['trial_run'].mean()}, "
-      f"min: {bug_running_time_df['trial_run'].min()}, "
-        f"max: {bug_running_time_df['trial_run'].max()}")
+print(f"Total time: {bug_running_time_df['total'].sum() / 60}, "
+      f"average: {bug_running_time_df['total'].mean() / 60}, "
+      f"min: {bug_running_time_df['total'].min() / 60}, "
+      f"max: {bug_running_time_df['total'].max() / 60}")
+print(f"Total bootstrap time: {bug_running_time_df['k8s_bootstrap'].sum() / 60}, "
+      f"average: {bug_running_time_df['k8s_bootstrap'].mean() / 60}, "
+      f"min: {bug_running_time_df['k8s_bootstrap'].min() / 60}, "
+      f"max: {bug_running_time_df['k8s_bootstrap'].max() / 60}")
+print(f"Total operator deploy time: {bug_running_time_df['operator_deploy'].sum() / 60}, "
+      f"average: {bug_running_time_df['operator_deploy'].mean() / 60}, "
+      f"min: {bug_running_time_df['operator_deploy'].min() / 60}, "
+      f"max: {bug_running_time_df['operator_deploy'].max() / 60}")
+print(
+    f"Total trial run time: {bug_running_time_df['trial_run'].sum() / 60}",
+    f"average: {bug_running_time_df['trial_run'].mean() / 60}, "
+    f"min: {bug_running_time_df['trial_run'].min() / 60}, "
+    f"max: {bug_running_time_df['trial_run'].max() / 60}")
 
 bug_running_time_df['k8s_bootstrap']
 
