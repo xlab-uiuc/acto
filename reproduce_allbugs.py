@@ -214,14 +214,24 @@ if __name__ == '__main__':
             operator, reproduce_result[BugCateogry.UNDESIRED_STATE],
             reproduce_result[BugCateogry.SYSTEM_ERROR],
             reproduce_result[BugCateogry.OPERATOR_ERROR],
-            reproduce_result[BugCateogry.RECOVERY_FAILURE]
+            reproduce_result[BugCateogry.RECOVERY_FAILURE],
+            sum(reproduce_result.values())
         ])
+
+    table5.append([
+        'Total',
+        sum([reproduce_result[BugCateogry.UNDESIRED_STATE] for reproduce_result in reproduce_results.values()]),
+        sum([reproduce_result[BugCateogry.SYSTEM_ERROR] for reproduce_result in reproduce_results.values()]),
+        sum([reproduce_result[BugCateogry.OPERATOR_ERROR] for reproduce_result in reproduce_results.values()]),
+        sum([reproduce_result[BugCateogry.RECOVERY_FAILURE] for reproduce_result in reproduce_results.values()]),
+        total_reproduced
+    ])
 
     print(
         tabulate(table5,
                  headers=[
                      'Operator', 'Undesired State', 'System Error', 'Operator Error',
-                     'Recovery Failure'
+                     'Recovery Failure', 'Total'
                  ]))
 
     print(f"Total reproduced: {total_reproduced}")
