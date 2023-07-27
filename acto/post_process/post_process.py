@@ -74,7 +74,7 @@ class Step:
 def read_trial_dir(trial_dir: str) -> Dict[str, Step]:
     '''Read a trial directory and return a list of steps'''
 
-    steps: Dict[str, Step] = []
+    steps: Dict[str, Step] = {}
     for generation in range(0, 20):
         if not os.path.exists('%s/mutated-%d.yaml' % (trial_dir, generation)):
             break

@@ -4,10 +4,12 @@ from functools import partial
 import json
 import sys
 import logging
+from typing import List
 import jsonpatch
 import yaml
 from glob import glob
 import os
+from acto.common import RunResult
 
 from acto.engine import Acto
 from acto.input.testplan import TestGroup
@@ -135,7 +137,7 @@ def repro_setup(v):
     return None
 
 
-def reproduce(workdir_path: str, reproduce_dir: str, operator_config: OperatorConfig, acto_namespace: int, **kwargs) -> bool:
+def reproduce(workdir_path: str, reproduce_dir: str, operator_config: OperatorConfig, acto_namespace: int, **kwargs) -> List[RunResult]:
     os.makedirs(workdir_path, exist_ok=True)
     # Setting up log infra
     logging.basicConfig(
@@ -170,10 +172,7 @@ def reproduce(workdir_path: str, reproduce_dir: str, operator_config: OperatorCo
                 acto_namespace=acto_namespace)
 
     errors = acto.run(modes=['normal'])
-    if any(x is not None for x in errors):
-        return True
-    else:
-        return False
+    return [error for error in errors if error is not None]
 
 def reproduce_postdiff(workdir_path: str, operator_config: OperatorConfig, acto_namespace: int, **kwargs) -> bool:
     with open(operator_config, 'r') as config_file:
