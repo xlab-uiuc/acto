@@ -1,13 +1,11 @@
 import argparse
-import copy
 from enum import Enum
 import glob
 import json
 import multiprocessing
 import os
 import queue
-import threading
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 from tabulate import tabulate
 from acto.checker.impl.health import HealthChecker
 from acto.common import PassResult
@@ -50,7 +48,7 @@ class ReproWorker:
     def run(self, reproduce_results, table_7_results):
         while True:
             try:
-                bug_tuple: Tuple[str, str, BugConfig] = self._workqueue.get(block=False)
+                bug_tuple: Tuple[str, str, BugConfig] = self._workqueue.get(block=True, timeout=5)
             except queue.Empty:
                 break
 
@@ -90,6 +88,9 @@ class ReproWorker:
                         if last_error.recovery_result != None and not isinstance(last_error.recovery_result, PassResult):
                             reproduced = True
                             table_7_results['recovery_oracle'] += 1
+                        elif last_error.state_result != None and not isinstance(last_error.state_result, PassResult):
+                            reproduced = True
+                            table_7_results['recovery_oracle'] += 1
                     else:
                         print(f"Bug {bug_id} not reproduced!")
                         failed_reproductions[bug_id] = True
@@ -123,7 +124,29 @@ class ReproWorker:
 
 
 if __name__ == '__main__':
-    manager = multiprocessing.Manager() 
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--num-workers', '-n', dest='num_workers', type=int, default=1)
+    parser.add_argument('--bug-id', dest='bug_id', type=str, required=False, default=None)
+    args = parser.parse_args()
+
+    bug_id_map: Dict[str, Tuple[str, BugConfig]] = {}
+    for operator, bugs in all_bugs.items():
+        for bug_id, bug_config in bugs.items():
+            bug_id_map[bug_id] = (operator, bug_config)
+
+    if args.bug_id:
+        (operator, bug_config) = bug_id_map[args.bug_id]
+        print(f"Reproducing bug {args.bug_id} in {operator}!")
+        to_reproduce = {
+            operator: {
+                args.bug_id: bug_config
+            }
+        }
+    else:
+        print(f"Reproducing all bugs!")
+        to_reproduce = all_bugs
+
+    manager = multiprocessing.Manager()
     reproduce_results = manager.dict()
     table_7_results = manager.dict()
     table_7_results['declaration_oracle'] = 0
@@ -133,13 +156,10 @@ if __name__ == '__main__':
 
     failed_reproductions = {}
     total_reproduced = 0
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--num-workers', '-n', dest='num_workers', type=int, default=1)
-    args = parser.parse_args()
 
     workqueue = multiprocessing.Queue()
 
-    for operator, bugs in all_bugs.items():
+    for operator, bugs in to_reproduce.items():
         reproduce_results[operator] = manager.dict()
         reproduce_results[operator][BugCateogry.UNDESIRED_STATE] = 0
         reproduce_results[operator][BugCateogry.SYSTEM_ERROR] = 0

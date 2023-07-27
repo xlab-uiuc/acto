@@ -55,7 +55,7 @@ all_bugs = {
     'cass-operator': {
         'cassop-315': BugConfig(
             category=BugCateogry.RECOVERY_FAILURE, 
-            dir='test/cassop-315/trial-04-0000',
+            dir='test/cassop-315/inputs',
             recovery=True,
         ),
         'cassop-330': BugConfig(
