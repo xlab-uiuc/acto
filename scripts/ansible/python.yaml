@@ -12,7 +12,13 @@
         state: present
         update_cache: yes
 
+    - name: Get the home directory
+      become: false
+      command: echo $HOME
+      register: home
+
     - name: Install python packages using pip
       pip:
-        name: "{{ PYTHON_PKGS }}"
+        # Implication: this script should happen after acto.yml
+        requirements: "{{ home.stdout }}/acto/requirements.txt"
         state: present
