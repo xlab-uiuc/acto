@@ -33,8 +33,10 @@ We are going to manage CloudLab machines with Ansible **from our local machine**
 # Install Ansible
 #
 
-# A Python virtual environment is encouraged, which is not detailed here though.
-pip3 install ansible
+sudo apt update
+sudo apt install software-properties-common
+sudo add-apt-repository --yes --update ppa:ansible/ansible
+sudo apt install ansible
 ansible-galaxy collection install ansible.posix
 ansible-galaxy collection install community.general
 
