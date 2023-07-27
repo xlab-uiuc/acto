@@ -368,7 +368,7 @@ class PostDiffTest(PostProcessor):
 
         self.all_inputs = []
         for trial, steps in self.trial_to_steps.items():
-            for step in steps:
+            for step in steps.values():
                 invalid, _ = step.runtime_result.is_invalid()
                 if invalid:
                     continue
@@ -488,7 +488,7 @@ class PostDiffTest(PostProcessor):
                     continue
 
                 trial_basename = os.path.basename(trial)
-                original_result = self.trial_to_steps[trial_basename][gen]
+                original_result = self.trial_to_steps[trial_basename][str(gen)]
                 step_result = PostDiffTest.check_diff_test_step(diff_test_result, original_result,
                                                                 self.config, False, runner)
                 if step_result is None:
