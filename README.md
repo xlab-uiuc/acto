@@ -192,14 +192,17 @@ ZookeeperOp               740
 ```
 
 ## Running all the test campaigns of all the operators (Optional)
+<details><summary>Click to show detailed instructions</summary>
 
 Please note that running all the test campaigns on the CloudLab Clemson c6420 could take 160 machine hours. In our evaluation, we did all the entire runs progressively and ran different test campaigns on different machines at the same time, with a cluster of 10 CloudLab machines. We suggest you reserve 10 machines, instead of doing it with one machine.
 
 You can refer to [test_campaign.md](test_campaign.md) for detailed commands for running each test campaign.
 
 If you would like to try out an end-to-end test campaign, you can do it with the following command (taking the RabbitMQ operator as an example):
- 
 
 ```
 python3 -m acto --config data/rabbitmq-operator/config.json –num-workers 16
 ```
+
+</details>
+
