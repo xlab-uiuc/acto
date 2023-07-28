@@ -11,7 +11,7 @@ from acto.checker.impl.health import HealthChecker
 from acto.common import PassResult
 from acto.reproduce import reproduce, reproduce_postdiff
 from acto.snapshot import EmptySnapshot
-from test.utils import BugConfig, all_bugs
+from test.utils import BugConfig, all_bugs, operator_pretty_name_mapping
 
 
 class BugCateogry(str, Enum):
@@ -22,36 +22,6 @@ class BugCateogry(str, Enum):
 
     def __str__(self) -> str:
         return self.value
-
-
-class OperatorPrettyName(str, Enum):
-    CASS_OPERATOR = 'CassOp'
-    COCKROACH_OPERATOR = 'CockroachOp'
-    KNATIVE_OPERATOR = 'KnativeOp'
-    OCK_REDIS_OPERATOR = 'OCK-RedisOp'
-    OFC_MONGODB_OPERATOR = 'OFC-MongoDBOp'
-    PCN_MONGODB_OPERATOR = 'PCN-MongoDBOp'
-    RABBITMQ_OPERATOR = 'RabbitMQOp'
-    SAH_REDIS_OPERATOR = 'SAH-RedisOp'
-    TIDB_OPERATOR = 'TiDBOp'
-    XTRADB_OPERATOR = 'XtraDBOp'
-    ZOOKEEPER_OPERATOR = 'ZookeeperOp'
-
-
-# Mapping from operator name to pretty name
-operator_pretty_name_mapping = {
-    "cass-operator": OperatorPrettyName.CASS_OPERATOR,
-    "cockroach-operator": OperatorPrettyName.COCKROACH_OPERATOR,
-    "knative-operator": OperatorPrettyName.KNATIVE_OPERATOR,
-    "redis-ot-container-kit-operator": OperatorPrettyName.OCK_REDIS_OPERATOR,
-    "mongodb-community-operator": OperatorPrettyName.OFC_MONGODB_OPERATOR,
-    "percona-server-mongodb-operator": OperatorPrettyName.PCN_MONGODB_OPERATOR,
-    "rabbitmq-operator": OperatorPrettyName.RABBITMQ_OPERATOR,
-    "redis-operator": OperatorPrettyName.SAH_REDIS_OPERATOR,
-    "tidb-operator": OperatorPrettyName.TIDB_OPERATOR,
-    "percona-xtradb-cluster-operator": OperatorPrettyName.XTRADB_OPERATOR,
-    "zookeeper-operator": OperatorPrettyName.ZOOKEEPER_OPERATOR
-}
 
 
 def check_postdiff_runtime_error(workdir_path: str) -> bool:
@@ -182,6 +152,8 @@ if __name__ == '__main__':
     parser.add_argument('--bug-id', dest='bug_id', type=str, required=False, default=None)
     args = parser.parse_args()
 
+    produce_table = True
+
     bug_id_map: Dict[str, Tuple[str, BugConfig]] = {}
     for operator, bugs in all_bugs.items():
         for bug_id, bug_config in bugs.items():
@@ -189,8 +161,9 @@ if __name__ == '__main__':
 
     if args.bug_id:
         (operator, bug_config) = bug_id_map[args.bug_id]
-        print(f"Reproducing bug {args.bug_id} in {operator}!")
+        print(f"Reproducing single bug {args.bug_id} in {operator_pretty_name_mapping[operator]}!")
         to_reproduce = {operator: {args.bug_id: bug_config}}
+        produce_table = False
     else:
         print(f"Reproducing all bugs!")
         to_reproduce = all_bugs
@@ -232,93 +205,96 @@ if __name__ == '__main__':
     for p in processes:
         p.join()
 
-    # aggregate results from each worker
-    for operator, results in reproduce_results.items():
-        for category, count in results.items():
-            total_reproduced += count
+    if produce_table:
+        # aggregate results from each worker
+        for operator, results in reproduce_results.items():
+            for category, count in results.items():
+                total_reproduced += count
 
-    reproduce_results['knative-operator'][
-        BugCateogry.UNDESIRED_STATE] = reproduce_results['knative-operator-serving'][
-            BugCateogry.UNDESIRED_STATE] + reproduce_results['knative-operator-eventing'][
-                BugCateogry.UNDESIRED_STATE]
-    reproduce_results['knative-operator'][
-        BugCateogry.SYSTEM_ERROR] = reproduce_results['knative-operator-serving'][
-            BugCateogry.SYSTEM_ERROR] + reproduce_results['knative-operator-eventing'][
-                BugCateogry.SYSTEM_ERROR]
-    reproduce_results['knative-operator'][
-        BugCateogry.OPERATOR_ERROR] = reproduce_results['knative-operator-serving'][
-            BugCateogry.OPERATOR_ERROR] + reproduce_results['knative-operator-eventing'][
-                BugCateogry.OPERATOR_ERROR]
-    reproduce_results['knative-operator'][
-        BugCateogry.RECOVERY_FAILURE] = reproduce_results['knative-operator-serving'][
-            BugCateogry.RECOVERY_FAILURE] + reproduce_results['knative-operator-eventing'][
-                BugCateogry.RECOVERY_FAILURE]
+        reproduce_results['knative-operator'][
+            BugCateogry.UNDESIRED_STATE] = reproduce_results['knative-operator-serving'][
+                BugCateogry.UNDESIRED_STATE] + reproduce_results['knative-operator-eventing'][
+                    BugCateogry.UNDESIRED_STATE]
+        reproduce_results['knative-operator'][
+            BugCateogry.SYSTEM_ERROR] = reproduce_results['knative-operator-serving'][
+                BugCateogry.SYSTEM_ERROR] + reproduce_results['knative-operator-eventing'][
+                    BugCateogry.SYSTEM_ERROR]
+        reproduce_results['knative-operator'][
+            BugCateogry.OPERATOR_ERROR] = reproduce_results['knative-operator-serving'][
+                BugCateogry.OPERATOR_ERROR] + reproduce_results['knative-operator-eventing'][
+                    BugCateogry.OPERATOR_ERROR]
+        reproduce_results['knative-operator'][
+            BugCateogry.RECOVERY_FAILURE] = reproduce_results['knative-operator-serving'][
+                BugCateogry.RECOVERY_FAILURE] + reproduce_results['knative-operator-eventing'][
+                    BugCateogry.RECOVERY_FAILURE]
 
-    del reproduce_results['knative-operator-serving']
-    del reproduce_results['knative-operator-eventing']
+        del reproduce_results['knative-operator-serving']
+        del reproduce_results['knative-operator-eventing']
 
-    table5 = []
-    for operator, reproduce_result in reproduce_results.items():
+        table5 = []
+        for operator, reproduce_result in reproduce_results.items():
+            table5.append([
+                operator_pretty_name_mapping[operator], reproduce_result[BugCateogry.UNDESIRED_STATE],
+                reproduce_result[BugCateogry.SYSTEM_ERROR],
+                reproduce_result[BugCateogry.OPERATOR_ERROR],
+                reproduce_result[BugCateogry.RECOVERY_FAILURE],
+                sum(reproduce_result.values())
+            ])
+
+        table5 = sorted(table5, key=lambda x: x[0])
+
         table5.append([
-            operator_pretty_name_mapping[operator], reproduce_result[BugCateogry.UNDESIRED_STATE],
-            reproduce_result[BugCateogry.SYSTEM_ERROR],
-            reproduce_result[BugCateogry.OPERATOR_ERROR],
-            reproduce_result[BugCateogry.RECOVERY_FAILURE],
-            sum(reproduce_result.values())
+            'Total',
+            sum([
+                reproduce_result[BugCateogry.UNDESIRED_STATE]
+                for reproduce_result in reproduce_results.values()
+            ]),
+            sum([
+                reproduce_result[BugCateogry.SYSTEM_ERROR]
+                for reproduce_result in reproduce_results.values()
+            ]),
+            sum([
+                reproduce_result[BugCateogry.OPERATOR_ERROR]
+                for reproduce_result in reproduce_results.values()
+            ]),
+            sum([
+                reproduce_result[BugCateogry.RECOVERY_FAILURE]
+                for reproduce_result in reproduce_results.values()
+            ]), total_reproduced
         ])
 
-    table5.append([
-        'Total',
-        sum([
-            reproduce_result[BugCateogry.UNDESIRED_STATE]
-            for reproduce_result in reproduce_results.values()
-        ]),
-        sum([
-            reproduce_result[BugCateogry.SYSTEM_ERROR]
-            for reproduce_result in reproduce_results.values()
-        ]),
-        sum([
-            reproduce_result[BugCateogry.OPERATOR_ERROR]
-            for reproduce_result in reproduce_results.values()
-        ]),
-        sum([
-            reproduce_result[BugCateogry.RECOVERY_FAILURE]
-            for reproduce_result in reproduce_results.values()
-        ]), total_reproduced
-    ])
-
-    print(
-        tabulate(table5,
-                 headers=[
-                     'Operator', 'Undesired State', 'System Error', 'Operator Error',
-                     'Recovery Failure', 'Total'
-                 ]))
-    with open('table5.txt', 'w') as table5_f:
-        table5_f.write(
+        print(
             tabulate(table5,
-                     headers=[
-                         'Operator', 'Undesired State', 'System Error', 'Operator Error',
-                         'Recovery Failure', 'Total'
-                     ]))
+                    headers=[
+                        'Operator', 'Undesired State', 'System Error', 'Operator Error',
+                        'Recovery Failure', 'Total'
+                    ]))
+        with open('table5.txt', 'w') as table5_f:
+            table5_f.write(
+                tabulate(table5,
+                        headers=[
+                            'Operator', 'Undesired State', 'System Error', 'Operator Error',
+                            'Recovery Failure', 'Total'
+                        ]))
 
-    print(f"Total reproduced: {total_reproduced}")
-    table7 = []
-    table7.append([
-        'Consistency oracle',
-        f"{table_7_results['declaration_oracle']} ({table_7_results['declaration_oracle']/total_reproduced:.2%})"
-    ])
-    table7.append([
-        'Differential oracle for normal state transition',
-        f"{table_7_results['diff_oracle']} ({table_7_results['diff_oracle']/total_reproduced:.2%})"
-    ])
-    table7.append([
-        'Differential oracle for rollback state transition',
-        f"{table_7_results['recovery_oracle']} ({table_7_results['recovery_oracle']/total_reproduced:.2%})"
-    ])
-    table7.append([
-        'Regular error check (e.g., exceptions, error codes)',
-        f"{table_7_results['runtime_oracle']} ({table_7_results['runtime_oracle']/total_reproduced:.2%})"
-    ])
-    print(tabulate(table7, headers=['Test Oracle', '# Bugs (Percentage)']))
-    with open('table7.txt', 'w') as table7_f:
-        table7_f.write(tabulate(table7, headers=['Test Oracle', '# Bugs (Percentage)']))
+        print(f"Total reproduced: {total_reproduced}")
+        table7 = []
+        table7.append([
+            'Consistency oracle',
+            f"{table_7_results['declaration_oracle']} ({table_7_results['declaration_oracle']/total_reproduced:.2%})"
+        ])
+        table7.append([
+            'Differential oracle for normal state transition',
+            f"{table_7_results['diff_oracle']} ({table_7_results['diff_oracle']/total_reproduced:.2%})"
+        ])
+        table7.append([
+            'Differential oracle for rollback state transition',
+            f"{table_7_results['recovery_oracle']} ({table_7_results['recovery_oracle']/total_reproduced:.2%})"
+        ])
+        table7.append([
+            'Regular error check (e.g., exceptions, error codes)',
+            f"{table_7_results['runtime_oracle']} ({table_7_results['runtime_oracle']/total_reproduced:.2%})"
+        ])
+        print(tabulate(table7, headers=['Test Oracle', '# Bugs (Percentage)']))
+        with open('table7.txt', 'w') as table7_f:
+            table7_f.write(tabulate(table7, headers=['Test Oracle', '# Bugs (Percentage)']))

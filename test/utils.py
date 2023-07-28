@@ -70,6 +70,35 @@ class BugConfig:
             self.consequences = consequences
 
 
+class OperatorPrettyName(str, Enum):
+    CASS_OPERATOR = 'CassOp'
+    COCKROACH_OPERATOR = 'CockroachOp'
+    KNATIVE_OPERATOR = 'KnativeOp'
+    OCK_REDIS_OPERATOR = 'OCK-RedisOp'
+    OFC_MONGODB_OPERATOR = 'OFC-MongoDBOp'
+    PCN_MONGODB_OPERATOR = 'PCN-MongoDBOp'
+    RABBITMQ_OPERATOR = 'RabbitMQOp'
+    SAH_REDIS_OPERATOR = 'SAH-RedisOp'
+    TIDB_OPERATOR = 'TiDBOp'
+    XTRADB_OPERATOR = 'XtraDBOp'
+    ZOOKEEPER_OPERATOR = 'ZookeeperOp'
+
+
+# Mapping from operator name to pretty name
+operator_pretty_name_mapping = {
+    "cass-operator": OperatorPrettyName.CASS_OPERATOR,
+    "cockroach-operator": OperatorPrettyName.COCKROACH_OPERATOR,
+    "knative-operator": OperatorPrettyName.KNATIVE_OPERATOR,
+    "redis-ot-container-kit-operator": OperatorPrettyName.OCK_REDIS_OPERATOR,
+    "mongodb-community-operator": OperatorPrettyName.OFC_MONGODB_OPERATOR,
+    "percona-server-mongodb-operator": OperatorPrettyName.PCN_MONGODB_OPERATOR,
+    "rabbitmq-operator": OperatorPrettyName.RABBITMQ_OPERATOR,
+    "redis-operator": OperatorPrettyName.SAH_REDIS_OPERATOR,
+    "tidb-operator": OperatorPrettyName.TIDB_OPERATOR,
+    "percona-xtradb-cluster-operator": OperatorPrettyName.XTRADB_OPERATOR,
+    "zookeeper-operator": OperatorPrettyName.ZOOKEEPER_OPERATOR
+}
+
 all_bugs = {
     'cass-operator': {
         'cassop-315':
