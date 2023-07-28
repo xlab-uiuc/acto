@@ -39,6 +39,8 @@ from acto.runner.snapshot_collector import CollectorContext, with_context, snaps
 
 from .post_process import PostProcessor
 
+__test__ = False
+
 
 def digest_input(system_input: dict):
     return hashlib.md5(json.dumps(system_input, sort_keys=True).encode("utf-8")).hexdigest()

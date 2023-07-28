@@ -35,6 +35,7 @@ class Runner:
             preload_images_store = lambda image_hash: f'/tmp/acto_image_{image_hash}.tar'
         preload_images_store = preload_images_store(hash_preload_images(preload_images))
         self.cluster_name = None
+        self.cluster = None
         self.preload_images = preload_images
         self.preload_images_store = preload_images_store
         self.kubernetes_engine_class = engine_class
@@ -92,9 +93,10 @@ class Runner:
                            list(self.preload_images), stdout=subprocess.DEVNULL)
 
     def teardown_cluster(self):
-        self.cluster.delete_cluster(self.cluster_name, self.kubectl_client.kubeconfig)
-        self.cluster_name = None
-        try:
-            os.remove(self.kubectl_client.kubeconfig)
-        except OSError:
-            pass
+        if self.cluster:
+            self.cluster.delete_cluster(self.cluster_name, self.kubectl_client.kubeconfig)
+            self.cluster_name = None
+            try:
+                os.remove(self.kubectl_client.kubeconfig)
+            except OSError:
+                pass
