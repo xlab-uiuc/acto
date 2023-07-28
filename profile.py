@@ -16,6 +16,11 @@ import geni.rspec.pg as pg
 # Emulab specific extensions.
 import geni.rspec.emulab as emulab
 
+import os
+
+cl_repo_path              = "/local/repository/"
+bootstrap_script_rel_path = "scripts/cl_bootstrap.sh"
+
 # Create a portal context, needed to defined parameters
 pc = portal.Context()
 
@@ -139,6 +144,8 @@ if params.nodeCount > 1:
         lan.setNoInterSwitchLinks()
     pass
 
+nodeList = []
+
 # Process nodes, adding to link or lan.
 for i in range(params.nodeCount):
     # Create a node and add it to the request
@@ -149,6 +156,9 @@ for i in range(params.nodeCount):
         name = "node" + str(i)
         node = request.RawPC(name)
         pass
+
+    nodeList.append(node)
+
     if params.osImage and params.osImage != "default":
         node.disk_image = params.osImage
         pass
@@ -181,6 +191,11 @@ for i in range(params.nodeCount):
         node.startVNC()
         pass
     pass
+
+# Acto bootstrap
+bootstrap_script_path = os.path.join(cl_repo_path, bootstrap_script_rel_path)
+physicalWorker = nodeList[0]
+physicalWorker.addService(pg.Execute(shell="bash", command=bootstrap_script_path))
 
 # Print the RSpec to the enclosing page.
 pc.printRequestRSpec(request)
