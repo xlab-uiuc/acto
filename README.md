@@ -101,10 +101,6 @@ Bug category: undesired_state
 
 ## Reproducing Tables 5, 6, 7
 
-We provide the script to run Acto to reproduce the 56 bugs it found.
-
-For each bug, the reproduction code runs Acto with tests needed to reproduce the bug. It checks if every bug is reproducible and outputs Table 5. The code uses each bug’s consequence labels to reproduce Table 6. The code also checks which oracles are used by Acto to detect the bug, and reproduces Table 7.
-
 To reproduce the 56 bugs in Table 5, please execute the tests by running:
 
 ```
@@ -112,13 +108,11 @@ make
 python3 reproduce_bugs.py -n NUM_WORKERS
 ```
 
-Using the CloudLab machine we recommend, run the tests with 16 workers and it will take about 80 minutes to finish.
+Using the CloudLab machine we recommend, run the tests with 16 workers `-n 16` and it will take about 80 minutes to finish.
 
-Caution: running too many workers at the same time may overload your machine, and Kind would fail to bootstrap Kubernetes clusters. If you are not running the experiment using our recommended CloudLab profile, please default the number of workers to `1`. Running this step sequentially takes approximately 17 hours.
+**Caution**: running too many workers at the same time may overload your machine, and Kind would fail to bootstrap Kubernetes clusters. If you are not running the experiment using our recommended CloudLab profile, please default the number of workers to `1`. Running this step sequentially takes approximately 17 hours.
 
-```
-python3 reproduce_bugs.py -n 16
-```
+<details><summary>What does the reproduce script do?</summary>For each bug, the reproduction code runs Acto with tests needed to reproduce the bug. It checks if every bug is reproducible and outputs Table 5. The code uses each bug’s consequence labels to reproduce Table 6. The code also checks which oracles are used by Acto to detect the bug, and reproduces Table 7.</details>
 
 After it finishes, you will find `table5.txt`, and `table6.txt`, and `table7.txt` in the current directory.
 
@@ -205,7 +199,3 @@ If you would like to try out an end-to-end test campaign, you can do it with the
 ```
 python3 -m acto --config data/rabbitmq-operator/config.json –num-workers 16
 ```
-
-# 5. Contact
-* Jiawei Tyler Gu
-* Wentao Zhang
