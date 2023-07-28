@@ -24,6 +24,36 @@ class BugCateogry(str, Enum):
         return self.value
 
 
+class OperatorPrettyName(str, Enum):
+    CASS_OPERATOR = 'CassOp'
+    COCKROACH_OPERATOR = 'CockroachOp'
+    KNATIVE_OPERATOR = 'KnativeOp'
+    OCK_REDIS_OPERATOR = 'OCK-RedisOp'
+    OFC_MONGODB_OPERATOR = 'OFC-MongoDBOp'
+    PCN_MONGODB_OPERATOR = 'PCN-MongoDBOp'
+    RABBITMQ_OPERATOR = 'RabbitMQOp'
+    SAH_REDIS_OPERATOR = 'SAH-RedisOp'
+    TIDB_OPERATOR = 'TiDBOp'
+    XTRADB_OPERATOR = 'XtraDBOp'
+    ZOOKEEPER_OPERATOR = 'ZookeeperOp'
+
+
+# Mapping from operator name to pretty name
+operator_pretty_name_mapping = {
+    "cass-operator": OperatorPrettyName.CASS_OPERATOR,
+    "cockroach-operator": OperatorPrettyName.COCKROACH_OPERATOR,
+    "knative-operator": OperatorPrettyName.KNATIVE_OPERATOR,
+    "redis-ot-container-kit-operator": OperatorPrettyName.OCK_REDIS_OPERATOR,
+    "mongodb-community-operator": OperatorPrettyName.OFC_MONGODB_OPERATOR,
+    "percona-server-mongodb-operator": OperatorPrettyName.PCN_MONGODB_OPERATOR,
+    "rabbitmq-operator": OperatorPrettyName.RABBITMQ_OPERATOR,
+    "redis-operator": OperatorPrettyName.SAH_REDIS_OPERATOR,
+    "tidb-operator": OperatorPrettyName.TIDB_OPERATOR,
+    "percona-xtradb-cluster-operator": OperatorPrettyName.XTRADB_OPERATOR,
+    "zookeeper-operator": OperatorPrettyName.ZOOKEEPER_OPERATOR
+}
+
+
 def check_postdiff_runtime_error(workdir_path: str) -> bool:
     post_diff_test_dir = os.path.join(workdir_path, 'post_diff_test')
     compare_results = glob.glob(os.path.join(post_diff_test_dir, 'compare-results-*.json'))
@@ -204,14 +234,33 @@ if __name__ == '__main__':
 
     # aggregate results from each worker
     for operator, results in reproduce_results.items():
-        print(f"Operator {operator} results: {results}")
         for category, count in results.items():
             total_reproduced += count
+
+    reproduce_results['knative-operator'][
+        BugCateogry.UNDESIRED_STATE] = reproduce_results['knative-operator-serving'][
+            BugCateogry.UNDESIRED_STATE] + reproduce_results['knative-operator-eventing'][
+                BugCateogry.UNDESIRED_STATE]
+    reproduce_results['knative-operator'][
+        BugCateogry.SYSTEM_ERROR] = reproduce_results['knative-operator-serving'][
+            BugCateogry.SYSTEM_ERROR] + reproduce_results['knative-operator-eventing'][
+                BugCateogry.SYSTEM_ERROR]
+    reproduce_results['knative-operator'][
+        BugCateogry.OPERATOR_ERROR] = reproduce_results['knative-operator-serving'][
+            BugCateogry.OPERATOR_ERROR] + reproduce_results['knative-operator-eventing'][
+                BugCateogry.OPERATOR_ERROR]
+    reproduce_results['knative-operator'][
+        BugCateogry.RECOVERY_FAILURE] = reproduce_results['knative-operator-serving'][
+            BugCateogry.RECOVERY_FAILURE] + reproduce_results['knative-operator-eventing'][
+                BugCateogry.RECOVERY_FAILURE]
+
+    del reproduce_results['knative-operator-serving']
+    del reproduce_results['knative-operator-eventing']
 
     table5 = []
     for operator, reproduce_result in reproduce_results.items():
         table5.append([
-            operator, reproduce_result[BugCateogry.UNDESIRED_STATE],
+            operator_pretty_name_mapping[operator], reproduce_result[BugCateogry.UNDESIRED_STATE],
             reproduce_result[BugCateogry.SYSTEM_ERROR],
             reproduce_result[BugCateogry.OPERATOR_ERROR],
             reproduce_result[BugCateogry.RECOVERY_FAILURE],
