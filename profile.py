@@ -39,13 +39,13 @@ imageList = [
 
 pc.defineParameter("osImage", "Select OS image",
                    portal.ParameterType.IMAGE,
-                   imageList[0], imageList,
+                   imageList[2], imageList,
                    longDescription="Most clusters have this set of images, " +
                    "pick your favorite one.")
 
 # Optional physical type for all nodes.
 pc.defineParameter("phystype",  "Optional physical node type",
-                   portal.ParameterType.STRING, "",
+                   portal.ParameterType.STRING, "c6420",
                    longDescription="Specify a single physical node type (pc3000,d710,etc) " +
                    "instead of letting the resource mapper choose for you.")
 
