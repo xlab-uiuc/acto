@@ -1,0 +1,284 @@
+---------- INPUT DELTA  ----------
+{
+      "dictionary_item_added": {
+            "root['spec']['security']['roles'][0][db]": {
+                  "prev": "NotPresent",
+                  "curr": "ACTOKEY",
+                  "path": [
+                        "spec",
+                        "security",
+                        "roles",
+                        0,
+                        "db"
+                  ]
+            },
+            "root['spec']['security']['roles'][0][privileges][0][actions][0]": {
+                  "prev": "NotPresent",
+                  "curr": "ACTOKEY",
+                  "path": [
+                        "spec",
+                        "security",
+                        "roles",
+                        0,
+                        "privileges",
+                        0,
+                        "actions",
+                        0
+                  ]
+            },
+            "root['spec']['security']['roles'][0][privileges][0][actions][1]": {
+                  "prev": "NotPresent",
+                  "curr": "ACTOKEY",
+                  "path": [
+                        "spec",
+                        "security",
+                        "roles",
+                        0,
+                        "privileges",
+                        0,
+                        "actions",
+                        1
+                  ]
+            },
+            "root['spec']['security']['roles'][0][privileges][0][actions][2]": {
+                  "prev": "NotPresent",
+                  "curr": "ACTOKEY",
+                  "path": [
+                        "spec",
+                        "security",
+                        "roles",
+                        0,
+                        "privileges",
+                        0,
+                        "actions",
+                        2
+                  ]
+            },
+            "root['spec']['security']['roles'][0][privileges][0][actions][3]": {
+                  "prev": "NotPresent",
+                  "curr": "ACTOKEY",
+                  "path": [
+                        "spec",
+                        "security",
+                        "roles",
+                        0,
+                        "privileges",
+                        0,
+                        "actions",
+                        3
+                  ]
+            },
+            "root['spec']['security']['roles'][0][role]": {
+                  "prev": "NotPresent",
+                  "curr": "ACTOKEY",
+                  "path": [
+                        "spec",
+                        "security",
+                        "roles",
+                        0,
+                        "role"
+                  ]
+            },
+            "root['spec']['security']['roles'][0][roles][0][db]": {
+                  "prev": "NotPresent",
+                  "curr": "ACTOKEY",
+                  "path": [
+                        "spec",
+                        "security",
+                        "roles",
+                        0,
+                        "roles",
+                        0,
+                        "db"
+                  ]
+            },
+            "root['spec']['security']['roles'][0][roles][0][name]": {
+                  "prev": "NotPresent",
+                  "curr": "ACTOKEY",
+                  "path": [
+                        "spec",
+                        "security",
+                        "roles",
+                        0,
+                        "roles",
+                        0,
+                        "name"
+                  ]
+            }
+      }
+}
+---------- SYSTEM DELTA ----------
+{
+      "pod": {
+            "values_changed": {
+                  "root['test-cluster-1']['metadata']['annotations']['agent.mongodb.com/version']": {
+                        "prev": "2",
+                        "curr": "3",
+                        "path": [
+                              "test-cluster-1",
+                              "metadata",
+                              "annotations",
+                              "agent.mongodb.com/version"
+                        ]
+                  },
+                  "root['test-cluster-2']['metadata']['annotations']['agent.mongodb.com/version']": {
+                        "prev": "2",
+                        "curr": "3",
+                        "path": [
+                              "test-cluster-2",
+                              "metadata",
+                              "annotations",
+                              "agent.mongodb.com/version"
+                        ]
+                  }
+            }
+      },
+      "deployment_pods": {},
+      "stateful_set": {},
+      "deployment": {},
+      "config_map": {},
+      "service": {},
+      "service_account": {},
+      "pvc": {},
+      "cronjob": {},
+      "ingress": {},
+      "network_policy": {},
+      "pod_disruption_budget": {},
+      "secret": {
+            "values_changed": {
+                  "root['test-cluster-config']['data']['cluster-config.json']": {
+                        "prev": "{\"version\":2,\"processes\":[{\"name\":\"test-cluster-0\",\"disabled\":false,\"hostname\":\"test-cluster-0.test-cluster-svc.mongodb.svc.cluster.local\",\"args2_6\":{\"net\":{\"port\":27017},\"replication\":{\"replSetName\":\"test-cluster\"},\"storage\":{\"dbPath\":\"/data\"}},\"featureCompatibilityVersion\":\"4.4\",\"processType\":\"mongod\",\"version\":\"4.4.0\",\"authSchemaVersion\":5},{\"name\":\"test-cluster-1\",\"disabled\":false,\"hostname\":\"test-cluster-1.test-cluster-svc.mongodb.svc.cluster.local\",\"args2_6\":{\"net\":{\"port\":27017},\"replication\":{\"replSetName\":\"test-cluster\"},\"storage\":{\"dbPath\":\"/data\"}},\"featureCompatibilityVersion\":\"4.4\",\"processType\":\"mongod\",\"version\":\"4.4.0\",\"authSchemaVersion\":5},{\"name\":\"test-cluster-2\",\"disabled\":false,\"hostname\":\"test-cluster-2.test-cluster-svc.mongodb.svc.cluster.local\",\"args2_6\":{\"net\":{\"port\":27017},\"replication\":{\"replSetName\":\"test-cluster\"},\"storage\":{\"dbPath\":\"/data\"}},\"featureCompatibilityVersion\":\"4.4\",\"processType\":\"mongod\",\"version\":\"4.4.0\",\"authSchemaVersion\":5}],\"replicaSets\":[{\"_id\":\"test-cluster\",\"members\":[{\"_id\":0,\"host\":\"test-cluster-0\",\"priority\":1,\"arbiterOnly\":false,\"votes\":1},{\"_id\":1,\"host\":\"test-cluster-1\",\"priority\":1,\"arbiterOnly\":false,\"votes\":1},{\"_id\":2,\"host\":\"test-cluster-2\",\"priority\":1,\"arbiterOnly\":false,\"votes\":1}],\"protocolVersion\":\"1\",\"numberArbiters\":0}],\"auth\":{\"usersWanted\":[{\"mechanisms\":[],\"roles\":[{\"role\":\"clusterAdmin\",\"db\":\"admin\"},{\"role\":\"userAdminAnyDatabase\",\"db\":\"admin\"}],\"user\":\"my-user\",\"db\":\"admin\",\"authenticationRestrictions\":[],\"scramSha256Creds\":{\"iterationCount\":15000,\"salt\":\"sO0vXM6hkqdjTe+FaIeppQpNMODRJejunYF/BA==\",\"serverKey\":\"wCSEAuMKEo5Di7bOm9Cc4MF1nO9e/4SI9x3mof6NRVs=\",\"storedKey\":\"tu6/QldaTRz1S6i0eYCw/IL6UnXTJSs1W0+ZJRLfa+0=\"},\"scramSha1Creds\":{\"iterationCount\":10000,\"salt\":\"Hg3Ddt1JFq09KsLSCWoHCg==\",\"serverKey\":\"liut1CFs/gnf0zBsuWaCIA2WtR8=\",\"storedKey\":\"zEhQ5+72FSM8pVhiixsFJ5q6mUw=\"}}],\"disabled\":false,\"authoritativeSet\":false,\"autoAuthMechanisms\":[\"SCRAM-SHA-256\"],\"autoAuthMechanism\":\"SCRAM-SHA-256\",\"deploymentAuthMechanisms\":[\"SCRAM-SHA-256\"],\"autoUser\":\"mms-automation\",\"key\":\"57Us7UEgO3KMUvsEHp+fSm3gYpqPquGRZC+L2G0Kajy8qtQqWIlqcYyG4Ekgbn4XSWAh+Vtn3ksmjT7akZPBn9X4YA2lpR9ULfqcMNavRkXTAm6aoGvwXo1e+KJWkTUCG1dfAcQMgoSOjzwRpjQ+BZ33oFuoLKzVKhkW5jyaxl/vdq2+3/OuhV81YDk8PanTgpV7PnhQGhcy3ISqzkoP4YoU0KWW7ra25hirPvQ0R2UgVzWYBZaOHYk8kuO6Zutz3au0HNheckS6agTIHE2sv+v6QQjhDqV2UG46Iadk6gePIbFIInt0FjN9fwJaYNukwjgcYrLGGw+l+QyrYvhyN7P4UXwSPin8mTLb/qZPKlh8eolo2zkSyCUzFpczYEbNNNFm0Y2gKkOLDh7mnBNQOHrpRNqFtxrU5S7A8937KF+Xk0itkWmBYIEO96uxRYSX3jVcn/D12iH2iq1rWLnnDaZ3pe2d2X4TWGX+2t9L/AQ+dJtklHXL36H6xyMZ3I/9sJA7yj4IKFw2QOfiuiLW64h28h2ZxHmm+xvznJqH/iAHM9STDRe5wauNULNAmIVAy+GovzwjOMz+GgULcSNq+UQgrhK4tgDTmfvNKEH/3wJ3Bt1z5HN7MIrq0BGWT3Ld4ia/r9LrYwGwQbislRE/KDamebE=\",\"keyfile\":\"/var/lib/mongodb-mms-automation/authentication/keyfile\",\"keyfileWindows\":\"%SystemDrive%\\\\MMSAutomation\\\\versions\\\\keyfile\",\"autoPwd\":\"KB40UMu_4H1t38riJsV4\"},\"tls\":{\"CAFilePath\":\"\",\"clientCertificateMode\":\"OPTIONAL\"},\"mongoDbVersions\":[{\"name\":\"4.4.0\",\"builds\":[{\"platform\":\"linux\",\"url\":\"\",\"gitVersion\":\"\",\"architecture\":\"amd64\",\"flavor\":\"rhel\",\"minOsVersion\":\"\",\"maxOsVersion\":\"\",\"modules\":[]},{\"platform\":\"linux\",\"url\":\"\",\"gitVersion\":\"\",\"architecture\":\"amd64\",\"flavor\":\"ubuntu\",\"minOsVersion\":\"\",\"maxOsVersion\":\"\",\"modules\":[]}]}],\"backupVersions\":[],\"monitoringVersions\":[],\"options\":{\"downloadBase\":\"/var/lib/mongodb-mms-automation\"}}",
+                        "curr": "{\"version\":3,\"processes\":[{\"name\":\"test-cluster-0\",\"disabled\":false,\"hostname\":\"test-cluster-0.test-cluster-svc.mongodb.svc.cluster.local\",\"args2_6\":{\"net\":{\"port\":27017},\"replication\":{\"replSetName\":\"test-cluster\"},\"storage\":{\"dbPath\":\"/data\"}},\"featureCompatibilityVersion\":\"4.4\",\"processType\":\"mongod\",\"version\":\"4.4.0\",\"authSchemaVersion\":5},{\"name\":\"test-cluster-1\",\"disabled\":false,\"hostname\":\"test-cluster-1.test-cluster-svc.mongodb.svc.cluster.local\",\"args2_6\":{\"net\":{\"port\":27017},\"replication\":{\"replSetName\":\"test-cluster\"},\"storage\":{\"dbPath\":\"/data\"}},\"featureCompatibilityVersion\":\"4.4\",\"processType\":\"mongod\",\"version\":\"4.4.0\",\"authSchemaVersion\":5},{\"name\":\"test-cluster-2\",\"disabled\":false,\"hostname\":\"test-cluster-2.test-cluster-svc.mongodb.svc.cluster.local\",\"args2_6\":{\"net\":{\"port\":27017},\"replication\":{\"replSetName\":\"test-cluster\"},\"storage\":{\"dbPath\":\"/data\"}},\"featureCompatibilityVersion\":\"4.4\",\"processType\":\"mongod\",\"version\":\"4.4.0\",\"authSchemaVersion\":5}],\"replicaSets\":[{\"_id\":\"test-cluster\",\"members\":[{\"_id\":0,\"host\":\"test-cluster-0\",\"priority\":1,\"arbiterOnly\":false,\"votes\":1},{\"_id\":1,\"host\":\"test-cluster-1\",\"priority\":1,\"arbiterOnly\":false,\"votes\":1},{\"_id\":2,\"host\":\"test-cluster-2\",\"priority\":1,\"arbiterOnly\":false,\"votes\":1}],\"protocolVersion\":\"1\",\"numberArbiters\":0}],\"auth\":{\"usersWanted\":[{\"mechanisms\":[],\"roles\":[{\"role\":\"clusterAdmin\",\"db\":\"admin\"},{\"role\":\"userAdminAnyDatabase\",\"db\":\"admin\"}],\"user\":\"my-user\",\"db\":\"admin\",\"authenticationRestrictions\":[],\"scramSha256Creds\":{\"iterationCount\":15000,\"salt\":\"sO0vXM6hkqdjTe+FaIeppQpNMODRJejunYF/BA==\",\"serverKey\":\"wCSEAuMKEo5Di7bOm9Cc4MF1nO9e/4SI9x3mof6NRVs=\",\"storedKey\":\"tu6/QldaTRz1S6i0eYCw/IL6UnXTJSs1W0+ZJRLfa+0=\"},\"scramSha1Creds\":{\"iterationCount\":10000,\"salt\":\"Hg3Ddt1JFq09KsLSCWoHCg==\",\"serverKey\":\"liut1CFs/gnf0zBsuWaCIA2WtR8=\",\"storedKey\":\"zEhQ5+72FSM8pVhiixsFJ5q6mUw=\"}}],\"disabled\":false,\"authoritativeSet\":false,\"autoAuthMechanisms\":[\"SCRAM-SHA-256\"],\"autoAuthMechanism\":\"SCRAM-SHA-256\",\"deploymentAuthMechanisms\":[\"SCRAM-SHA-256\"],\"autoUser\":\"mms-automation\",\"key\":\"57Us7UEgO3KMUvsEHp+fSm3gYpqPquGRZC+L2G0Kajy8qtQqWIlqcYyG4Ekgbn4XSWAh+Vtn3ksmjT7akZPBn9X4YA2lpR9ULfqcMNavRkXTAm6aoGvwXo1e+KJWkTUCG1dfAcQMgoSOjzwRpjQ+BZ33oFuoLKzVKhkW5jyaxl/vdq2+3/OuhV81YDk8PanTgpV7PnhQGhcy3ISqzkoP4YoU0KWW7ra25hirPvQ0R2UgVzWYBZaOHYk8kuO6Zutz3au0HNheckS6agTIHE2sv+v6QQjhDqV2UG46Iadk6gePIbFIInt0FjN9fwJaYNukwjgcYrLGGw+l+QyrYvhyN7P4UXwSPin8mTLb/qZPKlh8eolo2zkSyCUzFpczYEbNNNFm0Y2gKkOLDh7mnBNQOHrpRNqFtxrU5S7A8937KF+Xk0itkWmBYIEO96uxRYSX3jVcn/D12iH2iq1rWLnnDaZ3pe2d2X4TWGX+2t9L/AQ+dJtklHXL36H6xyMZ3I/9sJA7yj4IKFw2QOfiuiLW64h28h2ZxHmm+xvznJqH/iAHM9STDRe5wauNULNAmIVAy+GovzwjOMz+GgULcSNq+UQgrhK4tgDTmfvNKEH/3wJ3Bt1z5HN7MIrq0BGWT3Ld4ia/r9LrYwGwQbislRE/KDamebE=\",\"keyfile\":\"/var/lib/mongodb-mms-automation/authentication/keyfile\",\"keyfileWindows\":\"%SystemDrive%\\\\MMSAutomation\\\\versions\\\\keyfile\",\"autoPwd\":\"KB40UMu_4H1t38riJsV4\"},\"tls\":{\"CAFilePath\":\"\",\"clientCertificateMode\":\"OPTIONAL\"},\"mongoDbVersions\":[{\"name\":\"4.4.0\",\"builds\":[{\"platform\":\"linux\",\"url\":\"\",\"gitVersion\":\"\",\"architecture\":\"amd64\",\"flavor\":\"rhel\",\"minOsVersion\":\"\",\"maxOsVersion\":\"\",\"modules\":[]},{\"platform\":\"linux\",\"url\":\"\",\"gitVersion\":\"\",\"architecture\":\"amd64\",\"flavor\":\"ubuntu\",\"minOsVersion\":\"\",\"maxOsVersion\":\"\",\"modules\":[]}]}],\"backupVersions\":[],\"monitoringVersions\":[],\"options\":{\"downloadBase\":\"/var/lib/mongodb-mms-automation\"},\"roles\":[{\"role\":\"ACTOKEY\",\"db\":\"ACTOKEY\",\"privileges\":[{\"resource\":{},\"actions\":[\"ACTOKEY\",\"ACTOKEY\",\"ACTOKEY\",\"ACTOKEY\"]},{\"resource\":{},\"actions\":[]}],\"roles\":[{\"role\":\"ACTOKEY\",\"db\":\"ACTOKEY\"}]}]}",
+                        "path": [
+                              "test-cluster-config",
+                              "data",
+                              "cluster-config.json"
+                        ]
+                  }
+            }
+      },
+      "endpoints": {},
+      "job": {},
+      "role": {},
+      "role_binding": {},
+      "custom_resource_spec": {
+            "dictionary_item_added": {
+                  "root['security']['roles'][0][db]": {
+                        "prev": "NotPresent",
+                        "curr": "ACTOKEY",
+                        "path": [
+                              "security",
+                              "roles",
+                              0,
+                              "db"
+                        ]
+                  },
+                  "root['security']['roles'][0][privileges][0][actions][0]": {
+                        "prev": "NotPresent",
+                        "curr": "ACTOKEY",
+                        "path": [
+                              "security",
+                              "roles",
+                              0,
+                              "privileges",
+                              0,
+                              "actions",
+                              0
+                        ]
+                  },
+                  "root['security']['roles'][0][privileges][0][actions][1]": {
+                        "prev": "NotPresent",
+                        "curr": "ACTOKEY",
+                        "path": [
+                              "security",
+                              "roles",
+                              0,
+                              "privileges",
+                              0,
+                              "actions",
+                              1
+                        ]
+                  },
+                  "root['security']['roles'][0][privileges][0][actions][2]": {
+                        "prev": "NotPresent",
+                        "curr": "ACTOKEY",
+                        "path": [
+                              "security",
+                              "roles",
+                              0,
+                              "privileges",
+                              0,
+                              "actions",
+                              2
+                        ]
+                  },
+                  "root['security']['roles'][0][privileges][0][actions][3]": {
+                        "prev": "NotPresent",
+                        "curr": "ACTOKEY",
+                        "path": [
+                              "security",
+                              "roles",
+                              0,
+                              "privileges",
+                              0,
+                              "actions",
+                              3
+                        ]
+                  },
+                  "root['security']['roles'][0][role]": {
+                        "prev": "NotPresent",
+                        "curr": "ACTOKEY",
+                        "path": [
+                              "security",
+                              "roles",
+                              0,
+                              "role"
+                        ]
+                  },
+                  "root['security']['roles'][0][roles][0][db]": {
+                        "prev": "NotPresent",
+                        "curr": "ACTOKEY",
+                        "path": [
+                              "security",
+                              "roles",
+                              0,
+                              "roles",
+                              0,
+                              "db"
+                        ]
+                  },
+                  "root['security']['roles'][0][roles][0][name]": {
+                        "prev": "NotPresent",
+                        "curr": "ACTOKEY",
+                        "path": [
+                              "security",
+                              "roles",
+                              0,
+                              "roles",
+                              0,
+                              "name"
+                        ]
+                  }
+            }
+      },
+      "custom_resource_status": {
+            "values_changed": {
+                  "root['phase']": {
+                        "prev": "Running",
+                        "curr": "Pending",
+                        "path": [
+                              "phase"
+                        ]
+                  }
+            },
+            "dictionary_item_added": {
+                  "root['message']": {
+                        "prev": "NotPresent",
+                        "curr": "ReplicaSet is not yet ready, retrying in 10 seconds",
+                        "path": [
+                              "message"
+                        ]
+                  }
+            }
+      }
+}

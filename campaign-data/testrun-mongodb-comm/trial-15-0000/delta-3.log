@@ -1,0 +1,92 @@
+---------- INPUT DELTA  ----------
+{
+      "values_changed": {
+            "root['spec']['security']['roles'][0]['authenticationRestrictions'][0]['serverAddress'][0]": {
+                  "prev": "",
+                  "curr": "ACTOKEY",
+                  "path": [
+                        "spec",
+                        "security",
+                        "roles",
+                        0,
+                        "authenticationRestrictions",
+                        0,
+                        "serverAddress",
+                        0
+                  ]
+            }
+      }
+}
+---------- SYSTEM DELTA ----------
+{
+      "pod": {
+            "values_changed": {
+                  "root['test-cluster-1']['metadata']['annotations']['agent.mongodb.com/version']": {
+                        "prev": "3",
+                        "curr": "4",
+                        "path": [
+                              "test-cluster-1",
+                              "metadata",
+                              "annotations",
+                              "agent.mongodb.com/version"
+                        ]
+                  },
+                  "root['test-cluster-2']['metadata']['annotations']['agent.mongodb.com/version']": {
+                        "prev": "3",
+                        "curr": "4",
+                        "path": [
+                              "test-cluster-2",
+                              "metadata",
+                              "annotations",
+                              "agent.mongodb.com/version"
+                        ]
+                  }
+            }
+      },
+      "deployment_pods": {},
+      "stateful_set": {},
+      "deployment": {},
+      "config_map": {},
+      "service": {},
+      "service_account": {},
+      "pvc": {},
+      "cronjob": {},
+      "ingress": {},
+      "network_policy": {},
+      "pod_disruption_budget": {},
+      "secret": {
+            "values_changed": {
+                  "root['test-cluster-config']['data']['cluster-config.json']": {
+                        "prev": "{\"version\":3,\"processes\":[{\"name\":\"test-cluster-0\",\"disabled\":false,\"hostname\":\"test-cluster-0.test-cluster-svc.mongodb.svc.cluster.local\",\"args2_6\":{\"net\":{\"port\":27017},\"replication\":{\"replSetName\":\"test-cluster\"},\"storage\":{\"dbPath\":\"/data\"}},\"featureCompatibilityVersion\":\"4.4\",\"processType\":\"mongod\",\"version\":\"4.4.0\",\"authSchemaVersion\":5},{\"name\":\"test-cluster-1\",\"disabled\":false,\"hostname\":\"test-cluster-1.test-cluster-svc.mongodb.svc.cluster.local\",\"args2_6\":{\"net\":{\"port\":27017},\"replication\":{\"replSetName\":\"test-cluster\"},\"storage\":{\"dbPath\":\"/data\"}},\"featureCompatibilityVersion\":\"4.4\",\"processType\":\"mongod\",\"version\":\"4.4.0\",\"authSchemaVersion\":5},{\"name\":\"test-cluster-2\",\"disabled\":false,\"hostname\":\"test-cluster-2.test-cluster-svc.mongodb.svc.cluster.local\",\"args2_6\":{\"net\":{\"port\":27017},\"replication\":{\"replSetName\":\"test-cluster\"},\"storage\":{\"dbPath\":\"/data\"}},\"featureCompatibilityVersion\":\"4.4\",\"processType\":\"mongod\",\"version\":\"4.4.0\",\"authSchemaVersion\":5}],\"replicaSets\":[{\"_id\":\"test-cluster\",\"members\":[{\"_id\":0,\"host\":\"test-cluster-0\",\"priority\":1,\"arbiterOnly\":false,\"votes\":1},{\"_id\":1,\"host\":\"test-cluster-1\",\"priority\":1,\"arbiterOnly\":false,\"votes\":1},{\"_id\":2,\"host\":\"test-cluster-2\",\"priority\":1,\"arbiterOnly\":false,\"votes\":1}],\"protocolVersion\":\"1\",\"numberArbiters\":0}],\"auth\":{\"usersWanted\":[{\"mechanisms\":[],\"roles\":[{\"role\":\"clusterAdmin\",\"db\":\"admin\"},{\"role\":\"userAdminAnyDatabase\",\"db\":\"admin\"}],\"user\":\"my-user\",\"db\":\"admin\",\"authenticationRestrictions\":[],\"scramSha256Creds\":{\"iterationCount\":15000,\"salt\":\"Cg2UX+ucXiVDzK4tW9CSwCTu2dyFR1WfZuy+lg==\",\"serverKey\":\"VVYkuGnAo8SCnmP7iRXB+HlYIBzvd6eEdSMWdxkCO3g=\",\"storedKey\":\"DciQ+PEgdtogQi04yqpP3icxnP7BtbcXJts2KBe+VC8=\"},\"scramSha1Creds\":{\"iterationCount\":10000,\"salt\":\"6wgQT1EU8nTRFynz65oi+g==\",\"serverKey\":\"G4+cozjhWQbwmS6HK6BcNBLPmF0=\",\"storedKey\":\"R7zbW83F/MOVBtVs0rPvfqsShOc=\"}}],\"disabled\":false,\"authoritativeSet\":false,\"autoAuthMechanisms\":[\"SCRAM-SHA-256\"],\"autoAuthMechanism\":\"SCRAM-SHA-256\",\"deploymentAuthMechanisms\":[\"SCRAM-SHA-256\"],\"autoUser\":\"mms-automation\",\"key\":\"sBtwwP47OJQxaJRh5qiIYuAZqp3hUJKbcakImfE4OVpEzIKD0DCNI8N1ijBRAcdIbUshPfIZKImYR4zXrvRQp8+bRyTU9p6G1CdptwzAryX3D+YKt565xvzqNpSNrOlsOOtxvMM380IphiylR7Ik/wvqKUmMJ2AGAULwKMxfrC/5HJaZzDQldRe9Jz7Sc6j58lNj/AGgOsgLqWquqyGwZ44DYB9rBGkKcLiuI9Ff1KxS97yajFnF3fT746dq19fVlbl3fVZLXmykvIxU/n9lkK/IFlUh5+vcjehoWdJEr5xEHG76G8uUAgrft3cdynWCPGYorCbApsZHHzER6nBJfH+8Wm4JQGtw3P4a04ttUNohaKwzi2ABL/18eKtS6li+KxxLsb97yjgi6HOxI4nhqKt4cdpMXbwauC6IhMejok6W1M7QoGxiky9N/eJdGTPej9B8iC5VrT+HG98u368RHAyiwJcZm/FOucDJIdET78i/SSS4gf3VBLvQud9wMZRC0IGKgzkJL1d7fYD/pFHxB4iAPMmxWaB5lpOhF8AkGbE5SQXjcRtclY1FF1yX8dFe5LlertRgGFdsC8wPmb4tmoG2jVKagOGYgw7fMjWHngmG/aYWRTGRraELK5UXRz4UzyRKx/6olsf/nODnBOuhy0+Rw/k=\",\"keyfile\":\"/var/lib/mongodb-mms-automation/authentication/keyfile\",\"keyfileWindows\":\"%SystemDrive%\\\\MMSAutomation\\\\versions\\\\keyfile\",\"autoPwd\":\"G8fxQhAUguN1gSZ2FWbI\"},\"tls\":{\"CAFilePath\":\"\",\"clientCertificateMode\":\"OPTIONAL\"},\"mongoDbVersions\":[{\"name\":\"4.4.0\",\"builds\":[{\"platform\":\"linux\",\"url\":\"\",\"gitVersion\":\"\",\"architecture\":\"amd64\",\"flavor\":\"rhel\",\"minOsVersion\":\"\",\"maxOsVersion\":\"\",\"modules\":[]},{\"platform\":\"linux\",\"url\":\"\",\"gitVersion\":\"\",\"architecture\":\"amd64\",\"flavor\":\"ubuntu\",\"minOsVersion\":\"\",\"maxOsVersion\":\"\",\"modules\":[]}]}],\"backupVersions\":[],\"monitoringVersions\":[],\"options\":{\"downloadBase\":\"/var/lib/mongodb-mms-automation\"},\"roles\":[{\"role\":\"ACTOKEY\",\"db\":\"ACTOKEY\",\"privileges\":[{\"resource\":{},\"actions\":[]},{\"resource\":{},\"actions\":[\"ACTOKEY\",\"ACTOKEY\",\"ACTOKEY\",\"ACTOKEY\",\"ACTOKEY\"]},{\"resource\":{},\"actions\":[\"ACTOKEY\",\"ACTOKEY\"]},{\"resource\":{},\"actions\":[\"ACTOKEY\"]},{\"resource\":{},\"actions\":[\"ACTOKEY\"]}],\"roles\":[],\"authenticationRestrictions\":[{\"clientSource\":[],\"serverAddress\":[\"\"]}]}]}",
+                        "curr": "{\"version\":4,\"processes\":[{\"name\":\"test-cluster-0\",\"disabled\":false,\"hostname\":\"test-cluster-0.test-cluster-svc.mongodb.svc.cluster.local\",\"args2_6\":{\"net\":{\"port\":27017},\"replication\":{\"replSetName\":\"test-cluster\"},\"storage\":{\"dbPath\":\"/data\"}},\"featureCompatibilityVersion\":\"4.4\",\"processType\":\"mongod\",\"version\":\"4.4.0\",\"authSchemaVersion\":5},{\"name\":\"test-cluster-1\",\"disabled\":false,\"hostname\":\"test-cluster-1.test-cluster-svc.mongodb.svc.cluster.local\",\"args2_6\":{\"net\":{\"port\":27017},\"replication\":{\"replSetName\":\"test-cluster\"},\"storage\":{\"dbPath\":\"/data\"}},\"featureCompatibilityVersion\":\"4.4\",\"processType\":\"mongod\",\"version\":\"4.4.0\",\"authSchemaVersion\":5},{\"name\":\"test-cluster-2\",\"disabled\":false,\"hostname\":\"test-cluster-2.test-cluster-svc.mongodb.svc.cluster.local\",\"args2_6\":{\"net\":{\"port\":27017},\"replication\":{\"replSetName\":\"test-cluster\"},\"storage\":{\"dbPath\":\"/data\"}},\"featureCompatibilityVersion\":\"4.4\",\"processType\":\"mongod\",\"version\":\"4.4.0\",\"authSchemaVersion\":5}],\"replicaSets\":[{\"_id\":\"test-cluster\",\"members\":[{\"_id\":0,\"host\":\"test-cluster-0\",\"priority\":1,\"arbiterOnly\":false,\"votes\":1},{\"_id\":1,\"host\":\"test-cluster-1\",\"priority\":1,\"arbiterOnly\":false,\"votes\":1},{\"_id\":2,\"host\":\"test-cluster-2\",\"priority\":1,\"arbiterOnly\":false,\"votes\":1}],\"protocolVersion\":\"1\",\"numberArbiters\":0}],\"auth\":{\"usersWanted\":[{\"mechanisms\":[],\"roles\":[{\"role\":\"clusterAdmin\",\"db\":\"admin\"},{\"role\":\"userAdminAnyDatabase\",\"db\":\"admin\"}],\"user\":\"my-user\",\"db\":\"admin\",\"authenticationRestrictions\":[],\"scramSha256Creds\":{\"iterationCount\":15000,\"salt\":\"Cg2UX+ucXiVDzK4tW9CSwCTu2dyFR1WfZuy+lg==\",\"serverKey\":\"VVYkuGnAo8SCnmP7iRXB+HlYIBzvd6eEdSMWdxkCO3g=\",\"storedKey\":\"DciQ+PEgdtogQi04yqpP3icxnP7BtbcXJts2KBe+VC8=\"},\"scramSha1Creds\":{\"iterationCount\":10000,\"salt\":\"6wgQT1EU8nTRFynz65oi+g==\",\"serverKey\":\"G4+cozjhWQbwmS6HK6BcNBLPmF0=\",\"storedKey\":\"R7zbW83F/MOVBtVs0rPvfqsShOc=\"}}],\"disabled\":false,\"authoritativeSet\":false,\"autoAuthMechanisms\":[\"SCRAM-SHA-256\"],\"autoAuthMechanism\":\"SCRAM-SHA-256\",\"deploymentAuthMechanisms\":[\"SCRAM-SHA-256\"],\"autoUser\":\"mms-automation\",\"key\":\"sBtwwP47OJQxaJRh5qiIYuAZqp3hUJKbcakImfE4OVpEzIKD0DCNI8N1ijBRAcdIbUshPfIZKImYR4zXrvRQp8+bRyTU9p6G1CdptwzAryX3D+YKt565xvzqNpSNrOlsOOtxvMM380IphiylR7Ik/wvqKUmMJ2AGAULwKMxfrC/5HJaZzDQldRe9Jz7Sc6j58lNj/AGgOsgLqWquqyGwZ44DYB9rBGkKcLiuI9Ff1KxS97yajFnF3fT746dq19fVlbl3fVZLXmykvIxU/n9lkK/IFlUh5+vcjehoWdJEr5xEHG76G8uUAgrft3cdynWCPGYorCbApsZHHzER6nBJfH+8Wm4JQGtw3P4a04ttUNohaKwzi2ABL/18eKtS6li+KxxLsb97yjgi6HOxI4nhqKt4cdpMXbwauC6IhMejok6W1M7QoGxiky9N/eJdGTPej9B8iC5VrT+HG98u368RHAyiwJcZm/FOucDJIdET78i/SSS4gf3VBLvQud9wMZRC0IGKgzkJL1d7fYD/pFHxB4iAPMmxWaB5lpOhF8AkGbE5SQXjcRtclY1FF1yX8dFe5LlertRgGFdsC8wPmb4tmoG2jVKagOGYgw7fMjWHngmG/aYWRTGRraELK5UXRz4UzyRKx/6olsf/nODnBOuhy0+Rw/k=\",\"keyfile\":\"/var/lib/mongodb-mms-automation/authentication/keyfile\",\"keyfileWindows\":\"%SystemDrive%\\\\MMSAutomation\\\\versions\\\\keyfile\",\"autoPwd\":\"G8fxQhAUguN1gSZ2FWbI\"},\"tls\":{\"CAFilePath\":\"\",\"clientCertificateMode\":\"OPTIONAL\"},\"mongoDbVersions\":[{\"name\":\"4.4.0\",\"builds\":[{\"platform\":\"linux\",\"url\":\"\",\"gitVersion\":\"\",\"architecture\":\"amd64\",\"flavor\":\"rhel\",\"minOsVersion\":\"\",\"maxOsVersion\":\"\",\"modules\":[]},{\"platform\":\"linux\",\"url\":\"\",\"gitVersion\":\"\",\"architecture\":\"amd64\",\"flavor\":\"ubuntu\",\"minOsVersion\":\"\",\"maxOsVersion\":\"\",\"modules\":[]}]}],\"backupVersions\":[],\"monitoringVersions\":[],\"options\":{\"downloadBase\":\"/var/lib/mongodb-mms-automation\"},\"roles\":[{\"role\":\"ACTOKEY\",\"db\":\"ACTOKEY\",\"privileges\":[{\"resource\":{},\"actions\":[]},{\"resource\":{},\"actions\":[\"ACTOKEY\",\"ACTOKEY\",\"ACTOKEY\",\"ACTOKEY\",\"ACTOKEY\"]},{\"resource\":{},\"actions\":[\"ACTOKEY\",\"ACTOKEY\"]},{\"resource\":{},\"actions\":[\"ACTOKEY\"]},{\"resource\":{},\"actions\":[\"ACTOKEY\"]}],\"roles\":[],\"authenticationRestrictions\":[{\"clientSource\":[],\"serverAddress\":[\"ACTOKEY\"]}]}]}",
+                        "path": [
+                              "test-cluster-config",
+                              "data",
+                              "cluster-config.json"
+                        ]
+                  }
+            }
+      },
+      "endpoints": {},
+      "job": {},
+      "role": {},
+      "role_binding": {},
+      "custom_resource_spec": {
+            "values_changed": {
+                  "root['security']['roles'][0]['authenticationRestrictions'][0]['serverAddress'][0]": {
+                        "prev": "",
+                        "curr": "ACTOKEY",
+                        "path": [
+                              "security",
+                              "roles",
+                              0,
+                              "authenticationRestrictions",
+                              0,
+                              "serverAddress",
+                              0
+                        ]
+                  }
+            }
+      },
+      "custom_resource_status": {}
+}

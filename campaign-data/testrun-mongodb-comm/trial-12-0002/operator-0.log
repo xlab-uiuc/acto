@@ -1,0 +1,375 @@
+Running ./manager
+2023-03-31T17:30:53.553Z	INFO	manager/main.go:74	Watching namespace: mongodb
+2023-03-31T17:30:53.608Z	INFO	manager/main.go:91	Registering Components.
+2023-03-31T17:30:53.609Z	INFO	manager/main.go:104	Starting the Cmd.
+2023-03-31T17:30:54.731Z	INFO	controllers/replica_set_controller.go:140	Reconciling MongoDB	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:54.731Z	DEBUG	controllers/replica_set_controller.go:142	Validating MongoDB.Spec	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:54.731Z	DEBUG	controllers/replica_set_controller.go:151	Ensuring the service exists	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:54.832Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:54.832Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:54.832Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:54.933Z	DEBUG	agent/replica_set_port_manager.go:122	No port change required	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:54.938Z	INFO	controllers/replica_set_controller.go:462	Create/Update operation succeeded	{"ReplicaSet": "mongodb/test-cluster", "operation": "created"}
+2023-03-31T17:30:54.939Z	INFO	controllers/replica_set_controller.go:358	Creating/Updating AutomationConfig	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:54.939Z	DEBUG	scram/scram.go:195	No existing credentials found, generating new credentials
+2023-03-31T17:30:54.939Z	DEBUG	scram/scram.go:173	Generating new credentials and storing in secret/my-scram-scram-credentials
+2023-03-31T17:30:54.963Z	DEBUG	scram/scram.go:184	Successfully generated SCRAM credentials
+2023-03-31T17:30:54.969Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:54.969Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:54.969Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:54.969Z	DEBUG	agent/replica_set_port_manager.go:122	No port change required	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:54.969Z	DEBUG	agent/replica_set_port_manager.go:40	Calculated process port map: map[test-cluster-0:27017 test-cluster-1:27017 test-cluster-2:27017]	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:54.969Z	DEBUG	controllers/replica_set_controller.go:529	AutomationConfigMembersThisReconciliation	{"mdb.AutomationConfigMembersThisReconciliation()": 3}
+2023-03-31T17:30:54.972Z	DEBUG	controllers/replica_set_controller.go:377	The existing StatefulSet did not have the readiness probe init container, skipping pod annotation check.	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:54.973Z	INFO	controllers/replica_set_controller.go:333	Creating/Updating StatefulSet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:54.979Z	INFO	controllers/replica_set_controller.go:338	Creating/Updating StatefulSet for Arbiters	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:54.986Z	DEBUG	controllers/replica_set_controller.go:348	Ensuring StatefulSet is ready, with type: RollingUpdate	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:54.986Z	INFO	controllers/mongodb_status_options.go:110	ReplicaSet is not yet ready, retrying in 10 seconds
+2023-03-31T17:30:54.992Z	INFO	controllers/replica_set_controller.go:140	Reconciling MongoDB	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:54.993Z	DEBUG	controllers/replica_set_controller.go:142	Validating MongoDB.Spec	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:54.993Z	DEBUG	controllers/replica_set_controller.go:151	Ensuring the service exists	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:54.993Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:54.993Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:54.993Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:54.993Z	DEBUG	agent/replica_set_port_manager.go:122	No port change required	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:54.997Z	INFO	controllers/replica_set_controller.go:462	Create/Update operation succeeded	{"ReplicaSet": "mongodb/test-cluster", "operation": "updated"}
+2023-03-31T17:30:54.998Z	INFO	controllers/replica_set_controller.go:358	Creating/Updating AutomationConfig	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.018Z	DEBUG	scram/scram.go:168	Credentials have not changed, using credentials stored in: secret/my-scram-scram-credentials
+2023-03-31T17:30:55.018Z	DEBUG	agent/agent_readiness.go:101	The Pod 'test-cluster-0' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.018Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.018Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.018Z	DEBUG	agent/replica_set_port_manager.go:122	No port change required	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.018Z	DEBUG	agent/replica_set_port_manager.go:40	Calculated process port map: map[test-cluster-0:27017 test-cluster-1:27017 test-cluster-2:27017]	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.018Z	DEBUG	controllers/replica_set_controller.go:529	AutomationConfigMembersThisReconciliation	{"mdb.AutomationConfigMembersThisReconciliation()": 3}
+2023-03-31T17:30:55.019Z	DEBUG	controllers/replica_set_controller.go:381	Waiting for agents to reach version 2	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.019Z	DEBUG	agent/agent_readiness.go:101	The Pod 'test-cluster-0' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.019Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.019Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.019Z	INFO	controllers/mongodb_status_options.go:110	ReplicaSet is not yet ready, retrying in 10 seconds
+2023-03-31T17:30:55.028Z	INFO	controllers/replica_set_controller.go:140	Reconciling MongoDB	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.028Z	DEBUG	controllers/replica_set_controller.go:142	Validating MongoDB.Spec	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.028Z	DEBUG	controllers/replica_set_controller.go:151	Ensuring the service exists	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.028Z	DEBUG	agent/agent_readiness.go:101	The Pod 'test-cluster-0' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.028Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.028Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.028Z	DEBUG	agent/replica_set_port_manager.go:122	No port change required	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.032Z	INFO	controllers/replica_set_controller.go:462	Create/Update operation succeeded	{"ReplicaSet": "mongodb/test-cluster", "operation": "updated"}
+2023-03-31T17:30:55.033Z	INFO	controllers/replica_set_controller.go:358	Creating/Updating AutomationConfig	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.052Z	DEBUG	scram/scram.go:168	Credentials have not changed, using credentials stored in: secret/my-scram-scram-credentials
+2023-03-31T17:30:55.052Z	DEBUG	agent/agent_readiness.go:101	The Pod 'test-cluster-0' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.052Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.052Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.052Z	DEBUG	agent/replica_set_port_manager.go:122	No port change required	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.052Z	DEBUG	agent/replica_set_port_manager.go:40	Calculated process port map: map[test-cluster-0:27017 test-cluster-1:27017 test-cluster-2:27017]	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.052Z	DEBUG	controllers/replica_set_controller.go:529	AutomationConfigMembersThisReconciliation	{"mdb.AutomationConfigMembersThisReconciliation()": 3}
+2023-03-31T17:30:55.053Z	DEBUG	controllers/replica_set_controller.go:381	Waiting for agents to reach version 2	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.053Z	DEBUG	agent/agent_readiness.go:101	The Pod 'test-cluster-0' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.053Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.053Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.053Z	INFO	controllers/mongodb_status_options.go:110	ReplicaSet is not yet ready, retrying in 10 seconds
+2023-03-31T17:30:55.063Z	INFO	controllers/replica_set_controller.go:140	Reconciling MongoDB	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.063Z	DEBUG	controllers/replica_set_controller.go:142	Validating MongoDB.Spec	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.063Z	DEBUG	controllers/replica_set_controller.go:151	Ensuring the service exists	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.064Z	DEBUG	agent/agent_readiness.go:101	The Pod 'test-cluster-0' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.064Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.064Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.064Z	DEBUG	agent/replica_set_port_manager.go:122	No port change required	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.068Z	INFO	controllers/replica_set_controller.go:462	Create/Update operation succeeded	{"ReplicaSet": "mongodb/test-cluster", "operation": "updated"}
+2023-03-31T17:30:55.068Z	INFO	controllers/replica_set_controller.go:358	Creating/Updating AutomationConfig	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.087Z	DEBUG	scram/scram.go:168	Credentials have not changed, using credentials stored in: secret/my-scram-scram-credentials
+2023-03-31T17:30:55.087Z	DEBUG	agent/agent_readiness.go:101	The Pod 'test-cluster-0' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.087Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.087Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.087Z	DEBUG	agent/replica_set_port_manager.go:122	No port change required	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.087Z	DEBUG	agent/replica_set_port_manager.go:40	Calculated process port map: map[test-cluster-0:27017 test-cluster-1:27017 test-cluster-2:27017]	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.087Z	DEBUG	controllers/replica_set_controller.go:529	AutomationConfigMembersThisReconciliation	{"mdb.AutomationConfigMembersThisReconciliation()": 3}
+2023-03-31T17:30:55.087Z	DEBUG	controllers/replica_set_controller.go:381	Waiting for agents to reach version 2	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.087Z	DEBUG	agent/agent_readiness.go:101	The Pod 'test-cluster-0' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.087Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.087Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:30:55.087Z	INFO	controllers/mongodb_status_options.go:110	ReplicaSet is not yet ready, retrying in 10 seconds
+2023-03-31T17:31:05.099Z	INFO	controllers/replica_set_controller.go:140	Reconciling MongoDB	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:05.099Z	DEBUG	controllers/replica_set_controller.go:142	Validating MongoDB.Spec	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:05.099Z	DEBUG	controllers/replica_set_controller.go:151	Ensuring the service exists	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:05.100Z	DEBUG	agent/agent_readiness.go:101	The Pod 'test-cluster-0' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:05.100Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:05.100Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:05.100Z	DEBUG	agent/replica_set_port_manager.go:122	No port change required	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:05.105Z	INFO	controllers/replica_set_controller.go:462	Create/Update operation succeeded	{"ReplicaSet": "mongodb/test-cluster", "operation": "updated"}
+2023-03-31T17:31:05.106Z	INFO	controllers/replica_set_controller.go:358	Creating/Updating AutomationConfig	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:05.126Z	DEBUG	scram/scram.go:168	Credentials have not changed, using credentials stored in: secret/my-scram-scram-credentials
+2023-03-31T17:31:05.126Z	DEBUG	agent/agent_readiness.go:101	The Pod 'test-cluster-0' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:05.126Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:05.126Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:05.127Z	DEBUG	agent/replica_set_port_manager.go:122	No port change required	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:05.127Z	DEBUG	agent/replica_set_port_manager.go:40	Calculated process port map: map[test-cluster-0:27017 test-cluster-1:27017 test-cluster-2:27017]	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:05.127Z	DEBUG	controllers/replica_set_controller.go:529	AutomationConfigMembersThisReconciliation	{"mdb.AutomationConfigMembersThisReconciliation()": 3}
+2023-03-31T17:31:05.128Z	DEBUG	controllers/replica_set_controller.go:381	Waiting for agents to reach version 2	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:05.129Z	DEBUG	agent/agent_readiness.go:101	The Pod 'test-cluster-0' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:05.129Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:05.129Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:05.129Z	INFO	controllers/mongodb_status_options.go:110	ReplicaSet is not yet ready, retrying in 10 seconds
+2023-03-31T17:31:15.137Z	INFO	controllers/replica_set_controller.go:140	Reconciling MongoDB	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:15.137Z	DEBUG	controllers/replica_set_controller.go:142	Validating MongoDB.Spec	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:15.137Z	DEBUG	controllers/replica_set_controller.go:151	Ensuring the service exists	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:15.138Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-0' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:15.138Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:15.138Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:15.138Z	DEBUG	agent/replica_set_port_manager.go:122	No port change required	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:15.144Z	INFO	controllers/replica_set_controller.go:462	Create/Update operation succeeded	{"ReplicaSet": "mongodb/test-cluster", "operation": "updated"}
+2023-03-31T17:31:15.144Z	INFO	controllers/replica_set_controller.go:358	Creating/Updating AutomationConfig	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:15.162Z	DEBUG	scram/scram.go:168	Credentials have not changed, using credentials stored in: secret/my-scram-scram-credentials
+2023-03-31T17:31:15.163Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-0' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:15.163Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:15.163Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:15.163Z	DEBUG	agent/replica_set_port_manager.go:122	No port change required	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:15.163Z	DEBUG	agent/replica_set_port_manager.go:40	Calculated process port map: map[test-cluster-0:27017 test-cluster-1:27017 test-cluster-2:27017]	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:15.163Z	DEBUG	controllers/replica_set_controller.go:529	AutomationConfigMembersThisReconciliation	{"mdb.AutomationConfigMembersThisReconciliation()": 3}
+2023-03-31T17:31:15.163Z	DEBUG	controllers/replica_set_controller.go:381	Waiting for agents to reach version 2	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:15.163Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-0' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:15.163Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:15.163Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:15.163Z	INFO	controllers/mongodb_status_options.go:110	ReplicaSet is not yet ready, retrying in 10 seconds
+2023-03-31T17:31:25.179Z	INFO	controllers/replica_set_controller.go:140	Reconciling MongoDB	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:25.179Z	DEBUG	controllers/replica_set_controller.go:142	Validating MongoDB.Spec	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:25.179Z	DEBUG	controllers/replica_set_controller.go:151	Ensuring the service exists	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:25.179Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-0' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:25.179Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:25.179Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:25.179Z	DEBUG	agent/replica_set_port_manager.go:122	No port change required	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:25.199Z	INFO	controllers/replica_set_controller.go:462	Create/Update operation succeeded	{"ReplicaSet": "mongodb/test-cluster", "operation": "updated"}
+2023-03-31T17:31:25.199Z	INFO	controllers/replica_set_controller.go:358	Creating/Updating AutomationConfig	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:25.222Z	DEBUG	scram/scram.go:168	Credentials have not changed, using credentials stored in: secret/my-scram-scram-credentials
+2023-03-31T17:31:25.222Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-0' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:25.222Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:25.222Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:25.222Z	DEBUG	agent/replica_set_port_manager.go:122	No port change required	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:25.222Z	DEBUG	agent/replica_set_port_manager.go:40	Calculated process port map: map[test-cluster-0:27017 test-cluster-1:27017 test-cluster-2:27017]	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:25.222Z	DEBUG	controllers/replica_set_controller.go:529	AutomationConfigMembersThisReconciliation	{"mdb.AutomationConfigMembersThisReconciliation()": 3}
+2023-03-31T17:31:25.222Z	DEBUG	controllers/replica_set_controller.go:381	Waiting for agents to reach version 2	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:25.222Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-0' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:25.222Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:25.222Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:25.222Z	INFO	controllers/mongodb_status_options.go:110	ReplicaSet is not yet ready, retrying in 10 seconds
+2023-03-31T17:31:30.175Z	INFO	controllers/replica_set_controller.go:140	Reconciling MongoDB	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:30.175Z	DEBUG	controllers/replica_set_controller.go:142	Validating MongoDB.Spec	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:30.175Z	DEBUG	controllers/replica_set_controller.go:151	Ensuring the service exists	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:30.176Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-0' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:30.176Z	DEBUG	agent/agent_readiness.go:101	The Pod 'test-cluster-1' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:30.176Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:30.176Z	DEBUG	agent/replica_set_port_manager.go:122	No port change required	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:30.180Z	INFO	controllers/replica_set_controller.go:462	Create/Update operation succeeded	{"ReplicaSet": "mongodb/test-cluster", "operation": "updated"}
+2023-03-31T17:31:30.180Z	INFO	controllers/replica_set_controller.go:358	Creating/Updating AutomationConfig	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:30.196Z	DEBUG	scram/scram.go:168	Credentials have not changed, using credentials stored in: secret/my-scram-scram-credentials
+2023-03-31T17:31:30.196Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-0' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:30.197Z	DEBUG	agent/agent_readiness.go:101	The Pod 'test-cluster-1' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:30.197Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:30.197Z	DEBUG	agent/replica_set_port_manager.go:122	No port change required	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:30.197Z	DEBUG	agent/replica_set_port_manager.go:40	Calculated process port map: map[test-cluster-0:27017 test-cluster-1:27017 test-cluster-2:27017]	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:30.197Z	DEBUG	controllers/replica_set_controller.go:529	AutomationConfigMembersThisReconciliation	{"mdb.AutomationConfigMembersThisReconciliation()": 3}
+2023-03-31T17:31:30.197Z	DEBUG	controllers/replica_set_controller.go:381	Waiting for agents to reach version 2	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:30.197Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-0' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:30.197Z	DEBUG	agent/agent_readiness.go:101	The Pod 'test-cluster-1' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:30.197Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:30.197Z	INFO	controllers/mongodb_status_options.go:110	ReplicaSet is not yet ready, retrying in 10 seconds
+2023-03-31T17:31:35.236Z	INFO	controllers/replica_set_controller.go:140	Reconciling MongoDB	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:35.236Z	DEBUG	controllers/replica_set_controller.go:142	Validating MongoDB.Spec	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:35.236Z	DEBUG	controllers/replica_set_controller.go:151	Ensuring the service exists	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:35.236Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-0' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:35.236Z	DEBUG	agent/agent_readiness.go:101	The Pod 'test-cluster-1' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:35.236Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:35.236Z	DEBUG	agent/replica_set_port_manager.go:122	No port change required	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:35.246Z	INFO	controllers/replica_set_controller.go:462	Create/Update operation succeeded	{"ReplicaSet": "mongodb/test-cluster", "operation": "updated"}
+2023-03-31T17:31:35.246Z	INFO	controllers/replica_set_controller.go:358	Creating/Updating AutomationConfig	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:35.264Z	DEBUG	scram/scram.go:168	Credentials have not changed, using credentials stored in: secret/my-scram-scram-credentials
+2023-03-31T17:31:35.264Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-0' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:35.264Z	DEBUG	agent/agent_readiness.go:101	The Pod 'test-cluster-1' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:35.264Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:35.264Z	DEBUG	agent/replica_set_port_manager.go:122	No port change required	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:35.264Z	DEBUG	agent/replica_set_port_manager.go:40	Calculated process port map: map[test-cluster-0:27017 test-cluster-1:27017 test-cluster-2:27017]	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:35.264Z	DEBUG	controllers/replica_set_controller.go:529	AutomationConfigMembersThisReconciliation	{"mdb.AutomationConfigMembersThisReconciliation()": 3}
+2023-03-31T17:31:35.265Z	DEBUG	controllers/replica_set_controller.go:381	Waiting for agents to reach version 2	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:35.265Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-0' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:35.265Z	DEBUG	agent/agent_readiness.go:101	The Pod 'test-cluster-1' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:35.265Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:35.265Z	INFO	controllers/mongodb_status_options.go:110	ReplicaSet is not yet ready, retrying in 10 seconds
+2023-03-31T17:31:45.277Z	INFO	controllers/replica_set_controller.go:140	Reconciling MongoDB	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:45.277Z	DEBUG	controllers/replica_set_controller.go:142	Validating MongoDB.Spec	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:45.277Z	DEBUG	controllers/replica_set_controller.go:151	Ensuring the service exists	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:45.278Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-0' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:45.278Z	DEBUG	agent/agent_readiness.go:101	The Pod 'test-cluster-1' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:45.278Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:45.278Z	DEBUG	agent/replica_set_port_manager.go:122	No port change required	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:45.295Z	INFO	controllers/replica_set_controller.go:462	Create/Update operation succeeded	{"ReplicaSet": "mongodb/test-cluster", "operation": "updated"}
+2023-03-31T17:31:45.296Z	INFO	controllers/replica_set_controller.go:358	Creating/Updating AutomationConfig	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:45.316Z	DEBUG	scram/scram.go:168	Credentials have not changed, using credentials stored in: secret/my-scram-scram-credentials
+2023-03-31T17:31:45.317Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-0' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:45.317Z	DEBUG	agent/agent_readiness.go:101	The Pod 'test-cluster-1' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:45.317Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:45.317Z	DEBUG	agent/replica_set_port_manager.go:122	No port change required	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:45.317Z	DEBUG	agent/replica_set_port_manager.go:40	Calculated process port map: map[test-cluster-0:27017 test-cluster-1:27017 test-cluster-2:27017]	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:45.317Z	DEBUG	controllers/replica_set_controller.go:529	AutomationConfigMembersThisReconciliation	{"mdb.AutomationConfigMembersThisReconciliation()": 3}
+2023-03-31T17:31:45.317Z	DEBUG	controllers/replica_set_controller.go:381	Waiting for agents to reach version 2	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:45.319Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-0' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:45.319Z	DEBUG	agent/agent_readiness.go:101	The Pod 'test-cluster-1' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:45.319Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:45.319Z	INFO	controllers/mongodb_status_options.go:110	ReplicaSet is not yet ready, retrying in 10 seconds
+2023-03-31T17:31:55.329Z	INFO	controllers/replica_set_controller.go:140	Reconciling MongoDB	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:55.330Z	DEBUG	controllers/replica_set_controller.go:142	Validating MongoDB.Spec	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:55.330Z	DEBUG	controllers/replica_set_controller.go:151	Ensuring the service exists	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:55.330Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-0' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:55.330Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-1' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:55.330Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:55.330Z	DEBUG	agent/replica_set_port_manager.go:122	No port change required	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:55.337Z	INFO	controllers/replica_set_controller.go:462	Create/Update operation succeeded	{"ReplicaSet": "mongodb/test-cluster", "operation": "updated"}
+2023-03-31T17:31:55.337Z	INFO	controllers/replica_set_controller.go:358	Creating/Updating AutomationConfig	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:55.359Z	DEBUG	scram/scram.go:168	Credentials have not changed, using credentials stored in: secret/my-scram-scram-credentials
+2023-03-31T17:31:55.359Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-0' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:55.359Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-1' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:55.359Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:55.360Z	DEBUG	agent/replica_set_port_manager.go:122	No port change required	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:55.360Z	DEBUG	agent/replica_set_port_manager.go:40	Calculated process port map: map[test-cluster-0:27017 test-cluster-1:27017 test-cluster-2:27017]	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:55.360Z	DEBUG	controllers/replica_set_controller.go:529	AutomationConfigMembersThisReconciliation	{"mdb.AutomationConfigMembersThisReconciliation()": 3}
+2023-03-31T17:31:55.360Z	DEBUG	controllers/replica_set_controller.go:381	Waiting for agents to reach version 2	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:55.360Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-0' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:55.360Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-1' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:55.360Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:31:55.360Z	INFO	controllers/mongodb_status_options.go:110	ReplicaSet is not yet ready, retrying in 10 seconds
+2023-03-31T17:32:05.361Z	INFO	controllers/replica_set_controller.go:140	Reconciling MongoDB	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:05.361Z	DEBUG	controllers/replica_set_controller.go:142	Validating MongoDB.Spec	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:05.361Z	DEBUG	controllers/replica_set_controller.go:151	Ensuring the service exists	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:05.361Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-0' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:05.361Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-1' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:05.361Z	DEBUG	agent/agent_readiness.go:101	The Pod 'test-cluster-2' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:05.361Z	DEBUG	agent/replica_set_port_manager.go:122	No port change required	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:05.366Z	INFO	controllers/replica_set_controller.go:462	Create/Update operation succeeded	{"ReplicaSet": "mongodb/test-cluster", "operation": "updated"}
+2023-03-31T17:32:05.366Z	INFO	controllers/replica_set_controller.go:358	Creating/Updating AutomationConfig	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:05.385Z	DEBUG	scram/scram.go:168	Credentials have not changed, using credentials stored in: secret/my-scram-scram-credentials
+2023-03-31T17:32:05.385Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-0' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:05.385Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-1' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:05.385Z	DEBUG	agent/agent_readiness.go:101	The Pod 'test-cluster-2' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:05.385Z	DEBUG	agent/replica_set_port_manager.go:122	No port change required	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:05.385Z	DEBUG	agent/replica_set_port_manager.go:40	Calculated process port map: map[test-cluster-0:27017 test-cluster-1:27017 test-cluster-2:27017]	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:05.385Z	DEBUG	controllers/replica_set_controller.go:529	AutomationConfigMembersThisReconciliation	{"mdb.AutomationConfigMembersThisReconciliation()": 3}
+2023-03-31T17:32:05.386Z	DEBUG	controllers/replica_set_controller.go:381	Waiting for agents to reach version 2	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:05.386Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-0' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:05.386Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-1' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:05.386Z	DEBUG	agent/agent_readiness.go:101	The Pod 'test-cluster-2' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:05.386Z	INFO	controllers/mongodb_status_options.go:110	ReplicaSet is not yet ready, retrying in 10 seconds
+2023-03-31T17:32:05.394Z	INFO	controllers/replica_set_controller.go:140	Reconciling MongoDB	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:05.394Z	DEBUG	controllers/replica_set_controller.go:142	Validating MongoDB.Spec	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:05.394Z	DEBUG	controllers/replica_set_controller.go:151	Ensuring the service exists	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:05.394Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-0' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:05.394Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-1' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:05.394Z	DEBUG	agent/agent_readiness.go:101	The Pod 'test-cluster-2' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:05.394Z	DEBUG	agent/replica_set_port_manager.go:122	No port change required	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:05.399Z	INFO	controllers/replica_set_controller.go:462	Create/Update operation succeeded	{"ReplicaSet": "mongodb/test-cluster", "operation": "updated"}
+2023-03-31T17:32:05.400Z	INFO	controllers/replica_set_controller.go:358	Creating/Updating AutomationConfig	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:05.421Z	DEBUG	scram/scram.go:168	Credentials have not changed, using credentials stored in: secret/my-scram-scram-credentials
+2023-03-31T17:32:05.421Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-0' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:05.421Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-1' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:05.421Z	DEBUG	agent/agent_readiness.go:101	The Pod 'test-cluster-2' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:05.421Z	DEBUG	agent/replica_set_port_manager.go:122	No port change required	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:05.421Z	DEBUG	agent/replica_set_port_manager.go:40	Calculated process port map: map[test-cluster-0:27017 test-cluster-1:27017 test-cluster-2:27017]	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:05.421Z	DEBUG	controllers/replica_set_controller.go:529	AutomationConfigMembersThisReconciliation	{"mdb.AutomationConfigMembersThisReconciliation()": 3}
+2023-03-31T17:32:05.421Z	DEBUG	controllers/replica_set_controller.go:381	Waiting for agents to reach version 2	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:05.421Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-0' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:05.421Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-1' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:05.421Z	DEBUG	agent/agent_readiness.go:101	The Pod 'test-cluster-2' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:05.421Z	INFO	controllers/mongodb_status_options.go:110	ReplicaSet is not yet ready, retrying in 10 seconds
+2023-03-31T17:32:15.394Z	INFO	controllers/replica_set_controller.go:140	Reconciling MongoDB	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:15.394Z	DEBUG	controllers/replica_set_controller.go:142	Validating MongoDB.Spec	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:15.394Z	DEBUG	controllers/replica_set_controller.go:151	Ensuring the service exists	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:15.394Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-0' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:15.394Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-1' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:15.394Z	DEBUG	agent/agent_readiness.go:101	The Pod 'test-cluster-2' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:15.395Z	DEBUG	agent/replica_set_port_manager.go:122	No port change required	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:15.402Z	INFO	controllers/replica_set_controller.go:462	Create/Update operation succeeded	{"ReplicaSet": "mongodb/test-cluster", "operation": "updated"}
+2023-03-31T17:32:15.402Z	INFO	controllers/replica_set_controller.go:358	Creating/Updating AutomationConfig	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:15.419Z	DEBUG	scram/scram.go:168	Credentials have not changed, using credentials stored in: secret/my-scram-scram-credentials
+2023-03-31T17:32:15.420Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-0' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:15.420Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-1' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:15.420Z	DEBUG	agent/agent_readiness.go:101	The Pod 'test-cluster-2' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:15.420Z	DEBUG	agent/replica_set_port_manager.go:122	No port change required	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:15.420Z	DEBUG	agent/replica_set_port_manager.go:40	Calculated process port map: map[test-cluster-0:27017 test-cluster-1:27017 test-cluster-2:27017]	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:15.420Z	DEBUG	controllers/replica_set_controller.go:529	AutomationConfigMembersThisReconciliation	{"mdb.AutomationConfigMembersThisReconciliation()": 3}
+2023-03-31T17:32:15.420Z	DEBUG	controllers/replica_set_controller.go:381	Waiting for agents to reach version 2	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:15.420Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-0' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:15.420Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-1' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:15.420Z	DEBUG	agent/agent_readiness.go:101	The Pod 'test-cluster-2' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:15.420Z	INFO	controllers/mongodb_status_options.go:110	ReplicaSet is not yet ready, retrying in 10 seconds
+2023-03-31T17:32:25.435Z	INFO	controllers/replica_set_controller.go:140	Reconciling MongoDB	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:25.435Z	DEBUG	controllers/replica_set_controller.go:142	Validating MongoDB.Spec	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:25.435Z	DEBUG	controllers/replica_set_controller.go:151	Ensuring the service exists	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:25.435Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-0' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:25.435Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-1' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:25.435Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-2' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:25.436Z	DEBUG	agent/replica_set_port_manager.go:122	No port change required	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:25.445Z	INFO	controllers/replica_set_controller.go:462	Create/Update operation succeeded	{"ReplicaSet": "mongodb/test-cluster", "operation": "updated"}
+2023-03-31T17:32:25.445Z	INFO	controllers/replica_set_controller.go:358	Creating/Updating AutomationConfig	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:25.470Z	DEBUG	scram/scram.go:168	Credentials have not changed, using credentials stored in: secret/my-scram-scram-credentials
+2023-03-31T17:32:25.470Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-0' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:25.470Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-1' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:25.470Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-2' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:25.470Z	DEBUG	agent/replica_set_port_manager.go:122	No port change required	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:25.470Z	DEBUG	agent/replica_set_port_manager.go:40	Calculated process port map: map[test-cluster-0:27017 test-cluster-1:27017 test-cluster-2:27017]	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:25.470Z	DEBUG	controllers/replica_set_controller.go:529	AutomationConfigMembersThisReconciliation	{"mdb.AutomationConfigMembersThisReconciliation()": 3}
+2023-03-31T17:32:25.471Z	DEBUG	controllers/replica_set_controller.go:381	Waiting for agents to reach version 2	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:25.471Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-0' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:25.471Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-1' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:25.471Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-2' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:25.471Z	INFO	controllers/mongodb_status_options.go:110	ReplicaSet is not yet ready, retrying in 10 seconds
+2023-03-31T17:32:35.486Z	INFO	controllers/replica_set_controller.go:140	Reconciling MongoDB	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:35.486Z	DEBUG	controllers/replica_set_controller.go:142	Validating MongoDB.Spec	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:35.486Z	DEBUG	controllers/replica_set_controller.go:151	Ensuring the service exists	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:35.486Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-0' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:35.486Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-1' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:35.486Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-2' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:35.486Z	DEBUG	agent/replica_set_port_manager.go:122	No port change required	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:35.492Z	INFO	controllers/replica_set_controller.go:462	Create/Update operation succeeded	{"ReplicaSet": "mongodb/test-cluster", "operation": "updated"}
+2023-03-31T17:32:35.492Z	INFO	controllers/replica_set_controller.go:358	Creating/Updating AutomationConfig	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:35.511Z	DEBUG	scram/scram.go:168	Credentials have not changed, using credentials stored in: secret/my-scram-scram-credentials
+2023-03-31T17:32:35.511Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-0' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:35.511Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-1' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:35.511Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-2' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:35.511Z	DEBUG	agent/replica_set_port_manager.go:122	No port change required	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:35.511Z	DEBUG	agent/replica_set_port_manager.go:40	Calculated process port map: map[test-cluster-0:27017 test-cluster-1:27017 test-cluster-2:27017]	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:35.511Z	DEBUG	controllers/replica_set_controller.go:529	AutomationConfigMembersThisReconciliation	{"mdb.AutomationConfigMembersThisReconciliation()": 3}
+2023-03-31T17:32:35.511Z	DEBUG	controllers/replica_set_controller.go:381	Waiting for agents to reach version 2	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:35.511Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-0' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:35.511Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-1' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:35.511Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-2' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:35.511Z	INFO	controllers/mongodb_status_options.go:110	ReplicaSet is not yet ready, retrying in 10 seconds
+2023-03-31T17:32:41.503Z	INFO	controllers/replica_set_controller.go:140	Reconciling MongoDB	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:41.503Z	DEBUG	controllers/replica_set_controller.go:142	Validating MongoDB.Spec	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:41.503Z	DEBUG	controllers/replica_set_controller.go:151	Ensuring the service exists	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:41.504Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-1' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:41.504Z	DEBUG	agent/replica_set_port_manager.go:122	No port change required	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:41.508Z	INFO	controllers/replica_set_controller.go:462	Create/Update operation succeeded	{"ReplicaSet": "mongodb/test-cluster", "operation": "updated"}
+2023-03-31T17:32:41.509Z	INFO	controllers/replica_set_controller.go:358	Creating/Updating AutomationConfig	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:41.526Z	DEBUG	scram/scram.go:168	Credentials have not changed, using credentials stored in: secret/my-scram-scram-credentials
+2023-03-31T17:32:41.526Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-1' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:41.526Z	DEBUG	agent/replica_set_port_manager.go:122	No port change required	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:41.526Z	DEBUG	agent/replica_set_port_manager.go:40	Calculated process port map: map[test-cluster-0:27017 test-cluster-1:27017 test-cluster-2:27017]	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:41.526Z	DEBUG	controllers/replica_set_controller.go:529	AutomationConfigMembersThisReconciliation	{"mdb.AutomationConfigMembersThisReconciliation()": 3}
+2023-03-31T17:32:41.526Z	DEBUG	controllers/replica_set_controller.go:381	Waiting for agents to reach version 2	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:41.527Z	DEBUG	agent/agent_readiness.go:105	The Agent in the Pod 'test-cluster-1' hasn't reached the goal state yet (goal: 2, agent: -1)	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:41.528Z	INFO	controllers/mongodb_status_options.go:110	ReplicaSet is not yet ready, retrying in 10 seconds
+2023-03-31T17:32:45.523Z	INFO	controllers/replica_set_controller.go:140	Reconciling MongoDB	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:45.523Z	DEBUG	controllers/replica_set_controller.go:142	Validating MongoDB.Spec	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:45.523Z	DEBUG	controllers/replica_set_controller.go:151	Ensuring the service exists	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:45.524Z	DEBUG	agent/replica_set_port_manager.go:122	No port change required	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:45.530Z	INFO	controllers/replica_set_controller.go:462	Create/Update operation succeeded	{"ReplicaSet": "mongodb/test-cluster", "operation": "updated"}
+2023-03-31T17:32:45.530Z	INFO	controllers/replica_set_controller.go:358	Creating/Updating AutomationConfig	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:45.547Z	DEBUG	scram/scram.go:168	Credentials have not changed, using credentials stored in: secret/my-scram-scram-credentials
+2023-03-31T17:32:45.548Z	DEBUG	agent/replica_set_port_manager.go:122	No port change required	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:45.548Z	DEBUG	agent/replica_set_port_manager.go:40	Calculated process port map: map[test-cluster-0:27017 test-cluster-1:27017 test-cluster-2:27017]	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:45.548Z	DEBUG	controllers/replica_set_controller.go:529	AutomationConfigMembersThisReconciliation	{"mdb.AutomationConfigMembersThisReconciliation()": 3}
+2023-03-31T17:32:45.548Z	DEBUG	controllers/replica_set_controller.go:381	Waiting for agents to reach version 2	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:45.548Z	INFO	agent/agent_readiness.go:58	All 3 Agents have reached Goal state	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:45.548Z	INFO	controllers/replica_set_controller.go:333	Creating/Updating StatefulSet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:45.556Z	INFO	controllers/replica_set_controller.go:338	Creating/Updating StatefulSet for Arbiters	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:45.562Z	DEBUG	controllers/replica_set_controller.go:348	Ensuring StatefulSet is ready, with type: RollingUpdate	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:45.562Z	DEBUG	controllers/replica_set_controller.go:218	Resetting StatefulSet UpdateStrategy to RollingUpdate	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-31T17:32:45.583Z	INFO	controllers/replica_set_controller.go:268	Successfully finished reconciliation, MongoDB.Spec: {Members:3 Type:ReplicaSet Version:4.4.0 Arbiters:0 FeatureCompatibilityVersion: ReplicaSetHorizons:[] Security:{Authentication:{Modes:[SCRAM] IgnoreUnknownUsers:0xc00082939c} TLS:{Enabled:false Optional:false CertificateKeySecret:{Name:} CaCertificateSecret:<nil> CaConfigMap:<nil>} Roles:[]} Users:[{Name:my-user DB:admin PasswordSecretRef:{Name:my-user-password Key:} Roles:[{DB:admin Name:clusterAdmin} {DB:admin Name:userAdminAnyDatabase}] ScramCredentialsSecretName:my-scram ConnectionStringSecretName:}] StatefulSetConfiguration:{SpecWrapper:{Spec:{Replicas:<nil> Selector:nil Template:{ObjectMeta:{Name: GenerateName: Namespace: SelfLink: UID: ResourceVersion: Generation:0 CreationTimestamp:0001-01-01 00:00:00 +0000 UTC DeletionTimestamp:<nil> DeletionGracePeriodSeconds:<nil> Labels:map[] Annotations:map[] OwnerReferences:[] Finalizers:[] ClusterName: ManagedFields:[]} Spec:{Volumes:[] InitContainers:[] Containers:[{Name:mongod Image: Command:[] Args:[] WorkingDir: Ports:[] EnvFrom:[] Env:[] Resources:{Limits:map[cpu:{i:{value:1 scale:0} d:{Dec:<nil>} s:1 Format:DecimalSI} memory:{i:{value:1000 scale:6} d:{Dec:<nil>} s: Format:DecimalSI}] Requests:map[cpu:{i:{value:1 scale:0} d:{Dec:<nil>} s:1 Format:DecimalSI} memory:{i:{value:1000 scale:6} d:{Dec:<nil>} s: Format:DecimalSI}]} VolumeMounts:[] VolumeDevices:[] LivenessProbe:nil ReadinessProbe:nil StartupProbe:nil Lifecycle:nil TerminationMessagePath: TerminationMessagePolicy: ImagePullPolicy: SecurityContext:nil Stdin:false StdinOnce:false TTY:false} {Name:mongodb-agent Image: Command:[] Args:[] WorkingDir: Ports:[] EnvFrom:[] Env:[] Resources:{Limits:map[cpu:{i:{value:1 scale:0} d:{Dec:<nil>} s:1 Format:DecimalSI} memory:{i:{value:1000 scale:6} d:{Dec:<nil>} s: Format:DecimalSI}] Requests:map[cpu:{i:{value:1 scale:0} d:{Dec:<nil>} s:1 Format:DecimalSI} memory:{i:{value:1000 scale:6} d:{Dec:<nil>} s: Format:DecimalSI}]} VolumeMounts:[] VolumeDevices:[] LivenessProbe:nil ReadinessProbe:nil StartupProbe:nil Lifecycle:nil TerminationMessagePath: TerminationMessagePolicy: ImagePullPolicy: SecurityContext:nil Stdin:false StdinOnce:false TTY:false}] EphemeralContainers:[] RestartPolicy: TerminationGracePeriodSeconds:<nil> ActiveDeadlineSeconds:<nil> DNSPolicy: NodeSelector:map[] ServiceAccountName: DeprecatedServiceAccount: AutomountServiceAccountToken:<nil> NodeName: HostNetwork:false HostPID:false HostIPC:false ShareProcessNamespace:<nil> SecurityContext:nil ImagePullSecrets:[] Hostname: Subdomain: Affinity:nil SchedulerName: Tolerations:[] HostAliases:[] PriorityClassName: Priority:<nil> DNSConfig:nil ReadinessGates:[] RuntimeClassName:<nil> EnableServiceLinks:<nil> PreemptionPolicy:<nil> Overhead:map[] TopologySpreadConstraints:[] SetHostnameAsFQDN:<nil> OS:nil}} VolumeClaimTemplates:[] ServiceName: PodManagementPolicy: UpdateStrategy:{Type: RollingUpdate:nil} RevisionHistoryLimit:<nil> MinReadySeconds:0 PersistentVolumeClaimRetentionPolicy:nil}}} AdditionalMongodConfig:{Object:map[]} AutomationConfigOverride:0xc00002dcb0 Prometheus:<nil>}, MongoDB.Status: {MongoURI:mongodb://test-cluster-0.test-cluster-svc.mongodb.svc.cluster.local:27017,test-cluster-1.test-cluster-svc.mongodb.svc.cluster.local:27017,test-cluster-2.test-cluster-svc.mongodb.svc.cluster.local:27017/?replicaSet=test-cluster Phase:Running Version:4.4.0 CurrentStatefulSetReplicas:3 CurrentMongoDBMembers:3 CurrentStatefulSetArbitersReplicas:0 CurrentMongoDBArbiters:0 Message:}	{"ReplicaSet": "mongodb/test-cluster"}
+

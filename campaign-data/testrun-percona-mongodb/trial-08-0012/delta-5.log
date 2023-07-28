@@ -1,0 +1,119 @@
+---------- INPUT DELTA  ----------
+{
+      "dictionary_item_added": {
+            "root['spec']['sharding']['mongos']['expose']['loadBalancerSourceRanges'][0]": {
+                  "prev": "NotPresent",
+                  "curr": "ACTOKEY",
+                  "path": [
+                        "spec",
+                        "sharding",
+                        "mongos",
+                        "expose",
+                        "loadBalancerSourceRanges",
+                        0
+                  ]
+            }
+      }
+}
+---------- SYSTEM DELTA ----------
+{
+      "pod": {},
+      "deployment_pods": {},
+      "stateful_set": {},
+      "deployment": {},
+      "config_map": {},
+      "service": {},
+      "service_account": {},
+      "pvc": {},
+      "cronjob": {},
+      "ingress": {},
+      "network_policy": {},
+      "pod_disruption_budget": {},
+      "secret": {},
+      "endpoints": {},
+      "job": {},
+      "role": {},
+      "role_binding": {},
+      "custom_resource_spec": {
+            "dictionary_item_added": {
+                  "root['sharding']['mongos']['expose']['loadBalancerSourceRanges'][0]": {
+                        "prev": "NotPresent",
+                        "curr": "ACTOKEY",
+                        "path": [
+                              "sharding",
+                              "mongos",
+                              "expose",
+                              "loadBalancerSourceRanges",
+                              0
+                        ]
+                  }
+            }
+      },
+      "custom_resource_status": {
+            "iterable_item_added": {
+                  "root['conditions'][10][lastTransitionTime]": {
+                        "prev": "NotPresent",
+                        "curr": "2023-03-31T17:56:30Z",
+                        "path": [
+                              "conditions",
+                              10,
+                              "lastTransitionTime"
+                        ]
+                  },
+                  "root['conditions'][10][message]": {
+                        "prev": "NotPresent",
+                        "curr": "create or update mongos service: create or update mongos service: Service \"test-cluster-mongos\" is invalid: [spec.LoadBalancerSourceRanges: Forbidden: may only be used when `type` is 'LoadBalancer', spec.LoadBalancerSourceRanges: Invalid value: \"[ACTOKEY]\": must be a list of IP ranges. For example, 10.240.0.0/24,10.250.0.0/24 ]",
+                        "path": [
+                              "conditions",
+                              10,
+                              "message"
+                        ]
+                  },
+                  "root['conditions'][10][reason]": {
+                        "prev": "NotPresent",
+                        "curr": "ErrorReconcile",
+                        "path": [
+                              "conditions",
+                              10,
+                              "reason"
+                        ]
+                  },
+                  "root['conditions'][10][status]": {
+                        "prev": "NotPresent",
+                        "curr": "True",
+                        "path": [
+                              "conditions",
+                              10,
+                              "status"
+                        ]
+                  },
+                  "root['conditions'][10][type]": {
+                        "prev": "NotPresent",
+                        "curr": "error",
+                        "path": [
+                              "conditions",
+                              10,
+                              "type"
+                        ]
+                  }
+            },
+            "dictionary_item_added": {
+                  "root['message']": {
+                        "prev": "NotPresent",
+                        "curr": "Error: create or update mongos service: create or update mongos service: Service \"test-cluster-mongos\" is invalid: [spec.LoadBalancerSourceRanges: Forbidden: may only be used when `type` is 'LoadBalancer', spec.LoadBalancerSourceRanges: Invalid value: \"[ACTOKEY]\": must be a list of IP ranges. For example, 10.240.0.0/24,10.250.0.0/24 ]",
+                        "path": [
+                              "message"
+                        ]
+                  }
+            },
+            "values_changed": {
+                  "root['state']": {
+                        "prev": "ready",
+                        "curr": "error",
+                        "path": [
+                              "state"
+                        ]
+                  }
+            }
+      }
+}

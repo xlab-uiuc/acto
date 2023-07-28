@@ -1,0 +1,93 @@
+---------- INPUT DELTA  ----------
+{
+      "dictionary_item_removed": {
+            "root['spec']['persistence']['reclaimPolicy']": {
+                  "prev": "Delete",
+                  "curr": "NotPresent",
+                  "path": [
+                        "spec",
+                        "persistence",
+                        "reclaimPolicy"
+                  ]
+            },
+            "root['spec']['persistence']['spec'][resources][requests][storage]": {
+                  "prev": "20Gi",
+                  "curr": "NotPresent",
+                  "path": [
+                        "spec",
+                        "persistence",
+                        "spec",
+                        "resources",
+                        "requests",
+                        "storage"
+                  ]
+            },
+            "root['spec']['persistence']['spec'][storageClassName]": {
+                  "prev": "standard",
+                  "curr": "NotPresent",
+                  "path": [
+                        "spec",
+                        "persistence",
+                        "spec",
+                        "storageClassName"
+                  ]
+            }
+      }
+}
+---------- SYSTEM DELTA ----------
+{
+      "pod": {},
+      "deployment_pods": {},
+      "stateful_set": {
+            "values_changed": {
+                  "root['test-cluster']['metadata']['labels']['owner-rv']": {
+                        "prev": "1142",
+                        "curr": "1227",
+                        "path": [
+                              "test-cluster",
+                              "metadata",
+                              "labels",
+                              "owner-rv"
+                        ]
+                  }
+            }
+      },
+      "deployment": {},
+      "config_map": {},
+      "service": {},
+      "service_account": {},
+      "pvc": {},
+      "cronjob": {},
+      "ingress": {},
+      "network_policy": {},
+      "pod_disruption_budget": {},
+      "secret": {},
+      "endpoints": {},
+      "job": {},
+      "role": {},
+      "role_binding": {},
+      "custom_resource_spec": {
+            "values_changed": {
+                  "root['persistence']['reclaimPolicy']": {
+                        "prev": "Delete",
+                        "curr": "Retain",
+                        "path": [
+                              "persistence",
+                              "reclaimPolicy"
+                        ]
+                  }
+            },
+            "dictionary_item_removed": {
+                  "root['persistence']['spec']['storageClassName']": {
+                        "prev": "standard",
+                        "curr": "NotPresent",
+                        "path": [
+                              "persistence",
+                              "spec",
+                              "storageClassName"
+                        ]
+                  }
+            }
+      },
+      "custom_resource_status": {}
+}

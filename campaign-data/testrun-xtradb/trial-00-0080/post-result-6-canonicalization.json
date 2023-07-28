@@ -1,0 +1,86 @@
+{
+      "alarm": true,
+      "original_result": {
+            "revert": false,
+            "generation": 6,
+            "testcase": {
+                  "field": "[\"spec\", \"haproxy\", \"livenessProbes\"]",
+                  "testcase": "object-deletion"
+            },
+            "feature_gate": 51,
+            "crash_result": "Pass",
+            "input_result": "Pass",
+            "health_result": {
+                  "oracle": "SystemHealth",
+                  "message": "statefulset: test-cluster-haproxy replicas [3] ready_replicas [2]\n"
+            },
+            "state_result": {
+                  "oracle": "SystemState",
+                  "message": "Matched delta inconsistent with input delta",
+                  "input_delta": {
+                        "prev": "NotPresent",
+                        "curr": 2,
+                        "path": [
+                              "spec",
+                              "haproxy",
+                              "livenessProbes",
+                              "initialDelaySeconds"
+                        ]
+                  },
+                  "matched_system_delta": {
+                        "prev": 60,
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-haproxy-2",
+                              "spec",
+                              "containers",
+                              0,
+                              "liveness_probe",
+                              "initial_delay_seconds"
+                        ]
+                  }
+            },
+            "log_result": "Pass",
+            "custom_result": null,
+            "misc_result": null,
+            "recovery_result": null
+      },
+      "post_result": {
+            "trial_num": "00-0080-6",
+            "error": {
+                  "revert": false,
+                  "generation": 6,
+                  "testcase": {
+                        "field": "[\"spec\", \"haproxy\", \"livenessProbes\"]",
+                        "testcase": "object-deletion"
+                  },
+                  "feature_gate": 19,
+                  "crash_result": "Pass",
+                  "input_result": "Pass",
+                  "health_result": {
+                        "oracle": "SystemHealth",
+                        "message": "statefulset: test-cluster-haproxy replicas [3] ready_replicas [2]\n"
+                  },
+                  "state_result": {
+                        "oracle": "SystemState",
+                        "message": "Found no matching fields for input",
+                        "input_delta": {
+                              "prev": "NotPresent",
+                              "curr": "ACTOKEY",
+                              "path": [
+                                    "spec",
+                                    "haproxy",
+                                    "livenessProbes",
+                                    "grpc",
+                                    "service"
+                              ]
+                        },
+                        "matched_system_delta": null
+                  },
+                  "log_result": "Pass",
+                  "custom_result": null,
+                  "misc_result": null,
+                  "recovery_result": null
+            }
+      }
+}

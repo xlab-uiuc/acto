@@ -1,0 +1,94 @@
+{
+      "alarm": true,
+      "original_result": {
+            "revert": false,
+            "generation": 1,
+            "testcase": {
+                  "field": "[\"spec\", \"sharding\", \"configsvrReplSet\", \"sidecars\", 0, \"resources\", \"requests\", \"jwwhaibzwh\"]",
+                  "testcase": "k8s-quantity_increase"
+            },
+            "feature_gate": 51,
+            "crash_result": "Pass",
+            "input_result": "Pass",
+            "health_result": {
+                  "oracle": "SystemHealth",
+                  "message": "statefulset: test-cluster-cfg replicas [3] ready_replicas [2]\n"
+            },
+            "state_result": {
+                  "oracle": "SystemState",
+                  "message": "Matched delta inconsistent with input delta",
+                  "input_delta": {
+                        "prev": "NotPresent",
+                        "curr": "1000m",
+                        "path": [
+                              "spec",
+                              "sharding",
+                              "configsvrReplSet",
+                              "sidecars",
+                              0,
+                              "resources",
+                              "requests",
+                              "cpu"
+                        ]
+                  },
+                  "matched_system_delta": {
+                        "prev": "300m",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-cfg-2",
+                              "spec",
+                              "containers",
+                              0,
+                              "resources",
+                              "requests",
+                              "cpu"
+                        ]
+                  }
+            },
+            "log_result": {
+                  "responsible_field": [
+                        "spec",
+                        "sharding",
+                        "configsvrReplSet",
+                        "sidecars",
+                        0,
+                        "name"
+                  ]
+            },
+            "custom_result": null,
+            "misc_result": null,
+            "recovery_result": null
+      },
+      "post_result": {
+            "trial_num": "10-0040-1",
+            "error": {
+                  "revert": false,
+                  "generation": 1,
+                  "testcase": {
+                        "field": "[\"spec\", \"sharding\", \"configsvrReplSet\", \"sidecars\", 0, \"resources\", \"requests\", \"jwwhaibzwh\"]",
+                        "testcase": "k8s-quantity_increase"
+                  },
+                  "feature_gate": 19,
+                  "crash_result": "Pass",
+                  "input_result": "Pass",
+                  "health_result": {
+                        "oracle": "SystemHealth",
+                        "message": "statefulset: test-cluster-cfg replicas [3] ready_replicas [2]\n"
+                  },
+                  "state_result": "Pass",
+                  "log_result": {
+                        "responsible_field": [
+                              "spec",
+                              "sharding",
+                              "configsvrReplSet",
+                              "sidecars",
+                              0,
+                              "name"
+                        ]
+                  },
+                  "custom_result": null,
+                  "misc_result": null,
+                  "recovery_result": null
+            }
+      }
+}

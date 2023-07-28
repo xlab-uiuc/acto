@@ -1,0 +1,126 @@
+I0329 00:21:07.634700       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"372b8cf5-6c9b-4185-b2be-cf536148a479", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"31652", FieldPath:""}): type: 'Normal' reason: 'Successfully Create' create Role/test-cluster-discovery for controller TidbCluster/test-cluster successfully
+I0329 00:21:07.638716       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"372b8cf5-6c9b-4185-b2be-cf536148a479", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"31652", FieldPath:""}): type: 'Normal' reason: 'Successfully Create' create ServiceAccount/test-cluster-discovery for controller TidbCluster/test-cluster successfully
+I0329 00:21:07.651639       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"372b8cf5-6c9b-4185-b2be-cf536148a479", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"31652", FieldPath:""}): type: 'Normal' reason: 'Successfully Create' create RoleBinding/test-cluster-discovery for controller TidbCluster/test-cluster successfully
+I0329 00:21:07.655905       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"372b8cf5-6c9b-4185-b2be-cf536148a479", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"31652", FieldPath:""}): type: 'Normal' reason: 'Successfully Create' create Deployment/test-cluster-discovery for controller TidbCluster/test-cluster successfully
+I0329 00:21:07.661827       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"372b8cf5-6c9b-4185-b2be-cf536148a479", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"31652", FieldPath:""}): type: 'Normal' reason: 'Successfully Create' create Service/test-cluster-discovery for controller TidbCluster/test-cluster successfully
+I0329 00:21:07.668970       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"372b8cf5-6c9b-4185-b2be-cf536148a479", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"31652", FieldPath:""}): type: 'Normal' reason: 'SuccessfulCreate' create Service test-cluster-pd in  test-cluster successful
+I0329 00:21:07.672212       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"372b8cf5-6c9b-4185-b2be-cf536148a479", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"31652", FieldPath:""}): type: 'Normal' reason: 'SuccessfulCreate' create Service test-cluster-pd-peer in  test-cluster successful
+I0329 00:21:07.677142       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"372b8cf5-6c9b-4185-b2be-cf536148a479", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"31652", FieldPath:""}): type: 'Normal' reason: 'Successfully Create' create ConfigMap/test-cluster-pd-3731616 for controller TidbCluster/test-cluster successfully
+I0329 00:21:07.682925       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"372b8cf5-6c9b-4185-b2be-cf536148a479", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"31652", FieldPath:""}): type: 'Normal' reason: 'SuccessfulCreate' create StatefulSet test-cluster-pd in  test-cluster successful
+I0329 00:21:07.695550       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+I0329 00:21:07.695583       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: TidbCluster: [acto-namespace/test-cluster], waiting for PD cluster running, requeuing
+I0329 00:21:07.799430       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+I0329 00:21:07.799465       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: TidbCluster: [acto-namespace/test-cluster], waiting for PD cluster running, requeuing
+I0329 00:21:07.891324       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: TidbCluster: [acto-namespace/test-cluster], waiting for PD cluster running, requeuing
+E0329 00:21:08.755590       1 pd_member_manager.go:190] failed to sync TidbCluster: [acto-namespace/test-cluster]'s status, error: Error response 503 URL http://test-cluster-pd.acto-namespace:2379/pd/health,body response: no leader
+, service acto-namespace/test-cluster-pd has no endpoints
+I0329 00:21:08.780233       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+E0329 00:21:08.780267       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed tidbcluster: [acto-namespace/test-cluster]'s pd status sync failed, can not to be upgraded, requeuing
+E0329 00:21:08.836799       1 pd_member_manager.go:190] failed to sync TidbCluster: [acto-namespace/test-cluster]'s status, error: Error response 503 URL http://test-cluster-pd.acto-namespace:2379/pd/health,body response: no leader
+, service acto-namespace/test-cluster-pd has no endpoints
+E0329 00:21:08.845772       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed tidbcluster: [acto-namespace/test-cluster]'s pd status sync failed, can not to be upgraded, requeuing
+E0329 00:21:16.847564       1 pd_member_manager.go:190] failed to sync TidbCluster: [acto-namespace/test-cluster]'s status, error: Error response 503 URL http://test-cluster-pd.acto-namespace:2379/pd/health,body response: no leader
+, service acto-namespace/test-cluster-pd has no endpoints
+E0329 00:21:16.854996       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed tidbcluster: [acto-namespace/test-cluster]'s pd status sync failed, can not to be upgraded, requeuing
+E0329 00:21:28.652716       1 pd_member_manager.go:190] failed to sync TidbCluster: [acto-namespace/test-cluster]'s status, error: Get http://test-cluster-pd.acto-namespace:2379/pd/health: dial tcp 10.96.49.140:2379: connect: connection refused, service acto-namespace/test-cluster-pd has no endpoints
+I0329 00:21:28.674892       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+I0329 00:21:28.674927       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: TidbCluster: [acto-namespace/test-cluster], waiting for PD cluster running, requeuing
+E0329 00:21:29.744822       1 pd_member_manager.go:190] failed to sync TidbCluster: [acto-namespace/test-cluster]'s status, error: Get http://test-cluster-pd.acto-namespace:2379/pd/health: dial tcp 10.96.49.140:2379: connect: connection refused
+I0329 00:21:29.798946       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+I0329 00:21:29.798990       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: TidbCluster: [acto-namespace/test-cluster], waiting for PD cluster running, requeuing
+E0329 00:21:29.862576       1 pd_member_manager.go:190] failed to sync TidbCluster: [acto-namespace/test-cluster]'s status, error: Get http://test-cluster-pd.acto-namespace:2379/pd/health: dial tcp 10.96.49.140:2379: connect: connection refused
+I0329 00:21:29.877410       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"372b8cf5-6c9b-4185-b2be-cf536148a479", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"31888", FieldPath:""}): type: 'Normal' reason: 'SuccessfulCreate' create Service test-cluster-tikv-peer in  test-cluster successful
+I0329 00:21:29.881575       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"372b8cf5-6c9b-4185-b2be-cf536148a479", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"31888", FieldPath:""}): type: 'Normal' reason: 'Successfully Create' create ConfigMap/test-cluster-tikv-3831336 for controller TidbCluster/test-cluster successfully
+I0329 00:21:29.888944       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"372b8cf5-6c9b-4185-b2be-cf536148a479", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"31888", FieldPath:""}): type: 'Normal' reason: 'SuccessfulCreate' create StatefulSet test-cluster-tikv in  test-cluster successful
+I0329 00:21:29.927140       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+I0329 00:21:29.927187       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: TidbCluster: [acto-namespace/test-cluster], waiting for TiKV cluster running, requeuing
+E0329 00:21:29.988188       1 pd_member_manager.go:190] failed to sync TidbCluster: [acto-namespace/test-cluster]'s status, error: Get http://test-cluster-pd.acto-namespace:2379/pd/health: dial tcp 10.96.49.140:2379: connect: connection refused
+I0329 00:21:30.018457       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+E0329 00:21:30.018531       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed Get http://test-cluster-pd.acto-namespace:2379/pd/api/v1/stores: dial tcp 10.96.49.140:2379: connect: connection refused, requeuing
+E0329 00:21:30.085883       1 pd_member_manager.go:190] failed to sync TidbCluster: [acto-namespace/test-cluster]'s status, error: Get http://test-cluster-pd.acto-namespace:2379/pd/health: dial tcp 10.96.49.140:2379: connect: connection refused
+E0329 00:21:30.097109       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed Get http://test-cluster-pd.acto-namespace:2379/pd/api/v1/stores: dial tcp 10.96.49.140:2379: connect: connection refused, requeuing
+E0329 00:21:41.900762       1 pd_member_manager.go:190] failed to sync TidbCluster: [acto-namespace/test-cluster]'s status, error: Error response 503 URL http://test-cluster-pd.acto-namespace:2379/pd/health,body response: no leader
+E0329 00:21:41.908906       1 tikv_upgrader.go:249] tikv: no store found for TiKV ordinal 0 of acto-namespace/test-cluster
+I0329 00:21:41.924918       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+E0329 00:21:41.924965       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed Error response 503 URL http://test-cluster-pd.acto-namespace:2379/pd/api/v1/stores,body response: no leader
+, requeuing
+E0329 00:21:41.982865       1 pd_member_manager.go:190] failed to sync TidbCluster: [acto-namespace/test-cluster]'s status, error: Error response 503 URL http://test-cluster-pd.acto-namespace:2379/pd/health,body response: no leader
+E0329 00:21:41.993020       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed Error response 503 URL http://test-cluster-pd.acto-namespace:2379/pd/api/v1/stores,body response: no leader
+, requeuing
+E0329 00:21:43.526752       1 pd_member_manager.go:190] failed to sync TidbCluster: [acto-namespace/test-cluster]'s status, error: Error response 503 URL http://test-cluster-pd.acto-namespace:2379/pd/health,body response: no leader
+I0329 00:21:43.552076       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+E0329 00:21:43.552131       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed Error response 503 URL http://test-cluster-pd.acto-namespace:2379/pd/api/v1/stores,body response: no leader
+, requeuing
+E0329 00:21:43.615728       1 pd_member_manager.go:190] failed to sync TidbCluster: [acto-namespace/test-cluster]'s status, error: Error response 503 URL http://test-cluster-pd.acto-namespace:2379/pd/health,body response: no leader
+I0329 00:21:43.667370       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+E0329 00:21:43.667427       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed Error response 503 URL http://test-cluster-pd.acto-namespace:2379/pd/api/v1/stores,body response: no leader
+, requeuing
+E0329 00:21:43.728215       1 pd_member_manager.go:190] failed to sync TidbCluster: [acto-namespace/test-cluster]'s status, error: Error response 503 URL http://test-cluster-pd.acto-namespace:2379/pd/health,body response: no leader
+I0329 00:21:43.772567       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+E0329 00:21:43.772622       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed Error response 503 URL http://test-cluster-pd.acto-namespace:2379/pd/api/v1/stores,body response: no leader
+, requeuing
+E0329 00:21:43.919674       1 pd_member_manager.go:190] failed to sync TidbCluster: [acto-namespace/test-cluster]'s status, error: Error response 503 URL http://test-cluster-pd.acto-namespace:2379/pd/health,body response: no leader
+E0329 00:21:43.930264       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed Error response 503 URL http://test-cluster-pd.acto-namespace:2379/pd/api/v1/stores,body response: no leader
+, requeuing
+E0329 00:21:48.918115       1 pd_member_manager.go:190] failed to sync TidbCluster: [acto-namespace/test-cluster]'s status, error: Error response 503 URL http://test-cluster-pd.acto-namespace:2379/pd/health,body response: no leader
+E0329 00:21:48.928153       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed Error response 503 URL http://test-cluster-pd.acto-namespace:2379/pd/api/v1/stores,body response: no leader
+, requeuing
+E0329 00:21:53.639626       1 pd_member_manager.go:190] failed to sync TidbCluster: [acto-namespace/test-cluster]'s status, error: Error response 503 URL http://test-cluster-pd.acto-namespace:2379/pd/health,body response: no leader
+I0329 00:21:53.664912       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+E0329 00:21:53.664955       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed Error response 503 URL http://test-cluster-pd.acto-namespace:2379/pd/api/v1/stores,body response: no leader
+, requeuing
+E0329 00:21:53.724846       1 pd_member_manager.go:190] failed to sync TidbCluster: [acto-namespace/test-cluster]'s status, error: Error response 503 URL http://test-cluster-pd.acto-namespace:2379/pd/health,body response: no leader
+E0329 00:21:53.733202       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed Error response 503 URL http://test-cluster-pd.acto-namespace:2379/pd/api/v1/stores,body response: no leader
+, requeuing
+E0329 00:21:54.647687       1 pd_member_manager.go:190] failed to sync TidbCluster: [acto-namespace/test-cluster]'s status, error: Error response 503 URL http://test-cluster-pd.acto-namespace:2379/pd/health,body response: no leader
+I0329 00:21:54.673085       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+E0329 00:21:54.673144       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed Error response 503 URL http://test-cluster-pd.acto-namespace:2379/pd/api/v1/stores,body response: no leader
+, requeuing
+E0329 00:21:54.737674       1 pd_member_manager.go:190] failed to sync TidbCluster: [acto-namespace/test-cluster]'s status, error: Error response 503 URL http://test-cluster-pd.acto-namespace:2379/pd/health,body response: no leader
+E0329 00:21:54.747292       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed Error response 503 URL http://test-cluster-pd.acto-namespace:2379/pd/api/v1/stores,body response: no leader
+, requeuing
+E0329 00:21:57.633424       1 pd_member_manager.go:190] failed to sync TidbCluster: [acto-namespace/test-cluster]'s status, error: Error response 503 URL http://test-cluster-pd.acto-namespace:2379/pd/health,body response: no leader
+E0329 00:21:57.645943       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed Error response 503 URL http://test-cluster-pd.acto-namespace:2379/pd/api/v1/stores,body response: no leader
+, requeuing
+I0329 00:22:27.699424       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"372b8cf5-6c9b-4185-b2be-cf536148a479", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"32134", FieldPath:""}): type: 'Normal' reason: 'SuccessfulCreate' create Service test-cluster-tidb-peer in  test-cluster successful
+I0329 00:22:27.711719       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"372b8cf5-6c9b-4185-b2be-cf536148a479", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"32134", FieldPath:""}): type: 'Normal' reason: 'SuccessfulCreate' create Service test-cluster-tidb in  test-cluster successful
+I0329 00:22:27.715626       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"372b8cf5-6c9b-4185-b2be-cf536148a479", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"32134", FieldPath:""}): type: 'Normal' reason: 'Successfully Create' create ConfigMap/test-cluster-tidb-6662316 for controller TidbCluster/test-cluster successfully
+I0329 00:22:27.722888       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"372b8cf5-6c9b-4185-b2be-cf536148a479", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"32134", FieldPath:""}): type: 'Normal' reason: 'SuccessfulCreate' create StatefulSet test-cluster-tidb in  test-cluster successful
+I0329 00:22:28.330525       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+I0329 00:22:28.451883       1 equality.go:87] Service spec diff for acto-namespace/test-cluster-tidb:   v1.ServiceSpec{
+  	Ports: []v1.ServicePort{
+  		{
+  			... // 3 identical fields
+  			Port:       4000,
+  			TargetPort: {IntVal: 4000},
+- 			NodePort:   0,
++ 			NodePort:   31098,
+  		},
+  		{
+  			... // 3 identical fields
+  			Port:       10080,
+  			TargetPort: {IntVal: 10080},
+- 			NodePort:   0,
++ 			NodePort:   30473,
+  		},
+  	},
+  	Selector:  {"app.kubernetes.io/component": "tidb", "app.kubernetes.io/instance": "test-cluster", "app.kubernetes.io/managed-by": "tidb-operator", "app.kubernetes.io/name": "tidb-cluster"},
+  	ClusterIP: "",
+  	... // 12 identical fields
+  }
+I0329 00:22:28.451953       1 tidb_member_manager.go:442] Sync TiDB service acto-namespace/test-cluster-tidb, spec equal: false, annotations equal: true, label equal: true
+I0329 00:22:28.502200       1 service_control.go:88] update Service: [acto-namespace/test-cluster-tidb] successfully, kind: , name: test-cluster
+I0329 00:22:28.528643       1 tidb_failover.go:53] tidb failover is disabled for acto-namespace/test-cluster, skipped
+E0329 00:22:29.105490       1 pod_control.go:185] failed to update pod acto-namespace/test-cluster-tidb-1 with cluster labels map[app.kubernetes.io/component:tidb app.kubernetes.io/instance:test-cluster app.kubernetes.io/managed-by:tidb-operator app.kubernetes.io/name:tidb-cluster controller-revision-hash:test-cluster-tidb-788bdc6cfc statefulset.kubernetes.io/pod-name:test-cluster-tidb-1 tidb.pingcap.com/cluster-id:7215726583173129394], TidbCluster: test-cluster, err: Operation cannot be fulfilled on pods "test-cluster-tidb-1": the object has been modified; please apply your changes to the latest version and try again
+E0329 00:22:29.701274       1 pod_control.go:185] failed to update pod acto-namespace/test-cluster-tidb-2 with cluster labels map[app.kubernetes.io/component:tidb app.kubernetes.io/instance:test-cluster app.kubernetes.io/managed-by:tidb-operator app.kubernetes.io/name:tidb-cluster controller-revision-hash:test-cluster-tidb-788bdc6cfc statefulset.kubernetes.io/pod-name:test-cluster-tidb-2 tidb.pingcap.com/cluster-id:7215726583173129394], TidbCluster: test-cluster, err: Operation cannot be fulfilled on pods "test-cluster-tidb-2": the object has been modified; please apply your changes to the latest version and try again
+I0329 00:22:29.932865       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+I0329 00:22:30.075753       1 tidb_failover.go:53] tidb failover is disabled for acto-namespace/test-cluster, skipped
+I0329 00:22:47.937766       1 tidb_failover.go:53] tidb failover is disabled for acto-namespace/test-cluster, skipped
+I0329 00:22:47.960806       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+I0329 00:22:48.289250       1 tidb_failover.go:53] tidb failover is disabled for acto-namespace/test-cluster, skipped
+I0329 00:22:48.335364       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+I0329 00:22:49.488614       1 tidb_failover.go:53] tidb failover is disabled for acto-namespace/test-cluster, skipped
+I0329 00:22:50.688907       1 tidb_failover.go:53] tidb failover is disabled for acto-namespace/test-cluster, skipped
+I0329 00:22:57.702827       1 tidb_failover.go:53] tidb failover is disabled for acto-namespace/test-cluster, skipped
+I0329 00:23:27.733224       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+

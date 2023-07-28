@@ -1,0 +1,913 @@
+---------- INPUT DELTA  ----------
+{
+      "dictionary_item_added": {
+            "root['spec']['additionalLabels']['ACTOKEY']": {
+                  "prev": "NotPresent",
+                  "curr": "ACTOKEY",
+                  "path": [
+                        "spec",
+                        "additionalLabels",
+                        "ACTOKEY"
+                  ]
+            }
+      }
+}
+---------- SYSTEM DELTA ----------
+{
+      "pod": {},
+      "deployment_pods": {},
+      "stateful_set": {},
+      "deployment": {},
+      "config_map": {},
+      "service": {
+            "dictionary_item_added": {
+                  "root['test-cluster']['spec']['selector']['ACTOKEY']": {
+                        "prev": "NotPresent",
+                        "curr": "ACTOKEY",
+                        "path": [
+                              "test-cluster",
+                              "spec",
+                              "selector",
+                              "ACTOKEY"
+                        ]
+                  },
+                  "root['test-cluster-public']['spec']['selector']['ACTOKEY']": {
+                        "prev": "NotPresent",
+                        "curr": "ACTOKEY",
+                        "path": [
+                              "test-cluster-public",
+                              "spec",
+                              "selector",
+                              "ACTOKEY"
+                        ]
+                  }
+            },
+            "values_changed": {
+                  "root['test-cluster']['metadata']['annotations']['crdb.io/last-applied']": {
+                        "prev": "eyJzcGVjIjp7InBvcnRzIjpbeyJuYW1lIjoiZ3JwYyIsInBvcnQiOjI2MjU4fSx7Im5hbWUiOiJodHRwIiwicG9ydCI6ODA4MH0seyJuYW1lIjoic3FsIiwicG9ydCI6MjYyNTd9XSwic2VsZWN0b3IiOnsiYXBwLmt1YmVybmV0ZXMuaW8vbmFtZSI6ImNvY2tyb2FjaGRiIiwiYXBwLmt1YmVybmV0ZXMuaW8vaW5zdGFuY2UiOiJ0ZXN0LWNsdXN0ZXIiLCJhcHAua3ViZXJuZXRlcy5pby9jb21wb25lbnQiOiJkYXRhYmFzZSIsImNyZGIiOiJpcy1jb29sIn0sImNsdXN0ZXJJUCI6Ik5vbmUiLCJwdWJsaXNoTm90UmVhZHlBZGRyZXNzZXMiOnRydWV9LCJzdGF0dXMiOnsibG9hZEJhbGFuY2VyIjp7fX0sImtpbmQiOiJTZXJ2aWNlIiwiYXBpVmVyc2lvbiI6InYxIiwibWV0YWRhdGEiOnsibmFtZSI6InRlc3QtY2x1c3RlciIsIm93bmVyUmVmZXJlbmNlcyI6W3siYXBpVmVyc2lvbiI6ImNyZGIuY29ja3JvYWNobGFicy5jb20vdjFhbHBoYTEiLCJraW5kIjoiQ3JkYkNsdXN0ZXIiLCJuYW1lIjoidGVzdC1jbHVzdGVyIiwidWlkIjoiOTMyMTNhMDItYjI3MS00ZDg3LTkzNmMtNTNjZjNmZTBhODkwIiwiY29udHJvbGxlciI6dHJ1ZSwiYmxvY2tPd25lckRlbGV0aW9uIjp0cnVlfV0sInJlc291cmNlVmVyc2lvbiI6IjEzOTkiLCJjcmVhdGlvblRpbWVzdGFtcCI6IjIwMjMtMDQtMDJUMDU6NTE6NDVaIiwibGFiZWxzIjp7ImFwcC5rdWJlcm5ldGVzLmlvL2NvbXBvbmVudCI6ImRhdGFiYXNlIiwiYXBwLmt1YmVybmV0ZXMuaW8vaW5zdGFuY2UiOiJ0ZXN0LWNsdXN0ZXIiLCJhcHAua3ViZXJuZXRlcy5pby9tYW5hZ2VkLWJ5IjoiY29ja3JvYWNoLW9wZXJhdG9yIiwiYXBwLmt1YmVybmV0ZXMuaW8vbmFtZSI6ImNvY2tyb2FjaGRiIiwiYXBwLmt1YmVybmV0ZXMuaW8vcGFydC1vZiI6ImNvY2tyb2FjaGRiIiwiYXBwLmt1YmVybmV0ZXMuaW8vdmVyc2lvbiI6InYyMS4yLjEwIiwiY3JkYiI6ImlzLWNvb2wiLCJBQ1RPS0VZIjoiQUNUT0tFWSJ9LCJtYW5hZ2VkRmllbGRzIjpbeyJ0aW1lIjoiMjAyMy0wNC0wMlQwNTo1Mzo1NFoiLCJmaWVsZHNUeXBlIjoiRmllbGRzVjEiLCJmaWVsZHNWMSI6eyJmOm1ldGFkYXRhIjp7ImY6YW5ub3RhdGlvbnMiOnsiZjpwcm9tZXRoZXVzLmlvL3BvcnQiOnt9LCJmOnByb21ldGhldXMuaW8vc2NyYXBlIjp7fSwiLiI6e30sImY6Y3JkYi5pby9sYXN0LWFwcGxpZWQiOnt9LCJmOnByb21ldGhldXMuaW8vcGF0aCI6e319LCJmOmxhYmVscyI6eyJmOmNyZGIiOnt9LCIuIjp7fSwiZjphcHAua3ViZXJuZXRlcy5pby9pbnN0YW5jZSI6e30sImY6YXBwLmt1YmVybmV0ZXMuaW8vbWFuYWdlZC1ieSI6e30sImY6YXBwLmt1YmVybmV0ZXMuaW8vbmFtZSI6e30sImY6YXBwLmt1YmVybmV0ZXMuaW8vY29tcG9uZW50Ijp7fSwiZjphcHAua3ViZXJuZXRlcy5pby9wYXJ0LW9mIjp7fSwiZjphcHAua3ViZXJuZXRlcy5pby92ZXJzaW9uIjp7fSwiZjpBQ1RPS0VZIjp7fX0sImY6b3duZXJSZWZlcmVuY2VzIjp7Ii4iOnt9LCJrOntcInVpZFwiOlwiOTMyMTNhMDItYjI3MS00ZDg3LTkzNmMtNTNjZjNmZTBhODkwXCJ9Ijp7fX19LCJmOnNwZWMiOnsiZjpjbHVzdGVySVAiOnt9LCJmOmludGVybmFsVHJhZmZpY1BvbGljeSI6e30sImY6cG9ydHMiOnsiLiI6e30sIms6e1wicG9ydFwiOjgwODAsXCJwcm90b2NvbFwiOlwiVENQXCJ9Ijp7ImY6bmFtZSI6e30sImY6cG9ydCI6e30sImY6cHJvdG9jb2wiOnt9LCJmOnRhcmdldFBvcnQiOnt9LCIuIjp7fX0sIms6e1wicG9ydFwiOjI2MjU3LFwicHJvdG9jb2xcIjpcIlRDUFwifSI6eyJmOnByb3RvY29sIjp7fSwiZjp0YXJnZXRQb3J0Ijp7fSwiLiI6e30sImY6bmFtZSI6e30sImY6cG9ydCI6e319LCJrOntcInBvcnRcIjoyNjI1OCxcInByb3RvY29sXCI6XCJUQ1BcIn0iOnsiZjp0YXJnZXRQb3J0Ijp7fSwiLiI6e30sImY6bmFtZSI6e30sImY6cG9ydCI6e30sImY6cHJvdG9jb2wiOnt9fX0sImY6cHVibGlzaE5vdFJlYWR5QWRkcmVzc2VzIjp7fSwiZjpzZWxlY3RvciI6e30sImY6c2Vzc2lvbkFmZmluaXR5Ijp7fSwiZjp0eXBlIjp7fX19LCJtYW5hZ2VyIjoiY29ja3JvYWNoLW9wZXJhdG9yIiwib3BlcmF0aW9uIjoiVXBkYXRlIiwiYXBpVmVyc2lvbiI6InYxIn1dLCJhbm5vdGF0aW9ucyI6eyJwcm9tZXRoZXVzLmlvL3NjcmFwZSI6InRydWUiLCJwcm9tZXRoZXVzLmlvL3BhdGgiOiJfc3RhdHVzL3ZhcnMiLCJwcm9tZXRoZXVzLmlvL3BvcnQiOiI4MDgwIn0sIm5hbWVzcGFjZSI6ImNvY2tyb2FjaC1vcGVyYXRvci1zeXN0ZW0iLCJ1aWQiOiJiYWU3ZWQ0OC03NjZlLTRmY2ItYjE1Mi0wYjRiMzgyMGUxMDQifX0=",
+                        "curr": "eyJraW5kIjoiU2VydmljZSIsImFwaVZlcnNpb24iOiJ2MSIsIm1ldGFkYXRhIjp7ImxhYmVscyI6eyJhcHAua3ViZXJuZXRlcy5pby9jb21wb25lbnQiOiJkYXRhYmFzZSIsImFwcC5rdWJlcm5ldGVzLmlvL2luc3RhbmNlIjoidGVzdC1jbHVzdGVyIiwiYXBwLmt1YmVybmV0ZXMuaW8vbWFuYWdlZC1ieSI6ImNvY2tyb2FjaC1vcGVyYXRvciIsImFwcC5rdWJlcm5ldGVzLmlvL25hbWUiOiJjb2Nrcm9hY2hkYiIsImFwcC5rdWJlcm5ldGVzLmlvL3BhcnQtb2YiOiJjb2Nrcm9hY2hkYiIsImFwcC5rdWJlcm5ldGVzLmlvL3ZlcnNpb24iOiJ2MjEuMi4xMCIsImNyZGIiOiJpcy1jb29sIiwiQUNUT0tFWSI6IkFDVE9LRVkifSwidWlkIjoiYmFlN2VkNDgtNzY2ZS00ZmNiLWIxNTItMGI0YjM4MjBlMTA0IiwiYW5ub3RhdGlvbnMiOnsicHJvbWV0aGV1cy5pby9wYXRoIjoiX3N0YXR1cy92YXJzIiwicHJvbWV0aGV1cy5pby9wb3J0IjoiODA4MCIsInByb21ldGhldXMuaW8vc2NyYXBlIjoidHJ1ZSJ9LCJvd25lclJlZmVyZW5jZXMiOlt7ImtpbmQiOiJDcmRiQ2x1c3RlciIsIm5hbWUiOiJ0ZXN0LWNsdXN0ZXIiLCJ1aWQiOiI5MzIxM2EwMi1iMjcxLTRkODctOTM2Yy01M2NmM2ZlMGE4OTAiLCJjb250cm9sbGVyIjp0cnVlLCJibG9ja093bmVyRGVsZXRpb24iOnRydWUsImFwaVZlcnNpb24iOiJjcmRiLmNvY2tyb2FjaGxhYnMuY29tL3YxYWxwaGExIn1dLCJuYW1lc3BhY2UiOiJjb2Nrcm9hY2gtb3BlcmF0b3Itc3lzdGVtIiwiY3JlYXRpb25UaW1lc3RhbXAiOiIyMDIzLTA0LTAyVDA1OjUxOjQ1WiIsInJlc291cmNlVmVyc2lvbiI6IjE1MDciLCJuYW1lIjoidGVzdC1jbHVzdGVyIiwibWFuYWdlZEZpZWxkcyI6W3sibWFuYWdlciI6ImNvY2tyb2FjaC1vcGVyYXRvciIsIm9wZXJhdGlvbiI6IlVwZGF0ZSIsImFwaVZlcnNpb24iOiJ2MSIsInRpbWUiOiIyMDIzLTA0LTAyVDA1OjUzOjU0WiIsImZpZWxkc1R5cGUiOiJGaWVsZHNWMSIsImZpZWxkc1YxIjp7ImY6bWV0YWRhdGEiOnsiZjphbm5vdGF0aW9ucyI6eyJmOnByb21ldGhldXMuaW8vcGF0aCI6e30sImY6cHJvbWV0aGV1cy5pby9wb3J0Ijp7fSwiZjpwcm9tZXRoZXVzLmlvL3NjcmFwZSI6e30sIi4iOnt9LCJmOmNyZGIuaW8vbGFzdC1hcHBsaWVkIjp7fX0sImY6bGFiZWxzIjp7ImY6YXBwLmt1YmVybmV0ZXMuaW8vcGFydC1vZiI6e30sImY6Y3JkYiI6e30sImY6YXBwLmt1YmVybmV0ZXMuaW8vbWFuYWdlZC1ieSI6e30sImY6YXBwLmt1YmVybmV0ZXMuaW8vdmVyc2lvbiI6e30sIi4iOnt9LCJmOkFDVE9LRVkiOnt9LCJmOmFwcC5rdWJlcm5ldGVzLmlvL2luc3RhbmNlIjp7fSwiZjphcHAua3ViZXJuZXRlcy5pby9jb21wb25lbnQiOnt9LCJmOmFwcC5rdWJlcm5ldGVzLmlvL25hbWUiOnt9fSwiZjpvd25lclJlZmVyZW5jZXMiOnsiazp7XCJ1aWRcIjpcIjkzMjEzYTAyLWIyNzEtNGQ4Ny05MzZjLTUzY2YzZmUwYTg5MFwifSI6e30sIi4iOnt9fX0sImY6c3BlYyI6eyJmOmNsdXN0ZXJJUCI6e30sImY6aW50ZXJuYWxUcmFmZmljUG9saWN5Ijp7fSwiZjpwb3J0cyI6eyJrOntcInBvcnRcIjoyNjI1NyxcInByb3RvY29sXCI6XCJUQ1BcIn0iOnsiZjp0YXJnZXRQb3J0Ijp7fSwiLiI6e30sImY6bmFtZSI6e30sImY6cG9ydCI6e30sImY6cHJvdG9jb2wiOnt9fSwiazp7XCJwb3J0XCI6MjYyNTgsXCJwcm90b2NvbFwiOlwiVENQXCJ9Ijp7ImY6cHJvdG9jb2wiOnt9LCJmOnRhcmdldFBvcnQiOnt9LCIuIjp7fSwiZjpuYW1lIjp7fSwiZjpwb3J0Ijp7fX0sIi4iOnt9LCJrOntcInBvcnRcIjo4MDgwLFwicHJvdG9jb2xcIjpcIlRDUFwifSI6eyJmOnBvcnQiOnt9LCJmOnByb3RvY29sIjp7fSwiZjp0YXJnZXRQb3J0Ijp7fSwiLiI6e30sImY6bmFtZSI6e319fSwiZjpwdWJsaXNoTm90UmVhZHlBZGRyZXNzZXMiOnt9LCJmOnNlbGVjdG9yIjp7fSwiZjpzZXNzaW9uQWZmaW5pdHkiOnt9LCJmOnR5cGUiOnt9fX19XX0sInNwZWMiOnsicG9ydHMiOlt7Im5hbWUiOiJncnBjIiwicG9ydCI6MjYyNTh9LHsibmFtZSI6Imh0dHAiLCJwb3J0Ijo4MDgwfSx7Im5hbWUiOiJzcWwiLCJwb3J0IjoyNjI1N31dLCJzZWxlY3RvciI6eyJBQ1RPS0VZIjoiQUNUT0tFWSIsImNyZGIiOiJpcy1jb29sIiwiYXBwLmt1YmVybmV0ZXMuaW8vbmFtZSI6ImNvY2tyb2FjaGRiIiwiYXBwLmt1YmVybmV0ZXMuaW8vaW5zdGFuY2UiOiJ0ZXN0LWNsdXN0ZXIiLCJhcHAua3ViZXJuZXRlcy5pby9jb21wb25lbnQiOiJkYXRhYmFzZSJ9LCJjbHVzdGVySVAiOiJOb25lIiwicHVibGlzaE5vdFJlYWR5QWRkcmVzc2VzIjp0cnVlfSwic3RhdHVzIjp7ImxvYWRCYWxhbmNlciI6e319fQ==",
+                        "path": [
+                              "test-cluster",
+                              "metadata",
+                              "annotations",
+                              "crdb.io/last-applied"
+                        ]
+                  },
+                  "root['test-cluster-public']['metadata']['annotations']['crdb.io/last-applied']": {
+                        "prev": "eyJraW5kIjoiU2VydmljZSIsImFwaVZlcnNpb24iOiJ2MSIsIm1ldGFkYXRhIjp7ImNyZWF0aW9uVGltZXN0YW1wIjoiMjAyMy0wNC0wMlQwNTo1MTo0NVoiLCJsYWJlbHMiOnsiY3JkYiI6ImlzLWNvb2wiLCJBQ1RPS0VZIjoiQUNUT0tFWSIsImFwcC5rdWJlcm5ldGVzLmlvL2NvbXBvbmVudCI6ImRhdGFiYXNlIiwiYXBwLmt1YmVybmV0ZXMuaW8vaW5zdGFuY2UiOiJ0ZXN0LWNsdXN0ZXIiLCJhcHAua3ViZXJuZXRlcy5pby9tYW5hZ2VkLWJ5IjoiY29ja3JvYWNoLW9wZXJhdG9yIiwiYXBwLmt1YmVybmV0ZXMuaW8vbmFtZSI6ImNvY2tyb2FjaGRiIiwiYXBwLmt1YmVybmV0ZXMuaW8vcGFydC1vZiI6ImNvY2tyb2FjaGRiIiwiYXBwLmt1YmVybmV0ZXMuaW8vdmVyc2lvbiI6InYyMS4yLjEwIn0sIm93bmVyUmVmZXJlbmNlcyI6W3siY29udHJvbGxlciI6dHJ1ZSwiYmxvY2tPd25lckRlbGV0aW9uIjp0cnVlLCJhcGlWZXJzaW9uIjoiY3JkYi5jb2Nrcm9hY2hsYWJzLmNvbS92MWFscGhhMSIsImtpbmQiOiJDcmRiQ2x1c3RlciIsIm5hbWUiOiJ0ZXN0LWNsdXN0ZXIiLCJ1aWQiOiI5MzIxM2EwMi1iMjcxLTRkODctOTM2Yy01M2NmM2ZlMGE4OTAifV0sIm1hbmFnZWRGaWVsZHMiOlt7Im9wZXJhdGlvbiI6IlVwZGF0ZSIsImFwaVZlcnNpb24iOiJ2MSIsInRpbWUiOiIyMDIzLTA0LTAyVDA1OjUzOjU1WiIsImZpZWxkc1R5cGUiOiJGaWVsZHNWMSIsImZpZWxkc1YxIjp7ImY6bWV0YWRhdGEiOnsiZjphbm5vdGF0aW9ucyI6eyIuIjp7fSwiZjpjcmRiLmlvL2xhc3QtYXBwbGllZCI6e319LCJmOmxhYmVscyI6eyJmOmFwcC5rdWJlcm5ldGVzLmlvL2luc3RhbmNlIjp7fSwiZjphcHAua3ViZXJuZXRlcy5pby9jb21wb25lbnQiOnt9LCJmOmFwcC5rdWJlcm5ldGVzLmlvL21hbmFnZWQtYnkiOnt9LCJmOmFwcC5rdWJlcm5ldGVzLmlvL25hbWUiOnt9LCJmOmNyZGIiOnt9LCIuIjp7fSwiZjpBQ1RPS0VZIjp7fSwiZjphcHAua3ViZXJuZXRlcy5pby9wYXJ0LW9mIjp7fSwiZjphcHAua3ViZXJuZXRlcy5pby92ZXJzaW9uIjp7fX0sImY6b3duZXJSZWZlcmVuY2VzIjp7Ii4iOnt9LCJrOntcInVpZFwiOlwiOTMyMTNhMDItYjI3MS00ZDg3LTkzNmMtNTNjZjNmZTBhODkwXCJ9Ijp7fX19LCJmOnNwZWMiOnsiZjpzZXNzaW9uQWZmaW5pdHkiOnt9LCJmOnR5cGUiOnt9LCJmOmludGVybmFsVHJhZmZpY1BvbGljeSI6e30sImY6cG9ydHMiOnsiLiI6e30sIms6e1wicG9ydFwiOjgwODAsXCJwcm90b2NvbFwiOlwiVENQXCJ9Ijp7ImY6bmFtZSI6e30sImY6cG9ydCI6e30sImY6cHJvdG9jb2wiOnt9LCJmOnRhcmdldFBvcnQiOnt9LCIuIjp7fX0sIms6e1wicG9ydFwiOjI2MjU3LFwicHJvdG9jb2xcIjpcIlRDUFwifSI6eyJmOnRhcmdldFBvcnQiOnt9LCIuIjp7fSwiZjpuYW1lIjp7fSwiZjpwb3J0Ijp7fSwiZjpwcm90b2NvbCI6e319LCJrOntcInBvcnRcIjoyNjI1OCxcInByb3RvY29sXCI6XCJUQ1BcIn0iOnsiZjpwcm90b2NvbCI6e30sImY6dGFyZ2V0UG9ydCI6e30sIi4iOnt9LCJmOm5hbWUiOnt9LCJmOnBvcnQiOnt9fX0sImY6c2VsZWN0b3IiOnt9fX0sIm1hbmFnZXIiOiJjb2Nrcm9hY2gtb3BlcmF0b3IifV0sIm5hbWUiOiJ0ZXN0LWNsdXN0ZXItcHVibGljIiwibmFtZXNwYWNlIjoiY29ja3JvYWNoLW9wZXJhdG9yLXN5c3RlbSIsInVpZCI6IjhiODU3MTU3LWM4NDItNDI5MC1hZWQ5LTgxZGNkYWQ4ZmI0ZiIsInJlc291cmNlVmVyc2lvbiI6IjE0MDIifSwic3BlYyI6eyJzZWxlY3RvciI6eyJjcmRiIjoiaXMtY29vbCIsImFwcC5rdWJlcm5ldGVzLmlvL25hbWUiOiJjb2Nrcm9hY2hkYiIsImFwcC5rdWJlcm5ldGVzLmlvL2luc3RhbmNlIjoidGVzdC1jbHVzdGVyIiwiYXBwLmt1YmVybmV0ZXMuaW8vY29tcG9uZW50IjoiZGF0YWJhc2UifSwiY2x1c3RlcklQIjoiMTAuOTYuMTMxLjEyMiIsImNsdXN0ZXJJUHMiOlsiMTAuOTYuMTMxLjEyMiJdLCJ0eXBlIjoiQ2x1c3RlcklQIiwic2Vzc2lvbkFmZmluaXR5IjoiTm9uZSIsImlwRmFtaWxpZXMiOlsiSVB2NCJdLCJpcEZhbWlseVBvbGljeSI6IlNpbmdsZVN0YWNrIiwicG9ydHMiOlt7InBvcnQiOjI2MjU4LCJ0YXJnZXRQb3J0IjoyNjI1OCwibmFtZSI6ImdycGMiLCJwcm90b2NvbCI6IlRDUCJ9LHsibmFtZSI6Imh0dHAiLCJwcm90b2NvbCI6IlRDUCIsInBvcnQiOjgwODAsInRhcmdldFBvcnQiOjgwODB9LHsidGFyZ2V0UG9ydCI6MjYyNTcsIm5hbWUiOiJzcWwiLCJwcm90b2NvbCI6IlRDUCIsInBvcnQiOjI2MjU3fV19LCJzdGF0dXMiOnsibG9hZEJhbGFuY2VyIjp7fX19",
+                        "curr": "eyJzcGVjIjp7InR5cGUiOiJDbHVzdGVySVAiLCJzZXNzaW9uQWZmaW5pdHkiOiJOb25lIiwiaXBGYW1pbGllcyI6WyJJUHY0Il0sImlwRmFtaWx5UG9saWN5IjoiU2luZ2xlU3RhY2siLCJwb3J0cyI6W3sibmFtZSI6ImdycGMiLCJwcm90b2NvbCI6IlRDUCIsInBvcnQiOjI2MjU4LCJ0YXJnZXRQb3J0IjoyNjI1OH0seyJuYW1lIjoiaHR0cCIsInByb3RvY29sIjoiVENQIiwicG9ydCI6ODA4MCwidGFyZ2V0UG9ydCI6ODA4MH0seyJwcm90b2NvbCI6IlRDUCIsInBvcnQiOjI2MjU3LCJ0YXJnZXRQb3J0IjoyNjI1NywibmFtZSI6InNxbCJ9XSwic2VsZWN0b3IiOnsiQUNUT0tFWSI6IkFDVE9LRVkiLCJhcHAua3ViZXJuZXRlcy5pby9uYW1lIjoiY29ja3JvYWNoZGIiLCJhcHAua3ViZXJuZXRlcy5pby9pbnN0YW5jZSI6InRlc3QtY2x1c3RlciIsImFwcC5rdWJlcm5ldGVzLmlvL2NvbXBvbmVudCI6ImRhdGFiYXNlIiwiY3JkYiI6ImlzLWNvb2wifSwiY2x1c3RlcklQIjoiMTAuOTYuMTMxLjEyMiIsImNsdXN0ZXJJUHMiOlsiMTAuOTYuMTMxLjEyMiJdfSwic3RhdHVzIjp7ImxvYWRCYWxhbmNlciI6e319LCJraW5kIjoiU2VydmljZSIsImFwaVZlcnNpb24iOiJ2MSIsIm1ldGFkYXRhIjp7InJlc291cmNlVmVyc2lvbiI6IjE1MTAiLCJjcmVhdGlvblRpbWVzdGFtcCI6IjIwMjMtMDQtMDJUMDU6NTE6NDVaIiwibGFiZWxzIjp7ImFwcC5rdWJlcm5ldGVzLmlvL21hbmFnZWQtYnkiOiJjb2Nrcm9hY2gtb3BlcmF0b3IiLCJhcHAua3ViZXJuZXRlcy5pby9uYW1lIjoiY29ja3JvYWNoZGIiLCJhcHAua3ViZXJuZXRlcy5pby9wYXJ0LW9mIjoiY29ja3JvYWNoZGIiLCJhcHAua3ViZXJuZXRlcy5pby92ZXJzaW9uIjoidjIxLjIuMTAiLCJjcmRiIjoiaXMtY29vbCIsIkFDVE9LRVkiOiJBQ1RPS0VZIiwiYXBwLmt1YmVybmV0ZXMuaW8vY29tcG9uZW50IjoiZGF0YWJhc2UiLCJhcHAua3ViZXJuZXRlcy5pby9pbnN0YW5jZSI6InRlc3QtY2x1c3RlciJ9LCJvd25lclJlZmVyZW5jZXMiOlt7ImtpbmQiOiJDcmRiQ2x1c3RlciIsIm5hbWUiOiJ0ZXN0LWNsdXN0ZXIiLCJ1aWQiOiI5MzIxM2EwMi1iMjcxLTRkODctOTM2Yy01M2NmM2ZlMGE4OTAiLCJjb250cm9sbGVyIjp0cnVlLCJibG9ja093bmVyRGVsZXRpb24iOnRydWUsImFwaVZlcnNpb24iOiJjcmRiLmNvY2tyb2FjaGxhYnMuY29tL3YxYWxwaGExIn1dLCJtYW5hZ2VkRmllbGRzIjpbeyJmaWVsZHNWMSI6eyJmOm1ldGFkYXRhIjp7ImY6bGFiZWxzIjp7ImY6YXBwLmt1YmVybmV0ZXMuaW8vdmVyc2lvbiI6e30sImY6YXBwLmt1YmVybmV0ZXMuaW8vbmFtZSI6e30sImY6Y3JkYiI6e30sImY6YXBwLmt1YmVybmV0ZXMuaW8vbWFuYWdlZC1ieSI6e30sImY6YXBwLmt1YmVybmV0ZXMuaW8vcGFydC1vZiI6e30sIi4iOnt9LCJmOkFDVE9LRVkiOnt9LCJmOmFwcC5rdWJlcm5ldGVzLmlvL2NvbXBvbmVudCI6e30sImY6YXBwLmt1YmVybmV0ZXMuaW8vaW5zdGFuY2UiOnt9fSwiZjpvd25lclJlZmVyZW5jZXMiOnsiLiI6e30sIms6e1widWlkXCI6XCI5MzIxM2EwMi1iMjcxLTRkODctOTM2Yy01M2NmM2ZlMGE4OTBcIn0iOnt9fSwiZjphbm5vdGF0aW9ucyI6eyIuIjp7fSwiZjpjcmRiLmlvL2xhc3QtYXBwbGllZCI6e319fSwiZjpzcGVjIjp7ImY6dHlwZSI6e30sImY6aW50ZXJuYWxUcmFmZmljUG9saWN5Ijp7fSwiZjpwb3J0cyI6eyJrOntcInBvcnRcIjoyNjI1OCxcInByb3RvY29sXCI6XCJUQ1BcIn0iOnsiZjpwcm90b2NvbCI6e30sImY6dGFyZ2V0UG9ydCI6e30sIi4iOnt9LCJmOm5hbWUiOnt9LCJmOnBvcnQiOnt9fSwiLiI6e30sIms6e1wicG9ydFwiOjgwODAsXCJwcm90b2NvbFwiOlwiVENQXCJ9Ijp7ImY6bmFtZSI6e30sImY6cG9ydCI6e30sImY6cHJvdG9jb2wiOnt9LCJmOnRhcmdldFBvcnQiOnt9LCIuIjp7fX0sIms6e1wicG9ydFwiOjI2MjU3LFwicHJvdG9jb2xcIjpcIlRDUFwifSI6eyIuIjp7fSwiZjpuYW1lIjp7fSwiZjpwb3J0Ijp7fSwiZjpwcm90b2NvbCI6e30sImY6dGFyZ2V0UG9ydCI6e319fSwiZjpzZWxlY3RvciI6e30sImY6c2Vzc2lvbkFmZmluaXR5Ijp7fX19LCJtYW5hZ2VyIjoiY29ja3JvYWNoLW9wZXJhdG9yIiwib3BlcmF0aW9uIjoiVXBkYXRlIiwiYXBpVmVyc2lvbiI6InYxIiwidGltZSI6IjIwMjMtMDQtMDJUMDU6NTM6NTVaIiwiZmllbGRzVHlwZSI6IkZpZWxkc1YxIn1dLCJuYW1lIjoidGVzdC1jbHVzdGVyLXB1YmxpYyIsIm5hbWVzcGFjZSI6ImNvY2tyb2FjaC1vcGVyYXRvci1zeXN0ZW0iLCJ1aWQiOiI4Yjg1NzE1Ny1jODQyLTQyOTAtYWVkOS04MWRjZGFkOGZiNGYifX0=",
+                        "path": [
+                              "test-cluster-public",
+                              "metadata",
+                              "annotations",
+                              "crdb.io/last-applied"
+                        ]
+                  }
+            }
+      },
+      "service_account": {},
+      "pvc": {},
+      "cronjob": {},
+      "ingress": {},
+      "network_policy": {},
+      "pod_disruption_budget": {},
+      "secret": {},
+      "endpoints": {
+            "type_changes": {
+                  "root['test-cluster']['metadata']['annotations'][endpoints.kubernetes.io/last-change-trigger-time]": {
+                        "prev": "2023-04-02T05:52:04Z",
+                        "curr": null,
+                        "path": [
+                              "test-cluster",
+                              "metadata",
+                              "annotations",
+                              "endpoints.kubernetes.io/last-change-trigger-time"
+                        ]
+                  },
+                  "root['test-cluster']['subsets'][0][addresses][0][hostname]": {
+                        "prev": "test-cluster-2",
+                        "curr": null,
+                        "path": [
+                              "test-cluster",
+                              "subsets",
+                              0,
+                              "addresses",
+                              0,
+                              "hostname"
+                        ]
+                  },
+                  "root['test-cluster']['subsets'][0][addresses][0][ip]": {
+                        "prev": "10.244.1.6",
+                        "curr": null,
+                        "path": [
+                              "test-cluster",
+                              "subsets",
+                              0,
+                              "addresses",
+                              0,
+                              "ip"
+                        ]
+                  },
+                  "root['test-cluster']['subsets'][0][addresses][0][node_name]": {
+                        "prev": "acto-cluster-1-worker3",
+                        "curr": null,
+                        "path": [
+                              "test-cluster",
+                              "subsets",
+                              0,
+                              "addresses",
+                              0,
+                              "node_name"
+                        ]
+                  },
+                  "root['test-cluster']['subsets'][0][addresses][0][target_ref][kind]": {
+                        "prev": "Pod",
+                        "curr": null,
+                        "path": [
+                              "test-cluster",
+                              "subsets",
+                              0,
+                              "addresses",
+                              0,
+                              "target_ref",
+                              "kind"
+                        ]
+                  },
+                  "root['test-cluster']['subsets'][0][addresses][0][target_ref][name]": {
+                        "prev": "test-cluster-2",
+                        "curr": null,
+                        "path": [
+                              "test-cluster",
+                              "subsets",
+                              0,
+                              "addresses",
+                              0,
+                              "target_ref",
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster']['subsets'][0][addresses][0][target_ref][namespace]": {
+                        "prev": "cockroach-operator-system",
+                        "curr": null,
+                        "path": [
+                              "test-cluster",
+                              "subsets",
+                              0,
+                              "addresses",
+                              0,
+                              "target_ref",
+                              "namespace"
+                        ]
+                  },
+                  "root['test-cluster']['subsets'][0][addresses][0][target_ref][resource_version]": {
+                        "prev": "1213",
+                        "curr": null,
+                        "path": [
+                              "test-cluster",
+                              "subsets",
+                              0,
+                              "addresses",
+                              0,
+                              "target_ref",
+                              "resource_version"
+                        ]
+                  },
+                  "root['test-cluster']['subsets'][0][addresses][0][target_ref][uid]": {
+                        "prev": "7462a3db-4878-427c-aef9-d01ed5e0c26d",
+                        "curr": null,
+                        "path": [
+                              "test-cluster",
+                              "subsets",
+                              0,
+                              "addresses",
+                              0,
+                              "target_ref",
+                              "uid"
+                        ]
+                  },
+                  "root['test-cluster']['subsets'][0][addresses][1][hostname]": {
+                        "prev": "test-cluster-1",
+                        "curr": null,
+                        "path": [
+                              "test-cluster",
+                              "subsets",
+                              0,
+                              "addresses",
+                              1,
+                              "hostname"
+                        ]
+                  },
+                  "root['test-cluster']['subsets'][0][addresses][1][ip]": {
+                        "prev": "10.244.2.4",
+                        "curr": null,
+                        "path": [
+                              "test-cluster",
+                              "subsets",
+                              0,
+                              "addresses",
+                              1,
+                              "ip"
+                        ]
+                  },
+                  "root['test-cluster']['subsets'][0][addresses][1][node_name]": {
+                        "prev": "acto-cluster-1-worker",
+                        "curr": null,
+                        "path": [
+                              "test-cluster",
+                              "subsets",
+                              0,
+                              "addresses",
+                              1,
+                              "node_name"
+                        ]
+                  },
+                  "root['test-cluster']['subsets'][0][addresses][1][target_ref][kind]": {
+                        "prev": "Pod",
+                        "curr": null,
+                        "path": [
+                              "test-cluster",
+                              "subsets",
+                              0,
+                              "addresses",
+                              1,
+                              "target_ref",
+                              "kind"
+                        ]
+                  },
+                  "root['test-cluster']['subsets'][0][addresses][1][target_ref][name]": {
+                        "prev": "test-cluster-1",
+                        "curr": null,
+                        "path": [
+                              "test-cluster",
+                              "subsets",
+                              0,
+                              "addresses",
+                              1,
+                              "target_ref",
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster']['subsets'][0][addresses][1][target_ref][namespace]": {
+                        "prev": "cockroach-operator-system",
+                        "curr": null,
+                        "path": [
+                              "test-cluster",
+                              "subsets",
+                              0,
+                              "addresses",
+                              1,
+                              "target_ref",
+                              "namespace"
+                        ]
+                  },
+                  "root['test-cluster']['subsets'][0][addresses][1][target_ref][resource_version]": {
+                        "prev": "1214",
+                        "curr": null,
+                        "path": [
+                              "test-cluster",
+                              "subsets",
+                              0,
+                              "addresses",
+                              1,
+                              "target_ref",
+                              "resource_version"
+                        ]
+                  },
+                  "root['test-cluster']['subsets'][0][addresses][1][target_ref][uid]": {
+                        "prev": "8e0e9d46-b773-40ed-a185-35b4532cda5d",
+                        "curr": null,
+                        "path": [
+                              "test-cluster",
+                              "subsets",
+                              0,
+                              "addresses",
+                              1,
+                              "target_ref",
+                              "uid"
+                        ]
+                  },
+                  "root['test-cluster']['subsets'][0][addresses][2][hostname]": {
+                        "prev": "test-cluster-0",
+                        "curr": null,
+                        "path": [
+                              "test-cluster",
+                              "subsets",
+                              0,
+                              "addresses",
+                              2,
+                              "hostname"
+                        ]
+                  },
+                  "root['test-cluster']['subsets'][0][addresses][2][ip]": {
+                        "prev": "10.244.3.5",
+                        "curr": null,
+                        "path": [
+                              "test-cluster",
+                              "subsets",
+                              0,
+                              "addresses",
+                              2,
+                              "ip"
+                        ]
+                  },
+                  "root['test-cluster']['subsets'][0][addresses][2][node_name]": {
+                        "prev": "acto-cluster-1-worker2",
+                        "curr": null,
+                        "path": [
+                              "test-cluster",
+                              "subsets",
+                              0,
+                              "addresses",
+                              2,
+                              "node_name"
+                        ]
+                  },
+                  "root['test-cluster']['subsets'][0][addresses][2][target_ref][kind]": {
+                        "prev": "Pod",
+                        "curr": null,
+                        "path": [
+                              "test-cluster",
+                              "subsets",
+                              0,
+                              "addresses",
+                              2,
+                              "target_ref",
+                              "kind"
+                        ]
+                  },
+                  "root['test-cluster']['subsets'][0][addresses][2][target_ref][name]": {
+                        "prev": "test-cluster-0",
+                        "curr": null,
+                        "path": [
+                              "test-cluster",
+                              "subsets",
+                              0,
+                              "addresses",
+                              2,
+                              "target_ref",
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster']['subsets'][0][addresses][2][target_ref][namespace]": {
+                        "prev": "cockroach-operator-system",
+                        "curr": null,
+                        "path": [
+                              "test-cluster",
+                              "subsets",
+                              0,
+                              "addresses",
+                              2,
+                              "target_ref",
+                              "namespace"
+                        ]
+                  },
+                  "root['test-cluster']['subsets'][0][addresses][2][target_ref][resource_version]": {
+                        "prev": "1204",
+                        "curr": null,
+                        "path": [
+                              "test-cluster",
+                              "subsets",
+                              0,
+                              "addresses",
+                              2,
+                              "target_ref",
+                              "resource_version"
+                        ]
+                  },
+                  "root['test-cluster']['subsets'][0][addresses][2][target_ref][uid]": {
+                        "prev": "ff1f4a94-6593-4ddd-b9d5-3492a4f6dc01",
+                        "curr": null,
+                        "path": [
+                              "test-cluster",
+                              "subsets",
+                              0,
+                              "addresses",
+                              2,
+                              "target_ref",
+                              "uid"
+                        ]
+                  },
+                  "root['test-cluster']['subsets'][0][ports][0][name]": {
+                        "prev": "grpc",
+                        "curr": null,
+                        "path": [
+                              "test-cluster",
+                              "subsets",
+                              0,
+                              "ports",
+                              0,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster']['subsets'][0][ports][0][port]": {
+                        "prev": 26258,
+                        "curr": null,
+                        "path": [
+                              "test-cluster",
+                              "subsets",
+                              0,
+                              "ports",
+                              0,
+                              "port"
+                        ]
+                  },
+                  "root['test-cluster']['subsets'][0][ports][0][protocol]": {
+                        "prev": "TCP",
+                        "curr": null,
+                        "path": [
+                              "test-cluster",
+                              "subsets",
+                              0,
+                              "ports",
+                              0,
+                              "protocol"
+                        ]
+                  },
+                  "root['test-cluster']['subsets'][0][ports][1][name]": {
+                        "prev": "sql",
+                        "curr": null,
+                        "path": [
+                              "test-cluster",
+                              "subsets",
+                              0,
+                              "ports",
+                              1,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster']['subsets'][0][ports][1][port]": {
+                        "prev": 26257,
+                        "curr": null,
+                        "path": [
+                              "test-cluster",
+                              "subsets",
+                              0,
+                              "ports",
+                              1,
+                              "port"
+                        ]
+                  },
+                  "root['test-cluster']['subsets'][0][ports][1][protocol]": {
+                        "prev": "TCP",
+                        "curr": null,
+                        "path": [
+                              "test-cluster",
+                              "subsets",
+                              0,
+                              "ports",
+                              1,
+                              "protocol"
+                        ]
+                  },
+                  "root['test-cluster']['subsets'][0][ports][2][name]": {
+                        "prev": "http",
+                        "curr": null,
+                        "path": [
+                              "test-cluster",
+                              "subsets",
+                              0,
+                              "ports",
+                              2,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster']['subsets'][0][ports][2][port]": {
+                        "prev": 8080,
+                        "curr": null,
+                        "path": [
+                              "test-cluster",
+                              "subsets",
+                              0,
+                              "ports",
+                              2,
+                              "port"
+                        ]
+                  },
+                  "root['test-cluster']['subsets'][0][ports][2][protocol]": {
+                        "prev": "TCP",
+                        "curr": null,
+                        "path": [
+                              "test-cluster",
+                              "subsets",
+                              0,
+                              "ports",
+                              2,
+                              "protocol"
+                        ]
+                  },
+                  "root['test-cluster-public']['metadata']['annotations'][endpoints.kubernetes.io/last-change-trigger-time]": {
+                        "prev": "2023-04-02T05:52:04Z",
+                        "curr": null,
+                        "path": [
+                              "test-cluster-public",
+                              "metadata",
+                              "annotations",
+                              "endpoints.kubernetes.io/last-change-trigger-time"
+                        ]
+                  },
+                  "root['test-cluster-public']['subsets'][0][addresses][0][ip]": {
+                        "prev": "10.244.1.6",
+                        "curr": null,
+                        "path": [
+                              "test-cluster-public",
+                              "subsets",
+                              0,
+                              "addresses",
+                              0,
+                              "ip"
+                        ]
+                  },
+                  "root['test-cluster-public']['subsets'][0][addresses][0][node_name]": {
+                        "prev": "acto-cluster-1-worker3",
+                        "curr": null,
+                        "path": [
+                              "test-cluster-public",
+                              "subsets",
+                              0,
+                              "addresses",
+                              0,
+                              "node_name"
+                        ]
+                  },
+                  "root['test-cluster-public']['subsets'][0][addresses][0][target_ref][kind]": {
+                        "prev": "Pod",
+                        "curr": null,
+                        "path": [
+                              "test-cluster-public",
+                              "subsets",
+                              0,
+                              "addresses",
+                              0,
+                              "target_ref",
+                              "kind"
+                        ]
+                  },
+                  "root['test-cluster-public']['subsets'][0][addresses][0][target_ref][name]": {
+                        "prev": "test-cluster-2",
+                        "curr": null,
+                        "path": [
+                              "test-cluster-public",
+                              "subsets",
+                              0,
+                              "addresses",
+                              0,
+                              "target_ref",
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-public']['subsets'][0][addresses][0][target_ref][namespace]": {
+                        "prev": "cockroach-operator-system",
+                        "curr": null,
+                        "path": [
+                              "test-cluster-public",
+                              "subsets",
+                              0,
+                              "addresses",
+                              0,
+                              "target_ref",
+                              "namespace"
+                        ]
+                  },
+                  "root['test-cluster-public']['subsets'][0][addresses][0][target_ref][resource_version]": {
+                        "prev": "1213",
+                        "curr": null,
+                        "path": [
+                              "test-cluster-public",
+                              "subsets",
+                              0,
+                              "addresses",
+                              0,
+                              "target_ref",
+                              "resource_version"
+                        ]
+                  },
+                  "root['test-cluster-public']['subsets'][0][addresses][0][target_ref][uid]": {
+                        "prev": "7462a3db-4878-427c-aef9-d01ed5e0c26d",
+                        "curr": null,
+                        "path": [
+                              "test-cluster-public",
+                              "subsets",
+                              0,
+                              "addresses",
+                              0,
+                              "target_ref",
+                              "uid"
+                        ]
+                  },
+                  "root['test-cluster-public']['subsets'][0][addresses][1][ip]": {
+                        "prev": "10.244.2.4",
+                        "curr": null,
+                        "path": [
+                              "test-cluster-public",
+                              "subsets",
+                              0,
+                              "addresses",
+                              1,
+                              "ip"
+                        ]
+                  },
+                  "root['test-cluster-public']['subsets'][0][addresses][1][node_name]": {
+                        "prev": "acto-cluster-1-worker",
+                        "curr": null,
+                        "path": [
+                              "test-cluster-public",
+                              "subsets",
+                              0,
+                              "addresses",
+                              1,
+                              "node_name"
+                        ]
+                  },
+                  "root['test-cluster-public']['subsets'][0][addresses][1][target_ref][kind]": {
+                        "prev": "Pod",
+                        "curr": null,
+                        "path": [
+                              "test-cluster-public",
+                              "subsets",
+                              0,
+                              "addresses",
+                              1,
+                              "target_ref",
+                              "kind"
+                        ]
+                  },
+                  "root['test-cluster-public']['subsets'][0][addresses][1][target_ref][name]": {
+                        "prev": "test-cluster-1",
+                        "curr": null,
+                        "path": [
+                              "test-cluster-public",
+                              "subsets",
+                              0,
+                              "addresses",
+                              1,
+                              "target_ref",
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-public']['subsets'][0][addresses][1][target_ref][namespace]": {
+                        "prev": "cockroach-operator-system",
+                        "curr": null,
+                        "path": [
+                              "test-cluster-public",
+                              "subsets",
+                              0,
+                              "addresses",
+                              1,
+                              "target_ref",
+                              "namespace"
+                        ]
+                  },
+                  "root['test-cluster-public']['subsets'][0][addresses][1][target_ref][resource_version]": {
+                        "prev": "1214",
+                        "curr": null,
+                        "path": [
+                              "test-cluster-public",
+                              "subsets",
+                              0,
+                              "addresses",
+                              1,
+                              "target_ref",
+                              "resource_version"
+                        ]
+                  },
+                  "root['test-cluster-public']['subsets'][0][addresses][1][target_ref][uid]": {
+                        "prev": "8e0e9d46-b773-40ed-a185-35b4532cda5d",
+                        "curr": null,
+                        "path": [
+                              "test-cluster-public",
+                              "subsets",
+                              0,
+                              "addresses",
+                              1,
+                              "target_ref",
+                              "uid"
+                        ]
+                  },
+                  "root['test-cluster-public']['subsets'][0][addresses][2][ip]": {
+                        "prev": "10.244.3.5",
+                        "curr": null,
+                        "path": [
+                              "test-cluster-public",
+                              "subsets",
+                              0,
+                              "addresses",
+                              2,
+                              "ip"
+                        ]
+                  },
+                  "root['test-cluster-public']['subsets'][0][addresses][2][node_name]": {
+                        "prev": "acto-cluster-1-worker2",
+                        "curr": null,
+                        "path": [
+                              "test-cluster-public",
+                              "subsets",
+                              0,
+                              "addresses",
+                              2,
+                              "node_name"
+                        ]
+                  },
+                  "root['test-cluster-public']['subsets'][0][addresses][2][target_ref][kind]": {
+                        "prev": "Pod",
+                        "curr": null,
+                        "path": [
+                              "test-cluster-public",
+                              "subsets",
+                              0,
+                              "addresses",
+                              2,
+                              "target_ref",
+                              "kind"
+                        ]
+                  },
+                  "root['test-cluster-public']['subsets'][0][addresses][2][target_ref][name]": {
+                        "prev": "test-cluster-0",
+                        "curr": null,
+                        "path": [
+                              "test-cluster-public",
+                              "subsets",
+                              0,
+                              "addresses",
+                              2,
+                              "target_ref",
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-public']['subsets'][0][addresses][2][target_ref][namespace]": {
+                        "prev": "cockroach-operator-system",
+                        "curr": null,
+                        "path": [
+                              "test-cluster-public",
+                              "subsets",
+                              0,
+                              "addresses",
+                              2,
+                              "target_ref",
+                              "namespace"
+                        ]
+                  },
+                  "root['test-cluster-public']['subsets'][0][addresses][2][target_ref][resource_version]": {
+                        "prev": "1204",
+                        "curr": null,
+                        "path": [
+                              "test-cluster-public",
+                              "subsets",
+                              0,
+                              "addresses",
+                              2,
+                              "target_ref",
+                              "resource_version"
+                        ]
+                  },
+                  "root['test-cluster-public']['subsets'][0][addresses][2][target_ref][uid]": {
+                        "prev": "ff1f4a94-6593-4ddd-b9d5-3492a4f6dc01",
+                        "curr": null,
+                        "path": [
+                              "test-cluster-public",
+                              "subsets",
+                              0,
+                              "addresses",
+                              2,
+                              "target_ref",
+                              "uid"
+                        ]
+                  },
+                  "root['test-cluster-public']['subsets'][0][ports][0][name]": {
+                        "prev": "grpc",
+                        "curr": null,
+                        "path": [
+                              "test-cluster-public",
+                              "subsets",
+                              0,
+                              "ports",
+                              0,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-public']['subsets'][0][ports][0][port]": {
+                        "prev": 26258,
+                        "curr": null,
+                        "path": [
+                              "test-cluster-public",
+                              "subsets",
+                              0,
+                              "ports",
+                              0,
+                              "port"
+                        ]
+                  },
+                  "root['test-cluster-public']['subsets'][0][ports][0][protocol]": {
+                        "prev": "TCP",
+                        "curr": null,
+                        "path": [
+                              "test-cluster-public",
+                              "subsets",
+                              0,
+                              "ports",
+                              0,
+                              "protocol"
+                        ]
+                  },
+                  "root['test-cluster-public']['subsets'][0][ports][1][name]": {
+                        "prev": "sql",
+                        "curr": null,
+                        "path": [
+                              "test-cluster-public",
+                              "subsets",
+                              0,
+                              "ports",
+                              1,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-public']['subsets'][0][ports][1][port]": {
+                        "prev": 26257,
+                        "curr": null,
+                        "path": [
+                              "test-cluster-public",
+                              "subsets",
+                              0,
+                              "ports",
+                              1,
+                              "port"
+                        ]
+                  },
+                  "root['test-cluster-public']['subsets'][0][ports][1][protocol]": {
+                        "prev": "TCP",
+                        "curr": null,
+                        "path": [
+                              "test-cluster-public",
+                              "subsets",
+                              0,
+                              "ports",
+                              1,
+                              "protocol"
+                        ]
+                  },
+                  "root['test-cluster-public']['subsets'][0][ports][2][name]": {
+                        "prev": "http",
+                        "curr": null,
+                        "path": [
+                              "test-cluster-public",
+                              "subsets",
+                              0,
+                              "ports",
+                              2,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-public']['subsets'][0][ports][2][port]": {
+                        "prev": 8080,
+                        "curr": null,
+                        "path": [
+                              "test-cluster-public",
+                              "subsets",
+                              0,
+                              "ports",
+                              2,
+                              "port"
+                        ]
+                  },
+                  "root['test-cluster-public']['subsets'][0][ports][2][protocol]": {
+                        "prev": "TCP",
+                        "curr": null,
+                        "path": [
+                              "test-cluster-public",
+                              "subsets",
+                              0,
+                              "ports",
+                              2,
+                              "protocol"
+                        ]
+                  }
+            }
+      },
+      "job": {},
+      "role": {},
+      "role_binding": {},
+      "custom_resource_spec": {
+            "dictionary_item_added": {
+                  "root['additionalLabels']['ACTOKEY']": {
+                        "prev": "NotPresent",
+                        "curr": "ACTOKEY",
+                        "path": [
+                              "additionalLabels",
+                              "ACTOKEY"
+                        ]
+                  }
+            }
+      },
+      "custom_resource_status": {
+            "values_changed": {
+                  "root['operatorActions'][1]['lastTransitionTime']": {
+                        "prev": "2023-04-02T05:54:23Z",
+                        "curr": "2023-04-02T05:56:13Z",
+                        "path": [
+                              "operatorActions",
+                              1,
+                              "lastTransitionTime"
+                        ]
+                  }
+            }
+      }
+}

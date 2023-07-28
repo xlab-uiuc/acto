@@ -1,0 +1,30 @@
+apiVersion: operator.knative.dev/v1beta1
+kind: KnativeEventing
+metadata:
+  name: test-cluster
+  namespace: knative-eventing
+spec:
+  config:
+    config-kreference-mapping:
+      key1: value1
+  deployments:
+  - env:
+    - container: eventing-controller
+      envVars:
+      - name: ENVAR_1
+        value: VALUE_1
+    name: eventing-controller
+    resources:
+    - container: eventing-controller
+      limits:
+        cpu: 1000m
+        memory: 250M
+      requests:
+        cpu: 300m
+        memory: 100M
+  podDisruptionBudgets:
+  - minAvailable: 50%
+    name: ACTOKEY
+  services:
+  - name: eventing-webhook
+  version: 1.6.0

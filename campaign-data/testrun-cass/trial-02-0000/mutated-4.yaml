@@ -1,0 +1,149 @@
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: test-cluster
+spec:
+  clusterName: cluster1
+  config:
+    cassandra-yaml:
+      authenticator: org.apache.cassandra.auth.PasswordAuthenticator
+      authorizer: org.apache.cassandra.auth.CassandraAuthorizer
+      role_manager: org.apache.cassandra.auth.CassandraRoleManager
+    jvm-options:
+      initial_heap_size: 800M
+      max_heap_size: 800M
+  managementApiAuth:
+    insecure: {}
+  serverType: cassandra
+  serverVersion: 3.11.7
+  size: 3
+  storageConfig:
+    additionalVolumes:
+    - mountPath: ACTOKEY
+      name: gmaf5x7
+      pvcSpec:
+        accessModes: ReadWriteOnce
+        dataSource:
+          apiGroup: ACTOKEY
+          kind: ACTOKEY
+          name: ACTOKEY
+        dataSourceRef:
+          apiGroup: ACTOKEY
+          kind: ACTOKEY
+          name: ACTOKEY
+        resources:
+          requests:
+            storage: 1000m
+        selector:
+          matchExpressions:
+          - key: ACTOKEY
+            operator: ACTOKEY
+            values:
+            - ACTOKEY
+            - ACTOKEY
+            - ACTOKEY
+            - ACTOKEY
+            - ACTOKEY
+          matchLabels:
+            ACTOKEY: ACTOKEY
+        storageClassName: ACTOKEY
+        volumeMode: ACTOKEY
+        volumeName: ACTOKEY
+    - mountPath: ACTOKEY
+      name: pi
+      pvcSpec:
+        accessModes: ReadWriteOnce
+        dataSource:
+          apiGroup: ACTOKEY
+          kind: ACTOKEY
+          name: ACTOKEY
+        dataSourceRef:
+          apiGroup: ACTOKEY
+          kind: ACTOKEY
+          name: ACTOKEY
+        resources:
+          requests:
+            storage: 1000m
+        selector:
+          matchExpressions: null
+          matchLabels:
+            ACTOKEY: ACTOKEY
+        storageClassName: ACTOKEY
+        volumeMode: ACTOKEY
+        volumeName: null
+    - mountPath: ACTOKEY
+      name: '6'
+      pvcSpec:
+        accessModes: ReadWriteOnce
+        dataSource:
+          apiGroup: ACTOKEY
+          kind: ACTOKEY
+          name: ACTOKEY
+        dataSourceRef:
+          apiGroup: ACTOKEY
+          kind: ACTOKEY
+          name: ACTOKEY
+        resources:
+          requests:
+            storage: 1000m
+        selector:
+          matchExpressions: []
+          matchLabels:
+            ACTOKEY: ACTOKEY
+        storageClassName: ACTOKEY
+        volumeMode: ACTOKEY
+        volumeName: ACTOKEY
+    - mountPath: ACTOKEY
+      name: k
+      pvcSpec:
+        accessModes: ReadWriteOnce
+        dataSource:
+          apiGroup: ACTOKEY
+          kind: ACTOKEY
+          name: ACTOKEY
+        dataSourceRef:
+          apiGroup: ACTOKEY
+          kind: ACTOKEY
+          name: ACTOKEY
+        resources:
+          requests:
+            storage: 1000m
+        selector:
+          matchExpressions:
+          - key: ACTOKEY
+            operator: ACTOKEY
+            values:
+            - ACTOKEY
+            - ACTOKEY
+            - ACTOKEY
+            - ACTOKEY
+            - ACTOKEY
+          - key: ACTOKEY
+            operator: ACTOKEY
+            values:
+            - ACTOKEY
+            - ACTOKEY
+            - ACTOKEY
+            - ACTOKEY
+          - key: ACTOKEY
+            operator: ACTOKEY
+            values:
+            - ACTOKEY
+            - ACTOKEY
+            - ACTOKEY
+          - key: ACTOKEY
+            operator: ACTOKEY
+            values: []
+          matchLabels:
+            ACTOKEY: ACTOKEY
+        storageClassName: ACTOKEY
+        volumeMode: ACTOKEY
+        volumeName: ACTOKEY
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 3Gi
+      storageClassName: server-storage
+  tolerations: []

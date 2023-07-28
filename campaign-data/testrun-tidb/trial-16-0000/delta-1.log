@@ -1,0 +1,3002 @@
+---------- INPUT DELTA  ----------
+{
+      "dictionary_item_added": {
+            "root['spec']['tiflash'][replicas]": {
+                  "prev": "NotPresent",
+                  "curr": 2,
+                  "path": [
+                        "spec",
+                        "tiflash",
+                        "replicas"
+                  ]
+            }
+      }
+}
+---------- SYSTEM DELTA ----------
+{
+      "pod": {},
+      "deployment_pods": {},
+      "stateful_set": {
+            "dictionary_item_added": {
+                  "root['test-cluster-tiflash'][metadata][annotations][pingcap.com/last-applied-configuration]": {
+                        "prev": "NotPresent",
+                        "curr": "{\"replicas\":2,\"selector\":{\"matchLabels\":{\"app.kubernetes.io/component\":\"tiflash\",\"app.kubernetes.io/instance\":\"test-cluster\",\"app.kubernetes.io/managed-by\":\"tidb-operator\",\"app.kubernetes.io/name\":\"tidb-cluster\"}},\"template\":{\"metadata\":{\"creationTimestamp\":null,\"labels\":{\"app.kubernetes.io/component\":\"tiflash\",\"app.kubernetes.io/instance\":\"test-cluster\",\"app.kubernetes.io/managed-by\":\"tidb-operator\",\"app.kubernetes.io/name\":\"tidb-cluster\"},\"annotations\":{\"prometheus.io/path\":\"/metrics\",\"prometheus.io/port\":\"8234\",\"prometheus.io/scrape\":\"true\",\"tiflash.proxy.prometheus.io/port\":\"20292\"}},\"spec\":{\"volumes\":[{\"name\":\"annotations\",\"downwardAPI\":{\"items\":[{\"path\":\"annotations\",\"fieldRef\":{\"fieldPath\":\"metadata.annotations\"}}]}},{\"name\":\"config\",\"configMap\":{\"name\":\"test-cluster-tiflash-3835353\"}}],\"initContainers\":[{\"name\":\"init\",\"image\":\"busybox:1.34.1\",\"command\":[\"sh\",\"-c\",\"set -ex;ordinal=`echo ${POD_NAME} | awk -F- '{print $NF}'`;sed s/POD_NUM/${ordinal}/g /etc/tiflash/config_templ.toml \\u003e /data0/config.toml;sed s/POD_NUM/${ordinal}/g /etc/tiflash/proxy_templ.toml \\u003e /data0/proxy.toml\"],\"env\":[{\"name\":\"POD_NAME\",\"valueFrom\":{\"fieldRef\":{\"fieldPath\":\"metadata.name\"}}}],\"resources\":{},\"volumeMounts\":[{\"name\":\"data0\",\"mountPath\":\"/data0\"},{\"name\":\"config\",\"readOnly\":true,\"mountPath\":\"/etc/tiflash\"}]}],\"containers\":[{\"name\":\"tiflash\",\"image\":\"pingcap/tiflash:v5.4.0\",\"command\":[\"/bin/sh\",\"-c\",\"/tiflash/tiflash server --config-file /data0/config.toml\"],\"ports\":[{\"name\":\"tiflash\",\"containerPort\":3930,\"protocol\":\"TCP\"},{\"name\":\"proxy\",\"containerPort\":20170,\"protocol\":\"TCP\"},{\"name\":\"tcp\",\"containerPort\":9000,\"protocol\":\"TCP\"},{\"name\":\"http\",\"containerPort\":8123,\"protocol\":\"TCP\"},{\"name\":\"internal\",\"containerPort\":9009,\"protocol\":\"TCP\"},{\"name\":\"metrics\",\"containerPort\":8234,\"protocol\":\"TCP\"}],\"env\":[{\"name\":\"NAMESPACE\",\"valueFrom\":{\"fieldRef\":{\"fieldPath\":\"metadata.namespace\"}}},{\"name\":\"CLUSTER_NAME\",\"value\":\"test-cluster\"},{\"name\":\"HEADLESS_SERVICE_NAME\",\"value\":\"test-cluster-tiflash-peer\"},{\"name\":\"CAPACITY\",\"value\":\"0\"},{\"name\":\"TZ\",\"value\":\"UTC\"}],\"resources\":{},\"volumeMounts\":[{\"name\":\"annotations\",\"readOnly\":true,\"mountPath\":\"/etc/podinfo\"},{\"name\":\"data0\",\"mountPath\":\"/data0\"},{\"name\":\"data1\",\"mountPath\":\"/data1\"}],\"imagePullPolicy\":\"IfNotPresent\",\"securityContext\":{\"privileged\":false}},{\"name\":\"serverlog\",\"image\":\"busybox:1.34.1\",\"command\":[\"sh\",\"-c\",\"touch /data0/logs/server.log; tail -n0 -F /data0/logs/server.log;\"],\"resources\":{},\"volumeMounts\":[{\"name\":\"data0\",\"mountPath\":\"/data0\"}],\"imagePullPolicy\":\"IfNotPresent\"},{\"name\":\"errorlog\",\"image\":\"busybox:1.34.1\",\"command\":[\"sh\",\"-c\",\"touch /data0/logs/error.log; tail -n0 -F /data0/logs/error.log;\"],\"resources\":{},\"volumeMounts\":[{\"name\":\"data0\",\"mountPath\":\"/data0\"}],\"imagePullPolicy\":\"IfNotPresent\"},{\"name\":\"clusterlog\",\"image\":\"busybox:1.34.1\",\"command\":[\"sh\",\"-c\",\"touch /data0/logs/flash_cluster_manager.log; tail -n0 -F /data0/logs/flash_cluster_manager.log;\"],\"resources\":{},\"volumeMounts\":[{\"name\":\"data0\",\"mountPath\":\"/data0\"}],\"imagePullPolicy\":\"IfNotPresent\"}],\"restartPolicy\":\"Always\",\"dnsPolicy\":\"ClusterFirst\"}},\"volumeClaimTemplates\":[{\"metadata\":{\"name\":\"data0\",\"creationTimestamp\":null},\"spec\":{\"accessModes\":[\"ReadWriteOnce\"],\"resources\":{}},\"status\":{}},{\"metadata\":{\"name\":\"data1\",\"creationTimestamp\":null},\"spec\":{\"accessModes\":[\"ReadWriteOnce\"],\"resources\":{}},\"status\":{}}],\"serviceName\":\"test-cluster-tiflash-peer\",\"podManagementPolicy\":\"Parallel\",\"updateStrategy\":{\"type\":\"RollingUpdate\",\"rollingUpdate\":{\"partition\":2}}}",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "metadata",
+                              "annotations",
+                              "pingcap.com/last-applied-configuration"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][metadata][creation_timestamp]": {
+                        "prev": "NotPresent",
+                        "curr": "2023-04-05T02:02:56+00:00",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "metadata",
+                              "creation_timestamp"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][metadata][generation]": {
+                        "prev": "NotPresent",
+                        "curr": 1,
+                        "path": [
+                              "test-cluster-tiflash",
+                              "metadata",
+                              "generation"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][metadata][labels][app.kubernetes.io/component]": {
+                        "prev": "NotPresent",
+                        "curr": "tiflash",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "metadata",
+                              "labels",
+                              "app.kubernetes.io/component"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][metadata][labels][app.kubernetes.io/instance]": {
+                        "prev": "NotPresent",
+                        "curr": "test-cluster",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "metadata",
+                              "labels",
+                              "app.kubernetes.io/instance"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][metadata][labels][app.kubernetes.io/managed-by]": {
+                        "prev": "NotPresent",
+                        "curr": "tidb-operator",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "metadata",
+                              "labels",
+                              "app.kubernetes.io/managed-by"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][metadata][labels][app.kubernetes.io/name]": {
+                        "prev": "NotPresent",
+                        "curr": "tidb-cluster",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "metadata",
+                              "labels",
+                              "app.kubernetes.io/name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][metadata][managed_fields][0][api_version]": {
+                        "prev": "NotPresent",
+                        "curr": "apps/v1",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "metadata",
+                              "managed_fields",
+                              0,
+                              "api_version"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][metadata][managed_fields][0][fields_type]": {
+                        "prev": "NotPresent",
+                        "curr": "FieldsV1",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "metadata",
+                              "managed_fields",
+                              0,
+                              "fields_type"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][metadata][managed_fields][0][manager]": {
+                        "prev": "NotPresent",
+                        "curr": "tidb-controller-manager",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "metadata",
+                              "managed_fields",
+                              0,
+                              "manager"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][metadata][managed_fields][0][operation]": {
+                        "prev": "NotPresent",
+                        "curr": "Update",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "metadata",
+                              "managed_fields",
+                              0,
+                              "operation"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][metadata][managed_fields][0][time]": {
+                        "prev": "NotPresent",
+                        "curr": "2023-04-05T02:02:56+00:00",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "metadata",
+                              "managed_fields",
+                              0,
+                              "time"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][metadata][name]": {
+                        "prev": "NotPresent",
+                        "curr": "test-cluster-tiflash",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "metadata",
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][metadata][namespace]": {
+                        "prev": "NotPresent",
+                        "curr": "acto-namespace",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "metadata",
+                              "namespace"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][metadata][owner_references][0][api_version]": {
+                        "prev": "NotPresent",
+                        "curr": "pingcap.com/v1alpha1",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "metadata",
+                              "owner_references",
+                              0,
+                              "api_version"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][metadata][owner_references][0][block_owner_deletion]": {
+                        "prev": "NotPresent",
+                        "curr": true,
+                        "path": [
+                              "test-cluster-tiflash",
+                              "metadata",
+                              "owner_references",
+                              0,
+                              "block_owner_deletion"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][metadata][owner_references][0][controller]": {
+                        "prev": "NotPresent",
+                        "curr": true,
+                        "path": [
+                              "test-cluster-tiflash",
+                              "metadata",
+                              "owner_references",
+                              0,
+                              "controller"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][metadata][owner_references][0][kind]": {
+                        "prev": "NotPresent",
+                        "curr": "TidbCluster",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "metadata",
+                              "owner_references",
+                              0,
+                              "kind"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][metadata][owner_references][0][name]": {
+                        "prev": "NotPresent",
+                        "curr": "test-cluster",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "metadata",
+                              "owner_references",
+                              0,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][metadata][owner_references][0][uid]": {
+                        "prev": "NotPresent",
+                        "curr": "7b0a3e3c-b446-4392-add1-839146ebd509",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "metadata",
+                              "owner_references",
+                              0,
+                              "uid"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][metadata][resource_version]": {
+                        "prev": "NotPresent",
+                        "curr": "1673",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "metadata",
+                              "resource_version"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][metadata][uid]": {
+                        "prev": "NotPresent",
+                        "curr": "165a8c02-d9f8-47f8-987c-bd083c983948",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "metadata",
+                              "uid"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][pod_management_policy]": {
+                        "prev": "NotPresent",
+                        "curr": "Parallel",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "pod_management_policy"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][replicas]": {
+                        "prev": "NotPresent",
+                        "curr": 2,
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "replicas"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][revision_history_limit]": {
+                        "prev": "NotPresent",
+                        "curr": 10,
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "revision_history_limit"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][selector][match_labels][app.kubernetes.io/component]": {
+                        "prev": "NotPresent",
+                        "curr": "tiflash",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "selector",
+                              "match_labels",
+                              "app.kubernetes.io/component"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][selector][match_labels][app.kubernetes.io/instance]": {
+                        "prev": "NotPresent",
+                        "curr": "test-cluster",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "selector",
+                              "match_labels",
+                              "app.kubernetes.io/instance"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][selector][match_labels][app.kubernetes.io/managed-by]": {
+                        "prev": "NotPresent",
+                        "curr": "tidb-operator",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "selector",
+                              "match_labels",
+                              "app.kubernetes.io/managed-by"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][selector][match_labels][app.kubernetes.io/name]": {
+                        "prev": "NotPresent",
+                        "curr": "tidb-cluster",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "selector",
+                              "match_labels",
+                              "app.kubernetes.io/name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][service_name]": {
+                        "prev": "NotPresent",
+                        "curr": "test-cluster-tiflash-peer",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "service_name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][metadata][annotations][prometheus.io/path]": {
+                        "prev": "NotPresent",
+                        "curr": "/metrics",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "metadata",
+                              "annotations",
+                              "prometheus.io/path"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][metadata][annotations][prometheus.io/port]": {
+                        "prev": "NotPresent",
+                        "curr": "8234",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "metadata",
+                              "annotations",
+                              "prometheus.io/port"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][metadata][annotations][prometheus.io/scrape]": {
+                        "prev": "NotPresent",
+                        "curr": "true",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "metadata",
+                              "annotations",
+                              "prometheus.io/scrape"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][metadata][annotations][tiflash.proxy.prometheus.io/port]": {
+                        "prev": "NotPresent",
+                        "curr": "20292",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "metadata",
+                              "annotations",
+                              "tiflash.proxy.prometheus.io/port"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][metadata][labels][app.kubernetes.io/component]": {
+                        "prev": "NotPresent",
+                        "curr": "tiflash",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "metadata",
+                              "labels",
+                              "app.kubernetes.io/component"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][metadata][labels][app.kubernetes.io/instance]": {
+                        "prev": "NotPresent",
+                        "curr": "test-cluster",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "metadata",
+                              "labels",
+                              "app.kubernetes.io/instance"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][metadata][labels][app.kubernetes.io/managed-by]": {
+                        "prev": "NotPresent",
+                        "curr": "tidb-operator",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "metadata",
+                              "labels",
+                              "app.kubernetes.io/managed-by"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][metadata][labels][app.kubernetes.io/name]": {
+                        "prev": "NotPresent",
+                        "curr": "tidb-cluster",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "metadata",
+                              "labels",
+                              "app.kubernetes.io/name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][command][0]": {
+                        "prev": "NotPresent",
+                        "curr": "/bin/sh",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "command",
+                              0
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][command][1]": {
+                        "prev": "NotPresent",
+                        "curr": "-c",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "command",
+                              1
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][command][2]": {
+                        "prev": "NotPresent",
+                        "curr": "/tiflash/tiflash server --config-file /data0/config.toml",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "command",
+                              2
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][env][0][name]": {
+                        "prev": "NotPresent",
+                        "curr": "NAMESPACE",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "env",
+                              0,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][env][0][value_from][field_ref][api_version]": {
+                        "prev": "NotPresent",
+                        "curr": "v1",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "env",
+                              0,
+                              "value_from",
+                              "field_ref",
+                              "api_version"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][env][0][value_from][field_ref][field_path]": {
+                        "prev": "NotPresent",
+                        "curr": "metadata.namespace",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "env",
+                              0,
+                              "value_from",
+                              "field_ref",
+                              "field_path"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][env][1][name]": {
+                        "prev": "NotPresent",
+                        "curr": "CLUSTER_NAME",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "env",
+                              1,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][env][1][value]": {
+                        "prev": "NotPresent",
+                        "curr": "test-cluster",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "env",
+                              1,
+                              "value"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][env][2][name]": {
+                        "prev": "NotPresent",
+                        "curr": "HEADLESS_SERVICE_NAME",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "env",
+                              2,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][env][2][value]": {
+                        "prev": "NotPresent",
+                        "curr": "test-cluster-tiflash-peer",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "env",
+                              2,
+                              "value"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][env][3][name]": {
+                        "prev": "NotPresent",
+                        "curr": "CAPACITY",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "env",
+                              3,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][env][3][value]": {
+                        "prev": "NotPresent",
+                        "curr": "0",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "env",
+                              3,
+                              "value"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][env][4][name]": {
+                        "prev": "NotPresent",
+                        "curr": "TZ",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "env",
+                              4,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][env][4][value]": {
+                        "prev": "NotPresent",
+                        "curr": "UTC",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "env",
+                              4,
+                              "value"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][image]": {
+                        "prev": "NotPresent",
+                        "curr": "pingcap/tiflash:v5.4.0",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "image"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][image_pull_policy]": {
+                        "prev": "NotPresent",
+                        "curr": "IfNotPresent",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "image_pull_policy"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][name]": {
+                        "prev": "NotPresent",
+                        "curr": "tiflash",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][ports][0][container_port]": {
+                        "prev": "NotPresent",
+                        "curr": 3930,
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "ports",
+                              0,
+                              "container_port"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][ports][0][name]": {
+                        "prev": "NotPresent",
+                        "curr": "tiflash",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "ports",
+                              0,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][ports][0][protocol]": {
+                        "prev": "NotPresent",
+                        "curr": "TCP",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "ports",
+                              0,
+                              "protocol"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][ports][1][container_port]": {
+                        "prev": "NotPresent",
+                        "curr": 20170,
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "ports",
+                              1,
+                              "container_port"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][ports][1][name]": {
+                        "prev": "NotPresent",
+                        "curr": "proxy",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "ports",
+                              1,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][ports][1][protocol]": {
+                        "prev": "NotPresent",
+                        "curr": "TCP",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "ports",
+                              1,
+                              "protocol"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][ports][2][container_port]": {
+                        "prev": "NotPresent",
+                        "curr": 9000,
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "ports",
+                              2,
+                              "container_port"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][ports][2][name]": {
+                        "prev": "NotPresent",
+                        "curr": "tcp",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "ports",
+                              2,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][ports][2][protocol]": {
+                        "prev": "NotPresent",
+                        "curr": "TCP",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "ports",
+                              2,
+                              "protocol"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][ports][3][container_port]": {
+                        "prev": "NotPresent",
+                        "curr": 8123,
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "ports",
+                              3,
+                              "container_port"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][ports][3][name]": {
+                        "prev": "NotPresent",
+                        "curr": "http",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "ports",
+                              3,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][ports][3][protocol]": {
+                        "prev": "NotPresent",
+                        "curr": "TCP",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "ports",
+                              3,
+                              "protocol"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][ports][4][container_port]": {
+                        "prev": "NotPresent",
+                        "curr": 9009,
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "ports",
+                              4,
+                              "container_port"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][ports][4][name]": {
+                        "prev": "NotPresent",
+                        "curr": "internal",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "ports",
+                              4,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][ports][4][protocol]": {
+                        "prev": "NotPresent",
+                        "curr": "TCP",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "ports",
+                              4,
+                              "protocol"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][ports][5][container_port]": {
+                        "prev": "NotPresent",
+                        "curr": 8234,
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "ports",
+                              5,
+                              "container_port"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][ports][5][name]": {
+                        "prev": "NotPresent",
+                        "curr": "metrics",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "ports",
+                              5,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][ports][5][protocol]": {
+                        "prev": "NotPresent",
+                        "curr": "TCP",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "ports",
+                              5,
+                              "protocol"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][security_context][privileged]": {
+                        "prev": "NotPresent",
+                        "curr": false,
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "security_context",
+                              "privileged"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][termination_message_path]": {
+                        "prev": "NotPresent",
+                        "curr": "/dev/termination-log",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "termination_message_path"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][termination_message_policy]": {
+                        "prev": "NotPresent",
+                        "curr": "File",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "termination_message_policy"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][volume_mounts][0][mount_path]": {
+                        "prev": "NotPresent",
+                        "curr": "/etc/podinfo",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "volume_mounts",
+                              0,
+                              "mount_path"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][volume_mounts][0][name]": {
+                        "prev": "NotPresent",
+                        "curr": "annotations",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "volume_mounts",
+                              0,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][volume_mounts][0][read_only]": {
+                        "prev": "NotPresent",
+                        "curr": true,
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "volume_mounts",
+                              0,
+                              "read_only"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][volume_mounts][1][mount_path]": {
+                        "prev": "NotPresent",
+                        "curr": "/data0",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "volume_mounts",
+                              1,
+                              "mount_path"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][volume_mounts][1][name]": {
+                        "prev": "NotPresent",
+                        "curr": "data0",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "volume_mounts",
+                              1,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][volume_mounts][2][mount_path]": {
+                        "prev": "NotPresent",
+                        "curr": "/data1",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "volume_mounts",
+                              2,
+                              "mount_path"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][0][volume_mounts][2][name]": {
+                        "prev": "NotPresent",
+                        "curr": "data1",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "volume_mounts",
+                              2,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][1][command][0]": {
+                        "prev": "NotPresent",
+                        "curr": "sh",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              1,
+                              "command",
+                              0
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][1][command][1]": {
+                        "prev": "NotPresent",
+                        "curr": "-c",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              1,
+                              "command",
+                              1
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][1][command][2]": {
+                        "prev": "NotPresent",
+                        "curr": "touch /data0/logs/server.log; tail -n0 -F /data0/logs/server.log;",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              1,
+                              "command",
+                              2
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][1][image]": {
+                        "prev": "NotPresent",
+                        "curr": "busybox:1.34.1",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              1,
+                              "image"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][1][image_pull_policy]": {
+                        "prev": "NotPresent",
+                        "curr": "IfNotPresent",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              1,
+                              "image_pull_policy"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][1][name]": {
+                        "prev": "NotPresent",
+                        "curr": "serverlog",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              1,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][1][termination_message_path]": {
+                        "prev": "NotPresent",
+                        "curr": "/dev/termination-log",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              1,
+                              "termination_message_path"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][1][termination_message_policy]": {
+                        "prev": "NotPresent",
+                        "curr": "File",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              1,
+                              "termination_message_policy"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][1][volume_mounts][0][mount_path]": {
+                        "prev": "NotPresent",
+                        "curr": "/data0",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              1,
+                              "volume_mounts",
+                              0,
+                              "mount_path"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][1][volume_mounts][0][name]": {
+                        "prev": "NotPresent",
+                        "curr": "data0",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              1,
+                              "volume_mounts",
+                              0,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][2][command][0]": {
+                        "prev": "NotPresent",
+                        "curr": "sh",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              2,
+                              "command",
+                              0
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][2][command][1]": {
+                        "prev": "NotPresent",
+                        "curr": "-c",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              2,
+                              "command",
+                              1
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][2][command][2]": {
+                        "prev": "NotPresent",
+                        "curr": "touch /data0/logs/error.log; tail -n0 -F /data0/logs/error.log;",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              2,
+                              "command",
+                              2
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][2][image]": {
+                        "prev": "NotPresent",
+                        "curr": "busybox:1.34.1",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              2,
+                              "image"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][2][image_pull_policy]": {
+                        "prev": "NotPresent",
+                        "curr": "IfNotPresent",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              2,
+                              "image_pull_policy"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][2][name]": {
+                        "prev": "NotPresent",
+                        "curr": "errorlog",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              2,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][2][termination_message_path]": {
+                        "prev": "NotPresent",
+                        "curr": "/dev/termination-log",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              2,
+                              "termination_message_path"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][2][termination_message_policy]": {
+                        "prev": "NotPresent",
+                        "curr": "File",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              2,
+                              "termination_message_policy"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][2][volume_mounts][0][mount_path]": {
+                        "prev": "NotPresent",
+                        "curr": "/data0",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              2,
+                              "volume_mounts",
+                              0,
+                              "mount_path"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][2][volume_mounts][0][name]": {
+                        "prev": "NotPresent",
+                        "curr": "data0",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              2,
+                              "volume_mounts",
+                              0,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][3][command][0]": {
+                        "prev": "NotPresent",
+                        "curr": "sh",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              3,
+                              "command",
+                              0
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][3][command][1]": {
+                        "prev": "NotPresent",
+                        "curr": "-c",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              3,
+                              "command",
+                              1
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][3][command][2]": {
+                        "prev": "NotPresent",
+                        "curr": "touch /data0/logs/flash_cluster_manager.log; tail -n0 -F /data0/logs/flash_cluster_manager.log;",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              3,
+                              "command",
+                              2
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][3][image]": {
+                        "prev": "NotPresent",
+                        "curr": "busybox:1.34.1",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              3,
+                              "image"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][3][image_pull_policy]": {
+                        "prev": "NotPresent",
+                        "curr": "IfNotPresent",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              3,
+                              "image_pull_policy"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][3][name]": {
+                        "prev": "NotPresent",
+                        "curr": "clusterlog",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              3,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][3][termination_message_path]": {
+                        "prev": "NotPresent",
+                        "curr": "/dev/termination-log",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              3,
+                              "termination_message_path"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][3][termination_message_policy]": {
+                        "prev": "NotPresent",
+                        "curr": "File",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              3,
+                              "termination_message_policy"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][3][volume_mounts][0][mount_path]": {
+                        "prev": "NotPresent",
+                        "curr": "/data0",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              3,
+                              "volume_mounts",
+                              0,
+                              "mount_path"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][containers][3][volume_mounts][0][name]": {
+                        "prev": "NotPresent",
+                        "curr": "data0",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              3,
+                              "volume_mounts",
+                              0,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][dns_policy]": {
+                        "prev": "NotPresent",
+                        "curr": "ClusterFirst",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "dns_policy"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][init_containers][0][command][0]": {
+                        "prev": "NotPresent",
+                        "curr": "sh",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "init_containers",
+                              0,
+                              "command",
+                              0
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][init_containers][0][command][1]": {
+                        "prev": "NotPresent",
+                        "curr": "-c",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "init_containers",
+                              0,
+                              "command",
+                              1
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][init_containers][0][command][2]": {
+                        "prev": "NotPresent",
+                        "curr": "set -ex;ordinal=`echo ${POD_NAME} | awk -F- '{print $NF}'`;sed s/POD_NUM/${ordinal}/g /etc/tiflash/config_templ.toml > /data0/config.toml;sed s/POD_NUM/${ordinal}/g /etc/tiflash/proxy_templ.toml > /data0/proxy.toml",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "init_containers",
+                              0,
+                              "command",
+                              2
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][init_containers][0][env][0][name]": {
+                        "prev": "NotPresent",
+                        "curr": "POD_NAME",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "init_containers",
+                              0,
+                              "env",
+                              0,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][init_containers][0][env][0][value_from][field_ref][api_version]": {
+                        "prev": "NotPresent",
+                        "curr": "v1",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "init_containers",
+                              0,
+                              "env",
+                              0,
+                              "value_from",
+                              "field_ref",
+                              "api_version"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][init_containers][0][env][0][value_from][field_ref][field_path]": {
+                        "prev": "NotPresent",
+                        "curr": "metadata.name",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "init_containers",
+                              0,
+                              "env",
+                              0,
+                              "value_from",
+                              "field_ref",
+                              "field_path"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][init_containers][0][image]": {
+                        "prev": "NotPresent",
+                        "curr": "busybox:1.34.1",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "init_containers",
+                              0,
+                              "image"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][init_containers][0][image_pull_policy]": {
+                        "prev": "NotPresent",
+                        "curr": "IfNotPresent",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "init_containers",
+                              0,
+                              "image_pull_policy"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][init_containers][0][name]": {
+                        "prev": "NotPresent",
+                        "curr": "init",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "init_containers",
+                              0,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][init_containers][0][termination_message_path]": {
+                        "prev": "NotPresent",
+                        "curr": "/dev/termination-log",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "init_containers",
+                              0,
+                              "termination_message_path"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][init_containers][0][termination_message_policy]": {
+                        "prev": "NotPresent",
+                        "curr": "File",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "init_containers",
+                              0,
+                              "termination_message_policy"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][init_containers][0][volume_mounts][0][mount_path]": {
+                        "prev": "NotPresent",
+                        "curr": "/data0",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "init_containers",
+                              0,
+                              "volume_mounts",
+                              0,
+                              "mount_path"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][init_containers][0][volume_mounts][0][name]": {
+                        "prev": "NotPresent",
+                        "curr": "data0",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "init_containers",
+                              0,
+                              "volume_mounts",
+                              0,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][init_containers][0][volume_mounts][1][mount_path]": {
+                        "prev": "NotPresent",
+                        "curr": "/etc/tiflash",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "init_containers",
+                              0,
+                              "volume_mounts",
+                              1,
+                              "mount_path"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][init_containers][0][volume_mounts][1][name]": {
+                        "prev": "NotPresent",
+                        "curr": "config",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "init_containers",
+                              0,
+                              "volume_mounts",
+                              1,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][init_containers][0][volume_mounts][1][read_only]": {
+                        "prev": "NotPresent",
+                        "curr": true,
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "init_containers",
+                              0,
+                              "volume_mounts",
+                              1,
+                              "read_only"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][restart_policy]": {
+                        "prev": "NotPresent",
+                        "curr": "Always",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "restart_policy"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][scheduler_name]": {
+                        "prev": "NotPresent",
+                        "curr": "default-scheduler",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "scheduler_name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][termination_grace_period_seconds]": {
+                        "prev": "NotPresent",
+                        "curr": 30,
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "termination_grace_period_seconds"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][volumes][0][downward_api][default_mode]": {
+                        "prev": "NotPresent",
+                        "curr": 420,
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "volumes",
+                              0,
+                              "downward_api",
+                              "default_mode"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][volumes][0][downward_api][items][0][field_ref][api_version]": {
+                        "prev": "NotPresent",
+                        "curr": "v1",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "volumes",
+                              0,
+                              "downward_api",
+                              "items",
+                              0,
+                              "field_ref",
+                              "api_version"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][volumes][0][downward_api][items][0][field_ref][field_path]": {
+                        "prev": "NotPresent",
+                        "curr": "metadata.annotations",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "volumes",
+                              0,
+                              "downward_api",
+                              "items",
+                              0,
+                              "field_ref",
+                              "field_path"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][volumes][0][downward_api][items][0][path]": {
+                        "prev": "NotPresent",
+                        "curr": "annotations",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "volumes",
+                              0,
+                              "downward_api",
+                              "items",
+                              0,
+                              "path"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][volumes][0][name]": {
+                        "prev": "NotPresent",
+                        "curr": "annotations",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "volumes",
+                              0,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][volumes][1][config_map][default_mode]": {
+                        "prev": "NotPresent",
+                        "curr": 420,
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "volumes",
+                              1,
+                              "config_map",
+                              "default_mode"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][volumes][1][config_map][name]": {
+                        "prev": "NotPresent",
+                        "curr": "test-cluster-tiflash-3835353",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "volumes",
+                              1,
+                              "config_map",
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][template][spec][volumes][1][name]": {
+                        "prev": "NotPresent",
+                        "curr": "config",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "template",
+                              "spec",
+                              "volumes",
+                              1,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][update_strategy][rolling_update][partition]": {
+                        "prev": "NotPresent",
+                        "curr": 2,
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "update_strategy",
+                              "rolling_update",
+                              "partition"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][update_strategy][type]": {
+                        "prev": "NotPresent",
+                        "curr": "RollingUpdate",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "update_strategy",
+                              "type"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][volume_claim_templates][0][api_version]": {
+                        "prev": "NotPresent",
+                        "curr": "v1",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "volume_claim_templates",
+                              0,
+                              "api_version"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][volume_claim_templates][0][kind]": {
+                        "prev": "NotPresent",
+                        "curr": "PersistentVolumeClaim",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "volume_claim_templates",
+                              0,
+                              "kind"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][volume_claim_templates][0][metadata][name]": {
+                        "prev": "NotPresent",
+                        "curr": "data0",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "volume_claim_templates",
+                              0,
+                              "metadata",
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][volume_claim_templates][0][spec][access_modes][0]": {
+                        "prev": "NotPresent",
+                        "curr": "ReadWriteOnce",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "volume_claim_templates",
+                              0,
+                              "spec",
+                              "access_modes",
+                              0
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][volume_claim_templates][0][spec][volume_mode]": {
+                        "prev": "NotPresent",
+                        "curr": "Filesystem",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "volume_claim_templates",
+                              0,
+                              "spec",
+                              "volume_mode"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][volume_claim_templates][0][status][phase]": {
+                        "prev": "NotPresent",
+                        "curr": "Pending",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "volume_claim_templates",
+                              0,
+                              "status",
+                              "phase"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][volume_claim_templates][1][api_version]": {
+                        "prev": "NotPresent",
+                        "curr": "v1",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "volume_claim_templates",
+                              1,
+                              "api_version"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][volume_claim_templates][1][kind]": {
+                        "prev": "NotPresent",
+                        "curr": "PersistentVolumeClaim",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "volume_claim_templates",
+                              1,
+                              "kind"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][volume_claim_templates][1][metadata][name]": {
+                        "prev": "NotPresent",
+                        "curr": "data1",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "volume_claim_templates",
+                              1,
+                              "metadata",
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][volume_claim_templates][1][spec][access_modes][0]": {
+                        "prev": "NotPresent",
+                        "curr": "ReadWriteOnce",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "volume_claim_templates",
+                              1,
+                              "spec",
+                              "access_modes",
+                              0
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][volume_claim_templates][1][spec][volume_mode]": {
+                        "prev": "NotPresent",
+                        "curr": "Filesystem",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "volume_claim_templates",
+                              1,
+                              "spec",
+                              "volume_mode"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][spec][volume_claim_templates][1][status][phase]": {
+                        "prev": "NotPresent",
+                        "curr": "Pending",
+                        "path": [
+                              "test-cluster-tiflash",
+                              "spec",
+                              "volume_claim_templates",
+                              1,
+                              "status",
+                              "phase"
+                        ]
+                  },
+                  "root['test-cluster-tiflash'][status][replicas]": {
+                        "prev": "NotPresent",
+                        "curr": 0,
+                        "path": [
+                              "test-cluster-tiflash",
+                              "status",
+                              "replicas"
+                        ]
+                  }
+            }
+      },
+      "deployment": {},
+      "config_map": {
+            "dictionary_item_added": {
+                  "root['test-cluster-tiflash-3835353'][data][config_templ.toml]": {
+                        "prev": "NotPresent",
+                        "curr": "http_port = 8123\ntcp_port = 9000\ntmp_path = \"/data0/tmp\"\n\n[flash]\n  service_addr = \"0.0.0.0:3930\"\n  tidb_status_addr = \"test-cluster-tidb.acto-namespace.svc:10080\"\n  [flash.flash_cluster]\n    log = \"/data0/logs/flash_cluster_manager.log\"\n  [flash.proxy]\n    addr = \"0.0.0.0:20170\"\n    advertise-addr = \"test-cluster-tiflash-POD_NUM.test-cluster-tiflash-peer.acto-namespace.svc:20170\"\n    config = \"/data0/proxy.toml\"\n    data-dir = \"/data0/proxy\"\n\n[logger]\n  errorlog = \"/data0/logs/error.log\"\n  log = \"/data0/logs/server.log\"\n\n[raft]\n  pd_addr = \"test-cluster-pd.acto-namespace.svc:2379\"\n\n[storage]\n  [storage.main]\n    dir = [\"/data0/db\", \"/data1/db\"]\n  [storage.raft]\n    dir = [\"/data0/kvstore\"]\n",
+                        "path": [
+                              "test-cluster-tiflash-3835353",
+                              "data",
+                              "config_templ.toml"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-3835353'][data][proxy_templ.toml]": {
+                        "prev": "NotPresent",
+                        "curr": "log-level = \"info\"\n\n[server]\n  advertise-status-addr = \"test-cluster-tiflash-POD_NUM.test-cluster-tiflash-peer.acto-namespace.svc:20292\"\n  engine-addr = \"test-cluster-tiflash-POD_NUM.test-cluster-tiflash-peer.acto-namespace.svc:3930\"\n  status-addr = \"0.0.0.0:20292\"\n",
+                        "path": [
+                              "test-cluster-tiflash-3835353",
+                              "data",
+                              "proxy_templ.toml"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-3835353'][metadata][creation_timestamp]": {
+                        "prev": "NotPresent",
+                        "curr": "2023-04-05T02:02:56+00:00",
+                        "path": [
+                              "test-cluster-tiflash-3835353",
+                              "metadata",
+                              "creation_timestamp"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-3835353'][metadata][labels][app.kubernetes.io/component]": {
+                        "prev": "NotPresent",
+                        "curr": "tiflash",
+                        "path": [
+                              "test-cluster-tiflash-3835353",
+                              "metadata",
+                              "labels",
+                              "app.kubernetes.io/component"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-3835353'][metadata][labels][app.kubernetes.io/instance]": {
+                        "prev": "NotPresent",
+                        "curr": "test-cluster",
+                        "path": [
+                              "test-cluster-tiflash-3835353",
+                              "metadata",
+                              "labels",
+                              "app.kubernetes.io/instance"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-3835353'][metadata][labels][app.kubernetes.io/managed-by]": {
+                        "prev": "NotPresent",
+                        "curr": "tidb-operator",
+                        "path": [
+                              "test-cluster-tiflash-3835353",
+                              "metadata",
+                              "labels",
+                              "app.kubernetes.io/managed-by"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-3835353'][metadata][labels][app.kubernetes.io/name]": {
+                        "prev": "NotPresent",
+                        "curr": "tidb-cluster",
+                        "path": [
+                              "test-cluster-tiflash-3835353",
+                              "metadata",
+                              "labels",
+                              "app.kubernetes.io/name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-3835353'][metadata][managed_fields][0][api_version]": {
+                        "prev": "NotPresent",
+                        "curr": "v1",
+                        "path": [
+                              "test-cluster-tiflash-3835353",
+                              "metadata",
+                              "managed_fields",
+                              0,
+                              "api_version"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-3835353'][metadata][managed_fields][0][fields_type]": {
+                        "prev": "NotPresent",
+                        "curr": "FieldsV1",
+                        "path": [
+                              "test-cluster-tiflash-3835353",
+                              "metadata",
+                              "managed_fields",
+                              0,
+                              "fields_type"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-3835353'][metadata][managed_fields][0][manager]": {
+                        "prev": "NotPresent",
+                        "curr": "tidb-controller-manager",
+                        "path": [
+                              "test-cluster-tiflash-3835353",
+                              "metadata",
+                              "managed_fields",
+                              0,
+                              "manager"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-3835353'][metadata][managed_fields][0][operation]": {
+                        "prev": "NotPresent",
+                        "curr": "Update",
+                        "path": [
+                              "test-cluster-tiflash-3835353",
+                              "metadata",
+                              "managed_fields",
+                              0,
+                              "operation"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-3835353'][metadata][managed_fields][0][time]": {
+                        "prev": "NotPresent",
+                        "curr": "2023-04-05T02:02:56+00:00",
+                        "path": [
+                              "test-cluster-tiflash-3835353",
+                              "metadata",
+                              "managed_fields",
+                              0,
+                              "time"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-3835353'][metadata][name]": {
+                        "prev": "NotPresent",
+                        "curr": "test-cluster-tiflash-3835353",
+                        "path": [
+                              "test-cluster-tiflash-3835353",
+                              "metadata",
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-3835353'][metadata][namespace]": {
+                        "prev": "NotPresent",
+                        "curr": "acto-namespace",
+                        "path": [
+                              "test-cluster-tiflash-3835353",
+                              "metadata",
+                              "namespace"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-3835353'][metadata][owner_references][0][api_version]": {
+                        "prev": "NotPresent",
+                        "curr": "pingcap.com/v1alpha1",
+                        "path": [
+                              "test-cluster-tiflash-3835353",
+                              "metadata",
+                              "owner_references",
+                              0,
+                              "api_version"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-3835353'][metadata][owner_references][0][block_owner_deletion]": {
+                        "prev": "NotPresent",
+                        "curr": true,
+                        "path": [
+                              "test-cluster-tiflash-3835353",
+                              "metadata",
+                              "owner_references",
+                              0,
+                              "block_owner_deletion"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-3835353'][metadata][owner_references][0][controller]": {
+                        "prev": "NotPresent",
+                        "curr": true,
+                        "path": [
+                              "test-cluster-tiflash-3835353",
+                              "metadata",
+                              "owner_references",
+                              0,
+                              "controller"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-3835353'][metadata][owner_references][0][kind]": {
+                        "prev": "NotPresent",
+                        "curr": "TidbCluster",
+                        "path": [
+                              "test-cluster-tiflash-3835353",
+                              "metadata",
+                              "owner_references",
+                              0,
+                              "kind"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-3835353'][metadata][owner_references][0][name]": {
+                        "prev": "NotPresent",
+                        "curr": "test-cluster",
+                        "path": [
+                              "test-cluster-tiflash-3835353",
+                              "metadata",
+                              "owner_references",
+                              0,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-3835353'][metadata][owner_references][0][uid]": {
+                        "prev": "NotPresent",
+                        "curr": "7b0a3e3c-b446-4392-add1-839146ebd509",
+                        "path": [
+                              "test-cluster-tiflash-3835353",
+                              "metadata",
+                              "owner_references",
+                              0,
+                              "uid"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-3835353'][metadata][resource_version]": {
+                        "prev": "NotPresent",
+                        "curr": "1668",
+                        "path": [
+                              "test-cluster-tiflash-3835353",
+                              "metadata",
+                              "resource_version"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-3835353'][metadata][uid]": {
+                        "prev": "NotPresent",
+                        "curr": "5567eb24-9352-4a6a-98fc-6848656f472a",
+                        "path": [
+                              "test-cluster-tiflash-3835353",
+                              "metadata",
+                              "uid"
+                        ]
+                  }
+            }
+      },
+      "service": {
+            "dictionary_item_added": {
+                  "root['test-cluster-tiflash-peer'][metadata][annotations][pingcap.com/last-applied-configuration]": {
+                        "prev": "NotPresent",
+                        "curr": "{\"ports\":[{\"name\":\"tiflash\",\"protocol\":\"TCP\",\"port\":3930,\"targetPort\":3930},{\"name\":\"proxy\",\"protocol\":\"TCP\",\"port\":20170,\"targetPort\":20170}],\"selector\":{\"app.kubernetes.io/component\":\"tiflash\",\"app.kubernetes.io/instance\":\"test-cluster\",\"app.kubernetes.io/managed-by\":\"tidb-operator\",\"app.kubernetes.io/name\":\"tidb-cluster\"},\"clusterIP\":\"None\",\"publishNotReadyAddresses\":true}",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "metadata",
+                              "annotations",
+                              "pingcap.com/last-applied-configuration"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][metadata][creation_timestamp]": {
+                        "prev": "NotPresent",
+                        "curr": "2023-04-05T02:02:56+00:00",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "metadata",
+                              "creation_timestamp"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][metadata][labels][app.kubernetes.io/component]": {
+                        "prev": "NotPresent",
+                        "curr": "tiflash",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "metadata",
+                              "labels",
+                              "app.kubernetes.io/component"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][metadata][labels][app.kubernetes.io/instance]": {
+                        "prev": "NotPresent",
+                        "curr": "test-cluster",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "metadata",
+                              "labels",
+                              "app.kubernetes.io/instance"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][metadata][labels][app.kubernetes.io/managed-by]": {
+                        "prev": "NotPresent",
+                        "curr": "tidb-operator",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "metadata",
+                              "labels",
+                              "app.kubernetes.io/managed-by"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][metadata][labels][app.kubernetes.io/name]": {
+                        "prev": "NotPresent",
+                        "curr": "tidb-cluster",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "metadata",
+                              "labels",
+                              "app.kubernetes.io/name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][metadata][managed_fields][0][api_version]": {
+                        "prev": "NotPresent",
+                        "curr": "v1",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "metadata",
+                              "managed_fields",
+                              0,
+                              "api_version"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][metadata][managed_fields][0][fields_type]": {
+                        "prev": "NotPresent",
+                        "curr": "FieldsV1",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "metadata",
+                              "managed_fields",
+                              0,
+                              "fields_type"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][metadata][managed_fields][0][manager]": {
+                        "prev": "NotPresent",
+                        "curr": "tidb-controller-manager",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "metadata",
+                              "managed_fields",
+                              0,
+                              "manager"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][metadata][managed_fields][0][operation]": {
+                        "prev": "NotPresent",
+                        "curr": "Update",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "metadata",
+                              "managed_fields",
+                              0,
+                              "operation"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][metadata][managed_fields][0][time]": {
+                        "prev": "NotPresent",
+                        "curr": "2023-04-05T02:02:56+00:00",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "metadata",
+                              "managed_fields",
+                              0,
+                              "time"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][metadata][name]": {
+                        "prev": "NotPresent",
+                        "curr": "test-cluster-tiflash-peer",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "metadata",
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][metadata][namespace]": {
+                        "prev": "NotPresent",
+                        "curr": "acto-namespace",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "metadata",
+                              "namespace"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][metadata][owner_references][0][api_version]": {
+                        "prev": "NotPresent",
+                        "curr": "pingcap.com/v1alpha1",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "metadata",
+                              "owner_references",
+                              0,
+                              "api_version"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][metadata][owner_references][0][block_owner_deletion]": {
+                        "prev": "NotPresent",
+                        "curr": true,
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "metadata",
+                              "owner_references",
+                              0,
+                              "block_owner_deletion"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][metadata][owner_references][0][controller]": {
+                        "prev": "NotPresent",
+                        "curr": true,
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "metadata",
+                              "owner_references",
+                              0,
+                              "controller"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][metadata][owner_references][0][kind]": {
+                        "prev": "NotPresent",
+                        "curr": "TidbCluster",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "metadata",
+                              "owner_references",
+                              0,
+                              "kind"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][metadata][owner_references][0][name]": {
+                        "prev": "NotPresent",
+                        "curr": "test-cluster",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "metadata",
+                              "owner_references",
+                              0,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][metadata][owner_references][0][uid]": {
+                        "prev": "NotPresent",
+                        "curr": "7b0a3e3c-b446-4392-add1-839146ebd509",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "metadata",
+                              "owner_references",
+                              0,
+                              "uid"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][metadata][resource_version]": {
+                        "prev": "NotPresent",
+                        "curr": "1667",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "metadata",
+                              "resource_version"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][metadata][uid]": {
+                        "prev": "NotPresent",
+                        "curr": "cf86f786-45d4-4177-86ba-aacc7aee8555",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "metadata",
+                              "uid"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][spec][cluster_ip]": {
+                        "prev": "NotPresent",
+                        "curr": "None",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "spec",
+                              "cluster_ip"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][spec][cluster_i_ps][0]": {
+                        "prev": "NotPresent",
+                        "curr": "None",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "spec",
+                              "cluster_i_ps",
+                              0
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][spec][internal_traffic_policy]": {
+                        "prev": "NotPresent",
+                        "curr": "Cluster",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "spec",
+                              "internal_traffic_policy"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][spec][ip_families][0]": {
+                        "prev": "NotPresent",
+                        "curr": "IPv4",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "spec",
+                              "ip_families",
+                              0
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][spec][ip_family_policy]": {
+                        "prev": "NotPresent",
+                        "curr": "SingleStack",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "spec",
+                              "ip_family_policy"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][spec][ports][0][name]": {
+                        "prev": "NotPresent",
+                        "curr": "tiflash",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "spec",
+                              "ports",
+                              0,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][spec][ports][0][port]": {
+                        "prev": "NotPresent",
+                        "curr": 3930,
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "spec",
+                              "ports",
+                              0,
+                              "port"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][spec][ports][0][protocol]": {
+                        "prev": "NotPresent",
+                        "curr": "TCP",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "spec",
+                              "ports",
+                              0,
+                              "protocol"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][spec][ports][0][target_port]": {
+                        "prev": "NotPresent",
+                        "curr": 3930,
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "spec",
+                              "ports",
+                              0,
+                              "target_port"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][spec][ports][1][name]": {
+                        "prev": "NotPresent",
+                        "curr": "proxy",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "spec",
+                              "ports",
+                              1,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][spec][ports][1][port]": {
+                        "prev": "NotPresent",
+                        "curr": 20170,
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "spec",
+                              "ports",
+                              1,
+                              "port"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][spec][ports][1][protocol]": {
+                        "prev": "NotPresent",
+                        "curr": "TCP",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "spec",
+                              "ports",
+                              1,
+                              "protocol"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][spec][ports][1][target_port]": {
+                        "prev": "NotPresent",
+                        "curr": 20170,
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "spec",
+                              "ports",
+                              1,
+                              "target_port"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][spec][publish_not_ready_addresses]": {
+                        "prev": "NotPresent",
+                        "curr": true,
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "spec",
+                              "publish_not_ready_addresses"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][spec][selector][app.kubernetes.io/component]": {
+                        "prev": "NotPresent",
+                        "curr": "tiflash",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "spec",
+                              "selector",
+                              "app.kubernetes.io/component"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][spec][selector][app.kubernetes.io/instance]": {
+                        "prev": "NotPresent",
+                        "curr": "test-cluster",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "spec",
+                              "selector",
+                              "app.kubernetes.io/instance"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][spec][selector][app.kubernetes.io/managed-by]": {
+                        "prev": "NotPresent",
+                        "curr": "tidb-operator",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "spec",
+                              "selector",
+                              "app.kubernetes.io/managed-by"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][spec][selector][app.kubernetes.io/name]": {
+                        "prev": "NotPresent",
+                        "curr": "tidb-cluster",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "spec",
+                              "selector",
+                              "app.kubernetes.io/name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][spec][session_affinity]": {
+                        "prev": "NotPresent",
+                        "curr": "None",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "spec",
+                              "session_affinity"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][spec][type]": {
+                        "prev": "NotPresent",
+                        "curr": "ClusterIP",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "spec",
+                              "type"
+                        ]
+                  }
+            }
+      },
+      "service_account": {},
+      "pvc": {},
+      "cronjob": {},
+      "ingress": {},
+      "network_policy": {},
+      "pod_disruption_budget": {},
+      "secret": {},
+      "endpoints": {
+            "dictionary_item_added": {
+                  "root['test-cluster-tiflash-peer'][metadata][annotations][endpoints.kubernetes.io/last-change-trigger-time]": {
+                        "prev": "NotPresent",
+                        "curr": "2023-04-05T02:02:56Z",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "metadata",
+                              "annotations",
+                              "endpoints.kubernetes.io/last-change-trigger-time"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][metadata][creation_timestamp]": {
+                        "prev": "NotPresent",
+                        "curr": "2023-04-05T02:02:56+00:00",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "metadata",
+                              "creation_timestamp"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][metadata][labels][app.kubernetes.io/component]": {
+                        "prev": "NotPresent",
+                        "curr": "tiflash",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "metadata",
+                              "labels",
+                              "app.kubernetes.io/component"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][metadata][labels][app.kubernetes.io/instance]": {
+                        "prev": "NotPresent",
+                        "curr": "test-cluster",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "metadata",
+                              "labels",
+                              "app.kubernetes.io/instance"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][metadata][labels][app.kubernetes.io/managed-by]": {
+                        "prev": "NotPresent",
+                        "curr": "tidb-operator",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "metadata",
+                              "labels",
+                              "app.kubernetes.io/managed-by"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][metadata][labels][app.kubernetes.io/name]": {
+                        "prev": "NotPresent",
+                        "curr": "tidb-cluster",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "metadata",
+                              "labels",
+                              "app.kubernetes.io/name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][metadata][labels][service.kubernetes.io/headless]": {
+                        "prev": "NotPresent",
+                        "curr": "",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "metadata",
+                              "labels",
+                              "service.kubernetes.io/headless"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][metadata][managed_fields][0][api_version]": {
+                        "prev": "NotPresent",
+                        "curr": "v1",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "metadata",
+                              "managed_fields",
+                              0,
+                              "api_version"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][metadata][managed_fields][0][fields_type]": {
+                        "prev": "NotPresent",
+                        "curr": "FieldsV1",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "metadata",
+                              "managed_fields",
+                              0,
+                              "fields_type"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][metadata][managed_fields][0][manager]": {
+                        "prev": "NotPresent",
+                        "curr": "kube-controller-manager",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "metadata",
+                              "managed_fields",
+                              0,
+                              "manager"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][metadata][managed_fields][0][operation]": {
+                        "prev": "NotPresent",
+                        "curr": "Update",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "metadata",
+                              "managed_fields",
+                              0,
+                              "operation"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][metadata][managed_fields][0][time]": {
+                        "prev": "NotPresent",
+                        "curr": "2023-04-05T02:02:56+00:00",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "metadata",
+                              "managed_fields",
+                              0,
+                              "time"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][metadata][name]": {
+                        "prev": "NotPresent",
+                        "curr": "test-cluster-tiflash-peer",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "metadata",
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][metadata][namespace]": {
+                        "prev": "NotPresent",
+                        "curr": "acto-namespace",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "metadata",
+                              "namespace"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][metadata][resource_version]": {
+                        "prev": "NotPresent",
+                        "curr": "1670",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "metadata",
+                              "resource_version"
+                        ]
+                  },
+                  "root['test-cluster-tiflash-peer'][metadata][uid]": {
+                        "prev": "NotPresent",
+                        "curr": "d7a1e76e-2a97-499e-b87b-078413b1fe5e",
+                        "path": [
+                              "test-cluster-tiflash-peer",
+                              "metadata",
+                              "uid"
+                        ]
+                  }
+            }
+      },
+      "job": {},
+      "role": {},
+      "role_binding": {},
+      "custom_resource_spec": {
+            "dictionary_item_added": {
+                  "root['tiflash'][baseImage]": {
+                        "prev": "NotPresent",
+                        "curr": "pingcap/tiflash",
+                        "path": [
+                              "tiflash",
+                              "baseImage"
+                        ]
+                  },
+                  "root['tiflash'][maxFailoverCount]": {
+                        "prev": "NotPresent",
+                        "curr": 3,
+                        "path": [
+                              "tiflash",
+                              "maxFailoverCount"
+                        ]
+                  },
+                  "root['tiflash'][replicas]": {
+                        "prev": "NotPresent",
+                        "curr": 2,
+                        "path": [
+                              "tiflash",
+                              "replicas"
+                        ]
+                  }
+            }
+      },
+      "custom_resource_status": {
+            "dictionary_item_added": {
+                  "root['tiflash']['image']": {
+                        "prev": "NotPresent",
+                        "curr": "pingcap/tiflash:v5.4.0",
+                        "path": [
+                              "tiflash",
+                              "image"
+                        ]
+                  },
+                  "root['tiflash']['phase']": {
+                        "prev": "NotPresent",
+                        "curr": "Normal",
+                        "path": [
+                              "tiflash",
+                              "phase"
+                        ]
+                  },
+                  "root['tiflash']['statefulSet'][replicas]": {
+                        "prev": "NotPresent",
+                        "curr": 0,
+                        "path": [
+                              "tiflash",
+                              "statefulSet",
+                              "replicas"
+                        ]
+                  },
+                  "root['tiflash']['synced']": {
+                        "prev": "NotPresent",
+                        "curr": true,
+                        "path": [
+                              "tiflash",
+                              "synced"
+                        ]
+                  }
+            },
+            "values_changed": {
+                  "root['conditions'][0]['lastTransitionTime']": {
+                        "prev": "2023-04-05T02:02:00Z",
+                        "curr": "2023-04-05T02:02:56Z",
+                        "path": [
+                              "conditions",
+                              0,
+                              "lastTransitionTime"
+                        ]
+                  },
+                  "root['conditions'][0]['lastUpdateTime']": {
+                        "prev": "2023-04-05T02:02:00Z",
+                        "curr": "2023-04-05T02:02:56Z",
+                        "path": [
+                              "conditions",
+                              0,
+                              "lastUpdateTime"
+                        ]
+                  },
+                  "root['conditions'][0]['message']": {
+                        "prev": "TiDB cluster is fully up and running",
+                        "curr": "TiFlash store(s) are not up",
+                        "path": [
+                              "conditions",
+                              0,
+                              "message"
+                        ]
+                  },
+                  "root['conditions'][0]['reason']": {
+                        "prev": "Ready",
+                        "curr": "TiFlashStoreNotUp",
+                        "path": [
+                              "conditions",
+                              0,
+                              "reason"
+                        ]
+                  },
+                  "root['conditions'][0]['status']": {
+                        "prev": "True",
+                        "curr": "False",
+                        "path": [
+                              "conditions",
+                              0,
+                              "status"
+                        ]
+                  }
+            }
+      }
+}

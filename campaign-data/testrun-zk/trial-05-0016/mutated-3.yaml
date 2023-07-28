@@ -1,0 +1,29 @@
+apiVersion: zookeeper.pravega.io/v1beta1
+kind: ZookeeperCluster
+metadata:
+  name: test-cluster
+spec:
+  image:
+    pullPolicy: IfNotPresent
+    repository: pravega/zookeeper
+    tag: 0.2.14
+  persistence:
+    reclaimPolicy: Delete
+    spec:
+      resources:
+        requests:
+          storage: 20Gi
+      storageClassName: standard
+  pod:
+    resources:
+      limits:
+        cpu: 800m
+      requests:
+        ACTOKEY: 1000m
+        jcssdgxjmf: 1000m
+    tolerations:
+    - effect: NoSchedule
+      key: node-role.kubernetes.io/control-plane
+      operator: Exists
+  replicas: 3
+  storageType: persistence

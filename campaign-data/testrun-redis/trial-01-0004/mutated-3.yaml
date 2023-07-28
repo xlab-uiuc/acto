@@ -1,0 +1,93 @@
+apiVersion: databases.spotahome.com/v1
+kind: RedisFailover
+metadata:
+  name: test-cluster
+spec:
+  redis:
+    customConfig:
+    - maxclients 100
+    - hz 50
+    - timeout 60
+    - tcp-keepalive 60
+    - client-output-buffer-limit normal 0 0 0
+    - client-output-buffer-limit slave 1000000000 1000000000 0
+    - client-output-buffer-limit pubsub 33554432 8388608 60
+    exporter:
+      enabled: true
+    imagePullPolicy: IfNotPresent
+    replicas: 3
+    storage:
+      persistentVolumeClaim:
+        apiVersion: ACTOKEY
+        kind: ACTOKEY
+        metadata:
+          annotations:
+            ACTOKEY: ACTOKEY
+          labels:
+            ACTOKEY: ACTOKEY
+          name: ACTOKEY
+        spec:
+          accessModes:
+          - ACTOKEY
+          - ACTOKEY
+          dataSource:
+            apiGroup: ACTOKEY
+            kind: ACTOKEY
+            name: ACTOKEY
+          dataSourceRef:
+            apiGroup: ACTOKEY
+            kind: ACTOKEY
+            name: ACTOKEY
+          resources:
+            requests:
+              storage: 1000m
+          selector:
+            matchExpressions: []
+            matchLabels:
+              ACTOKEY: ACTOKEY
+          storageClassName: ACTOKEY
+          volumeMode: ACTOKEY
+          volumeName: ACTOKEY
+        status:
+          accessModes:
+          - ACTOKEY
+          capacity:
+            ACTOKEY: 0
+          conditions:
+          - lastProbeTime: ACTOKEY
+            lastTransitionTime: ACTOKEY
+            message: ACTOKEY
+            reason: ACTOKEY
+            status: ACTOKEY
+            type: ACTOKEY
+          - lastProbeTime: ACTOKEY
+            lastTransitionTime: ACTOKEY
+            message: ACTOKEY
+            reason: ACTOKEY
+            status: ACTOKEY
+            type: ACTOKEY
+          - lastProbeTime: ACTOKEY
+            lastTransitionTime: ACTOKEY
+            message: ACTOKEY
+            reason: null
+            status: ACTOKEY
+            type: ACTOKEY
+          phase: ACTOKEY
+  sentinel:
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+              - key: security
+                operator: In
+                values:
+                - us-west-1
+            topologyKey: failure-domain.beta.kubernetes.io/zone
+          weight: 95
+    customConfig:
+    - down-after-milliseconds 2000
+    - failover-timeout 3000
+    imagePullPolicy: IfNotPresent
+    replicas: 3

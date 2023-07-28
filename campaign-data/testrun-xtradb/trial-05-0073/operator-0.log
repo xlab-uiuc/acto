@@ -1,0 +1,116 @@
+{"level":"info","ts":1679729645.1267605,"logger":"setup","msg":"Runs on","platform":"kubernetes","version":"v1.22.9"}
+{"level":"info","ts":1679729645.1269825,"logger":"setup","msg":"Git commit: 46b71b736a7dcfde5e401f355a39eb8b8c65e449 Git branch: release-1-11-0 Build time: 2022-06-01T18:24:03Z"}
+{"level":"info","ts":1679729645.1270297,"logger":"setup","msg":"Go Version: go1.18.2"}
+{"level":"info","ts":1679729645.127045,"logger":"setup","msg":"Go OS/Arch: linux/amd64"}
+{"level":"info","ts":1679729645.7844899,"logger":"controller-runtime.metrics","msg":"Metrics server is starting to listen","addr":":8080"}
+{"level":"info","ts":1679729645.7853422,"logger":"setup","msg":"Registering Components."}
+{"level":"info","ts":1679729649.3998756,"logger":"controller-runtime.webhook","msg":"Registering webhook","path":"/validate-percona-xtradbcluster"}
+{"level":"info","ts":1679729649.4000056,"logger":"setup","msg":"Starting the Cmd."}
+{"level":"info","ts":1679729649.4001675,"logger":"controller-runtime.webhook.webhooks","msg":"Starting webhook server"}
+{"level":"info","ts":1679729649.4002905,"msg":"Starting server","path":"/metrics","kind":"metrics","addr":"[::]:8080"}
+{"level":"info","ts":1679729649.4003448,"msg":"Starting server","kind":"health probe","addr":"[::]:8081"}
+{"level":"info","ts":1679729649.400683,"logger":"controller-runtime.certwatcher","msg":"Updated current TLS certificate"}
+{"level":"info","ts":1679729649.400935,"logger":"controller-runtime.webhook","msg":"Serving webhook server","host":"","port":9443}
+{"level":"info","ts":1679729649.400975,"msg":"attempting to acquire leader lease acto-namespace/08db1feb.percona.com...\n"}
+{"level":"info","ts":1679729649.4011726,"logger":"controller-runtime.certwatcher","msg":"Starting certificate watcher"}
+{"level":"info","ts":1679729666.4975157,"msg":"successfully acquired lease acto-namespace/08db1feb.percona.com\n"}
+{"level":"info","ts":1679729666.4981399,"logger":"controller.perconaxtradbcluster-controller","msg":"Starting EventSource","source":"kind source: *v1.PerconaXtraDBCluster"}
+{"level":"info","ts":1679729666.498294,"logger":"controller.perconaxtradbcluster-controller","msg":"Starting Controller"}
+{"level":"info","ts":1679729666.4983163,"logger":"controller.perconaxtradbclusterbackup-controller","msg":"Starting EventSource","source":"kind source: *v1.PerconaXtraDBClusterBackup"}
+{"level":"info","ts":1679729666.4985528,"logger":"controller.perconaxtradbclusterbackup-controller","msg":"Starting Controller"}
+{"level":"info","ts":1679729666.4985378,"logger":"controller.perconaxtradbclusterrestore-controller","msg":"Starting EventSource","source":"kind source: *v1.PerconaXtraDBClusterRestore"}
+{"level":"info","ts":1679729666.4986112,"logger":"controller.perconaxtradbclusterrestore-controller","msg":"Starting Controller"}
+{"level":"info","ts":1679729666.599943,"logger":"controller.perconaxtradbclusterbackup-controller","msg":"Starting workers","worker count":1}
+{"level":"info","ts":1679729666.6000166,"logger":"controller.perconaxtradbclusterrestore-controller","msg":"Starting workers","worker count":1}
+{"level":"info","ts":1679729666.9006457,"logger":"controller.perconaxtradbcluster-controller","msg":"Starting workers","worker count":1}
+{"level":"info","ts":1679729998.8012447,"logger":"KubeAPIWarningLogger","msg":"policy/v1beta1 PodDisruptionBudget is deprecated in v1.21+, unavailable in v1.25+; use policy/v1 PodDisruptionBudget"}
+{"level":"info","ts":1679729999.994323,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:267","msg":"statefulSet was changed, run smart update","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679729999.9944792,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:280","msg":"can't start/continue 'SmartUpdate': waiting for all replicas are ready","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730000.0447478,"caller":"pxc/backup.go:87","msg":"Creating or updating backup job","name":"ac58c-sat-night-backup","schedule":"0 0 * * 6"}
+{"level":"info","ts":1679730000.0449903,"caller":"pxc/backup.go:87","msg":"Creating or updating backup job","name":"ac58c-daily-backup","schedule":"0 0 * * *"}
+{"level":"info","ts":1679730000.0453238,"logger":"perconaxtradbcluster","caller":"pxc/version.go:65","msg":"add new job","cluster":"test-cluster","namespace":"acto-namespace","schedule":"0 4 * * *"}
+{"level":"info","ts":1679730000.0454483,"logger":"perconaxtradbcluster","caller":"pxc/version.go:107","msg":"add new job","cluster":"test-cluster","namespace":"acto-namespace","name":"ensure-version/acto-namespace/test-cluster","schedule":"0 4 * * *"}
+{"level":"info","ts":1679730001.3254933,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:267","msg":"statefulSet was changed, run smart update","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730001.3256,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:280","msg":"can't start/continue 'SmartUpdate': waiting for all replicas are ready","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730006.2957249,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:267","msg":"statefulSet was changed, run smart update","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730006.2958324,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:280","msg":"can't start/continue 'SmartUpdate': waiting for all replicas are ready","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730012.512277,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:267","msg":"statefulSet was changed, run smart update","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730012.5123754,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:280","msg":"can't start/continue 'SmartUpdate': waiting for all replicas are ready","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730018.6943202,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:267","msg":"statefulSet was changed, run smart update","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730018.6945329,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:280","msg":"can't start/continue 'SmartUpdate': waiting for all replicas are ready","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730025.1297565,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:267","msg":"statefulSet was changed, run smart update","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730025.129859,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:280","msg":"can't start/continue 'SmartUpdate': waiting for all replicas are ready","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730031.3219824,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:267","msg":"statefulSet was changed, run smart update","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730031.3221204,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:280","msg":"can't start/continue 'SmartUpdate': waiting for all replicas are ready","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730037.7153077,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:267","msg":"statefulSet was changed, run smart update","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730037.715449,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:280","msg":"can't start/continue 'SmartUpdate': waiting for all replicas are ready","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730043.8444207,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:267","msg":"statefulSet was changed, run smart update","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730043.8445385,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:280","msg":"can't start/continue 'SmartUpdate': waiting for all replicas are ready","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730050.1119952,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:267","msg":"statefulSet was changed, run smart update","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730050.1121097,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:280","msg":"can't start/continue 'SmartUpdate': waiting for all replicas are ready","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730056.2573402,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:267","msg":"statefulSet was changed, run smart update","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730056.2574668,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:280","msg":"can't start/continue 'SmartUpdate': waiting for all replicas are ready","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730062.415027,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:267","msg":"statefulSet was changed, run smart update","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730062.4151332,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:280","msg":"can't start/continue 'SmartUpdate': waiting for all replicas are ready","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730068.8062954,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:267","msg":"statefulSet was changed, run smart update","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730068.806607,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:280","msg":"can't start/continue 'SmartUpdate': waiting for all replicas are ready","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730070.0294328,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:267","msg":"statefulSet was changed, run smart update","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730070.0295079,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:280","msg":"can't start/continue 'SmartUpdate': waiting for all replicas are ready","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730075.019149,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:267","msg":"statefulSet was changed, run smart update","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730075.01924,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:280","msg":"can't start/continue 'SmartUpdate': waiting for all replicas are ready","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730081.2229047,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:267","msg":"statefulSet was changed, run smart update","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730081.2230916,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:280","msg":"can't start/continue 'SmartUpdate': waiting for all replicas are ready","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730087.3419316,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:267","msg":"statefulSet was changed, run smart update","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730087.3420122,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:280","msg":"can't start/continue 'SmartUpdate': waiting for all replicas are ready","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730088.5081172,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:267","msg":"statefulSet was changed, run smart update","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730088.5081856,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:280","msg":"can't start/continue 'SmartUpdate': waiting for all replicas are ready","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730093.5421124,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:267","msg":"statefulSet was changed, run smart update","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730093.5422678,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:280","msg":"can't start/continue 'SmartUpdate': waiting for all replicas are ready","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730099.716852,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:267","msg":"statefulSet was changed, run smart update","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730099.7169788,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:280","msg":"can't start/continue 'SmartUpdate': waiting for all replicas are ready","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730105.9131181,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:267","msg":"statefulSet was changed, run smart update","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730105.9132328,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:280","msg":"can't start/continue 'SmartUpdate': waiting for all replicas are ready","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730107.1305985,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:267","msg":"statefulSet was changed, run smart update","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730107.130728,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:280","msg":"can't start/continue 'SmartUpdate': waiting for all replicas are ready","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730112.1149478,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:267","msg":"statefulSet was changed, run smart update","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730112.1150558,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:280","msg":"can't start/continue 'SmartUpdate': waiting for all replicas are ready","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730118.3177712,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:267","msg":"statefulSet was changed, run smart update","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730118.317912,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:280","msg":"can't start/continue 'SmartUpdate': waiting for all replicas are ready","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730124.716944,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:267","msg":"statefulSet was changed, run smart update","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730124.7170537,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:280","msg":"can't start/continue 'SmartUpdate': waiting for all replicas are ready","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730130.9211233,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:267","msg":"statefulSet was changed, run smart update","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730130.9212382,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:280","msg":"can't start/continue 'SmartUpdate': waiting for all replicas are ready","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730132.5297766,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:267","msg":"statefulSet was changed, run smart update","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730132.5299215,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:280","msg":"can't start/continue 'SmartUpdate': waiting for all replicas are ready","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730137.1454728,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:267","msg":"statefulSet was changed, run smart update","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730137.1455758,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:280","msg":"can't start/continue 'SmartUpdate': waiting for all replicas are ready","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730143.4148629,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:267","msg":"statefulSet was changed, run smart update","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730143.4149802,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:280","msg":"can't start/continue 'SmartUpdate': waiting for all replicas are ready","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730149.75022,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:267","msg":"statefulSet was changed, run smart update","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730149.7503273,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:280","msg":"can't start/continue 'SmartUpdate': waiting for all replicas are ready","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730156.0161753,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:267","msg":"statefulSet was changed, run smart update","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730156.0162787,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:280","msg":"can't start/continue 'SmartUpdate': waiting for all replicas are ready","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730162.308092,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:267","msg":"statefulSet was changed, run smart update","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730162.3081596,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:280","msg":"can't start/continue 'SmartUpdate': waiting for all replicas are ready","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730168.5412738,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:267","msg":"statefulSet was changed, run smart update","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730168.5413752,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:280","msg":"can't start/continue 'SmartUpdate': waiting for all replicas are ready","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730174.8944905,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:267","msg":"statefulSet was changed, run smart update","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730174.8946507,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:280","msg":"can't start/continue 'SmartUpdate': waiting for all replicas are ready","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730181.3140984,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:267","msg":"statefulSet was changed, run smart update","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730181.31417,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:280","msg":"can't start/continue 'SmartUpdate': waiting for all replicas are ready","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730187.6204748,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:267","msg":"statefulSet was changed, run smart update","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730187.6206367,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:280","msg":"can't start/continue 'SmartUpdate': waiting for all replicas are ready","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730194.3197868,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:267","msg":"statefulSet was changed, run smart update","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730194.3199317,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:280","msg":"can't start/continue 'SmartUpdate': waiting for all replicas are ready","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730200.6286383,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:267","msg":"statefulSet was changed, run smart update","cluster":"test-cluster","namespace":"acto-namespace"}
+{"level":"info","ts":1679730200.6365244,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:295","msg":"primary pod","cluster":"test-cluster","namespace":"acto-namespace","pod name":"test-cluster-pxc-0.test-cluster-pxc.acto-namespace"}
+{"level":"info","ts":1679730200.6366327,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:312","msg":"apply changes to secondary pod","cluster":"test-cluster","namespace":"acto-namespace","pod name":"test-cluster-pxc-2"}
+{"level":"info","ts":1679730200.6366932,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:333","msg":"pod is already updated","cluster":"test-cluster","namespace":"acto-namespace","pod name":"test-cluster-pxc-2"}
+{"level":"info","ts":1679730200.750004,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:589","msg":"pod is running","cluster":"test-cluster","namespace":"acto-namespace","pod name":"test-cluster-pxc-2"}
+{"level":"info","ts":1679730200.7968497,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:312","msg":"apply changes to secondary pod","cluster":"test-cluster","namespace":"acto-namespace","pod name":"test-cluster-pxc-1"}
+{"level":"info","ts":1679730200.7969606,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:333","msg":"pod is already updated","cluster":"test-cluster","namespace":"acto-namespace","pod name":"test-cluster-pxc-1"}
+{"level":"info","ts":1679730200.868938,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:589","msg":"pod is running","cluster":"test-cluster","namespace":"acto-namespace","pod name":"test-cluster-pxc-1"}
+{"level":"info","ts":1679730200.896809,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:319","msg":"apply changes to primary pod","cluster":"test-cluster","namespace":"acto-namespace","pod name":"test-cluster-pxc-0"}
+{"level":"info","ts":1679730251.2801895,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:589","msg":"pod is running","cluster":"test-cluster","namespace":"acto-namespace","pod name":"test-cluster-pxc-0"}
+{"level":"info","ts":1679730251.3975906,"logger":"perconaxtradbcluster","caller":"pxc/upgrade.go:324","msg":"smart update finished","cluster":"test-cluster","namespace":"acto-namespace"}
+

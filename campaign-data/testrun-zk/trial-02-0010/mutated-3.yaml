@@ -1,0 +1,216 @@
+apiVersion: zookeeper.pravega.io/v1beta1
+kind: ZookeeperCluster
+metadata:
+  name: test-cluster
+spec:
+  image:
+    pullPolicy: IfNotPresent
+    repository: pravega/zookeeper
+    tag: 0.2.14
+  persistence:
+    reclaimPolicy: Delete
+    spec:
+      resources:
+        requests:
+          storage: 20Gi
+      storageClassName: standard
+  replicas: 3
+  storageType: persistence
+  volumes:
+  - awsElasticBlockStore:
+      fsType: ACTOKEY
+      partition: 5
+      readOnly: true
+      volumeID: ACTOKEY
+    azureDisk:
+      cachingMode: null
+      diskName: ACTOKEY
+      diskURI: ACTOKEY
+      fsType: ACTOKEY
+      kind: ACTOKEY
+      readOnly: false
+    azureFile:
+      readOnly: false
+      secretName: ACTOKEY
+      shareName: ACTOKEY
+    cephfs:
+      monitors:
+      - ACTOKEY
+      - ACTOKEY
+      - ACTOKEY
+      - ACTOKEY
+      path: ACTOKEY
+      readOnly: true
+      secretFile: ACTOKEY
+      secretRef:
+        name: ACTOKEY
+      user: ACTOKEY
+    cinder:
+      fsType: null
+      readOnly: true
+      secretRef:
+        name: null
+      volumeID: ACTOKEY
+    configMap:
+      defaultMode: 2
+      items:
+      - key: ACTOKEY
+        mode: 0
+        path: ACTOKEY
+      name: ACTOKEY
+      optional: true
+    csi: null
+    downwardAPI:
+      defaultMode: 1
+      items: []
+    emptyDir:
+      medium: ACTOKEY
+      sizeLimit: 0
+    ephemeral:
+      readOnly: true
+      volumeClaimTemplate:
+        metadata: null
+        spec:
+          accessModes:
+          - ACTOKEY
+          - ACTOKEY
+          dataSource:
+            apiGroup: ACTOKEY
+            kind: ACTOKEY
+            name: ACTOKEY
+          resources:
+            limits:
+              ACTOKEY: .662110083Pi
+            requests:
+              ACTOKEY: 3
+          selector: null
+          storageClassName: ACTOKEY
+          volumeMode: ACTOKEY
+          volumeName: ACTOKEY
+    fc:
+      fsType: ACTOKEY
+      lun: 3
+      readOnly: true
+      targetWWNs:
+      - ACTOKEY
+      wwids:
+      - ACTOKEY
+      - ACTOKEY
+      - ACTOKEY
+      - ACTOKEY
+    flexVolume:
+      driver: ACTOKEY
+      fsType: ACTOKEY
+      options:
+        ACTOKEY: ACTOKEY
+      readOnly: false
+      secretRef:
+        name: ACTOKEY
+    flocker: null
+    gcePersistentDisk:
+      fsType: ACTOKEY
+      partition: 0
+      pdName: ACTOKEY
+      readOnly: true
+    gitRepo:
+      directory: ACTOKEY
+      repository: ACTOKEY
+      revision: ACTOKEY
+    glusterfs:
+      endpoints: ACTOKEY
+      path: ACTOKEY
+      readOnly: false
+    hostPath:
+      path: ACTOKEY
+      type: ACTOKEY
+    iscsi:
+      chapAuthDiscovery: false
+      chapAuthSession: false
+      fsType: ACTOKEY
+      initiatorName: ACTOKEY
+      iqn: ACTOKEY
+      iscsiInterface: ACTOKEY
+      lun: 4
+      portals: null
+      readOnly: false
+      secretRef:
+        name: ACTOKEY
+      targetPortal: ACTOKEY
+    name: ACTOKEY
+    nfs:
+      path: ACTOKEY
+      readOnly: false
+      server: ACTOKEY
+    persistentVolumeClaim: null
+    photonPersistentDisk:
+      fsType: ACTOKEY
+      pdID: ACTOKEY
+    portworxVolume:
+      fsType: ACTOKEY
+      readOnly: true
+      volumeID: ACTOKEY
+    projected:
+      defaultMode: 2
+      sources: null
+    quobyte:
+      group: ACTOKEY
+      readOnly: false
+      registry: ACTOKEY
+      tenant: ACTOKEY
+      user: ACTOKEY
+      volume: ACTOKEY
+    rbd:
+      fsType: ACTOKEY
+      image: ACTOKEY
+      keyring: ACTOKEY
+      monitors:
+      - ACTOKEY
+      pool: ACTOKEY
+      readOnly: false
+      secretRef:
+        name: ACTOKEY
+      user: ACTOKEY
+    scaleIO:
+      fsType: ACTOKEY
+      gateway: ACTOKEY
+      protectionDomain: ACTOKEY
+      readOnly: true
+      secretRef:
+        name: ACTOKEY
+      sslEnabled: false
+      storageMode: ACTOKEY
+      storagePool: ACTOKEY
+      system: ACTOKEY
+      volumeName: ACTOKEY
+    secret:
+      defaultMode: null
+      items:
+      - key: ACTOKEY
+        mode: 4
+        path: ACTOKEY
+      - key: ACTOKEY
+        mode: 5
+        path: ACTOKEY
+      - key: ACTOKEY
+        mode: 2
+        path: ACTOKEY
+      - key: ACTOKEY
+        mode: 0
+        path: ACTOKEY
+      - key: ACTOKEY
+        mode: 1
+        path: ACTOKEY
+      optional: false
+      secretName: ACTOKEY
+    storageos:
+      fsType: ACTOKEY
+      readOnly: true
+      secretRef:
+        name: ACTOKEY
+      volumeName: ACTOKEY
+      volumeNamespace: null
+    vsphereVolume:
+      fsType: ACTOKEY
+      storagePolicyID: ACTOKEY
+      storagePolicyName: ACTOKEY
+      volumePath: ACTOKEY

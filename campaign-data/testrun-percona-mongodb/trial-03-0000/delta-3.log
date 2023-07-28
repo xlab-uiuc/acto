@@ -1,0 +1,825 @@
+---------- INPUT DELTA  ----------
+{
+      "values_changed": {
+            "root['spec']['backup']['tasks'][0]['enabled']": {
+                  "prev": true,
+                  "curr": false,
+                  "path": [
+                        "spec",
+                        "backup",
+                        "tasks",
+                        0,
+                        "enabled"
+                  ]
+            }
+      }
+}
+---------- SYSTEM DELTA ----------
+{
+      "pod": {},
+      "deployment_pods": {},
+      "stateful_set": {},
+      "deployment": {},
+      "config_map": {},
+      "service": {},
+      "service_account": {},
+      "pvc": {},
+      "cronjob": {
+            "dictionary_item_removed": {
+                  "root['test-cluster-backup-daily-s3-us-west'][metadata][annotations][percona.com/last-config-hash]": {
+                        "prev": "eyJraW5kIjoiQ3JvbkpvYiIsImFwaVZlcnNpb24iOiJiYXRjaC92MWJldGExIiwibWV0YWRhdGEiOnsibmFtZSI6InRlc3QtY2x1c3Rlci1iYWNrdXAtZGFpbHktczMtdXMtd2VzdCIsIm5hbWVzcGFjZSI6ImFjdG8tbmFtZXNwYWNlIiwiY3JlYXRpb25UaW1lc3RhbXAiOm51bGwsImxhYmVscyI6eyJhcHAua3ViZXJuZXRlcy5pby9jb21wb25lbnQiOiJiYWNrdXAtc2NoZWR1bGUiLCJhcHAua3ViZXJuZXRlcy5pby9pbnN0YW5jZSI6InRlc3QtY2x1c3RlciIsImFwcC5rdWJlcm5ldGVzLmlvL21hbmFnZWQtYnkiOiJwZXJjb25hLXNlcnZlci1tb25nb2RiLW9wZXJhdG9yIiwiYXBwLmt1YmVybmV0ZXMuaW8vbmFtZSI6InBlcmNvbmEtc2VydmVyLW1vbmdvZGIiLCJhcHAua3ViZXJuZXRlcy5pby9wYXJ0LW9mIjoicGVyY29uYS1zZXJ2ZXItbW9uZ29kYiIsImFwcC5rdWJlcm5ldGVzLmlvL3JlcGxzZXQiOiJnZW5lcmFsIn0sIm93bmVyUmVmZXJlbmNlcyI6W3siYXBpVmVyc2lvbiI6InBzbWRiLnBlcmNvbmEuY29tL3YxLTEyLTAiLCJraW5kIjoiUGVyY29uYVNlcnZlck1vbmdvREIiLCJuYW1lIjoidGVzdC1jbHVzdGVyIiwidWlkIjoiYmU1ZWNiOGEtMWM2YS00N2IwLWFmZWItMjUwZGIwYmNjNjMyIiwiY29udHJvbGxlciI6dHJ1ZX1dfSwic3BlYyI6eyJzY2hlZHVsZSI6IjAgMCAqICogKiIsImNvbmN1cnJlbmN5UG9saWN5IjoiRm9yYmlkIiwiam9iVGVtcGxhdGUiOnsibWV0YWRhdGEiOnsiY3JlYXRpb25UaW1lc3RhbXAiOm51bGwsImxhYmVscyI6eyJhcHAua3ViZXJuZXRlcy5pby9jb21wb25lbnQiOiJiYWNrdXAtc2NoZWR1bGUiLCJhcHAua3ViZXJuZXRlcy5pby9pbnN0YW5jZSI6InRlc3QtY2x1c3RlciIsImFwcC5rdWJlcm5ldGVzLmlvL21hbmFnZWQtYnkiOiJwZXJjb25hLXNlcnZlci1tb25nb2RiLW9wZXJhdG9yIiwiYXBwLmt1YmVybmV0ZXMuaW8vbmFtZSI6InBlcmNvbmEtc2VydmVyLW1vbmdvZGIiLCJhcHAua3ViZXJuZXRlcy5pby9wYXJ0LW9mIjoicGVyY29uYS1zZXJ2ZXItbW9uZ29kYiIsImFwcC5rdWJlcm5ldGVzLmlvL3JlcGxzZXQiOiJnZW5lcmFsIn19LCJzcGVjIjp7InRlbXBsYXRlIjp7Im1ldGFkYXRhIjp7ImNyZWF0aW9uVGltZXN0YW1wIjpudWxsLCJsYWJlbHMiOnsiYXBwLmt1YmVybmV0ZXMuaW8vY29tcG9uZW50IjoiYmFja3VwLXNjaGVkdWxlIiwiYXBwLmt1YmVybmV0ZXMuaW8vaW5zdGFuY2UiOiJ0ZXN0LWNsdXN0ZXIiLCJhcHAua3ViZXJuZXRlcy5pby9tYW5hZ2VkLWJ5IjoicGVyY29uYS1zZXJ2ZXItbW9uZ29kYi1vcGVyYXRvciIsImFwcC5rdWJlcm5ldGVzLmlvL25hbWUiOiJwZXJjb25hLXNlcnZlci1tb25nb2RiIiwiYXBwLmt1YmVybmV0ZXMuaW8vcGFydC1vZiI6InBlcmNvbmEtc2VydmVyLW1vbmdvZGIiLCJhcHAua3ViZXJuZXRlcy5pby9yZXBsc2V0IjoiZ2VuZXJhbCJ9fSwic3BlYyI6eyJjb250YWluZXJzIjpbeyJuYW1lIjoiYmFja3VwIiwiaW1hZ2UiOiJwZXJjb25hL3BlcmNvbmEtYmFja3VwLW1vbmdvZGI6MS43LjAiLCJjb21tYW5kIjpbInNoIl0sImFyZ3MiOlsiLWMiLCJjdXJsIFxcXG5cdFx0XHQtdnZ2IFxcXG5cdFx0XHQtWCBQT1NUIFxcXG5cdFx0XHQtLWNhY2VydCAvcnVuL3NlY3JldHMva3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9jYS5jcnQgXFxcblx0XHRcdC1IIFwiQ29udGVudC1UeXBlOiBhcHBsaWNhdGlvbi9qc29uXCIgXFxcblx0XHRcdC1IIFwiQXV0aG9yaXphdGlvbjogQmVhcmVyICQoY2F0IC9ydW4vc2VjcmV0cy9rdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3Rva2VuKVwiIFxcXG5cdFx0XHQtLWRhdGEgXCJ7XFxcImtpbmRcXFwiOlxcXCJQZXJjb25hU2VydmVyTW9uZ29EQkJhY2t1cFxcXCIsXFxcImFwaVZlcnNpb25cXFwiOlxcXCJwc21kYi5wZXJjb25hLmNvbS92MVxcXCIsXFxcIm1ldGFkYXRhXFxcIjp7XFxcImdlbmVyYXRlTmFtZVxcXCI6XFxcImNyb24tJHtjbHVzdGVyTmFtZTowOjE2fS0kKGRhdGUgLXUgJyslWSVtJWQlSCVNJVMnKS1cXFwiLFxcXCJjcmVhdGlvblRpbWVzdGFtcFxcXCI6bnVsbCxcXFwibGFiZWxzXFxcIjp7XFxcImFuY2VzdG9yXFxcIjpcXFwidGVzdC1jbHVzdGVyLWJhY2t1cC1kYWlseS1zMy11cy13ZXN0XFxcIixcXFwiY2x1c3RlclxcXCI6XFxcIiR7Y2x1c3Rlck5hbWV9XFxcIixcXFwidHlwZVxcXCI6XFxcImNyb25cXFwifSxcXFwiZmluYWxpemVyc1xcXCI6W1xcXCJkZWxldGUtYmFja3VwXFxcIl19LFxcXCJzcGVjXFxcIjp7XFxcImNsdXN0ZXJOYW1lXFxcIjpcXFwiJHtjbHVzdGVyTmFtZX1cXFwiLFxcXCJzdG9yYWdlTmFtZVxcXCI6XFxcInMzLXVzLXdlc3RcXFwiLFxcXCJjb21wcmVzc2lvblR5cGVcXFwiOlxcXCJnemlwXFxcIixcXFwiY29tcHJlc3Npb25MZXZlbFxcXCI6Nn0sXFxcInN0YXR1c1xcXCI6e319XCIgXFxcblx0XHRcdGh0dHBzOi8vJHtLVUJFUk5FVEVTX1NFUlZJQ0VfSE9TVH06JHtLVUJFUk5FVEVTX1NFUlZJQ0VfUE9SVH0vYXBpcy9wc21kYi5wZXJjb25hLmNvbS92MS9uYW1lc3BhY2VzLyR7TkFNRVNQQUNFfS9wZXJjb25hc2VydmVybW9uZ29kYmJhY2t1cHMiXSwiZW52IjpbeyJuYW1lIjoiY2x1c3Rlck5hbWUiLCJ2YWx1ZSI6InRlc3QtY2x1c3RlciJ9LHsibmFtZSI6Ik5BTUVTUEFDRSIsInZhbHVlRnJvbSI6eyJmaWVsZFJlZiI6eyJmaWVsZFBhdGgiOiJtZXRhZGF0YS5uYW1lc3BhY2UifX19XSwicmVzb3VyY2VzIjp7fSwic2VjdXJpdHlDb250ZXh0Ijp7InJ1bkFzVXNlciI6MTAwMSwicnVuQXNOb25Sb290Ijp0cnVlfX1dLCJyZXN0YXJ0UG9saWN5IjoiTmV2ZXIiLCJzZXJ2aWNlQWNjb3VudE5hbWUiOiJwZXJjb25hLXNlcnZlci1tb25nb2RiLW9wZXJhdG9yIiwic2VjdXJpdHlDb250ZXh0Ijp7ImZzR3JvdXAiOjEwMDF9fX19fX0sInN0YXR1cyI6e319",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "metadata",
+                              "annotations",
+                              "percona.com/last-config-hash"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][metadata][creation_timestamp]": {
+                        "prev": "2023-03-31T15:55:31+00:00",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "metadata",
+                              "creation_timestamp"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][metadata][generation]": {
+                        "prev": 1,
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "metadata",
+                              "generation"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][metadata][labels][app.kubernetes.io/component]": {
+                        "prev": "backup-schedule",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "metadata",
+                              "labels",
+                              "app.kubernetes.io/component"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][metadata][labels][app.kubernetes.io/instance]": {
+                        "prev": "test-cluster",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "metadata",
+                              "labels",
+                              "app.kubernetes.io/instance"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][metadata][labels][app.kubernetes.io/managed-by]": {
+                        "prev": "percona-server-mongodb-operator",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "metadata",
+                              "labels",
+                              "app.kubernetes.io/managed-by"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][metadata][labels][app.kubernetes.io/name]": {
+                        "prev": "percona-server-mongodb",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "metadata",
+                              "labels",
+                              "app.kubernetes.io/name"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][metadata][labels][app.kubernetes.io/part-of]": {
+                        "prev": "percona-server-mongodb",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "metadata",
+                              "labels",
+                              "app.kubernetes.io/part-of"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][metadata][labels][app.kubernetes.io/replset]": {
+                        "prev": "general",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "metadata",
+                              "labels",
+                              "app.kubernetes.io/replset"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][metadata][managed_fields][0][api_version]": {
+                        "prev": "batch/v1beta1",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "metadata",
+                              "managed_fields",
+                              0,
+                              "api_version"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][metadata][managed_fields][0][fields_type]": {
+                        "prev": "FieldsV1",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "metadata",
+                              "managed_fields",
+                              0,
+                              "fields_type"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][metadata][managed_fields][0][manager]": {
+                        "prev": "percona-server-mongodb-operator",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "metadata",
+                              "managed_fields",
+                              0,
+                              "manager"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][metadata][managed_fields][0][operation]": {
+                        "prev": "Update",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "metadata",
+                              "managed_fields",
+                              0,
+                              "operation"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][metadata][managed_fields][0][time]": {
+                        "prev": "2023-03-31T15:55:31+00:00",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "metadata",
+                              "managed_fields",
+                              0,
+                              "time"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][metadata][name]": {
+                        "prev": "test-cluster-backup-daily-s3-us-west",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "metadata",
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][metadata][namespace]": {
+                        "prev": "acto-namespace",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "metadata",
+                              "namespace"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][metadata][owner_references][0][api_version]": {
+                        "prev": "psmdb.percona.com/v1-12-0",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "metadata",
+                              "owner_references",
+                              0,
+                              "api_version"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][metadata][owner_references][0][controller]": {
+                        "prev": true,
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "metadata",
+                              "owner_references",
+                              0,
+                              "controller"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][metadata][owner_references][0][kind]": {
+                        "prev": "PerconaServerMongoDB",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "metadata",
+                              "owner_references",
+                              0,
+                              "kind"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][metadata][owner_references][0][name]": {
+                        "prev": "test-cluster",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "metadata",
+                              "owner_references",
+                              0,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][metadata][owner_references][0][uid]": {
+                        "prev": "be5ecb8a-1c6a-47b0-afeb-250db0bcc632",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "metadata",
+                              "owner_references",
+                              0,
+                              "uid"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][metadata][resource_version]": {
+                        "prev": "2146",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "metadata",
+                              "resource_version"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][metadata][uid]": {
+                        "prev": "73cb40d3-39ef-4606-bba7-d069668ba9ee",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "metadata",
+                              "uid"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][spec][concurrency_policy]": {
+                        "prev": "Forbid",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "spec",
+                              "concurrency_policy"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][spec][failed_jobs_history_limit]": {
+                        "prev": 1,
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "spec",
+                              "failed_jobs_history_limit"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][spec][job_template][metadata][labels][app.kubernetes.io/component]": {
+                        "prev": "backup-schedule",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "spec",
+                              "job_template",
+                              "metadata",
+                              "labels",
+                              "app.kubernetes.io/component"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][spec][job_template][metadata][labels][app.kubernetes.io/instance]": {
+                        "prev": "test-cluster",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "spec",
+                              "job_template",
+                              "metadata",
+                              "labels",
+                              "app.kubernetes.io/instance"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][spec][job_template][metadata][labels][app.kubernetes.io/managed-by]": {
+                        "prev": "percona-server-mongodb-operator",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "spec",
+                              "job_template",
+                              "metadata",
+                              "labels",
+                              "app.kubernetes.io/managed-by"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][spec][job_template][metadata][labels][app.kubernetes.io/name]": {
+                        "prev": "percona-server-mongodb",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "spec",
+                              "job_template",
+                              "metadata",
+                              "labels",
+                              "app.kubernetes.io/name"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][spec][job_template][metadata][labels][app.kubernetes.io/part-of]": {
+                        "prev": "percona-server-mongodb",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "spec",
+                              "job_template",
+                              "metadata",
+                              "labels",
+                              "app.kubernetes.io/part-of"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][spec][job_template][metadata][labels][app.kubernetes.io/replset]": {
+                        "prev": "general",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "spec",
+                              "job_template",
+                              "metadata",
+                              "labels",
+                              "app.kubernetes.io/replset"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][spec][job_template][spec][template][metadata][labels][app.kubernetes.io/component]": {
+                        "prev": "backup-schedule",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "spec",
+                              "job_template",
+                              "spec",
+                              "template",
+                              "metadata",
+                              "labels",
+                              "app.kubernetes.io/component"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][spec][job_template][spec][template][metadata][labels][app.kubernetes.io/instance]": {
+                        "prev": "test-cluster",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "spec",
+                              "job_template",
+                              "spec",
+                              "template",
+                              "metadata",
+                              "labels",
+                              "app.kubernetes.io/instance"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][spec][job_template][spec][template][metadata][labels][app.kubernetes.io/managed-by]": {
+                        "prev": "percona-server-mongodb-operator",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "spec",
+                              "job_template",
+                              "spec",
+                              "template",
+                              "metadata",
+                              "labels",
+                              "app.kubernetes.io/managed-by"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][spec][job_template][spec][template][metadata][labels][app.kubernetes.io/name]": {
+                        "prev": "percona-server-mongodb",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "spec",
+                              "job_template",
+                              "spec",
+                              "template",
+                              "metadata",
+                              "labels",
+                              "app.kubernetes.io/name"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][spec][job_template][spec][template][metadata][labels][app.kubernetes.io/part-of]": {
+                        "prev": "percona-server-mongodb",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "spec",
+                              "job_template",
+                              "spec",
+                              "template",
+                              "metadata",
+                              "labels",
+                              "app.kubernetes.io/part-of"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][spec][job_template][spec][template][metadata][labels][app.kubernetes.io/replset]": {
+                        "prev": "general",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "spec",
+                              "job_template",
+                              "spec",
+                              "template",
+                              "metadata",
+                              "labels",
+                              "app.kubernetes.io/replset"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][spec][job_template][spec][template][spec][containers][0][args][0]": {
+                        "prev": "-c",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "spec",
+                              "job_template",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "args",
+                              0
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][spec][job_template][spec][template][spec][containers][0][args][1]": {
+                        "prev": "curl \\\n\t\t\t-vvv \\\n\t\t\t-X POST \\\n\t\t\t--cacert /run/secrets/kubernetes.io/serviceaccount/ca.crt \\\n\t\t\t-H \"Content-Type: application/json\" \\\n\t\t\t-H \"Authorization: Bearer $(cat /run/secrets/kubernetes.io/serviceaccount/token)\" \\\n\t\t\t--data \"{\\\"kind\\\":\\\"PerconaServerMongoDBBackup\\\",\\\"apiVersion\\\":\\\"psmdb.percona.com/v1\\\",\\\"metadata\\\":{\\\"generateName\\\":\\\"cron-${clusterName:0:16}-$(date -u '+%Y%m%d%H%M%S')-\\\",\\\"creationTimestamp\\\":null,\\\"labels\\\":{\\\"ancestor\\\":\\\"test-cluster-backup-daily-s3-us-west\\\",\\\"cluster\\\":\\\"${clusterName}\\\",\\\"type\\\":\\\"cron\\\"},\\\"finalizers\\\":[\\\"delete-backup\\\"]},\\\"spec\\\":{\\\"clusterName\\\":\\\"${clusterName}\\\",\\\"storageName\\\":\\\"s3-us-west\\\",\\\"compressionType\\\":\\\"gzip\\\",\\\"compressionLevel\\\":6},\\\"status\\\":{}}\" \\\n\t\t\thttps://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}/apis/psmdb.percona.com/v1/namespaces/${NAMESPACE}/perconaservermongodbbackups",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "spec",
+                              "job_template",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "args",
+                              1
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][spec][job_template][spec][template][spec][containers][0][command][0]": {
+                        "prev": "sh",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "spec",
+                              "job_template",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "command",
+                              0
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][spec][job_template][spec][template][spec][containers][0][env][0][name]": {
+                        "prev": "clusterName",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "spec",
+                              "job_template",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "env",
+                              0,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][spec][job_template][spec][template][spec][containers][0][env][0][value]": {
+                        "prev": "test-cluster",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "spec",
+                              "job_template",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "env",
+                              0,
+                              "value"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][spec][job_template][spec][template][spec][containers][0][env][1][name]": {
+                        "prev": "NAMESPACE",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "spec",
+                              "job_template",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "env",
+                              1,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][spec][job_template][spec][template][spec][containers][0][env][1][value_from][field_ref][api_version]": {
+                        "prev": "v1",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "spec",
+                              "job_template",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "env",
+                              1,
+                              "value_from",
+                              "field_ref",
+                              "api_version"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][spec][job_template][spec][template][spec][containers][0][env][1][value_from][field_ref][field_path]": {
+                        "prev": "metadata.namespace",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "spec",
+                              "job_template",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "env",
+                              1,
+                              "value_from",
+                              "field_ref",
+                              "field_path"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][spec][job_template][spec][template][spec][containers][0][image]": {
+                        "prev": "percona/percona-backup-mongodb:1.7.0",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "spec",
+                              "job_template",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "image"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][spec][job_template][spec][template][spec][containers][0][image_pull_policy]": {
+                        "prev": "IfNotPresent",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "spec",
+                              "job_template",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "image_pull_policy"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][spec][job_template][spec][template][spec][containers][0][name]": {
+                        "prev": "backup",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "spec",
+                              "job_template",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "name"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][spec][job_template][spec][template][spec][containers][0][security_context][run_as_non_root]": {
+                        "prev": true,
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "spec",
+                              "job_template",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "security_context",
+                              "run_as_non_root"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][spec][job_template][spec][template][spec][containers][0][security_context][run_as_user]": {
+                        "prev": 1001,
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "spec",
+                              "job_template",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "security_context",
+                              "run_as_user"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][spec][job_template][spec][template][spec][containers][0][termination_message_path]": {
+                        "prev": "/dev/termination-log",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "spec",
+                              "job_template",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "termination_message_path"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][spec][job_template][spec][template][spec][containers][0][termination_message_policy]": {
+                        "prev": "File",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "spec",
+                              "job_template",
+                              "spec",
+                              "template",
+                              "spec",
+                              "containers",
+                              0,
+                              "termination_message_policy"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][spec][job_template][spec][template][spec][dns_policy]": {
+                        "prev": "ClusterFirst",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "spec",
+                              "job_template",
+                              "spec",
+                              "template",
+                              "spec",
+                              "dns_policy"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][spec][job_template][spec][template][spec][restart_policy]": {
+                        "prev": "Never",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "spec",
+                              "job_template",
+                              "spec",
+                              "template",
+                              "spec",
+                              "restart_policy"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][spec][job_template][spec][template][spec][scheduler_name]": {
+                        "prev": "default-scheduler",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "spec",
+                              "job_template",
+                              "spec",
+                              "template",
+                              "spec",
+                              "scheduler_name"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][spec][job_template][spec][template][spec][security_context][fs_group]": {
+                        "prev": 1001,
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "spec",
+                              "job_template",
+                              "spec",
+                              "template",
+                              "spec",
+                              "security_context",
+                              "fs_group"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][spec][job_template][spec][template][spec][service_account]": {
+                        "prev": "percona-server-mongodb-operator",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "spec",
+                              "job_template",
+                              "spec",
+                              "template",
+                              "spec",
+                              "service_account"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][spec][job_template][spec][template][spec][service_account_name]": {
+                        "prev": "percona-server-mongodb-operator",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "spec",
+                              "job_template",
+                              "spec",
+                              "template",
+                              "spec",
+                              "service_account_name"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][spec][job_template][spec][template][spec][termination_grace_period_seconds]": {
+                        "prev": 30,
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "spec",
+                              "job_template",
+                              "spec",
+                              "template",
+                              "spec",
+                              "termination_grace_period_seconds"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][spec][schedule]": {
+                        "prev": "0 0 * * *",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "spec",
+                              "schedule"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][spec][successful_jobs_history_limit]": {
+                        "prev": 3,
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "spec",
+                              "successful_jobs_history_limit"
+                        ]
+                  },
+                  "root['test-cluster-backup-daily-s3-us-west'][spec][suspend]": {
+                        "prev": false,
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-backup-daily-s3-us-west",
+                              "spec",
+                              "suspend"
+                        ]
+                  }
+            }
+      },
+      "ingress": {},
+      "network_policy": {},
+      "pod_disruption_budget": {},
+      "secret": {},
+      "endpoints": {},
+      "job": {},
+      "role": {},
+      "role_binding": {},
+      "custom_resource_spec": {
+            "values_changed": {
+                  "root['backup']['tasks'][0]['enabled']": {
+                        "prev": true,
+                        "curr": false,
+                        "path": [
+                              "backup",
+                              "tasks",
+                              0,
+                              "enabled"
+                        ]
+                  }
+            }
+      },
+      "custom_resource_status": {}
+}

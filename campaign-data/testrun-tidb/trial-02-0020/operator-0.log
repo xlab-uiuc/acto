@@ -1,0 +1,225 @@
+I0402 14:24:48.849371       1 version.go:38] Welcome to TiDB Operator.
+I0402 14:24:48.849395       1 version.go:39] TiDB Operator Version: version.Info{GitVersion:"v1.3.2", GitCommit:"019c90c96c748ed6e5bdee2c3b7594a6c211f32a", GitTreeState:"clean", BuildDate:"2022-03-17T16:23:53Z", GoVersion:"go1.13.8", Compiler:"gc", Platform:"linux/amd64"}
+I0402 14:24:48.849436       1 main.go:75] FLAG: --V="false"
+I0402 14:24:48.849448       1 main.go:75] FLAG: --add_dir_header="false"
+I0402 14:24:48.849454       1 main.go:75] FLAG: --alsologtostderr="false"
+I0402 14:24:48.849459       1 main.go:75] FLAG: --auto-failover="true"
+I0402 14:24:48.849465       1 main.go:75] FLAG: --cluster-permission-node="true"
+I0402 14:24:48.849470       1 main.go:75] FLAG: --cluster-permission-pv="true"
+I0402 14:24:48.849480       1 main.go:75] FLAG: --cluster-permission-sc="true"
+I0402 14:24:48.849485       1 main.go:75] FLAG: --cluster-scoped="true"
+I0402 14:24:48.849491       1 main.go:75] FLAG: --dm-master-failover-period="5m0s"
+I0402 14:24:48.849499       1 main.go:75] FLAG: --dm-worker-failover-period="5m0s"
+I0402 14:24:48.849505       1 main.go:75] FLAG: --features="AdvancedStatefulSet=false,AutoScaling=false,StableScheduling=true"
+I0402 14:24:48.849522       1 main.go:75] FLAG: --leader-lease-duration="15s"
+I0402 14:24:48.849530       1 main.go:75] FLAG: --leader-renew-deadline="10s"
+I0402 14:24:48.849536       1 main.go:75] FLAG: --leader-retry-period="2s"
+I0402 14:24:48.849542       1 main.go:75] FLAG: --log_backtrace_at=":0"
+I0402 14:24:48.849551       1 main.go:75] FLAG: --log_dir=""
+I0402 14:24:48.849559       1 main.go:75] FLAG: --log_file=""
+I0402 14:24:48.849565       1 main.go:75] FLAG: --log_file_max_size="1800"
+I0402 14:24:48.849572       1 main.go:75] FLAG: --logtostderr="true"
+I0402 14:24:48.849578       1 main.go:75] FLAG: --pd-failover-period="5m0s"
+I0402 14:24:48.849584       1 main.go:75] FLAG: --resync-duration="30s"
+I0402 14:24:48.849590       1 main.go:75] FLAG: --selector=""
+I0402 14:24:48.849596       1 main.go:75] FLAG: --skip_headers="false"
+I0402 14:24:48.849602       1 main.go:75] FLAG: --skip_log_headers="false"
+I0402 14:24:48.849612       1 main.go:75] FLAG: --stderrthreshold="2"
+I0402 14:24:48.849620       1 main.go:75] FLAG: --test-mode="false"
+I0402 14:24:48.849626       1 main.go:75] FLAG: --tidb-backup-manager-image="pingcap/tidb-backup-manager:v1.3.2"
+I0402 14:24:48.849633       1 main.go:75] FLAG: --tidb-discovery-image="pingcap/tidb-operator:v1.3.2"
+I0402 14:24:48.849640       1 main.go:75] FLAG: --tidb-failover-period="5m0s"
+I0402 14:24:48.849646       1 main.go:75] FLAG: --tiflash-failover-period="5m0s"
+I0402 14:24:48.849652       1 main.go:75] FLAG: --tikv-failover-period="5m0s"
+I0402 14:24:48.849658       1 main.go:75] FLAG: --v="2"
+I0402 14:24:48.849664       1 main.go:75] FLAG: --version="false"
+I0402 14:24:48.849670       1 main.go:75] FLAG: --vmodule=""
+I0402 14:24:48.849677       1 main.go:75] FLAG: --workers="5"
+I0402 14:24:48.849715       1 main.go:92] HELM_RELEASE environment variable not set
+I0402 14:24:48.873751       1 leaderelection.go:243] attempting to acquire leader lease  acto-namespace/tidb-controller-manager...
+I0402 14:25:09.948315       1 leaderelection.go:253] successfully acquired lease acto-namespace/tidb-controller-manager
+I0402 14:25:09.952408       1 upgrader.go:109] Upgrader: APIGroup apps.pingcap.com is not registered, skip checking Advanced Statfulset
+I0402 14:25:09.953143       1 reflector.go:207] Starting reflector *v1alpha1.TidbInitializer (30s) from k8s.io/client-go@v0.19.16/tools/cache/reflector.go:156
+I0402 14:25:09.953157       1 reflector.go:207] Starting reflector *v1alpha1.BackupSchedule (30s) from k8s.io/client-go@v0.19.16/tools/cache/reflector.go:156
+I0402 14:25:09.953211       1 reflector.go:207] Starting reflector *v1alpha1.Restore (30s) from k8s.io/client-go@v0.19.16/tools/cache/reflector.go:156
+I0402 14:25:09.953204       1 reflector.go:207] Starting reflector *v1alpha1.TidbClusterAutoScaler (30s) from k8s.io/client-go@v0.19.16/tools/cache/reflector.go:156
+I0402 14:25:09.953221       1 reflector.go:207] Starting reflector *v1alpha1.Backup (30s) from k8s.io/client-go@v0.19.16/tools/cache/reflector.go:156
+I0402 14:25:09.953164       1 reflector.go:207] Starting reflector *v1alpha1.DMCluster (30s) from k8s.io/client-go@v0.19.16/tools/cache/reflector.go:156
+I0402 14:25:09.953320       1 reflector.go:207] Starting reflector *v1alpha1.TidbNGMonitoring (30s) from k8s.io/client-go@v0.19.16/tools/cache/reflector.go:156
+I0402 14:25:09.953152       1 reflector.go:207] Starting reflector *v1alpha1.TidbMonitor (30s) from k8s.io/client-go@v0.19.16/tools/cache/reflector.go:156
+I0402 14:25:09.953251       1 reflector.go:207] Starting reflector *v1alpha1.TidbCluster (30s) from k8s.io/client-go@v0.19.16/tools/cache/reflector.go:156
+I0402 14:25:10.053415       1 reflector.go:207] Starting reflector *v1.StatefulSet (30s) from k8s.io/client-go@v0.19.16/tools/cache/reflector.go:156
+I0402 14:25:10.053456       1 reflector.go:207] Starting reflector *v1.Deployment (30s) from k8s.io/client-go@v0.19.16/tools/cache/reflector.go:156
+I0402 14:25:10.053512       1 reflector.go:207] Starting reflector *v1.StorageClass (30s) from k8s.io/client-go@v0.19.16/tools/cache/reflector.go:156
+I0402 14:25:10.053510       1 reflector.go:207] Starting reflector *v1.Secret (30s) from k8s.io/client-go@v0.19.16/tools/cache/reflector.go:156
+I0402 14:25:10.053530       1 reflector.go:207] Starting reflector *v1.Node (30s) from k8s.io/client-go@v0.19.16/tools/cache/reflector.go:156
+I0402 14:25:10.053556       1 reflector.go:207] Starting reflector *v1.PersistentVolumeClaim (30s) from k8s.io/client-go@v0.19.16/tools/cache/reflector.go:156
+I0402 14:25:10.053582       1 reflector.go:207] Starting reflector *v1.Pod (30s) from k8s.io/client-go@v0.19.16/tools/cache/reflector.go:156
+I0402 14:25:10.053611       1 reflector.go:207] Starting reflector *v1.Service (30s) from k8s.io/client-go@v0.19.16/tools/cache/reflector.go:156
+I0402 14:25:10.053456       1 reflector.go:207] Starting reflector *v1.PersistentVolume (30s) from k8s.io/client-go@v0.19.16/tools/cache/reflector.go:156
+I0402 14:25:10.053524       1 reflector.go:207] Starting reflector *v1.Endpoints (30s) from k8s.io/client-go@v0.19.16/tools/cache/reflector.go:156
+I0402 14:25:10.053515       1 reflector.go:207] Starting reflector *v1.Ingress (30s) from k8s.io/client-go@v0.19.16/tools/cache/reflector.go:156
+I0402 14:25:10.053461       1 reflector.go:207] Starting reflector *v1.Job (30s) from k8s.io/client-go@v0.19.16/tools/cache/reflector.go:156
+I0402 14:25:10.153636       1 reflector.go:207] Starting reflector *v1.ConfigMap (30s) from k8s.io/client-go@v0.19.16/tools/cache/reflector.go:156
+I0402 14:25:10.353743       1 main.go:189] cache of informer factories sync successfully
+I0402 14:25:10.353834       1 dm_cluster_controller.go:91] Starting dmcluster controller
+I0402 14:25:10.353870       1 tidb_cluster_controller.go:98] Starting tidbcluster controller
+I0402 14:25:10.353899       1 tidb_ng_monitoring_controller.go:78] Starting tidbngmonitor controller
+I0402 14:25:10.353928       1 backup_schedule_controller.go:70] Starting backup schedule controller
+I0402 14:25:10.353947       1 pod_control.go:113] Starting tidbcluster pod controller
+I0402 14:25:10.353982       1 backup_controller.go:78] Starting backup controller
+I0402 14:25:10.354004       1 tidb_initializer_controller.go:69] Starting tidbinitializer controller
+I0402 14:25:10.354016       1 restore_controller.go:71] Starting restore controller
+I0402 14:25:10.354093       1 tidb_monitor_controller.go:65] Starting tidbmonitor controller
+I0402 14:25:10.361913       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"7bfb24ac-0473-44c0-bcb4-b1306db5dd26", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"959", FieldPath:""}): type: 'Normal' reason: 'Successfully Create' create Role/test-cluster-discovery for controller TidbCluster/test-cluster successfully
+I0402 14:25:10.366521       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"7bfb24ac-0473-44c0-bcb4-b1306db5dd26", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"959", FieldPath:""}): type: 'Normal' reason: 'Successfully Create' create ServiceAccount/test-cluster-discovery for controller TidbCluster/test-cluster successfully
+I0402 14:25:10.380645       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"7bfb24ac-0473-44c0-bcb4-b1306db5dd26", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"959", FieldPath:""}): type: 'Normal' reason: 'Successfully Create' create RoleBinding/test-cluster-discovery for controller TidbCluster/test-cluster successfully
+I0402 14:25:10.390354       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"7bfb24ac-0473-44c0-bcb4-b1306db5dd26", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"959", FieldPath:""}): type: 'Normal' reason: 'Successfully Create' create Deployment/test-cluster-discovery for controller TidbCluster/test-cluster successfully
+I0402 14:25:10.400293       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"7bfb24ac-0473-44c0-bcb4-b1306db5dd26", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"959", FieldPath:""}): type: 'Normal' reason: 'Successfully Create' create Service/test-cluster-discovery for controller TidbCluster/test-cluster successfully
+I0402 14:25:10.744249       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"7bfb24ac-0473-44c0-bcb4-b1306db5dd26", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"959", FieldPath:""}): type: 'Normal' reason: 'SuccessfulCreate' create Service test-cluster-pd in TidbCluster test-cluster successful
+I0402 14:25:11.138474       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"7bfb24ac-0473-44c0-bcb4-b1306db5dd26", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"959", FieldPath:""}): type: 'Normal' reason: 'SuccessfulCreate' create Service test-cluster-pd-peer in TidbCluster test-cluster successful
+I0402 14:25:11.142151       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"7bfb24ac-0473-44c0-bcb4-b1306db5dd26", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"959", FieldPath:""}): type: 'Normal' reason: 'Successfully Create' create ConfigMap/test-cluster-pd-3731616 for controller TidbCluster/test-cluster successfully
+I0402 14:25:11.163591       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"7bfb24ac-0473-44c0-bcb4-b1306db5dd26", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"959", FieldPath:""}): type: 'Normal' reason: 'SuccessfulCreate' create StatefulSet test-cluster-pd in TidbCluster test-cluster successful
+I0402 14:25:11.190587       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+I0402 14:25:11.190623       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: TidbCluster: [acto-namespace/test-cluster], waiting for PD cluster running, requeuing
+E0402 14:25:11.239087       1 pd_member_manager.go:190] failed to sync TidbCluster: [acto-namespace/test-cluster]'s status, error: Get http://test-cluster-pd.acto-namespace:2379/pd/health: dial tcp 10.96.219.196:2379: connect: network is unreachable, service acto-namespace/test-cluster-pd has no endpoints
+I0402 14:25:11.280779       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+E0402 14:25:11.280828       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed TidbCluster: acto-namespace/test-cluster .Status.PD.Synced = false, can't failover, requeuing
+E0402 14:25:11.340083       1 pd_member_manager.go:190] failed to sync TidbCluster: [acto-namespace/test-cluster]'s status, error: Get http://test-cluster-pd.acto-namespace:2379/pd/health: dial tcp 10.96.219.196:2379: connect: network is unreachable, service acto-namespace/test-cluster-pd has no endpoints
+E0402 14:25:11.348150       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed TidbCluster: acto-namespace/test-cluster .Status.PD.Synced = false, can't failover, requeuing
+E0402 14:25:13.271134       1 pd_member_manager.go:190] failed to sync TidbCluster: [acto-namespace/test-cluster]'s status, error: Get http://test-cluster-pd.acto-namespace:2379/pd/health: dial tcp 10.96.219.196:2379: connect: connection refused, service acto-namespace/test-cluster-pd has no endpoints
+E0402 14:25:13.281093       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed TidbCluster: acto-namespace/test-cluster .Status.PD.Synced = false, can't failover, requeuing
+I0402 14:25:16.388139       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"7bfb24ac-0473-44c0-bcb4-b1306db5dd26", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1091", FieldPath:""}): type: 'Normal' reason: 'SuccessfulPatch' patch PV pvc-2f37f6fa-42ac-4004-a5c6-e09c40b91b0f in TidbCluster test-cluster successful
+I0402 14:25:16.392987       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"7bfb24ac-0473-44c0-bcb4-b1306db5dd26", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1091", FieldPath:""}): type: 'Normal' reason: 'SuccessfulPatch' patch PV pvc-ba6e9bdb-edae-4eef-b9c4-67372691f3e1 in TidbCluster test-cluster successful
+I0402 14:25:16.397675       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"7bfb24ac-0473-44c0-bcb4-b1306db5dd26", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1091", FieldPath:""}): type: 'Normal' reason: 'SuccessfulPatch' patch PV pvc-f3df5b76-65d8-417a-9f50-01232c3f0ec6 in TidbCluster test-cluster successful
+E0402 14:25:16.448812       1 pd_member_manager.go:190] failed to sync TidbCluster: [acto-namespace/test-cluster]'s status, error: Get http://test-cluster-pd.acto-namespace:2379/pd/health: dial tcp 10.96.219.196:2379: connect: connection refused
+I0402 14:25:16.469175       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+E0402 14:25:16.469246       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed TidbCluster: acto-namespace/test-cluster .Status.PD.Synced = false, can't failover, requeuing
+E0402 14:25:16.533952       1 pd_member_manager.go:190] failed to sync TidbCluster: [acto-namespace/test-cluster]'s status, error: Get http://test-cluster-pd.acto-namespace:2379/pd/health: dial tcp 10.96.219.196:2379: connect: connection refused
+E0402 14:25:16.542979       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed TidbCluster: acto-namespace/test-cluster .Status.PD.Synced = false, can't failover, requeuing
+E0402 14:25:17.160084       1 pd_member_manager.go:190] failed to sync TidbCluster: [acto-namespace/test-cluster]'s status, error: Get http://test-cluster-pd.acto-namespace:2379/pd/health: dial tcp 10.96.219.196:2379: connect: connection refused
+I0402 14:25:17.177217       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+E0402 14:25:17.177262       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed TidbCluster: acto-namespace/test-cluster .Status.PD.Synced = false, can't failover, requeuing
+E0402 14:25:17.229416       1 pd_member_manager.go:190] failed to sync TidbCluster: [acto-namespace/test-cluster]'s status, error: Get http://test-cluster-pd.acto-namespace:2379/pd/health: dial tcp 10.96.219.196:2379: connect: connection refused
+E0402 14:25:17.236616       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed TidbCluster: acto-namespace/test-cluster .Status.PD.Synced = false, can't failover, requeuing
+E0402 14:25:17.910304       1 pd_member_manager.go:190] failed to sync TidbCluster: [acto-namespace/test-cluster]'s status, error: Get http://test-cluster-pd.acto-namespace:2379/pd/health: dial tcp 10.96.219.196:2379: connect: connection refused
+I0402 14:25:17.934926       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+E0402 14:25:17.934971       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed TidbCluster: acto-namespace/test-cluster .Status.PD.Synced = false, can't failover, requeuing
+E0402 14:25:18.043208       1 pd_member_manager.go:190] failed to sync TidbCluster: [acto-namespace/test-cluster]'s status, error: Get http://test-cluster-pd.acto-namespace:2379/pd/health: dial tcp 10.96.219.196:2379: connect: connection refused
+E0402 14:25:18.051386       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed TidbCluster: acto-namespace/test-cluster .Status.PD.Synced = false, can't failover, requeuing
+E0402 14:25:21.353403       1 pd_member_manager.go:190] failed to sync TidbCluster: [acto-namespace/test-cluster]'s status, error: Get http://test-cluster-pd.acto-namespace:2379/pd/health: dial tcp 10.96.219.196:2379: connect: connection refused
+E0402 14:25:21.361798       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed TidbCluster: acto-namespace/test-cluster .Status.PD.Synced = false, can't failover, requeuing
+E0402 14:25:39.246342       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 14:25:39.252580       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"7bfb24ac-0473-44c0-bcb4-b1306db5dd26", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1220", FieldPath:""}): type: 'Normal' reason: 'SuccessfulCreate' create Service test-cluster-tikv-peer in  test-cluster successful
+I0402 14:25:39.257162       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"7bfb24ac-0473-44c0-bcb4-b1306db5dd26", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1220", FieldPath:""}): type: 'Normal' reason: 'Successfully Create' create ConfigMap/test-cluster-tikv-3831336 for controller TidbCluster/test-cluster successfully
+I0402 14:25:39.264625       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"7bfb24ac-0473-44c0-bcb4-b1306db5dd26", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1220", FieldPath:""}): type: 'Normal' reason: 'SuccessfulCreate' create StatefulSet test-cluster-tikv in  test-cluster successful
+I0402 14:25:39.283132       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+I0402 14:25:39.283160       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: TidbCluster: [acto-namespace/test-cluster], waiting for TiKV cluster running, requeuing
+E0402 14:25:39.355386       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 14:25:39.356353       1 tikv_member_manager.go:787] TiKV of Cluster acto-namespace/test-cluster not bootstrapped yet
+I0402 14:25:39.360930       1 tikv_member_manager.go:885] TiKV of Cluster acto-namespace/test-cluster is not bootstrapped yet, no need to set store labels
+I0402 14:25:39.391133       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+I0402 14:25:39.391166       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: TidbCluster: [acto-namespace/test-cluster], waiting for TiKV cluster running, requeuing
+E0402 14:25:39.461598       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 14:25:39.463500       1 tikv_member_manager.go:787] TiKV of Cluster acto-namespace/test-cluster not bootstrapped yet
+I0402 14:25:39.470157       1 tikv_member_manager.go:885] TiKV of Cluster acto-namespace/test-cluster is not bootstrapped yet, no need to set store labels
+I0402 14:25:39.512016       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+I0402 14:25:39.512111       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: TidbCluster: [acto-namespace/test-cluster], waiting for TiKV cluster running, requeuing
+E0402 14:25:39.842172       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 14:25:39.843778       1 tikv_member_manager.go:787] TiKV of Cluster acto-namespace/test-cluster not bootstrapped yet
+I0402 14:25:40.241167       1 tikv_member_manager.go:885] TiKV of Cluster acto-namespace/test-cluster is not bootstrapped yet, no need to set store labels
+I0402 14:25:40.257647       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+I0402 14:25:40.257687       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: TidbCluster: [acto-namespace/test-cluster], waiting for TiKV cluster running, requeuing
+E0402 14:25:40.643273       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 14:25:40.644724       1 tikv_member_manager.go:787] TiKV of Cluster acto-namespace/test-cluster not bootstrapped yet
+I0402 14:25:41.041949       1 tikv_member_manager.go:885] TiKV of Cluster acto-namespace/test-cluster is not bootstrapped yet, no need to set store labels
+I0402 14:25:41.058426       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+I0402 14:25:41.058458       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: TidbCluster: [acto-namespace/test-cluster], waiting for TiKV cluster running, requeuing
+E0402 14:25:41.442621       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 14:25:41.444387       1 tikv_member_manager.go:787] TiKV of Cluster acto-namespace/test-cluster not bootstrapped yet
+I0402 14:25:41.840710       1 tikv_member_manager.go:885] TiKV of Cluster acto-namespace/test-cluster is not bootstrapped yet, no need to set store labels
+I0402 14:25:41.856028       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+I0402 14:25:41.856059       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: TidbCluster: [acto-namespace/test-cluster], waiting for TiKV cluster running, requeuing
+E0402 14:25:42.242420       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 14:25:42.243928       1 tikv_member_manager.go:787] TiKV of Cluster acto-namespace/test-cluster not bootstrapped yet
+I0402 14:25:42.641317       1 tikv_member_manager.go:885] TiKV of Cluster acto-namespace/test-cluster is not bootstrapped yet, no need to set store labels
+I0402 14:25:42.660229       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+I0402 14:25:42.660267       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: TidbCluster: [acto-namespace/test-cluster], waiting for TiKV cluster running, requeuing
+I0402 14:25:45.922610       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"7bfb24ac-0473-44c0-bcb4-b1306db5dd26", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1372", FieldPath:""}): type: 'Normal' reason: 'SuccessfulPatch' patch PV pvc-521ad82e-81b3-44f8-88c5-f7dcb932a768 in TidbCluster test-cluster successful
+I0402 14:25:45.927083       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"7bfb24ac-0473-44c0-bcb4-b1306db5dd26", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1372", FieldPath:""}): type: 'Normal' reason: 'SuccessfulPatch' patch PV pvc-46aa848a-71e3-4037-b3d8-40402f92d736 in TidbCluster test-cluster successful
+I0402 14:25:45.930646       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"7bfb24ac-0473-44c0-bcb4-b1306db5dd26", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1372", FieldPath:""}): type: 'Normal' reason: 'SuccessfulPatch' patch PV pvc-9e003369-2cc3-4636-8289-dae438baf136 in TidbCluster test-cluster successful
+E0402 14:25:46.006340       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 14:25:46.008445       1 tikv_member_manager.go:787] TiKV of Cluster acto-namespace/test-cluster not bootstrapped yet
+I0402 14:25:46.016184       1 tikv_member_manager.go:885] TiKV of Cluster acto-namespace/test-cluster is not bootstrapped yet, no need to set store labels
+I0402 14:25:46.028563       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+I0402 14:25:46.028597       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: TidbCluster: [acto-namespace/test-cluster], waiting for TiKV cluster running, requeuing
+E0402 14:25:46.107298       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 14:25:46.108793       1 tikv_member_manager.go:787] TiKV of Cluster acto-namespace/test-cluster not bootstrapped yet
+I0402 14:25:46.116244       1 tikv_member_manager.go:885] TiKV of Cluster acto-namespace/test-cluster is not bootstrapped yet, no need to set store labels
+I0402 14:25:46.135759       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+I0402 14:25:46.135809       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: TidbCluster: [acto-namespace/test-cluster], waiting for TiKV cluster running, requeuing
+E0402 14:25:46.209518       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 14:25:46.211529       1 tikv_member_manager.go:787] TiKV of Cluster acto-namespace/test-cluster not bootstrapped yet
+I0402 14:25:46.402258       1 tikv_member_manager.go:885] TiKV of Cluster acto-namespace/test-cluster is not bootstrapped yet, no need to set store labels
+I0402 14:25:46.418628       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+I0402 14:25:46.418672       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: TidbCluster: [acto-namespace/test-cluster], waiting for TiKV cluster running, requeuing
+E0402 14:25:46.801441       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 14:25:46.802992       1 tikv_member_manager.go:787] TiKV of Cluster acto-namespace/test-cluster not bootstrapped yet
+I0402 14:25:47.201099       1 tikv_member_manager.go:885] TiKV of Cluster acto-namespace/test-cluster is not bootstrapped yet, no need to set store labels
+I0402 14:25:47.245414       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+I0402 14:25:47.245475       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: TidbCluster: [acto-namespace/test-cluster], waiting for TiKV cluster running, requeuing
+I0402 14:25:48.023219       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+I0402 14:25:48.023270       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: TidbCluster: [acto-namespace/test-cluster], waiting for TiKV cluster running, requeuing
+I0402 14:25:48.852775       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+I0402 14:25:48.852808       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: TidbCluster: [acto-namespace/test-cluster], waiting for TiKV cluster running, requeuing
+I0402 14:25:49.646229       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+I0402 14:25:49.646265       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: TidbCluster: [acto-namespace/test-cluster], waiting for TiKV cluster running, requeuing
+I0402 14:25:50.449064       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+I0402 14:25:50.449108       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: TidbCluster: [acto-namespace/test-cluster], waiting for TiKV cluster running, requeuing
+I0402 14:25:51.206341       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: TidbCluster: [acto-namespace/test-cluster], waiting for TiKV cluster running, requeuing
+I0402 14:25:52.009455       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: TidbCluster: [acto-namespace/test-cluster], waiting for TiKV cluster running, requeuing
+I0402 14:26:10.081500       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"7bfb24ac-0473-44c0-bcb4-b1306db5dd26", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1488", FieldPath:""}): type: 'Normal' reason: 'SuccessfulCreate' create Service test-cluster-tidb-peer in  test-cluster successful
+I0402 14:26:10.092530       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"7bfb24ac-0473-44c0-bcb4-b1306db5dd26", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1488", FieldPath:""}): type: 'Normal' reason: 'SuccessfulCreate' create Service test-cluster-tidb in  test-cluster successful
+I0402 14:26:10.098411       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"7bfb24ac-0473-44c0-bcb4-b1306db5dd26", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1488", FieldPath:""}): type: 'Normal' reason: 'Successfully Create' create ConfigMap/test-cluster-tidb-6662316 for controller TidbCluster/test-cluster successfully
+I0402 14:26:10.103843       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"7bfb24ac-0473-44c0-bcb4-b1306db5dd26", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1488", FieldPath:""}): type: 'Normal' reason: 'SuccessfulCreate' create StatefulSet test-cluster-tidb in  test-cluster successful
+I0402 14:26:10.127839       1 pv_control.go:192] PV: [pvc-2f37f6fa-42ac-4004-a5c6-e09c40b91b0f] updated successfully, : acto-namespace/test-cluster
+I0402 14:26:10.485285       1 pv_control.go:192] PV: [pvc-ba6e9bdb-edae-4eef-b9c4-67372691f3e1] updated successfully, : acto-namespace/test-cluster
+I0402 14:26:11.088419       1 pv_control.go:192] PV: [pvc-f3df5b76-65d8-417a-9f50-01232c3f0ec6] updated successfully, : acto-namespace/test-cluster
+I0402 14:26:12.083849       1 pv_control.go:192] PV: [pvc-46aa848a-71e3-4037-b3d8-40402f92d736] updated successfully, : acto-namespace/test-cluster
+I0402 14:26:12.685174       1 pv_control.go:192] PV: [pvc-9e003369-2cc3-4636-8289-dae438baf136] updated successfully, : acto-namespace/test-cluster
+I0402 14:26:13.484106       1 pv_control.go:192] PV: [pvc-521ad82e-81b3-44f8-88c5-f7dcb932a768] updated successfully, : acto-namespace/test-cluster
+I0402 14:26:13.507536       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+I0402 14:26:13.599368       1 equality.go:87] Service spec diff for acto-namespace/test-cluster-tidb:   v1.ServiceSpec{
+  	Ports: []v1.ServicePort{
+  		{
+  			... // 3 identical fields
+  			Port:       4000,
+  			TargetPort: {IntVal: 4000},
+- 			NodePort:   0,
++ 			NodePort:   30132,
+  		},
+  		{
+  			... // 3 identical fields
+  			Port:       10080,
+  			TargetPort: {IntVal: 10080},
+- 			NodePort:   0,
++ 			NodePort:   32633,
+  		},
+  	},
+  	Selector:  {"app.kubernetes.io/component": "tidb", "app.kubernetes.io/instance": "test-cluster", "app.kubernetes.io/managed-by": "tidb-operator", "app.kubernetes.io/name": "tidb-cluster"},
+  	ClusterIP: "",
+  	... // 12 identical fields
+  }
+I0402 14:26:13.599416       1 tidb_member_manager.go:442] Sync TiDB service acto-namespace/test-cluster-tidb, spec equal: false, annotations equal: true, label equal: true
+I0402 14:26:13.685086       1 service_control.go:88] update Service: [acto-namespace/test-cluster-tidb] successfully, kind: , name: test-cluster
+I0402 14:26:13.697653       1 tidb_failover.go:53] tidb failover is disabled for acto-namespace/test-cluster, skipped
+I0402 14:26:14.728441       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+I0402 14:26:14.818410       1 tidb_failover.go:53] tidb failover is disabled for acto-namespace/test-cluster, skipped
+I0402 14:26:14.867788       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+I0402 14:26:15.192804       1 tidb_failover.go:53] tidb failover is disabled for acto-namespace/test-cluster, skipped
+I0402 14:26:15.244925       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+I0402 14:26:16.442505       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+I0402 14:26:17.646458       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+I0402 14:26:30.292408       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+I0402 14:26:30.692427       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+

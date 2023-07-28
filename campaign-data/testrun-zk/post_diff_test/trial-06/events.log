@@ -1,0 +1,97 @@
+01:30:19 Pod acto-test-operator-zookeeper-operator-658b9fbcfb-6jmpn 710:	Successfully assigned acto-namespace/acto-test-operator-zookeeper-operator-658b9fbcfb-6jmpn to acto-cluster-6-worker2
+01:30:19 Pod acto-test-operator-zookeeper-operator-658b9fbcfb-6jmpn 714:	Pulling image "pravega/zookeeper-operator:0.2.13"
+01:30:20 Pod acto-test-operator-zookeeper-operator-658b9fbcfb-6jmpn 714:	Successfully pulled image "pravega/zookeeper-operator:0.2.13" in 1.273539941s
+01:30:20 Pod acto-test-operator-zookeeper-operator-658b9fbcfb-6jmpn 714:	Created container acto-test-operator-zookeeper-operator
+01:30:21 Pod acto-test-operator-zookeeper-operator-658b9fbcfb-6jmpn 714:	Started container acto-test-operator-zookeeper-operator
+01:30:18 ReplicaSet acto-test-operator-zookeeper-operator-658b9fbcfb 707:	Created pod: acto-test-operator-zookeeper-operator-658b9fbcfb-6jmpn
+01:30:18 Deployment acto-test-operator-zookeeper-operator 706:	Scaled up replica set acto-test-operator-zookeeper-operator-658b9fbcfb to 1
+01:30:32 PersistentVolumeClaim data-test-cluster-0 768:	waiting for first consumer to be created before binding
+01:30:32 PersistentVolumeClaim data-test-cluster-0 784:	waiting for a volume to be created, either by external provisioner "rancher.io/local-path" or manually created by system administrator
+01:30:32 PersistentVolumeClaim data-test-cluster-0 784:	External provisioner is provisioning volume for claim "acto-namespace/data-test-cluster-0"
+01:30:37 PersistentVolumeClaim data-test-cluster-0 784:	Successfully provisioned volume pvc-4bd3e918-b7c5-4db8-89f6-f3e3b42a970f
+01:30:58 PersistentVolumeClaim data-test-cluster-1 869:	waiting for first consumer to be created before binding
+01:30:58 PersistentVolumeClaim data-test-cluster-1 876:	waiting for a volume to be created, either by external provisioner "rancher.io/local-path" or manually created by system administrator
+01:30:58 PersistentVolumeClaim data-test-cluster-1 876:	External provisioner is provisioning volume for claim "acto-namespace/data-test-cluster-1"
+01:31:03 PersistentVolumeClaim data-test-cluster-1 876:	Successfully provisioned volume pvc-94aa6b3d-5f60-473d-87a6-2ccf8e7f34ff
+01:32:17 PersistentVolumeClaim data-test-cluster-2 1064:	waiting for first consumer to be created before binding
+01:32:17 PersistentVolumeClaim data-test-cluster-2 1071:	waiting for a volume to be created, either by external provisioner "rancher.io/local-path" or manually created by system administrator
+01:32:17 PersistentVolumeClaim data-test-cluster-2 1071:	External provisioner is provisioning volume for claim "acto-namespace/data-test-cluster-2"
+01:32:21 PersistentVolumeClaim data-test-cluster-2 1071:	Successfully provisioned volume pvc-93f1233c-a282-4081-80b3-110f93909ea4
+01:30:38 Pod test-cluster-0 774:	Successfully assigned acto-namespace/test-cluster-0 to acto-cluster-6-worker3
+01:30:38 Pod test-cluster-0 814:	Pulling image "pravega/zookeeper:0.2.14"
+01:30:44 Pod test-cluster-0 814:	Successfully pulled image "pravega/zookeeper:0.2.14" in 5.660789736s
+01:30:44 Pod test-cluster-0 814:	Created container zookeeper
+01:30:44 Pod test-cluster-0 814:	Started container zookeeper
+01:31:04 Pod test-cluster-1 872:	Successfully assigned acto-namespace/test-cluster-1 to acto-cluster-6-worker
+01:31:05 Pod test-cluster-1 906:	Pulling image "pravega/zookeeper:0.2.14"
+01:31:11 Pod test-cluster-1 906:	Successfully pulled image "pravega/zookeeper:0.2.14" in 5.975612312s
+01:31:11 Pod test-cluster-1 906:	Created container zookeeper
+01:31:11 Pod test-cluster-1 906:	Started container zookeeper
+01:31:11 Pod test-cluster-1 906:	Container image "pravega/zookeeper:0.2.14" already present on machine
+01:31:12 Pod test-cluster-1 906:	Back-off restarting failed container
+01:32:22 Pod test-cluster-2 1067:	Successfully assigned acto-namespace/test-cluster-2 to acto-cluster-6-worker2
+01:32:22 Pod test-cluster-2 1097:	Pulling image "pravega/zookeeper:0.2.14"
+01:32:28 Pod test-cluster-2 1097:	Successfully pulled image "pravega/zookeeper:0.2.14" in 5.952972724s
+01:32:28 Pod test-cluster-2 1097:	Created container zookeeper
+01:32:29 Pod test-cluster-2 1097:	Started container zookeeper
+01:32:52 Pod test-cluster-2 1097:	Readiness probe failed: 10.244.3.3      test-cluster-headless.acto-namespace.svc.cluster.local
+10.244.2.3      test-cluster-headless.acto-namespace.svc.cluster.local
+Server not found in ensemble. Exiting ...
++ source /conf/env.sh
+++ DOMAIN=test-cluster-headless.acto-namespace.svc.cluster.local
+++ QUORUM_PORT=2888
+++ LEADER_PORT=3888
+++ CLIENT_HOST=test-cluster-client
+++ CLIENT_PORT=2181
+++ ADMIN_SERVER_HOST=test-cluster-admin-server
+++ ADMIN_SERVER_PORT=8080
+++ CLUSTER_NAME=test-cluster
+++ CLUSTER_SIZE=3
++ source /usr/local/bin/zookeeperFunctions.sh
+++ set -ex
+++ hostname -s
++ HOST=test-cluster-2
++ DATA_DIR=/data
++ MYID_FILE=/data/myid
++ LOG4J_CONF=/conf/log4j-quiet.properties
++ STATIC_CONFIG=/data/conf/zoo.cfg
+++ echo ruok
+++ nc 127.0.0.1 2181
++ OK=imok
++ [[ imok == \i\m\o\k ]]
++ set +e
++ getent hosts test-cluster-headless.acto-namespace.svc.cluster.local
++ [[ 0 -ne 0 ]]
++ set -e
++ set +e
+++ hostname -s
++ HOST=test-cluster-2
++ [[ test-cluster-2 =~ (.*)-([0-9]+)$ ]]
++ NAME=test-cluster
++ ORD=2
++ MYID=3
++ ONDISK_CONFIG=false
++ '[' -f /data/myid ']'
+++ cat /data/myid
++ EXISTING_ID=3
++ [[ 3 == \3 ]]
++ [[ -f /data/conf/zoo.cfg ]]
++ ONDISK_CONFIG=true
+++ cat /data/conf/zoo.cfg
+++ grep 'dynamicConfigFile\='
++ DYN_CFG_FILE_LINE=dynamicConfigFile=/data/conf/zoo.cfg.dynamic.10000000e
++ DYN_CFG_FILE=/data/conf/zoo.cfg.dynamic.10000000e
+++ cat /data/conf/zoo.cfg.dynamic.10000000e
+++ grep server.3=
+++ wc -l
++ SERVER_FOUND=0
++ [[ 0 == \0 ]]
++ echo 'Server not found in ensemble. Exiting ...'
++ exit 1
+
+01:30:32 StatefulSet test-cluster 761:	create Claim data-test-cluster-0 Pod test-cluster-0 in StatefulSet test-cluster success
+01:30:32 StatefulSet test-cluster 761:	create Pod test-cluster-0 in StatefulSet test-cluster successful
+01:30:58 StatefulSet test-cluster 792:	create Claim data-test-cluster-1 Pod test-cluster-1 in StatefulSet test-cluster success
+01:30:58 StatefulSet test-cluster 792:	create Pod test-cluster-1 in StatefulSet test-cluster successful
+01:32:17 StatefulSet test-cluster 1033:	create Claim data-test-cluster-2 Pod test-cluster-2 in StatefulSet test-cluster success
+01:32:17 StatefulSet test-cluster 1033:	create Pod test-cluster-2 in StatefulSet test-cluster successful

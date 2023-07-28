@@ -1,0 +1,29 @@
+apiVersion: zookeeper.pravega.io/v1beta1
+kind: ZookeeperCluster
+metadata:
+  name: test-cluster
+spec:
+  image:
+    pullPolicy: IfNotPresent
+    repository: pravega/zookeeper
+    tag: 0.2.14
+  persistence:
+    reclaimPolicy: Delete
+    spec:
+      resources:
+        requests:
+          storage: 20Gi
+      storageClassName: standard
+  ports:
+  - containerPort: 3
+    hostIP: ACTOKEY
+    hostPort: 1
+    name: null
+    protocol: ACTOKEY
+  - containerPort: 0
+    hostIP: ACTOKEY
+    hostPort: 1
+    name: ACTOKEY
+    protocol: ACTOKEY
+  replicas: 3
+  storageType: persistence

@@ -1,0 +1,124 @@
+04:58:48 Pod acto-test-operator-zookeeper-operator-658b9fbcfb-t8wrh 719:	Successfully assigned acto-namespace/acto-test-operator-zookeeper-operator-658b9fbcfb-t8wrh to acto-cluster-3-worker
+04:58:48 Pod acto-test-operator-zookeeper-operator-658b9fbcfb-t8wrh 721:	Container image "pravega/zookeeper-operator:0.2.13" already present on machine
+04:58:48 Pod acto-test-operator-zookeeper-operator-658b9fbcfb-t8wrh 721:	Created container acto-test-operator-zookeeper-operator
+04:58:48 Pod acto-test-operator-zookeeper-operator-658b9fbcfb-t8wrh 721:	Started container acto-test-operator-zookeeper-operator
+04:58:48 ReplicaSet acto-test-operator-zookeeper-operator-658b9fbcfb 715:	Created pod: acto-test-operator-zookeeper-operator-658b9fbcfb-t8wrh
+04:58:48 Deployment acto-test-operator-zookeeper-operator 714:	Scaled up replica set acto-test-operator-zookeeper-operator-658b9fbcfb to 1
+04:59:21 PersistentVolumeClaim data-test-cluster-0 812:	waiting for first consumer to be created before binding
+04:59:21 PersistentVolumeClaim data-test-cluster-0 822:	waiting for a volume to be created, either by external provisioner "rancher.io/local-path" or manually created by system administrator
+04:59:21 PersistentVolumeClaim data-test-cluster-0 822:	External provisioner is provisioning volume for claim "acto-namespace/data-test-cluster-0"
+04:59:25 PersistentVolumeClaim data-test-cluster-0 822:	Successfully provisioned volume pvc-215a9d39-84a4-40f1-be7c-b706fba4f91d
+04:59:46 PersistentVolumeClaim data-test-cluster-1 907:	waiting for first consumer to be created before binding
+04:59:46 PersistentVolumeClaim data-test-cluster-1 914:	waiting for a volume to be created, either by external provisioner "rancher.io/local-path" or manually created by system administrator
+04:59:47 PersistentVolumeClaim data-test-cluster-1 914:	External provisioner is provisioning volume for claim "acto-namespace/data-test-cluster-1"
+04:59:52 PersistentVolumeClaim data-test-cluster-1 914:	Successfully provisioned volume pvc-42e30303-2cf2-40f2-ac47-6930c8987ed1
+05:00:15 PersistentVolumeClaim data-test-cluster-2 1002:	waiting for first consumer to be created before binding
+05:00:15 PersistentVolumeClaim data-test-cluster-2 1010:	waiting for a volume to be created, either by external provisioner "rancher.io/local-path" or manually created by system administrator
+05:00:15 PersistentVolumeClaim data-test-cluster-2 1010:	External provisioner is provisioning volume for claim "acto-namespace/data-test-cluster-2"
+05:00:19 PersistentVolumeClaim data-test-cluster-2 1010:	Successfully provisioned volume pvc-f0964a35-c0dc-412d-a6fd-c63555562a3c
+04:59:26 Pod test-cluster-0 814:	Successfully assigned acto-namespace/test-cluster-0 to acto-cluster-3-worker
+04:59:26 Pod test-cluster-0 856:	Container image "pravega/zookeeper:0.2.14" already present on machine
+04:59:26 Pod test-cluster-0 856:	Created container zookeeper
+04:59:27 Pod test-cluster-0 856:	Started container zookeeper
+05:02:32 Pod test-cluster-0 856:	Stopping container zookeeper
+05:03:05 Pod test-cluster-0 1433:	Successfully assigned acto-namespace/test-cluster-0 to acto-cluster-3-worker
+05:03:05 Pod test-cluster-0 1434:	Container image "pravega/zookeeper:0.2.14" already present on machine
+05:03:05 Pod test-cluster-0 1434:	Created container zookeeper
+05:03:05 Pod test-cluster-0 1434:	Started container zookeeper
+05:03:06 Pod test-cluster-0 1434:	Readiness probe failed: + source /conf/env.sh
+++ DOMAIN=test-cluster-headless.acto-namespace.svc.cluster.local
+++ QUORUM_PORT=2888
+++ LEADER_PORT=3888
+++ CLIENT_HOST=test-cluster-client
+++ CLIENT_PORT=2181
+++ ADMIN_SERVER_HOST=test-cluster-admin-server
+++ ADMIN_SERVER_PORT=8080
+++ CLUSTER_NAME=test-cluster
+++ CLUSTER_SIZE=3
++ source /usr/local/bin/zookeeperFunctions.sh
+++ set -ex
+++ hostname -s
++ HOST=test-cluster-0
++ DATA_DIR=/data
++ MYID_FILE=/data/myid
++ LOG4J_CONF=/conf/log4j-quiet.properties
++ STATIC_CONFIG=/data/conf/zoo.cfg
+++ echo ruok
+++ nc 127.0.0.1 2181
++ OK=
+
+04:59:52 Pod test-cluster-1 910:	Successfully assigned acto-namespace/test-cluster-1 to acto-cluster-3-worker2
+04:59:54 Pod test-cluster-1 944:	Container image "pravega/zookeeper:0.2.14" already present on machine
+04:59:55 Pod test-cluster-1 944:	Created container zookeeper
+04:59:56 Pod test-cluster-1 944:	Started container zookeeper
+05:01:58 Pod test-cluster-1 944:	Stopping container zookeeper
+05:02:30 Pod test-cluster-1 1332:	Successfully assigned acto-namespace/test-cluster-1 to acto-cluster-3-worker2
+05:02:31 Pod test-cluster-1 1333:	Container image "pravega/zookeeper:0.2.14" already present on machine
+05:02:31 Pod test-cluster-1 1333:	Created container zookeeper
+05:02:31 Pod test-cluster-1 1333:	Started container zookeeper
+05:02:32 Pod test-cluster-1 1333:	Readiness probe failed: + source /conf/env.sh
+++ DOMAIN=test-cluster-headless.acto-namespace.svc.cluster.local
+++ QUORUM_PORT=2888
+++ LEADER_PORT=3888
+++ CLIENT_HOST=test-cluster-client
+++ CLIENT_PORT=2181
+++ ADMIN_SERVER_HOST=test-cluster-admin-server
+++ ADMIN_SERVER_PORT=8080
+++ CLUSTER_NAME=test-cluster
+++ CLUSTER_SIZE=3
++ source /usr/local/bin/zookeeperFunctions.sh
+++ set -ex
+++ hostname -s
++ HOST=test-cluster-1
++ DATA_DIR=/data
++ MYID_FILE=/data/myid
++ LOG4J_CONF=/conf/log4j-quiet.properties
++ STATIC_CONFIG=/data/conf/zoo.cfg
+++ echo ruok
+++ nc 127.0.0.1 2181
++ OK=
+
+05:00:20 Pod test-cluster-2 1006:	Successfully assigned acto-namespace/test-cluster-2 to acto-cluster-3-worker3
+05:00:21 Pod test-cluster-2 1035:	Container image "pravega/zookeeper:0.2.14" already present on machine
+05:00:21 Pod test-cluster-2 1035:	Created container zookeeper
+05:00:21 Pod test-cluster-2 1035:	Started container zookeeper
+05:01:24 Pod test-cluster-2 1035:	Stopping container zookeeper
+05:01:56 Pod test-cluster-2 1232:	Successfully assigned acto-namespace/test-cluster-2 to acto-cluster-3-worker3
+05:01:57 Pod test-cluster-2 1233:	Container image "pravega/zookeeper:0.2.14" already present on machine
+05:01:57 Pod test-cluster-2 1233:	Created container zookeeper
+05:01:57 Pod test-cluster-2 1233:	Started container zookeeper
+05:01:57 Pod test-cluster-2 1233:	Readiness probe failed: + source /conf/env.sh
+++ DOMAIN=test-cluster-headless.acto-namespace.svc.cluster.local
+++ QUORUM_PORT=2888
+++ LEADER_PORT=3888
+++ CLIENT_HOST=test-cluster-client
+++ CLIENT_PORT=2181
+++ ADMIN_SERVER_HOST=test-cluster-admin-server
+++ ADMIN_SERVER_PORT=8080
+++ CLUSTER_NAME=test-cluster
+++ CLUSTER_SIZE=3
++ source /usr/local/bin/zookeeperFunctions.sh
+++ set -ex
+++ hostname -s
++ HOST=test-cluster-2
++ DATA_DIR=/data
++ MYID_FILE=/data/myid
++ LOG4J_CONF=/conf/log4j-quiet.properties
++ STATIC_CONFIG=/data/conf/zoo.cfg
+++ echo ruok
+++ nc 127.0.0.1 2181
++ OK=
+
+04:59:21 StatefulSet test-cluster 799:	create Claim data-test-cluster-0 Pod test-cluster-0 in StatefulSet test-cluster success
+04:59:21 StatefulSet test-cluster 799:	create Pod test-cluster-0 in StatefulSet test-cluster successful
+04:59:46 StatefulSet test-cluster 837:	create Claim data-test-cluster-1 Pod test-cluster-1 in StatefulSet test-cluster success
+04:59:46 StatefulSet test-cluster 837:	create Pod test-cluster-1 in StatefulSet test-cluster successful
+05:00:15 StatefulSet test-cluster 940:	create Claim data-test-cluster-2 Pod test-cluster-2 in StatefulSet test-cluster success
+05:00:15 StatefulSet test-cluster 940:	create Pod test-cluster-2 in StatefulSet test-cluster successful
+05:01:24 StatefulSet test-cluster 1160:	delete Pod test-cluster-2 in StatefulSet test-cluster successful
+05:01:58 StatefulSet test-cluster 1238:	delete Pod test-cluster-1 in StatefulSet test-cluster successful
+05:02:32 StatefulSet test-cluster 1340:	delete Pod test-cluster-0 in StatefulSet test-cluster successful
+04:59:18 Pod zkapp 783:	Successfully assigned acto-namespace/zkapp to acto-cluster-3-worker3
+04:59:18 Pod zkapp 784:	Container image "tylergu1998/zkapp:v1" already present on machine
+04:59:18 Pod zkapp 784:	Created container zkapp
+04:59:19 Pod zkapp 784:	Started container zkapp

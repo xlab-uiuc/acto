@@ -1,0 +1,91 @@
+---------- INPUT DELTA  ----------
+{
+      "iterable_item_removed": {
+            "root['spec']['podDisruptionBudgets'][0][minAvailable]": {
+                  "prev": "50%",
+                  "curr": "NotPresent",
+                  "path": [
+                        "spec",
+                        "podDisruptionBudgets",
+                        0,
+                        "minAvailable"
+                  ]
+            },
+            "root['spec']['podDisruptionBudgets'][0][name]": {
+                  "prev": "eventing-webhook",
+                  "curr": "NotPresent",
+                  "path": [
+                        "spec",
+                        "podDisruptionBudgets",
+                        0,
+                        "name"
+                  ]
+            }
+      }
+}
+---------- SYSTEM DELTA ----------
+{
+      "pod": {},
+      "deployment_pods": {},
+      "stateful_set": {},
+      "deployment": {},
+      "config_map": {},
+      "service": {},
+      "service_account": {},
+      "pvc": {},
+      "cronjob": {},
+      "ingress": {},
+      "network_policy": {},
+      "pod_disruption_budget": {
+            "values_changed": {
+                  "root['eventing-webhook']['spec']['min_available']": {
+                        "prev": "50%",
+                        "curr": "80%",
+                        "path": [
+                              "eventing-webhook",
+                              "spec",
+                              "min_available"
+                        ]
+                  },
+                  "root['eventing-webhook']['status']['conditions'][0]['last_transition_time']": {
+                        "prev": "2023-03-31T20:10:08+00:00",
+                        "curr": "2023-03-31T20:14:33+00:00",
+                        "path": [
+                              "eventing-webhook",
+                              "status",
+                              "conditions",
+                              0,
+                              "last_transition_time"
+                        ]
+                  }
+            }
+      },
+      "secret": {},
+      "endpoints": {},
+      "job": {},
+      "role": {},
+      "role_binding": {},
+      "custom_resource_spec": {
+            "iterable_item_removed": {
+                  "root['podDisruptionBudgets'][0][minAvailable]": {
+                        "prev": "50%",
+                        "curr": "NotPresent",
+                        "path": [
+                              "podDisruptionBudgets",
+                              0,
+                              "minAvailable"
+                        ]
+                  },
+                  "root['podDisruptionBudgets'][0][name]": {
+                        "prev": "eventing-webhook",
+                        "curr": "NotPresent",
+                        "path": [
+                              "podDisruptionBudgets",
+                              0,
+                              "name"
+                        ]
+                  }
+            }
+      },
+      "custom_resource_status": {}
+}

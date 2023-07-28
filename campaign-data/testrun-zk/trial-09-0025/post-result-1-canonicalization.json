@@ -1,0 +1,72 @@
+{
+      "alarm": true,
+      "original_result": {
+            "revert": false,
+            "generation": 1,
+            "testcase": {
+                  "field": "[\"spec\", \"containers\", 0, \"livenessProbe\"]",
+                  "testcase": "k8s-tcp_probe"
+            },
+            "feature_gate": 51,
+            "crash_result": "Pass",
+            "input_result": "Pass",
+            "health_result": {
+                  "oracle": "SystemHealth",
+                  "message": "statefulset: test-cluster replicas [3] ready_replicas [2]\n"
+            },
+            "state_result": {
+                  "oracle": "SystemState",
+                  "message": "Matched delta inconsistent with input delta",
+                  "input_delta": {
+                        "prev": "NotPresent",
+                        "curr": 10,
+                        "path": [
+                              "spec",
+                              "containers",
+                              0,
+                              "livenessProbe",
+                              "initialDelaySeconds"
+                        ]
+                  },
+                  "matched_system_delta": {
+                        "prev": 10,
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-2",
+                              "spec",
+                              "containers",
+                              0,
+                              "liveness_probe",
+                              "initial_delay_seconds"
+                        ]
+                  }
+            },
+            "log_result": "Pass",
+            "custom_result": null,
+            "misc_result": null,
+            "recovery_result": null
+      },
+      "post_result": {
+            "trial_num": "09-0025-1",
+            "error": {
+                  "revert": false,
+                  "generation": 1,
+                  "testcase": {
+                        "field": "[\"spec\", \"containers\", 0, \"livenessProbe\"]",
+                        "testcase": "k8s-tcp_probe"
+                  },
+                  "feature_gate": 19,
+                  "crash_result": "Pass",
+                  "input_result": "Pass",
+                  "health_result": {
+                        "oracle": "SystemHealth",
+                        "message": "statefulset: test-cluster replicas [3] ready_replicas [2]\n"
+                  },
+                  "state_result": "Pass",
+                  "log_result": "Pass",
+                  "custom_result": null,
+                  "misc_result": null,
+                  "recovery_result": null
+            }
+      }
+}

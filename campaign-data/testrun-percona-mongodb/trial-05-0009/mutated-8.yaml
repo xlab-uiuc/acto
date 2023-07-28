@@ -1,0 +1,396 @@
+apiVersion: psmdb.percona.com/v1-12-0
+kind: PerconaServerMongoDB
+metadata:
+  finalizers:
+  - delete-psmdb-pods-in-order
+  name: test-cluster
+spec:
+  allowUnsafeConfigurations: false
+  backup:
+    enabled: true
+    image: percona/percona-backup-mongodb:1.7.0
+    pitr:
+      compressionLevel: 6
+      compressionType: gzip
+      enabled: true
+    serviceAccountName: percona-server-mongodb-operator
+    tasks:
+    - compressionLevel: 6
+      compressionType: gzip
+      enabled: true
+      keep: 3
+      name: daily-s3-us-west
+      schedule: 0 0 * * *
+      storageName: s3-us-west
+  crVersion: 1.12.0
+  image: percona/percona-server-mongodb:4.4.10-11
+  imagePullPolicy: IfNotPresent
+  multiCluster:
+    DNSSuffix: svc.clusterset.local
+    enabled: false
+  pmm:
+    enabled: false
+    image: percona/pmm-client:2.24.0
+    serverHost: monitoring-service
+  replsets:
+  - arbiter:
+      affinity:
+        antiAffinityTopologyKey: kubernetes.io/hostname
+      enabled: true
+      sidecarPVCs:
+      - apiVersion: ACTOKEY
+        kind: ACTOKEY
+        metadata: null
+        spec:
+          accessModes:
+          - ACTOKEY
+          - ACTOKEY
+          - ACTOKEY
+          dataSource:
+            apiGroup: ACTOKEY
+            kind: ACTOKEY
+            name: ACTOKEY
+          dataSourceRef:
+            apiGroup: ACTOKEY
+            kind: ACTOKEY
+            name: ACTOKEY
+          resources:
+            limits:
+              cpu: 800m
+            requests:
+              cpu: 800m
+          selector: null
+          storageClassName: ACTOKEY
+          volumeMode: ACTOKEY
+          volumeName: ACTOKEY
+        status:
+          accessModes: null
+          allocatedResources:
+            ACTOKEY: 4
+          capacity:
+            ACTOKEY: 0
+          conditions:
+          - lastProbeTime: ACTOKEY
+            lastTransitionTime: ACTOKEY
+            message: ACTOKEY
+            reason: ACTOKEY
+            status: ACTOKEY
+            type: ACTOKEY
+          - lastProbeTime: ACTOKEY
+            lastTransitionTime: null
+            message: ACTOKEY
+            reason: ACTOKEY
+            status: ACTOKEY
+            type: ACTOKEY
+          phase: ACTOKEY
+          resizeStatus: ACTOKEY
+      - apiVersion: ACTOKEY
+        kind: ACTOKEY
+        metadata: null
+        spec:
+          accessModes:
+          - ACTOKEY
+          - ACTOKEY
+          - ACTOKEY
+          - ACTOKEY
+          dataSource:
+            apiGroup: null
+            kind: ACTOKEY
+            name: ACTOKEY
+          dataSourceRef:
+            apiGroup: ACTOKEY
+            kind: ACTOKEY
+            name: ACTOKEY
+          resources:
+            limits:
+              cpu: 800m
+            requests:
+              cpu: 800m
+          selector:
+            matchExpressions: null
+            matchLabels:
+              ACTOKEY: ACTOKEY
+          storageClassName: ACTOKEY
+          volumeMode: ACTOKEY
+          volumeName: ACTOKEY
+        status:
+          accessModes: []
+          allocatedResources:
+            ACTOKEY: 5
+          capacity:
+            ACTOKEY: '.31049'
+          conditions:
+          - lastProbeTime: ACTOKEY
+            lastTransitionTime: ACTOKEY
+            message: ACTOKEY
+            reason: ACTOKEY
+            status: ACTOKEY
+            type: ACTOKEY
+          - lastProbeTime: ACTOKEY
+            lastTransitionTime: null
+            message: ACTOKEY
+            reason: ACTOKEY
+            status: ACTOKEY
+            type: ACTOKEY
+          - lastProbeTime: ACTOKEY
+            lastTransitionTime: ACTOKEY
+            message: ACTOKEY
+            reason: null
+            status: ACTOKEY
+            type: ACTOKEY
+          phase: ACTOKEY
+          resizeStatus: null
+      - apiVersion: null
+        kind: ACTOKEY
+        metadata: null
+        spec: null
+        status:
+          accessModes: []
+          allocatedResources:
+            ACTOKEY: '.529'
+          capacity:
+            ACTOKEY: 5
+          conditions: null
+          phase: null
+          resizeStatus: ACTOKEY
+      - apiVersion: ACTOKEY
+        kind: ACTOKEY
+        metadata: null
+        spec:
+          accessModes:
+          - ACTOKEY
+          - ACTOKEY
+          - ACTOKEY
+          - ACTOKEY
+          - ACTOKEY
+          dataSource:
+            apiGroup: ACTOKEY
+            kind: ACTOKEY
+            name: ACTOKEY
+          dataSourceRef:
+            apiGroup: ACTOKEY
+            kind: ACTOKEY
+            name: ACTOKEY
+          resources:
+            limits:
+              cpu: 800m
+            requests:
+              cpu: 800m
+          selector:
+            matchExpressions:
+            - key: ACTOKEY
+              operator: ACTOKEY
+              values: []
+            - key: ACTOKEY
+              operator: ACTOKEY
+              values:
+              - ACTOKEY
+            - key: ACTOKEY
+              operator: ACTOKEY
+              values:
+              - ACTOKEY
+              - ACTOKEY
+            - key: ACTOKEY
+              operator: ACTOKEY
+              values:
+              - ACTOKEY
+              - ACTOKEY
+            - key: ACTOKEY
+              operator: ACTOKEY
+              values: []
+            matchLabels: null
+          storageClassName: ACTOKEY
+          volumeMode: ACTOKEY
+          volumeName: ACTOKEY
+        status:
+          accessModes:
+          - ACTOKEY
+          - ACTOKEY
+          - ACTOKEY
+          - ACTOKEY
+          allocatedResources:
+            ACTOKEY: 2
+          capacity:
+            ACTOKEY: 1
+          conditions:
+          - lastProbeTime: ACTOKEY
+            lastTransitionTime: ACTOKEY
+            message: ACTOKEY
+            reason: ACTOKEY
+            status: ACTOKEY
+            type: ACTOKEY
+          phase: ACTOKEY
+          resizeStatus: ACTOKEY
+      - apiVersion: ACTOKEY
+        kind: null
+        metadata: null
+        spec:
+          accessModes: []
+          dataSource:
+            apiGroup: ACTOKEY
+            kind: ACTOKEY
+            name: ACTOKEY
+          dataSourceRef:
+            apiGroup: ACTOKEY
+            kind: ACTOKEY
+            name: ACTOKEY
+          resources:
+            limits:
+              cpu: 800m
+            requests:
+              cpu: 800m
+          selector:
+            matchExpressions:
+            - key: ACTOKEY
+              operator: ACTOKEY
+              values:
+              - ACTOKEY
+              - ACTOKEY
+              - ACTOKEY
+              - ACTOKEY
+            - key: ACTOKEY
+              operator: ACTOKEY
+              values:
+              - ACTOKEY
+              - ACTOKEY
+              - ACTOKEY
+              - ACTOKEY
+              - ACTOKEY
+            matchLabels:
+              ACTOKEY: ACTOKEY
+          storageClassName: ACTOKEY
+          volumeMode: ACTOKEY
+          volumeName: ACTOKEY
+        status:
+          accessModes: null
+          allocatedResources:
+            ACTOKEY: 5
+          capacity:
+            ACTOKEY: 0
+          conditions:
+          - lastProbeTime: ACTOKEY
+            lastTransitionTime: ACTOKEY
+            message: ACTOKEY
+            reason: ACTOKEY
+            status: ACTOKEY
+            type: ACTOKEY
+          - lastProbeTime: ACTOKEY
+            lastTransitionTime: ACTOKEY
+            message: ACTOKEY
+            reason: ACTOKEY
+            status: ACTOKEY
+            type: ACTOKEY
+          - lastProbeTime: ACTOKEY
+            lastTransitionTime: ACTOKEY
+            message: null
+            reason: ACTOKEY
+            status: ACTOKEY
+            type: ACTOKEY
+          - lastProbeTime: ACTOKEY
+            lastTransitionTime: ACTOKEY
+            message: ACTOKEY
+            reason: ACTOKEY
+            status: ACTOKEY
+            type: ACTOKEY
+          - lastProbeTime: ACTOKEY
+            lastTransitionTime: ACTOKEY
+            message: ACTOKEY
+            reason: ACTOKEY
+            status: ACTOKEY
+            type: ACTOKEY
+          phase: ACTOKEY
+          resizeStatus: ACTOKEY
+      size: 2
+    expose:
+      enabled: true
+      exposeType: ClusterIP
+    name: rs0
+    nonvoting:
+      affinity:
+        antiAffinityTopologyKey: kubernetes.io/hostname
+      configuration: "operationProfiling:\n  mode: slowOp\nsystemLog:\n  verbosity:\
+        \ 1\n"
+      enabled: true
+      podDisruptionBudget:
+        maxUnavailable: 1
+      resources:
+        limits:
+          cpu: 300m
+          memory: 0.5G
+        requests:
+          cpu: 300m
+          memory: 0.5G
+      size: 2
+      volumeSpec:
+        persistentVolumeClaim:
+          accessModes:
+          - ReadWriteOnce
+          resources:
+            requests:
+              storage: 3Gi
+          storageClassName: standard
+    podDisruptionBudget:
+      maxUnavailable: 1
+    resources:
+      limits:
+        cpu: 300m
+        memory: 0.5G
+      requests:
+        cpu: 300m
+        memory: 0.5G
+    size: 2
+    volumeSpec:
+      persistentVolumeClaim:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 3Gi
+        storageClassName: standard
+  secrets:
+    encryptionKey: my-cluster-name-mongodb-encryption-key
+    users: my-cluster-name-secrets
+  sharding:
+    configsvrReplSet:
+      affinity:
+        antiAffinityTopologyKey: kubernetes.io/hostname
+      expose:
+        enabled: true
+        exposeType: ClusterIP
+      podDisruptionBudget:
+        maxUnavailable: 1
+      resources:
+        limits:
+          cpu: 300m
+          memory: 0.5G
+        requests:
+          cpu: 300m
+          memory: 0.5G
+      size: 2
+      volumeSpec:
+        persistentVolumeClaim:
+          resources:
+            requests:
+              storage: 3Gi
+    enabled: true
+    mongos:
+      affinity:
+        antiAffinityTopologyKey: kubernetes.io/hostname
+      expose:
+        exposeType: ClusterIP
+      podDisruptionBudget:
+        maxUnavailable: 1
+      resources:
+        limits:
+          cpu: 300m
+          memory: 0.5G
+        requests:
+          cpu: 300m
+          memory: 0.5G
+      size: 2
+  updateStrategy: SmartUpdate
+  upgradeOptions:
+    apply: 4.4-never
+    schedule: 0 2 * * *
+    setFCV: false
+    versionServiceEndpoint: https://check.percona.com

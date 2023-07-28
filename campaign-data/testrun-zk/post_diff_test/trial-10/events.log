@@ -1,0 +1,131 @@
+01:23:28 Pod acto-test-operator-zookeeper-operator-658b9fbcfb-pdxz4 700:	Successfully assigned acto-namespace/acto-test-operator-zookeeper-operator-658b9fbcfb-pdxz4 to acto-cluster-10-worker
+01:23:28 Pod acto-test-operator-zookeeper-operator-658b9fbcfb-pdxz4 702:	Pulling image "pravega/zookeeper-operator:0.2.13"
+01:23:30 Pod acto-test-operator-zookeeper-operator-658b9fbcfb-pdxz4 702:	Successfully pulled image "pravega/zookeeper-operator:0.2.13" in 1.182611314s
+01:23:30 Pod acto-test-operator-zookeeper-operator-658b9fbcfb-pdxz4 702:	Created container acto-test-operator-zookeeper-operator
+01:23:30 Pod acto-test-operator-zookeeper-operator-658b9fbcfb-pdxz4 702:	Started container acto-test-operator-zookeeper-operator
+01:23:28 ReplicaSet acto-test-operator-zookeeper-operator-658b9fbcfb 697:	Created pod: acto-test-operator-zookeeper-operator-658b9fbcfb-pdxz4
+01:23:28 Deployment acto-test-operator-zookeeper-operator 696:	Scaled up replica set acto-test-operator-zookeeper-operator-658b9fbcfb to 1
+01:23:41 PersistentVolumeClaim data-test-cluster-0 759:	waiting for first consumer to be created before binding
+01:23:41 PersistentVolumeClaim data-test-cluster-0 772:	waiting for a volume to be created, either by external provisioner "rancher.io/local-path" or manually created by system administrator
+01:23:41 PersistentVolumeClaim data-test-cluster-0 772:	External provisioner is provisioning volume for claim "acto-namespace/data-test-cluster-0"
+01:23:45 PersistentVolumeClaim data-test-cluster-0 772:	Successfully provisioned volume pvc-8dba8c6d-62b6-496d-a921-c8037245be75
+01:23:55 PersistentVolumeClaim data-test-cluster-1 840:	waiting for first consumer to be created before binding
+01:23:55 PersistentVolumeClaim data-test-cluster-1 847:	waiting for a volume to be created, either by external provisioner "rancher.io/local-path" or manually created by system administrator
+01:23:55 PersistentVolumeClaim data-test-cluster-1 847:	External provisioner is provisioning volume for claim "acto-namespace/data-test-cluster-1"
+01:23:59 PersistentVolumeClaim data-test-cluster-1 847:	Successfully provisioned volume pvc-bfbf97ff-fdba-4276-a10b-118df28b90f9
+01:23:46 Pod test-cluster-0 764:	Successfully assigned acto-namespace/test-cluster-0 to acto-cluster-10-worker2
+01:23:47 Pod test-cluster-0 804:	Pulling image "pravega/zookeeper:0.2.14"
+01:23:53 Pod test-cluster-0 804:	Successfully pulled image "pravega/zookeeper:0.2.14" in 6.311974401s
+01:23:53 Pod test-cluster-0 804:	Created container zookeeper
+01:23:53 Pod test-cluster-0 804:	Started container zookeeper
+01:23:54 Pod test-cluster-0 804:	Readiness probe failed: + source /conf/env.sh
+++ DOMAIN=test-cluster-headless.acto-namespace.svc.cluster.local
+++ QUORUM_PORT=2888
+++ LEADER_PORT=3888
+++ CLIENT_HOST=test-cluster-client
+++ CLIENT_PORT=2181
+++ ADMIN_SERVER_HOST=test-cluster-admin-server
+++ ADMIN_SERVER_PORT=8080
+++ CLUSTER_NAME=test-cluster
+++ CLUSTER_SIZE=3
++ source /usr/local/bin/zookeeperFunctions.sh
+++ set -ex
+++ hostname -s
++ HOST=test-cluster-0
++ DATA_DIR=/data
++ MYID_FILE=/data/myid
++ LOG4J_CONF=/conf/log4j-quiet.properties
++ STATIC_CONFIG=/data/conf/zoo.cfg
+++ echo ruok
+++ nc 127.0.0.1 2181
++ OK=
+
+01:24:00 Pod test-cluster-1 843:	Successfully assigned acto-namespace/test-cluster-1 to acto-cluster-10-worker3
+01:24:00 Pod test-cluster-1 869:	Pulling image "pravega/zookeeper:0.2.14"
+01:24:06 Pod test-cluster-1 869:	Successfully pulled image "pravega/zookeeper:0.2.14" in 5.533716989s
+01:24:06 Pod test-cluster-1 869:	Created container zookeeper
+01:24:06 Pod test-cluster-1 869:	Started container zookeeper
+01:24:06 Pod test-cluster-1 869:	Readiness probe errored: rpc error: code = NotFound desc = failed to exec in container: failed to create exec "b6dd5051c00a6304b97667ef0504887b8111dbf6d62a26ea234be0b7a206a72e": task cfbc2968b338a6b3064265b4ae120c576a43b5576a49cb6465f49b0b8d81c77c not found: not found
+01:24:07 Pod test-cluster-1 869:	Container image "pravega/zookeeper:0.2.14" already present on machine
+01:24:08 Pod test-cluster-1 869:	Back-off restarting failed container
+01:24:44 Pod test-cluster-1 869:	Readiness probe failed: + source /conf/env.sh
+++ DOMAIN=test-cluster-headless.acto-namespace.svc.cluster.local
+++ QUORUM_PORT=2888
+++ LEADER_PORT=3888
+++ CLIENT_HOST=test-cluster-client
+++ CLIENT_PORT=2181
+++ ADMIN_SERVER_HOST=test-cluster-admin-server
+++ ADMIN_SERVER_PORT=8080
+++ CLUSTER_NAME=test-cluster
+++ CLUSTER_SIZE=3
++ source /usr/local/bin/zookeeperFunctions.sh
+++ set -ex
+++ hostname -s
++ HOST=test-cluster-1
++ DATA_DIR=/data
++ MYID_FILE=/data/myid
++ LOG4J_CONF=/conf/log4j-quiet.properties
++ STATIC_CONFIG=/data/conf/zoo.cfg
+++ echo ruok
+++ nc 127.0.0.1 2181
++ OK=
+
+01:24:51 Pod test-cluster-1 869:	Readiness probe failed: 
+01:25:00 Pod test-cluster-1 869:	Readiness probe failed: 10.244.3.3      test-cluster-headless.acto-namespace.svc.cluster.local
+Server not found in ensemble. Exiting ...
++ source /conf/env.sh
+++ DOMAIN=test-cluster-headless.acto-namespace.svc.cluster.local
+++ QUORUM_PORT=2888
+++ LEADER_PORT=3888
+++ CLIENT_HOST=test-cluster-client
+++ CLIENT_PORT=2181
+++ ADMIN_SERVER_HOST=test-cluster-admin-server
+++ ADMIN_SERVER_PORT=8080
+++ CLUSTER_NAME=test-cluster
+++ CLUSTER_SIZE=3
++ source /usr/local/bin/zookeeperFunctions.sh
+++ set -ex
+++ hostname -s
++ HOST=test-cluster-1
++ DATA_DIR=/data
++ MYID_FILE=/data/myid
++ LOG4J_CONF=/conf/log4j-quiet.properties
++ STATIC_CONFIG=/data/conf/zoo.cfg
+++ echo ruok
+++ nc 127.0.0.1 2181
++ OK=imok
++ [[ imok == \i\m\o\k ]]
++ set +e
++ getent hosts test-cluster-headless.acto-namespace.svc.cluster.local
++ [[ 0 -ne 0 ]]
++ set -e
++ set +e
+++ hostname -s
++ HOST=test-cluster-1
++ [[ test-cluster-1 =~ (.*)-([0-9]+)$ ]]
++ NAME=test-cluster
++ ORD=1
++ MYID=2
++ ONDISK_CONFIG=false
++ '[' -f /data/myid ']'
+++ cat /data/myid
++ EXISTING_ID=2
++ [[ 2 == \2 ]]
++ [[ -f /data/conf/zoo.cfg ]]
++ ONDISK_CONFIG=true
+++ cat /data/conf/zoo.cfg
+++ grep 'dynamicConfigFile\='
++ DYN_CFG_FILE_LINE=dynamicConfigFile=/data/conf/zoo.cfg.dynamic.100000005
++ DYN_CFG_FILE=/data/conf/zoo.cfg.dynamic.100000005
+++ cat /data/conf/zoo.cfg.dynamic.100000005
+++ grep server.2=
+++ wc -l
++ SERVER_FOUND=0
++ [[ 0 == \0 ]]
++ echo 'Server not found in ensemble. Exiting ...'
++ exit 1
+
+01:23:41 StatefulSet test-cluster 749:	create Claim data-test-cluster-0 Pod test-cluster-0 in StatefulSet test-cluster success
+01:23:41 StatefulSet test-cluster 749:	create Pod test-cluster-0 in StatefulSet test-cluster successful
+01:23:55 StatefulSet test-cluster 787:	create Claim data-test-cluster-1 Pod test-cluster-1 in StatefulSet test-cluster success
+01:23:55 StatefulSet test-cluster 787:	create Pod test-cluster-1 in StatefulSet test-cluster successful

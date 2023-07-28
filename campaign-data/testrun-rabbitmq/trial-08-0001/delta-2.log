@@ -1,0 +1,86 @@
+---------- INPUT DELTA  ----------
+{
+      "values_changed": {
+            "root['spec']['tls']['disableNonTLSListeners']": {
+                  "prev": false,
+                  "curr": true,
+                  "path": [
+                        "spec",
+                        "tls",
+                        "disableNonTLSListeners"
+                  ]
+            }
+      }
+}
+---------- SYSTEM DELTA ----------
+{
+      "pod": {},
+      "deployment_pods": {},
+      "stateful_set": {},
+      "deployment": {},
+      "config_map": {},
+      "service": {},
+      "service_account": {},
+      "pvc": {},
+      "cronjob": {},
+      "ingress": {},
+      "network_policy": {},
+      "pod_disruption_budget": {},
+      "secret": {},
+      "endpoints": {},
+      "job": {},
+      "role": {},
+      "role_binding": {},
+      "custom_resource_spec": {
+            "values_changed": {
+                  "root['tls']['disableNonTLSListeners']": {
+                        "prev": false,
+                        "curr": true,
+                        "path": [
+                              "tls",
+                              "disableNonTLSListeners"
+                        ]
+                  }
+            }
+      },
+      "custom_resource_status": {
+            "values_changed": {
+                  "root['conditions'][3]['lastTransitionTime']": {
+                        "prev": "2023-03-31T22:00:26Z",
+                        "curr": "2023-03-31T22:02:29Z",
+                        "path": [
+                              "conditions",
+                              3,
+                              "lastTransitionTime"
+                        ]
+                  },
+                  "root['conditions'][3]['message']": {
+                        "prev": "Finish reconciling",
+                        "curr": "TLS must be enabled if disableNonTLSListeners is set to true",
+                        "path": [
+                              "conditions",
+                              3,
+                              "message"
+                        ]
+                  },
+                  "root['conditions'][3]['reason']": {
+                        "prev": "Success",
+                        "curr": "TLSError",
+                        "path": [
+                              "conditions",
+                              3,
+                              "reason"
+                        ]
+                  },
+                  "root['conditions'][3]['status']": {
+                        "prev": "True",
+                        "curr": "False",
+                        "path": [
+                              "conditions",
+                              3,
+                              "status"
+                        ]
+                  }
+            }
+      }
+}

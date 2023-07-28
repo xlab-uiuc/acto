@@ -1,0 +1,1940 @@
+{
+      "input_digest": "9e315a6f8f9c84707cd0b7855f046524",
+      "snapshot": {
+            "input": {
+                  "apiVersion": "psmdb.percona.com/v1-12-0",
+                  "kind": "PerconaServerMongoDB",
+                  "metadata": {
+                        "finalizers": [
+                              "delete-psmdb-pods-in-order"
+                        ],
+                        "name": "test-cluster"
+                  },
+                  "spec": {
+                        "allowUnsafeConfigurations": false,
+                        "backup": {
+                              "enabled": true,
+                              "image": "percona/percona-backup-mongodb:1.7.0",
+                              "pitr": {
+                                    "compressionLevel": 6,
+                                    "compressionType": "gzip",
+                                    "enabled": true
+                              },
+                              "serviceAccountName": "percona-server-mongodb-operator",
+                              "tasks": [
+                                    {
+                                          "compressionLevel": 6,
+                                          "compressionType": "gzip",
+                                          "enabled": true,
+                                          "keep": 3,
+                                          "name": "daily-s3-us-west",
+                                          "schedule": "0 0 * * *",
+                                          "storageName": "s3-us-west"
+                                    }
+                              ]
+                        },
+                        "crVersion": "1.12.0",
+                        "image": "percona/percona-server-mongodb:4.4.10-11",
+                        "imagePullPolicy": "IfNotPresent",
+                        "multiCluster": {
+                              "DNSSuffix": "svc.clusterset.local",
+                              "enabled": false
+                        },
+                        "pmm": {
+                              "enabled": false,
+                              "image": "percona/pmm-client:2.24.0",
+                              "serverHost": "monitoring-service"
+                        },
+                        "replsets": [
+                              {
+                                    "arbiter": {
+                                          "affinity": {
+                                                "antiAffinityTopologyKey": "kubernetes.io/hostname"
+                                          },
+                                          "enabled": true,
+                                          "size": 2
+                                    },
+                                    "expose": {
+                                          "enabled": true,
+                                          "exposeType": "ClusterIP"
+                                    },
+                                    "externalNodes": [
+                                          {
+                                                "host": "ACTOKEY",
+                                                "port": 0,
+                                                "priority": 3,
+                                                "votes": 4
+                                          }
+                                    ],
+                                    "name": "rs0",
+                                    "nonvoting": {
+                                          "affinity": {
+                                                "antiAffinityTopologyKey": "kubernetes.io/hostname"
+                                          },
+                                          "configuration": "operationProfiling:\n  mode: slowOp\nsystemLog:\n  verbosity: 1\n",
+                                          "enabled": true,
+                                          "podDisruptionBudget": {
+                                                "maxUnavailable": 1
+                                          },
+                                          "resources": {
+                                                "limits": {
+                                                      "cpu": "300m",
+                                                      "memory": "0.5G"
+                                                },
+                                                "requests": {
+                                                      "cpu": "300m",
+                                                      "memory": "0.5G"
+                                                }
+                                          },
+                                          "size": 2,
+                                          "volumeSpec": {
+                                                "persistentVolumeClaim": {
+                                                      "accessModes": [
+                                                            "ReadWriteOnce"
+                                                      ],
+                                                      "resources": {
+                                                            "requests": {
+                                                                  "storage": "3Gi"
+                                                            }
+                                                      },
+                                                      "storageClassName": "standard"
+                                                }
+                                          }
+                                    },
+                                    "podDisruptionBudget": {
+                                          "maxUnavailable": 1
+                                    },
+                                    "resources": {
+                                          "limits": {
+                                                "cpu": "300m",
+                                                "memory": "0.5G"
+                                          },
+                                          "requests": {
+                                                "cpu": "300m",
+                                                "memory": "0.5G"
+                                          }
+                                    },
+                                    "size": 2,
+                                    "volumeSpec": {
+                                          "persistentVolumeClaim": {
+                                                "accessModes": [
+                                                      "ReadWriteOnce"
+                                                ],
+                                                "resources": {
+                                                      "requests": {
+                                                            "storage": "3Gi"
+                                                      }
+                                                },
+                                                "storageClassName": "standard"
+                                          }
+                                    }
+                              }
+                        ],
+                        "secrets": {
+                              "encryptionKey": "my-cluster-name-mongodb-encryption-key",
+                              "users": "my-cluster-name-secrets"
+                        },
+                        "sharding": {
+                              "configsvrReplSet": {
+                                    "affinity": {
+                                          "antiAffinityTopologyKey": "kubernetes.io/hostname"
+                                    },
+                                    "expose": {
+                                          "enabled": true,
+                                          "exposeType": "ClusterIP"
+                                    },
+                                    "podDisruptionBudget": {
+                                          "maxUnavailable": 1
+                                    },
+                                    "resources": {
+                                          "limits": {
+                                                "cpu": "300m",
+                                                "memory": "0.5G"
+                                          },
+                                          "requests": {
+                                                "cpu": "300m",
+                                                "memory": "0.5G"
+                                          }
+                                    },
+                                    "size": 2,
+                                    "volumeSpec": {
+                                          "persistentVolumeClaim": {
+                                                "resources": {
+                                                      "requests": {
+                                                            "storage": "3Gi"
+                                                      }
+                                                }
+                                          }
+                                    }
+                              },
+                              "enabled": true,
+                              "mongos": {
+                                    "affinity": {
+                                          "antiAffinityTopologyKey": "kubernetes.io/hostname"
+                                    },
+                                    "expose": {
+                                          "exposeType": "ClusterIP"
+                                    },
+                                    "podDisruptionBudget": {
+                                          "maxUnavailable": 1
+                                    },
+                                    "resources": {
+                                          "limits": {
+                                                "cpu": "300m",
+                                                "memory": "0.5G"
+                                          },
+                                          "requests": {
+                                                "cpu": "300m",
+                                                "memory": "0.5G"
+                                          }
+                                    },
+                                    "size": 2
+                              }
+                        },
+                        "updateStrategy": "SmartUpdate",
+                        "upgradeOptions": {
+                              "apply": "4.4-never",
+                              "schedule": "0 2 * * *",
+                              "setFCV": false,
+                              "versionServiceEndpoint": "https://check.percona.com"
+                        }
+                  }
+            },
+            "cli_result": {
+                  "stdout": "perconaservermongodb.psmdb.percona.com/test-cluster created\n",
+                  "stderr": ""
+            },
+            "system_state": {
+                  "pod": {},
+                  "deployment_pods": {
+                        "percona-server-mongodb-operator": [
+                              {
+                                    "api_version": null,
+                                    "kind": null,
+                                    "metadata": {
+                                          "annotations": null,
+                                          "cluster_name": null,
+                                          "creation_timestamp": "2023-03-27T03:38:40+00:00",
+                                          "deletion_grace_period_seconds": null,
+                                          "deletion_timestamp": null,
+                                          "finalizers": null,
+                                          "generate_name": "percona-server-mongodb-operator-fb6cf9f7c-",
+                                          "generation": null,
+                                          "labels": {
+                                                "acto/tag": "operator-pod",
+                                                "name": "percona-server-mongodb-operator",
+                                                "pod-template-hash": "fb6cf9f7c"
+                                          },
+                                          "managed_fields": [
+                                                {
+                                                      "api_version": "v1",
+                                                      "fields_type": "FieldsV1",
+                                                      "fields_v1": {
+                                                            "f:metadata": {
+                                                                  "f:generateName": {},
+                                                                  "f:labels": {
+                                                                        ".": {},
+                                                                        "f:acto/tag": {},
+                                                                        "f:name": {},
+                                                                        "f:pod-template-hash": {}
+                                                                  },
+                                                                  "f:ownerReferences": {
+                                                                        ".": {},
+                                                                        "k:{\"uid\":\"6276afa5-db09-42f6-a389-45270e08b415\"}": {}
+                                                                  }
+                                                            },
+                                                            "f:spec": {
+                                                                  "f:containers": {
+                                                                        "k:{\"name\":\"percona-server-mongodb-operator\"}": {
+                                                                              ".": {},
+                                                                              "f:command": {},
+                                                                              "f:env": {
+                                                                                    ".": {},
+                                                                                    "k:{\"name\":\"LOG_VERBOSE\"}": {
+                                                                                          ".": {},
+                                                                                          "f:name": {},
+                                                                                          "f:value": {}
+                                                                                    },
+                                                                                    "k:{\"name\":\"OPERATOR_NAME\"}": {
+                                                                                          ".": {},
+                                                                                          "f:name": {},
+                                                                                          "f:value": {}
+                                                                                    },
+                                                                                    "k:{\"name\":\"POD_NAME\"}": {
+                                                                                          ".": {},
+                                                                                          "f:name": {},
+                                                                                          "f:valueFrom": {
+                                                                                                ".": {},
+                                                                                                "f:fieldRef": {}
+                                                                                          }
+                                                                                    },
+                                                                                    "k:{\"name\":\"RESYNC_PERIOD\"}": {
+                                                                                          ".": {},
+                                                                                          "f:name": {},
+                                                                                          "f:value": {}
+                                                                                    },
+                                                                                    "k:{\"name\":\"WATCH_NAMESPACE\"}": {
+                                                                                          ".": {},
+                                                                                          "f:name": {},
+                                                                                          "f:valueFrom": {
+                                                                                                ".": {},
+                                                                                                "f:fieldRef": {}
+                                                                                          }
+                                                                                    }
+                                                                              },
+                                                                              "f:image": {},
+                                                                              "f:imagePullPolicy": {},
+                                                                              "f:name": {},
+                                                                              "f:ports": {
+                                                                                    ".": {},
+                                                                                    "k:{\"containerPort\":60000,\"protocol\":\"TCP\"}": {
+                                                                                          ".": {},
+                                                                                          "f:containerPort": {},
+                                                                                          "f:name": {},
+                                                                                          "f:protocol": {}
+                                                                                    }
+                                                                              },
+                                                                              "f:resources": {},
+                                                                              "f:terminationMessagePath": {},
+                                                                              "f:terminationMessagePolicy": {}
+                                                                        }
+                                                                  },
+                                                                  "f:dnsPolicy": {},
+                                                                  "f:enableServiceLinks": {},
+                                                                  "f:restartPolicy": {},
+                                                                  "f:schedulerName": {},
+                                                                  "f:securityContext": {},
+                                                                  "f:serviceAccount": {},
+                                                                  "f:serviceAccountName": {},
+                                                                  "f:terminationGracePeriodSeconds": {}
+                                                            }
+                                                      },
+                                                      "manager": "kube-controller-manager",
+                                                      "operation": "Update",
+                                                      "subresource": null,
+                                                      "time": "2023-03-27T03:38:40+00:00"
+                                                },
+                                                {
+                                                      "api_version": "v1",
+                                                      "fields_type": "FieldsV1",
+                                                      "fields_v1": {
+                                                            "f:status": {
+                                                                  "f:conditions": {
+                                                                        "k:{\"type\":\"ContainersReady\"}": {
+                                                                              ".": {},
+                                                                              "f:lastProbeTime": {},
+                                                                              "f:lastTransitionTime": {},
+                                                                              "f:status": {},
+                                                                              "f:type": {}
+                                                                        },
+                                                                        "k:{\"type\":\"Initialized\"}": {
+                                                                              ".": {},
+                                                                              "f:lastProbeTime": {},
+                                                                              "f:lastTransitionTime": {},
+                                                                              "f:status": {},
+                                                                              "f:type": {}
+                                                                        },
+                                                                        "k:{\"type\":\"Ready\"}": {
+                                                                              ".": {},
+                                                                              "f:lastProbeTime": {},
+                                                                              "f:lastTransitionTime": {},
+                                                                              "f:status": {},
+                                                                              "f:type": {}
+                                                                        }
+                                                                  },
+                                                                  "f:containerStatuses": {},
+                                                                  "f:hostIP": {},
+                                                                  "f:phase": {},
+                                                                  "f:podIP": {},
+                                                                  "f:podIPs": {
+                                                                        ".": {},
+                                                                        "k:{\"ip\":\"10.244.3.3\"}": {
+                                                                              ".": {},
+                                                                              "f:ip": {}
+                                                                        }
+                                                                  },
+                                                                  "f:startTime": {}
+                                                            }
+                                                      },
+                                                      "manager": "kubelet",
+                                                      "operation": "Update",
+                                                      "subresource": "status",
+                                                      "time": "2023-03-27T03:38:41+00:00"
+                                                }
+                                          ],
+                                          "name": "percona-server-mongodb-operator-fb6cf9f7c-fbg66",
+                                          "namespace": "acto-namespace",
+                                          "owner_references": [
+                                                {
+                                                      "api_version": "apps/v1",
+                                                      "block_owner_deletion": true,
+                                                      "controller": true,
+                                                      "kind": "ReplicaSet",
+                                                      "name": "percona-server-mongodb-operator-fb6cf9f7c",
+                                                      "uid": "6276afa5-db09-42f6-a389-45270e08b415"
+                                                }
+                                          ],
+                                          "resource_version": "857",
+                                          "self_link": null,
+                                          "uid": "33d7c872-c1c7-48fb-a62a-40820ff9f804"
+                                    },
+                                    "spec": {
+                                          "active_deadline_seconds": null,
+                                          "affinity": null,
+                                          "automount_service_account_token": null,
+                                          "containers": [
+                                                {
+                                                      "args": null,
+                                                      "command": [
+                                                            "percona-server-mongodb-operator"
+                                                      ],
+                                                      "env": [
+                                                            {
+                                                                  "name": "WATCH_NAMESPACE",
+                                                                  "value": null,
+                                                                  "value_from": {
+                                                                        "config_map_key_ref": null,
+                                                                        "field_ref": {
+                                                                              "api_version": "v1",
+                                                                              "field_path": "metadata.namespace"
+                                                                        },
+                                                                        "resource_field_ref": null,
+                                                                        "secret_key_ref": null
+                                                                  }
+                                                            },
+                                                            {
+                                                                  "name": "POD_NAME",
+                                                                  "value": null,
+                                                                  "value_from": {
+                                                                        "config_map_key_ref": null,
+                                                                        "field_ref": {
+                                                                              "api_version": "v1",
+                                                                              "field_path": "metadata.name"
+                                                                        },
+                                                                        "resource_field_ref": null,
+                                                                        "secret_key_ref": null
+                                                                  }
+                                                            },
+                                                            {
+                                                                  "name": "OPERATOR_NAME",
+                                                                  "value": "percona-server-mongodb-operator",
+                                                                  "value_from": null
+                                                            },
+                                                            {
+                                                                  "name": "RESYNC_PERIOD",
+                                                                  "value": "5s",
+                                                                  "value_from": null
+                                                            },
+                                                            {
+                                                                  "name": "LOG_VERBOSE",
+                                                                  "value": "false",
+                                                                  "value_from": null
+                                                            }
+                                                      ],
+                                                      "env_from": null,
+                                                      "image": "perconalab/percona-server-mongodb-operator:release-1-12-0",
+                                                      "image_pull_policy": "IfNotPresent",
+                                                      "lifecycle": null,
+                                                      "liveness_probe": null,
+                                                      "name": "percona-server-mongodb-operator",
+                                                      "ports": [
+                                                            {
+                                                                  "container_port": 60000,
+                                                                  "host_ip": null,
+                                                                  "host_port": null,
+                                                                  "name": "metrics",
+                                                                  "protocol": "TCP"
+                                                            }
+                                                      ],
+                                                      "readiness_probe": null,
+                                                      "resources": {
+                                                            "limits": null,
+                                                            "requests": null
+                                                      },
+                                                      "security_context": null,
+                                                      "startup_probe": null,
+                                                      "stdin": null,
+                                                      "stdin_once": null,
+                                                      "termination_message_path": "/dev/termination-log",
+                                                      "termination_message_policy": "File",
+                                                      "tty": null,
+                                                      "volume_devices": null,
+                                                      "volume_mounts": [
+                                                            {
+                                                                  "mount_path": "/var/run/secrets/kubernetes.io/serviceaccount",
+                                                                  "mount_propagation": null,
+                                                                  "name": "kube-api-access-g9hqx",
+                                                                  "read_only": true,
+                                                                  "sub_path": null,
+                                                                  "sub_path_expr": null
+                                                            }
+                                                      ],
+                                                      "working_dir": null
+                                                }
+                                          ],
+                                          "dns_config": null,
+                                          "dns_policy": "ClusterFirst",
+                                          "enable_service_links": true,
+                                          "ephemeral_containers": null,
+                                          "host_aliases": null,
+                                          "host_ipc": null,
+                                          "host_network": null,
+                                          "host_pid": null,
+                                          "hostname": null,
+                                          "image_pull_secrets": null,
+                                          "init_containers": null,
+                                          "node_name": "acto-cluster-1-worker",
+                                          "node_selector": null,
+                                          "overhead": null,
+                                          "preemption_policy": "PreemptLowerPriority",
+                                          "priority": 0,
+                                          "priority_class_name": null,
+                                          "readiness_gates": null,
+                                          "restart_policy": "Always",
+                                          "runtime_class_name": null,
+                                          "scheduler_name": "default-scheduler",
+                                          "security_context": {
+                                                "fs_group": null,
+                                                "fs_group_change_policy": null,
+                                                "run_as_group": null,
+                                                "run_as_non_root": null,
+                                                "run_as_user": null,
+                                                "se_linux_options": null,
+                                                "seccomp_profile": null,
+                                                "supplemental_groups": null,
+                                                "sysctls": null,
+                                                "windows_options": null
+                                          },
+                                          "service_account": "percona-server-mongodb-operator",
+                                          "service_account_name": "percona-server-mongodb-operator",
+                                          "set_hostname_as_fqdn": null,
+                                          "share_process_namespace": null,
+                                          "subdomain": null,
+                                          "termination_grace_period_seconds": 30,
+                                          "tolerations": [
+                                                {
+                                                      "effect": "NoExecute",
+                                                      "key": "node.kubernetes.io/not-ready",
+                                                      "operator": "Exists",
+                                                      "toleration_seconds": 300,
+                                                      "value": null
+                                                },
+                                                {
+                                                      "effect": "NoExecute",
+                                                      "key": "node.kubernetes.io/unreachable",
+                                                      "operator": "Exists",
+                                                      "toleration_seconds": 300,
+                                                      "value": null
+                                                }
+                                          ],
+                                          "topology_spread_constraints": null,
+                                          "volumes": [
+                                                {
+                                                      "aws_elastic_block_store": null,
+                                                      "azure_disk": null,
+                                                      "azure_file": null,
+                                                      "cephfs": null,
+                                                      "cinder": null,
+                                                      "config_map": null,
+                                                      "csi": null,
+                                                      "downward_api": null,
+                                                      "empty_dir": null,
+                                                      "ephemeral": null,
+                                                      "fc": null,
+                                                      "flex_volume": null,
+                                                      "flocker": null,
+                                                      "gce_persistent_disk": null,
+                                                      "git_repo": null,
+                                                      "glusterfs": null,
+                                                      "host_path": null,
+                                                      "iscsi": null,
+                                                      "name": "kube-api-access-g9hqx",
+                                                      "nfs": null,
+                                                      "persistent_volume_claim": null,
+                                                      "photon_persistent_disk": null,
+                                                      "portworx_volume": null,
+                                                      "projected": {
+                                                            "default_mode": 420,
+                                                            "sources": [
+                                                                  {
+                                                                        "config_map": null,
+                                                                        "downward_api": null,
+                                                                        "secret": null,
+                                                                        "service_account_token": {
+                                                                              "audience": null,
+                                                                              "expiration_seconds": 3607,
+                                                                              "path": "token"
+                                                                        }
+                                                                  },
+                                                                  {
+                                                                        "config_map": {
+                                                                              "items": [
+                                                                                    {
+                                                                                          "key": "ca.crt",
+                                                                                          "mode": null,
+                                                                                          "path": "ca.crt"
+                                                                                    }
+                                                                              ],
+                                                                              "name": "kube-root-ca.crt",
+                                                                              "optional": null
+                                                                        },
+                                                                        "downward_api": null,
+                                                                        "secret": null,
+                                                                        "service_account_token": null
+                                                                  },
+                                                                  {
+                                                                        "config_map": null,
+                                                                        "downward_api": {
+                                                                              "items": [
+                                                                                    {
+                                                                                          "field_ref": {
+                                                                                                "api_version": "v1",
+                                                                                                "field_path": "metadata.namespace"
+                                                                                          },
+                                                                                          "mode": null,
+                                                                                          "path": "namespace",
+                                                                                          "resource_field_ref": null
+                                                                                    }
+                                                                              ]
+                                                                        },
+                                                                        "secret": null,
+                                                                        "service_account_token": null
+                                                                  }
+                                                            ]
+                                                      },
+                                                      "quobyte": null,
+                                                      "rbd": null,
+                                                      "scale_io": null,
+                                                      "secret": null,
+                                                      "storageos": null,
+                                                      "vsphere_volume": null
+                                                }
+                                          ]
+                                    },
+                                    "status": {
+                                          "conditions": [
+                                                {
+                                                      "last_probe_time": null,
+                                                      "last_transition_time": "2023-03-27T03:38:40+00:00",
+                                                      "message": null,
+                                                      "reason": null,
+                                                      "status": "True",
+                                                      "type": "Initialized"
+                                                },
+                                                {
+                                                      "last_probe_time": null,
+                                                      "last_transition_time": "2023-03-27T03:38:41+00:00",
+                                                      "message": null,
+                                                      "reason": null,
+                                                      "status": "True",
+                                                      "type": "Ready"
+                                                },
+                                                {
+                                                      "last_probe_time": null,
+                                                      "last_transition_time": "2023-03-27T03:38:41+00:00",
+                                                      "message": null,
+                                                      "reason": null,
+                                                      "status": "True",
+                                                      "type": "ContainersReady"
+                                                },
+                                                {
+                                                      "last_probe_time": null,
+                                                      "last_transition_time": "2023-03-27T03:38:40+00:00",
+                                                      "message": null,
+                                                      "reason": null,
+                                                      "status": "True",
+                                                      "type": "PodScheduled"
+                                                }
+                                          ],
+                                          "container_statuses": [
+                                                {
+                                                      "container_id": "containerd://d103d57d02d0be94048f4d9be2f8f64f169f2206bf7fc1a7042b79ca25dde265",
+                                                      "image": "docker.io/perconalab/percona-server-mongodb-operator:release-1-12-0",
+                                                      "image_id": "docker.io/perconalab/percona-server-mongodb-operator@sha256:e9ed11994cef3f7ab33e126484d5d5991cccc00b54d066183d1c7abe8e29b802",
+                                                      "last_state": {
+                                                            "running": null,
+                                                            "terminated": null,
+                                                            "waiting": null
+                                                      },
+                                                      "name": "percona-server-mongodb-operator",
+                                                      "ready": true,
+                                                      "restart_count": 0,
+                                                      "started": true,
+                                                      "state": {
+                                                            "running": {
+                                                                  "started_at": "2023-03-27T03:38:41+00:00"
+                                                            },
+                                                            "terminated": null,
+                                                            "waiting": null
+                                                      }
+                                                }
+                                          ],
+                                          "ephemeral_container_statuses": null,
+                                          "host_ip": "172.18.0.23",
+                                          "init_container_statuses": null,
+                                          "message": null,
+                                          "nominated_node_name": null,
+                                          "phase": "Running",
+                                          "pod_ip": "10.244.3.3",
+                                          "pod_i_ps": [
+                                                {
+                                                      "ip": "10.244.3.3"
+                                                }
+                                          ],
+                                          "qos_class": "BestEffort",
+                                          "reason": null,
+                                          "start_time": "2023-03-27T03:38:40+00:00"
+                                    }
+                              }
+                        ]
+                  },
+                  "stateful_set": {},
+                  "deployment": {
+                        "percona-server-mongodb-operator": {
+                              "api_version": null,
+                              "kind": null,
+                              "metadata": {
+                                    "annotations": {
+                                          "deployment.kubernetes.io/revision": "2"
+                                    },
+                                    "cluster_name": null,
+                                    "creation_timestamp": "2023-03-27T03:38:30+00:00",
+                                    "deletion_grace_period_seconds": null,
+                                    "deletion_timestamp": null,
+                                    "finalizers": null,
+                                    "generate_name": null,
+                                    "generation": 2,
+                                    "labels": {
+                                          "acto/tag": "operator-deployment"
+                                    },
+                                    "managed_fields": [
+                                          {
+                                                "api_version": "apps/v1",
+                                                "fields_type": "FieldsV1",
+                                                "fields_v1": {
+                                                      "f:spec": {
+                                                            "f:replicas": {},
+                                                            "f:selector": {},
+                                                            "f:template": {
+                                                                  "f:metadata": {
+                                                                        "f:labels": {
+                                                                              "f:name": {}
+                                                                        }
+                                                                  },
+                                                                  "f:spec": {
+                                                                        "f:containers": {
+                                                                              "k:{\"name\":\"percona-server-mongodb-operator\"}": {
+                                                                                    ".": {},
+                                                                                    "f:command": {},
+                                                                                    "f:env": {
+                                                                                          "k:{\"name\":\"LOG_VERBOSE\"}": {
+                                                                                                ".": {},
+                                                                                                "f:name": {},
+                                                                                                "f:value": {}
+                                                                                          },
+                                                                                          "k:{\"name\":\"OPERATOR_NAME\"}": {
+                                                                                                ".": {},
+                                                                                                "f:name": {},
+                                                                                                "f:value": {}
+                                                                                          },
+                                                                                          "k:{\"name\":\"POD_NAME\"}": {
+                                                                                                ".": {},
+                                                                                                "f:name": {},
+                                                                                                "f:valueFrom": {
+                                                                                                      "f:fieldRef": {}
+                                                                                                }
+                                                                                          },
+                                                                                          "k:{\"name\":\"RESYNC_PERIOD\"}": {
+                                                                                                ".": {},
+                                                                                                "f:name": {},
+                                                                                                "f:value": {}
+                                                                                          },
+                                                                                          "k:{\"name\":\"WATCH_NAMESPACE\"}": {
+                                                                                                ".": {},
+                                                                                                "f:name": {},
+                                                                                                "f:valueFrom": {
+                                                                                                      "f:fieldRef": {}
+                                                                                                }
+                                                                                          }
+                                                                                    },
+                                                                                    "f:image": {},
+                                                                                    "f:imagePullPolicy": {},
+                                                                                    "f:name": {},
+                                                                                    "f:ports": {
+                                                                                          "k:{\"containerPort\":60000,\"protocol\":\"TCP\"}": {
+                                                                                                ".": {},
+                                                                                                "f:containerPort": {},
+                                                                                                "f:name": {},
+                                                                                                "f:protocol": {}
+                                                                                          }
+                                                                                    }
+                                                                              }
+                                                                        },
+                                                                        "f:serviceAccountName": {}
+                                                                  }
+                                                            }
+                                                      }
+                                                },
+                                                "manager": "kubectl",
+                                                "operation": "Apply",
+                                                "subresource": null,
+                                                "time": "2023-03-27T03:38:30+00:00"
+                                          },
+                                          {
+                                                "api_version": "apps/v1",
+                                                "fields_type": "FieldsV1",
+                                                "fields_v1": {
+                                                      "f:metadata": {
+                                                            "f:labels": {
+                                                                  ".": {},
+                                                                  "f:acto/tag": {}
+                                                            }
+                                                      },
+                                                      "f:spec": {
+                                                            "f:template": {
+                                                                  "f:metadata": {
+                                                                        "f:labels": {
+                                                                              "f:acto/tag": {}
+                                                                        }
+                                                                  }
+                                                            }
+                                                      }
+                                                },
+                                                "manager": "OpenAPI-Generator",
+                                                "operation": "Update",
+                                                "subresource": null,
+                                                "time": "2023-03-27T03:38:40+00:00"
+                                          },
+                                          {
+                                                "api_version": "apps/v1",
+                                                "fields_type": "FieldsV1",
+                                                "fields_v1": {
+                                                      "f:metadata": {
+                                                            "f:annotations": {
+                                                                  ".": {},
+                                                                  "f:deployment.kubernetes.io/revision": {}
+                                                            }
+                                                      },
+                                                      "f:status": {
+                                                            "f:availableReplicas": {},
+                                                            "f:conditions": {
+                                                                  ".": {},
+                                                                  "k:{\"type\":\"Available\"}": {
+                                                                        ".": {},
+                                                                        "f:lastTransitionTime": {},
+                                                                        "f:lastUpdateTime": {},
+                                                                        "f:message": {},
+                                                                        "f:reason": {},
+                                                                        "f:status": {},
+                                                                        "f:type": {}
+                                                                  },
+                                                                  "k:{\"type\":\"Progressing\"}": {
+                                                                        ".": {},
+                                                                        "f:lastTransitionTime": {},
+                                                                        "f:lastUpdateTime": {},
+                                                                        "f:message": {},
+                                                                        "f:reason": {},
+                                                                        "f:status": {},
+                                                                        "f:type": {}
+                                                                  }
+                                                            },
+                                                            "f:observedGeneration": {},
+                                                            "f:readyReplicas": {},
+                                                            "f:replicas": {},
+                                                            "f:updatedReplicas": {}
+                                                      }
+                                                },
+                                                "manager": "kube-controller-manager",
+                                                "operation": "Update",
+                                                "subresource": "status",
+                                                "time": "2023-03-27T03:38:41+00:00"
+                                          }
+                                    ],
+                                    "name": "percona-server-mongodb-operator",
+                                    "namespace": "acto-namespace",
+                                    "owner_references": null,
+                                    "resource_version": "868",
+                                    "self_link": null,
+                                    "uid": "87a16764-d6a3-4992-82b1-a369b6b188af"
+                              },
+                              "spec": {
+                                    "min_ready_seconds": null,
+                                    "paused": null,
+                                    "progress_deadline_seconds": 600,
+                                    "replicas": 1,
+                                    "revision_history_limit": 10,
+                                    "selector": {
+                                          "match_expressions": null,
+                                          "match_labels": {
+                                                "name": "percona-server-mongodb-operator"
+                                          }
+                                    },
+                                    "strategy": {
+                                          "rolling_update": {
+                                                "max_surge": "25%",
+                                                "max_unavailable": "25%"
+                                          },
+                                          "type": "RollingUpdate"
+                                    },
+                                    "template": {
+                                          "metadata": {
+                                                "annotations": null,
+                                                "cluster_name": null,
+                                                "creation_timestamp": null,
+                                                "deletion_grace_period_seconds": null,
+                                                "deletion_timestamp": null,
+                                                "finalizers": null,
+                                                "generate_name": null,
+                                                "generation": null,
+                                                "labels": {
+                                                      "acto/tag": "operator-pod",
+                                                      "name": "percona-server-mongodb-operator"
+                                                },
+                                                "managed_fields": null,
+                                                "name": null,
+                                                "namespace": null,
+                                                "owner_references": null,
+                                                "resource_version": null,
+                                                "self_link": null,
+                                                "uid": null
+                                          },
+                                          "spec": {
+                                                "active_deadline_seconds": null,
+                                                "affinity": null,
+                                                "automount_service_account_token": null,
+                                                "containers": [
+                                                      {
+                                                            "args": null,
+                                                            "command": [
+                                                                  "percona-server-mongodb-operator"
+                                                            ],
+                                                            "env": [
+                                                                  {
+                                                                        "name": "WATCH_NAMESPACE",
+                                                                        "value": null,
+                                                                        "value_from": {
+                                                                              "config_map_key_ref": null,
+                                                                              "field_ref": {
+                                                                                    "api_version": "v1",
+                                                                                    "field_path": "metadata.namespace"
+                                                                              },
+                                                                              "resource_field_ref": null,
+                                                                              "secret_key_ref": null
+                                                                        }
+                                                                  },
+                                                                  {
+                                                                        "name": "POD_NAME",
+                                                                        "value": null,
+                                                                        "value_from": {
+                                                                              "config_map_key_ref": null,
+                                                                              "field_ref": {
+                                                                                    "api_version": "v1",
+                                                                                    "field_path": "metadata.name"
+                                                                              },
+                                                                              "resource_field_ref": null,
+                                                                              "secret_key_ref": null
+                                                                        }
+                                                                  },
+                                                                  {
+                                                                        "name": "OPERATOR_NAME",
+                                                                        "value": "percona-server-mongodb-operator",
+                                                                        "value_from": null
+                                                                  },
+                                                                  {
+                                                                        "name": "RESYNC_PERIOD",
+                                                                        "value": "5s",
+                                                                        "value_from": null
+                                                                  },
+                                                                  {
+                                                                        "name": "LOG_VERBOSE",
+                                                                        "value": "false",
+                                                                        "value_from": null
+                                                                  }
+                                                            ],
+                                                            "env_from": null,
+                                                            "image": "perconalab/percona-server-mongodb-operator:release-1-12-0",
+                                                            "image_pull_policy": "IfNotPresent",
+                                                            "lifecycle": null,
+                                                            "liveness_probe": null,
+                                                            "name": "percona-server-mongodb-operator",
+                                                            "ports": [
+                                                                  {
+                                                                        "container_port": 60000,
+                                                                        "host_ip": null,
+                                                                        "host_port": null,
+                                                                        "name": "metrics",
+                                                                        "protocol": "TCP"
+                                                                  }
+                                                            ],
+                                                            "readiness_probe": null,
+                                                            "resources": {
+                                                                  "limits": null,
+                                                                  "requests": null
+                                                            },
+                                                            "security_context": null,
+                                                            "startup_probe": null,
+                                                            "stdin": null,
+                                                            "stdin_once": null,
+                                                            "termination_message_path": "/dev/termination-log",
+                                                            "termination_message_policy": "File",
+                                                            "tty": null,
+                                                            "volume_devices": null,
+                                                            "volume_mounts": null,
+                                                            "working_dir": null
+                                                      }
+                                                ],
+                                                "dns_config": null,
+                                                "dns_policy": "ClusterFirst",
+                                                "enable_service_links": null,
+                                                "ephemeral_containers": null,
+                                                "host_aliases": null,
+                                                "host_ipc": null,
+                                                "host_network": null,
+                                                "host_pid": null,
+                                                "hostname": null,
+                                                "image_pull_secrets": null,
+                                                "init_containers": null,
+                                                "node_name": null,
+                                                "node_selector": null,
+                                                "overhead": null,
+                                                "preemption_policy": null,
+                                                "priority": null,
+                                                "priority_class_name": null,
+                                                "readiness_gates": null,
+                                                "restart_policy": "Always",
+                                                "runtime_class_name": null,
+                                                "scheduler_name": "default-scheduler",
+                                                "security_context": {
+                                                      "fs_group": null,
+                                                      "fs_group_change_policy": null,
+                                                      "run_as_group": null,
+                                                      "run_as_non_root": null,
+                                                      "run_as_user": null,
+                                                      "se_linux_options": null,
+                                                      "seccomp_profile": null,
+                                                      "supplemental_groups": null,
+                                                      "sysctls": null,
+                                                      "windows_options": null
+                                                },
+                                                "service_account": "percona-server-mongodb-operator",
+                                                "service_account_name": "percona-server-mongodb-operator",
+                                                "set_hostname_as_fqdn": null,
+                                                "share_process_namespace": null,
+                                                "subdomain": null,
+                                                "termination_grace_period_seconds": 30,
+                                                "tolerations": null,
+                                                "topology_spread_constraints": null,
+                                                "volumes": null
+                                          }
+                                    }
+                              },
+                              "status": {
+                                    "available_replicas": 1,
+                                    "collision_count": null,
+                                    "conditions": [
+                                          {
+                                                "last_transition_time": "2023-03-27T03:38:35+00:00",
+                                                "last_update_time": "2023-03-27T03:38:35+00:00",
+                                                "message": "Deployment has minimum availability.",
+                                                "reason": "MinimumReplicasAvailable",
+                                                "status": "True",
+                                                "type": "Available"
+                                          },
+                                          {
+                                                "last_transition_time": "2023-03-27T03:38:30+00:00",
+                                                "last_update_time": "2023-03-27T03:38:41+00:00",
+                                                "message": "ReplicaSet \"percona-server-mongodb-operator-fb6cf9f7c\" has successfully progressed.",
+                                                "reason": "NewReplicaSetAvailable",
+                                                "status": "True",
+                                                "type": "Progressing"
+                                          }
+                                    ],
+                                    "observed_generation": 2,
+                                    "ready_replicas": 1,
+                                    "replicas": 1,
+                                    "unavailable_replicas": null,
+                                    "updated_replicas": 1
+                              }
+                        }
+                  },
+                  "config_map": {
+                        "08db0feb.percona.com": {
+                              "api_version": null,
+                              "binary_data": null,
+                              "data": null,
+                              "immutable": null,
+                              "kind": null,
+                              "metadata": {
+                                    "annotations": {
+                                          "control-plane.alpha.kubernetes.io/leader": "{\"holderIdentity\":\"percona-server-mongodb-operator-fb6cf9f7c-fbg66_40b7ab61-9638-468f-bf89-f605393098ab\",\"leaseDurationSeconds\":15,\"acquireTime\":\"2023-03-27T03:39:00Z\",\"renewTime\":\"2023-03-27T03:39:44Z\",\"leaderTransitions\":1}"
+                                    },
+                                    "cluster_name": null,
+                                    "creation_timestamp": "2023-03-27T03:38:37+00:00",
+                                    "deletion_grace_period_seconds": null,
+                                    "deletion_timestamp": null,
+                                    "finalizers": null,
+                                    "generate_name": null,
+                                    "generation": null,
+                                    "labels": null,
+                                    "managed_fields": [
+                                          {
+                                                "api_version": "v1",
+                                                "fields_type": "FieldsV1",
+                                                "fields_v1": {
+                                                      "f:metadata": {
+                                                            "f:annotations": {
+                                                                  ".": {},
+                                                                  "f:control-plane.alpha.kubernetes.io/leader": {}
+                                                            }
+                                                      }
+                                                },
+                                                "manager": "percona-server-mongodb-operator",
+                                                "operation": "Update",
+                                                "subresource": null,
+                                                "time": "2023-03-27T03:38:37+00:00"
+                                          }
+                                    ],
+                                    "name": "08db0feb.percona.com",
+                                    "namespace": "acto-namespace",
+                                    "owner_references": null,
+                                    "resource_version": "1021",
+                                    "self_link": null,
+                                    "uid": "a68ca619-7c12-42eb-958e-ed70e3d24aae"
+                              }
+                        },
+                        "kube-root-ca.crt": {
+                              "api_version": null,
+                              "binary_data": null,
+                              "data": {
+                                    "ca.crt": "-----BEGIN CERTIFICATE-----\nMIIC/jCCAeagAwIBAgIBADANBgkqhkiG9w0BAQsFADAVMRMwEQYDVQQDEwprdWJl\ncm5ldGVzMB4XDTIzMDMyNzAzMzcxNVoXDTMzMDMyNDAzMzcxNVowFTETMBEGA1UE\nAxMKa3ViZXJuZXRlczCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBANaa\nd3nUJyDfoQoJs0EycGudphMJwOb8BJJ1iBvNah6zdZICEPq1cqLoq/HeECpWpwPQ\nQfj4vHA3pWP93pZfPm5Wskx2hlJhShpq4+2RUXFGu2sNeVMpvKKy4ZZnkIsfPzGm\nCT4pOfxYii00jfos3fgNEu8qG+yDXnSFNccgRHj9suoB3fL6caVzO860fOdTlQdi\noY02Q/hXTBD7Cpq1tpJzedTufuvRWcpr04SqGartjuoL58bpqvpyAMzswObhkIXe\n2zsj5aflLb5lcOI00iP7RCTvyD6r9Q1fs7vk818CDwiYpjT+XbcaAFaZi/XNc2OE\nBdXtVKSGQ3JH6lIu+j0CAwEAAaNZMFcwDgYDVR0PAQH/BAQDAgKkMA8GA1UdEwEB\n/wQFMAMBAf8wHQYDVR0OBBYEFHzDYEdbTkC+JRHTZYDUC7kug6acMBUGA1UdEQQO\nMAyCCmt1YmVybmV0ZXMwDQYJKoZIhvcNAQELBQADggEBANVbNURqyTlZBXzbvRy3\nH4hblmotjA3NaN/KimzXRhNXiRPfgjM0SfEdA4L9vGZwTTO4iOG+hCmT9EDufU06\nth1s5xMcMJeohJ30TU1I/+37H28ps8KKKGAcTB38AXpZDyD8YQX1FsN/5M6My0oL\nrBErWoUQ8rENVn8bfAczHvQNgaiQWYeWS8kPHjn9MzHB0xk1PJFs1h0Yek5ItelX\nDmt+j8SeKaBalzTn1NOAtoyS7un0arvTGJ27R8ONNR3+pYQjA4kdpuLU4BOeWkAE\noXw/3c8/CXrJYMzRHLYH6q8kAI8LRrBEUfvxCZYTT4/UmNEZquj+KpMZtzDgtYms\n1sw=\n-----END CERTIFICATE-----\n"
+                              },
+                              "immutable": null,
+                              "kind": null,
+                              "metadata": {
+                                    "annotations": {
+                                          "kubernetes.io/description": "Contains a CA bundle that can be used to verify the kube-apiserver when using internal endpoints such as the internal service IP or kubernetes.default.svc. No other usage is guaranteed across distributions of Kubernetes clusters."
+                                    },
+                                    "cluster_name": null,
+                                    "creation_timestamp": "2023-03-27T03:38:16+00:00",
+                                    "deletion_grace_period_seconds": null,
+                                    "deletion_timestamp": null,
+                                    "finalizers": null,
+                                    "generate_name": null,
+                                    "generation": null,
+                                    "labels": null,
+                                    "managed_fields": [
+                                          {
+                                                "api_version": "v1",
+                                                "fields_type": "FieldsV1",
+                                                "fields_v1": {
+                                                      "f:data": {
+                                                            ".": {},
+                                                            "f:ca.crt": {}
+                                                      },
+                                                      "f:metadata": {
+                                                            "f:annotations": {
+                                                                  ".": {},
+                                                                  "f:kubernetes.io/description": {}
+                                                            }
+                                                      }
+                                                },
+                                                "manager": "kube-controller-manager",
+                                                "operation": "Update",
+                                                "subresource": null,
+                                                "time": "2023-03-27T03:38:16+00:00"
+                                          }
+                                    ],
+                                    "name": "kube-root-ca.crt",
+                                    "namespace": "acto-namespace",
+                                    "owner_references": null,
+                                    "resource_version": "730",
+                                    "self_link": null,
+                                    "uid": "c1cd87ea-07b9-4cc9-ae16-535fd0730036"
+                              }
+                        }
+                  },
+                  "service": {},
+                  "service_account": {
+                        "default": {
+                              "api_version": null,
+                              "automount_service_account_token": null,
+                              "image_pull_secrets": null,
+                              "kind": null,
+                              "metadata": {
+                                    "annotations": null,
+                                    "cluster_name": null,
+                                    "creation_timestamp": "2023-03-27T03:38:16+00:00",
+                                    "deletion_grace_period_seconds": null,
+                                    "deletion_timestamp": null,
+                                    "finalizers": null,
+                                    "generate_name": null,
+                                    "generation": null,
+                                    "labels": null,
+                                    "managed_fields": null,
+                                    "name": "default",
+                                    "namespace": "acto-namespace",
+                                    "owner_references": null,
+                                    "resource_version": "733",
+                                    "self_link": null,
+                                    "uid": "183da8e3-0f6b-4ba4-bc7f-cdc7376ad7d1"
+                              },
+                              "secrets": [
+                                    {
+                                          "api_version": null,
+                                          "field_path": null,
+                                          "kind": null,
+                                          "name": "default-token-cm954",
+                                          "namespace": null,
+                                          "resource_version": null,
+                                          "uid": null
+                                    }
+                              ]
+                        },
+                        "percona-server-mongodb-operator": {
+                              "api_version": null,
+                              "automount_service_account_token": null,
+                              "image_pull_secrets": null,
+                              "kind": null,
+                              "metadata": {
+                                    "annotations": null,
+                                    "cluster_name": null,
+                                    "creation_timestamp": "2023-03-27T03:38:30+00:00",
+                                    "deletion_grace_period_seconds": null,
+                                    "deletion_timestamp": null,
+                                    "finalizers": null,
+                                    "generate_name": null,
+                                    "generation": null,
+                                    "labels": null,
+                                    "managed_fields": null,
+                                    "name": "percona-server-mongodb-operator",
+                                    "namespace": "acto-namespace",
+                                    "owner_references": null,
+                                    "resource_version": "787",
+                                    "self_link": null,
+                                    "uid": "02828689-9300-469e-8c8f-44374e571be1"
+                              },
+                              "secrets": [
+                                    {
+                                          "api_version": null,
+                                          "field_path": null,
+                                          "kind": null,
+                                          "name": "percona-server-mongodb-operator-token-kfk2t",
+                                          "namespace": null,
+                                          "resource_version": null,
+                                          "uid": null
+                                    }
+                              ]
+                        }
+                  },
+                  "pvc": {},
+                  "cronjob": {},
+                  "ingress": {},
+                  "network_policy": {},
+                  "pod_disruption_budget": {},
+                  "secret": {
+                        "default-token-cm954": {
+                              "api_version": null,
+                              "data": {
+                                    "ca.crt": "-----BEGIN CERTIFICATE-----\nMIIC/jCCAeagAwIBAgIBADANBgkqhkiG9w0BAQsFADAVMRMwEQYDVQQDEwprdWJl\ncm5ldGVzMB4XDTIzMDMyNzAzMzcxNVoXDTMzMDMyNDAzMzcxNVowFTETMBEGA1UE\nAxMKa3ViZXJuZXRlczCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBANaa\nd3nUJyDfoQoJs0EycGudphMJwOb8BJJ1iBvNah6zdZICEPq1cqLoq/HeECpWpwPQ\nQfj4vHA3pWP93pZfPm5Wskx2hlJhShpq4+2RUXFGu2sNeVMpvKKy4ZZnkIsfPzGm\nCT4pOfxYii00jfos3fgNEu8qG+yDXnSFNccgRHj9suoB3fL6caVzO860fOdTlQdi\noY02Q/hXTBD7Cpq1tpJzedTufuvRWcpr04SqGartjuoL58bpqvpyAMzswObhkIXe\n2zsj5aflLb5lcOI00iP7RCTvyD6r9Q1fs7vk818CDwiYpjT+XbcaAFaZi/XNc2OE\nBdXtVKSGQ3JH6lIu+j0CAwEAAaNZMFcwDgYDVR0PAQH/BAQDAgKkMA8GA1UdEwEB\n/wQFMAMBAf8wHQYDVR0OBBYEFHzDYEdbTkC+JRHTZYDUC7kug6acMBUGA1UdEQQO\nMAyCCmt1YmVybmV0ZXMwDQYJKoZIhvcNAQELBQADggEBANVbNURqyTlZBXzbvRy3\nH4hblmotjA3NaN/KimzXRhNXiRPfgjM0SfEdA4L9vGZwTTO4iOG+hCmT9EDufU06\nth1s5xMcMJeohJ30TU1I/+37H28ps8KKKGAcTB38AXpZDyD8YQX1FsN/5M6My0oL\nrBErWoUQ8rENVn8bfAczHvQNgaiQWYeWS8kPHjn9MzHB0xk1PJFs1h0Yek5ItelX\nDmt+j8SeKaBalzTn1NOAtoyS7un0arvTGJ27R8ONNR3+pYQjA4kdpuLU4BOeWkAE\noXw/3c8/CXrJYMzRHLYH6q8kAI8LRrBEUfvxCZYTT4/UmNEZquj+KpMZtzDgtYms\n1sw=\n-----END CERTIFICATE-----\n",
+                                    "namespace": "acto-namespace",
+                                    "token": "eyJhbGciOiJSUzI1NiIsImtpZCI6IlVSeFQ2LXU4NkJQSHBpYm9hc2REUjVwQWFMMTBzRnFXcE91QkxzcjR2NmMifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJhY3RvLW5hbWVzcGFjZSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJkZWZhdWx0LXRva2VuLWNtOTU0Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6ImRlZmF1bHQiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiIxODNkYThlMy0wZjZiLTRiYTQtYmM3Zi1jZGM3Mzc2YWQ3ZDEiLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6YWN0by1uYW1lc3BhY2U6ZGVmYXVsdCJ9.cqqgBlz8d1aYw3LyaTpBSrzEEHYcISUFj0X9ZiJlEbBRTyiPiuYTsLBvhGKDdNHlFaBugYAsBqgWyg1nCXdyDDme-VCUwShMJDTyuM4ruskGfIR4ZTpOlRKygkf2VlBAtp5wX6FhPK7acciVanVN3ZPsspEoFv5GmS3KTBtEn7P5tw3_tVYKTnHhnUvjT4lzRhsi0V_nKKFbc31Zod_y_DHyShKLnklhOYhcPyN7X2ZELcm5L2ogpo9aFTKfVDt3k0vtwq4Mhp7rytDm4124f8PgjJKIsJ1qNsRilgj_scuujb9OVI6flxhP9_6gnyI2wdr7C39W2JrITWDwH4PLMA"
+                              },
+                              "immutable": null,
+                              "kind": null,
+                              "metadata": {
+                                    "annotations": {
+                                          "kubernetes.io/service-account.name": "default",
+                                          "kubernetes.io/service-account.uid": "183da8e3-0f6b-4ba4-bc7f-cdc7376ad7d1"
+                                    },
+                                    "cluster_name": null,
+                                    "creation_timestamp": "2023-03-27T03:38:16+00:00",
+                                    "deletion_grace_period_seconds": null,
+                                    "deletion_timestamp": null,
+                                    "finalizers": null,
+                                    "generate_name": null,
+                                    "generation": null,
+                                    "labels": null,
+                                    "managed_fields": [
+                                          {
+                                                "api_version": "v1",
+                                                "fields_type": "FieldsV1",
+                                                "fields_v1": {
+                                                      "f:data": {
+                                                            ".": {},
+                                                            "f:ca.crt": {},
+                                                            "f:namespace": {},
+                                                            "f:token": {}
+                                                      },
+                                                      "f:metadata": {
+                                                            "f:annotations": {
+                                                                  ".": {},
+                                                                  "f:kubernetes.io/service-account.name": {},
+                                                                  "f:kubernetes.io/service-account.uid": {}
+                                                            }
+                                                      },
+                                                      "f:type": {}
+                                                },
+                                                "manager": "kube-controller-manager",
+                                                "operation": "Update",
+                                                "subresource": null,
+                                                "time": "2023-03-27T03:38:16+00:00"
+                                          }
+                                    ],
+                                    "name": "default-token-cm954",
+                                    "namespace": "acto-namespace",
+                                    "owner_references": null,
+                                    "resource_version": "732",
+                                    "self_link": null,
+                                    "uid": "6921a3a5-e399-42bd-a004-543e2b061ac5"
+                              },
+                              "string_data": null,
+                              "type": "kubernetes.io/service-account-token"
+                        },
+                        "my-cluster-name-secrets": {
+                              "api_version": null,
+                              "data": {
+                                    "MONGODB_BACKUP_PASSWORD": "backup123456",
+                                    "MONGODB_BACKUP_USER": "backup",
+                                    "MONGODB_CLUSTER_ADMIN_PASSWORD": "clusterAdmin123456",
+                                    "MONGODB_CLUSTER_ADMIN_USER": "clusterAdmin",
+                                    "MONGODB_CLUSTER_MONITOR_PASSWORD": "clusterMonitor123456",
+                                    "MONGODB_CLUSTER_MONITOR_USER": "clusterMonitor",
+                                    "MONGODB_DATABASE_ADMIN_PASSWORD": "databaseAdmin123456",
+                                    "MONGODB_DATABASE_ADMIN_USER": "databaseAdmin",
+                                    "MONGODB_USER_ADMIN_PASSWORD": "userAdmin123456",
+                                    "MONGODB_USER_ADMIN_USER": "userAdmin",
+                                    "PMM_SERVER_PASSWORD": "password",
+                                    "PMM_SERVER_USER": "admin"
+                              },
+                              "immutable": null,
+                              "kind": null,
+                              "metadata": {
+                                    "annotations": null,
+                                    "cluster_name": null,
+                                    "creation_timestamp": "2023-03-27T03:38:30+00:00",
+                                    "deletion_grace_period_seconds": null,
+                                    "deletion_timestamp": null,
+                                    "finalizers": null,
+                                    "generate_name": null,
+                                    "generation": null,
+                                    "labels": null,
+                                    "managed_fields": [
+                                          {
+                                                "api_version": "v1",
+                                                "fields_type": "FieldsV1",
+                                                "fields_v1": {
+                                                      "f:stringData": {
+                                                            "f:MONGODB_BACKUP_PASSWORD": {},
+                                                            "f:MONGODB_BACKUP_USER": {},
+                                                            "f:MONGODB_CLUSTER_ADMIN_PASSWORD": {},
+                                                            "f:MONGODB_CLUSTER_ADMIN_USER": {},
+                                                            "f:MONGODB_CLUSTER_MONITOR_PASSWORD": {},
+                                                            "f:MONGODB_CLUSTER_MONITOR_USER": {},
+                                                            "f:MONGODB_DATABASE_ADMIN_PASSWORD": {},
+                                                            "f:MONGODB_DATABASE_ADMIN_USER": {},
+                                                            "f:MONGODB_USER_ADMIN_PASSWORD": {},
+                                                            "f:MONGODB_USER_ADMIN_USER": {},
+                                                            "f:PMM_SERVER_PASSWORD": {},
+                                                            "f:PMM_SERVER_USER": {}
+                                                      },
+                                                      "f:type": {}
+                                                },
+                                                "manager": "kubectl",
+                                                "operation": "Apply",
+                                                "subresource": null,
+                                                "time": "2023-03-27T03:38:30+00:00"
+                                          }
+                                    ],
+                                    "name": "my-cluster-name-secrets",
+                                    "namespace": "acto-namespace",
+                                    "owner_references": null,
+                                    "resource_version": "790",
+                                    "self_link": null,
+                                    "uid": "d4ff3f3f-94c6-4359-8427-255d147c0346"
+                              },
+                              "string_data": null,
+                              "type": "Opaque"
+                        },
+                        "percona-server-mongodb-operator-token-kfk2t": {
+                              "api_version": null,
+                              "data": {
+                                    "ca.crt": "-----BEGIN CERTIFICATE-----\nMIIC/jCCAeagAwIBAgIBADANBgkqhkiG9w0BAQsFADAVMRMwEQYDVQQDEwprdWJl\ncm5ldGVzMB4XDTIzMDMyNzAzMzcxNVoXDTMzMDMyNDAzMzcxNVowFTETMBEGA1UE\nAxMKa3ViZXJuZXRlczCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBANaa\nd3nUJyDfoQoJs0EycGudphMJwOb8BJJ1iBvNah6zdZICEPq1cqLoq/HeECpWpwPQ\nQfj4vHA3pWP93pZfPm5Wskx2hlJhShpq4+2RUXFGu2sNeVMpvKKy4ZZnkIsfPzGm\nCT4pOfxYii00jfos3fgNEu8qG+yDXnSFNccgRHj9suoB3fL6caVzO860fOdTlQdi\noY02Q/hXTBD7Cpq1tpJzedTufuvRWcpr04SqGartjuoL58bpqvpyAMzswObhkIXe\n2zsj5aflLb5lcOI00iP7RCTvyD6r9Q1fs7vk818CDwiYpjT+XbcaAFaZi/XNc2OE\nBdXtVKSGQ3JH6lIu+j0CAwEAAaNZMFcwDgYDVR0PAQH/BAQDAgKkMA8GA1UdEwEB\n/wQFMAMBAf8wHQYDVR0OBBYEFHzDYEdbTkC+JRHTZYDUC7kug6acMBUGA1UdEQQO\nMAyCCmt1YmVybmV0ZXMwDQYJKoZIhvcNAQELBQADggEBANVbNURqyTlZBXzbvRy3\nH4hblmotjA3NaN/KimzXRhNXiRPfgjM0SfEdA4L9vGZwTTO4iOG+hCmT9EDufU06\nth1s5xMcMJeohJ30TU1I/+37H28ps8KKKGAcTB38AXpZDyD8YQX1FsN/5M6My0oL\nrBErWoUQ8rENVn8bfAczHvQNgaiQWYeWS8kPHjn9MzHB0xk1PJFs1h0Yek5ItelX\nDmt+j8SeKaBalzTn1NOAtoyS7un0arvTGJ27R8ONNR3+pYQjA4kdpuLU4BOeWkAE\noXw/3c8/CXrJYMzRHLYH6q8kAI8LRrBEUfvxCZYTT4/UmNEZquj+KpMZtzDgtYms\n1sw=\n-----END CERTIFICATE-----\n",
+                                    "namespace": "acto-namespace",
+                                    "token": "eyJhbGciOiJSUzI1NiIsImtpZCI6IlVSeFQ2LXU4NkJQSHBpYm9hc2REUjVwQWFMMTBzRnFXcE91QkxzcjR2NmMifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJhY3RvLW5hbWVzcGFjZSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJwZXJjb25hLXNlcnZlci1tb25nb2RiLW9wZXJhdG9yLXRva2VuLWtmazJ0Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6InBlcmNvbmEtc2VydmVyLW1vbmdvZGItb3BlcmF0b3IiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiIwMjgyODY4OS05MzAwLTQ2OWUtOGM4Zi00NDM3NGU1NzFiZTEiLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6YWN0by1uYW1lc3BhY2U6cGVyY29uYS1zZXJ2ZXItbW9uZ29kYi1vcGVyYXRvciJ9.Z7hfHXLui_8CNH5h_SjijsdRu3gZsrF-b4W2LvXU3heNMZZmH71qLcLEz4_LCexgzJf76JgwdJEFukDpu0t1xr0o9ERrCOaqgBCVoqqoNI5oAEGBkg_rAfgUYne4x1oEPvP-pulrbVwrjBjWcm831_yzp-flOObDOOU2VuZfAK_oeHLNuIHu8fVN-WP2gcEQk8xImbzzXABC3I5XTpoAMJG_dMWDVc8lZ5JXBAKZFa2sp2ZH_yd7S47ndwnVePUItVpNx-iz2biucYaoZMpyVl0S4ibHJwCjAm-72tHT6XbVQKjEe6dCZLL-1dBjCS0WlX5M8QBkcGPQNKUnbYX4JA"
+                              },
+                              "immutable": null,
+                              "kind": null,
+                              "metadata": {
+                                    "annotations": {
+                                          "kubernetes.io/service-account.name": "percona-server-mongodb-operator",
+                                          "kubernetes.io/service-account.uid": "02828689-9300-469e-8c8f-44374e571be1"
+                                    },
+                                    "cluster_name": null,
+                                    "creation_timestamp": "2023-03-27T03:38:30+00:00",
+                                    "deletion_grace_period_seconds": null,
+                                    "deletion_timestamp": null,
+                                    "finalizers": null,
+                                    "generate_name": null,
+                                    "generation": null,
+                                    "labels": null,
+                                    "managed_fields": [
+                                          {
+                                                "api_version": "v1",
+                                                "fields_type": "FieldsV1",
+                                                "fields_v1": {
+                                                      "f:data": {
+                                                            ".": {},
+                                                            "f:ca.crt": {},
+                                                            "f:namespace": {},
+                                                            "f:token": {}
+                                                      },
+                                                      "f:metadata": {
+                                                            "f:annotations": {
+                                                                  ".": {},
+                                                                  "f:kubernetes.io/service-account.name": {},
+                                                                  "f:kubernetes.io/service-account.uid": {}
+                                                            }
+                                                      },
+                                                      "f:type": {}
+                                                },
+                                                "manager": "kube-controller-manager",
+                                                "operation": "Update",
+                                                "subresource": null,
+                                                "time": "2023-03-27T03:38:30+00:00"
+                                          }
+                                    ],
+                                    "name": "percona-server-mongodb-operator-token-kfk2t",
+                                    "namespace": "acto-namespace",
+                                    "owner_references": null,
+                                    "resource_version": "786",
+                                    "self_link": null,
+                                    "uid": "f2270d23-4627-4cc2-baec-2d1d2fbe47a8"
+                              },
+                              "string_data": null,
+                              "type": "kubernetes.io/service-account-token"
+                        }
+                  },
+                  "endpoints": {},
+                  "job": {},
+                  "role": {
+                        "percona-server-mongodb-operator": {
+                              "api_version": null,
+                              "kind": null,
+                              "metadata": {
+                                    "annotations": null,
+                                    "cluster_name": null,
+                                    "creation_timestamp": "2023-03-27T03:38:30+00:00",
+                                    "deletion_grace_period_seconds": null,
+                                    "deletion_timestamp": null,
+                                    "finalizers": null,
+                                    "generate_name": null,
+                                    "generation": null,
+                                    "labels": null,
+                                    "managed_fields": [
+                                          {
+                                                "api_version": "rbac.authorization.k8s.io/v1",
+                                                "fields_type": "FieldsV1",
+                                                "fields_v1": {
+                                                      "f:rules": {}
+                                                },
+                                                "manager": "kubectl",
+                                                "operation": "Apply",
+                                                "subresource": null,
+                                                "time": "2023-03-27T03:38:30+00:00"
+                                          }
+                                    ],
+                                    "name": "percona-server-mongodb-operator",
+                                    "namespace": "acto-namespace",
+                                    "owner_references": null,
+                                    "resource_version": "783",
+                                    "self_link": null,
+                                    "uid": "3cc88ae5-7b46-47ca-acd0-7ceb87e99d38"
+                              },
+                              "rules": [
+                                    {
+                                          "api_groups": [
+                                                "psmdb.percona.com"
+                                          ],
+                                          "non_resource_ur_ls": null,
+                                          "resource_names": null,
+                                          "resources": [
+                                                "perconaservermongodbs",
+                                                "perconaservermongodbs/status",
+                                                "perconaservermongodbbackups",
+                                                "perconaservermongodbbackups/status",
+                                                "perconaservermongodbrestores",
+                                                "perconaservermongodbrestores/status"
+                                          ],
+                                          "verbs": [
+                                                "get",
+                                                "list",
+                                                "watch",
+                                                "create",
+                                                "update",
+                                                "patch",
+                                                "delete"
+                                          ]
+                                    },
+                                    {
+                                          "api_groups": [
+                                                ""
+                                          ],
+                                          "non_resource_ur_ls": null,
+                                          "resource_names": null,
+                                          "resources": [
+                                                "pods",
+                                                "pods/exec",
+                                                "services",
+                                                "persistentvolumeclaims",
+                                                "secrets",
+                                                "configmaps"
+                                          ],
+                                          "verbs": [
+                                                "get",
+                                                "list",
+                                                "watch",
+                                                "create",
+                                                "update",
+                                                "patch",
+                                                "delete"
+                                          ]
+                                    },
+                                    {
+                                          "api_groups": [
+                                                "apps"
+                                          ],
+                                          "non_resource_ur_ls": null,
+                                          "resource_names": null,
+                                          "resources": [
+                                                "deployments",
+                                                "replicasets",
+                                                "statefulsets"
+                                          ],
+                                          "verbs": [
+                                                "get",
+                                                "list",
+                                                "watch",
+                                                "create",
+                                                "update",
+                                                "patch",
+                                                "delete"
+                                          ]
+                                    },
+                                    {
+                                          "api_groups": [
+                                                "batch"
+                                          ],
+                                          "non_resource_ur_ls": null,
+                                          "resource_names": null,
+                                          "resources": [
+                                                "cronjobs"
+                                          ],
+                                          "verbs": [
+                                                "get",
+                                                "list",
+                                                "watch",
+                                                "create",
+                                                "update",
+                                                "patch",
+                                                "delete"
+                                          ]
+                                    },
+                                    {
+                                          "api_groups": [
+                                                "policy"
+                                          ],
+                                          "non_resource_ur_ls": null,
+                                          "resource_names": null,
+                                          "resources": [
+                                                "poddisruptionbudgets"
+                                          ],
+                                          "verbs": [
+                                                "get",
+                                                "list",
+                                                "watch",
+                                                "create",
+                                                "update",
+                                                "patch",
+                                                "delete"
+                                          ]
+                                    },
+                                    {
+                                          "api_groups": [
+                                                "coordination.k8s.io"
+                                          ],
+                                          "non_resource_ur_ls": null,
+                                          "resource_names": null,
+                                          "resources": [
+                                                "leases"
+                                          ],
+                                          "verbs": [
+                                                "get",
+                                                "list",
+                                                "watch",
+                                                "create",
+                                                "update",
+                                                "patch",
+                                                "delete"
+                                          ]
+                                    },
+                                    {
+                                          "api_groups": [
+                                                ""
+                                          ],
+                                          "non_resource_ur_ls": null,
+                                          "resource_names": null,
+                                          "resources": [
+                                                "events"
+                                          ],
+                                          "verbs": [
+                                                "create",
+                                                "patch"
+                                          ]
+                                    },
+                                    {
+                                          "api_groups": [
+                                                "certmanager.k8s.io",
+                                                "cert-manager.io"
+                                          ],
+                                          "non_resource_ur_ls": null,
+                                          "resource_names": null,
+                                          "resources": [
+                                                "issuers",
+                                                "certificates"
+                                          ],
+                                          "verbs": [
+                                                "get",
+                                                "list",
+                                                "watch",
+                                                "create",
+                                                "update",
+                                                "patch",
+                                                "delete",
+                                                "deletecollection"
+                                          ]
+                                    },
+                                    {
+                                          "api_groups": [
+                                                "net.gke.io",
+                                                "multicluster.x-k8s.io"
+                                          ],
+                                          "non_resource_ur_ls": null,
+                                          "resource_names": null,
+                                          "resources": [
+                                                "serviceexports",
+                                                "serviceimports"
+                                          ],
+                                          "verbs": [
+                                                "get",
+                                                "list",
+                                                "watch",
+                                                "create",
+                                                "update",
+                                                "patch",
+                                                "delete",
+                                                "deletecollection"
+                                          ]
+                                    }
+                              ]
+                        }
+                  },
+                  "role_binding": {
+                        "service-account-percona-server-mongodb-operator": {
+                              "api_version": null,
+                              "kind": null,
+                              "metadata": {
+                                    "annotations": null,
+                                    "cluster_name": null,
+                                    "creation_timestamp": "2023-03-27T03:38:30+00:00",
+                                    "deletion_grace_period_seconds": null,
+                                    "deletion_timestamp": null,
+                                    "finalizers": null,
+                                    "generate_name": null,
+                                    "generation": null,
+                                    "labels": null,
+                                    "managed_fields": [
+                                          {
+                                                "api_version": "rbac.authorization.k8s.io/v1",
+                                                "fields_type": "FieldsV1",
+                                                "fields_v1": {
+                                                      "f:roleRef": {},
+                                                      "f:subjects": {}
+                                                },
+                                                "manager": "kubectl",
+                                                "operation": "Apply",
+                                                "subresource": null,
+                                                "time": "2023-03-27T03:38:30+00:00"
+                                          }
+                                    ],
+                                    "name": "service-account-percona-server-mongodb-operator",
+                                    "namespace": "acto-namespace",
+                                    "owner_references": null,
+                                    "resource_version": "785",
+                                    "self_link": null,
+                                    "uid": "cce4890b-b3cf-43c5-b143-137a8f4d03bd"
+                              },
+                              "role_ref": {
+                                    "api_group": "rbac.authorization.k8s.io",
+                                    "kind": "Role",
+                                    "name": "percona-server-mongodb-operator"
+                              },
+                              "subjects": [
+                                    {
+                                          "api_group": null,
+                                          "kind": "ServiceAccount",
+                                          "name": "percona-server-mongodb-operator",
+                                          "namespace": null
+                                    }
+                              ]
+                        }
+                  },
+                  "custom_resource_spec": {
+                        "allowUnsafeConfigurations": false,
+                        "backup": {
+                              "enabled": true,
+                              "image": "percona/percona-backup-mongodb:1.7.0",
+                              "pitr": {
+                                    "compressionLevel": 6,
+                                    "compressionType": "gzip",
+                                    "enabled": true
+                              },
+                              "serviceAccountName": "percona-server-mongodb-operator",
+                              "tasks": [
+                                    {
+                                          "compressionLevel": 6,
+                                          "compressionType": "gzip",
+                                          "enabled": true,
+                                          "keep": 3,
+                                          "name": "daily-s3-us-west",
+                                          "schedule": "0 0 * * *",
+                                          "storageName": "s3-us-west"
+                                    }
+                              ]
+                        },
+                        "crVersion": "1.12.0",
+                        "image": "percona/percona-server-mongodb:4.4.10-11",
+                        "imagePullPolicy": "IfNotPresent",
+                        "multiCluster": {
+                              "DNSSuffix": "svc.clusterset.local",
+                              "enabled": false
+                        },
+                        "pmm": {
+                              "enabled": false,
+                              "image": "percona/pmm-client:2.24.0",
+                              "serverHost": "monitoring-service"
+                        },
+                        "replsets": [
+                              {
+                                    "arbiter": {
+                                          "affinity": {
+                                                "antiAffinityTopologyKey": "kubernetes.io/hostname"
+                                          },
+                                          "enabled": true,
+                                          "size": 2
+                                    },
+                                    "expose": {
+                                          "enabled": true,
+                                          "exposeType": "ClusterIP"
+                                    },
+                                    "externalNodes": [
+                                          {
+                                                "host": "ACTOKEY",
+                                                "port": 0,
+                                                "priority": 3,
+                                                "votes": 4
+                                          }
+                                    ],
+                                    "name": "rs0",
+                                    "nonvoting": {
+                                          "affinity": {
+                                                "antiAffinityTopologyKey": "kubernetes.io/hostname"
+                                          },
+                                          "configuration": "operationProfiling:\n  mode: slowOp\nsystemLog:\n  verbosity: 1\n",
+                                          "enabled": true,
+                                          "podDisruptionBudget": {
+                                                "maxUnavailable": 1
+                                          },
+                                          "resources": {
+                                                "limits": {
+                                                      "cpu": "300m",
+                                                      "memory": "0.5G"
+                                                },
+                                                "requests": {
+                                                      "cpu": "300m",
+                                                      "memory": "0.5G"
+                                                }
+                                          },
+                                          "size": 2,
+                                          "volumeSpec": {
+                                                "persistentVolumeClaim": {
+                                                      "accessModes": [
+                                                            "ReadWriteOnce"
+                                                      ],
+                                                      "resources": {
+                                                            "requests": {
+                                                                  "storage": "3Gi"
+                                                            }
+                                                      },
+                                                      "storageClassName": "standard"
+                                                }
+                                          }
+                                    },
+                                    "podDisruptionBudget": {
+                                          "maxUnavailable": 1
+                                    },
+                                    "resources": {
+                                          "limits": {
+                                                "cpu": "300m",
+                                                "memory": "0.5G"
+                                          },
+                                          "requests": {
+                                                "cpu": "300m",
+                                                "memory": "0.5G"
+                                          }
+                                    },
+                                    "size": 2,
+                                    "volumeSpec": {
+                                          "persistentVolumeClaim": {
+                                                "accessModes": [
+                                                      "ReadWriteOnce"
+                                                ],
+                                                "resources": {
+                                                      "requests": {
+                                                            "storage": "3Gi"
+                                                      }
+                                                },
+                                                "storageClassName": "standard"
+                                          }
+                                    }
+                              }
+                        ],
+                        "secrets": {
+                              "encryptionKey": "my-cluster-name-mongodb-encryption-key",
+                              "users": "my-cluster-name-secrets"
+                        },
+                        "sharding": {
+                              "configsvrReplSet": {
+                                    "affinity": {
+                                          "antiAffinityTopologyKey": "kubernetes.io/hostname"
+                                    },
+                                    "expose": {
+                                          "enabled": true,
+                                          "exposeType": "ClusterIP"
+                                    },
+                                    "podDisruptionBudget": {
+                                          "maxUnavailable": 1
+                                    },
+                                    "resources": {
+                                          "limits": {
+                                                "cpu": "300m",
+                                                "memory": "0.5G"
+                                          },
+                                          "requests": {
+                                                "cpu": "300m",
+                                                "memory": "0.5G"
+                                          }
+                                    },
+                                    "size": 2,
+                                    "volumeSpec": {
+                                          "persistentVolumeClaim": {
+                                                "resources": {
+                                                      "requests": {
+                                                            "storage": "3Gi"
+                                                      }
+                                                }
+                                          }
+                                    }
+                              },
+                              "enabled": true,
+                              "mongos": {
+                                    "affinity": {
+                                          "antiAffinityTopologyKey": "kubernetes.io/hostname"
+                                    },
+                                    "expose": {
+                                          "exposeType": "ClusterIP"
+                                    },
+                                    "podDisruptionBudget": {
+                                          "maxUnavailable": 1
+                                    },
+                                    "resources": {
+                                          "limits": {
+                                                "cpu": "300m",
+                                                "memory": "0.5G"
+                                          },
+                                          "requests": {
+                                                "cpu": "300m",
+                                                "memory": "0.5G"
+                                          }
+                                    },
+                                    "size": 2
+                              }
+                        },
+                        "updateStrategy": "SmartUpdate",
+                        "upgradeOptions": {
+                              "apply": "4.4-never",
+                              "schedule": "0 2 * * *",
+                              "setFCV": false,
+                              "versionServiceEndpoint": "https://check.percona.com"
+                        }
+                  },
+                  "custom_resource_status": {
+                        "conditions": [
+                              {
+                                    "lastTransitionTime": "2023-03-27T03:39:00Z",
+                                    "message": "wrong psmdb options: ConfigsvrReplSet must have externalNodes if replset rs0 has",
+                                    "reason": "ErrorReconcile",
+                                    "status": "True",
+                                    "type": "error"
+                              }
+                        ],
+                        "message": "Error: wrong psmdb options: ConfigsvrReplSet must have externalNodes if replset rs0 has",
+                        "ready": 0,
+                        "size": 0,
+                        "state": "error"
+                  }
+            },
+            "operator_log": [
+                  "{\"level\":\"info\",\"ts\":1679888321.4500222,\"logger\":\"setup\",\"msg\":\"Git commit: 9a969e114b50c5299c25856dff6c23368987be70 Git branch: release-1-12-0\"}",
+                  "{\"level\":\"info\",\"ts\":1679888321.450067,\"logger\":\"setup\",\"msg\":\"Go Version: go1.17.9\"}",
+                  "{\"level\":\"info\",\"ts\":1679888321.4500759,\"logger\":\"setup\",\"msg\":\"Go OS/Arch: linux/amd64\"}",
+                  "{\"level\":\"info\",\"ts\":1679888322.1550899,\"logger\":\"controller-runtime.metrics\",\"msg\":\"Metrics server is starting to listen\",\"addr\":\":8080\"}",
+                  "{\"level\":\"info\",\"ts\":1679888322.865226,\"logger\":\"controller_psmdb\",\"msg\":\"server version\",\"platform\":\"kubernetes\",\"version\":\"v1.22.9\"}",
+                  "{\"level\":\"info\",\"ts\":1679888323.5732799,\"msg\":\"Starting server\",\"path\":\"/metrics\",\"kind\":\"metrics\",\"addr\":\"[::]:8080\"}",
+                  "{\"level\":\"info\",\"ts\":1679888323.5733514,\"msg\":\"Starting server\",\"kind\":\"health probe\",\"addr\":\"[::]:8081\"}",
+                  "I0327 03:38:43.573451       1 leaderelection.go:248] attempting to acquire leader lease acto-namespace/08db0feb.percona.com...",
+                  "I0327 03:39:00.103351       1 leaderelection.go:258] successfully acquired lease acto-namespace/08db0feb.percona.com",
+                  "{\"level\":\"info\",\"ts\":1679888340.1036441,\"logger\":\"controller.perconaservermongodbrestore-controller\",\"msg\":\"Starting EventSource\",\"source\":\"kind source: *v1.PerconaServerMongoDBRestore\"}",
+                  "{\"level\":\"info\",\"ts\":1679888340.1036394,\"logger\":\"controller.psmdb-controller\",\"msg\":\"Starting EventSource\",\"source\":\"kind source: *v1.PerconaServerMongoDB\"}",
+                  "{\"level\":\"info\",\"ts\":1679888340.1036973,\"logger\":\"controller.perconaservermongodbbackup-controller\",\"msg\":\"Starting EventSource\",\"source\":\"kind source: *v1.PerconaServerMongoDBBackup\"}",
+                  "{\"level\":\"info\",\"ts\":1679888340.1037633,\"logger\":\"controller.perconaservermongodbbackup-controller\",\"msg\":\"Starting EventSource\",\"source\":\"kind source: *v1.Pod\"}",
+                  "{\"level\":\"info\",\"ts\":1679888340.1037803,\"logger\":\"controller.perconaservermongodbbackup-controller\",\"msg\":\"Starting Controller\"}",
+                  "{\"level\":\"info\",\"ts\":1679888340.103734,\"logger\":\"controller.psmdb-controller\",\"msg\":\"Starting Controller\"}",
+                  "{\"level\":\"info\",\"ts\":1679888340.103718,\"logger\":\"controller.perconaservermongodbrestore-controller\",\"msg\":\"Starting EventSource\",\"source\":\"kind source: *v1.Pod\"}",
+                  "{\"level\":\"info\",\"ts\":1679888340.103938,\"logger\":\"controller.perconaservermongodbrestore-controller\",\"msg\":\"Starting Controller\"}",
+                  "{\"level\":\"info\",\"ts\":1679888340.204825,\"logger\":\"controller.perconaservermongodbbackup-controller\",\"msg\":\"Starting workers\",\"worker count\":1}",
+                  "{\"level\":\"info\",\"ts\":1679888340.2049177,\"logger\":\"controller.perconaservermongodbrestore-controller\",\"msg\":\"Starting workers\",\"worker count\":1}",
+                  "{\"level\":\"info\",\"ts\":1679888340.2049236,\"logger\":\"controller.psmdb-controller\",\"msg\":\"Starting workers\",\"worker count\":1}",
+                  "{\"level\":\"error\",\"ts\":1679888340.2320385,\"logger\":\"controller.psmdb-controller\",\"msg\":\"Reconciler error\",\"name\":\"test-cluster\",\"namespace\":\"acto-namespace\",\"error\":\"wrong psmdb options: ConfigsvrReplSet must have externalNodes if replset rs0 has\",\"errorVerbose\":\"ConfigsvrReplSet must have externalNodes if replset rs0 has\\ngithub.com/percona/percona-server-mongodb-operator/pkg/apis/psmdb/v1.(*PerconaServerMongoDB).CheckNSetDefaults\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/apis/psmdb/v1/psmdb_defaults.go:302\\ngithub.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb.(*ReconcilePerconaServerMongoDB).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb/psmdb_controller.go:258\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:114\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:311\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\\nruntime.goexit\\n\\t/usr/local/go/src/runtime/asm_amd64.s:1581\\nwrong psmdb options\\ngithub.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb.(*ReconcilePerconaServerMongoDB).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb/psmdb_controller.go:260\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:114\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:311\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\\nruntime.goexit\\n\\t/usr/local/go/src/runtime/asm_amd64.s:1581\",\"stacktrace\":\"sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\"}",
+                  "{\"level\":\"error\",\"ts\":1679888340.2517915,\"logger\":\"controller.psmdb-controller\",\"msg\":\"Reconciler error\",\"name\":\"test-cluster\",\"namespace\":\"acto-namespace\",\"error\":\"wrong psmdb options: ConfigsvrReplSet must have externalNodes if replset rs0 has\",\"errorVerbose\":\"ConfigsvrReplSet must have externalNodes if replset rs0 has\\ngithub.com/percona/percona-server-mongodb-operator/pkg/apis/psmdb/v1.(*PerconaServerMongoDB).CheckNSetDefaults\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/apis/psmdb/v1/psmdb_defaults.go:302\\ngithub.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb.(*ReconcilePerconaServerMongoDB).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb/psmdb_controller.go:258\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:114\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:311\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\\nruntime.goexit\\n\\t/usr/local/go/src/runtime/asm_amd64.s:1581\\nwrong psmdb options\\ngithub.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb.(*ReconcilePerconaServerMongoDB).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb/psmdb_controller.go:260\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:114\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:311\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\\nruntime.goexit\\n\\t/usr/local/go/src/runtime/asm_amd64.s:1581\",\"stacktrace\":\"sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\"}",
+                  "{\"level\":\"error\",\"ts\":1679888340.2696621,\"logger\":\"controller.psmdb-controller\",\"msg\":\"Reconciler error\",\"name\":\"test-cluster\",\"namespace\":\"acto-namespace\",\"error\":\"wrong psmdb options: ConfigsvrReplSet must have externalNodes if replset rs0 has\",\"errorVerbose\":\"ConfigsvrReplSet must have externalNodes if replset rs0 has\\ngithub.com/percona/percona-server-mongodb-operator/pkg/apis/psmdb/v1.(*PerconaServerMongoDB).CheckNSetDefaults\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/apis/psmdb/v1/psmdb_defaults.go:302\\ngithub.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb.(*ReconcilePerconaServerMongoDB).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb/psmdb_controller.go:258\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:114\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:311\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\\nruntime.goexit\\n\\t/usr/local/go/src/runtime/asm_amd64.s:1581\\nwrong psmdb options\\ngithub.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb.(*ReconcilePerconaServerMongoDB).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb/psmdb_controller.go:260\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:114\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:311\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\\nruntime.goexit\\n\\t/usr/local/go/src/runtime/asm_amd64.s:1581\",\"stacktrace\":\"sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\"}",
+                  "{\"level\":\"error\",\"ts\":1679888340.2878287,\"logger\":\"controller.psmdb-controller\",\"msg\":\"Reconciler error\",\"name\":\"test-cluster\",\"namespace\":\"acto-namespace\",\"error\":\"wrong psmdb options: ConfigsvrReplSet must have externalNodes if replset rs0 has\",\"errorVerbose\":\"ConfigsvrReplSet must have externalNodes if replset rs0 has\\ngithub.com/percona/percona-server-mongodb-operator/pkg/apis/psmdb/v1.(*PerconaServerMongoDB).CheckNSetDefaults\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/apis/psmdb/v1/psmdb_defaults.go:302\\ngithub.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb.(*ReconcilePerconaServerMongoDB).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb/psmdb_controller.go:258\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:114\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:311\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\\nruntime.goexit\\n\\t/usr/local/go/src/runtime/asm_amd64.s:1581\\nwrong psmdb options\\ngithub.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb.(*ReconcilePerconaServerMongoDB).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb/psmdb_controller.go:260\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:114\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:311\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\\nruntime.goexit\\n\\t/usr/local/go/src/runtime/asm_amd64.s:1581\",\"stacktrace\":\"sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\"}",
+                  "{\"level\":\"error\",\"ts\":1679888340.3147714,\"logger\":\"controller.psmdb-controller\",\"msg\":\"Reconciler error\",\"name\":\"test-cluster\",\"namespace\":\"acto-namespace\",\"error\":\"wrong psmdb options: ConfigsvrReplSet must have externalNodes if replset rs0 has\",\"errorVerbose\":\"ConfigsvrReplSet must have externalNodes if replset rs0 has\\ngithub.com/percona/percona-server-mongodb-operator/pkg/apis/psmdb/v1.(*PerconaServerMongoDB).CheckNSetDefaults\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/apis/psmdb/v1/psmdb_defaults.go:302\\ngithub.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb.(*ReconcilePerconaServerMongoDB).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb/psmdb_controller.go:258\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:114\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:311\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\\nruntime.goexit\\n\\t/usr/local/go/src/runtime/asm_amd64.s:1581\\nwrong psmdb options\\ngithub.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb.(*ReconcilePerconaServerMongoDB).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb/psmdb_controller.go:260\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:114\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:311\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\\nruntime.goexit\\n\\t/usr/local/go/src/runtime/asm_amd64.s:1581\",\"stacktrace\":\"sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\"}",
+                  "{\"level\":\"error\",\"ts\":1679888340.41598,\"logger\":\"controller.psmdb-controller\",\"msg\":\"Reconciler error\",\"name\":\"test-cluster\",\"namespace\":\"acto-namespace\",\"error\":\"wrong psmdb options: ConfigsvrReplSet must have externalNodes if replset rs0 has\",\"errorVerbose\":\"ConfigsvrReplSet must have externalNodes if replset rs0 has\\ngithub.com/percona/percona-server-mongodb-operator/pkg/apis/psmdb/v1.(*PerconaServerMongoDB).CheckNSetDefaults\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/apis/psmdb/v1/psmdb_defaults.go:302\\ngithub.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb.(*ReconcilePerconaServerMongoDB).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb/psmdb_controller.go:258\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:114\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:311\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\\nruntime.goexit\\n\\t/usr/local/go/src/runtime/asm_amd64.s:1581\\nwrong psmdb options\\ngithub.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb.(*ReconcilePerconaServerMongoDB).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb/psmdb_controller.go:260\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:114\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:311\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\\nruntime.goexit\\n\\t/usr/local/go/src/runtime/asm_amd64.s:1581\",\"stacktrace\":\"sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\"}",
+                  "{\"level\":\"error\",\"ts\":1679888340.5986273,\"logger\":\"controller.psmdb-controller\",\"msg\":\"Reconciler error\",\"name\":\"test-cluster\",\"namespace\":\"acto-namespace\",\"error\":\"wrong psmdb options: ConfigsvrReplSet must have externalNodes if replset rs0 has\",\"errorVerbose\":\"ConfigsvrReplSet must have externalNodes if replset rs0 has\\ngithub.com/percona/percona-server-mongodb-operator/pkg/apis/psmdb/v1.(*PerconaServerMongoDB).CheckNSetDefaults\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/apis/psmdb/v1/psmdb_defaults.go:302\\ngithub.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb.(*ReconcilePerconaServerMongoDB).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb/psmdb_controller.go:258\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:114\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:311\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\\nruntime.goexit\\n\\t/usr/local/go/src/runtime/asm_amd64.s:1581\\nwrong psmdb options\\ngithub.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb.(*ReconcilePerconaServerMongoDB).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb/psmdb_controller.go:260\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:114\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:311\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\\nruntime.goexit\\n\\t/usr/local/go/src/runtime/asm_amd64.s:1581\",\"stacktrace\":\"sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\"}",
+                  "{\"level\":\"error\",\"ts\":1679888340.9432714,\"logger\":\"controller.psmdb-controller\",\"msg\":\"Reconciler error\",\"name\":\"test-cluster\",\"namespace\":\"acto-namespace\",\"error\":\"wrong psmdb options: ConfigsvrReplSet must have externalNodes if replset rs0 has\",\"errorVerbose\":\"ConfigsvrReplSet must have externalNodes if replset rs0 has\\ngithub.com/percona/percona-server-mongodb-operator/pkg/apis/psmdb/v1.(*PerconaServerMongoDB).CheckNSetDefaults\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/apis/psmdb/v1/psmdb_defaults.go:302\\ngithub.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb.(*ReconcilePerconaServerMongoDB).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb/psmdb_controller.go:258\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:114\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:311\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\\nruntime.goexit\\n\\t/usr/local/go/src/runtime/asm_amd64.s:1581\\nwrong psmdb options\\ngithub.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb.(*ReconcilePerconaServerMongoDB).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb/psmdb_controller.go:260\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:114\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:311\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\\nruntime.goexit\\n\\t/usr/local/go/src/runtime/asm_amd64.s:1581\",\"stacktrace\":\"sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\"}",
+                  "{\"level\":\"error\",\"ts\":1679888341.6095917,\"logger\":\"controller.psmdb-controller\",\"msg\":\"Reconciler error\",\"name\":\"test-cluster\",\"namespace\":\"acto-namespace\",\"error\":\"wrong psmdb options: ConfigsvrReplSet must have externalNodes if replset rs0 has\",\"errorVerbose\":\"ConfigsvrReplSet must have externalNodes if replset rs0 has\\ngithub.com/percona/percona-server-mongodb-operator/pkg/apis/psmdb/v1.(*PerconaServerMongoDB).CheckNSetDefaults\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/apis/psmdb/v1/psmdb_defaults.go:302\\ngithub.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb.(*ReconcilePerconaServerMongoDB).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb/psmdb_controller.go:258\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:114\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:311\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\\nruntime.goexit\\n\\t/usr/local/go/src/runtime/asm_amd64.s:1581\\nwrong psmdb options\\ngithub.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb.(*ReconcilePerconaServerMongoDB).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb/psmdb_controller.go:260\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:114\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:311\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\\nruntime.goexit\\n\\t/usr/local/go/src/runtime/asm_amd64.s:1581\",\"stacktrace\":\"sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\"}",
+                  "{\"level\":\"error\",\"ts\":1679888342.9120603,\"logger\":\"controller.psmdb-controller\",\"msg\":\"Reconciler error\",\"name\":\"test-cluster\",\"namespace\":\"acto-namespace\",\"error\":\"wrong psmdb options: ConfigsvrReplSet must have externalNodes if replset rs0 has\",\"errorVerbose\":\"ConfigsvrReplSet must have externalNodes if replset rs0 has\\ngithub.com/percona/percona-server-mongodb-operator/pkg/apis/psmdb/v1.(*PerconaServerMongoDB).CheckNSetDefaults\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/apis/psmdb/v1/psmdb_defaults.go:302\\ngithub.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb.(*ReconcilePerconaServerMongoDB).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb/psmdb_controller.go:258\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:114\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:311\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\\nruntime.goexit\\n\\t/usr/local/go/src/runtime/asm_amd64.s:1581\\nwrong psmdb options\\ngithub.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb.(*ReconcilePerconaServerMongoDB).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb/psmdb_controller.go:260\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:114\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:311\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\\nruntime.goexit\\n\\t/usr/local/go/src/runtime/asm_amd64.s:1581\",\"stacktrace\":\"sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\"}",
+                  "{\"level\":\"error\",\"ts\":1679888345.4964929,\"logger\":\"controller.psmdb-controller\",\"msg\":\"Reconciler error\",\"name\":\"test-cluster\",\"namespace\":\"acto-namespace\",\"error\":\"wrong psmdb options: ConfigsvrReplSet must have externalNodes if replset rs0 has\",\"errorVerbose\":\"ConfigsvrReplSet must have externalNodes if replset rs0 has\\ngithub.com/percona/percona-server-mongodb-operator/pkg/apis/psmdb/v1.(*PerconaServerMongoDB).CheckNSetDefaults\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/apis/psmdb/v1/psmdb_defaults.go:302\\ngithub.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb.(*ReconcilePerconaServerMongoDB).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb/psmdb_controller.go:258\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:114\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:311\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\\nruntime.goexit\\n\\t/usr/local/go/src/runtime/asm_amd64.s:1581\\nwrong psmdb options\\ngithub.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb.(*ReconcilePerconaServerMongoDB).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb/psmdb_controller.go:260\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:114\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:311\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\\nruntime.goexit\\n\\t/usr/local/go/src/runtime/asm_amd64.s:1581\",\"stacktrace\":\"sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\"}",
+                  "{\"level\":\"error\",\"ts\":1679888350.6361036,\"logger\":\"controller.psmdb-controller\",\"msg\":\"Reconciler error\",\"name\":\"test-cluster\",\"namespace\":\"acto-namespace\",\"error\":\"wrong psmdb options: ConfigsvrReplSet must have externalNodes if replset rs0 has\",\"errorVerbose\":\"ConfigsvrReplSet must have externalNodes if replset rs0 has\\ngithub.com/percona/percona-server-mongodb-operator/pkg/apis/psmdb/v1.(*PerconaServerMongoDB).CheckNSetDefaults\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/apis/psmdb/v1/psmdb_defaults.go:302\\ngithub.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb.(*ReconcilePerconaServerMongoDB).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb/psmdb_controller.go:258\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:114\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:311\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\\nruntime.goexit\\n\\t/usr/local/go/src/runtime/asm_amd64.s:1581\\nwrong psmdb options\\ngithub.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb.(*ReconcilePerconaServerMongoDB).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb/psmdb_controller.go:260\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:114\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:311\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\\nruntime.goexit\\n\\t/usr/local/go/src/runtime/asm_amd64.s:1581\",\"stacktrace\":\"sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\"}",
+                  "{\"level\":\"error\",\"ts\":1679888360.9042258,\"logger\":\"controller.psmdb-controller\",\"msg\":\"Reconciler error\",\"name\":\"test-cluster\",\"namespace\":\"acto-namespace\",\"error\":\"wrong psmdb options: ConfigsvrReplSet must have externalNodes if replset rs0 has\",\"errorVerbose\":\"ConfigsvrReplSet must have externalNodes if replset rs0 has\\ngithub.com/percona/percona-server-mongodb-operator/pkg/apis/psmdb/v1.(*PerconaServerMongoDB).CheckNSetDefaults\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/apis/psmdb/v1/psmdb_defaults.go:302\\ngithub.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb.(*ReconcilePerconaServerMongoDB).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb/psmdb_controller.go:258\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:114\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:311\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\\nruntime.goexit\\n\\t/usr/local/go/src/runtime/asm_amd64.s:1581\\nwrong psmdb options\\ngithub.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb.(*ReconcilePerconaServerMongoDB).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb/psmdb_controller.go:260\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:114\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:311\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\\nruntime.goexit\\n\\t/usr/local/go/src/runtime/asm_amd64.s:1581\",\"stacktrace\":\"sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\"}",
+                  "{\"level\":\"error\",\"ts\":1679888381.4148414,\"logger\":\"controller.psmdb-controller\",\"msg\":\"Reconciler error\",\"name\":\"test-cluster\",\"namespace\":\"acto-namespace\",\"error\":\"wrong psmdb options: ConfigsvrReplSet must have externalNodes if replset rs0 has\",\"errorVerbose\":\"ConfigsvrReplSet must have externalNodes if replset rs0 has\\ngithub.com/percona/percona-server-mongodb-operator/pkg/apis/psmdb/v1.(*PerconaServerMongoDB).CheckNSetDefaults\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/apis/psmdb/v1/psmdb_defaults.go:302\\ngithub.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb.(*ReconcilePerconaServerMongoDB).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb/psmdb_controller.go:258\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:114\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:311\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\\nruntime.goexit\\n\\t/usr/local/go/src/runtime/asm_amd64.s:1581\\nwrong psmdb options\\ngithub.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb.(*ReconcilePerconaServerMongoDB).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb/psmdb_controller.go:260\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:114\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:311\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\\nruntime.goexit\\n\\t/usr/local/go/src/runtime/asm_amd64.s:1581\",\"stacktrace\":\"sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\\n\\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\"}",
+                  ""
+            ]
+      },
+      "originals": [
+            {
+                  "trial": "trial-08-0021",
+                  "gen": 1
+            }
+      ]
+}

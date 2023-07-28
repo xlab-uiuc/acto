@@ -1,0 +1,329 @@
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: test-cluster
+spec:
+  configUpdateStrategy: RollingUpdate
+  enableDynamicConfiguration: true
+  helper:
+    image: busybox:1.34.1
+  pd:
+    baseImage: pingcap/pd
+    config: "[dashboard]\n  internal-proxy = true\n"
+    maxFailoverCount: 0
+    mountClusterClientSecret: true
+    replicas: 3
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    additionalVolumes:
+    - awsElasticBlockStore:
+        fsType: ACTOKEY
+        partition: 4
+        readOnly: false
+        volumeID: ACTOKEY
+      azureDisk:
+        cachingMode: ACTOKEY
+        diskName: ACTOKEY
+        diskURI: ACTOKEY
+        fsType: ACTOKEY
+        kind: ACTOKEY
+        readOnly: false
+      azureFile:
+        readOnly: null
+        secretName: ACTOKEY
+        shareName: ACTOKEY
+      cephfs:
+        monitors:
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+        path: ACTOKEY
+        readOnly: false
+        secretFile: ACTOKEY
+        secretRef:
+          name: ACTOKEY
+        user: ACTOKEY
+      cinder:
+        fsType: ACTOKEY
+        readOnly: true
+        secretRef:
+          name: null
+        volumeID: ACTOKEY
+      configMap:
+        defaultMode: null
+        items:
+        - key: ACTOKEY
+          mode: 1
+          path: ACTOKEY
+        - key: ACTOKEY
+          mode: 4
+          path: ACTOKEY
+        - key: ACTOKEY
+          mode: 1
+          path: ACTOKEY
+        - key: ACTOKEY
+          mode: null
+          path: ACTOKEY
+        - key: ACTOKEY
+          mode: 2
+          path: ACTOKEY
+        name: ACTOKEY
+        optional: false
+      csi:
+        driver: ACTOKEY
+        fsType: ACTOKEY
+        nodePublishSecretRef:
+          name: ACTOKEY
+        readOnly: true
+        volumeAttributes:
+          ACTOKEY: ACTOKEY
+      downwardAPI:
+        defaultMode: 0
+        items:
+        - fieldRef:
+            apiVersion: ACTOKEY
+            fieldPath: ACTOKEY
+          mode: 2
+          path: ACTOKEY
+          resourceFieldRef:
+            containerName: null
+            divisor: null
+            resource: ACTOKEY
+        - fieldRef:
+            apiVersion: null
+            fieldPath: ACTOKEY
+          mode: null
+          path: ACTOKEY
+          resourceFieldRef:
+            containerName: ACTOKEY
+            divisor: -.8497632742
+            resource: ACTOKEY
+        - fieldRef:
+            apiVersion: ACTOKEY
+            fieldPath: ACTOKEY
+          mode: 2
+          path: ACTOKEY
+          resourceFieldRef:
+            containerName: null
+            divisor: 2
+            resource: ACTOKEY
+        - fieldRef:
+            apiVersion: ACTOKEY
+            fieldPath: ACTOKEY
+          mode: 1
+          path: ACTOKEY
+          resourceFieldRef:
+            containerName: ACTOKEY
+            divisor: null
+            resource: ACTOKEY
+      emptyDir:
+        medium: null
+        sizeLimit: '.8562'
+      ephemeral:
+        readOnly: true
+        volumeClaimTemplate:
+          metadata: null
+          spec:
+            accessModes:
+            - ACTOKEY
+            - ACTOKEY
+            - ACTOKEY
+            - ACTOKEY
+            dataSource:
+              apiGroup: ACTOKEY
+              kind: ACTOKEY
+              name: ACTOKEY
+            resources:
+              limits:
+                ACTOKEY: 1
+              requests:
+                ACTOKEY: 2
+            selector:
+              matchExpressions:
+              - key: ACTOKEY
+                operator: ACTOKEY
+                values:
+                - ACTOKEY
+                - ACTOKEY
+                - ACTOKEY
+              - key: ACTOKEY
+                operator: ACTOKEY
+                values:
+                - ACTOKEY
+                - ACTOKEY
+                - ACTOKEY
+                - ACTOKEY
+              - key: ACTOKEY
+                operator: ACTOKEY
+                values:
+                - ACTOKEY
+                - ACTOKEY
+                - ACTOKEY
+              matchLabels: null
+            storageClassName: ACTOKEY
+            volumeMode: ACTOKEY
+            volumeName: ACTOKEY
+      fc:
+        fsType: ACTOKEY
+        lun: 2
+        readOnly: false
+        targetWWNs:
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+        wwids: null
+      flexVolume:
+        driver: ACTOKEY
+        fsType: ACTOKEY
+        options:
+          ACTOKEY: ACTOKEY
+        readOnly: true
+        secretRef: null
+      flocker:
+        datasetName: null
+        datasetUUID: ACTOKEY
+      gcePersistentDisk: null
+      gitRepo:
+        directory: null
+        repository: ACTOKEY
+        revision: ACTOKEY
+      glusterfs: null
+      hostPath:
+        path: ACTOKEY
+        type: ACTOKEY
+      iscsi:
+        chapAuthDiscovery: true
+        chapAuthSession: true
+        fsType: ACTOKEY
+        initiatorName: ACTOKEY
+        iqn: ACTOKEY
+        iscsiInterface: ACTOKEY
+        lun: 4
+        portals:
+        - ACTOKEY
+        readOnly: false
+        secretRef:
+          name: ACTOKEY
+        targetPortal: ACTOKEY
+      name: ACTOKEY
+      nfs:
+        path: ACTOKEY
+        readOnly: false
+        server: ACTOKEY
+      persistentVolumeClaim:
+        claimName: ACTOKEY
+        readOnly: null
+      photonPersistentDisk:
+        fsType: ACTOKEY
+        pdID: ACTOKEY
+      portworxVolume:
+        fsType: ACTOKEY
+        readOnly: null
+        volumeID: ACTOKEY
+      projected:
+        defaultMode: 1
+        sources:
+        - configMap: null
+          downwardAPI:
+            items:
+            - fieldRef:
+                apiVersion: ACTOKEY
+                fieldPath: ACTOKEY
+              mode: 5
+              path: ACTOKEY
+              resourceFieldRef:
+                containerName: ACTOKEY
+                divisor: 1
+                resource: ACTOKEY
+          secret:
+            items:
+            - key: ACTOKEY
+              mode: 1
+              path: ACTOKEY
+            name: null
+            optional: true
+          serviceAccountToken:
+            audience: ACTOKEY
+            expirationSeconds: 0
+            path: ACTOKEY
+      quobyte:
+        group: ACTOKEY
+        readOnly: false
+        registry: ACTOKEY
+        tenant: ACTOKEY
+        user: ACTOKEY
+        volume: ACTOKEY
+      rbd:
+        fsType: ACTOKEY
+        image: ACTOKEY
+        keyring: null
+        monitors:
+        - ACTOKEY
+        pool: null
+        readOnly: true
+        secretRef:
+          name: ACTOKEY
+        user: ACTOKEY
+      scaleIO:
+        fsType: ACTOKEY
+        gateway: ACTOKEY
+        protectionDomain: ACTOKEY
+        readOnly: false
+        secretRef:
+          name: null
+        sslEnabled: true
+        storageMode: ACTOKEY
+        storagePool: ACTOKEY
+        system: ACTOKEY
+        volumeName: ACTOKEY
+      secret:
+        defaultMode: null
+        items:
+        - key: ACTOKEY
+          mode: null
+          path: ACTOKEY
+        - key: ACTOKEY
+          mode: 2
+          path: ACTOKEY
+        - key: ACTOKEY
+          mode: 4
+          path: ACTOKEY
+        - key: ACTOKEY
+          mode: null
+          path: ACTOKEY
+        - key: ACTOKEY
+          mode: 1
+          path: ACTOKEY
+        optional: true
+        secretName: null
+      storageos:
+        fsType: ACTOKEY
+        readOnly: true
+        secretRef: null
+        volumeName: null
+        volumeNamespace: ACTOKEY
+      vsphereVolume: null
+    baseImage: pingcap/tidb
+    config: "[performance]\n  tcp-keep-alive = true\n"
+    maxFailoverCount: 0
+    replicas: 3
+    service:
+      externalTrafficPolicy: Local
+      type: NodePort
+  tikv:
+    baseImage: pingcap/tikv
+    config: 'log-level = "info"
+
+      '
+    maxFailoverCount: 0
+    mountClusterClientSecret: true
+    recoverFailover: false
+    replicas: 3
+    requests:
+      storage: 100Gi
+    separateRaftLog: true
+  timezone: UTC
+  version: v5.4.0

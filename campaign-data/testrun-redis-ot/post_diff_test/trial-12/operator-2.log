@@ -1,0 +1,51 @@
+1.6796646415434673e+09	INFO	controller-runtime.metrics	Metrics server is starting to listen	{"addr": ":8080"}
+1.6796646415442767e+09	INFO	setup	starting manager
+I0324 13:30:41.544909       1 leaderelection.go:248] attempting to acquire leader lease redis-operator/6cab913b.redis.opstreelabs.in...
+1.6796646415449834e+09	INFO	Starting server	{"path": "/metrics", "kind": "metrics", "addr": "[::]:8080"}
+1.6796646415449965e+09	INFO	Starting server	{"kind": "health probe", "addr": "[::]:8081"}
+I0324 13:30:57.305683       1 leaderelection.go:258] successfully acquired lease redis-operator/6cab913b.redis.opstreelabs.in
+1.6796646573057418e+09	DEBUG	events	Normal	{"object": {"kind":"ConfigMap","namespace":"redis-operator","name":"6cab913b.redis.opstreelabs.in","uid":"738f4954-11fe-40b1-9045-5aea6ea252ad","apiVersion":"v1","resourceVersion":"1621"}, "reason": "LeaderElection", "message": "redis-operator-54fb85ff56-kfmj2_22be3147-f215-4f85-8751-5fed2655f94e became leader"}
+1.679664657305871e+09	DEBUG	events	Normal	{"object": {"kind":"Lease","namespace":"redis-operator","name":"6cab913b.redis.opstreelabs.in","uid":"f2070af5-4a47-404f-8944-ec10e4d9de71","apiVersion":"coordination.k8s.io/v1","resourceVersion":"1622"}, "reason": "LeaderElection", "message": "redis-operator-54fb85ff56-kfmj2_22be3147-f215-4f85-8751-5fed2655f94e became leader"}
+1.6796646573058834e+09	INFO	controller.redis	Starting EventSource	{"reconciler group": "redis.redis.opstreelabs.in", "reconciler kind": "Redis", "source": "kind source: *v1beta1.Redis"}
+1.6796646573059258e+09	INFO	controller.redis	Starting Controller	{"reconciler group": "redis.redis.opstreelabs.in", "reconciler kind": "Redis"}
+1.6796646573059607e+09	INFO	controller.rediscluster	Starting EventSource	{"reconciler group": "redis.redis.opstreelabs.in", "reconciler kind": "RedisCluster", "source": "kind source: *v1beta1.RedisCluster"}
+1.679664657306038e+09	INFO	controller.rediscluster	Starting Controller	{"reconciler group": "redis.redis.opstreelabs.in", "reconciler kind": "RedisCluster"}
+E0324 13:30:57.344781       1 event.go:267] Server rejected event '&v1.Event{TypeMeta:v1.TypeMeta{Kind:"", APIVersion:""}, ObjectMeta:v1.ObjectMeta{Name:"6cab913b.redis.opstreelabs.in.174f5e1b487b3ddb", GenerateName:"", Namespace:"redis-operator", SelfLink:"", UID:"", ResourceVersion:"", Generation:0, CreationTimestamp:time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC), DeletionTimestamp:<nil>, DeletionGracePeriodSeconds:(*int64)(nil), Labels:map[string]string(nil), Annotations:map[string]string(nil), OwnerReferences:[]v1.OwnerReference(nil), Finalizers:[]string(nil), ClusterName:"", ManagedFields:[]v1.ManagedFieldsEntry(nil)}, InvolvedObject:v1.ObjectReference{Kind:"ConfigMap", Namespace:"redis-operator", Name:"6cab913b.redis.opstreelabs.in", UID:"738f4954-11fe-40b1-9045-5aea6ea252ad", APIVersion:"v1", ResourceVersion:"1621", FieldPath:""}, Reason:"LeaderElection", Message:"redis-operator-54fb85ff56-kfmj2_22be3147-f215-4f85-8751-5fed2655f94e became leader", Source:v1.EventSource{Component:"redis-operator-54fb85ff56-kfmj2_22be3147-f215-4f85-8751-5fed2655f94e", Host:""}, FirstTimestamp:time.Date(2023, time.March, 24, 13, 30, 57, 305648603, time.Local), LastTimestamp:time.Date(2023, time.March, 24, 13, 30, 57, 305648603, time.Local), Count:1, Type:"Normal", EventTime:time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC), Series:(*v1.EventSeries)(nil), Action:"", Related:(*v1.ObjectReference)(nil), ReportingController:"", ReportingInstance:""}': 'events is forbidden: User "system:serviceaccount:redis-operator:redis-operator" cannot create resource "events" in API group "" in the namespace "redis-operator"' (will not retry!)
+E0324 13:30:57.347043       1 event.go:267] Server rejected event '&v1.Event{TypeMeta:v1.TypeMeta{Kind:"", APIVersion:""}, ObjectMeta:v1.ObjectMeta{Name:"6cab913b.redis.opstreelabs.in.174f5e1b487b8d6b", GenerateName:"", Namespace:"redis-operator", SelfLink:"", UID:"", ResourceVersion:"", Generation:0, CreationTimestamp:time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC), DeletionTimestamp:<nil>, DeletionGracePeriodSeconds:(*int64)(nil), Labels:map[string]string(nil), Annotations:map[string]string(nil), OwnerReferences:[]v1.OwnerReference(nil), Finalizers:[]string(nil), ClusterName:"", ManagedFields:[]v1.ManagedFieldsEntry(nil)}, InvolvedObject:v1.ObjectReference{Kind:"Lease", Namespace:"redis-operator", Name:"6cab913b.redis.opstreelabs.in", UID:"f2070af5-4a47-404f-8944-ec10e4d9de71", APIVersion:"coordination.k8s.io/v1", ResourceVersion:"1622", FieldPath:""}, Reason:"LeaderElection", Message:"redis-operator-54fb85ff56-kfmj2_22be3147-f215-4f85-8751-5fed2655f94e became leader", Source:v1.EventSource{Component:"redis-operator-54fb85ff56-kfmj2_22be3147-f215-4f85-8751-5fed2655f94e", Host:""}, FirstTimestamp:time.Date(2023, time.March, 24, 13, 30, 57, 305668971, time.Local), LastTimestamp:time.Date(2023, time.March, 24, 13, 30, 57, 305668971, time.Local), Count:1, Type:"Normal", EventTime:time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC), Series:(*v1.EventSeries)(nil), Action:"", Related:(*v1.ObjectReference)(nil), ReportingController:"", ReportingInstance:""}': 'events is forbidden: User "system:serviceaccount:redis-operator:redis-operator" cannot create resource "events" in API group "" in the namespace "redis-operator"' (will not retry!)
+1.6796646574428337e+09	INFO	controller.redis	Starting workers	{"reconciler group": "redis.redis.opstreelabs.in", "reconciler kind": "Redis", "worker count": 1}
+1.6796646574429424e+09	INFO	controller.rediscluster	Starting workers	{"reconciler group": "redis.redis.opstreelabs.in", "reconciler kind": "RedisCluster", "worker count": 1}
+1.6796646574430394e+09	INFO	controllers.RedisCluster	Reconciling opstree redis Cluster controller	{"Request.Namespace": "redis-operator", "Request.Name": "test-cluster"}
+MATT IS HERE: Reconcile
+MATT IS HERE: CreateRedisLeader
+MATT IS HERE: CreateRedisClusterSetup
+MATT IS HERE: CreateOrUpdateStateFul
+1.6796646574475534e+09	INFO	controller_redis	Redis statefulset get action failed	{"Request.StatefulSet.Namespace": "redis-operator", "Request.StatefulSet.Name": "test-cluster-leader"}
+panic: runtime error: invalid memory address or nil pointer dereference
+[signal SIGSEGV: segmentation violation code=0x1 addr=0x0 pc=0x1415141]
+
+goroutine 349 [running]:
+redis-operator/k8sutils.getEnvironmentVariables({0x17259a9, 0x7}, 0x0, 0xc0007aac91, 0x0, 0xc000445670, 0xc0007aac91, 0x0, 0x0)
+	/workspace/k8sutils/statefulset.go:417 +0x641
+redis-operator/k8sutils.generateContainerDef({0xc000a54468, 0x0}, {{0xc00078a920, 0x1c}, {0xc0002a6f90, 0xc}, 0xc000445650, {0xc0007ba9f0, 0x22}, {0xc0002a6fe0, ...}, ...}, ...)
+	/workspace/k8sutils/statefulset.go:215 +0xcd
+redis-operator/k8sutils.generateStatefulSetsDef({{0xc000a54468, 0x13}, {0x0, 0x0}, {0xc0002a6f80, 0xe}, {0x0, 0x0}, {0x0, 0x0}, ...}, ...)
+	/workspace/k8sutils/statefulset.go:133 +0x145
+redis-operator/k8sutils.CreateOrUpdateStateFul({_, _}, {{0xc000a54468, 0x13}, {0x0, 0x0}, {0xc0002a6f80, 0xe}, {0x0, 0x0}, ...}, ...)
+	/workspace/k8sutils/statefulset.go:62 +0x1e7
+redis-operator/k8sutils.RedisClusterSTS.CreateRedisClusterSetup({{0x1724f41, 0x6}, 0x0, 0x0, 0x0, 0x0}, 0xc0006dc000)
+	/workspace/k8sutils/redis-cluster.go:155 +0x685
+redis-operator/k8sutils.CreateRedisLeader(0xc0006dc000)
+	/workspace/k8sutils/redis-cluster.go:108 +0xf1
+redis-operator/controllers.(*RedisClusterReconciler).Reconcile(0xc00067da40, {0xc0005eb560, 0x155c060}, {{{0xc0002a6f80, 0x1666c40}, {0xc0002a6f10, 0x30}}})
+	/workspace/controllers/rediscluster_controller.go:69 +0x316
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile(0xc000a120b0, {0x1940918, 0xc0005eb560}, {{{0xc0002a6f80, 0x1666c40}, {0xc0002a6f10, 0x413a94}}})
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.11.0/pkg/internal/controller/controller.go:114 +0x26f
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler(0xc000a120b0, {0x1940870, 0xc00061a300}, {0x15b1740, 0xc0003ecc00})
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.11.0/pkg/internal/controller/controller.go:311 +0x33e
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem(0xc000a120b0, {0x1940870, 0xc00061a300})
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.11.0/pkg/internal/controller/controller.go:266 +0x205
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2()
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.11.0/pkg/internal/controller/controller.go:227 +0x85
+created by sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.11.0/pkg/internal/controller/controller.go:223 +0x357
+

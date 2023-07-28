@@ -1,0 +1,34 @@
+{"level":"info","ts":1679683499.6936,"logger":"setup","msg":"Runs on","platform":"kubernetes","version":"v1.22.9"}
+{"level":"info","ts":1679683499.6939003,"logger":"setup","msg":"Git commit: 46b71b736a7dcfde5e401f355a39eb8b8c65e449 Git branch: release-1-11-0 Build time: 2022-06-01T18:24:03Z"}
+{"level":"info","ts":1679683499.6939437,"logger":"setup","msg":"Go Version: go1.18.2"}
+{"level":"info","ts":1679683499.6939578,"logger":"setup","msg":"Go OS/Arch: linux/amd64"}
+{"level":"info","ts":1679683500.4004288,"logger":"controller-runtime.metrics","msg":"Metrics server is starting to listen","addr":":8080"}
+{"level":"info","ts":1679683500.4012964,"logger":"setup","msg":"Registering Components."}
+{"level":"info","ts":1679683506.213636,"logger":"controller-runtime.webhook","msg":"Registering webhook","path":"/validate-percona-xtradbcluster"}
+{"level":"info","ts":1679683506.2138264,"logger":"setup","msg":"Starting the Cmd."}
+{"level":"info","ts":1679683506.2925332,"logger":"controller-runtime.webhook.webhooks","msg":"Starting webhook server"}
+{"level":"info","ts":1679683506.2931726,"msg":"Starting server","kind":"health probe","addr":"[::]:8081"}
+{"level":"info","ts":1679683506.2931645,"msg":"Starting server","path":"/metrics","kind":"metrics","addr":"[::]:8080"}
+{"level":"info","ts":1679683506.294215,"msg":"attempting to acquire leader lease acto-namespace/08db1feb.percona.com...\n"}
+{"level":"info","ts":1679683506.393743,"logger":"controller-runtime.certwatcher","msg":"Updated current TLS certificate"}
+{"level":"info","ts":1679683506.394281,"logger":"controller-runtime.webhook","msg":"Serving webhook server","host":"","port":9443}
+{"level":"info","ts":1679683506.394847,"logger":"controller-runtime.certwatcher","msg":"Starting certificate watcher"}
+{"level":"info","ts":1679683521.6201684,"msg":"successfully acquired lease acto-namespace/08db1feb.percona.com\n"}
+{"level":"info","ts":1679683521.6206503,"logger":"controller.perconaxtradbcluster-controller","msg":"Starting EventSource","source":"kind source: *v1.PerconaXtraDBCluster"}
+{"level":"info","ts":1679683521.6207387,"logger":"controller.perconaxtradbclusterrestore-controller","msg":"Starting EventSource","source":"kind source: *v1.PerconaXtraDBClusterRestore"}
+{"level":"info","ts":1679683521.6208308,"logger":"controller.perconaxtradbclusterrestore-controller","msg":"Starting Controller"}
+{"level":"info","ts":1679683521.6208456,"logger":"controller.perconaxtradbcluster-controller","msg":"Starting Controller"}
+{"level":"info","ts":1679683521.6210473,"logger":"controller.perconaxtradbclusterbackup-controller","msg":"Starting EventSource","source":"kind source: *v1.PerconaXtraDBClusterBackup"}
+{"level":"info","ts":1679683521.621453,"logger":"controller.perconaxtradbclusterbackup-controller","msg":"Starting Controller"}
+{"level":"info","ts":1679683521.8219419,"logger":"controller.perconaxtradbcluster-controller","msg":"Starting workers","worker count":1}
+{"level":"info","ts":1679683521.8219917,"logger":"controller.perconaxtradbclusterrestore-controller","msg":"Starting workers","worker count":1}
+{"level":"info","ts":1679683521.8932333,"logger":"controller.perconaxtradbclusterbackup-controller","msg":"Starting workers","worker count":1}
+{"level":"info","ts":1679683857.0976036,"logger":"KubeAPIWarningLogger","msg":"policy/v1beta1 PodDisruptionBudget is deprecated in v1.21+, unavailable in v1.25+; use policy/v1 PodDisruptionBudget"}
+{"level":"info","ts":1679683858.5977948,"caller":"pxc/backup.go:87","msg":"Creating or updating backup job","name":"ac58c-sat-night-backup","schedule":"0 0 * * 6"}
+{"level":"info","ts":1679683858.598015,"caller":"pxc/backup.go:87","msg":"Creating or updating backup job","name":"ac58c-daily-backup","schedule":"0 0 * * *"}
+{"level":"info","ts":1679683858.5982583,"logger":"perconaxtradbcluster","caller":"pxc/version.go:65","msg":"add new job","cluster":"test-cluster","namespace":"acto-namespace","schedule":"0 4 * * *"}
+{"level":"info","ts":1679683858.5983224,"logger":"perconaxtradbcluster","caller":"pxc/version.go:107","msg":"add new job","cluster":"test-cluster","namespace":"acto-namespace","name":"ensure-version/acto-namespace/test-cluster","schedule":"0 4 * * *"}
+{"level":"info","ts":1679683934.9749436,"logger":"perconaxtradbcluster","caller":"pxc/controller.go:465","msg":"reconcile replication error","cluster":"test-cluster","namespace":"acto-namespace","err":"get primary pxc pod: failed to get proxySQL db: dial tcp 10.96.0.80:3306: connect: connection refused"}
+{"level":"info","ts":1679683943.454565,"logger":"perconaxtradbcluster","caller":"pxc/controller.go:465","msg":"reconcile replication error","cluster":"test-cluster","namespace":"acto-namespace","err":"get primary pxc pod: failed to get proxySQL db: dial tcp 10.96.0.80:3306: connect: connection refused"}
+{"level":"info","ts":1679683951.64682,"logger":"perconaxtradbcluster","caller":"pxc/controller.go:465","msg":"reconcile replication error","cluster":"test-cluster","namespace":"acto-namespace","err":"get primary pxc pod: failed to get proxySQL db: dial tcp 10.96.0.80:3306: connect: connection refused"}
+

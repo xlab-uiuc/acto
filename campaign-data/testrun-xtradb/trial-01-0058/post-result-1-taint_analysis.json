@@ -1,0 +1,69 @@
+{
+      "alarm": true,
+      "original_result": {
+            "revert": false,
+            "generation": 1,
+            "testcase": {
+                  "field": "[\"spec\", \"logcollector\", \"image\"]",
+                  "testcase": "string-empty"
+            },
+            "feature_gate": 51,
+            "crash_result": "Pass",
+            "input_result": "Pass",
+            "health_result": {
+                  "oracle": "SystemHealth",
+                  "message": "statefulset: test-cluster-pxc replicas [3] ready_replicas [2]\n"
+            },
+            "state_result": {
+                  "oracle": "SystemState",
+                  "message": "Matched delta inconsistent with input delta",
+                  "input_delta": {
+                        "prev": "percona/percona-xtradb-cluster-operator:1.11.0-logcollector",
+                        "curr": "",
+                        "path": [
+                              "spec",
+                              "logcollector",
+                              "image"
+                        ]
+                  },
+                  "matched_system_delta": {
+                        "prev": "percona/percona-xtradb-cluster:8.0.27-18.1",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-pxc-2",
+                              "spec",
+                              "containers",
+                              2,
+                              "image"
+                        ]
+                  }
+            },
+            "log_result": "Pass",
+            "custom_result": null,
+            "misc_result": null,
+            "recovery_result": null
+      },
+      "post_result": {
+            "trial_num": "01-0058-1",
+            "error": {
+                  "revert": false,
+                  "generation": 1,
+                  "testcase": {
+                        "field": "[\"spec\", \"logcollector\", \"image\"]",
+                        "testcase": "string-empty"
+                  },
+                  "feature_gate": 27,
+                  "crash_result": "Pass",
+                  "input_result": "Pass",
+                  "health_result": {
+                        "oracle": "SystemHealth",
+                        "message": "statefulset: test-cluster-pxc replicas [3] ready_replicas [2]\n"
+                  },
+                  "state_result": "Pass",
+                  "log_result": "Pass",
+                  "custom_result": null,
+                  "misc_result": null,
+                  "recovery_result": null
+            }
+      }
+}

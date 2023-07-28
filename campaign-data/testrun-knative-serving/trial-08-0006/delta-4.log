@@ -1,0 +1,94 @@
+---------- INPUT DELTA  ----------
+{
+      "values_changed": {
+            "root['spec']['ingress']['kourier']['service-type']": {
+                  "prev": "ClusterIP",
+                  "curr": "NodePort",
+                  "path": [
+                        "spec",
+                        "ingress",
+                        "kourier",
+                        "service-type"
+                  ]
+            }
+      }
+}
+---------- SYSTEM DELTA ----------
+{
+      "pod": {},
+      "deployment_pods": {},
+      "stateful_set": {},
+      "deployment": {},
+      "config_map": {},
+      "service": {
+            "values_changed": {
+                  "root['kourier']['spec']['type']": {
+                        "prev": "ClusterIP",
+                        "curr": "NodePort",
+                        "path": [
+                              "kourier",
+                              "spec",
+                              "type"
+                        ]
+                  }
+            },
+            "type_changes": {
+                  "root['kourier']['spec']['external_traffic_policy']": {
+                        "prev": null,
+                        "curr": "Cluster",
+                        "path": [
+                              "kourier",
+                              "spec",
+                              "external_traffic_policy"
+                        ]
+                  },
+                  "root['kourier']['spec']['ports'][0]['node_port']": {
+                        "prev": null,
+                        "curr": 31714,
+                        "path": [
+                              "kourier",
+                              "spec",
+                              "ports",
+                              0,
+                              "node_port"
+                        ]
+                  },
+                  "root['kourier']['spec']['ports'][1]['node_port']": {
+                        "prev": null,
+                        "curr": 30484,
+                        "path": [
+                              "kourier",
+                              "spec",
+                              "ports",
+                              1,
+                              "node_port"
+                        ]
+                  }
+            }
+      },
+      "service_account": {},
+      "pvc": {},
+      "cronjob": {},
+      "ingress": {},
+      "network_policy": {},
+      "pod_disruption_budget": {},
+      "secret": {},
+      "endpoints": {},
+      "job": {},
+      "role": {},
+      "role_binding": {},
+      "custom_resource_spec": {
+            "values_changed": {
+                  "root['ingress']['kourier']['service-type']": {
+                        "prev": "ClusterIP",
+                        "curr": "NodePort",
+                        "path": [
+                              "ingress",
+                              "kourier",
+                              "service-type"
+                        ]
+                  }
+            }
+      },
+      "custom_resource_status": {}
+}

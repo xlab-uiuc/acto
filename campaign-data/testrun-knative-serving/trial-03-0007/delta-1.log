@@ -1,0 +1,72 @@
+---------- INPUT DELTA  ----------
+{
+      "values_changed": {
+            "root['spec']['podDisruptionBudgets'][0]['name']": {
+                  "prev": "activator-pdb",
+                  "curr": "ACTOKEY",
+                  "path": [
+                        "spec",
+                        "podDisruptionBudgets",
+                        0,
+                        "name"
+                  ]
+            }
+      }
+}
+---------- SYSTEM DELTA ----------
+{
+      "pod": {},
+      "deployment_pods": {},
+      "stateful_set": {},
+      "deployment": {},
+      "config_map": {},
+      "service": {},
+      "service_account": {},
+      "pvc": {},
+      "cronjob": {},
+      "ingress": {},
+      "network_policy": {},
+      "pod_disruption_budget": {
+            "values_changed": {
+                  "root['activator-pdb']['spec']['min_available']": {
+                        "prev": "50%",
+                        "curr": "80%",
+                        "path": [
+                              "activator-pdb",
+                              "spec",
+                              "min_available"
+                        ]
+                  },
+                  "root['activator-pdb']['status']['conditions'][0]['last_transition_time']": {
+                        "prev": "2023-03-31T08:35:35+00:00",
+                        "curr": "2023-03-31T08:39:53+00:00",
+                        "path": [
+                              "activator-pdb",
+                              "status",
+                              "conditions",
+                              0,
+                              "last_transition_time"
+                        ]
+                  }
+            }
+      },
+      "secret": {},
+      "endpoints": {},
+      "job": {},
+      "role": {},
+      "role_binding": {},
+      "custom_resource_spec": {
+            "values_changed": {
+                  "root['podDisruptionBudgets'][0]['name']": {
+                        "prev": "activator-pdb",
+                        "curr": "ACTOKEY",
+                        "path": [
+                              "podDisruptionBudgets",
+                              0,
+                              "name"
+                        ]
+                  }
+            }
+      },
+      "custom_resource_status": {}
+}

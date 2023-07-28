@@ -1,0 +1,30 @@
+goroutine 27675 [running]:
+net/http.(*conn).serve.func1()
+	/usr/local/go/src/net/http/server.go:1825 +0xbf
+panic({0x1641280, 0x261ace0})
+	/usr/local/go/src/runtime/panic.go:844 +0x258
+github.com/percona/percona-xtradb-cluster-operator/pkg/apis/pxc/v1.(*PerconaXtraDBCluster).Validate(0xc0012f2000)
+	/go/src/github.com/percona/percona-xtradb-cluster-operator/pkg/apis/pxc/v1/pxc_types.go:227 +0xbb
+github.com/percona/percona-xtradb-cluster-operator/pkg/webhook.(*hook).ServeHTTP(0xc000304fc0, {0x7fbd9730e2f8, 0xc00141c140}, 0xc0008a1300)
+	/go/src/github.com/percona/percona-xtradb-cluster-operator/pkg/webhook/hook.go:290 +0x299
+github.com/prometheus/client_golang/prometheus/promhttp.InstrumentHandlerInFlight.func1({0x7fbd9730e2f8, 0xc00141c140}, 0x1a9d500?)
+	/go/src/github.com/percona/percona-xtradb-cluster-operator/vendor/github.com/prometheus/client_golang/prometheus/promhttp/instrument_server.go:40 +0xd4
+net/http.HandlerFunc.ServeHTTP(0x1a9d510?, {0x7fbd9730e2f8?, 0xc00141c140?}, 0x412a7a?)
+	/usr/local/go/src/net/http/server.go:2084 +0x2f
+github.com/prometheus/client_golang/prometheus/promhttp.InstrumentHandlerCounter.func1({0x1a9d510?, 0xc001608a80?}, 0xc0008a1300)
+	/go/src/github.com/percona/percona-xtradb-cluster-operator/vendor/github.com/prometheus/client_golang/prometheus/promhttp/instrument_server.go:101 +0x94
+net/http.HandlerFunc.ServeHTTP(0xc000aa9dc0?, {0x1a9d510?, 0xc001608a80?}, 0x1a89800?)
+	/usr/local/go/src/net/http/server.go:2084 +0x2f
+github.com/prometheus/client_golang/prometheus/promhttp.InstrumentHandlerDuration.func2({0x1a9d510, 0xc001608a80}, 0xc0008a1300)
+	/go/src/github.com/percona/percona-xtradb-cluster-operator/vendor/github.com/prometheus/client_golang/prometheus/promhttp/instrument_server.go:76 +0xa2
+net/http.HandlerFunc.ServeHTTP(0x2d5a4c390a4?, {0x1a9d510?, 0xc001608a80?}, 0xc0002e9b70?)
+	/usr/local/go/src/net/http/server.go:2084 +0x2f
+net/http.(*ServeMux).ServeHTTP(0xc0016c4165?, {0x1a9d510, 0xc001608a80}, 0xc0008a1300)
+	/usr/local/go/src/net/http/server.go:2462 +0x149
+net/http.serverHandler.ServeHTTP({0x1a90878?}, {0x1a9d510, 0xc001608a80}, 0xc0008a1300)
+	/usr/local/go/src/net/http/server.go:2916 +0x43b
+net/http.(*conn).serve(0xc000d1f680, {0x1a9e388, 0xc00046e750})
+	/usr/local/go/src/net/http/server.go:1966 +0x5d7
+created by net/http.(*Server).Serve
+	/usr/local/go/src/net/http/server.go:3071 +0x4db
+

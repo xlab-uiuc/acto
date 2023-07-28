@@ -1,0 +1,212 @@
+apiVersion: mongodbcommunity.mongodb.com/v1
+kind: MongoDBCommunity
+metadata:
+  name: test-cluster
+  namespace: mongodb
+spec:
+  automationConfig:
+    processes:
+    - disabled: false
+      name: test-cluster-1
+  members: 3
+  security:
+    authentication:
+      modes:
+      - SCRAM
+    roles:
+    - authenticationRestrictions:
+      - clientSource: []
+        serverAddress:
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+      - clientSource:
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+        serverAddress:
+        - ACTOKEY
+        - ACTOKEY
+      - clientSource:
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+        serverAddress:
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+      - clientSource:
+        - ACTOKEY
+        serverAddress:
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+      db: ACTOKEY
+      privileges:
+      - actions:
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+        resource:
+          anyResource: true
+          cluster: false
+          collection: null
+          db: null
+      role: ACTOKEY
+      roles:
+      - db: ACTOKEY
+        name: ACTOKEY
+      - db: ACTOKEY
+        name: ACTOKEY
+      - db: ACTOKEY
+        name: ACTOKEY
+      - db: ACTOKEY
+        name: ACTOKEY
+    - authenticationRestrictions: []
+      db: ACTOKEY
+      privileges:
+      - actions:
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+        resource:
+          anyResource: true
+          cluster: false
+          collection: ACTOKEY
+          db: ACTOKEY
+      - actions:
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+        resource:
+          anyResource: false
+          cluster: true
+          collection: null
+          db: ACTOKEY
+      - actions:
+        - ACTOKEY
+        resource:
+          anyResource: true
+          cluster: true
+          collection: ACTOKEY
+          db: ACTOKEY
+      - actions:
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+        resource:
+          anyResource: false
+          cluster: true
+          collection: ACTOKEY
+          db: ACTOKEY
+      role: ACTOKEY
+      roles: null
+    - authenticationRestrictions:
+      - clientSource:
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+        serverAddress: []
+      - clientSource:
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+        serverAddress:
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+      - clientSource:
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+        serverAddress:
+        - ACTOKEY
+      - clientSource: []
+        serverAddress:
+        - ACTOKEY
+      - clientSource:
+        - ACTOKEY
+        serverAddress:
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+      db: ACTOKEY
+      privileges:
+      - actions:
+        - ACTOKEY
+        - ACTOKEY
+        resource:
+          anyResource: true
+          cluster: null
+          collection: ACTOKEY
+          db: ACTOKEY
+      - actions:
+        - ACTOKEY
+        resource:
+          anyResource: true
+          cluster: true
+          collection: ACTOKEY
+          db: ACTOKEY
+      - actions:
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+        resource:
+          anyResource: null
+          cluster: false
+          collection: ACTOKEY
+          db: ACTOKEY
+      role: ACTOKEY
+      roles: null
+  statefulSet:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: mongod
+            resources:
+              limits:
+                cpu: '1'
+                memory: 1000M
+              requests:
+                cpu: '1'
+                memory: 1000M
+          - name: mongodb-agent
+            resources:
+              limits:
+                cpu: '1'
+                memory: 1000M
+              requests:
+                cpu: '1'
+                memory: 1000M
+  type: ReplicaSet
+  users:
+  - db: admin
+    name: my-user
+    passwordSecretRef:
+      name: my-user-password
+    roles:
+    - db: admin
+      name: clusterAdmin
+    - db: admin
+      name: userAdminAnyDatabase
+    scramCredentialsSecretName: my-scram
+  version: 4.4.0

@@ -1,0 +1,227 @@
+{"level":"info","ts":1679892581.371903,"logger":"setup","msg":"Git commit: 9a969e114b50c5299c25856dff6c23368987be70 Git branch: release-1-12-0"}
+{"level":"info","ts":1679892581.3719397,"logger":"setup","msg":"Go Version: go1.17.9"}
+{"level":"info","ts":1679892581.3719525,"logger":"setup","msg":"Go OS/Arch: linux/amd64"}
+{"level":"info","ts":1679892582.0773766,"logger":"controller-runtime.metrics","msg":"Metrics server is starting to listen","addr":":8080"}
+{"level":"info","ts":1679892582.7867875,"logger":"controller_psmdb","msg":"server version","platform":"kubernetes","version":"v1.22.9"}
+{"level":"info","ts":1679892583.498167,"msg":"Starting server","path":"/metrics","kind":"metrics","addr":"[::]:8080"}
+{"level":"info","ts":1679892583.4981673,"msg":"Starting server","kind":"health probe","addr":"[::]:8081"}
+I0327 04:49:43.498230       1 leaderelection.go:248] attempting to acquire leader lease acto-namespace/08db0feb.percona.com...
+I0327 04:50:01.374373       1 leaderelection.go:258] successfully acquired lease acto-namespace/08db0feb.percona.com
+{"level":"info","ts":1679892601.3746479,"logger":"controller.psmdb-controller","msg":"Starting EventSource","source":"kind source: *v1.PerconaServerMongoDB"}
+{"level":"info","ts":1679892601.3747313,"logger":"controller.psmdb-controller","msg":"Starting Controller"}
+{"level":"info","ts":1679892601.3746955,"logger":"controller.perconaservermongodbbackup-controller","msg":"Starting EventSource","source":"kind source: *v1.PerconaServerMongoDBBackup"}
+{"level":"info","ts":1679892601.3746834,"logger":"controller.perconaservermongodbrestore-controller","msg":"Starting EventSource","source":"kind source: *v1.PerconaServerMongoDBRestore"}
+{"level":"info","ts":1679892601.3747616,"logger":"controller.perconaservermongodbbackup-controller","msg":"Starting EventSource","source":"kind source: *v1.Pod"}
+{"level":"info","ts":1679892601.3747709,"logger":"controller.perconaservermongodbbackup-controller","msg":"Starting Controller"}
+{"level":"info","ts":1679892601.3747768,"logger":"controller.perconaservermongodbrestore-controller","msg":"Starting EventSource","source":"kind source: *v1.Pod"}
+{"level":"info","ts":1679892601.3747976,"logger":"controller.perconaservermongodbrestore-controller","msg":"Starting Controller"}
+{"level":"info","ts":1679892601.475868,"logger":"controller.psmdb-controller","msg":"Starting workers","worker count":1}
+{"level":"info","ts":1679892601.4758968,"logger":"controller.perconaservermongodbbackup-controller","msg":"Starting workers","worker count":1}
+{"level":"info","ts":1679892601.4758646,"logger":"controller.perconaservermongodbrestore-controller","msg":"Starting workers","worker count":1}
+{"level":"info","ts":1679892601.4762022,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1679892601.476227,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892601.4762323,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1679892601.4762397,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892601.4765298,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1679892601.4765592,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892601.476578,"logger":"controller_psmdb","msg":"Point-in-time recovery can be enabled only if one bucket is used in spec.backup.storages"}
+{"level":"error","ts":1679892602.4932504,"logger":"controller_psmdb","msg":"issue cert with cert-manager","error":"create issuer: no matches for kind \"Issuer\" in version \"cert-manager.io/v1\"","errorVerbose":"no matches for kind \"Issuer\" in version \"cert-manager.io/v1\"\ncreate issuer\ngithub.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb.(*ReconcilePerconaServerMongoDB).createSSLByCertManager\n\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb/ssl.go:85\ngithub.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb.(*ReconcilePerconaServerMongoDB).reconsileSSL\n\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb/ssl.go:47\ngithub.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb.(*ReconcilePerconaServerMongoDB).Reconcile\n\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb/psmdb_controller.go:339\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile\n\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:114\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler\n\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:311\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\n\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\n\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\nruntime.goexit\n\t/usr/local/go/src/runtime/asm_amd64.s:1581","stacktrace":"github.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb.(*ReconcilePerconaServerMongoDB).reconsileSSL\n\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb/ssl.go:49\ngithub.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb.(*ReconcilePerconaServerMongoDB).Reconcile\n\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb/psmdb_controller.go:339\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile\n\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:114\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler\n\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:311\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\n\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\n\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227"}
+{"level":"info","ts":1679892604.251434,"logger":"controller_psmdb","msg":"Created a new mongo key","Request.Namespace":"acto-namespace","Request.Name":"test-cluster","KeyName":"test-cluster-mongodb-keyfile"}
+{"level":"info","ts":1679892604.2542534,"logger":"controller_psmdb","msg":"Created a new mongo key","Request.Namespace":"acto-namespace","Request.Name":"test-cluster","KeyName":"my-cluster-name-mongodb-encryption-key"}
+{"level":"info","ts":1679892604.2586563,"logger":"KubeAPIWarningLogger","msg":"batch/v1beta1 CronJob is deprecated in v1.21+, unavailable in v1.25+; use batch/v1 CronJob"}
+{"level":"info","ts":1679892604.3789337,"logger":"KubeAPIWarningLogger","msg":"policy/v1beta1 PodDisruptionBudget is deprecated in v1.21+, unavailable in v1.25+; use policy/v1 PodDisruptionBudget"}
+{"level":"info","ts":1679892604.6950781,"logger":"controller_psmdb","msg":"Waiting for the pods","replsetSize":3,"pods":0}
+{"level":"info","ts":1679892604.7508266,"logger":"controller_psmdb","msg":"Waiting for the pods","replsetSize":7,"pods":0}
+{"level":"info","ts":1679892604.8754315,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1679892604.8754883,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892604.8754992,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1679892604.875506,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892604.8757231,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1679892604.8757427,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892604.8757603,"logger":"controller_psmdb","msg":"Point-in-time recovery can be enabled only if one bucket is used in spec.backup.storages"}
+{"level":"info","ts":1679892604.8910937,"logger":"controller_psmdb","msg":"Waiting for the pods","replsetSize":3,"pods":1}
+{"level":"info","ts":1679892604.9198308,"logger":"controller_psmdb","msg":"Waiting for the pods","replsetSize":7,"pods":3}
+{"level":"info","ts":1679892609.8758516,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1679892609.875876,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892609.8758805,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1679892609.8758838,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892609.8760886,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1679892609.8760993,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892609.876108,"logger":"controller_psmdb","msg":"Point-in-time recovery can be enabled only if one bucket is used in spec.backup.storages"}
+{"level":"info","ts":1679892609.8864462,"logger":"controller_psmdb","msg":"Waiting for the pods","replsetSize":3,"pods":1}
+{"level":"info","ts":1679892609.895005,"logger":"controller_psmdb","msg":"Waiting for the pods","replsetSize":7,"pods":3}
+{"level":"info","ts":1679892614.9180098,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1679892614.9180381,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892614.9180427,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1679892614.9180453,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892614.9181519,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1679892614.9181592,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892614.9181678,"logger":"controller_psmdb","msg":"Point-in-time recovery can be enabled only if one bucket is used in spec.backup.storages"}
+{"level":"info","ts":1679892614.929822,"logger":"controller_psmdb","msg":"Waiting for the pods","replsetSize":3,"pods":1}
+{"level":"info","ts":1679892614.936012,"logger":"controller_psmdb","msg":"Waiting for the pods","replsetSize":7,"pods":3}
+{"level":"info","ts":1679892619.9583123,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1679892619.958351,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892619.9583573,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1679892619.9583611,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892619.9584975,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1679892619.9585073,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892619.9585192,"logger":"controller_psmdb","msg":"Point-in-time recovery can be enabled only if one bucket is used in spec.backup.storages"}
+{"level":"info","ts":1679892619.9695833,"logger":"controller_psmdb","msg":"Waiting for the pods","replsetSize":3,"pods":1}
+{"level":"info","ts":1679892619.9782522,"logger":"controller_psmdb","msg":"Waiting for the pods","replsetSize":7,"pods":3}
+{"level":"info","ts":1679892624.9996862,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1679892624.999722,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892624.9997306,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1679892624.9997363,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892624.9999053,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1679892624.9999173,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892624.9999354,"logger":"controller_psmdb","msg":"Point-in-time recovery can be enabled only if one bucket is used in spec.backup.storages"}
+{"level":"info","ts":1679892625.0153167,"logger":"controller_psmdb","msg":"Waiting for the pods","replsetSize":3,"pods":1}
+{"level":"info","ts":1679892625.0225348,"logger":"controller_psmdb","msg":"Waiting for the pods","replsetSize":7,"pods":3}
+{"level":"info","ts":1679892630.0448158,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1679892630.044845,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892630.0448503,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1679892630.0448532,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892630.044972,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1679892630.0449839,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892630.044994,"logger":"controller_psmdb","msg":"Point-in-time recovery can be enabled only if one bucket is used in spec.backup.storages"}
+{"level":"info","ts":1679892630.0591047,"logger":"controller_psmdb","msg":"Waiting for the pods","replsetSize":3,"pods":1}
+{"level":"info","ts":1679892630.075201,"logger":"controller_psmdb","msg":"Waiting for the pods","replsetSize":7,"pods":4}
+{"level":"info","ts":1679892630.0968328,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1679892630.09686,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892630.0968678,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1679892630.0968707,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892630.0969687,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1679892630.096978,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892630.096988,"logger":"controller_psmdb","msg":"Point-in-time recovery can be enabled only if one bucket is used in spec.backup.storages"}
+{"level":"info","ts":1679892630.1041923,"logger":"controller_psmdb","msg":"Waiting for the pods","replsetSize":3,"pods":1}
+{"level":"info","ts":1679892630.1128047,"logger":"controller_psmdb","msg":"Waiting for the pods","replsetSize":7,"pods":4}
+{"level":"info","ts":1679892635.0972705,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1679892635.097313,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892635.097322,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1679892635.0973277,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892635.0974998,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1679892635.0975156,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892635.097528,"logger":"controller_psmdb","msg":"Point-in-time recovery can be enabled only if one bucket is used in spec.backup.storages"}
+{"level":"info","ts":1679892635.1197689,"logger":"controller_psmdb","msg":"Waiting for the pods","replsetSize":3,"pods":2}
+{"level":"info","ts":1679892635.1326044,"logger":"controller_psmdb","msg":"Waiting for the pods","replsetSize":7,"pods":4}
+{"level":"info","ts":1679892635.1594582,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1679892635.1594968,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892635.159502,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1679892635.1595051,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892635.1596322,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1679892635.1596472,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892635.159659,"logger":"controller_psmdb","msg":"Point-in-time recovery can be enabled only if one bucket is used in spec.backup.storages"}
+{"level":"info","ts":1679892635.1684513,"logger":"controller_psmdb","msg":"Waiting for the pods","replsetSize":3,"pods":2}
+{"level":"info","ts":1679892635.174748,"logger":"controller_psmdb","msg":"Waiting for the pods","replsetSize":7,"pods":4}
+{"level":"info","ts":1679892640.1596012,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1679892640.1596596,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892640.159668,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1679892640.1596723,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892640.1598926,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1679892640.159932,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892640.159967,"logger":"controller_psmdb","msg":"Point-in-time recovery can be enabled only if one bucket is used in spec.backup.storages"}
+{"level":"info","ts":1679892640.1730273,"logger":"controller_psmdb","msg":"Waiting for the pods","replsetSize":3,"pods":2}
+{"level":"info","ts":1679892640.1897964,"logger":"controller_psmdb","msg":"Waiting for the pods","replsetSize":7,"pods":5}
+{"level":"info","ts":1679892640.2370677,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1679892640.2371,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892640.2371051,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1679892640.237108,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892640.2372084,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1679892640.2372131,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892640.2372203,"logger":"controller_psmdb","msg":"Point-in-time recovery can be enabled only if one bucket is used in spec.backup.storages"}
+{"level":"info","ts":1679892640.244302,"logger":"controller_psmdb","msg":"Waiting for the pods","replsetSize":3,"pods":2}
+{"level":"info","ts":1679892640.2504878,"logger":"controller_psmdb","msg":"Waiting for the pods","replsetSize":7,"pods":5}
+{"level":"info","ts":1679892645.230483,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1679892645.230513,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892645.2305186,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1679892645.2305214,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892645.2306266,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1679892645.2306354,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892645.2306464,"logger":"controller_psmdb","msg":"Point-in-time recovery can be enabled only if one bucket is used in spec.backup.storages"}
+{"level":"info","ts":1679892645.2440612,"logger":"controller_psmdb","msg":"Waiting for the pods","replsetSize":3,"pods":2}
+{"level":"info","ts":1679892645.2600272,"logger":"controller_psmdb","msg":"Waiting for the pods","replsetSize":7,"pods":5}
+{"level":"info","ts":1679892650.287592,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1679892650.287637,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892650.287646,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1679892650.2876515,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892650.2878394,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1679892650.2878597,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892650.2878735,"logger":"controller_psmdb","msg":"Point-in-time recovery can be enabled only if one bucket is used in spec.backup.storages"}
+{"level":"info","ts":1679892650.3042357,"logger":"controller_psmdb","msg":"Waiting for the pods","replsetSize":3,"pods":2}
+{"level":"info","ts":1679892650.3136618,"logger":"controller_psmdb","msg":"Waiting for the pods","replsetSize":7,"pods":5}
+{"level":"info","ts":1679892650.3371305,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1679892650.3371613,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892650.3371675,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1679892650.337172,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892650.3372922,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1679892650.3373106,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892650.3373194,"logger":"controller_psmdb","msg":"Point-in-time recovery can be enabled only if one bucket is used in spec.backup.storages"}
+{"level":"info","ts":1679892650.345469,"logger":"controller_psmdb","msg":"Waiting for the pods","replsetSize":3,"pods":2}
+{"level":"info","ts":1679892650.3515983,"logger":"controller_psmdb","msg":"Waiting for the pods","replsetSize":7,"pods":5}
+{"level":"info","ts":1679892655.3372548,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1679892655.3372855,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892655.3372905,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1679892655.3372936,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892655.337392,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1679892655.337401,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892655.337408,"logger":"controller_psmdb","msg":"Point-in-time recovery can be enabled only if one bucket is used in spec.backup.storages"}
+{"level":"info","ts":1679892665.3629773,"logger":"controller_psmdb","msg":"initiating replset","replset":"cfg","pod":"test-cluster-cfg-0"}
+{"level":"info","ts":1679892672.3514237,"logger":"controller_psmdb","msg":"replset was initialized","replset":"cfg","pod":"test-cluster-cfg-0"}
+{"level":"info","ts":1679892673.1827412,"logger":"controller_psmdb","msg":"Waiting for the pods","replsetSize":7,"pods":6}
+{"level":"info","ts":1679892674.2323425,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1679892674.232395,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892674.2324038,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1679892674.232408,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892674.2325737,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1679892674.2325826,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892674.2325964,"logger":"controller_psmdb","msg":"Point-in-time recovery can be enabled only if one bucket is used in spec.backup.storages"}
+{"level":"info","ts":1679892675.4961538,"logger":"controller_psmdb","msg":"Waiting for the pods","replsetSize":7,"pods":6}
+{"level":"info","ts":1679892679.2329779,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1679892679.2330308,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892679.2330408,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1679892679.2330472,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892679.2332335,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1679892679.233248,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892679.2332587,"logger":"controller_psmdb","msg":"Point-in-time recovery can be enabled only if one bucket is used in spec.backup.storages"}
+{"level":"info","ts":1679892679.4628272,"logger":"controller_psmdb","msg":"Waiting for the pods","replsetSize":7,"pods":6}
+{"level":"info","ts":1679892684.494018,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1679892684.4940567,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892684.4940615,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1679892684.4940643,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892684.4941676,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1679892684.4941773,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892684.4941845,"logger":"controller_psmdb","msg":"Point-in-time recovery can be enabled only if one bucket is used in spec.backup.storages"}
+{"level":"info","ts":1679892694.7075164,"logger":"controller_psmdb","msg":"initiating replset","replset":"rs0","pod":"test-cluster-rs0-1"}
+{"level":"info","ts":1679892701.3596761,"logger":"controller_psmdb","msg":"replset was initialized","replset":"rs0","pod":"test-cluster-rs0-1"}
+{"level":"info","ts":1679892702.1905646,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1679892702.1906269,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892702.1906357,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1679892702.1906412,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892702.190826,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1679892702.1908424,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892702.1908565,"logger":"controller_psmdb","msg":"Point-in-time recovery can be enabled only if one bucket is used in spec.backup.storages"}
+{"level":"info","ts":1679892707.1905885,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1679892707.1906364,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892707.190645,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1679892707.1906507,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892707.190824,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1679892707.1908393,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892707.1908565,"logger":"controller_psmdb","msg":"Point-in-time recovery can be enabled only if one bucket is used in spec.backup.storages"}
+{"level":"info","ts":1679892707.712113,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1679892707.7121687,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892707.712177,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1679892707.712182,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892707.7123427,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1679892707.7129571,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892707.7129767,"logger":"controller_psmdb","msg":"Point-in-time recovery can be enabled only if one bucket is used in spec.backup.storages"}
+{"level":"info","ts":1679892707.9104092,"logger":"controller_psmdb","msg":"update Mongo version to 4.4.10-11 (fetched from db)"}
+{"level":"info","ts":1679892708.1362162,"logger":"controller_psmdb","msg":"adding rs to shard","rs":"rs0"}
+{"level":"info","ts":1679892718.444082,"logger":"controller_psmdb","msg":"added to shard","rs":"rs0"}
+{"level":"info","ts":1679892736.5814154,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1679892736.5815196,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892736.5815444,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1679892736.581563,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892736.5819778,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1679892736.5820155,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1679892736.582057,"logger":"controller_psmdb","msg":"Point-in-time recovery can be enabled only if one bucket is used in spec.backup.storages"}
+

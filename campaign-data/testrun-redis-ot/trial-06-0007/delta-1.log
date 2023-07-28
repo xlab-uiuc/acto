@@ -1,0 +1,101 @@
+---------- INPUT DELTA  ----------
+{
+      "dictionary_item_removed": {
+            "root['spec']['storage']['volumeClaimTemplate']['spec'][accessModes][0]": {
+                  "prev": "ReadWriteOnce",
+                  "curr": "NotPresent",
+                  "path": [
+                        "spec",
+                        "storage",
+                        "volumeClaimTemplate",
+                        "spec",
+                        "accessModes",
+                        0
+                  ]
+            },
+            "root['spec']['storage']['volumeClaimTemplate']['spec'][resources][requests][storage]": {
+                  "prev": "1Gi",
+                  "curr": "NotPresent",
+                  "path": [
+                        "spec",
+                        "storage",
+                        "volumeClaimTemplate",
+                        "spec",
+                        "resources",
+                        "requests",
+                        "storage"
+                  ]
+            }
+      }
+}
+---------- SYSTEM DELTA ----------
+{
+      "pod": {},
+      "deployment_pods": {},
+      "stateful_set": {
+            "values_changed": {
+                  "root['test-cluster-follower']['metadata']['annotations']['banzaicloud.com/last-applied']": {
+                        "prev": "UEsDBBQACAAIAAAAAAAAAAAAAAAAAAAAAAAIAAAAb3JpZ2luYWzcVU1vGzkM/S88yx5PnC/PrRt7FwGa1Bhnu4ciMGgN3RGqkVSJmtYw5r8vNP6oE2Q3uSyw7cke6pEi3yOpLaBTH8kHZQ0UgM6FrM1BwBdlKihgwci0jnpBDAIaYqyQEYotoDGWkZU1IX16qlQYWhfYE2lchaFKAdlHAvHiaWA0khKGAg+kjoHJQydA44p0HxSde3Y+WFut7Tfyh6DLQBzdkjcuhTpEEeCtToYjvBNgsHl+3Wm4dBwc9in1oQfWkUe26dB+M+RLWpMnIylA8ekZc7sKX6oza/MVMSZSpTXsrdbkoUjMHGkuk9/NMfkXMgUBUSXomZTnV3Q1GeDkPB+cX45oMBnnl4Mx0vl1Pprg9XgM3WMnIDiSO2mcVhIDFGMBgTTJVFOxhQZZ1u//E7bT9eRbJen+31lnapxGpj6fn7i9TvhOKqMy5HdtQqbtf/eizmfl4nbxMLu/mS1n9+9+ez+bgoAWdaRDQZ04osvZ9HaxfDedliegPrMiy7SVqGsbuLgcX01O3Raz8uOsXN59mM5O/H6QcAJ8+HP+j7hHAarBz8n2NeJmqGy2Jznb5dBeDs+GF7CHzaPWc6uV3EABt+t7y3NPgUxaHVq1ZCiEuberXmz6fmCraTANwSdYYahBQBaDz1bKZDWh5lrWJL8MQw2pp9eodPT0UHsKtdUVFBcClFGsUE9J42ZB0poqQJFfCHDkla2emFg1ZCMfbRevLwZPWKn/a+6ego2+X0lb0KpR3P+TLkIB+Shv+rXdWJ80yc+u7xT0Xl8jhTdAOwGt1bGhOxsN7xq6SX/nyDUUkPXz+gqFaRv90nMwoO/OeiZf5MPRW6Zhf+tTZ3hVzdHb1XwR2nWPSdHoKmRasEemzxsotkeVbzSq5mG/kvdq/8RL+bW+/LGzUUoK4c5WfdVQElZ/ecX0IaX7+EyYU74DW7/rjPyPp/NSJePvSlPYBKamv42RY3Lrdg/04ROwRaVxpak8vtUjcfJwj7ru7wAAAP//UEsHCLG8FTDyAgAAqgkAAFBLAQIUABQACAAIAAAAAACxvBUw8gIAAKoJAAAIAAAAAAAAAAAAAAAAAAAAAABvcmlnaW5hbFBLBQYAAAAAAQABADYAAAAoAwAAAAA=",
+                        "curr": "UEsDBBQACAAIAAAAAAAAAAAAAAAAAAAAAAAIAAAAb3JpZ2luYWzsmN9v2zYQx/+Xe5ZsK07SRm9d4mUFmtSw3QxoEgRn6RwToUiVpNx6hv73gdRPy/aadki3DnuzyOMd+b0j+aE3gCm7IaWZFBACpqnurwLw4ImJGEKYGjS0yPiUDHiQkMEYDUK4ARRCGjRMCm0/FcVM92SqjSLiONc9Zh0alRF4e3u1QRGRtSFt/Ihn2pCC3INIkfM7Ywlpg0kKIRwNjob+YOgPg9nRMAyG4WDwETzgOCfu4mOadlz5C8m5/Eyqiv+gyWTpg1mnNmoV0AMluW2ozXMPEhT4SPGvjHisIbw9KNPCWcwKl4X5TdN+E9ipLcK2bouwo1wPwk3uwSKco/gDWcRlFvcimfQ5auNjmnJGcWWzX+bDfZXIm9yZNHrVUZ1wLQdbKpXtTqDShfwsSE1oQYpERG1fT+HmDjIW30F4B0dRdPyKXp35eHYc+MenA/LPhsGpP0Q6fh0MzvD1cHgHuXPr/OqUokKfVMZXTv+EhBlLzqJ1M8OUswh1871iNie/MW2kWr9jCTNVnyZOkZGq+VYrFtE1JvXCDCUpR0PfkqV/NgMdqSIpDDJBynl0CRCYkMuA8+XTl1QqQ6rQuglKYtVNXT1yPJpM305no+vz0cPo+s0v70YX3eGipeIKeVYtcNvRZHTxdvrw5uJi8n3jp6PJzWjycPX+YvS9DmYfxt8w3n2yBB/rPvcxzjjfLsT2cEVaZmp7LyxCbmtxuylKs+pnQolU67oqFH3KSD/LvCxclTDhqvOKtLZTRLNsynqnt578jkR7j8z/q+U5459dLZytSJDWYyXntC3sl2IrN0mXSYIiritjgYxnimZLRXopeX0RMMEMQ35BHNdTiqSI60MxJcVk3GnUWRSR1jt+DEtIZqZlvae+MWY/1/R/qi3pikryLKErmQmzc6UmttU6c0Xat1dUtz5rE+gUbF7OLha6e5Nqg6pzvepoSXHGSbUvSU1RpphZn0th6IvZs6JLhRGNu2krAmdpjIamRqGhx3VxaynJOROPH1zX1jpSVIYZB1llGqpbsKXSOUeWzMqruw5VIJuCEC6lvzQm9SPOSFhslSkpLLxCGdQDWzmHwDL3/ibwaYMm0yVIrJBxnHOadOAlsjLYAOc2e3VrphQJs2NcNRfAUzXLucUaii9J1Gtsdu2666XLT0V2uk6L1rg9eFvhp2xOvmUPm0lSftVzQGqdzasNCSGU2hzOwPDkI+T3HhQ1fJDpbbdO0fksWKcILt08upTaRfgC1fYBW38VzMmgTWqzRAjtS6Z+Fk3suPP6BbFnpuBZFLbLewYIu+VWEjVzDE4GA/saqXivyd7QgxbeQoImWr57kbeQDd8G54Nu2yz9Y96JL/P4a+ndpuvbDTgIut1U2d7DPeBBSQfFguw5Ulo3cNMycjML+30uI+RLqU14Onx11h7WYprWuEaElmHFLvvs7j0oOQU+ZbjuMdkvRe4Xc1id9o56J1CatQkG3i6upRkr0sVhusMyFQPUV/8tzFEvwYN+plV/zkR/ScjNMlpS9NTTS7i3p8wOGJx4sJcKghMPOkxgm7o3/0n+1RNjF2T+RXPfQpaGVBxxQDAIEvf/S8EcEBy9vmLgRjWU8pemuQfbjHG7gRY1FFix/yhrJMzvbcX9h/dB/VwOg97gObuhjLo9GL6azcHzs7nXNM/vbUZ34KrOcpeRutdf+z++sW3VhoS5acb+sH/7XuYU/1ohN4c8uofFlYydTDAhjH9XzNB7O937TibbCdJGqqKUgsvtDRaTY0NOeq0NJS5aDYTpErXbNiRiJh7BprLdvwcXB17r6h/k+Z8BAAD//1BLBwihC5GOUQUAALUVAABQSwECFAAUAAgACAAAAAAAoQuRjlEFAAC1FQAACAAAAAAAAAAAAAAAAAAAAAAAb3JpZ2luYWxQSwUGAAAAAAEAAQA2AAAAhwUAAAAA",
+                        "path": [
+                              "test-cluster-follower",
+                              "metadata",
+                              "annotations",
+                              "banzaicloud.com/last-applied"
+                        ]
+                  },
+                  "root['test-cluster-leader']['metadata']['annotations']['banzaicloud.com/last-applied']": {
+                        "prev": "UEsDBBQACAAIAAAAAAAAAAAAAAAAAAAAAAAIAAAAb3JpZ2luYWzcVU1v2zgQ/S9zpi0rzpd168beRYAmNeRs91AExpiaVEQpkiWH2hqG/vuC8kecIJvmsIdNTxKHb4Yz7w2HG0CnPpMPyhooAJ0LWZuDgG/KVFDAgpHpIeoFMQhoiLFCRig2gMZYRlbWhLT0VKkwtC6wJ9K4CkOVArKPBOLF3cBoJCUMBR5IHQOTh06AxhXpPig692x/oAkr8vuQy0Ac3ZLXLgXaxxDgrU6GHbgTYLB5ftRjqLQZHPbJ9GEH1pFHtmnT/m3Il/RAnoykAMWXZ5xta3upwqzNV8SY6JTWsLdak4cicXIguEx+V4fEX8gTBESVoCdSnl7QxWSAk9N8cHo+osFknJ8Pxkinl/logpfjMXT3nYDgSG5FcVpJDFCMBQTSJFNNxQYaZFl//M95TkeTb5Wk29f4ZmqcRqY+k3faUkcsJ21RGfLb5iDT9t+dlPNZubhe3M1ur2bL2e2H3z7OpiCgRR1pX0wnDuhyNr1eLD9Mp+URqM+ryDJtJeraBi7OxxeTY7fFrPw8K5c3n6azI79HAo6Ad3/O/xV3L0A1+DXZvkdcD5XNdgRn2xza8+HJ8Ax2sHnUem61kmso4Prh1vLcUyCTRoVWLRkKYe7tqheafuzZahpMrf8FVhhqEJDF4LOVMllNqLmWNclvw1BD6uQHVDp6uqs9hdrqCoozAcooVqinpHG9IGlNFaDIzwQ48spWT0ysGrKRD7aznw0DT1ip/2vmnoKNvh9DG9CqUdz/SRehgHyUN/2QbqxPiuQnlzcKeq/vkcIboJ2A1urY0I2Nhrft3KTfOXINBWT9TX2VwDR/fuk7MKAfznomX+TD0Vtuwu7Up87wUy1Hb9fyRWjX3Sc9o6uQacEemb6uodgcNL7SqJq73Sjeaf1Oh/HrHfk4qVFKCuHGVn29UBJWf3nF9Cklev9MkmOmA1u/7Yn8j6f3pErG35WmsA5MTX8aI8fk1m0f4/0SsEWlcaWpPLzLI3H0SI+67p8AAAD//1BLBwgpsBo/8AIAAJAJAABQSwECFAAUAAgACAAAAAAAKbAaP/ACAACQCQAACAAAAAAAAAAAAAAAAAAAAAAAb3JpZ2luYWxQSwUGAAAAAAEAAQA2AAAAJgMAAAAA",
+                        "curr": "UEsDBBQACAAIAAAAAAAAAAAAAAAAAAAAAAAIAAAAb3JpZ2luYWzsWG1v2zYQ/i/3WbKtOC+NvnWJlxVoUsN2M6BJEJylc0yEIlWS8uoZ+u8DqVfLdpt2RbcO+2Yd743PHXkPvQFM2S0pzaSAEDBNdX8VgAfPTMQQwtSgoUXGp2TAg4QMxmgQwg2gENKgYVJo+6koZronU20UEce57jHr0KiMwNu7qg2KiKwOaeNHPNOGFOQeRIqc3xlLSBtMUgjhaHA09AdDfxjMjoZhcBSenH8ADzjOibv4mKYdVz4njElV0R81mSx9NOvUxqzCeaAkt4JSOfcgQYFPFP/KiMcawruDEC2cxqxwWKjfNvLbwKa1CNuYLcIOaj0IN7kHi3CO4k9kEZdZ3Itk0ueojY9pyhnFlc5+iA+vVQBvcqfSYFVHdaC1HGxhVModPKUL+YcgNaEFKRIRtX09h5t7yFh8D+E9HEXR8Rmdnft4fhz4x6cD8s+Hwak/RDp+FQzO8dVweA+5c+v86pSiAp9UxtcO/4SEGUvOonWTYcpZhLr5XjFbk9+YNlKt37KEmWpNE6fISNV8qxWL6AaTemOGkpSjoa+p0j9bgQ5UkRQGmSDlPLoCCEzIVcD58ulTKpUhVWDdBCWx6pauthyPJtM309no5mL0OLp5/cvb0WXXXLRQXCHPqg1uO5qMLt9MH19fXk6+zX46mtyOJo/X7y5H3+pg9n78FfbukyX4VK+5j3HG+XYjts0VaZmp7bOwCLntxW1RlGbVz4QSqdZ1Vyj6mJF+kXrZuCphwnXnNWltU0SzbNp6Z7VOfgeiPdfl/73yEvsX9wpnKxKk9VjJOW0D+6k4yE3JZZKgiOu+WCDjmaLZUpFeSl6PASaYYcgvieN6SpEUcX0lpqSYjDtCnUURab3jx7CEZGZa2nu6G2P2c6X/Ux1I11SSZwldy0yYnYGaWKl15pq0bwdUtz9rFeg0bF5mFwvdnaPaoOoMVx0tKc44qfaI1BRlipn1hRSGPpk9O7pSGNG4W7YicJbGaGhqFBp6WhczS0nOmXh675a29pGiMsw4ilWWoZqBLZQuOLJkVg7uOlRB2BSEcCX9pTGpH3FGwhJWmZLCwiuUQT2wnXOIUube36R72qDJdEkjVsg4zjlNOtQlsjDYABe2erU0U4qE2VGuxAXdqcRybkkNxVck6j02p3bd9dJlT0V1uk4Ladw23kb4OZuTb5mHrSQpv1o5ALXO5tWBhBBKbA5VYBgOTz5A/uBB0cMH2Lxd1Ck6jwXPKUJLl0WXoXbpe0HT9pG1/iqYk0Fb0maDENoXTP0cmli7i/rtsCdP8CwNtpt7AQl2m60AanIMjs/P7Euk4npN7YYetKgtJGii5dvv/gayoduE+YDLNoP+MS/D7//ca6Hc5tN3G3DE525T1XgP1wEPSkZQbMbeHaV2Q2haSi6vsN/nMkK+lNqEp8Oz87ZZi8e07BoAWooVX9mn9+BByU3gY4brHpP9EuB+kcPqtHfUO4FSrc1a4M3iRpqxIl1coDv8pZr79bi/gznqJXjQz7Tqz5noLwm5WUZLip57egkP9mbZIQMnHuxlAsGJBx0eYEXdaX+Sf+GW2KUu/6LMt0hKw00cx4BgECTuv5aCZUBw9OqagbNqeMlnVXMPtlnF3QZaPKEgEvuvrwrA/MF223/4DNSP4zDoDV5yEsqo28bwxVoOXl7Lvap5/mDruUOm6hp3OVF34LX/zRtbqTYkzG1j+8P+1/v+t/fnW7i52tE9Ia5l7ACCCWH8u2KG3tlEHzo1bJdGG6mKJgqutg9WTI4FctJrbShx0Wrqly5RuwNDImbiCWwR2+t7iOHAa435QZ7/FQAA//9QSwcIr22eVE8FAACZFQAAUEsBAhQAFAAIAAgAAAAAAK9tnlRPBQAAmRUAAAgAAAAAAAAAAAAAAAAAAAAAAG9yaWdpbmFsUEsFBgAAAAABAAEANgAAAIUFAAAAAA==",
+                        "path": [
+                              "test-cluster-leader",
+                              "metadata",
+                              "annotations",
+                              "banzaicloud.com/last-applied"
+                        ]
+                  }
+            }
+      },
+      "deployment": {},
+      "config_map": {},
+      "service": {},
+      "service_account": {},
+      "pvc": {},
+      "cronjob": {},
+      "ingress": {},
+      "network_policy": {},
+      "pod_disruption_budget": {},
+      "secret": {},
+      "endpoints": {},
+      "job": {},
+      "role": {},
+      "role_binding": {},
+      "custom_resource_spec": {
+            "dictionary_item_removed": {
+                  "root['storage']['volumeClaimTemplate']['spec'][accessModes][0]": {
+                        "prev": "ReadWriteOnce",
+                        "curr": "NotPresent",
+                        "path": [
+                              "storage",
+                              "volumeClaimTemplate",
+                              "spec",
+                              "accessModes",
+                              0
+                        ]
+                  },
+                  "root['storage']['volumeClaimTemplate']['spec'][resources][requests][storage]": {
+                        "prev": "1Gi",
+                        "curr": "NotPresent",
+                        "path": [
+                              "storage",
+                              "volumeClaimTemplate",
+                              "spec",
+                              "resources",
+                              "requests",
+                              "storage"
+                        ]
+                  }
+            }
+      },
+      "custom_resource_status": {}
+}

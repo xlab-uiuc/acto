@@ -1,0 +1,409 @@
+2023-03-31T16:47:14.486Z	INFO	api	Validating webhook called for update
+2023-03-31T16:47:14.486Z	DEBUG	controller-runtime.webhook.webhooks	wrote response	{"webhook": "/validate-cassandra-datastax-com-v1beta1-cassandradatacenter", "code": 200, "reason": "", "UID": "d668af06-7b10-49f1-a0fa-70f20a99db9e", "allowed": true}
+2023-03-31T16:47:14.492Z	INFO	controllers.CassandraDatacenter	======== handler::Reconcile has been called	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "1a3d7a5e-5a8c-4f46-9b3f-2e133daa20bd"}
+2023-03-31T16:47:14.492Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	handler::CreateReconciliationContext	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator"}
+2023-03-31T16:47:14.492Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	handler::calculateReconciliationActions	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:14.492Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	reconcile_services::ReconcileHeadlessServices	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:14.492Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	reconcile_endpoints::CheckAdditionalSeedEndpoints	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:14.497Z	ERROR	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	Could not set additional seeds for endpoints for additional seed service	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+github.com/k8ssandra/cass-operator/controllers/cassandra.(*CassandraDatacenterReconciler).Reconcile
+	/workspace/controllers/cassandra/cassandradatacenter_controller.go:143
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:114
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:311
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:266
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:14.497Z	ERROR	controllers.CassandraDatacenter	calculateReconciliationActions returned an error	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "1a3d7a5e-5a8c-4f46-9b3f-2e133daa20bd", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:311
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:266
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:14.497Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	lookup ACTOKEY on 10.96.0.10:53: no such host	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "reason": "ReconcileFailed", "eventType": "Warning"}
+2023-03-31T16:47:14.497Z	INFO	controllers.CassandraDatacenter	Reconcile loop completed	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "1a3d7a5e-5a8c-4f46-9b3f-2e133daa20bd", "duration": 0.00521177}
+2023-03-31T16:47:14.497Z	ERROR	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	Reconciler error	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:14.497Z	DEBUG	events	Warning	{"object": {"kind":"CassandraDatacenter","namespace":"cass-operator","name":"test-cluster","uid":"5af1cc09-512e-47cf-84ed-7f51cafe41a8","apiVersion":"cassandra.datastax.com/v1beta1","resourceVersion":"3079"}, "reason": "ReconcileFailed", "message": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+2023-03-31T16:47:14.502Z	INFO	controllers.CassandraDatacenter	======== handler::Reconcile has been called	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "435bd5a4-63b6-4040-a593-d837d4f91fe4"}
+2023-03-31T16:47:14.502Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	handler::CreateReconciliationContext	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator"}
+2023-03-31T16:47:14.502Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	handler::calculateReconciliationActions	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:14.502Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	reconcile_services::ReconcileHeadlessServices	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:14.503Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	reconcile_endpoints::CheckAdditionalSeedEndpoints	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:14.506Z	ERROR	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	Could not set additional seeds for endpoints for additional seed service	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+github.com/k8ssandra/cass-operator/controllers/cassandra.(*CassandraDatacenterReconciler).Reconcile
+	/workspace/controllers/cassandra/cassandradatacenter_controller.go:143
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:114
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:311
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:266
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:14.506Z	ERROR	controllers.CassandraDatacenter	calculateReconciliationActions returned an error	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "435bd5a4-63b6-4040-a593-d837d4f91fe4", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:311
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:266
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:14.506Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	lookup ACTOKEY on 10.96.0.10:53: no such host	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "reason": "ReconcileFailed", "eventType": "Warning"}
+2023-03-31T16:47:14.506Z	INFO	controllers.CassandraDatacenter	Reconcile loop completed	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "435bd5a4-63b6-4040-a593-d837d4f91fe4", "duration": 0.003794011}
+2023-03-31T16:47:14.506Z	ERROR	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	Reconciler error	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:14.506Z	DEBUG	events	Warning	{"object": {"kind":"CassandraDatacenter","namespace":"cass-operator","name":"test-cluster","uid":"5af1cc09-512e-47cf-84ed-7f51cafe41a8","apiVersion":"cassandra.datastax.com/v1beta1","resourceVersion":"3079"}, "reason": "ReconcileFailed", "message": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+2023-03-31T16:47:14.516Z	INFO	controllers.CassandraDatacenter	======== handler::Reconcile has been called	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "c99ebab7-4e59-4d33-b33a-dc511a8c5a17"}
+2023-03-31T16:47:14.516Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	handler::CreateReconciliationContext	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator"}
+2023-03-31T16:47:14.516Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	handler::calculateReconciliationActions	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:14.516Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	reconcile_services::ReconcileHeadlessServices	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:14.517Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	reconcile_endpoints::CheckAdditionalSeedEndpoints	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:14.519Z	ERROR	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	Could not set additional seeds for endpoints for additional seed service	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+github.com/k8ssandra/cass-operator/controllers/cassandra.(*CassandraDatacenterReconciler).Reconcile
+	/workspace/controllers/cassandra/cassandradatacenter_controller.go:143
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:114
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:311
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:266
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:14.519Z	ERROR	controllers.CassandraDatacenter	calculateReconciliationActions returned an error	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "c99ebab7-4e59-4d33-b33a-dc511a8c5a17", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:311
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:266
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:14.519Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	lookup ACTOKEY on 10.96.0.10:53: no such host	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "reason": "ReconcileFailed", "eventType": "Warning"}
+2023-03-31T16:47:14.519Z	INFO	controllers.CassandraDatacenter	Reconcile loop completed	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "c99ebab7-4e59-4d33-b33a-dc511a8c5a17", "duration": 0.003221337}
+2023-03-31T16:47:14.519Z	ERROR	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	Reconciler error	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:14.520Z	DEBUG	events	Warning	{"object": {"kind":"CassandraDatacenter","namespace":"cass-operator","name":"test-cluster","uid":"5af1cc09-512e-47cf-84ed-7f51cafe41a8","apiVersion":"cassandra.datastax.com/v1beta1","resourceVersion":"3079"}, "reason": "ReconcileFailed", "message": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+2023-03-31T16:47:14.540Z	INFO	controllers.CassandraDatacenter	======== handler::Reconcile has been called	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "9ca1440b-8197-42e7-923c-727ef40b10d8"}
+2023-03-31T16:47:14.540Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	handler::CreateReconciliationContext	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator"}
+2023-03-31T16:47:14.540Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	handler::calculateReconciliationActions	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:14.540Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	reconcile_services::ReconcileHeadlessServices	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:14.541Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	reconcile_endpoints::CheckAdditionalSeedEndpoints	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:14.545Z	ERROR	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	Could not set additional seeds for endpoints for additional seed service	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+github.com/k8ssandra/cass-operator/controllers/cassandra.(*CassandraDatacenterReconciler).Reconcile
+	/workspace/controllers/cassandra/cassandradatacenter_controller.go:143
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:114
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:311
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:266
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:14.545Z	ERROR	controllers.CassandraDatacenter	calculateReconciliationActions returned an error	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "9ca1440b-8197-42e7-923c-727ef40b10d8", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:311
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:266
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:14.545Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	lookup ACTOKEY on 10.96.0.10:53: no such host	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "reason": "ReconcileFailed", "eventType": "Warning"}
+2023-03-31T16:47:14.545Z	INFO	controllers.CassandraDatacenter	Reconcile loop completed	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "9ca1440b-8197-42e7-923c-727ef40b10d8", "duration": 0.005270434}
+2023-03-31T16:47:14.545Z	ERROR	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	Reconciler error	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:14.545Z	DEBUG	events	Warning	{"object": {"kind":"CassandraDatacenter","namespace":"cass-operator","name":"test-cluster","uid":"5af1cc09-512e-47cf-84ed-7f51cafe41a8","apiVersion":"cassandra.datastax.com/v1beta1","resourceVersion":"3079"}, "reason": "ReconcileFailed", "message": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+2023-03-31T16:47:14.586Z	INFO	controllers.CassandraDatacenter	======== handler::Reconcile has been called	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "ddb005a5-a43e-4bf9-b91d-99c0c08cd449"}
+2023-03-31T16:47:14.586Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	handler::CreateReconciliationContext	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator"}
+2023-03-31T16:47:14.586Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	handler::calculateReconciliationActions	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:14.586Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	reconcile_services::ReconcileHeadlessServices	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:14.586Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	reconcile_endpoints::CheckAdditionalSeedEndpoints	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:14.588Z	ERROR	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	Could not set additional seeds for endpoints for additional seed service	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+github.com/k8ssandra/cass-operator/controllers/cassandra.(*CassandraDatacenterReconciler).Reconcile
+	/workspace/controllers/cassandra/cassandradatacenter_controller.go:143
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:114
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:311
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:266
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:14.588Z	ERROR	controllers.CassandraDatacenter	calculateReconciliationActions returned an error	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "ddb005a5-a43e-4bf9-b91d-99c0c08cd449", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:311
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:266
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:14.588Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	lookup ACTOKEY on 10.96.0.10:53: no such host	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "reason": "ReconcileFailed", "eventType": "Warning"}
+2023-03-31T16:47:14.588Z	INFO	controllers.CassandraDatacenter	Reconcile loop completed	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "ddb005a5-a43e-4bf9-b91d-99c0c08cd449", "duration": 0.00295422}
+2023-03-31T16:47:14.589Z	ERROR	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	Reconciler error	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:14.589Z	DEBUG	events	Warning	{"object": {"kind":"CassandraDatacenter","namespace":"cass-operator","name":"test-cluster","uid":"5af1cc09-512e-47cf-84ed-7f51cafe41a8","apiVersion":"cassandra.datastax.com/v1beta1","resourceVersion":"3079"}, "reason": "ReconcileFailed", "message": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+2023-03-31T16:47:14.669Z	INFO	controllers.CassandraDatacenter	======== handler::Reconcile has been called	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "1f22db67-bd19-492f-89b1-640fc562514b"}
+2023-03-31T16:47:14.669Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	handler::CreateReconciliationContext	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator"}
+2023-03-31T16:47:14.669Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	handler::calculateReconciliationActions	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:14.669Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	reconcile_services::ReconcileHeadlessServices	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:14.670Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	reconcile_endpoints::CheckAdditionalSeedEndpoints	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:14.672Z	ERROR	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	Could not set additional seeds for endpoints for additional seed service	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+github.com/k8ssandra/cass-operator/controllers/cassandra.(*CassandraDatacenterReconciler).Reconcile
+	/workspace/controllers/cassandra/cassandradatacenter_controller.go:143
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:114
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:311
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:266
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:14.672Z	ERROR	controllers.CassandraDatacenter	calculateReconciliationActions returned an error	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "1f22db67-bd19-492f-89b1-640fc562514b", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:311
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:266
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:14.672Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	lookup ACTOKEY on 10.96.0.10:53: no such host	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "reason": "ReconcileFailed", "eventType": "Warning"}
+2023-03-31T16:47:14.672Z	INFO	controllers.CassandraDatacenter	Reconcile loop completed	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "1f22db67-bd19-492f-89b1-640fc562514b", "duration": 0.002878144}
+2023-03-31T16:47:14.672Z	ERROR	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	Reconciler error	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:14.672Z	DEBUG	events	Warning	{"object": {"kind":"CassandraDatacenter","namespace":"cass-operator","name":"test-cluster","uid":"5af1cc09-512e-47cf-84ed-7f51cafe41a8","apiVersion":"cassandra.datastax.com/v1beta1","resourceVersion":"3079"}, "reason": "ReconcileFailed", "message": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+2023-03-31T16:47:14.833Z	INFO	controllers.CassandraDatacenter	======== handler::Reconcile has been called	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "0a5de6f0-be23-4568-91df-8e9581ca2360"}
+2023-03-31T16:47:14.833Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	handler::CreateReconciliationContext	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator"}
+2023-03-31T16:47:14.833Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	handler::calculateReconciliationActions	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:14.833Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	reconcile_services::ReconcileHeadlessServices	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:14.833Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	reconcile_endpoints::CheckAdditionalSeedEndpoints	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:14.835Z	ERROR	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	Could not set additional seeds for endpoints for additional seed service	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+github.com/k8ssandra/cass-operator/controllers/cassandra.(*CassandraDatacenterReconciler).Reconcile
+	/workspace/controllers/cassandra/cassandradatacenter_controller.go:143
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:114
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:311
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:266
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:14.836Z	ERROR	controllers.CassandraDatacenter	calculateReconciliationActions returned an error	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "0a5de6f0-be23-4568-91df-8e9581ca2360", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:311
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:266
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:14.836Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	lookup ACTOKEY on 10.96.0.10:53: no such host	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "reason": "ReconcileFailed", "eventType": "Warning"}
+2023-03-31T16:47:14.836Z	INFO	controllers.CassandraDatacenter	Reconcile loop completed	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "0a5de6f0-be23-4568-91df-8e9581ca2360", "duration": 0.002860312}
+2023-03-31T16:47:14.836Z	ERROR	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	Reconciler error	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:14.836Z	DEBUG	events	Warning	{"object": {"kind":"CassandraDatacenter","namespace":"cass-operator","name":"test-cluster","uid":"5af1cc09-512e-47cf-84ed-7f51cafe41a8","apiVersion":"cassandra.datastax.com/v1beta1","resourceVersion":"3079"}, "reason": "ReconcileFailed", "message": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+2023-03-31T16:47:15.156Z	INFO	controllers.CassandraDatacenter	======== handler::Reconcile has been called	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "8e520549-6ac5-451f-bd27-0bd81b7637ff"}
+2023-03-31T16:47:15.156Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	handler::CreateReconciliationContext	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator"}
+2023-03-31T16:47:15.156Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	handler::calculateReconciliationActions	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:15.156Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	reconcile_services::ReconcileHeadlessServices	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:15.157Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	reconcile_endpoints::CheckAdditionalSeedEndpoints	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:15.159Z	ERROR	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	Could not set additional seeds for endpoints for additional seed service	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+github.com/k8ssandra/cass-operator/controllers/cassandra.(*CassandraDatacenterReconciler).Reconcile
+	/workspace/controllers/cassandra/cassandradatacenter_controller.go:143
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:114
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:311
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:266
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:15.159Z	ERROR	controllers.CassandraDatacenter	calculateReconciliationActions returned an error	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "8e520549-6ac5-451f-bd27-0bd81b7637ff", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:311
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:266
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:15.159Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	lookup ACTOKEY on 10.96.0.10:53: no such host	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "reason": "ReconcileFailed", "eventType": "Warning"}
+2023-03-31T16:47:15.159Z	INFO	controllers.CassandraDatacenter	Reconcile loop completed	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "8e520549-6ac5-451f-bd27-0bd81b7637ff", "duration": 0.002763466}
+2023-03-31T16:47:15.159Z	ERROR	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	Reconciler error	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:15.159Z	DEBUG	events	Warning	{"object": {"kind":"CassandraDatacenter","namespace":"cass-operator","name":"test-cluster","uid":"5af1cc09-512e-47cf-84ed-7f51cafe41a8","apiVersion":"cassandra.datastax.com/v1beta1","resourceVersion":"3079"}, "reason": "ReconcileFailed", "message": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+2023-03-31T16:47:15.799Z	INFO	controllers.CassandraDatacenter	======== handler::Reconcile has been called	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "7f8db90d-e309-4746-b9bd-4146887fa4fe"}
+2023-03-31T16:47:15.799Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	handler::CreateReconciliationContext	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator"}
+2023-03-31T16:47:15.799Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	handler::calculateReconciliationActions	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:15.799Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	reconcile_services::ReconcileHeadlessServices	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:15.800Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	reconcile_endpoints::CheckAdditionalSeedEndpoints	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:15.802Z	ERROR	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	Could not set additional seeds for endpoints for additional seed service	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+github.com/k8ssandra/cass-operator/controllers/cassandra.(*CassandraDatacenterReconciler).Reconcile
+	/workspace/controllers/cassandra/cassandradatacenter_controller.go:143
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:114
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:311
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:266
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:15.802Z	ERROR	controllers.CassandraDatacenter	calculateReconciliationActions returned an error	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "7f8db90d-e309-4746-b9bd-4146887fa4fe", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:311
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:266
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:15.802Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	lookup ACTOKEY on 10.96.0.10:53: no such host	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "reason": "ReconcileFailed", "eventType": "Warning"}
+2023-03-31T16:47:15.802Z	INFO	controllers.CassandraDatacenter	Reconcile loop completed	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "7f8db90d-e309-4746-b9bd-4146887fa4fe", "duration": 0.002701179}
+2023-03-31T16:47:15.802Z	ERROR	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	Reconciler error	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:15.802Z	DEBUG	events	Warning	{"object": {"kind":"CassandraDatacenter","namespace":"cass-operator","name":"test-cluster","uid":"5af1cc09-512e-47cf-84ed-7f51cafe41a8","apiVersion":"cassandra.datastax.com/v1beta1","resourceVersion":"3079"}, "reason": "ReconcileFailed", "message": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+2023-03-31T16:47:17.082Z	INFO	controllers.CassandraDatacenter	======== handler::Reconcile has been called	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "6e0fe16e-645e-4ef8-837b-47ef615bd9e6"}
+2023-03-31T16:47:17.083Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	handler::CreateReconciliationContext	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator"}
+2023-03-31T16:47:17.083Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	handler::calculateReconciliationActions	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:17.083Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	reconcile_services::ReconcileHeadlessServices	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:17.083Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	reconcile_endpoints::CheckAdditionalSeedEndpoints	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:17.085Z	ERROR	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	Could not set additional seeds for endpoints for additional seed service	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+github.com/k8ssandra/cass-operator/controllers/cassandra.(*CassandraDatacenterReconciler).Reconcile
+	/workspace/controllers/cassandra/cassandradatacenter_controller.go:143
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:114
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:311
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:266
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:17.085Z	ERROR	controllers.CassandraDatacenter	calculateReconciliationActions returned an error	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "6e0fe16e-645e-4ef8-837b-47ef615bd9e6", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:311
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:266
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:17.085Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	lookup ACTOKEY on 10.96.0.10:53: no such host	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "reason": "ReconcileFailed", "eventType": "Warning"}
+2023-03-31T16:47:17.085Z	INFO	controllers.CassandraDatacenter	Reconcile loop completed	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "6e0fe16e-645e-4ef8-837b-47ef615bd9e6", "duration": 0.002701664}
+2023-03-31T16:47:17.085Z	ERROR	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	Reconciler error	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:17.085Z	DEBUG	events	Warning	{"object": {"kind":"CassandraDatacenter","namespace":"cass-operator","name":"test-cluster","uid":"5af1cc09-512e-47cf-84ed-7f51cafe41a8","apiVersion":"cassandra.datastax.com/v1beta1","resourceVersion":"3079"}, "reason": "ReconcileFailed", "message": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+2023-03-31T16:47:19.646Z	INFO	controllers.CassandraDatacenter	======== handler::Reconcile has been called	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "3d3e3fc3-343e-4084-bc8a-65084074a563"}
+2023-03-31T16:47:19.646Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	handler::CreateReconciliationContext	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator"}
+2023-03-31T16:47:19.646Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	handler::calculateReconciliationActions	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:19.646Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	reconcile_services::ReconcileHeadlessServices	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:19.646Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	reconcile_endpoints::CheckAdditionalSeedEndpoints	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:19.650Z	ERROR	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	Could not set additional seeds for endpoints for additional seed service	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+github.com/k8ssandra/cass-operator/controllers/cassandra.(*CassandraDatacenterReconciler).Reconcile
+	/workspace/controllers/cassandra/cassandradatacenter_controller.go:143
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:114
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:311
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:266
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:19.650Z	ERROR	controllers.CassandraDatacenter	calculateReconciliationActions returned an error	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "3d3e3fc3-343e-4084-bc8a-65084074a563", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:311
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:266
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:19.650Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	lookup ACTOKEY on 10.96.0.10:53: no such host	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "reason": "ReconcileFailed", "eventType": "Warning"}
+2023-03-31T16:47:19.650Z	INFO	controllers.CassandraDatacenter	Reconcile loop completed	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "3d3e3fc3-343e-4084-bc8a-65084074a563", "duration": 0.004121859}
+2023-03-31T16:47:19.650Z	ERROR	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	Reconciler error	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:19.650Z	DEBUG	events	Warning	{"object": {"kind":"CassandraDatacenter","namespace":"cass-operator","name":"test-cluster","uid":"5af1cc09-512e-47cf-84ed-7f51cafe41a8","apiVersion":"cassandra.datastax.com/v1beta1","resourceVersion":"3079"}, "reason": "ReconcileFailed", "message": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+2023-03-31T16:47:24.771Z	INFO	controllers.CassandraDatacenter	======== handler::Reconcile has been called	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "ace165f2-13b4-4f0e-95c5-5e5ff569f73b"}
+2023-03-31T16:47:24.771Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	handler::CreateReconciliationContext	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator"}
+2023-03-31T16:47:24.771Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	handler::calculateReconciliationActions	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:24.771Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	reconcile_services::ReconcileHeadlessServices	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:24.771Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	reconcile_endpoints::CheckAdditionalSeedEndpoints	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:24.774Z	ERROR	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	Could not set additional seeds for endpoints for additional seed service	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+github.com/k8ssandra/cass-operator/controllers/cassandra.(*CassandraDatacenterReconciler).Reconcile
+	/workspace/controllers/cassandra/cassandradatacenter_controller.go:143
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:114
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:311
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:266
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:24.775Z	ERROR	controllers.CassandraDatacenter	calculateReconciliationActions returned an error	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "ace165f2-13b4-4f0e-95c5-5e5ff569f73b", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:311
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:266
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:24.775Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	lookup ACTOKEY on 10.96.0.10:53: no such host	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "reason": "ReconcileFailed", "eventType": "Warning"}
+2023-03-31T16:47:24.775Z	INFO	controllers.CassandraDatacenter	Reconcile loop completed	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "ace165f2-13b4-4f0e-95c5-5e5ff569f73b", "duration": 0.003652582}
+2023-03-31T16:47:24.775Z	ERROR	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	Reconciler error	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:24.775Z	DEBUG	events	Warning	{"object": {"kind":"CassandraDatacenter","namespace":"cass-operator","name":"test-cluster","uid":"5af1cc09-512e-47cf-84ed-7f51cafe41a8","apiVersion":"cassandra.datastax.com/v1beta1","resourceVersion":"3079"}, "reason": "ReconcileFailed", "message": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+2023-03-31T16:47:35.015Z	INFO	controllers.CassandraDatacenter	======== handler::Reconcile has been called	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "f2760316-0d29-431c-adbc-0cb7e05cf30d"}
+2023-03-31T16:47:35.015Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	handler::CreateReconciliationContext	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator"}
+2023-03-31T16:47:35.015Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	handler::calculateReconciliationActions	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:35.015Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	reconcile_services::ReconcileHeadlessServices	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:35.016Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	reconcile_endpoints::CheckAdditionalSeedEndpoints	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:35.022Z	ERROR	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	Could not set additional seeds for endpoints for additional seed service	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+github.com/k8ssandra/cass-operator/controllers/cassandra.(*CassandraDatacenterReconciler).Reconcile
+	/workspace/controllers/cassandra/cassandradatacenter_controller.go:143
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:114
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:311
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:266
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:35.022Z	ERROR	controllers.CassandraDatacenter	calculateReconciliationActions returned an error	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "f2760316-0d29-431c-adbc-0cb7e05cf30d", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:311
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:266
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:35.022Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	lookup ACTOKEY on 10.96.0.10:53: no such host	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "reason": "ReconcileFailed", "eventType": "Warning"}
+2023-03-31T16:47:35.022Z	INFO	controllers.CassandraDatacenter	Reconcile loop completed	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "f2760316-0d29-431c-adbc-0cb7e05cf30d", "duration": 0.006668974}
+2023-03-31T16:47:35.022Z	ERROR	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	Reconciler error	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:35.022Z	DEBUG	events	Warning	{"object": {"kind":"CassandraDatacenter","namespace":"cass-operator","name":"test-cluster","uid":"5af1cc09-512e-47cf-84ed-7f51cafe41a8","apiVersion":"cassandra.datastax.com/v1beta1","resourceVersion":"3079"}, "reason": "ReconcileFailed", "message": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+2023-03-31T16:47:55.502Z	INFO	controllers.CassandraDatacenter	======== handler::Reconcile has been called	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "e5247c76-7cec-47ab-ad01-935efe83beb6"}
+2023-03-31T16:47:55.502Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	handler::CreateReconciliationContext	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator"}
+2023-03-31T16:47:55.502Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	handler::calculateReconciliationActions	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:55.502Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	reconcile_services::ReconcileHeadlessServices	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:55.502Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	reconcile_endpoints::CheckAdditionalSeedEndpoints	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1"}
+2023-03-31T16:47:55.508Z	ERROR	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	Could not set additional seeds for endpoints for additional seed service	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "namespace": "cass-operator", "datacenterName": "test-cluster", "clusterName": "cluster1", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+github.com/k8ssandra/cass-operator/controllers/cassandra.(*CassandraDatacenterReconciler).Reconcile
+	/workspace/controllers/cassandra/cassandradatacenter_controller.go:143
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:114
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:311
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:266
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:55.508Z	ERROR	controllers.CassandraDatacenter	calculateReconciliationActions returned an error	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "e5247c76-7cec-47ab-ad01-935efe83beb6", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:311
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:266
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:55.508Z	INFO	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	lookup ACTOKEY on 10.96.0.10:53: no such host	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "reason": "ReconcileFailed", "eventType": "Warning"}
+2023-03-31T16:47:55.508Z	INFO	controllers.CassandraDatacenter	Reconcile loop completed	{"cassandradatacenter": "cass-operator/test-cluster", "requestNamespace": "cass-operator", "requestName": "test-cluster", "loopID": "e5247c76-7cec-47ab-ad01-935efe83beb6", "duration": 0.006007757}
+2023-03-31T16:47:55.508Z	ERROR	controllers.CassandraDatacenter.cassandradatacenter_controller.controller.cassandradatacenter-controller	Reconciler error	{"reconciler group": "cassandra.datastax.com", "reconciler kind": "CassandraDatacenter", "name": "test-cluster", "namespace": "cass-operator", "error": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.10.0/pkg/internal/controller/controller.go:227
+2023-03-31T16:47:55.508Z	DEBUG	events	Warning	{"object": {"kind":"CassandraDatacenter","namespace":"cass-operator","name":"test-cluster","uid":"5af1cc09-512e-47cf-84ed-7f51cafe41a8","apiVersion":"cassandra.datastax.com/v1beta1","resourceVersion":"3079"}, "reason": "ReconcileFailed", "message": "lookup ACTOKEY on 10.96.0.10:53: no such host"}
+

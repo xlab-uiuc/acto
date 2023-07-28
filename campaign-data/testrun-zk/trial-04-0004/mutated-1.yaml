@@ -1,0 +1,52 @@
+apiVersion: zookeeper.pravega.io/v1beta1
+kind: ZookeeperCluster
+metadata:
+  name: test-cluster
+spec:
+  image:
+    pullPolicy: IfNotPresent
+    repository: pravega/zookeeper
+    tag: 0.2.14
+  persistence:
+    reclaimPolicy: Delete
+    spec:
+      resources:
+        requests:
+          storage: 20Gi
+      storageClassName: standard
+  pod:
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+          - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+              - kind-worker
+              - kind-worker2
+              - kind-worker3kind-control-plane
+    annotations: null
+    env: null
+    imagePullSecrets: []
+    labels:
+      ACTOKEY: ACTOKEY
+    nodeSelector:
+      ACTOKEY: ACTOKEY
+    resources: null
+    securityContext:
+      fsGroup: 1000
+      runAsGroup: 1000
+      runAsUser: 1000
+    serviceAccountName: default
+    terminationGracePeriodSeconds: 1
+    tolerations:
+    - effect: NoSchedule
+      key: test-key
+      operator: Equal
+      value: test-value
+    - effect: NoSchedule
+      key: node-role.kubernetes.io/control-plane
+      operator: Exists
+  replicas: 3
+  storageType: persistence

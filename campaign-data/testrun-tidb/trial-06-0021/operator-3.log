@@ -1,0 +1,27 @@
+  	Ports: []v1.ServicePort{
+  		{
+  			... // 3 identical fields
+  			Port:       4000,
+  			TargetPort: {IntVal: 4000},
+- 			NodePort:   30974,
++ 			NodePort:   0,
+  		},
+  		{
+  			... // 3 identical fields
+  			Port:       10080,
+  			TargetPort: {IntVal: 10080},
+- 			NodePort:   31740,
++ 			NodePort:   0,
+  		},
+  	},
+  	Selector:        {"app.kubernetes.io/component": "tidb", "app.kubernetes.io/instance": "test-cluster", "app.kubernetes.io/managed-by": "tidb-operator", "app.kubernetes.io/name": "tidb-cluster"},
+  	ClusterIP:       "",
+- 	Type:            "NodePort",
++ 	Type:            "ClusterIP",
+  	ExternalIPs:     nil,
+  	SessionAffinity: "",
+  	... // 9 identical fields
+  }
+I0402 12:38:22.708190       1 tidb_member_manager.go:442] Sync TiDB service acto-namespace/test-cluster-tidb, spec equal: false, annotations equal: true, label equal: true
+I0402 12:38:22.718016       1 service_control.go:88] update Service: [acto-namespace/test-cluster-tidb] successfully, kind: , name: test-cluster
+

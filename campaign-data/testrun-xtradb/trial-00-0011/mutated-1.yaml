@@ -1,0 +1,1154 @@
+apiVersion: pxc.percona.com/v1-11-0
+kind: PerconaXtraDBCluster
+metadata:
+  finalizers:
+  - delete-pxc-pods-in-order
+  name: test-cluster
+spec:
+  allowUnsafeConfigurations: false
+  backup:
+    image: percona/percona-xtradb-cluster-operator:1.11.0-pxc8.0-backup
+    imagePullPolicy: IfNotPresent
+    pitr:
+      enabled: false
+      storageName: STORAGE-NAME-HERE
+      timeBetweenUploads: 60
+    schedule:
+    - keep: 3
+      name: sat-night-backup
+      schedule: 0 0 * * 6
+      storageName: s3-us-west
+    - keep: 5
+      name: daily-backup
+      schedule: 0 0 * * *
+      storageName: fs-pvc
+    storages:
+      fs-pvc:
+        type: filesystem
+        volume:
+          persistentVolumeClaim:
+            accessModes:
+            - ReadWriteOnce
+            resources:
+              requests:
+                storage: 6G
+      s3-us-west:
+        s3:
+          bucket: S3-BACKUP-BUCKET-NAME-HERE
+          credentialsSecret: my-cluster-name-backup-s3
+          region: us-west-2
+        type: s3
+        verifyTLS: true
+  crVersion: 1.11.0
+  enableCRValidationWebhook: true
+  haproxy:
+    affinity:
+      antiAffinityTopologyKey: kubernetes.io/hostname
+    enabled: true
+    gracePeriod: 30
+    image: percona/percona-xtradb-cluster-operator:1.11.0-haproxy
+    imagePullPolicy: IfNotPresent
+    podDisruptionBudget:
+      maxUnavailable: 1
+    resources:
+      requests:
+        cpu: 600m
+        memory: 1G
+    size: 3
+  logcollector:
+    enabled: true
+    image: percona/percona-xtradb-cluster-operator:1.11.0-logcollector
+    imagePullPolicy: IfNotPresent
+    resources:
+      requests:
+        cpu: 200m
+        memory: 100M
+  pmm:
+    enabled: false
+    image: percona/pmm-client:2.28.0
+    imagePullPolicy: IfNotPresent
+    resources:
+      requests:
+        cpu: 300m
+        memory: 150M
+    serverHost: monitoring-service
+  proxysql:
+    affinity:
+      antiAffinityTopologyKey: kubernetes.io/hostname
+    enabled: false
+    gracePeriod: 30
+    image: percona/percona-xtradb-cluster-operator:1.11.0-proxysql
+    imagePullPolicy: IfNotPresent
+    podDisruptionBudget:
+      maxUnavailable: 1
+    resources:
+      requests:
+        cpu: 600m
+        memory: 1G
+    sidecars:
+    - args: []
+      command: []
+      env: []
+      envFrom:
+      - configMapRef: null
+        prefix: ACTOKEY
+        secretRef:
+          name: ACTOKEY
+          optional: true
+      - configMapRef:
+          name: ACTOKEY
+          optional: false
+        prefix: ACTOKEY
+        secretRef:
+          name: ACTOKEY
+          optional: true
+      image: ACTOKEY
+      imagePullPolicy: ACTOKEY
+      lifecycle:
+        postStart: null
+        preStop: null
+      livenessProbe:
+        exec:
+          command:
+          - ACTOKEY
+          - ACTOKEY
+          - ACTOKEY
+          - ACTOKEY
+          - ACTOKEY
+        failureThreshold: 5
+        grpc:
+          port: 3
+          service: null
+        httpGet:
+          host: ACTOKEY
+          httpHeaders:
+          - name: ACTOKEY
+            value: ACTOKEY
+          - name: ACTOKEY
+            value: ACTOKEY
+          - name: ACTOKEY
+            value: ACTOKEY
+          - name: ACTOKEY
+            value: ACTOKEY
+          - name: ACTOKEY
+            value: ACTOKEY
+          path: ACTOKEY
+          port: 1
+          scheme: ACTOKEY
+        initialDelaySeconds: 4
+        periodSeconds: 5
+        successThreshold: 3
+        tcpSocket:
+          host: ACTOKEY
+          port: ACTOKEY
+        terminationGracePeriodSeconds: 5
+        timeoutSeconds: 4
+      name: ACTOKEY
+      ports: null
+      readinessProbe:
+        exec:
+          command:
+          - ACTOKEY
+          - ACTOKEY
+          - ACTOKEY
+          - ACTOKEY
+        failureThreshold: 0
+        grpc:
+          port: 2
+          service: ACTOKEY
+        httpGet:
+          host: ACTOKEY
+          httpHeaders:
+          - name: ACTOKEY
+            value: ACTOKEY
+          - name: ACTOKEY
+            value: ACTOKEY
+          - name: ACTOKEY
+            value: ACTOKEY
+          - name: ACTOKEY
+            value: ACTOKEY
+          path: ACTOKEY
+          port: 0
+          scheme: ACTOKEY
+        initialDelaySeconds: 2
+        periodSeconds: 2
+        successThreshold: 4
+        tcpSocket:
+          host: ACTOKEY
+          port: ACTOKEY
+        terminationGracePeriodSeconds: 0
+        timeoutSeconds: 5
+      resources:
+        limits:
+          cpu: 800m
+          memory: 1000m
+        requests:
+          cpu: 800m
+          memory: 1000m
+      securityContext:
+        allowPrivilegeEscalation: true
+        capabilities:
+          add: []
+          drop:
+          - ACTOKEY
+          - ACTOKEY
+        privileged: true
+        procMount: ACTOKEY
+        readOnlyRootFilesystem: false
+        runAsGroup: 5
+        runAsNonRoot: false
+        runAsUser: 1
+        seLinuxOptions:
+          level: ACTOKEY
+          role: ACTOKEY
+          type: ACTOKEY
+          user: ACTOKEY
+        seccompProfile: null
+        windowsOptions:
+          gmsaCredentialSpec: ACTOKEY
+          gmsaCredentialSpecName: ACTOKEY
+          hostProcess: true
+          runAsUserName: ACTOKEY
+      startupProbe:
+        exec:
+          command: []
+        failureThreshold: 5
+        grpc:
+          port: 2
+          service: ACTOKEY
+        httpGet:
+          host: ACTOKEY
+          httpHeaders:
+          - name: ACTOKEY
+            value: ACTOKEY
+          - name: ACTOKEY
+            value: ACTOKEY
+          - name: ACTOKEY
+            value: ACTOKEY
+          - name: ACTOKEY
+            value: ACTOKEY
+          path: ACTOKEY
+          port: ACTOKEY
+          scheme: ACTOKEY
+        initialDelaySeconds: 2
+        periodSeconds: 1
+        successThreshold: 1
+        tcpSocket:
+          host: ACTOKEY
+          port: ACTOKEY
+        terminationGracePeriodSeconds: 3
+        timeoutSeconds: 4
+      stdin: true
+      stdinOnce: false
+      terminationMessagePath: null
+      terminationMessagePolicy: ACTOKEY
+      tty: null
+      volumeDevices: null
+      volumeMounts: null
+      workingDir: null
+    - args:
+      - ACTOKEY
+      - ACTOKEY
+      - ACTOKEY
+      - ACTOKEY
+      command:
+      - ACTOKEY
+      - ACTOKEY
+      - ACTOKEY
+      env:
+      - name: ACTOKEY
+        value: ACTOKEY
+        valueFrom:
+          configMapKeyRef:
+            key: ACTOKEY
+            name: null
+            optional: false
+          fieldRef:
+            apiVersion: ACTOKEY
+            fieldPath: ACTOKEY
+          resourceFieldRef:
+            containerName: ACTOKEY
+            divisor: .5477E.932500
+            resource: ACTOKEY
+          secretKeyRef: null
+      - name: ACTOKEY
+        value: ACTOKEY
+        valueFrom:
+          configMapKeyRef:
+            key: ACTOKEY
+            name: ACTOKEY
+            optional: false
+          fieldRef:
+            apiVersion: null
+            fieldPath: ACTOKEY
+          resourceFieldRef:
+            containerName: ACTOKEY
+            divisor: 4
+            resource: ACTOKEY
+          secretKeyRef:
+            key: ACTOKEY
+            name: null
+            optional: false
+      - name: ACTOKEY
+        value: ACTOKEY
+        valueFrom:
+          configMapKeyRef:
+            key: ACTOKEY
+            name: ACTOKEY
+            optional: true
+          fieldRef:
+            apiVersion: ACTOKEY
+            fieldPath: ACTOKEY
+          resourceFieldRef:
+            containerName: ACTOKEY
+            divisor: -.232509265
+            resource: ACTOKEY
+          secretKeyRef:
+            key: ACTOKEY
+            name: ACTOKEY
+            optional: false
+      - name: ACTOKEY
+        value: ACTOKEY
+        valueFrom:
+          configMapKeyRef:
+            key: ACTOKEY
+            name: ACTOKEY
+            optional: false
+          fieldRef:
+            apiVersion: ACTOKEY
+            fieldPath: ACTOKEY
+          resourceFieldRef:
+            containerName: ACTOKEY
+            divisor: '.02'
+            resource: ACTOKEY
+          secretKeyRef:
+            key: ACTOKEY
+            name: ACTOKEY
+            optional: true
+      envFrom:
+      - configMapRef:
+          name: ACTOKEY
+          optional: true
+        prefix: ACTOKEY
+        secretRef:
+          name: ACTOKEY
+          optional: null
+      - configMapRef: null
+        prefix: null
+        secretRef: null
+      - configMapRef:
+          name: ACTOKEY
+          optional: null
+        prefix: ACTOKEY
+        secretRef:
+          name: ACTOKEY
+          optional: true
+      - configMapRef:
+          name: ACTOKEY
+          optional: false
+        prefix: ACTOKEY
+        secretRef:
+          name: ACTOKEY
+          optional: false
+      image: ACTOKEY
+      imagePullPolicy: null
+      lifecycle: null
+      livenessProbe:
+        exec:
+          command:
+          - ACTOKEY
+        failureThreshold: 3
+        grpc:
+          port: 2
+          service: ACTOKEY
+        httpGet:
+          host: ACTOKEY
+          httpHeaders:
+          - name: ACTOKEY
+            value: ACTOKEY
+          - name: ACTOKEY
+            value: ACTOKEY
+          path: ACTOKEY
+          port: 0
+          scheme: ACTOKEY
+        initialDelaySeconds: null
+        periodSeconds: 1
+        successThreshold: null
+        tcpSocket:
+          host: null
+          port: 3
+        terminationGracePeriodSeconds: 2
+        timeoutSeconds: 5
+      name: ACTOKEY
+      ports: null
+      readinessProbe:
+        exec:
+          command: null
+        failureThreshold: null
+        grpc: null
+        httpGet:
+          host: ACTOKEY
+          httpHeaders:
+          - name: ACTOKEY
+            value: ACTOKEY
+          - name: ACTOKEY
+            value: ACTOKEY
+          - name: ACTOKEY
+            value: ACTOKEY
+          - name: ACTOKEY
+            value: ACTOKEY
+          - name: ACTOKEY
+            value: ACTOKEY
+          path: ACTOKEY
+          port: 2
+          scheme: ACTOKEY
+        initialDelaySeconds: 2
+        periodSeconds: 3
+        successThreshold: 2
+        tcpSocket:
+          host: ACTOKEY
+          port: 3
+        terminationGracePeriodSeconds: 3
+        timeoutSeconds: 3
+      resources:
+        limits:
+          cpu: 800m
+          memory: 1000m
+        requests:
+          cpu: 800m
+          memory: 1000m
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          add:
+          - ACTOKEY
+          - ACTOKEY
+          - ACTOKEY
+          - ACTOKEY
+          - ACTOKEY
+          drop:
+          - ACTOKEY
+          - ACTOKEY
+        privileged: true
+        procMount: ACTOKEY
+        readOnlyRootFilesystem: true
+        runAsGroup: 5
+        runAsNonRoot: true
+        runAsUser: 2
+        seLinuxOptions:
+          level: ACTOKEY
+          role: ACTOKEY
+          type: null
+          user: ACTOKEY
+        seccompProfile:
+          localhostProfile: ACTOKEY
+          type: ACTOKEY
+        windowsOptions: null
+      startupProbe:
+        exec:
+          command:
+          - ACTOKEY
+          - ACTOKEY
+          - ACTOKEY
+        failureThreshold: 2
+        grpc:
+          port: 1
+          service: ACTOKEY
+        httpGet:
+          host: null
+          httpHeaders:
+          - name: ACTOKEY
+            value: ACTOKEY
+          path: ACTOKEY
+          port: ACTOKEY
+          scheme: ACTOKEY
+        initialDelaySeconds: 0
+        periodSeconds: 5
+        successThreshold: null
+        tcpSocket:
+          host: ACTOKEY
+          port: ACTOKEY
+        terminationGracePeriodSeconds: 4
+        timeoutSeconds: 5
+      stdin: true
+      stdinOnce: true
+      terminationMessagePath: ACTOKEY
+      terminationMessagePolicy: ACTOKEY
+      tty: null
+      volumeDevices:
+      - devicePath: ACTOKEY
+        name: ACTOKEY
+      volumeMounts:
+      - mountPath: ACTOKEY
+        mountPropagation: ACTOKEY
+        name: ACTOKEY
+        readOnly: true
+        subPath: ACTOKEY
+        subPathExpr: ACTOKEY
+      - mountPath: ACTOKEY
+        mountPropagation: ACTOKEY
+        name: ACTOKEY
+        readOnly: true
+        subPath: ACTOKEY
+        subPathExpr: ACTOKEY
+      - mountPath: ACTOKEY
+        mountPropagation: ACTOKEY
+        name: ACTOKEY
+        readOnly: true
+        subPath: ACTOKEY
+        subPathExpr: ACTOKEY
+      workingDir: ACTOKEY
+    - args:
+      - ACTOKEY
+      - ACTOKEY
+      command: null
+      env:
+      - name: ACTOKEY
+        value: ACTOKEY
+        valueFrom: null
+      - name: ACTOKEY
+        value: ACTOKEY
+        valueFrom:
+          configMapKeyRef:
+            key: ACTOKEY
+            name: ACTOKEY
+            optional: true
+          fieldRef:
+            apiVersion: ACTOKEY
+            fieldPath: ACTOKEY
+          resourceFieldRef:
+            containerName: ACTOKEY
+            divisor: 2
+            resource: ACTOKEY
+          secretKeyRef: null
+      envFrom:
+      - configMapRef:
+          name: ACTOKEY
+          optional: false
+        prefix: null
+        secretRef:
+          name: ACTOKEY
+          optional: false
+      image: ACTOKEY
+      imagePullPolicy: ACTOKEY
+      lifecycle:
+        postStart:
+          exec:
+            command:
+            - ACTOKEY
+            - ACTOKEY
+            - ACTOKEY
+            - ACTOKEY
+            - ACTOKEY
+          httpGet:
+            host: ACTOKEY
+            httpHeaders:
+            - name: ACTOKEY
+              value: ACTOKEY
+            - name: ACTOKEY
+              value: ACTOKEY
+            - name: ACTOKEY
+              value: ACTOKEY
+            - name: ACTOKEY
+              value: ACTOKEY
+            - name: ACTOKEY
+              value: ACTOKEY
+            path: ACTOKEY
+            port: ACTOKEY
+            scheme: ACTOKEY
+          tcpSocket:
+            host: ACTOKEY
+            port: ACTOKEY
+        preStop:
+          exec:
+            command:
+            - ACTOKEY
+          httpGet:
+            host: ACTOKEY
+            httpHeaders: null
+            path: ACTOKEY
+            port: ACTOKEY
+            scheme: ACTOKEY
+          tcpSocket:
+            host: null
+            port: ACTOKEY
+      livenessProbe: null
+      name: ACTOKEY
+      ports:
+      - containerPort: 1
+        hostIP: ACTOKEY
+        hostPort: 4
+        name: ACTOKEY
+        protocol: ACTOKEY
+      - containerPort: 0
+        hostIP: ACTOKEY
+        hostPort: 5
+        name: null
+        protocol: ACTOKEY
+      - containerPort: 5
+        hostIP: ACTOKEY
+        hostPort: 5
+        name: ACTOKEY
+        protocol: ACTOKEY
+      - containerPort: 2
+        hostIP: ACTOKEY
+        hostPort: 0
+        name: null
+        protocol: ACTOKEY
+      - containerPort: 4
+        hostIP: ACTOKEY
+        hostPort: 4
+        name: ACTOKEY
+        protocol: ACTOKEY
+      readinessProbe:
+        exec:
+          command:
+          - ACTOKEY
+          - ACTOKEY
+          - ACTOKEY
+        failureThreshold: 5
+        grpc:
+          port: 4
+          service: ACTOKEY
+        httpGet:
+          host: null
+          httpHeaders:
+          - name: ACTOKEY
+            value: ACTOKEY
+          - name: ACTOKEY
+            value: ACTOKEY
+          - name: ACTOKEY
+            value: ACTOKEY
+          - name: ACTOKEY
+            value: ACTOKEY
+          path: ACTOKEY
+          port: 2
+          scheme: ACTOKEY
+        initialDelaySeconds: 0
+        periodSeconds: 5
+        successThreshold: 5
+        tcpSocket:
+          host: ACTOKEY
+          port: ACTOKEY
+        terminationGracePeriodSeconds: 4
+        timeoutSeconds: 0
+      resources:
+        limits:
+          cpu: 800m
+          memory: 1000m
+        requests:
+          cpu: 800m
+          memory: 1000m
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          add:
+          - ACTOKEY
+          drop:
+          - ACTOKEY
+          - ACTOKEY
+        privileged: true
+        procMount: ACTOKEY
+        readOnlyRootFilesystem: true
+        runAsGroup: 4
+        runAsNonRoot: true
+        runAsUser: 3
+        seLinuxOptions:
+          level: ACTOKEY
+          role: ACTOKEY
+          type: ACTOKEY
+          user: ACTOKEY
+        seccompProfile:
+          localhostProfile: ACTOKEY
+          type: ACTOKEY
+        windowsOptions:
+          gmsaCredentialSpec: ACTOKEY
+          gmsaCredentialSpecName: ACTOKEY
+          hostProcess: false
+          runAsUserName: ACTOKEY
+      startupProbe:
+        exec: null
+        failureThreshold: null
+        grpc:
+          port: 4
+          service: ACTOKEY
+        httpGet:
+          host: ACTOKEY
+          httpHeaders:
+          - name: ACTOKEY
+            value: ACTOKEY
+          - name: ACTOKEY
+            value: ACTOKEY
+          - name: ACTOKEY
+            value: ACTOKEY
+          - name: ACTOKEY
+            value: ACTOKEY
+          - name: ACTOKEY
+            value: ACTOKEY
+          path: ACTOKEY
+          port: ACTOKEY
+          scheme: ACTOKEY
+        initialDelaySeconds: 0
+        periodSeconds: 3
+        successThreshold: 2
+        tcpSocket:
+          host: ACTOKEY
+          port: 5
+        terminationGracePeriodSeconds: 4
+        timeoutSeconds: 3
+      stdin: false
+      stdinOnce: false
+      terminationMessagePath: ACTOKEY
+      terminationMessagePolicy: ACTOKEY
+      tty: true
+      volumeDevices:
+      - devicePath: ACTOKEY
+        name: ACTOKEY
+      - devicePath: ACTOKEY
+        name: ACTOKEY
+      - devicePath: ACTOKEY
+        name: ACTOKEY
+      - devicePath: ACTOKEY
+        name: ACTOKEY
+      - devicePath: ACTOKEY
+        name: ACTOKEY
+      volumeMounts:
+      - mountPath: ACTOKEY
+        mountPropagation: ACTOKEY
+        name: ACTOKEY
+        readOnly: true
+        subPath: ACTOKEY
+        subPathExpr: ACTOKEY
+      - mountPath: ACTOKEY
+        mountPropagation: ACTOKEY
+        name: ACTOKEY
+        readOnly: true
+        subPath: ACTOKEY
+        subPathExpr: ACTOKEY
+      - mountPath: ACTOKEY
+        mountPropagation: ACTOKEY
+        name: ACTOKEY
+        readOnly: true
+        subPath: ACTOKEY
+        subPathExpr: ACTOKEY
+      workingDir: ACTOKEY
+    - args:
+      - ACTOKEY
+      command:
+      - ACTOKEY
+      - ACTOKEY
+      env:
+      - name: ACTOKEY
+        value: ACTOKEY
+        valueFrom: null
+      envFrom:
+      - configMapRef:
+          name: ACTOKEY
+          optional: false
+        prefix: null
+        secretRef:
+          name: ACTOKEY
+          optional: true
+      - configMapRef: null
+        prefix: ACTOKEY
+        secretRef:
+          name: ACTOKEY
+          optional: true
+      - configMapRef:
+          name: null
+          optional: false
+        prefix: ACTOKEY
+        secretRef:
+          name: ACTOKEY
+          optional: true
+      - configMapRef:
+          name: ACTOKEY
+          optional: false
+        prefix: ACTOKEY
+        secretRef:
+          name: null
+          optional: false
+      image: ACTOKEY
+      imagePullPolicy: null
+      lifecycle:
+        postStart:
+          exec: null
+          httpGet:
+            host: ACTOKEY
+            httpHeaders:
+            - name: ACTOKEY
+              value: ACTOKEY
+            - name: ACTOKEY
+              value: ACTOKEY
+            - name: ACTOKEY
+              value: ACTOKEY
+            - name: ACTOKEY
+              value: ACTOKEY
+            - name: ACTOKEY
+              value: ACTOKEY
+            path: ACTOKEY
+            port: 4
+            scheme: ACTOKEY
+          tcpSocket: null
+        preStop: null
+      livenessProbe:
+        exec: null
+        failureThreshold: null
+        grpc:
+          port: 3
+          service: ACTOKEY
+        httpGet:
+          host: ACTOKEY
+          httpHeaders:
+          - name: ACTOKEY
+            value: ACTOKEY
+          path: ACTOKEY
+          port: ACTOKEY
+          scheme: ACTOKEY
+        initialDelaySeconds: 0
+        periodSeconds: 1
+        successThreshold: 4
+        tcpSocket:
+          host: ACTOKEY
+          port: ACTOKEY
+        terminationGracePeriodSeconds: 5
+        timeoutSeconds: 5
+      name: ACTOKEY
+      ports:
+      - containerPort: 5
+        hostIP: ACTOKEY
+        hostPort: 0
+        name: ACTOKEY
+        protocol: ACTOKEY
+      - containerPort: 1
+        hostIP: ACTOKEY
+        hostPort: 1
+        name: ACTOKEY
+        protocol: ACTOKEY
+      - containerPort: 5
+        hostIP: ACTOKEY
+        hostPort: 3
+        name: ACTOKEY
+        protocol: ACTOKEY
+      - containerPort: 4
+        hostIP: ACTOKEY
+        hostPort: 2
+        name: ACTOKEY
+        protocol: ACTOKEY
+      readinessProbe:
+        exec:
+          command:
+          - ACTOKEY
+          - ACTOKEY
+          - ACTOKEY
+        failureThreshold: 1
+        grpc:
+          port: 1
+          service: ACTOKEY
+        httpGet:
+          host: ACTOKEY
+          httpHeaders:
+          - name: ACTOKEY
+            value: ACTOKEY
+          - name: ACTOKEY
+            value: ACTOKEY
+          - name: ACTOKEY
+            value: ACTOKEY
+          - name: ACTOKEY
+            value: ACTOKEY
+          - name: ACTOKEY
+            value: ACTOKEY
+          path: ACTOKEY
+          port: ACTOKEY
+          scheme: ACTOKEY
+        initialDelaySeconds: 5
+        periodSeconds: null
+        successThreshold: 3
+        tcpSocket:
+          host: null
+          port: ACTOKEY
+        terminationGracePeriodSeconds: null
+        timeoutSeconds: 3
+      resources:
+        limits:
+          cpu: 800m
+          memory: 1000m
+        requests:
+          cpu: 800m
+          memory: 1000m
+      securityContext: null
+      startupProbe:
+        exec: null
+        failureThreshold: 2
+        grpc:
+          port: 1
+          service: ACTOKEY
+        httpGet:
+          host: ACTOKEY
+          httpHeaders: []
+          path: ACTOKEY
+          port: 5
+          scheme: ACTOKEY
+        initialDelaySeconds: 3
+        periodSeconds: 1
+        successThreshold: null
+        tcpSocket:
+          host: ACTOKEY
+          port: ACTOKEY
+        terminationGracePeriodSeconds: 1
+        timeoutSeconds: 0
+      stdin: false
+      stdinOnce: true
+      terminationMessagePath: ACTOKEY
+      terminationMessagePolicy: ACTOKEY
+      tty: true
+      volumeDevices:
+      - devicePath: ACTOKEY
+        name: ACTOKEY
+      volumeMounts:
+      - mountPath: ACTOKEY
+        mountPropagation: null
+        name: ACTOKEY
+        readOnly: true
+        subPath: ACTOKEY
+        subPathExpr: ACTOKEY
+      - mountPath: ACTOKEY
+        mountPropagation: ACTOKEY
+        name: ACTOKEY
+        readOnly: null
+        subPath: ACTOKEY
+        subPathExpr: ACTOKEY
+      - mountPath: ACTOKEY
+        mountPropagation: ACTOKEY
+        name: ACTOKEY
+        readOnly: true
+        subPath: ACTOKEY
+        subPathExpr: ACTOKEY
+      - mountPath: ACTOKEY
+        mountPropagation: ACTOKEY
+        name: ACTOKEY
+        readOnly: null
+        subPath: ACTOKEY
+        subPathExpr: null
+      workingDir: ACTOKEY
+    - args:
+      - ACTOKEY
+      command:
+      - ACTOKEY
+      - ACTOKEY
+      - ACTOKEY
+      env: null
+      envFrom:
+      - configMapRef:
+          name: ACTOKEY
+          optional: null
+        prefix: ACTOKEY
+        secretRef:
+          name: ACTOKEY
+          optional: true
+      - configMapRef:
+          name: ACTOKEY
+          optional: true
+        prefix: ACTOKEY
+        secretRef:
+          name: null
+          optional: false
+      image: ACTOKEY
+      imagePullPolicy: ACTOKEY
+      lifecycle:
+        postStart:
+          exec:
+            command:
+            - ACTOKEY
+            - ACTOKEY
+          httpGet:
+            host: ACTOKEY
+            httpHeaders: []
+            path: ACTOKEY
+            port: ACTOKEY
+            scheme: ACTOKEY
+          tcpSocket:
+            host: ACTOKEY
+            port: ACTOKEY
+        preStop:
+          exec:
+            command:
+            - ACTOKEY
+            - ACTOKEY
+            - ACTOKEY
+            - ACTOKEY
+            - ACTOKEY
+          httpGet: null
+          tcpSocket:
+            host: ACTOKEY
+            port: ACTOKEY
+      livenessProbe:
+        exec:
+          command:
+          - ACTOKEY
+          - ACTOKEY
+          - ACTOKEY
+          - ACTOKEY
+        failureThreshold: 5
+        grpc:
+          port: 1
+          service: ACTOKEY
+        httpGet:
+          host: ACTOKEY
+          httpHeaders:
+          - name: ACTOKEY
+            value: ACTOKEY
+          - name: ACTOKEY
+            value: ACTOKEY
+          - name: ACTOKEY
+            value: ACTOKEY
+          - name: ACTOKEY
+            value: ACTOKEY
+          - name: ACTOKEY
+            value: ACTOKEY
+          path: null
+          port: 5
+          scheme: null
+        initialDelaySeconds: 2
+        periodSeconds: 0
+        successThreshold: 2
+        tcpSocket:
+          host: ACTOKEY
+          port: 0
+        terminationGracePeriodSeconds: 2
+        timeoutSeconds: 0
+      name: ACTOKEY
+      ports: null
+      readinessProbe:
+        exec:
+          command: null
+        failureThreshold: 0
+        grpc:
+          port: 0
+          service: ACTOKEY
+        httpGet:
+          host: null
+          httpHeaders:
+          - name: ACTOKEY
+            value: ACTOKEY
+          path: ACTOKEY
+          port: ACTOKEY
+          scheme: ACTOKEY
+        initialDelaySeconds: 2
+        periodSeconds: 1
+        successThreshold: 5
+        tcpSocket:
+          host: ACTOKEY
+          port: ACTOKEY
+        terminationGracePeriodSeconds: 3
+        timeoutSeconds: 3
+      resources:
+        limits:
+          cpu: 800m
+          memory: 1000m
+        requests:
+          cpu: 800m
+          memory: 1000m
+      securityContext:
+        allowPrivilegeEscalation: true
+        capabilities:
+          add:
+          - ACTOKEY
+          - ACTOKEY
+          - ACTOKEY
+          - ACTOKEY
+          drop: []
+        privileged: false
+        procMount: ACTOKEY
+        readOnlyRootFilesystem: false
+        runAsGroup: 5
+        runAsNonRoot: true
+        runAsUser: 5
+        seLinuxOptions:
+          level: ACTOKEY
+          role: null
+          type: ACTOKEY
+          user: null
+        seccompProfile:
+          localhostProfile: ACTOKEY
+          type: ACTOKEY
+        windowsOptions:
+          gmsaCredentialSpec: ACTOKEY
+          gmsaCredentialSpecName: ACTOKEY
+          hostProcess: true
+          runAsUserName: ACTOKEY
+      startupProbe:
+        exec:
+          command: null
+        failureThreshold: 3
+        grpc:
+          port: 2
+          service: ACTOKEY
+        httpGet:
+          host: ACTOKEY
+          httpHeaders:
+          - name: ACTOKEY
+            value: ACTOKEY
+          path: ACTOKEY
+          port: 5
+          scheme: ACTOKEY
+        initialDelaySeconds: 5
+        periodSeconds: 4
+        successThreshold: 4
+        tcpSocket:
+          host: ACTOKEY
+          port: ACTOKEY
+        terminationGracePeriodSeconds: 5
+        timeoutSeconds: null
+      stdin: false
+      stdinOnce: true
+      terminationMessagePath: ACTOKEY
+      terminationMessagePolicy: ACTOKEY
+      tty: true
+      volumeDevices: null
+      volumeMounts:
+      - mountPath: ACTOKEY
+        mountPropagation: ACTOKEY
+        name: ACTOKEY
+        readOnly: true
+        subPath: ACTOKEY
+        subPathExpr: ACTOKEY
+      - mountPath: ACTOKEY
+        mountPropagation: null
+        name: ACTOKEY
+        readOnly: false
+        subPath: ACTOKEY
+        subPathExpr: ACTOKEY
+      workingDir: ACTOKEY
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 2G
+  pxc:
+    affinity:
+      antiAffinityTopologyKey: kubernetes.io/hostname
+    autoRecovery: true
+    enabled: true
+    gracePeriod: 30
+    image: percona/percona-xtradb-cluster:8.0.27-18.1
+    imagePullPolicy: IfNotPresent
+    livenessDelaySec: 300
+    podDisruptionBudget:
+      maxUnavailable: 1
+    resources:
+      requests:
+        cpu: 600m
+        memory: 1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 6G
+  updateStrategy: SmartUpdate
+  upgradeOptions:
+    apply: 8.0-recommended
+    schedule: 0 4 * * *
+    versionServiceEndpoint: https://check.percona.com

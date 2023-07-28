@@ -1,0 +1,28 @@
+apiVersion: zookeeper.pravega.io/v1beta1
+kind: ZookeeperCluster
+metadata:
+  name: test-cluster
+spec:
+  headlessService:
+    annotations:
+      ACTOKEY: ''
+  image:
+    pullPolicy: IfNotPresent
+    repository: pravega/zookeeper
+    tag: 0.2.14
+  persistence:
+    reclaimPolicy: Delete
+    spec:
+      resources:
+        requests:
+          storage: 20Gi
+      storageClassName: standard
+  pod:
+    env:
+    - name: ACTOKEY
+      valueFrom:
+        fieldRef:
+          apiVersion: ACTOKEY
+          fieldPath: ACTOKEY
+  replicas: 3
+  storageType: persistence

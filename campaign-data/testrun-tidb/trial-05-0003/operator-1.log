@@ -1,0 +1,154 @@
+I0402 08:08:16.659422       1 stateful_set_control.go:92] : [acto-namespace/test-cluster]'s StatefulSet: [acto-namespace/test-cluster-pd] updated successfully
+I0402 08:08:16.703214       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+E0402 08:08:16.703264       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed unable to load certificates from secret acto-namespace/test-cluster-tidb-server-secret: secret "test-cluster-tidb-server-secret" not found, requeuing
+I0402 08:08:16.791810       1 statefulset.go:164] set acto-namespace/test-cluster-pd partition to 3
+I0402 08:08:17.296464       1 pd_upgrader.go:135] pd upgrader: transfer pd leader to: test-cluster-pd-0 successfully
+I0402 08:08:17.345805       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+I0402 08:08:17.345849       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: tidbcluster: [acto-namespace/test-cluster]'s pd member: [test-cluster-pd-2] is transferring leader to pd member: [test-cluster-pd-0], requeuing
+E0402 08:08:17.410616       1 pd_member_manager.go:190] failed to sync TidbCluster: [acto-namespace/test-cluster]'s status, error: Error response 503 URL http://test-cluster-pd.acto-namespace:2379/pd/health,body response: no leader
+I0402 08:08:17.470273       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+E0402 08:08:17.470336       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed tidbcluster: [acto-namespace/test-cluster]'s pd status sync failed, can not to be upgraded, requeuing
+E0402 08:08:17.529054       1 pd_member_manager.go:190] failed to sync TidbCluster: [acto-namespace/test-cluster]'s status, error: Error response 503 URL http://test-cluster-pd.acto-namespace:2379/pd/health,body response: no leader
+I0402 08:08:17.589241       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+E0402 08:08:17.589307       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed tidbcluster: [acto-namespace/test-cluster]'s pd status sync failed, can not to be upgraded, requeuing
+E0402 08:08:17.655522       1 pd_member_manager.go:190] failed to sync TidbCluster: [acto-namespace/test-cluster]'s status, error: Error response 503 URL http://test-cluster-pd.acto-namespace:2379/pd/health,body response: no leader
+E0402 08:08:17.664429       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed tidbcluster: [acto-namespace/test-cluster]'s pd status sync failed, can not to be upgraded, requeuing
+I0402 08:08:18.249586       1 statefulset.go:164] set acto-namespace/test-cluster-pd partition to 3
+I0402 08:08:18.249634       1 statefulset.go:164] set acto-namespace/test-cluster-pd partition to 2
+I0402 08:08:18.259829       1 stateful_set_control.go:92] : [acto-namespace/test-cluster]'s StatefulSet: [acto-namespace/test-cluster-pd] updated successfully
+I0402 08:08:18.303470       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+I0402 08:08:18.303507       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: TidbCluster: [acto-namespace/test-cluster], waiting for TiKV cluster running, requeuing
+E0402 08:08:18.823225       1 pd_member_manager.go:190] failed to sync TidbCluster: [acto-namespace/test-cluster]'s status, error: Error response 503 URL http://test-cluster-pd.acto-namespace:2379/pd/health,body response: no leader
+I0402 08:08:18.873812       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+E0402 08:08:18.873871       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed tidbcluster: [acto-namespace/test-cluster]'s pd status sync failed, can not to be upgraded, requeuing
+E0402 08:08:19.423329       1 pd_member_manager.go:190] failed to sync TidbCluster: [acto-namespace/test-cluster]'s status, error: Error response 503 URL http://test-cluster-pd.acto-namespace:2379/pd/health,body response: no leader
+I0402 08:08:19.476361       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+E0402 08:08:19.476407       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed tidbcluster: [acto-namespace/test-cluster]'s pd status sync failed, can not to be upgraded, requeuing
+E0402 08:08:23.053542       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 08:08:23.053634       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"d5661197-e563-4df3-871f-4f0ec4cffca3", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1833", FieldPath:""}): type: 'Warning' reason: 'PDMemberUnhealthy' acto-namespace/test-cluster-pd-2(5110389971597451409) is unhealthy
+I0402 08:08:23.054153       1 statefulset.go:164] set acto-namespace/test-cluster-pd partition to 2
+I0402 08:08:23.072662       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+I0402 08:08:23.072693       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: tidbcluster: [acto-namespace/test-cluster]'s upgraded pd pod: [test-cluster-pd-2] is not ready, requeuing
+E0402 08:08:26.168019       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 08:08:26.168157       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"d5661197-e563-4df3-871f-4f0ec4cffca3", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1833", FieldPath:""}): type: 'Warning' reason: 'PDMemberUnhealthy' acto-namespace/test-cluster-pd-2(5110389971597451409) is unhealthy
+I0402 08:08:26.169051       1 statefulset.go:164] set acto-namespace/test-cluster-pd partition to 2
+I0402 08:08:26.213924       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+I0402 08:08:26.213968       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: tidbcluster: [acto-namespace/test-cluster]'s upgraded pd pod: [test-cluster-pd-2] is not ready, requeuing
+E0402 08:08:29.306990       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 08:08:29.307043       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"d5661197-e563-4df3-871f-4f0ec4cffca3", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1868", FieldPath:""}): type: 'Warning' reason: 'PDMemberUnhealthy' acto-namespace/test-cluster-pd-2(5110389971597451409) is unhealthy
+I0402 08:08:29.307454       1 statefulset.go:164] set acto-namespace/test-cluster-pd partition to 2
+I0402 08:08:29.352846       1 tidbcluster_control.go:69] TidbCluster: [acto-namespace/test-cluster] updated successfully
+I0402 08:08:29.352879       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: tidbcluster: [acto-namespace/test-cluster]'s upgraded pd pod: [test-cluster-pd-2] is not ready, requeuing
+E0402 08:08:32.443341       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 08:08:32.443459       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"d5661197-e563-4df3-871f-4f0ec4cffca3", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1879", FieldPath:""}): type: 'Warning' reason: 'PDMemberUnhealthy' acto-namespace/test-cluster-pd-2(5110389971597451409) is unhealthy
+I0402 08:08:32.443843       1 statefulset.go:164] set acto-namespace/test-cluster-pd partition to 2
+I0402 08:08:32.443953       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: tidbcluster: [acto-namespace/test-cluster]'s upgraded pd pod: [test-cluster-pd-2] is not ready, requeuing
+E0402 08:08:35.527829       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 08:08:35.527978       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"d5661197-e563-4df3-871f-4f0ec4cffca3", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1893", FieldPath:""}): type: 'Warning' reason: 'PDMemberUnhealthy' acto-namespace/test-cluster-pd-2(5110389971597451409) is unhealthy
+I0402 08:08:35.528906       1 statefulset.go:164] set acto-namespace/test-cluster-pd partition to 2
+I0402 08:08:35.529134       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: tidbcluster: [acto-namespace/test-cluster]'s upgraded pd pod: [test-cluster-pd-2] is not ready, requeuing
+E0402 08:08:43.867171       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 08:08:43.867298       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"d5661197-e563-4df3-871f-4f0ec4cffca3", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1893", FieldPath:""}): type: 'Warning' reason: 'PDMemberUnhealthy' acto-namespace/test-cluster-pd-2(5110389971597451409) is unhealthy
+I0402 08:08:43.867771       1 statefulset.go:164] set acto-namespace/test-cluster-pd partition to 2
+I0402 08:08:43.867909       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: tidbcluster: [acto-namespace/test-cluster]'s upgraded pd pod: [test-cluster-pd-2] is not ready, requeuing
+E0402 08:08:50.395810       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 08:08:50.395932       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"d5661197-e563-4df3-871f-4f0ec4cffca3", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1893", FieldPath:""}): type: 'Warning' reason: 'PDMemberUnhealthy' acto-namespace/test-cluster-pd-2(5110389971597451409) is unhealthy
+I0402 08:08:50.397428       1 statefulset.go:164] set acto-namespace/test-cluster-pd partition to 2
+I0402 08:08:50.397750       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: tidbcluster: [acto-namespace/test-cluster]'s upgraded pd pod: [test-cluster-pd-2] is not ready, requeuing
+E0402 08:09:13.889856       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 08:09:13.889972       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"d5661197-e563-4df3-871f-4f0ec4cffca3", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1893", FieldPath:""}): type: 'Warning' reason: 'PDMemberUnhealthy' acto-namespace/test-cluster-pd-2(5110389971597451409) is unhealthy
+I0402 08:09:13.891219       1 statefulset.go:164] set acto-namespace/test-cluster-pd partition to 2
+I0402 08:09:13.891440       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: tidbcluster: [acto-namespace/test-cluster]'s upgraded pd pod: [test-cluster-pd-2] is not ready, requeuing
+E0402 08:09:43.873053       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 08:09:43.873180       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"d5661197-e563-4df3-871f-4f0ec4cffca3", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1893", FieldPath:""}): type: 'Warning' reason: 'PDMemberUnhealthy' acto-namespace/test-cluster-pd-2(5110389971597451409) is unhealthy
+I0402 08:09:43.873844       1 statefulset.go:164] set acto-namespace/test-cluster-pd partition to 2
+I0402 08:09:43.874007       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: tidbcluster: [acto-namespace/test-cluster]'s upgraded pd pod: [test-cluster-pd-2] is not ready, requeuing
+E0402 08:10:13.870973       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 08:10:13.871072       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"d5661197-e563-4df3-871f-4f0ec4cffca3", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1893", FieldPath:""}): type: 'Warning' reason: 'PDMemberUnhealthy' acto-namespace/test-cluster-pd-2(5110389971597451409) is unhealthy
+I0402 08:10:13.871625       1 statefulset.go:164] set acto-namespace/test-cluster-pd partition to 2
+I0402 08:10:13.871758       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: tidbcluster: [acto-namespace/test-cluster]'s upgraded pd pod: [test-cluster-pd-2] is not ready, requeuing
+E0402 08:10:30.483787       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 08:10:30.483902       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"d5661197-e563-4df3-871f-4f0ec4cffca3", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1893", FieldPath:""}): type: 'Warning' reason: 'PDMemberUnhealthy' acto-namespace/test-cluster-pd-2(5110389971597451409) is unhealthy
+I0402 08:10:30.484522       1 statefulset.go:164] set acto-namespace/test-cluster-pd partition to 2
+I0402 08:10:30.484680       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: tidbcluster: [acto-namespace/test-cluster]'s upgraded pd pod: [test-cluster-pd-2] is not ready, requeuing
+E0402 08:10:43.879965       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 08:10:43.880088       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"d5661197-e563-4df3-871f-4f0ec4cffca3", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1893", FieldPath:""}): type: 'Warning' reason: 'PDMemberUnhealthy' acto-namespace/test-cluster-pd-2(5110389971597451409) is unhealthy
+I0402 08:10:43.881042       1 statefulset.go:164] set acto-namespace/test-cluster-pd partition to 2
+I0402 08:10:43.881248       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: tidbcluster: [acto-namespace/test-cluster]'s upgraded pd pod: [test-cluster-pd-2] is not ready, requeuing
+E0402 08:11:13.868945       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 08:11:13.869095       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"d5661197-e563-4df3-871f-4f0ec4cffca3", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1893", FieldPath:""}): type: 'Warning' reason: 'PDMemberUnhealthy' acto-namespace/test-cluster-pd-2(5110389971597451409) is unhealthy
+I0402 08:11:13.869709       1 statefulset.go:164] set acto-namespace/test-cluster-pd partition to 2
+I0402 08:11:13.869860       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: tidbcluster: [acto-namespace/test-cluster]'s upgraded pd pod: [test-cluster-pd-2] is not ready, requeuing
+E0402 08:11:43.879702       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 08:11:43.879783       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"d5661197-e563-4df3-871f-4f0ec4cffca3", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1893", FieldPath:""}): type: 'Warning' reason: 'PDMemberUnhealthy' acto-namespace/test-cluster-pd-2(5110389971597451409) is unhealthy
+I0402 08:11:43.880630       1 statefulset.go:164] set acto-namespace/test-cluster-pd partition to 2
+I0402 08:11:43.880830       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: tidbcluster: [acto-namespace/test-cluster]'s upgraded pd pod: [test-cluster-pd-2] is not ready, requeuing
+E0402 08:12:10.564662       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 08:12:10.564761       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"d5661197-e563-4df3-871f-4f0ec4cffca3", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1893", FieldPath:""}): type: 'Warning' reason: 'PDMemberUnhealthy' acto-namespace/test-cluster-pd-2(5110389971597451409) is unhealthy
+I0402 08:12:10.565382       1 statefulset.go:164] set acto-namespace/test-cluster-pd partition to 2
+I0402 08:12:10.565537       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: tidbcluster: [acto-namespace/test-cluster]'s upgraded pd pod: [test-cluster-pd-2] is not ready, requeuing
+E0402 08:12:13.867604       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 08:12:13.867705       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"d5661197-e563-4df3-871f-4f0ec4cffca3", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1893", FieldPath:""}): type: 'Warning' reason: 'PDMemberUnhealthy' acto-namespace/test-cluster-pd-2(5110389971597451409) is unhealthy
+I0402 08:12:13.868132       1 statefulset.go:164] set acto-namespace/test-cluster-pd partition to 2
+I0402 08:12:13.868246       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: tidbcluster: [acto-namespace/test-cluster]'s upgraded pd pod: [test-cluster-pd-2] is not ready, requeuing
+E0402 08:12:43.876540       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 08:12:43.876643       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"d5661197-e563-4df3-871f-4f0ec4cffca3", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1893", FieldPath:""}): type: 'Warning' reason: 'PDMemberUnhealthy' acto-namespace/test-cluster-pd-2(5110389971597451409) is unhealthy
+I0402 08:12:43.877595       1 statefulset.go:164] set acto-namespace/test-cluster-pd partition to 2
+I0402 08:12:43.877822       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: tidbcluster: [acto-namespace/test-cluster]'s upgraded pd pod: [test-cluster-pd-2] is not ready, requeuing
+E0402 08:13:13.881805       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 08:13:13.881895       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"d5661197-e563-4df3-871f-4f0ec4cffca3", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1893", FieldPath:""}): type: 'Warning' reason: 'PDMemberUnhealthy' acto-namespace/test-cluster-pd-2(5110389971597451409) is unhealthy
+I0402 08:13:13.883202       1 statefulset.go:164] set acto-namespace/test-cluster-pd partition to 2
+I0402 08:13:13.883461       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: tidbcluster: [acto-namespace/test-cluster]'s upgraded pd pod: [test-cluster-pd-2] is not ready, requeuing
+E0402 08:13:43.889318       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 08:13:43.889455       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"d5661197-e563-4df3-871f-4f0ec4cffca3", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1893", FieldPath:""}): type: 'Warning' reason: 'PDMemberUnhealthy' acto-namespace/test-cluster-pd-2(5110389971597451409) is unhealthy
+I0402 08:13:43.889937       1 statefulset.go:164] set acto-namespace/test-cluster-pd partition to 2
+I0402 08:13:43.890063       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: tidbcluster: [acto-namespace/test-cluster]'s upgraded pd pod: [test-cluster-pd-2] is not ready, requeuing
+E0402 08:13:50.661113       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 08:13:50.661223       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"d5661197-e563-4df3-871f-4f0ec4cffca3", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1893", FieldPath:""}): type: 'Warning' reason: 'PDMemberUnhealthy' acto-namespace/test-cluster-pd-2(5110389971597451409) is unhealthy
+I0402 08:13:50.661789       1 statefulset.go:164] set acto-namespace/test-cluster-pd partition to 2
+I0402 08:13:50.661921       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: tidbcluster: [acto-namespace/test-cluster]'s upgraded pd pod: [test-cluster-pd-2] is not ready, requeuing
+E0402 08:14:13.885149       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 08:14:13.885287       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"d5661197-e563-4df3-871f-4f0ec4cffca3", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1893", FieldPath:""}): type: 'Warning' reason: 'PDMemberUnhealthy' acto-namespace/test-cluster-pd-2(5110389971597451409) is unhealthy
+I0402 08:14:13.885988       1 statefulset.go:164] set acto-namespace/test-cluster-pd partition to 2
+I0402 08:14:13.886158       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: tidbcluster: [acto-namespace/test-cluster]'s upgraded pd pod: [test-cluster-pd-2] is not ready, requeuing
+E0402 08:14:43.864546       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 08:14:43.864655       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"d5661197-e563-4df3-871f-4f0ec4cffca3", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1893", FieldPath:""}): type: 'Warning' reason: 'PDMemberUnhealthy' acto-namespace/test-cluster-pd-2(5110389971597451409) is unhealthy
+I0402 08:14:43.865281       1 statefulset.go:164] set acto-namespace/test-cluster-pd partition to 2
+I0402 08:14:43.865433       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: tidbcluster: [acto-namespace/test-cluster]'s upgraded pd pod: [test-cluster-pd-2] is not ready, requeuing
+E0402 08:15:13.876364       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 08:15:13.876445       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"d5661197-e563-4df3-871f-4f0ec4cffca3", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1893", FieldPath:""}): type: 'Warning' reason: 'PDMemberUnhealthy' acto-namespace/test-cluster-pd-2(5110389971597451409) is unhealthy
+I0402 08:15:13.877039       1 statefulset.go:164] set acto-namespace/test-cluster-pd partition to 2
+I0402 08:15:13.877177       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: tidbcluster: [acto-namespace/test-cluster]'s upgraded pd pod: [test-cluster-pd-2] is not ready, requeuing
+E0402 08:15:30.735060       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 08:15:30.735200       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"d5661197-e563-4df3-871f-4f0ec4cffca3", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1893", FieldPath:""}): type: 'Warning' reason: 'PDMemberUnhealthy' acto-namespace/test-cluster-pd-2(5110389971597451409) is unhealthy
+I0402 08:15:30.735986       1 statefulset.go:164] set acto-namespace/test-cluster-pd partition to 2
+I0402 08:15:30.736161       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: tidbcluster: [acto-namespace/test-cluster]'s upgraded pd pod: [test-cluster-pd-2] is not ready, requeuing
+E0402 08:15:43.866921       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 08:15:43.867031       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"d5661197-e563-4df3-871f-4f0ec4cffca3", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1893", FieldPath:""}): type: 'Warning' reason: 'PDMemberUnhealthy' acto-namespace/test-cluster-pd-2(5110389971597451409) is unhealthy
+I0402 08:15:43.867532       1 statefulset.go:164] set acto-namespace/test-cluster-pd partition to 2
+I0402 08:15:43.867653       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: tidbcluster: [acto-namespace/test-cluster]'s upgraded pd pod: [test-cluster-pd-2] is not ready, requeuing
+E0402 08:16:13.889507       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 08:16:13.889610       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"d5661197-e563-4df3-871f-4f0ec4cffca3", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1893", FieldPath:""}): type: 'Warning' reason: 'PDMemberUnhealthy' acto-namespace/test-cluster-pd-2(5110389971597451409) is unhealthy
+I0402 08:16:13.890522       1 statefulset.go:164] set acto-namespace/test-cluster-pd partition to 2
+I0402 08:16:13.890904       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: tidbcluster: [acto-namespace/test-cluster]'s upgraded pd pod: [test-cluster-pd-2] is not ready, requeuing
+E0402 08:16:43.877803       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 08:16:43.877945       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"d5661197-e563-4df3-871f-4f0ec4cffca3", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1893", FieldPath:""}): type: 'Warning' reason: 'PDMemberUnhealthy' acto-namespace/test-cluster-pd-2(5110389971597451409) is unhealthy
+I0402 08:16:43.878346       1 statefulset.go:164] set acto-namespace/test-cluster-pd partition to 2
+I0402 08:16:43.878473       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: tidbcluster: [acto-namespace/test-cluster]'s upgraded pd pod: [test-cluster-pd-2] is not ready, requeuing
+E0402 08:17:10.818509       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 08:17:10.818592       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"d5661197-e563-4df3-871f-4f0ec4cffca3", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1893", FieldPath:""}): type: 'Warning' reason: 'PDMemberUnhealthy' acto-namespace/test-cluster-pd-2(5110389971597451409) is unhealthy
+I0402 08:17:10.819173       1 statefulset.go:164] set acto-namespace/test-cluster-pd partition to 2
+I0402 08:17:10.819299       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: tidbcluster: [acto-namespace/test-cluster]'s upgraded pd pod: [test-cluster-pd-2] is not ready, requeuing
+E0402 08:17:13.888268       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 08:17:13.888357       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"d5661197-e563-4df3-871f-4f0ec4cffca3", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1893", FieldPath:""}): type: 'Warning' reason: 'PDMemberUnhealthy' acto-namespace/test-cluster-pd-2(5110389971597451409) is unhealthy
+I0402 08:17:13.889064       1 statefulset.go:164] set acto-namespace/test-cluster-pd partition to 2
+I0402 08:17:13.889222       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: tidbcluster: [acto-namespace/test-cluster]'s upgraded pd pod: [test-cluster-pd-2] is not ready, requeuing
+E0402 08:17:43.883797       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 08:17:43.883904       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"d5661197-e563-4df3-871f-4f0ec4cffca3", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1893", FieldPath:""}): type: 'Warning' reason: 'PDMemberUnhealthy' acto-namespace/test-cluster-pd-2(5110389971597451409) is unhealthy
+I0402 08:17:43.884463       1 statefulset.go:164] set acto-namespace/test-cluster-pd partition to 2
+I0402 08:17:43.884600       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: tidbcluster: [acto-namespace/test-cluster]'s upgraded pd pod: [test-cluster-pd-2] is not ready, requeuing
+E0402 08:18:13.894407       1 pd_failover.go:70] PD failover replicas (0) reaches the limit (0), skip failover
+I0402 08:18:13.894527       1 event.go:282] Event(v1.ObjectReference{Kind:"TidbCluster", Namespace:"acto-namespace", Name:"test-cluster", UID:"d5661197-e563-4df3-871f-4f0ec4cffca3", APIVersion:"pingcap.com/v1alpha1", ResourceVersion:"1893", FieldPath:""}): type: 'Warning' reason: 'PDMemberUnhealthy' acto-namespace/test-cluster-pd-2(5110389971597451409) is unhealthy
+I0402 08:18:13.895630       1 statefulset.go:164] set acto-namespace/test-cluster-pd partition to 2
+I0402 08:18:13.895863       1 tidb_cluster_controller.go:124] TidbCluster: acto-namespace/test-cluster, still need sync: tidbcluster: [acto-namespace/test-cluster]'s upgraded pd pod: [test-cluster-pd-2] is not ready, requeuing
+

@@ -1,0 +1,39 @@
+apiVersion: zookeeper.pravega.io/v1beta1
+kind: ZookeeperCluster
+metadata:
+  name: test-cluster
+spec:
+  config:
+    additionalConfig:
+      ACTOKEY: ACTOKEY
+    autoPurgePurgeInterval: 4
+    autoPurgeSnapRetainCount: 1
+    commitLogCount: 2
+    globalOutstandingLimit: 1
+    initLimit: 5
+    maxClientCnxns: 5
+    maxCnxns: 0
+    maxSessionTimeout: 1
+    minSessionTimeout: 0
+    preAllocSize: 0
+    quorumListenOnAllIPs: true
+    snapCount: null
+    snapSizeLimitInKb: 5
+    syncLimit: 1
+    tickTime: 3
+  image:
+    pullPolicy: IfNotPresent
+    repository: pravega/zookeeper
+    tag: 0.2.14
+  persistence:
+    reclaimPolicy: Delete
+    spec:
+      resources:
+        requests:
+          storage: 20Gi
+      storageClassName: standard
+  probes:
+    livenessProbe:
+      timeoutSeconds: 0
+  replicas: 3
+  storageType: persistence

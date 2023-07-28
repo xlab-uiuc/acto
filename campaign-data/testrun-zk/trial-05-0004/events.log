@@ -1,0 +1,134 @@
+05:29:48 Pod acto-test-operator-zookeeper-operator-658b9fbcfb-6czbv 720:	Successfully assigned acto-namespace/acto-test-operator-zookeeper-operator-658b9fbcfb-6czbv to acto-cluster-5-worker2
+05:29:49 Pod acto-test-operator-zookeeper-operator-658b9fbcfb-6czbv 722:	Container image "pravega/zookeeper-operator:0.2.13" already present on machine
+05:29:49 Pod acto-test-operator-zookeeper-operator-658b9fbcfb-6czbv 722:	Created container acto-test-operator-zookeeper-operator
+05:29:49 Pod acto-test-operator-zookeeper-operator-658b9fbcfb-6czbv 722:	Started container acto-test-operator-zookeeper-operator
+05:29:48 ReplicaSet acto-test-operator-zookeeper-operator-658b9fbcfb 716:	Created pod: acto-test-operator-zookeeper-operator-658b9fbcfb-6czbv
+05:29:48 Deployment acto-test-operator-zookeeper-operator 715:	Scaled up replica set acto-test-operator-zookeeper-operator-658b9fbcfb to 1
+05:30:22 PersistentVolumeClaim data-test-cluster-0 816:	waiting for first consumer to be created before binding
+05:30:22 PersistentVolumeClaim data-test-cluster-0 828:	waiting for a volume to be created, either by external provisioner "rancher.io/local-path" or manually created by system administrator
+05:30:22 PersistentVolumeClaim data-test-cluster-0 828:	External provisioner is provisioning volume for claim "acto-namespace/data-test-cluster-0"
+05:30:26 PersistentVolumeClaim data-test-cluster-0 828:	Successfully provisioned volume pvc-4618a0c2-4b24-49c8-8a78-daa0475cd89d
+05:30:37 PersistentVolumeClaim data-test-cluster-1 891:	waiting for first consumer to be created before binding
+05:30:37 PersistentVolumeClaim data-test-cluster-1 900:	waiting for a volume to be created, either by external provisioner "rancher.io/local-path" or manually created by system administrator
+05:30:37 PersistentVolumeClaim data-test-cluster-1 900:	External provisioner is provisioning volume for claim "acto-namespace/data-test-cluster-1"
+05:30:41 PersistentVolumeClaim data-test-cluster-1 900:	Successfully provisioned volume pvc-e48cc5e2-058e-4659-ace5-d8ef83f133cf
+05:32:14 PersistentVolumeClaim data-test-cluster-2 1112:	waiting for first consumer to be created before binding
+05:32:14 PersistentVolumeClaim data-test-cluster-2 1119:	waiting for a volume to be created, either by external provisioner "rancher.io/local-path" or manually created by system administrator
+05:32:14 PersistentVolumeClaim data-test-cluster-2 1119:	External provisioner is provisioning volume for claim "acto-namespace/data-test-cluster-2"
+05:32:18 PersistentVolumeClaim data-test-cluster-2 1119:	Successfully provisioned volume pvc-2ff12026-c6d3-448b-88b0-c5c98c581282
+05:30:27 Pod test-cluster-0 820:	Successfully assigned acto-namespace/test-cluster-0 to acto-cluster-5-worker2
+05:30:27 Pod test-cluster-0 857:	Container image "pravega/zookeeper:0.2.14" already present on machine
+05:30:27 Pod test-cluster-0 857:	Created container zookeeper
+05:30:27 Pod test-cluster-0 857:	Started container zookeeper
+05:30:42 Pod test-cluster-1 896:	Successfully assigned acto-namespace/test-cluster-1 to acto-cluster-5-worker3
+05:30:42 Pod test-cluster-1 927:	Container image "pravega/zookeeper:0.2.14" already present on machine
+05:30:42 Pod test-cluster-1 927:	Created container zookeeper
+05:30:43 Pod test-cluster-1 927:	Started container zookeeper
+05:31:02 Pod test-cluster-1 927:	Readiness probe failed: + source /conf/env.sh
+++ DOMAIN=test-cluster-headless.acto-namespace.svc.cluster.local
+++ QUORUM_PORT=2888
+++ LEADER_PORT=3888
+++ CLIENT_HOST=test-cluster-client
+++ CLIENT_PORT=2181
+++ ADMIN_SERVER_HOST=test-cluster-admin-server
+++ ADMIN_SERVER_PORT=8080
+++ CLUSTER_NAME=test-cluster
+++ CLUSTER_SIZE=3
++ source /usr/local/bin/zookeeperFunctions.sh
+++ set -ex
+++ hostname -s
++ HOST=test-cluster-1
++ DATA_DIR=/data
++ MYID_FILE=/data/myid
++ LOG4J_CONF=/conf/log4j-quiet.properties
++ STATIC_CONFIG=/data/conf/zoo.cfg
+++ echo ruok
+++ nc 127.0.0.1 2181
++ OK=
+
+05:31:02 Pod test-cluster-1 927:	Liveness probe failed: + source /conf/env.sh
+++ DOMAIN=test-cluster-headless.acto-namespace.svc.cluster.local
+++ QUORUM_PORT=2888
+++ LEADER_PORT=3888
+++ CLIENT_HOST=test-cluster-client
+++ CLIENT_PORT=2181
+++ ADMIN_SERVER_HOST=test-cluster-admin-server
+++ ADMIN_SERVER_PORT=8080
+++ CLUSTER_NAME=test-cluster
+++ CLUSTER_SIZE=3
+++ echo ruok
+++ nc 127.0.0.1 2181
++ OK=
+
+05:31:22 Pod test-cluster-1 927:	Container zookeeper failed liveness probe, will be restarted
+05:31:23 Pod test-cluster-1 927:	Exec lifecycle hook ([zookeeperTeardown.sh]) for Container "zookeeper" in Pod "test-cluster-1_acto-namespace(19af4a6f-8797-46a5-93e6-5a6ad05df1e8)" failed - error: command 'zookeeperTeardown.sh' exited with 1: + source /conf/env.sh
+++ DOMAIN=test-cluster-headless.acto-namespace.svc.cluster.local
+++ QUORUM_PORT=2888
+++ LEADER_PORT=3888
+++ CLIENT_HOST=test-cluster-client
+++ CLIENT_PORT=2181
+++ ADMIN_SERVER_HOST=test-cluster-admin-server
+++ ADMIN_SERVER_PORT=8080
+++ CLUSTER_NAME=test-cluster
+++ CLUSTER_SIZE=3
++ source /usr/local/bin/zookeeperFunctions.sh
+++ set -ex
++ DATA_DIR=/data
++ MYID_FILE=/data/myid
++ LOG4J_CONF=/conf/log4j-quiet.properties
+++ echo cons
+++ nc localhost 2181
+++ grep -v '^$'
+++ grep -v /127.0.0.1:
+++ wc -l
++ CONN_COUNT=0
++ (( i = 0 ))
++ (( i < 6 ))
++ [[ 0 -gt 0 ]]
++ echo '0 non-local connections'
++ break
++ set +e
+++ zkConnectionString
+++ set +e
+++ getent hosts test-cluster-client
+++ [[ 0 -ne 0 ]]
+++ set -e
+++ echo test-cluster-client:2181
++ ZKURL=test-cluster-client:2181
++ set -e
+++ cat /data/myid
++ MYID=2
++ ZNODE_PATH=/zookeeper-operator/test-cluster
+++ java -Dlog4j.configuration=file:/conf/log4j-quiet.properties -jar /opt/libs/zu.jar sync test-cluster-client:2181 /zookeeper-operator/test-cluster
+Connecting to Zookeeper test-cluster-client:2181
+Error performing zookeeper sync operation:
+org.apache.zookeeper.KeeperException$NoNodeException: KeeperErrorCode = NoNode for /zookeeper-operator/test-cluster
+	at org.apache.zookeeper.KeeperException.create(KeeperException.java:118)
+	at org.apache.zookeeper.KeeperException.create(KeeperException.java:54)
+	at org.apache.zookeeper.ZooKeeper.getData(ZooKeeper.java:1972)
+	at io.pravega.zookeeper.MainKt.runSync(Main.kt:48)
+	at io.pravega.zookeeper.MainKt.runSync$default(Main.kt:40)
+	at io.pravega.zookeeper.MainKt.main(Main.kt:35)
++ CLUSTERSIZE=
+, message: "0 non-local connections\n+ source /conf/env.sh\n++ DOMAIN=test-cluster-headless.acto-namespace.svc.cluster.local\n++ QUORUM_PORT=2888\n++ LEADER_PORT=3888\n++ CLIENT_HOST=test-cluster-client\n++ CLIENT_PORT=2181\n++ ADMIN_SERVER_HOST=test-cluster-admin-server\n++ ADMIN_SERVER_PORT=8080\n++ CLUSTER_NAME=test-cluster\n++ CLUSTER_SIZE=3\n+ source /usr/local/bin/zookeeperFunctions.sh\n++ set -ex\n+ DATA_DIR=/data\n+ MYID_FILE=/data/myid\n+ LOG4J_CONF=/conf/log4j-quiet.properties\n++ echo cons\n++ nc localhost 2181\n++ grep -v '^$'\n++ grep -v /127.0.0.1:\n++ wc -l\n+ CONN_COUNT=0\n+ (( i = 0 ))\n+ (( i < 6 ))\n+ [[ 0 -gt 0 ]]\n+ echo '0 non-local connections'\n+ break\n+ set +e\n++ zkConnectionString\n++ set +e\n++ getent hosts test-cluster-client\n++ [[ 0 -ne 0 ]]\n++ set -e\n++ echo test-cluster-client:2181\n+ ZKURL=test-cluster-client:2181\n+ set -e\n++ cat /data/myid\n+ MYID=2\n+ ZNODE_PATH=/zookeeper-operator/test-cluster\n++ java -Dlog4j.configuration=file:/conf/log4j-quiet.properties -jar /opt/libs/zu.jar sync test-cluster-client:2181 /zookeeper-operator/test-cluster\nConnecting to Zookeeper test-cluster-client:2181\nError performing zookeeper sync operation:\norg.apache.zookeeper.KeeperException$NoNodeException: KeeperErrorCode = NoNode for /zookeeper-operator/test-cluster\n\tat org.apache.zookeeper.KeeperException.create(KeeperException.java:118)\n\tat org.apache.zookeeper.KeeperException.create(KeeperException.java:54)\n\tat org.apache.zookeeper.ZooKeeper.getData(ZooKeeper.java:1972)\n\tat io.pravega.zookeeper.MainKt.runSync(Main.kt:48)\n\tat io.pravega.zookeeper.MainKt.runSync$default(Main.kt:40)\n\tat io.pravega.zookeeper.MainKt.main(Main.kt:35)\n+ CLUSTERSIZE=\n"
+05:32:19 Pod test-cluster-2 1115:	Successfully assigned acto-namespace/test-cluster-2 to acto-cluster-5-worker
+05:32:20 Pod test-cluster-2 1143:	Container image "pravega/zookeeper:0.2.14" already present on machine
+05:32:20 Pod test-cluster-2 1143:	Created container zookeeper
+05:32:20 Pod test-cluster-2 1143:	Started container zookeeper
+05:33:23 Pod test-cluster-2 1143:	Stopping container zookeeper
+05:43:27 Pod test-cluster-2 2226:	Successfully assigned acto-namespace/test-cluster-2 to acto-cluster-5-worker
+05:43:28 Pod test-cluster-2 2227:	Container image "pravega/zookeeper:0.2.14" already present on machine
+05:43:28 Pod test-cluster-2 2227:	Created container zookeeper
+05:43:28 Pod test-cluster-2 2227:	Started container zookeeper
+05:30:22 StatefulSet test-cluster 805:	create Claim data-test-cluster-0 Pod test-cluster-0 in StatefulSet test-cluster success
+05:30:22 StatefulSet test-cluster 805:	create Pod test-cluster-0 in StatefulSet test-cluster successful
+05:30:37 StatefulSet test-cluster 836:	create Claim data-test-cluster-1 Pod test-cluster-1 in StatefulSet test-cluster success
+05:30:37 StatefulSet test-cluster 836:	create Pod test-cluster-1 in StatefulSet test-cluster successful
+05:32:14 StatefulSet test-cluster 1014:	create Claim data-test-cluster-2 Pod test-cluster-2 in StatefulSet test-cluster success
+05:32:14 StatefulSet test-cluster 1014:	create Pod test-cluster-2 in StatefulSet test-cluster successful
+05:33:23 StatefulSet test-cluster 1267:	delete Pod test-cluster-2 in StatefulSet test-cluster successful
+05:33:55 StatefulSet test-cluster 1280:	create Pod test-cluster-2 in StatefulSet test-cluster failed error: Pod "test-cluster-2" is invalid: spec.containers[0].env[1].valueFrom.resourceFieldRef.resource: Unsupported value: "ACTOKEY": supported values: "limits.cpu", "limits.ephemeral-storage", "limits.memory", "requests.cpu", "requests.ephemeral-storage", "requests.memory"
+05:30:19 Pod zkapp 787:	Successfully assigned acto-namespace/zkapp to acto-cluster-5-worker2
+05:30:19 Pod zkapp 788:	Container image "tylergu1998/zkapp:v1" already present on machine
+05:30:19 Pod zkapp 788:	Created container zkapp
+05:30:20 Pod zkapp 788:	Started container zkapp

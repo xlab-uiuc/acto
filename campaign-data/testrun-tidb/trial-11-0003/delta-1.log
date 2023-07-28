@@ -1,0 +1,105 @@
+---------- INPUT DELTA  ----------
+{
+      "dictionary_item_added": {
+            "root['spec']['tidb']['service']['additionalPorts'][0][port]": {
+                  "prev": "NotPresent",
+                  "curr": 0,
+                  "path": [
+                        "spec",
+                        "tidb",
+                        "service",
+                        "additionalPorts",
+                        0,
+                        "port"
+                  ]
+            },
+            "root['spec']['tidb']['service']['additionalPorts'][0][targetPort]": {
+                  "prev": "NotPresent",
+                  "curr": "ACTOKEY",
+                  "path": [
+                        "spec",
+                        "tidb",
+                        "service",
+                        "additionalPorts",
+                        0,
+                        "targetPort"
+                  ]
+            }
+      }
+}
+---------- SYSTEM DELTA ----------
+{
+      "pod": {},
+      "deployment_pods": {},
+      "stateful_set": {},
+      "deployment": {},
+      "config_map": {},
+      "service": {},
+      "service_account": {},
+      "pvc": {},
+      "cronjob": {},
+      "ingress": {},
+      "network_policy": {},
+      "pod_disruption_budget": {},
+      "secret": {},
+      "endpoints": {},
+      "job": {},
+      "role": {},
+      "role_binding": {},
+      "custom_resource_spec": {
+            "values_changed": {
+                  "root['tidb']['config']": {
+                        "prev": "[log]\n  [log.file]\n    max-backups = 3\n\n[performance]\n  tcp-keep-alive = true\n",
+                        "curr": "[performance]\n  tcp-keep-alive = true\n",
+                        "path": [
+                              "tidb",
+                              "config"
+                        ]
+                  }
+            },
+            "dictionary_item_added": {
+                  "root['tidb']['service']['additionalPorts'][0][port]": {
+                        "prev": "NotPresent",
+                        "curr": 0,
+                        "path": [
+                              "tidb",
+                              "service",
+                              "additionalPorts",
+                              0,
+                              "port"
+                        ]
+                  },
+                  "root['tidb']['service']['additionalPorts'][0][protocol]": {
+                        "prev": "NotPresent",
+                        "curr": "TCP",
+                        "path": [
+                              "tidb",
+                              "service",
+                              "additionalPorts",
+                              0,
+                              "protocol"
+                        ]
+                  },
+                  "root['tidb']['service']['additionalPorts'][0][targetPort]": {
+                        "prev": "NotPresent",
+                        "curr": "ACTOKEY",
+                        "path": [
+                              "tidb",
+                              "service",
+                              "additionalPorts",
+                              0,
+                              "targetPort"
+                        ]
+                  },
+                  "root['tikv']['recoverFailover']": {
+                        "prev": "NotPresent",
+                        "curr": false,
+                        "path": [
+                              "tikv",
+                              "recoverFailover"
+                        ]
+                  }
+            }
+      },
+      "custom_resource_status": {}
+}

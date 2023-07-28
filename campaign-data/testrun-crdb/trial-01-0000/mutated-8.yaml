@@ -1,0 +1,56 @@
+apiVersion: crdb.cockroachlabs.com/v1alpha1
+kind: CrdbCluster
+metadata:
+  name: test-cluster
+spec:
+  additionalLabels:
+    crdb: is-cool
+  dataStore:
+    pvc:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+        volumeMode: Filesystem
+        volumeName: ''
+  image:
+    name: cockroachdb/cockroach:v21.2.10
+  nodes: 3
+  resources:
+    limits:
+      cpu: 2
+      memory: 2Gi
+    requests:
+      cpu: 100m
+      memory: 1Gi
+  tlsEnabled: true
+  topologySpreadConstraints:
+  - labelSelector:
+      matchExpressions:
+      - key: ACTOKEY
+        operator: ACTOKEY
+        values: []
+      - key: ACTOKEY
+        operator: ACTOKEY
+        values:
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+      - key: ACTOKEY
+        operator: ACTOKEY
+        values: null
+      matchLabels:
+        ACTOKEY: ACTOKEY
+    maxSkew: 0
+    topologyKey: ACTOKEY
+    whenUnsatisfiable: ACTOKEY
+  - labelSelector:
+      matchExpressions: null
+      matchLabels:
+        ACTOKEY: ACTOKEY
+    maxSkew: 3
+    topologyKey: ACTOKEY
+    whenUnsatisfiable: ACTOKEY

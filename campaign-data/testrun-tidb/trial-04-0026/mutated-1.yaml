@@ -1,0 +1,283 @@
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: test-cluster
+spec:
+  configUpdateStrategy: RollingUpdate
+  enableDynamicConfiguration: true
+  helper:
+    image: busybox:1.34.1
+  pd:
+    baseImage: pingcap/pd
+    config: "[dashboard]\n  internal-proxy = true\n"
+    maxFailoverCount: 0
+    mountClusterClientSecret: true
+    replicas: 3
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: "[performance]\n  tcp-keep-alive = true\n"
+    initContainers:
+    - args:
+      - ACTOKEY
+      command:
+      - ACTOKEY
+      - ACTOKEY
+      - ACTOKEY
+      - ACTOKEY
+      - ACTOKEY
+      env:
+      - name: ACTOKEY
+        value: ACTOKEY
+        valueFrom:
+          configMapKeyRef:
+            key: ACTOKEY
+            name: null
+            optional: false
+          fieldRef:
+            apiVersion: null
+            fieldPath: ACTOKEY
+          resourceFieldRef:
+            containerName: ACTOKEY
+            divisor: '.7095'
+            resource: ACTOKEY
+          secretKeyRef:
+            key: ACTOKEY
+            name: ACTOKEY
+            optional: false
+      - name: ACTOKEY
+        value: ACTOKEY
+        valueFrom:
+          configMapKeyRef:
+            key: ACTOKEY
+            name: ACTOKEY
+            optional: true
+          fieldRef:
+            apiVersion: ACTOKEY
+            fieldPath: ACTOKEY
+          resourceFieldRef:
+            containerName: ACTOKEY
+            divisor: null
+            resource: ACTOKEY
+          secretKeyRef: null
+      envFrom:
+      - configMapRef:
+          name: ACTOKEY
+          optional: false
+        prefix: ACTOKEY
+        secretRef:
+          name: ACTOKEY
+          optional: false
+      - configMapRef:
+          name: ACTOKEY
+          optional: false
+        prefix: ACTOKEY
+        secretRef:
+          name: ACTOKEY
+          optional: false
+      - configMapRef:
+          name: ACTOKEY
+          optional: false
+        prefix: ACTOKEY
+        secretRef: null
+      - configMapRef:
+          name: ACTOKEY
+          optional: false
+        prefix: ACTOKEY
+        secretRef:
+          name: ACTOKEY
+          optional: null
+      - configMapRef:
+          name: ACTOKEY
+          optional: true
+        prefix: ACTOKEY
+        secretRef:
+          name: ACTOKEY
+          optional: true
+      image: null
+      imagePullPolicy: ACTOKEY
+      lifecycle:
+        postStart:
+          exec:
+            command:
+            - ACTOKEY
+            - ACTOKEY
+          httpGet:
+            host: ACTOKEY
+            httpHeaders:
+            - name: ACTOKEY
+              value: ACTOKEY
+            path: ACTOKEY
+            port: ACTOKEY
+            scheme: ACTOKEY
+          tcpSocket:
+            host: ACTOKEY
+            port: ACTOKEY
+        preStop:
+          exec:
+            command:
+            - ACTOKEY
+          httpGet:
+            host: ACTOKEY
+            httpHeaders:
+            - name: ACTOKEY
+              value: ACTOKEY
+            - name: ACTOKEY
+              value: ACTOKEY
+            - name: ACTOKEY
+              value: ACTOKEY
+            path: ACTOKEY
+            port: ACTOKEY
+            scheme: ACTOKEY
+          tcpSocket:
+            host: ACTOKEY
+            port: ACTOKEY
+      livenessProbe:
+        exec:
+          command:
+          - ACTOKEY
+          - ACTOKEY
+          - ACTOKEY
+          - ACTOKEY
+          - ACTOKEY
+        failureThreshold: 2
+        httpGet:
+          host: ACTOKEY
+          httpHeaders:
+          - name: ACTOKEY
+            value: ACTOKEY
+          - name: ACTOKEY
+            value: ACTOKEY
+          - name: ACTOKEY
+            value: ACTOKEY
+          path: ACTOKEY
+          port: 1
+          scheme: ACTOKEY
+        initialDelaySeconds: 1
+        periodSeconds: 0
+        successThreshold: null
+        tcpSocket:
+          host: null
+          port: ACTOKEY
+        timeoutSeconds: 1
+      name: ACTOKEY
+      ports: []
+      readinessProbe:
+        exec:
+          command:
+          - ACTOKEY
+          - ACTOKEY
+          - ACTOKEY
+          - ACTOKEY
+        failureThreshold: 5
+        httpGet:
+          host: ACTOKEY
+          httpHeaders: []
+          path: ACTOKEY
+          port: ACTOKEY
+          scheme: ACTOKEY
+        initialDelaySeconds: 5
+        periodSeconds: 0
+        successThreshold: 5
+        tcpSocket:
+          host: ACTOKEY
+          port: 1
+        timeoutSeconds: 5
+      resources: null
+      securityContext:
+        allowPrivilegeEscalation: null
+        capabilities:
+          add: null
+          drop:
+          - ACTOKEY
+          - ACTOKEY
+          - ACTOKEY
+          - ACTOKEY
+        privileged: false
+        procMount: ACTOKEY
+        readOnlyRootFilesystem: false
+        runAsGroup: 0
+        runAsNonRoot: true
+        runAsUser: 0
+        seLinuxOptions:
+          level: ACTOKEY
+          role: ACTOKEY
+          type: null
+          user: ACTOKEY
+        seccompProfile:
+          localhostProfile: ACTOKEY
+          type: ACTOKEY
+        windowsOptions:
+          gmsaCredentialSpec: null
+          gmsaCredentialSpecName: ACTOKEY
+          runAsUserName: ACTOKEY
+      startupProbe:
+        exec:
+          command: null
+        failureThreshold: 2
+        httpGet:
+          host: null
+          httpHeaders:
+          - name: ACTOKEY
+            value: ACTOKEY
+          path: ACTOKEY
+          port: ACTOKEY
+          scheme: ACTOKEY
+        initialDelaySeconds: 4
+        periodSeconds: 0
+        successThreshold: 4
+        tcpSocket:
+          host: ACTOKEY
+          port: ACTOKEY
+        timeoutSeconds: 5
+      stdin: true
+      stdinOnce: false
+      terminationMessagePath: ACTOKEY
+      terminationMessagePolicy: ACTOKEY
+      tty: true
+      volumeDevices:
+      - devicePath: ACTOKEY
+        name: ACTOKEY
+      - devicePath: ACTOKEY
+        name: ACTOKEY
+      - devicePath: ACTOKEY
+        name: ACTOKEY
+      - devicePath: ACTOKEY
+        name: ACTOKEY
+      - devicePath: ACTOKEY
+        name: ACTOKEY
+      volumeMounts:
+      - mountPath: ACTOKEY
+        mountPropagation: ACTOKEY
+        name: ACTOKEY
+        readOnly: null
+        subPath: ACTOKEY
+        subPathExpr: ACTOKEY
+      - mountPath: ACTOKEY
+        mountPropagation: ACTOKEY
+        name: ACTOKEY
+        readOnly: false
+        subPath: ACTOKEY
+        subPathExpr: ACTOKEY
+      workingDir: ACTOKEY
+    maxFailoverCount: 0
+    replicas: 3
+    service:
+      externalTrafficPolicy: Local
+      type: NodePort
+  tikv:
+    baseImage: pingcap/tikv
+    config: 'log-level = "info"
+
+      '
+    maxFailoverCount: 0
+    mountClusterClientSecret: true
+    recoverFailover: false
+    replicas: 3
+    requests:
+      storage: 100Gi
+    separateRaftLog: true
+  timezone: UTC
+  version: v5.4.0

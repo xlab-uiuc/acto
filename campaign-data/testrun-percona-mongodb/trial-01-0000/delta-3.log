@@ -1,0 +1,159 @@
+---------- INPUT DELTA  ----------
+{
+      "dictionary_item_added": {
+            "root['spec']['backup']['containerSecurityContext'][windowsOptions][gmsaCredentialSpec]": {
+                  "prev": "NotPresent",
+                  "curr": "ACTOKEY",
+                  "path": [
+                        "spec",
+                        "backup",
+                        "containerSecurityContext",
+                        "windowsOptions",
+                        "gmsaCredentialSpec"
+                  ]
+            },
+            "root['spec']['backup']['containerSecurityContext'][windowsOptions][gmsaCredentialSpecName]": {
+                  "prev": "NotPresent",
+                  "curr": "ACTOKEY",
+                  "path": [
+                        "spec",
+                        "backup",
+                        "containerSecurityContext",
+                        "windowsOptions",
+                        "gmsaCredentialSpecName"
+                  ]
+            },
+            "root['spec']['backup']['containerSecurityContext'][windowsOptions][runAsUserName]": {
+                  "prev": "NotPresent",
+                  "curr": "ACTOKEY",
+                  "path": [
+                        "spec",
+                        "backup",
+                        "containerSecurityContext",
+                        "windowsOptions",
+                        "runAsUserName"
+                  ]
+            }
+      }
+}
+---------- SYSTEM DELTA ----------
+{
+      "pod": {},
+      "deployment_pods": {},
+      "stateful_set": {},
+      "deployment": {},
+      "config_map": {},
+      "service": {},
+      "service_account": {},
+      "pvc": {},
+      "cronjob": {},
+      "ingress": {},
+      "network_policy": {},
+      "pod_disruption_budget": {},
+      "secret": {},
+      "endpoints": {},
+      "job": {},
+      "role": {},
+      "role_binding": {},
+      "custom_resource_spec": {
+            "dictionary_item_added": {
+                  "root['backup']['containerSecurityContext'][windowsOptions][gmsaCredentialSpec]": {
+                        "prev": "NotPresent",
+                        "curr": "ACTOKEY",
+                        "path": [
+                              "backup",
+                              "containerSecurityContext",
+                              "windowsOptions",
+                              "gmsaCredentialSpec"
+                        ]
+                  },
+                  "root['backup']['containerSecurityContext'][windowsOptions][gmsaCredentialSpecName]": {
+                        "prev": "NotPresent",
+                        "curr": "ACTOKEY",
+                        "path": [
+                              "backup",
+                              "containerSecurityContext",
+                              "windowsOptions",
+                              "gmsaCredentialSpecName"
+                        ]
+                  },
+                  "root['backup']['containerSecurityContext'][windowsOptions][runAsUserName]": {
+                        "prev": "NotPresent",
+                        "curr": "ACTOKEY",
+                        "path": [
+                              "backup",
+                              "containerSecurityContext",
+                              "windowsOptions",
+                              "runAsUserName"
+                        ]
+                  }
+            }
+      },
+      "custom_resource_status": {
+            "iterable_item_added": {
+                  "root['conditions'][8][lastTransitionTime]": {
+                        "prev": "NotPresent",
+                        "curr": "2023-03-31T15:56:28Z",
+                        "path": [
+                              "conditions",
+                              8,
+                              "lastTransitionTime"
+                        ]
+                  },
+                  "root['conditions'][8][message]": {
+                        "prev": "NotPresent",
+                        "curr": "reconcile backup tasks: create or update backup job: CronJob.batch \"test-cluster-backup-daily-s3-us-west\" is invalid: spec.jobTemplate.spec.template.spec.containers[0].securityContext.windowsOptions.gmsaCredentialSpecName: Invalid value: \"ACTOKEY\": a lowercase RFC 1123 subdomain must consist of lower case alphanumeric characters, '-' or '.', and must start and end with an alphanumeric character (e.g. 'example.com', regex used for validation is '[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*')",
+                        "path": [
+                              "conditions",
+                              8,
+                              "message"
+                        ]
+                  },
+                  "root['conditions'][8][reason]": {
+                        "prev": "NotPresent",
+                        "curr": "ErrorReconcile",
+                        "path": [
+                              "conditions",
+                              8,
+                              "reason"
+                        ]
+                  },
+                  "root['conditions'][8][status]": {
+                        "prev": "NotPresent",
+                        "curr": "True",
+                        "path": [
+                              "conditions",
+                              8,
+                              "status"
+                        ]
+                  },
+                  "root['conditions'][8][type]": {
+                        "prev": "NotPresent",
+                        "curr": "error",
+                        "path": [
+                              "conditions",
+                              8,
+                              "type"
+                        ]
+                  }
+            },
+            "dictionary_item_added": {
+                  "root['message']": {
+                        "prev": "NotPresent",
+                        "curr": "Error: reconcile backup tasks: create or update backup job: CronJob.batch \"test-cluster-backup-daily-s3-us-west\" is invalid: spec.jobTemplate.spec.template.spec.containers[0].securityContext.windowsOptions.gmsaCredentialSpecName: Invalid value: \"ACTOKEY\": a lowercase RFC 1123 subdomain must consist of lower case alphanumeric characters, '-' or '.', and must start and end with an alphanumeric character (e.g. 'example.com', regex used for validation is '[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*')",
+                        "path": [
+                              "message"
+                        ]
+                  }
+            },
+            "values_changed": {
+                  "root['state']": {
+                        "prev": "ready",
+                        "curr": "error",
+                        "path": [
+                              "state"
+                        ]
+                  }
+            }
+      }
+}

@@ -1,0 +1,86 @@
+{
+      "alarm": true,
+      "original_result": {
+            "revert": false,
+            "generation": 3,
+            "testcase": {
+                  "field": "[\"spec\", \"ports\"]",
+                  "testcase": "array-deletion"
+            },
+            "feature_gate": 51,
+            "crash_result": "Pass",
+            "input_result": "Pass",
+            "health_result": {
+                  "oracle": "SystemHealth",
+                  "message": "statefulset: test-cluster replicas [3] ready_replicas [2]\n"
+            },
+            "state_result": {
+                  "oracle": "SystemState",
+                  "message": "Matched delta inconsistent with input delta",
+                  "input_delta": {
+                        "prev": "NotPresent",
+                        "curr": 5,
+                        "path": [
+                              "spec",
+                              "ports",
+                              0,
+                              "containerPort"
+                        ]
+                  },
+                  "matched_system_delta": {
+                        "prev": 2181,
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-2",
+                              "spec",
+                              "containers",
+                              0,
+                              "ports",
+                              0,
+                              "container_port"
+                        ]
+                  }
+            },
+            "log_result": {
+                  "responsible_field": [
+                        "spec",
+                        "ports",
+                        0,
+                        "name"
+                  ]
+            },
+            "custom_result": null,
+            "misc_result": null,
+            "recovery_result": null
+      },
+      "post_result": {
+            "trial_num": "06-0010-3",
+            "error": {
+                  "revert": false,
+                  "generation": 3,
+                  "testcase": {
+                        "field": "[\"spec\", \"ports\"]",
+                        "testcase": "array-deletion"
+                  },
+                  "feature_gate": 27,
+                  "crash_result": "Pass",
+                  "input_result": "Pass",
+                  "health_result": {
+                        "oracle": "SystemHealth",
+                        "message": "statefulset: test-cluster replicas [3] ready_replicas [2]\n"
+                  },
+                  "state_result": "Pass",
+                  "log_result": {
+                        "responsible_field": [
+                              "spec",
+                              "ports",
+                              0,
+                              "name"
+                        ]
+                  },
+                  "custom_result": null,
+                  "misc_result": null,
+                  "recovery_result": null
+            }
+      }
+}

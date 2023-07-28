@@ -1,0 +1,258 @@
+---------- INPUT DELTA  ----------
+{
+      "values_changed": {
+            "root['spec']['users'][0]['scramCredentialsSecretName']": {
+                  "prev": "my-scram",
+                  "curr": "oad5qinmos.f",
+                  "path": [
+                        "spec",
+                        "users",
+                        0,
+                        "scramCredentialsSecretName"
+                  ]
+            }
+      }
+}
+---------- SYSTEM DELTA ----------
+{
+      "pod": {
+            "values_changed": {
+                  "root['test-cluster-0']['metadata']['annotations']['agent.mongodb.com/version']": {
+                        "prev": "1",
+                        "curr": "2",
+                        "path": [
+                              "test-cluster-0",
+                              "metadata",
+                              "annotations",
+                              "agent.mongodb.com/version"
+                        ]
+                  },
+                  "root['test-cluster-1']['metadata']['annotations']['agent.mongodb.com/version']": {
+                        "prev": "1",
+                        "curr": "2",
+                        "path": [
+                              "test-cluster-1",
+                              "metadata",
+                              "annotations",
+                              "agent.mongodb.com/version"
+                        ]
+                  },
+                  "root['test-cluster-2']['metadata']['annotations']['agent.mongodb.com/version']": {
+                        "prev": "1",
+                        "curr": "2",
+                        "path": [
+                              "test-cluster-2",
+                              "metadata",
+                              "annotations",
+                              "agent.mongodb.com/version"
+                        ]
+                  }
+            }
+      },
+      "deployment_pods": {},
+      "stateful_set": {},
+      "deployment": {},
+      "config_map": {},
+      "service": {},
+      "service_account": {},
+      "pvc": {},
+      "cronjob": {},
+      "ingress": {},
+      "network_policy": {},
+      "pod_disruption_budget": {},
+      "secret": {
+            "values_changed": {
+                  "root['test-cluster-config']['data']['cluster-config.json']": {
+                        "prev": "{\"version\":1,\"processes\":[{\"name\":\"test-cluster-0\",\"disabled\":false,\"hostname\":\"test-cluster-0.test-cluster-svc.mongodb.svc.cluster.local\",\"args2_6\":{\"net\":{\"port\":27017},\"replication\":{\"replSetName\":\"test-cluster\"},\"storage\":{\"dbPath\":\"/data\"}},\"featureCompatibilityVersion\":\"4.4\",\"processType\":\"mongod\",\"version\":\"4.4.0\",\"authSchemaVersion\":5},{\"name\":\"test-cluster-1\",\"disabled\":false,\"hostname\":\"test-cluster-1.test-cluster-svc.mongodb.svc.cluster.local\",\"args2_6\":{\"net\":{\"port\":27017},\"replication\":{\"replSetName\":\"test-cluster\"},\"storage\":{\"dbPath\":\"/data\"}},\"featureCompatibilityVersion\":\"4.4\",\"processType\":\"mongod\",\"version\":\"4.4.0\",\"authSchemaVersion\":5},{\"name\":\"test-cluster-2\",\"disabled\":false,\"hostname\":\"test-cluster-2.test-cluster-svc.mongodb.svc.cluster.local\",\"args2_6\":{\"net\":{\"port\":27017},\"replication\":{\"replSetName\":\"test-cluster\"},\"storage\":{\"dbPath\":\"/data\"}},\"featureCompatibilityVersion\":\"4.4\",\"processType\":\"mongod\",\"version\":\"4.4.0\",\"authSchemaVersion\":5}],\"replicaSets\":[{\"_id\":\"test-cluster\",\"members\":[{\"_id\":0,\"host\":\"test-cluster-0\",\"priority\":1,\"arbiterOnly\":false,\"votes\":1},{\"_id\":1,\"host\":\"test-cluster-1\",\"priority\":1,\"arbiterOnly\":false,\"votes\":1},{\"_id\":2,\"host\":\"test-cluster-2\",\"priority\":1,\"arbiterOnly\":false,\"votes\":1}],\"protocolVersion\":\"1\",\"numberArbiters\":0}],\"auth\":{\"usersWanted\":[{\"mechanisms\":[],\"roles\":[{\"role\":\"clusterAdmin\",\"db\":\"admin\"},{\"role\":\"userAdminAnyDatabase\",\"db\":\"admin\"}],\"user\":\"my-user\",\"db\":\"admin\",\"authenticationRestrictions\":[],\"scramSha256Creds\":{\"iterationCount\":15000,\"salt\":\"Zwa9iEH76BMH8k7CowrmJ95ymP/fnYrIr2/7yQ==\",\"serverKey\":\"Q2yL5Jgs8efRDewwGxN1Zu3eG/Qy9lTHYdUzRKySM70=\",\"storedKey\":\"lcS9ZUODsJYQ6BxQarO0EvGwY55lmsAKFQOllesleOo=\"},\"scramSha1Creds\":{\"iterationCount\":10000,\"salt\":\"FHhLmxNJUqakiPt084b9ww==\",\"serverKey\":\"0HUfllV99HU/of8s11gECfAvifc=\",\"storedKey\":\"Aa+a7HfwU630gfiPnducZYWIdN8=\"}}],\"disabled\":false,\"authoritativeSet\":false,\"autoAuthMechanisms\":[\"SCRAM-SHA-256\"],\"autoAuthMechanism\":\"SCRAM-SHA-256\",\"deploymentAuthMechanisms\":[\"SCRAM-SHA-256\"],\"autoUser\":\"mms-automation\",\"key\":\"57Us7UEgO3KMUvsEHp+fSm3gYpqPquGRZC+L2G0Kajy8qtQqWIlqcYyG4Ekgbn4XSWAh+Vtn3ksmjT7akZPBn9X4YA2lpR9ULfqcMNavRkXTAm6aoGvwXo1e+KJWkTUCG1dfAcQMgoSOjzwRpjQ+BZ33oFuoLKzVKhkW5jyaxl/vdq2+3/OuhV81YDk8PanTgpV7PnhQGhcy3ISqzkoP4YoU0KWW7ra25hirPvQ0R2UgVzWYBZaOHYk8kuO6Zutz3au0HNheckS6agTIHE2sv+v6QQjhDqV2UG46Iadk6gePIbFIInt0FjN9fwJaYNukwjgcYrLGGw+l+QyrYvhyN7P4UXwSPin8mTLb/qZPKlh8eolo2zkSyCUzFpczYEbNNNFm0Y2gKkOLDh7mnBNQOHrpRNqFtxrU5S7A8937KF+Xk0itkWmBYIEO96uxRYSX3jVcn/D12iH2iq1rWLnnDaZ3pe2d2X4TWGX+2t9L/AQ+dJtklHXL36H6xyMZ3I/9sJA7yj4IKFw2QOfiuiLW64h28h2ZxHmm+xvznJqH/iAHM9STDRe5wauNULNAmIVAy+GovzwjOMz+GgULcSNq+UQgrhK4tgDTmfvNKEH/3wJ3Bt1z5HN7MIrq0BGWT3Ld4ia/r9LrYwGwQbislRE/KDamebE=\",\"keyfile\":\"/var/lib/mongodb-mms-automation/authentication/keyfile\",\"keyfileWindows\":\"%SystemDrive%\\\\MMSAutomation\\\\versions\\\\keyfile\",\"autoPwd\":\"KB40UMu_4H1t38riJsV4\"},\"tls\":{\"CAFilePath\":\"\",\"clientCertificateMode\":\"OPTIONAL\"},\"mongoDbVersions\":[{\"name\":\"4.4.0\",\"builds\":[{\"platform\":\"linux\",\"url\":\"\",\"gitVersion\":\"\",\"architecture\":\"amd64\",\"flavor\":\"rhel\",\"minOsVersion\":\"\",\"maxOsVersion\":\"\",\"modules\":[]},{\"platform\":\"linux\",\"url\":\"\",\"gitVersion\":\"\",\"architecture\":\"amd64\",\"flavor\":\"ubuntu\",\"minOsVersion\":\"\",\"maxOsVersion\":\"\",\"modules\":[]}]}],\"backupVersions\":[],\"monitoringVersions\":[],\"options\":{\"downloadBase\":\"/var/lib/mongodb-mms-automation\"}}",
+                        "curr": "{\"version\":2,\"processes\":[{\"name\":\"test-cluster-0\",\"disabled\":false,\"hostname\":\"test-cluster-0.test-cluster-svc.mongodb.svc.cluster.local\",\"args2_6\":{\"net\":{\"port\":27017},\"replication\":{\"replSetName\":\"test-cluster\"},\"storage\":{\"dbPath\":\"/data\"}},\"featureCompatibilityVersion\":\"4.4\",\"processType\":\"mongod\",\"version\":\"4.4.0\",\"authSchemaVersion\":5},{\"name\":\"test-cluster-1\",\"disabled\":false,\"hostname\":\"test-cluster-1.test-cluster-svc.mongodb.svc.cluster.local\",\"args2_6\":{\"net\":{\"port\":27017},\"replication\":{\"replSetName\":\"test-cluster\"},\"storage\":{\"dbPath\":\"/data\"}},\"featureCompatibilityVersion\":\"4.4\",\"processType\":\"mongod\",\"version\":\"4.4.0\",\"authSchemaVersion\":5},{\"name\":\"test-cluster-2\",\"disabled\":false,\"hostname\":\"test-cluster-2.test-cluster-svc.mongodb.svc.cluster.local\",\"args2_6\":{\"net\":{\"port\":27017},\"replication\":{\"replSetName\":\"test-cluster\"},\"storage\":{\"dbPath\":\"/data\"}},\"featureCompatibilityVersion\":\"4.4\",\"processType\":\"mongod\",\"version\":\"4.4.0\",\"authSchemaVersion\":5}],\"replicaSets\":[{\"_id\":\"test-cluster\",\"members\":[{\"_id\":0,\"host\":\"test-cluster-0\",\"priority\":1,\"arbiterOnly\":false,\"votes\":1},{\"_id\":1,\"host\":\"test-cluster-1\",\"priority\":1,\"arbiterOnly\":false,\"votes\":1},{\"_id\":2,\"host\":\"test-cluster-2\",\"priority\":1,\"arbiterOnly\":false,\"votes\":1}],\"protocolVersion\":\"1\",\"numberArbiters\":0}],\"auth\":{\"usersWanted\":[{\"mechanisms\":[],\"roles\":[{\"role\":\"clusterAdmin\",\"db\":\"admin\"},{\"role\":\"userAdminAnyDatabase\",\"db\":\"admin\"}],\"user\":\"my-user\",\"db\":\"admin\",\"authenticationRestrictions\":[],\"scramSha256Creds\":{\"iterationCount\":15000,\"salt\":\"sO0vXM6hkqdjTe+FaIeppQpNMODRJejunYF/BA==\",\"serverKey\":\"wCSEAuMKEo5Di7bOm9Cc4MF1nO9e/4SI9x3mof6NRVs=\",\"storedKey\":\"tu6/QldaTRz1S6i0eYCw/IL6UnXTJSs1W0+ZJRLfa+0=\"},\"scramSha1Creds\":{\"iterationCount\":10000,\"salt\":\"Hg3Ddt1JFq09KsLSCWoHCg==\",\"serverKey\":\"liut1CFs/gnf0zBsuWaCIA2WtR8=\",\"storedKey\":\"zEhQ5+72FSM8pVhiixsFJ5q6mUw=\"}}],\"disabled\":false,\"authoritativeSet\":false,\"autoAuthMechanisms\":[\"SCRAM-SHA-256\"],\"autoAuthMechanism\":\"SCRAM-SHA-256\",\"deploymentAuthMechanisms\":[\"SCRAM-SHA-256\"],\"autoUser\":\"mms-automation\",\"key\":\"57Us7UEgO3KMUvsEHp+fSm3gYpqPquGRZC+L2G0Kajy8qtQqWIlqcYyG4Ekgbn4XSWAh+Vtn3ksmjT7akZPBn9X4YA2lpR9ULfqcMNavRkXTAm6aoGvwXo1e+KJWkTUCG1dfAcQMgoSOjzwRpjQ+BZ33oFuoLKzVKhkW5jyaxl/vdq2+3/OuhV81YDk8PanTgpV7PnhQGhcy3ISqzkoP4YoU0KWW7ra25hirPvQ0R2UgVzWYBZaOHYk8kuO6Zutz3au0HNheckS6agTIHE2sv+v6QQjhDqV2UG46Iadk6gePIbFIInt0FjN9fwJaYNukwjgcYrLGGw+l+QyrYvhyN7P4UXwSPin8mTLb/qZPKlh8eolo2zkSyCUzFpczYEbNNNFm0Y2gKkOLDh7mnBNQOHrpRNqFtxrU5S7A8937KF+Xk0itkWmBYIEO96uxRYSX3jVcn/D12iH2iq1rWLnnDaZ3pe2d2X4TWGX+2t9L/AQ+dJtklHXL36H6xyMZ3I/9sJA7yj4IKFw2QOfiuiLW64h28h2ZxHmm+xvznJqH/iAHM9STDRe5wauNULNAmIVAy+GovzwjOMz+GgULcSNq+UQgrhK4tgDTmfvNKEH/3wJ3Bt1z5HN7MIrq0BGWT3Ld4ia/r9LrYwGwQbislRE/KDamebE=\",\"keyfile\":\"/var/lib/mongodb-mms-automation/authentication/keyfile\",\"keyfileWindows\":\"%SystemDrive%\\\\MMSAutomation\\\\versions\\\\keyfile\",\"autoPwd\":\"KB40UMu_4H1t38riJsV4\"},\"tls\":{\"CAFilePath\":\"\",\"clientCertificateMode\":\"OPTIONAL\"},\"mongoDbVersions\":[{\"name\":\"4.4.0\",\"builds\":[{\"platform\":\"linux\",\"url\":\"\",\"gitVersion\":\"\",\"architecture\":\"amd64\",\"flavor\":\"rhel\",\"minOsVersion\":\"\",\"maxOsVersion\":\"\",\"modules\":[]},{\"platform\":\"linux\",\"url\":\"\",\"gitVersion\":\"\",\"architecture\":\"amd64\",\"flavor\":\"ubuntu\",\"minOsVersion\":\"\",\"maxOsVersion\":\"\",\"modules\":[]}]}],\"backupVersions\":[],\"monitoringVersions\":[],\"options\":{\"downloadBase\":\"/var/lib/mongodb-mms-automation\"}}",
+                        "path": [
+                              "test-cluster-config",
+                              "data",
+                              "cluster-config.json"
+                        ]
+                  }
+            },
+            "dictionary_item_added": {
+                  "root['oad5qinmos.f-scram-credentials'][data][sha-1-server-key]": {
+                        "prev": "NotPresent",
+                        "curr": "liut1CFs/gnf0zBsuWaCIA2WtR8=",
+                        "path": [
+                              "oad5qinmos.f-scram-credentials",
+                              "data",
+                              "sha-1-server-key"
+                        ]
+                  },
+                  "root['oad5qinmos.f-scram-credentials'][data][sha-1-stored-key]": {
+                        "prev": "NotPresent",
+                        "curr": "zEhQ5+72FSM8pVhiixsFJ5q6mUw=",
+                        "path": [
+                              "oad5qinmos.f-scram-credentials",
+                              "data",
+                              "sha-1-stored-key"
+                        ]
+                  },
+                  "root['oad5qinmos.f-scram-credentials'][data][sha-256-server-key]": {
+                        "prev": "NotPresent",
+                        "curr": "wCSEAuMKEo5Di7bOm9Cc4MF1nO9e/4SI9x3mof6NRVs=",
+                        "path": [
+                              "oad5qinmos.f-scram-credentials",
+                              "data",
+                              "sha-256-server-key"
+                        ]
+                  },
+                  "root['oad5qinmos.f-scram-credentials'][data][sha-256-stored-key]": {
+                        "prev": "NotPresent",
+                        "curr": "tu6/QldaTRz1S6i0eYCw/IL6UnXTJSs1W0+ZJRLfa+0=",
+                        "path": [
+                              "oad5qinmos.f-scram-credentials",
+                              "data",
+                              "sha-256-stored-key"
+                        ]
+                  },
+                  "root['oad5qinmos.f-scram-credentials'][data][sha1-salt]": {
+                        "prev": "NotPresent",
+                        "curr": "Hg3Ddt1JFq09KsLSCWoHCg==",
+                        "path": [
+                              "oad5qinmos.f-scram-credentials",
+                              "data",
+                              "sha1-salt"
+                        ]
+                  },
+                  "root['oad5qinmos.f-scram-credentials'][data][sha256-salt]": {
+                        "prev": "NotPresent",
+                        "curr": "sO0vXM6hkqdjTe+FaIeppQpNMODRJejunYF/BA==",
+                        "path": [
+                              "oad5qinmos.f-scram-credentials",
+                              "data",
+                              "sha256-salt"
+                        ]
+                  },
+                  "root['oad5qinmos.f-scram-credentials'][metadata][creation_timestamp]": {
+                        "prev": "NotPresent",
+                        "curr": "2023-03-31T17:24:02+00:00",
+                        "path": [
+                              "oad5qinmos.f-scram-credentials",
+                              "metadata",
+                              "creation_timestamp"
+                        ]
+                  },
+                  "root['oad5qinmos.f-scram-credentials'][metadata][managed_fields][0][api_version]": {
+                        "prev": "NotPresent",
+                        "curr": "v1",
+                        "path": [
+                              "oad5qinmos.f-scram-credentials",
+                              "metadata",
+                              "managed_fields",
+                              0,
+                              "api_version"
+                        ]
+                  },
+                  "root['oad5qinmos.f-scram-credentials'][metadata][managed_fields][0][fields_type]": {
+                        "prev": "NotPresent",
+                        "curr": "FieldsV1",
+                        "path": [
+                              "oad5qinmos.f-scram-credentials",
+                              "metadata",
+                              "managed_fields",
+                              0,
+                              "fields_type"
+                        ]
+                  },
+                  "root['oad5qinmos.f-scram-credentials'][metadata][managed_fields][0][manager]": {
+                        "prev": "NotPresent",
+                        "curr": "manager",
+                        "path": [
+                              "oad5qinmos.f-scram-credentials",
+                              "metadata",
+                              "managed_fields",
+                              0,
+                              "manager"
+                        ]
+                  },
+                  "root['oad5qinmos.f-scram-credentials'][metadata][managed_fields][0][operation]": {
+                        "prev": "NotPresent",
+                        "curr": "Update",
+                        "path": [
+                              "oad5qinmos.f-scram-credentials",
+                              "metadata",
+                              "managed_fields",
+                              0,
+                              "operation"
+                        ]
+                  },
+                  "root['oad5qinmos.f-scram-credentials'][metadata][managed_fields][0][time]": {
+                        "prev": "NotPresent",
+                        "curr": "2023-03-31T17:24:02+00:00",
+                        "path": [
+                              "oad5qinmos.f-scram-credentials",
+                              "metadata",
+                              "managed_fields",
+                              0,
+                              "time"
+                        ]
+                  },
+                  "root['oad5qinmos.f-scram-credentials'][metadata][name]": {
+                        "prev": "NotPresent",
+                        "curr": "oad5qinmos.f-scram-credentials",
+                        "path": [
+                              "oad5qinmos.f-scram-credentials",
+                              "metadata",
+                              "name"
+                        ]
+                  },
+                  "root['oad5qinmos.f-scram-credentials'][metadata][namespace]": {
+                        "prev": "NotPresent",
+                        "curr": "mongodb",
+                        "path": [
+                              "oad5qinmos.f-scram-credentials",
+                              "metadata",
+                              "namespace"
+                        ]
+                  },
+                  "root['oad5qinmos.f-scram-credentials'][metadata][resource_version]": {
+                        "prev": "NotPresent",
+                        "curr": "1542",
+                        "path": [
+                              "oad5qinmos.f-scram-credentials",
+                              "metadata",
+                              "resource_version"
+                        ]
+                  },
+                  "root['oad5qinmos.f-scram-credentials'][metadata][uid]": {
+                        "prev": "NotPresent",
+                        "curr": "9c118306-bb82-4a5f-85ad-3ad890c05e27",
+                        "path": [
+                              "oad5qinmos.f-scram-credentials",
+                              "metadata",
+                              "uid"
+                        ]
+                  },
+                  "root['oad5qinmos.f-scram-credentials'][type]": {
+                        "prev": "NotPresent",
+                        "curr": "Opaque",
+                        "path": [
+                              "oad5qinmos.f-scram-credentials",
+                              "type"
+                        ]
+                  }
+            }
+      },
+      "endpoints": {},
+      "job": {},
+      "role": {},
+      "role_binding": {},
+      "custom_resource_spec": {
+            "values_changed": {
+                  "root['users'][0]['scramCredentialsSecretName']": {
+                        "prev": "my-scram",
+                        "curr": "oad5qinmos.f",
+                        "path": [
+                              "users",
+                              0,
+                              "scramCredentialsSecretName"
+                        ]
+                  }
+            }
+      },
+      "custom_resource_status": {}
+}

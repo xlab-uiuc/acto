@@ -1,0 +1,94 @@
+---------- INPUT DELTA  ----------
+{
+      "dictionary_item_added": {
+            "root['spec']['dataStore']['pvc']['spec']['resources']['limits'][storage]": {
+                  "prev": "NotPresent",
+                  "curr": "1000m",
+                  "path": [
+                        "spec",
+                        "dataStore",
+                        "pvc",
+                        "spec",
+                        "resources",
+                        "limits",
+                        "storage"
+                  ]
+            }
+      }
+}
+---------- SYSTEM DELTA ----------
+{
+      "pod": {},
+      "deployment_pods": {},
+      "stateful_set": {},
+      "deployment": {},
+      "config_map": {},
+      "service": {},
+      "service_account": {},
+      "pvc": {},
+      "cronjob": {},
+      "ingress": {},
+      "network_policy": {},
+      "pod_disruption_budget": {},
+      "secret": {},
+      "endpoints": {},
+      "job": {},
+      "role": {},
+      "role_binding": {},
+      "custom_resource_spec": {
+            "dictionary_item_added": {
+                  "root['dataStore']['pvc']['spec']['resources']['limits'][storage]": {
+                        "prev": "NotPresent",
+                        "curr": "1",
+                        "path": [
+                              "dataStore",
+                              "pvc",
+                              "spec",
+                              "resources",
+                              "limits",
+                              "storage"
+                        ]
+                  }
+            }
+      },
+      "custom_resource_status": {
+            "iterable_item_added": {
+                  "root['operatorActions'][1][lastTransitionTime]": {
+                        "prev": "NotPresent",
+                        "curr": "2023-04-02T05:27:17Z",
+                        "path": [
+                              "operatorActions",
+                              1,
+                              "lastTransitionTime"
+                        ]
+                  },
+                  "root['operatorActions'][1][message]": {
+                        "prev": "NotPresent",
+                        "curr": "failed to reconcile test-cluster: StatefulSet.apps \"test-cluster\" is invalid: spec: Forbidden: updates to statefulset spec for fields other than 'replicas', 'template', 'updateStrategy' and 'minReadySeconds' are forbidden",
+                        "path": [
+                              "operatorActions",
+                              1,
+                              "message"
+                        ]
+                  },
+                  "root['operatorActions'][1][status]": {
+                        "prev": "NotPresent",
+                        "curr": "Failed",
+                        "path": [
+                              "operatorActions",
+                              1,
+                              "status"
+                        ]
+                  },
+                  "root['operatorActions'][1][type]": {
+                        "prev": "NotPresent",
+                        "curr": "Deploy",
+                        "path": [
+                              "operatorActions",
+                              1,
+                              "type"
+                        ]
+                  }
+            }
+      }
+}

@@ -1,0 +1,93 @@
+---------- INPUT DELTA  ----------
+{
+      "values_changed": {
+            "root['spec']['kubernetesClusterDomain']": {
+                  "prev": "ACTOKEY",
+                  "curr": "",
+                  "path": [
+                        "spec",
+                        "kubernetesClusterDomain"
+                  ]
+            }
+      }
+}
+---------- SYSTEM DELTA ----------
+{
+      "pod": {},
+      "deployment_pods": {},
+      "stateful_set": {
+            "values_changed": {
+                  "root['test-cluster']['metadata']['labels']['owner-rv']": {
+                        "prev": "1726",
+                        "curr": "1806",
+                        "path": [
+                              "test-cluster",
+                              "metadata",
+                              "labels",
+                              "owner-rv"
+                        ]
+                  }
+            }
+      },
+      "deployment": {},
+      "config_map": {
+            "values_changed": {
+                  "root['test-cluster-configmap']['data']['env.sh']": {
+                        "prev": "#!/usr/bin/env bash\n\nDOMAIN=test-cluster-headless.acto-namespace.svc.ACTOKEY\nQUORUM_PORT=2888\nLEADER_PORT=3888\nCLIENT_HOST=test-cluster-client\nCLIENT_PORT=2181\nADMIN_SERVER_HOST=test-cluster-admin-server\nADMIN_SERVER_PORT=8080\nCLUSTER_NAME=test-cluster\nCLUSTER_SIZE=3\n",
+                        "curr": "#!/usr/bin/env bash\n\nDOMAIN=test-cluster-headless.acto-namespace.svc.cluster.local\nQUORUM_PORT=2888\nLEADER_PORT=3888\nCLIENT_HOST=test-cluster-client\nCLIENT_PORT=2181\nADMIN_SERVER_HOST=test-cluster-admin-server\nADMIN_SERVER_PORT=8080\nCLUSTER_NAME=test-cluster\nCLUSTER_SIZE=3\n",
+                        "path": [
+                              "test-cluster-configmap",
+                              "data",
+                              "env.sh"
+                        ]
+                  }
+            }
+      },
+      "service": {},
+      "service_account": {},
+      "pvc": {},
+      "cronjob": {},
+      "ingress": {},
+      "network_policy": {},
+      "pod_disruption_budget": {},
+      "secret": {},
+      "endpoints": {},
+      "job": {},
+      "role": {},
+      "role_binding": {},
+      "custom_resource_spec": {
+            "values_changed": {
+                  "root['kubernetesClusterDomain']": {
+                        "prev": "ACTOKEY",
+                        "curr": "",
+                        "path": [
+                              "kubernetesClusterDomain"
+                        ]
+                  }
+            }
+      },
+      "custom_resource_status": {
+            "iterable_item_removed": {
+                  "root['members']['ready'][2]": {
+                        "prev": "test-cluster-2",
+                        "curr": "NotPresent",
+                        "path": [
+                              "members",
+                              "ready",
+                              2
+                        ]
+                  }
+            },
+            "iterable_item_added": {
+                  "root['members']['ready'][0]": {
+                        "prev": "NotPresent",
+                        "curr": "test-cluster-2",
+                        "path": [
+                              "members",
+                              "ready",
+                              0
+                        ]
+                  }
+            }
+      }
+}

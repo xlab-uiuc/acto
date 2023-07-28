@@ -1,0 +1,49 @@
+apiVersion: mongodbcommunity.mongodb.com/v1
+kind: MongoDBCommunity
+metadata:
+  name: test-cluster
+  namespace: mongodb
+spec:
+  automationConfig:
+    processes:
+    - disabled: false
+      name: test-cluster-1
+  members: 3
+  security:
+    authentication:
+      modes:
+      - SCRAM
+  statefulSet:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: mongod
+            resources:
+              limits:
+                cpu: '1'
+                memory: 1000M
+              requests:
+                cpu: '1'
+                memory: '500000000'
+          - name: mongodb-agent
+            resources:
+              limits:
+                cpu: '1'
+                memory: 1000M
+              requests:
+                cpu: '1'
+                memory: 1000M
+  type: ReplicaSet
+  users:
+  - db: admin
+    name: my-user
+    passwordSecretRef:
+      name: my-user-password
+    roles:
+    - db: admin
+      name: clusterAdmin
+    - db: admin
+      name: userAdminAnyDatabase
+    scramCredentialsSecretName: my-scram
+  version: 4.4.0

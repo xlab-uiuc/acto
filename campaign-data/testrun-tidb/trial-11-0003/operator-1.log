@@ -1,0 +1,96 @@
+  	Ports: []v1.ServicePort{
+  		{Name: "mysql-client", Protocol: "TCP", Port: 4000, TargetPort: {IntVal: 4000}, ...},
++ 		{Protocol: "TCP", TargetPort: intstr.IntOrString{Type: 1, StrVal: "ACTOKEY"}},
+  		{Name: "status", Protocol: "TCP", Port: 10080, TargetPort: {IntVal: 10080}, ...},
+  	},
+  	Selector:  {"app.kubernetes.io/component": "tidb", "app.kubernetes.io/instance": "test-cluster", "app.kubernetes.io/managed-by": "tidb-operator", "app.kubernetes.io/name": "tidb-cluster"},
+  	ClusterIP: "",
+  	... // 12 identical fields
+  }
+I0402 07:42:20.778961       1 tidb_member_manager.go:442] Sync TiDB service acto-namespace/test-cluster-tidb, spec equal: false, annotations equal: true, label equal: true
+E0402 07:42:20.783809       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed Service "test-cluster-tidb" is invalid: [spec.ports[1].name: Required value, spec.ports[1].port: Invalid value: 0: must be between 1 and 65535, inclusive, spec.ports[1].targetPort: Invalid value: "ACTOKEY": must contain only alpha-numeric characters (a-z, 0-9), and hyphens (-), spec.ports[1].targetPort: Invalid value: "ACTOKEY": must contain at least one letter or number (a-z, 0-9)], requeuing
+I0402 07:42:21.880033       1 equality.go:87] Service spec diff for acto-namespace/test-cluster-tidb:   v1.ServiceSpec{
+  	Ports: []v1.ServicePort{
+  		{Name: "mysql-client", Protocol: "TCP", Port: 4000, TargetPort: {IntVal: 4000}, ...},
++ 		{Protocol: "TCP", TargetPort: intstr.IntOrString{Type: 1, StrVal: "ACTOKEY"}},
+  		{Name: "status", Protocol: "TCP", Port: 10080, TargetPort: {IntVal: 10080}, ...},
+  	},
+  	Selector:  {"app.kubernetes.io/component": "tidb", "app.kubernetes.io/instance": "test-cluster", "app.kubernetes.io/managed-by": "tidb-operator", "app.kubernetes.io/name": "tidb-cluster"},
+  	ClusterIP: "",
+  	... // 12 identical fields
+  }
+I0402 07:42:21.880115       1 tidb_member_manager.go:442] Sync TiDB service acto-namespace/test-cluster-tidb, spec equal: false, annotations equal: true, label equal: true
+E0402 07:42:21.886285       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed Service "test-cluster-tidb" is invalid: [spec.ports[1].name: Required value, spec.ports[1].port: Invalid value: 0: must be between 1 and 65535, inclusive, spec.ports[1].targetPort: Invalid value: "ACTOKEY": must contain only alpha-numeric characters (a-z, 0-9), and hyphens (-), spec.ports[1].targetPort: Invalid value: "ACTOKEY": must contain at least one letter or number (a-z, 0-9)], requeuing
+I0402 07:42:23.985332       1 equality.go:87] Service spec diff for acto-namespace/test-cluster-tidb:   v1.ServiceSpec{
+  	Ports: []v1.ServicePort{
+  		{Name: "mysql-client", Protocol: "TCP", Port: 4000, TargetPort: {IntVal: 4000}, ...},
++ 		{Protocol: "TCP", TargetPort: intstr.IntOrString{Type: 1, StrVal: "ACTOKEY"}},
+  		{Name: "status", Protocol: "TCP", Port: 10080, TargetPort: {IntVal: 10080}, ...},
+  	},
+  	Selector:  {"app.kubernetes.io/component": "tidb", "app.kubernetes.io/instance": "test-cluster", "app.kubernetes.io/managed-by": "tidb-operator", "app.kubernetes.io/name": "tidb-cluster"},
+  	ClusterIP: "",
+  	... // 12 identical fields
+  }
+I0402 07:42:23.985371       1 tidb_member_manager.go:442] Sync TiDB service acto-namespace/test-cluster-tidb, spec equal: false, annotations equal: true, label equal: true
+E0402 07:42:23.989541       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed Service "test-cluster-tidb" is invalid: [spec.ports[1].name: Required value, spec.ports[1].port: Invalid value: 0: must be between 1 and 65535, inclusive, spec.ports[1].targetPort: Invalid value: "ACTOKEY": must contain only alpha-numeric characters (a-z, 0-9), and hyphens (-), spec.ports[1].targetPort: Invalid value: "ACTOKEY": must contain at least one letter or number (a-z, 0-9)], requeuing
+I0402 07:42:28.090634       1 equality.go:87] Service spec diff for acto-namespace/test-cluster-tidb:   v1.ServiceSpec{
+  	Ports: []v1.ServicePort{
+  		{Name: "mysql-client", Protocol: "TCP", Port: 4000, TargetPort: {IntVal: 4000}, ...},
++ 		{Protocol: "TCP", TargetPort: intstr.IntOrString{Type: 1, StrVal: "ACTOKEY"}},
+  		{Name: "status", Protocol: "TCP", Port: 10080, TargetPort: {IntVal: 10080}, ...},
+  	},
+  	Selector:  {"app.kubernetes.io/component": "tidb", "app.kubernetes.io/instance": "test-cluster", "app.kubernetes.io/managed-by": "tidb-operator", "app.kubernetes.io/name": "tidb-cluster"},
+  	ClusterIP: "",
+  	... // 12 identical fields
+  }
+I0402 07:42:28.090666       1 tidb_member_manager.go:442] Sync TiDB service acto-namespace/test-cluster-tidb, spec equal: false, annotations equal: true, label equal: true
+E0402 07:42:28.095267       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed Service "test-cluster-tidb" is invalid: [spec.ports[1].name: Required value, spec.ports[1].port: Invalid value: 0: must be between 1 and 65535, inclusive, spec.ports[1].targetPort: Invalid value: "ACTOKEY": must contain only alpha-numeric characters (a-z, 0-9), and hyphens (-), spec.ports[1].targetPort: Invalid value: "ACTOKEY": must contain at least one letter or number (a-z, 0-9)], requeuing
+I0402 07:42:36.196856       1 equality.go:87] Service spec diff for acto-namespace/test-cluster-tidb:   v1.ServiceSpec{
+  	Ports: []v1.ServicePort{
+  		{Name: "mysql-client", Protocol: "TCP", Port: 4000, TargetPort: {IntVal: 4000}, ...},
++ 		{Protocol: "TCP", TargetPort: intstr.IntOrString{Type: 1, StrVal: "ACTOKEY"}},
+  		{Name: "status", Protocol: "TCP", Port: 10080, TargetPort: {IntVal: 10080}, ...},
+  	},
+  	Selector:  {"app.kubernetes.io/component": "tidb", "app.kubernetes.io/instance": "test-cluster", "app.kubernetes.io/managed-by": "tidb-operator", "app.kubernetes.io/name": "tidb-cluster"},
+  	ClusterIP: "",
+  	... // 12 identical fields
+  }
+I0402 07:42:36.196900       1 tidb_member_manager.go:442] Sync TiDB service acto-namespace/test-cluster-tidb, spec equal: false, annotations equal: true, label equal: true
+E0402 07:42:36.206624       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed Service "test-cluster-tidb" is invalid: [spec.ports[1].name: Required value, spec.ports[1].port: Invalid value: 0: must be between 1 and 65535, inclusive, spec.ports[1].targetPort: Invalid value: "ACTOKEY": must contain only alpha-numeric characters (a-z, 0-9), and hyphens (-), spec.ports[1].targetPort: Invalid value: "ACTOKEY": must contain at least one letter or number (a-z, 0-9)], requeuing
+I0402 07:42:47.493341       1 equality.go:87] Service spec diff for acto-namespace/test-cluster-tidb:   v1.ServiceSpec{
+  	Ports: []v1.ServicePort{
+  		{Name: "mysql-client", Protocol: "TCP", Port: 4000, TargetPort: {IntVal: 4000}, ...},
++ 		{Protocol: "TCP", TargetPort: intstr.IntOrString{Type: 1, StrVal: "ACTOKEY"}},
+  		{Name: "status", Protocol: "TCP", Port: 10080, TargetPort: {IntVal: 10080}, ...},
+  	},
+  	Selector:  {"app.kubernetes.io/component": "tidb", "app.kubernetes.io/instance": "test-cluster", "app.kubernetes.io/managed-by": "tidb-operator", "app.kubernetes.io/name": "tidb-cluster"},
+  	ClusterIP: "",
+  	... // 12 identical fields
+  }
+I0402 07:42:47.493375       1 tidb_member_manager.go:442] Sync TiDB service acto-namespace/test-cluster-tidb, spec equal: false, annotations equal: true, label equal: true
+E0402 07:42:47.499158       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed Service "test-cluster-tidb" is invalid: [spec.ports[1].name: Required value, spec.ports[1].port: Invalid value: 0: must be between 1 and 65535, inclusive, spec.ports[1].targetPort: Invalid value: "ACTOKEY": must contain only alpha-numeric characters (a-z, 0-9), and hyphens (-), spec.ports[1].targetPort: Invalid value: "ACTOKEY": must contain at least one letter or number (a-z, 0-9)], requeuing
+I0402 07:42:52.313063       1 equality.go:87] Service spec diff for acto-namespace/test-cluster-tidb:   v1.ServiceSpec{
+  	Ports: []v1.ServicePort{
+  		{Name: "mysql-client", Protocol: "TCP", Port: 4000, TargetPort: {IntVal: 4000}, ...},
++ 		{Protocol: "TCP", TargetPort: intstr.IntOrString{Type: 1, StrVal: "ACTOKEY"}},
+  		{Name: "status", Protocol: "TCP", Port: 10080, TargetPort: {IntVal: 10080}, ...},
+  	},
+  	Selector:  {"app.kubernetes.io/component": "tidb", "app.kubernetes.io/instance": "test-cluster", "app.kubernetes.io/managed-by": "tidb-operator", "app.kubernetes.io/name": "tidb-cluster"},
+  	ClusterIP: "",
+  	... // 12 identical fields
+  }
+I0402 07:42:52.313107       1 tidb_member_manager.go:442] Sync TiDB service acto-namespace/test-cluster-tidb, spec equal: false, annotations equal: true, label equal: true
+E0402 07:42:52.317299       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed Service "test-cluster-tidb" is invalid: [spec.ports[1].name: Required value, spec.ports[1].port: Invalid value: 0: must be between 1 and 65535, inclusive, spec.ports[1].targetPort: Invalid value: "ACTOKEY": must contain only alpha-numeric characters (a-z, 0-9), and hyphens (-), spec.ports[1].targetPort: Invalid value: "ACTOKEY": must contain at least one letter or number (a-z, 0-9)], requeuing
+I0402 07:43:17.477925       1 equality.go:87] Service spec diff for acto-namespace/test-cluster-tidb:   v1.ServiceSpec{
+  	Ports: []v1.ServicePort{
+  		{Name: "mysql-client", Protocol: "TCP", Port: 4000, TargetPort: {IntVal: 4000}, ...},
++ 		{Protocol: "TCP", TargetPort: intstr.IntOrString{Type: 1, StrVal: "ACTOKEY"}},
+  		{Name: "status", Protocol: "TCP", Port: 10080, TargetPort: {IntVal: 10080}, ...},
+  	},
+  	Selector:  {"app.kubernetes.io/component": "tidb", "app.kubernetes.io/instance": "test-cluster", "app.kubernetes.io/managed-by": "tidb-operator", "app.kubernetes.io/name": "tidb-cluster"},
+  	ClusterIP: "",
+  	... // 12 identical fields
+  }
+I0402 07:43:17.477970       1 tidb_member_manager.go:442] Sync TiDB service acto-namespace/test-cluster-tidb, spec equal: false, annotations equal: true, label equal: true
+E0402 07:43:17.483025       1 tidb_cluster_controller.go:126] TidbCluster: acto-namespace/test-cluster, sync failed Service "test-cluster-tidb" is invalid: [spec.ports[1].name: Required value, spec.ports[1].port: Invalid value: 0: must be between 1 and 65535, inclusive, spec.ports[1].targetPort: Invalid value: "ACTOKEY": must contain only alpha-numeric characters (a-z, 0-9), and hyphens (-), spec.ports[1].targetPort: Invalid value: "ACTOKEY": must contain at least one letter or number (a-z, 0-9)], requeuing
+

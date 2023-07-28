@@ -1,0 +1,36 @@
+Running ./manager
+2023-03-25T22:21:55.204Z	INFO	manager/main.go:74	Watching namespace: mongodb
+2023-03-25T22:21:55.260Z	INFO	manager/main.go:91	Registering Components.
+2023-03-25T22:21:55.261Z	INFO	manager/main.go:104	Starting the Cmd.
+2023-03-25T22:21:55.466Z	INFO	controllers/replica_set_controller.go:140	Reconciling MongoDB	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-25T22:21:55.466Z	DEBUG	controllers/replica_set_controller.go:142	Validating MongoDB.Spec	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-25T22:21:55.467Z	DEBUG	controllers/replica_set_controller.go:151	Ensuring the service exists	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-25T22:21:55.569Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-25T22:21:55.569Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-25T22:21:55.570Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-25T22:21:55.672Z	DEBUG	agent/replica_set_port_manager.go:122	No port change required	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-25T22:21:55.683Z	INFO	controllers/replica_set_controller.go:462	Create/Update operation succeeded	{"ReplicaSet": "mongodb/test-cluster", "operation": "updated"}
+2023-03-25T22:21:55.683Z	INFO	controllers/mongodb_tls.go:40	Ensuring TLS is correctly configured	{"ReplicaSet": "mongodb/test-cluster"}
+panic: runtime error: invalid memory address or nil pointer dereference
+[signal SIGSEGV: segmentation violation code=0x1 addr=0x0 pc=0x1391a8e]
+
+goroutine 350 [running]:
+github.com/mongodb/mongodb-kubernetes-operator/api/v1.MongoDBCommunity.TLSConfigMapNamespacedName(...)
+	/workspace/api/v1/mongodbcommunity_types.go:796
+github.com/mongodb/mongodb-kubernetes-operator/controllers.getCaCrt({_, _}, {_, _}, {{{0x13c4806, 0x10}, {0xc00019c500, 0x1f}}, {{0xc0007b42b0, 0xc}, ...}, ...})
+	/workspace/controllers/mongodb_tls.go:167 +0x12e
+github.com/mongodb/mongodb-kubernetes-operator/controllers.(*ReplicaSetReconciler).validateTLSConfig(_, {{{0x13c4806, 0x10}, {0xc00019c500, 0x1f}}, {{0xc0007b42b0, 0xc}, {0x0, 0x0}, {0xc0007b42a6, ...}, ...}, ...})
+	/workspace/controllers/mongodb_tls.go:43 +0x132
+github.com/mongodb/mongodb-kubernetes-operator/controllers.ReplicaSetReconciler.Reconcile({{0x19662d0, 0xc0007c14b0}, 0xc000246cb0, 0xc000622020, 0xc00019a140, 0xc00019a148}, {0x19241b8, 0xc000910120}, {{{0xc0007b42a6, 0x7}, ...}})
+	/workspace/controllers/replica_set_controller.go:160 +0x7fa
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile(0xc0001602c0, {0x19241b8, 0xc0009100f0}, {{{0xc0007b42a6, 0x15c8e80}, {0xc0007b42b0, 0x24c7f30}}})
+	/root/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.11.2/pkg/internal/controller/controller.go:114 +0x26f
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler(0xc0001602c0, {0x1924110, 0xc000894300}, {0x1521be0, 0xc00039a6c0})
+	/root/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.11.2/pkg/internal/controller/controller.go:311 +0x33e
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem(0xc0001602c0, {0x1924110, 0xc000894300})
+	/root/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.11.2/pkg/internal/controller/controller.go:266 +0x205
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2()
+	/root/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.11.2/pkg/internal/controller/controller.go:227 +0x85
+created by sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2
+	/root/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.11.2/pkg/internal/controller/controller.go:223 +0x357
+

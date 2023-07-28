@@ -1,0 +1,349 @@
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: test-cluster
+spec:
+  clusterName: cluster1
+  config:
+    cassandra-yaml:
+      authenticator: org.apache.cassandra.auth.PasswordAuthenticator
+      authorizer: org.apache.cassandra.auth.CassandraAuthorizer
+      role_manager: org.apache.cassandra.auth.CassandraRoleManager
+    jvm-options:
+      initial_heap_size: 800M
+      max_heap_size: 800M
+  managementApiAuth:
+    insecure: {}
+  podTemplateSpec:
+    spec:
+      containers:
+      - name: ACTOKEY
+      - name: ACTOKEY
+      volumes:
+      - awsElasticBlockStore:
+          fsType: ACTOKEY
+          partition: 0
+          readOnly: true
+          volumeID: ACTOKEY
+        azureDisk:
+          cachingMode: ACTOKEY
+          diskName: ACTOKEY
+          diskURI: ACTOKEY
+          fsType: ACTOKEY
+          kind: ACTOKEY
+          readOnly: true
+        azureFile:
+          readOnly: false
+          secretName: ACTOKEY
+          shareName: ACTOKEY
+        cephfs:
+          monitors:
+          - ACTOKEY
+          path: ACTOKEY
+          readOnly: false
+          secretFile: ACTOKEY
+          secretRef:
+            name: ACTOKEY
+          user: ACTOKEY
+        cinder:
+          fsType: null
+          readOnly: true
+          secretRef:
+            name: ACTOKEY
+          volumeID: ACTOKEY
+        configMap:
+          defaultMode: 1
+          items:
+          - key: ACTOKEY
+            mode: 3
+            path: ACTOKEY
+          - key: ACTOKEY
+            mode: 0
+            path: ACTOKEY
+          - key: ACTOKEY
+            mode: 1
+            path: ACTOKEY
+          - key: ACTOKEY
+            mode: 3
+            path: ACTOKEY
+          name: ACTOKEY
+          optional: false
+        csi:
+          driver: ACTOKEY
+          fsType: ACTOKEY
+          nodePublishSecretRef:
+            name: null
+          readOnly: false
+          volumeAttributes:
+            ACTOKEY: ACTOKEY
+        downwardAPI:
+          defaultMode: null
+          items:
+          - fieldRef:
+              apiVersion: ACTOKEY
+              fieldPath: ACTOKEY
+            mode: 4
+            path: ACTOKEY
+            resourceFieldRef:
+              containerName: null
+              divisor: null
+              resource: ACTOKEY
+        emptyDir:
+          medium: ACTOKEY
+          sizeLimit: 1
+        ephemeral:
+          volumeClaimTemplate:
+            metadata:
+              annotations:
+                ACTOKEY: ACTOKEY
+              finalizers:
+              - ACTOKEY
+              - ACTOKEY
+              labels:
+                ACTOKEY: ACTOKEY
+              name: ACTOKEY
+              namespace: ACTOKEY
+            spec:
+              accessModes: null
+              dataSource: null
+              dataSourceRef:
+                apiGroup: ACTOKEY
+                kind: ACTOKEY
+                name: ACTOKEY
+              resources:
+                limits:
+                  ACTOKEY: 26448492.19057431e507731
+                requests:
+                  ACTOKEY: '.6'
+              selector:
+                matchExpressions: []
+                matchLabels:
+                  ACTOKEY: ACTOKEY
+              storageClassName: null
+              volumeMode: ACTOKEY
+              volumeName: ACTOKEY
+        fc:
+          fsType: ACTOKEY
+          lun: 0
+          readOnly: true
+          targetWWNs: null
+          wwids: []
+        flexVolume:
+          driver: ACTOKEY
+          fsType: ACTOKEY
+          options:
+            ACTOKEY: ACTOKEY
+          readOnly: true
+          secretRef:
+            name: ACTOKEY
+        flocker:
+          datasetName: ACTOKEY
+          datasetUUID: ACTOKEY
+        gcePersistentDisk:
+          fsType: ACTOKEY
+          partition: 3
+          pdName: ACTOKEY
+          readOnly: false
+        gitRepo: null
+        glusterfs:
+          endpoints: ACTOKEY
+          path: ACTOKEY
+          readOnly: true
+        hostPath:
+          path: ACTOKEY
+          type: ACTOKEY
+        iscsi:
+          chapAuthDiscovery: false
+          chapAuthSession: true
+          fsType: ACTOKEY
+          initiatorName: ACTOKEY
+          iqn: ACTOKEY
+          iscsiInterface: ACTOKEY
+          lun: 0
+          portals:
+          - ACTOKEY
+          - ACTOKEY
+          - ACTOKEY
+          readOnly: false
+          secretRef:
+            name: null
+          targetPortal: ACTOKEY
+        name: ACTOKEY
+        nfs:
+          path: ACTOKEY
+          readOnly: true
+          server: ACTOKEY
+        persistentVolumeClaim: null
+        photonPersistentDisk:
+          fsType: ACTOKEY
+          pdID: ACTOKEY
+        portworxVolume:
+          fsType: null
+          readOnly: true
+          volumeID: ACTOKEY
+        projected:
+          defaultMode: 0
+          sources:
+          - configMap:
+              items:
+              - key: ACTOKEY
+                mode: 1
+                path: ACTOKEY
+              - key: ACTOKEY
+                mode: 2
+                path: ACTOKEY
+              - key: ACTOKEY
+                mode: 0
+                path: ACTOKEY
+              - key: ACTOKEY
+                mode: 5
+                path: ACTOKEY
+              name: ACTOKEY
+              optional: true
+            downwardAPI: null
+            secret:
+              items:
+              - key: ACTOKEY
+                mode: 5
+                path: ACTOKEY
+              - key: ACTOKEY
+                mode: 1
+                path: ACTOKEY
+              - key: ACTOKEY
+                mode: 4
+                path: ACTOKEY
+              - key: ACTOKEY
+                mode: null
+                path: ACTOKEY
+              - key: ACTOKEY
+                mode: 4
+                path: ACTOKEY
+              name: ACTOKEY
+              optional: true
+            serviceAccountToken: null
+          - configMap:
+              items:
+              - key: ACTOKEY
+                mode: 3
+                path: ACTOKEY
+              - key: ACTOKEY
+                mode: 0
+                path: ACTOKEY
+              - key: ACTOKEY
+                mode: 5
+                path: ACTOKEY
+              - key: ACTOKEY
+                mode: 5
+                path: ACTOKEY
+              name: null
+              optional: true
+            downwardAPI:
+              items:
+              - fieldRef:
+                  apiVersion: ACTOKEY
+                  fieldPath: ACTOKEY
+                mode: 1
+                path: ACTOKEY
+                resourceFieldRef:
+                  containerName: ACTOKEY
+                  divisor: 1
+                  resource: ACTOKEY
+              - fieldRef:
+                  apiVersion: ACTOKEY
+                  fieldPath: ACTOKEY
+                mode: 3
+                path: ACTOKEY
+                resourceFieldRef:
+                  containerName: ACTOKEY
+                  divisor: '-200.72'
+                  resource: ACTOKEY
+              - fieldRef:
+                  apiVersion: null
+                  fieldPath: ACTOKEY
+                mode: 3
+                path: ACTOKEY
+                resourceFieldRef:
+                  containerName: ACTOKEY
+                  divisor: +.3132E6498499876.237019521
+                  resource: ACTOKEY
+            secret:
+              items:
+              - key: ACTOKEY
+                mode: 5
+                path: ACTOKEY
+              name: ACTOKEY
+              optional: true
+            serviceAccountToken: null
+        quobyte:
+          group: ACTOKEY
+          readOnly: true
+          registry: ACTOKEY
+          tenant: ACTOKEY
+          user: ACTOKEY
+          volume: ACTOKEY
+        rbd:
+          fsType: ACTOKEY
+          image: ACTOKEY
+          keyring: null
+          monitors:
+          - ACTOKEY
+          pool: ACTOKEY
+          readOnly: true
+          secretRef:
+            name: ACTOKEY
+          user: ACTOKEY
+        scaleIO:
+          fsType: ACTOKEY
+          gateway: ACTOKEY
+          protectionDomain: ACTOKEY
+          readOnly: true
+          secretRef:
+            name: ACTOKEY
+          sslEnabled: false
+          storageMode: null
+          storagePool: ACTOKEY
+          system: ACTOKEY
+          volumeName: ACTOKEY
+        secret:
+          defaultMode: 5
+          items:
+          - key: ACTOKEY
+            mode: 5
+            path: ACTOKEY
+          - key: ACTOKEY
+            mode: 2
+            path: ACTOKEY
+          - key: ACTOKEY
+            mode: 0
+            path: ACTOKEY
+          - key: ACTOKEY
+            mode: 5
+            path: ACTOKEY
+          - key: ACTOKEY
+            mode: 1
+            path: ACTOKEY
+          optional: true
+          secretName: ACTOKEY
+        storageos:
+          fsType: ACTOKEY
+          readOnly: false
+          secretRef:
+            name: ACTOKEY
+          volumeName: null
+          volumeNamespace: ACTOKEY
+        vsphereVolume:
+          fsType: null
+          storagePolicyID: ACTOKEY
+          storagePolicyName: ACTOKEY
+          volumePath: ACTOKEY
+  serverType: cassandra
+  serverVersion: 3.11.7
+  size: 3
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 3Gi
+      storageClassName: server-storage

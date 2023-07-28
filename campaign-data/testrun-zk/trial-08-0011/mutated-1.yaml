@@ -1,0 +1,27 @@
+apiVersion: zookeeper.pravega.io/v1beta1
+kind: ZookeeperCluster
+metadata:
+  name: test-cluster
+spec:
+  image:
+    pullPolicy: IfNotPresent
+    repository: pravega/zookeeper
+    tag: 0.2.14
+  initContainers:
+  - name: ACTOKEY
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 1000m
+      requests:
+        cpu: 800m
+        memory: 1000m
+  persistence:
+    reclaimPolicy: Delete
+    spec:
+      resources:
+        requests:
+          storage: 20Gi
+      storageClassName: standard
+  replicas: 3
+  storageType: persistence

@@ -1,0 +1,45 @@
+{
+    "revert": false,
+    "generation": 1,
+    "testcase": {
+        "field": "[\"spec\", \"sentinel\", \"exporter\", \"image\"]",
+        "testcase": "string-change"
+    },
+    "feature_gate": 51,
+    "crash_result": "Pass",
+    "input_result": "Pass",
+    "health_result": {
+        "oracle": "SystemHealth",
+        "message": "deployment: rfs-test-cluster replicas [4] ready_replicas [3]\npod: rfs-test-cluster-78fc6dccc8-7mv6f\n"
+    },
+    "state_result": {
+        "oracle": "SystemState",
+        "message": "Matched delta inconsistent with input delta",
+        "input_delta": {
+            "prev": "NotPresent",
+            "curr": "ACTOKEY",
+            "path": [
+                "spec",
+                "sentinel",
+                "exporter",
+                "image"
+            ]
+        },
+        "matched_system_delta": {
+            "prev": "NotPresent",
+            "curr": "redis:6.2.6-alpine",
+            "path": [
+                "rfs-test-cluster",
+                3,
+                "spec",
+                "containers",
+                0,
+                "image"
+            ]
+        }
+    },
+    "log_result": "Pass",
+    "custom_result": null,
+    "misc_result": null,
+    "recovery_result": null
+}

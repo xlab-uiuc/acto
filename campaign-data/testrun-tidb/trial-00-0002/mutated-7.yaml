@@ -1,0 +1,54 @@
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: test-cluster
+spec:
+  configUpdateStrategy: RollingUpdate
+  enableDynamicConfiguration: true
+  helper:
+    image: busybox:1.34.1
+  pd:
+    baseImage: pingcap/pd
+    config: "[dashboard]\n  internal-proxy = true\n"
+    maxFailoverCount: 0
+    mountClusterClientSecret: true
+    replicas: 3
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    affinity: {}
+    baseImage: pingcap/tidb
+    config: "[performance]\n  tcp-keep-alive = true\n"
+    maxFailoverCount: 0
+    replicas: 0
+    service:
+      additionalPorts:
+      - appProtocol: ACTOKEY
+        name: ACTOKEY
+        nodePort: 1
+        port: 4
+        protocol: ACTOKEY
+        targetPort: 1
+      - appProtocol: ACTOKEY
+        name: ACTOKEY
+        nodePort: 0
+        port: 0
+        protocol: ACTOKEY
+        targetPort: 5
+      externalTrafficPolicy: Local
+      type: NodePort
+  tikv:
+    baseImage: pingcap/tikv
+    config: 'log-level = "info"
+
+      '
+    maxFailoverCount: 0
+    mountClusterClientSecret: true
+    recoverFailover: false
+    replicas: 3
+    requests:
+      storage: 100Gi
+    separateRaftLog: true
+  timezone: UTC
+  version: v5.4.0

@@ -1,0 +1,48 @@
+Running ./manager
+2023-03-25T22:40:51.453Z	INFO	manager/main.go:74	Watching namespace: mongodb
+2023-03-25T22:40:51.508Z	INFO	manager/main.go:91	Registering Components.
+2023-03-25T22:40:51.508Z	INFO	manager/main.go:104	Starting the Cmd.
+2023-03-25T22:40:51.611Z	INFO	controllers/replica_set_controller.go:140	Reconciling MongoDB	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-25T22:40:51.611Z	DEBUG	controllers/replica_set_controller.go:142	Validating MongoDB.Spec	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-25T22:40:51.611Z	DEBUG	controllers/replica_set_controller.go:151	Ensuring the service exists	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-25T22:40:51.712Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-25T22:40:51.712Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-25T22:40:51.712Z	DEBUG	agent/agent_readiness.go:101	The Pod '' doesn't have annotation 'agent.mongodb.com/version' yet	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-25T22:40:51.813Z	DEBUG	agent/replica_set_port_manager.go:122	No port change required	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-25T22:40:51.823Z	INFO	controllers/replica_set_controller.go:462	Create/Update operation succeeded	{"ReplicaSet": "mongodb/test-cluster", "operation": "updated"}
+2023-03-25T22:40:51.823Z	INFO	controllers/replica_set_controller.go:358	Creating/Updating AutomationConfig	{"ReplicaSet": "mongodb/test-cluster"}
+2023-03-25T22:40:51.846Z	DEBUG	scram/scram.go:168	Credentials have not changed, using credentials stored in: secret/my-scram-scram-credentials
+panic: runtime error: index out of range [0] with length 0
+
+goroutine 425 [running]:
+github.com/mongodb/mongodb-kubernetes-operator/api/v1.MongoDBCommunity.GetScramOptions({{{0x13c4806, 0x10}, {0xc00012ec80, 0x1f}}, {{0xc0003c8410, 0xc}, {0x0, 0x0}, {0xc0003c8420, 0x7}, ...}, ...})
+	/workspace/api/v1/mongodbcommunity_types.go:612 +0x33e
+github.com/mongodb/mongodb-kubernetes-operator/pkg/authentication/scram.Enable(0x1940660, {0x7f8d781351f8, 0xc000563d00}, {0x1940660, 0xc0004d0c00})
+	/workspace/pkg/authentication/scram/scram.go:140 +0x3a7
+github.com/mongodb/mongodb-kubernetes-operator/controllers.ReplicaSetReconciler.buildAutomationConfig({{_, _}, _, _, _, _}, {{{0x13c4806, 0x10}, {0xc00012ec80, 0x1f}}, ...})
+	/workspace/controllers/replica_set_controller.go:631 +0x49e
+github.com/mongodb/mongodb-kubernetes-operator/controllers.ReplicaSetReconciler.ensureAutomationConfig({{_, _}, _, _, _, _}, {{{0x13c4806, 0x10}, {0xc00012ec80, 0x1f}}, ...})
+	/workspace/controllers/replica_set_controller.go:512 +0x112
+github.com/mongodb/mongodb-kubernetes-operator/controllers.(*ReplicaSetReconciler).deployAutomationConfig(_, {{{0x13c4806, 0x10}, {0xc00012ec80, 0x1f}}, {{0xc0003c8410, 0xc}, {0x0, 0x0}, {0xc0003c8420, ...}, ...}, ...})
+	/workspace/controllers/replica_set_controller.go:365 +0x25d
+github.com/mongodb/mongodb-kubernetes-operator/controllers.(*ReplicaSetReconciler).deployMongoDBReplicaSet.func1()
+	/workspace/controllers/replica_set_controller.go:433 +0x4a
+github.com/mongodb/mongodb-kubernetes-operator/pkg/util/functions.runInOrder({0xc00065d648, 0x2, 0x0})
+	/workspace/pkg/util/functions/functions.go:16 +0x46
+github.com/mongodb/mongodb-kubernetes-operator/pkg/util/functions.RunSequentially(0x6, {0xc000cd5648, 0xc00012ec80, 0x1f})
+	/workspace/pkg/util/functions/functions.go:9 +0x2b
+github.com/mongodb/mongodb-kubernetes-operator/controllers.(*ReplicaSetReconciler).deployMongoDBReplicaSet(_, {{{0x13c4806, 0x10}, {0xc00012ec80, 0x1f}}, {{0xc0003c8410, 0xc}, {0x0, 0x0}, {0xc0003c8420, ...}, ...}, ...})
+	/workspace/controllers/replica_set_controller.go:431 +0x108
+github.com/mongodb/mongodb-kubernetes-operator/controllers.ReplicaSetReconciler.Reconcile({{0x19662d0, 0xc000563d00}, 0xc00025cd20, 0xc00063b3e8, 0xc00050a0d0, 0xc00050a0d8}, {0x19241b8, 0xc0002a9380}, {{{0xc0003c8420, 0x7}, ...}})
+	/workspace/controllers/replica_set_controller.go:201 +0xf33
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile(0xc000458210, {0x19241b8, 0xc0002a9350}, {{{0xc0003c8420, 0x15c8e80}, {0xc0003c8410, 0x413b14}}})
+	/root/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.11.2/pkg/internal/controller/controller.go:114 +0x26f
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler(0xc000458210, {0x1924110, 0xc000510e80}, {0x1521be0, 0xc000506000})
+	/root/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.11.2/pkg/internal/controller/controller.go:311 +0x33e
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem(0xc000458210, {0x1924110, 0xc000510e80})
+	/root/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.11.2/pkg/internal/controller/controller.go:266 +0x205
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2()
+	/root/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.11.2/pkg/internal/controller/controller.go:227 +0x85
+created by sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2
+	/root/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.11.2/pkg/internal/controller/controller.go:223 +0x357
+

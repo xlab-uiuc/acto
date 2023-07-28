@@ -1,0 +1,64 @@
+apiVersion: redis.redis.opstreelabs.in/v1beta1
+kind: RedisCluster
+metadata:
+  name: test-cluster
+spec:
+  clusterSize: 3
+  kubernetesConfig:
+    image: quay.io/opstree/redis:v6.2.5
+    imagePullPolicy: IfNotPresent
+    resources:
+      limits:
+        cpu: 101m
+        memory: 128Mi
+      requests:
+        cpu: 101m
+        memory: 128Mi
+  redisExporter:
+    enabled: true
+    image: quay.io/opstree/redis-exporter:1.0
+    imagePullPolicy: IfNotPresent
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+  redisFollower:
+    readinessProbe:
+      exec:
+        command:
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+      failureThreshold: 3
+      grpc:
+        port: 4
+        service: ACTOKEY
+      httpGet:
+        host: ACTOKEY
+        httpHeaders:
+        - name: ACTOKEY
+          value: ACTOKEY
+        - name: ACTOKEY
+          value: ACTOKEY
+        path: null
+        port: ACTOKEY
+        scheme: ACTOKEY
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      successThreshold: 1
+      tcpSocket:
+        host: ACTOKEY
+        port: 0
+      terminationGracePeriodSeconds: 2
+      timeoutSeconds: 4
+  storage:
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi

@@ -1,0 +1,82 @@
+apiVersion: operator.knative.dev/v1beta1
+kind: KnativeEventing
+metadata:
+  name: test-cluster
+  namespace: knative-eventing
+spec:
+  config:
+    config-kreference-mapping:
+      key1: value1
+  deployments:
+  - env:
+    - container: eventing-controller
+      envVars:
+      - name: ENVAR_1
+        value: VALUE_1
+    name: eventing-controller
+    resources:
+    - container: eventing-controller
+      limits:
+        cpu: 1000m
+        memory: 250M
+      requests:
+        cpu: 300m
+        memory: 100M
+  - affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+          - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+              - kind-worker
+              - kind-worker2
+              - kind-worker3kind-control-plane
+    annotations:
+      ACTOKEY: ACTOKEY
+    env:
+    - container: ACTOKEY
+      envVars:
+      - name: ACTOKEY
+        value: ACTOKEY
+        valueFrom:
+          configMapKeyRef:
+            key: ACTOKEY
+            name: ACTOKEY
+            optional: null
+          fieldRef: null
+          resourceFieldRef:
+            containerName: null
+            divisor: 3
+            resource: ACTOKEY
+          secretKeyRef:
+            key: ACTOKEY
+            name: ACTOKEY
+            optional: true
+    labels:
+      ACTOKEY: ACTOKEY
+    name: ACTOKEY
+    nodeSelector:
+      ACTOKEY: ACTOKEY
+    replicas: 3
+    resources:
+    - container: null
+      limits:
+        cpu: +2516075994GKki4361511
+        memory: null
+      requests: null
+    tolerations:
+    - effect: NoSchedule
+      key: test-key
+      operator: Equal
+      value: test-value
+    - effect: NoSchedule
+      key: node-role.kubernetes.io/control-plane
+      operator: Exists
+  podDisruptionBudgets:
+  - minAvailable: 50%
+    name: eventing-webhook
+  services:
+  - name: eventing-webhook
+  version: 1.6.0

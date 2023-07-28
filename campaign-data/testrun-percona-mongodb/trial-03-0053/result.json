@@ -1,0 +1,60 @@
+{
+      "trial_num": "03-0053",
+      "duration": "00:16:52",
+      "num_tests": 4,
+      "error": {
+            "revert": false,
+            "generation": 1,
+            "testcase": {
+                  "field": "[\"spec\", \"sharding\", \"mongos\", \"sidecars\", 0]",
+                  "testcase": "k8s-container_invalid_name"
+            },
+            "feature_gate": 51,
+            "crash_result": "Pass",
+            "input_result": "Pass",
+            "health_result": {
+                  "oracle": "SystemHealth",
+                  "message": "statefulset: test-cluster-mongos replicas [2] ready_replicas [1]\n"
+            },
+            "state_result": {
+                  "oracle": "SystemState",
+                  "message": "Matched delta inconsistent with input delta",
+                  "input_delta": {
+                        "prev": "NotPresent",
+                        "curr": "ubuntu",
+                        "path": [
+                              "spec",
+                              "sharding",
+                              "mongos",
+                              "sidecars",
+                              0,
+                              "image"
+                        ]
+                  },
+                  "matched_system_delta": {
+                        "prev": "percona/percona-server-mongodb:4.4.10-11",
+                        "curr": "NotPresent",
+                        "path": [
+                              "test-cluster-mongos-1",
+                              "spec",
+                              "containers",
+                              0,
+                              "image"
+                        ]
+                  }
+            },
+            "log_result": {
+                  "responsible_field": [
+                        "spec",
+                        "sharding",
+                        "mongos",
+                        "sidecars",
+                        0,
+                        "name"
+                  ]
+            },
+            "custom_result": null,
+            "misc_result": null,
+            "recovery_result": "Pass"
+      }
+}

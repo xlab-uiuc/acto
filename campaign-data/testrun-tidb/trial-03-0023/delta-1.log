@@ -1,0 +1,117 @@
+---------- INPUT DELTA  ----------
+{
+      "dictionary_item_added": {
+            "root['spec']['tidb']['additionalContainers'][0][livenessProbe][initialDelaySeconds]": {
+                  "prev": "NotPresent",
+                  "curr": 10,
+                  "path": [
+                        "spec",
+                        "tidb",
+                        "additionalContainers",
+                        0,
+                        "livenessProbe",
+                        "initialDelaySeconds"
+                  ]
+            },
+            "root['spec']['tidb']['additionalContainers'][0][livenessProbe][tcpSocket][port]": {
+                  "prev": "NotPresent",
+                  "curr": 8500,
+                  "path": [
+                        "spec",
+                        "tidb",
+                        "additionalContainers",
+                        0,
+                        "livenessProbe",
+                        "tcpSocket",
+                        "port"
+                  ]
+            },
+            "root['spec']['tidb']['additionalContainers'][0][name]": {
+                  "prev": "NotPresent",
+                  "curr": "ACTOKEY",
+                  "path": [
+                        "spec",
+                        "tidb",
+                        "additionalContainers",
+                        0,
+                        "name"
+                  ]
+            }
+      }
+}
+---------- SYSTEM DELTA ----------
+{
+      "pod": {},
+      "deployment_pods": {},
+      "stateful_set": {},
+      "deployment": {},
+      "config_map": {},
+      "service": {},
+      "service_account": {},
+      "pvc": {},
+      "cronjob": {},
+      "ingress": {},
+      "network_policy": {},
+      "pod_disruption_budget": {},
+      "secret": {},
+      "endpoints": {},
+      "job": {},
+      "role": {},
+      "role_binding": {},
+      "custom_resource_spec": {
+            "values_changed": {
+                  "root['tidb']['config']": {
+                        "prev": "[log]\n  [log.file]\n    max-backups = 3\n\n[performance]\n  tcp-keep-alive = true\n",
+                        "curr": "[performance]\n  tcp-keep-alive = true\n",
+                        "path": [
+                              "tidb",
+                              "config"
+                        ]
+                  }
+            },
+            "dictionary_item_added": {
+                  "root['tidb']['additionalContainers'][0][livenessProbe][initialDelaySeconds]": {
+                        "prev": "NotPresent",
+                        "curr": 10,
+                        "path": [
+                              "tidb",
+                              "additionalContainers",
+                              0,
+                              "livenessProbe",
+                              "initialDelaySeconds"
+                        ]
+                  },
+                  "root['tidb']['additionalContainers'][0][livenessProbe][tcpSocket][port]": {
+                        "prev": "NotPresent",
+                        "curr": 8500,
+                        "path": [
+                              "tidb",
+                              "additionalContainers",
+                              0,
+                              "livenessProbe",
+                              "tcpSocket",
+                              "port"
+                        ]
+                  },
+                  "root['tidb']['additionalContainers'][0][name]": {
+                        "prev": "NotPresent",
+                        "curr": "ACTOKEY",
+                        "path": [
+                              "tidb",
+                              "additionalContainers",
+                              0,
+                              "name"
+                        ]
+                  },
+                  "root['tikv']['recoverFailover']": {
+                        "prev": "NotPresent",
+                        "curr": false,
+                        "path": [
+                              "tikv",
+                              "recoverFailover"
+                        ]
+                  }
+            }
+      },
+      "custom_resource_status": {}
+}

@@ -1,0 +1,65 @@
+{
+    "revert": false,
+    "generation": 1,
+    "testcase": {
+        "field": "[\"spec\", \"pxc\", \"sidecars\"]",
+        "testcase": "array-pop"
+    },
+    "feature_gate": 51,
+    "crash_result": "Pass",
+    "input_result": "Pass",
+    "health_result": {
+        "oracle": "SystemHealth",
+        "message": "statefulset: test-cluster-pxc replicas [3] ready_replicas [2]\n"
+    },
+    "state_result": {
+        "oracle": "SystemState",
+        "message": "Matched delta inconsistent with input delta",
+        "input_delta": {
+            "prev": "NotPresent",
+            "curr": 2,
+            "path": [
+                "spec",
+                "pxc",
+                "sidecars",
+                0,
+                "env",
+                0,
+                "valueFrom",
+                "resourceFieldRef",
+                "divisor"
+            ]
+        },
+        "matched_system_delta": {
+            "prev": "NotPresent",
+            "curr": "69m",
+            "path": [
+                "test-cluster-pxc",
+                "spec",
+                "template",
+                "spec",
+                "containers",
+                4,
+                "env",
+                0,
+                "value_from",
+                "resource_field_ref",
+                "divisor"
+            ]
+        }
+    },
+    "log_result": {
+        "responsible_field": [
+            "spec",
+            "pxc",
+            "sidecars",
+            0,
+            "env",
+            0,
+            "name"
+        ]
+    },
+    "custom_result": null,
+    "misc_result": null,
+    "recovery_result": null
+}

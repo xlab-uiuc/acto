@@ -1,0 +1,110 @@
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: test-cluster
+  namespace: rabbitmq-system
+spec:
+  affinity:
+    podAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution: null
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+          - key: app.kubernetes.io/name
+            operator: In
+            values:
+            - test-cluster
+        topologyKey: kubernetes.io/hostname
+  image: null
+  imagePullSecrets: null
+  override:
+    service:
+      spec:
+        allocateLoadBalancerNodePorts: false
+        clusterIP: ACTOKEY
+        clusterIPs: null
+        externalIPs:
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+        externalName: ACTOKEY
+        externalTrafficPolicy: ACTOKEY
+        healthCheckNodePort: 3
+        internalTrafficPolicy: ACTOKEY
+        ipFamilies:
+        - ACTOKEY
+        ipFamilyPolicy: ACTOKEY
+        loadBalancerClass: null
+        loadBalancerIP: null
+        loadBalancerSourceRanges: []
+        ports:
+        - appProtocol: ACTOKEY
+          name: ACTOKEY
+          nodePort: 0
+          port: 3
+          protocol: null
+          targetPort: ACTOKEY
+        - appProtocol: null
+          name: ACTOKEY
+          nodePort: 1
+          port: 1
+          protocol: ACTOKEY
+          targetPort: 3
+        - appProtocol: ACTOKEY
+          name: ACTOKEY
+          nodePort: 1
+          port: 4
+          protocol: ACTOKEY
+          targetPort: null
+        - appProtocol: ACTOKEY
+          name: ACTOKEY
+          nodePort: 2
+          port: 3
+          protocol: ACTOKEY
+          targetPort: ACTOKEY
+        - appProtocol: ACTOKEY
+          name: ACTOKEY
+          nodePort: 1
+          port: 3
+          protocol: ACTOKEY
+          targetPort: 5
+        publishNotReadyAddresses: false
+        selector:
+          ACTOKEY: ACTOKEY
+        sessionAffinity: ACTOKEY
+        sessionAffinityConfig:
+          clientIP:
+            timeoutSeconds: 4
+        topologyKeys: []
+        type: null
+  persistence:
+    storage: 50Gi
+  rabbitmq:
+    additionalConfig: 'cluster_partition_handling = pause_minority
+
+      vm_memory_high_watermark_paging_ratio = 0.99
+
+      disk_free_limit.relative = 1.0
+
+      collect_statistics_interval = 10000
+
+      '
+  replicas: 3
+  resources:
+    limits:
+      cpu: 1
+      memory: 4Gi
+    requests:
+      cpu: 1
+      memory: 4Gi
+  secretBackend: null
+  service:
+    type: ClusterIP
+  skipPostDeploySteps: false
+  terminationGracePeriodSeconds: 1024
+  tls:
+    caSecretName: null
+    disableNonTLSListeners: false
+    secretName: null
+  tolerations: null

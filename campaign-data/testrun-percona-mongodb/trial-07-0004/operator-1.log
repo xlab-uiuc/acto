@@ -1,0 +1,576 @@
+{"level":"info","ts":1680281423.3419154,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281423.3419292,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281423.3419383,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281423.3422391,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281423.3422585,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281523.4980843,"logger":"controller_psmdb","msg":"StatefulSet is not up to date","sts":"test-cluster-rs0"}
+{"level":"info","ts":1680281523.529148,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281523.5291717,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281523.529176,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281523.529179,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281523.5292733,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281523.52928,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281523.5584538,"logger":"controller_psmdb","msg":"StatefulSet is changed, starting smart update","name":"test-cluster-rs0"}
+{"level":"error","ts":1680281553.6145175,"logger":"controller.psmdb-controller","msg":"Reconciler error","name":"test-cluster","namespace":"acto-namespace","error":"reconcile StatefulSet for rs0: failed to run smartUpdate: failed to check active jobs: getting pbm object: create PBM connection to test-cluster-rs0-2.test-cluster-rs0.acto-namespace.svc.cluster.local:27017,test-cluster-rs0-0.test-cluster-rs0.acto-namespace.svc.cluster.local:27017,test-cluster-rs0-1.test-cluster-rs0.acto-namespace.svc.cluster.local:27017: create mongo connection to configsvr with connection string 'mongodb://backup:backup123456@10.96.122.116:27017,10.96.224.120:27017,10.96.98.54:27017/': mongo ping: server selection error: server selection timeout, current topology: { Type: Unknown, Servers: [{ Addr: 10.96.122.116:27017, Type: Unknown, Last error: connection() error occured during connection handshake: dial tcp 10.96.122.116:27017: connect: connection refused }, { Addr: 10.96.224.120:27017, Type: Unknown, Last error: connection() error occured during connection handshake: dial tcp 10.96.224.120:27017: i/o timeout }, { Addr: 10.96.98.54:27017, Type: Unknown, Last error: connection() error occured during connection handshake: dial tcp 10.96.98.54:27017: connect: connection refused }, ] }","errorVerbose":"reconcile StatefulSet for rs0: failed to run smartUpdate: failed to check active jobs: getting pbm object: create PBM connection to test-cluster-rs0-2.test-cluster-rs0.acto-namespace.svc.cluster.local:27017,test-cluster-rs0-0.test-cluster-rs0.acto-namespace.svc.cluster.local:27017,test-cluster-rs0-1.test-cluster-rs0.acto-namespace.svc.cluster.local:27017: create mongo connection to configsvr with connection string 'mongodb://backup:backup123456@10.96.122.116:27017,10.96.224.120:27017,10.96.98.54:27017/': mongo ping: server selection error: server selection timeout, current topology: { Type: Unknown, Servers: [{ Addr: 10.96.122.116:27017, Type: Unknown, Last error: connection() error occured during connection handshake: dial tcp 10.96.122.116:27017: connect: connection refused }, { Addr: 10.96.224.120:27017, Type: Unknown, Last error: connection() error occured during connection handshake: dial tcp 10.96.224.120:27017: i/o timeout }, { Addr: 10.96.98.54:27017, Type: Unknown, Last error: connection() error occured during connection handshake: dial tcp 10.96.98.54:27017: connect: connection refused }, ] }\ngithub.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb.(*ReconcilePerconaServerMongoDB).Reconcile\n\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb/psmdb_controller.go:409\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile\n\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:114\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler\n\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:311\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\n\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\n\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\nruntime.goexit\n\t/usr/local/go/src/runtime/asm_amd64.s:1581","stacktrace":"sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\n\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\n\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227"}
+{"level":"info","ts":1680281553.6149442,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281553.6149597,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281553.614963,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281553.6149652,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281553.6150491,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281553.615055,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281553.6336126,"logger":"controller_psmdb","msg":"StatefulSet is changed, starting smart update","name":"test-cluster-rs0"}
+{"level":"error","ts":1680281583.678227,"logger":"controller.psmdb-controller","msg":"Reconciler error","name":"test-cluster","namespace":"acto-namespace","error":"reconcile StatefulSet for rs0: failed to run smartUpdate: failed to check active jobs: getting pbm object: create PBM connection to test-cluster-rs0-0.test-cluster-rs0.acto-namespace.svc.cluster.local:27017,test-cluster-rs0-1.test-cluster-rs0.acto-namespace.svc.cluster.local:27017,test-cluster-rs0-2.test-cluster-rs0.acto-namespace.svc.cluster.local:27017: create mongo connection to configsvr with connection string 'mongodb://backup:backup123456@10.96.122.116:27017,10.96.224.120:27017,10.96.98.54:27017/': mongo ping: server selection error: server selection timeout, current topology: { Type: Unknown, Servers: [{ Addr: 10.96.122.116:27017, Type: Unknown, Last error: connection() error occured during connection handshake: dial tcp 10.96.122.116:27017: i/o timeout }, { Addr: 10.96.224.120:27017, Type: Unknown, Last error: connection() error occured during connection handshake: dial tcp 10.96.224.120:27017: connect: connection refused }, { Addr: 10.96.98.54:27017, Type: Unknown, Last error: connection() error occured during connection handshake: dial tcp 10.96.98.54:27017: connect: connection refused }, ] }","errorVerbose":"reconcile StatefulSet for rs0: failed to run smartUpdate: failed to check active jobs: getting pbm object: create PBM connection to test-cluster-rs0-0.test-cluster-rs0.acto-namespace.svc.cluster.local:27017,test-cluster-rs0-1.test-cluster-rs0.acto-namespace.svc.cluster.local:27017,test-cluster-rs0-2.test-cluster-rs0.acto-namespace.svc.cluster.local:27017: create mongo connection to configsvr with connection string 'mongodb://backup:backup123456@10.96.122.116:27017,10.96.224.120:27017,10.96.98.54:27017/': mongo ping: server selection error: server selection timeout, current topology: { Type: Unknown, Servers: [{ Addr: 10.96.122.116:27017, Type: Unknown, Last error: connection() error occured during connection handshake: dial tcp 10.96.122.116:27017: i/o timeout }, { Addr: 10.96.224.120:27017, Type: Unknown, Last error: connection() error occured during connection handshake: dial tcp 10.96.224.120:27017: connect: connection refused }, { Addr: 10.96.98.54:27017, Type: Unknown, Last error: connection() error occured during connection handshake: dial tcp 10.96.98.54:27017: connect: connection refused }, ] }\ngithub.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb.(*ReconcilePerconaServerMongoDB).Reconcile\n\t/go/src/github.com/percona/percona-server-mongodb-operator/pkg/controller/perconaservermongodb/psmdb_controller.go:409\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Reconcile\n\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:114\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).reconcileHandler\n\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:311\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\n\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\n\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227\nruntime.goexit\n\t/usr/local/go/src/runtime/asm_amd64.s:1581","stacktrace":"sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem\n\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:266\nsigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2\n\t/go/src/github.com/percona/percona-server-mongodb-operator/vendor/sigs.k8s.io/controller-runtime/pkg/internal/controller/controller.go:227"}
+{"level":"info","ts":1680281583.679176,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281583.6792223,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281583.679236,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281583.6794603,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281583.6796343,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281583.6796415,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281583.6990364,"logger":"controller_psmdb","msg":"StatefulSet is not up to date","sts":"test-cluster-rs0"}
+{"level":"info","ts":1680281583.7188714,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281583.7188976,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281583.7189028,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281583.718906,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281583.7189872,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281583.7189927,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281583.7320378,"logger":"controller_psmdb","msg":"StatefulSet is not up to date","sts":"test-cluster-rs0"}
+{"level":"info","ts":1680281583.7492933,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281583.7493353,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281583.7493424,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281583.7493477,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281583.7495012,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281583.749519,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281583.7641158,"logger":"controller_psmdb","msg":"StatefulSet is not up to date","sts":"test-cluster-rs0"}
+{"level":"info","ts":1680281588.719848,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281588.7198784,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281588.7198846,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281588.719889,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281588.7200599,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281588.720068,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281588.738775,"logger":"controller_psmdb","msg":"StatefulSet is not up to date","sts":"test-cluster-rs0"}
+{"level":"info","ts":1680281593.763763,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281593.7638173,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281593.7638242,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281593.7638278,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281593.7639635,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281593.7639718,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281593.7853055,"logger":"controller_psmdb","msg":"StatefulSet is not up to date","sts":"test-cluster-rs0"}
+{"level":"info","ts":1680281598.807179,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281598.8072028,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281598.8072069,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281598.8072093,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281598.807393,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281598.8073988,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281598.8249772,"logger":"controller_psmdb","msg":"StatefulSet is not up to date","sts":"test-cluster-rs0"}
+{"level":"info","ts":1680281603.8478765,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281603.8479114,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281603.8479185,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281603.847924,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281603.848057,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281603.848076,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281603.870055,"logger":"controller_psmdb","msg":"StatefulSet is not up to date","sts":"test-cluster-rs0"}
+{"level":"info","ts":1680281608.8905842,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281608.8906171,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281608.8906221,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281608.8906255,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281608.8907263,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281608.8907337,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281608.936865,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281608.9368963,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281608.9369,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281608.936902,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281608.9369836,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281608.9369895,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281613.9377718,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281613.9378023,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281613.9378073,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281613.93781,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281613.9379032,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281613.93791,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281618.9803534,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281618.9804127,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281618.9804225,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281618.9804285,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281618.9805756,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281618.9805858,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281624.0203462,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281624.0203745,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281624.0203784,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281624.0203807,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281624.0204601,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281624.0204656,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281629.0589557,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281629.0589855,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281629.058991,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281629.0589945,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281629.059105,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281629.0591135,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281634.0946035,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281634.0946329,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281634.0946372,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281634.0946395,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281634.0947173,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281634.0947225,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281639.1375785,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281639.1376104,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281639.137614,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281639.1376169,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281639.1377265,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281639.1377332,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281644.177371,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281644.1774056,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281644.1774104,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281644.1774135,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281644.1775177,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281644.1776493,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281649.2270157,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281649.2270489,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281649.2270544,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281649.2270577,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281649.2271607,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281649.2271676,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281654.2710686,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281654.2711198,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281654.2711277,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281654.271133,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281654.2714589,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281654.2714758,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281659.3183289,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281659.3183665,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281659.318373,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281659.3183782,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281659.3185089,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281659.318516,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281664.3635924,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281664.3636212,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281664.363627,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281664.3636312,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281664.363748,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281664.363755,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281669.4048343,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281669.404871,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281669.4048774,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281669.4048812,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281669.405,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281669.4050078,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281674.4476962,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281674.4477787,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281674.4477918,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281674.4478016,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281674.4480863,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281674.448103,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281679.4975069,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281679.4975593,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281679.497568,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281679.4975734,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281679.4978726,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281679.4978967,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281684.5458944,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281684.5459378,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281684.545943,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281684.5459464,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281684.546051,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281684.5460598,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281689.586033,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281689.5860589,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281689.5860636,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281689.586077,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281689.5861897,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281689.586199,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281694.623092,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281694.6231318,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281694.6231403,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281694.6231444,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281694.6234992,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281694.6235135,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281699.6659055,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281699.6659455,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281699.665952,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281699.665956,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281699.66608,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281699.6660893,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281704.7101798,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281704.7102032,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281704.7102072,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281704.7102096,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281704.710298,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281704.7103019,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281709.7499328,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281709.7499692,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281709.749975,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281709.7499785,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281709.750124,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281709.7501295,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281714.7962005,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281714.7962291,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281714.796233,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281714.7962353,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281714.796313,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281714.7963183,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281719.828013,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281719.8280733,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281719.828082,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281719.8280876,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281719.8282473,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281719.8282583,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281724.8769078,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281724.8769572,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281724.8769636,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281724.8769672,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281724.8771362,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281724.8771472,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281729.9173038,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281729.9173415,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281729.9173474,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281729.9173508,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281729.9174597,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281729.9174664,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281734.9574668,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281734.957489,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281734.9574926,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281734.9574947,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281734.9575799,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281734.9575865,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281739.9984932,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281739.998537,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281739.9985456,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281739.9985511,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281739.9987764,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281739.9987915,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281745.0376463,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281745.0376823,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281745.0376885,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281745.0376923,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281745.0378234,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281745.037832,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281750.0840125,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281750.084073,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281750.0840833,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281750.0840883,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281750.084342,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281750.0843623,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281755.118185,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281755.1182265,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281755.1182325,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281755.1182368,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281755.118378,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281755.1183863,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281760.1667876,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281760.1668375,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281760.1668463,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281760.1668508,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281760.1669881,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281760.1670535,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281765.2110505,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281765.2110822,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281765.2110877,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281765.2110908,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281765.2112145,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281765.2112262,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281770.2485163,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281770.2485511,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281770.2485576,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281770.2485619,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281770.2486973,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281770.248708,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281775.2904456,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281775.2904773,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281775.2904844,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281775.29049,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281775.2906513,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281775.2906637,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281780.3385017,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281780.3385437,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281780.3385477,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281780.3385506,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281780.3386636,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281780.3386776,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281785.3703358,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281785.3703682,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281785.370373,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281785.370376,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281785.3704898,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281785.3704975,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281790.418907,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281790.418953,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281790.418963,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281790.4189708,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281790.419225,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281790.4192383,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281795.4577394,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281795.4577897,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281795.4577987,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281795.4578044,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281795.4579747,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281795.4579847,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281800.5160913,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281800.516129,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281800.5161364,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281800.5161407,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281800.5162728,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281800.5162807,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281805.554987,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281805.555029,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281805.555039,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281805.5550458,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281805.55549,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281805.5555117,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281810.5961118,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281810.596158,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281810.5961714,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281810.5961792,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281810.5964334,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281810.5964606,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281815.642949,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281815.6430151,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281815.6430216,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281815.6430252,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281815.6431577,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281815.643162,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281820.681838,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281820.6818955,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281820.6819024,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281820.6819065,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281820.6820185,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281820.6820264,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281825.7239683,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281825.7239952,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281825.723999,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281825.724002,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281825.7241037,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281825.7241101,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281830.761,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281830.7610245,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281830.7610288,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281830.7610314,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281830.761126,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281830.7611315,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281835.80316,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281835.8032248,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281835.803239,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281835.8036633,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281835.8038611,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281835.8038888,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281840.845434,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281840.8454702,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281840.8454745,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281840.845477,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281840.8455765,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281840.8455834,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281845.8856187,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281845.8856633,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281845.8856716,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281845.8856778,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281845.8858745,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281845.8858845,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281850.927565,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281850.927625,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281850.9276338,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281850.9276392,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281850.927829,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281850.927844,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281855.973653,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281855.973709,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281855.9737186,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281855.9737244,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281855.973897,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281855.9739096,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281861.0196257,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281861.0196476,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281861.0196512,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281861.019653,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281861.0197282,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281861.0197325,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281866.0652885,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281866.0653334,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281866.0653439,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281866.0653508,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281866.0655506,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281866.0655627,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281871.110573,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281871.1106012,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281871.1106064,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281871.110609,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281871.1107192,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281871.1107242,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281876.14713,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281876.1471736,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281876.1471834,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281876.1471891,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281876.147597,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281876.1479304,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281881.1986988,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281881.1987364,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281881.1987414,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281881.1987445,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281881.1988409,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281881.198847,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281886.243895,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281886.243921,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281886.243926,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281886.243929,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281886.2440348,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281886.244046,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281891.285753,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281891.2857878,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281891.2857933,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281891.2857962,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281891.2859194,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281891.2859387,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281896.3229444,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281896.322974,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281896.3229775,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281896.32298,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281896.3230615,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281896.3231897,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281901.3584301,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281901.358478,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281901.3584864,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281901.358491,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281901.3586264,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281901.3586364,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281906.4007332,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281906.4007735,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281906.400781,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281906.4007857,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281906.4009292,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281906.4009387,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281911.4445205,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281911.4445562,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281911.4445639,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281911.4445686,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281911.4447148,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281911.444735,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281916.4890077,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281916.4890487,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281916.4890828,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281916.4890966,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281916.489346,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281916.4893594,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281921.5351932,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281921.5352304,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281921.5352364,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281921.5352397,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281921.5354898,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281921.5354965,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281926.580848,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281926.580882,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281926.5808866,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281926.5808892,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281926.5809863,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281926.5809925,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281931.6238656,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281931.6239035,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281931.623908,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281931.6239114,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281931.6240172,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281931.624025,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281936.6703932,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281936.6704414,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281936.6704497,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281936.6704545,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281936.6706035,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281936.670655,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281941.7135074,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281941.7135413,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281941.7135475,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281941.7135508,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281941.7136672,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281941.713674,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281946.7595341,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281946.759582,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281946.759591,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281946.759597,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281946.7597775,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281946.7598302,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281951.8049424,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281951.8049798,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281951.804986,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281951.8049903,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281951.805193,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281951.80521,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281956.8505833,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281956.8506243,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281956.850632,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281956.850638,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281956.8507686,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281956.8507774,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281961.8950326,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281961.8950717,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281961.8950787,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281961.895083,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281961.8952096,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281961.8952217,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281966.9427652,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281966.9427967,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281966.9428031,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281966.9428084,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281966.9429443,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281966.9429517,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281971.991548,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281971.9915974,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281971.991603,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281971.9916065,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281971.9917705,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281971.9917831,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281977.0385218,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281977.038554,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281977.038559,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281977.038562,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281977.0386748,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281977.0386834,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281982.0803952,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281982.0804324,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281982.0804384,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281982.0804417,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281982.080554,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281982.0805624,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281987.123103,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281987.1231353,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281987.1231406,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281987.1231437,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281987.1234453,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281987.1234663,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281992.1725812,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281992.1726189,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281992.1726263,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281992.172631,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281992.172768,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281992.172776,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281997.217427,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680281997.2174635,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281997.2174716,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680281997.2174764,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680281997.2176356,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680281997.2176442,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680282002.2661815,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680282002.2662091,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680282002.266216,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680282002.2662206,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680282002.266364,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680282002.2663717,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680282007.3085024,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680282007.3085532,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680282007.3085606,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680282007.308565,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680282007.3087173,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680282007.3087277,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680282012.3495421,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680282012.3495715,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680282012.3495755,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680282012.3495781,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680282012.3496592,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680282012.3496642,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680282017.383901,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680282017.3839452,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680282017.3839529,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680282017.3839579,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680282017.3841245,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680282017.384132,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680282022.422449,"logger":"controller_psmdb","msg":"Arbiter size will be changed from 2 to 1 due to safe config"}
+{"level":"info","ts":1680282022.4224827,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680282022.4224901,"logger":"controller_psmdb","msg":"Replset size will be changed from 2 to 4 due to safe config"}
+{"level":"info","ts":1680282022.4224942,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+{"level":"info","ts":1680282022.422627,"logger":"controller_psmdb","msg":"Replset size will be increased from 2 to 3"}
+{"level":"info","ts":1680282022.4226348,"logger":"controller_psmdb","msg":"Set allowUnsafeConfigurations=true to disable safe configuration"}
+

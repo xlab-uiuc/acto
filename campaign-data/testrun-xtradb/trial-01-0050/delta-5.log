@@ -1,0 +1,137 @@
+---------- INPUT DELTA  ----------
+{
+      "dictionary_item_added": {
+            "root['spec']['pxc']['expose'][enabled]": {
+                  "prev": "NotPresent",
+                  "curr": true,
+                  "path": [
+                        "spec",
+                        "pxc",
+                        "expose",
+                        "enabled"
+                  ]
+            },
+            "root['spec']['pxc']['expose'][loadBalancerSourceRanges][0]": {
+                  "prev": "NotPresent",
+                  "curr": "ACTOKEY",
+                  "path": [
+                        "spec",
+                        "pxc",
+                        "expose",
+                        "loadBalancerSourceRanges",
+                        0
+                  ]
+            }
+      }
+}
+---------- SYSTEM DELTA ----------
+{
+      "pod": {},
+      "deployment_pods": {},
+      "stateful_set": {},
+      "deployment": {},
+      "config_map": {},
+      "service": {},
+      "service_account": {},
+      "pvc": {},
+      "cronjob": {},
+      "ingress": {},
+      "network_policy": {},
+      "pod_disruption_budget": {},
+      "secret": {},
+      "endpoints": {},
+      "job": {},
+      "role": {},
+      "role_binding": {},
+      "custom_resource_spec": {
+            "dictionary_item_added": {
+                  "root['pxc']['expose'][enabled]": {
+                        "prev": "NotPresent",
+                        "curr": true,
+                        "path": [
+                              "pxc",
+                              "expose",
+                              "enabled"
+                        ]
+                  },
+                  "root['pxc']['expose'][loadBalancerSourceRanges][0]": {
+                        "prev": "NotPresent",
+                        "curr": "ACTOKEY",
+                        "path": [
+                              "pxc",
+                              "expose",
+                              "loadBalancerSourceRanges",
+                              0
+                        ]
+                  }
+            }
+      },
+      "custom_resource_status": {
+            "dictionary_item_added": {
+                  "root['message'][0]": {
+                        "prev": "NotPresent",
+                        "curr": "Error: failed to ensure pxc service: Service \"test-cluster-pxc-0\" is invalid: [spec.LoadBalancerSourceRanges: Forbidden: may only be used when `type` is 'LoadBalancer', spec.LoadBalancerSourceRanges: Invalid value: \"[ACTOKEY]\": must be a list of IP ranges. For example, 10.240.0.0/24,10.250.0.0/24 ]",
+                        "path": [
+                              "message",
+                              0
+                        ]
+                  }
+            },
+            "values_changed": {
+                  "root['state']": {
+                        "prev": "ready",
+                        "curr": "error",
+                        "path": [
+                              "state"
+                        ]
+                  }
+            },
+            "iterable_item_added": {
+                  "root['conditions'][6][lastTransitionTime]": {
+                        "prev": "NotPresent",
+                        "curr": "2023-03-24T23:01:44Z",
+                        "path": [
+                              "conditions",
+                              6,
+                              "lastTransitionTime"
+                        ]
+                  },
+                  "root['conditions'][6][message]": {
+                        "prev": "NotPresent",
+                        "curr": "failed to ensure pxc service: Service \"test-cluster-pxc-0\" is invalid: [spec.LoadBalancerSourceRanges: Forbidden: may only be used when `type` is 'LoadBalancer', spec.LoadBalancerSourceRanges: Invalid value: \"[ACTOKEY]\": must be a list of IP ranges. For example, 10.240.0.0/24,10.250.0.0/24 ]",
+                        "path": [
+                              "conditions",
+                              6,
+                              "message"
+                        ]
+                  },
+                  "root['conditions'][6][reason]": {
+                        "prev": "NotPresent",
+                        "curr": "ErrorReconcile",
+                        "path": [
+                              "conditions",
+                              6,
+                              "reason"
+                        ]
+                  },
+                  "root['conditions'][6][status]": {
+                        "prev": "NotPresent",
+                        "curr": "True",
+                        "path": [
+                              "conditions",
+                              6,
+                              "status"
+                        ]
+                  },
+                  "root['conditions'][6][type]": {
+                        "prev": "NotPresent",
+                        "curr": "error",
+                        "path": [
+                              "conditions",
+                              6,
+                              "type"
+                        ]
+                  }
+            }
+      }
+}

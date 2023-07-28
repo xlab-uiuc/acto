@@ -1,0 +1,66 @@
+{
+      "input_digest": "d4e4e8d93402c840f2787d18a6dfb6f1",
+      "snapshot": {
+            "input": {
+                  "apiVersion": "crdb.cockroachlabs.com/v1alpha1",
+                  "kind": "CrdbCluster",
+                  "metadata": {
+                        "name": "test-cluster"
+                  },
+                  "spec": {
+                        "additionalLabels": {
+                              "crdb": "is-cool"
+                        },
+                        "dataStore": {
+                              "pvc": {
+                                    "spec": {
+                                          "accessModes": [
+                                                "ReadWriteOnce"
+                                          ],
+                                          "resources": {
+                                                "requests": {
+                                                      "storage": "1Gi"
+                                                }
+                                          },
+                                          "volumeMode": "Filesystem"
+                                    }
+                              }
+                        },
+                        "image": {
+                              "name": "cockroachdb/cockroach:v21.2.10"
+                        },
+                        "nodeSelector": {
+                              "ACTOKEY": "ACTOKEY"
+                        },
+                        "nodes": 3,
+                        "resources": {
+                              "limits": {
+                                    "cpu": 2,
+                                    "memory": "2Gi"
+                              },
+                              "requests": {
+                                    "cpu": "100m",
+                                    "memory": "1Gi"
+                              }
+                        },
+                        "tlsEnabled": true
+                  }
+            },
+            "cli_result": {
+                  "stdout": "",
+                  "stderr": "Error from server (InternalError): error when creating \"difftest-crdb-whitebox-3/trial-11/mutated-6.yaml\": Internal error occurred: failed calling webhook \"mcrdbcluster.kb.io\": failed to call webhook: Post \"https://cockroach-operator-webhook-service.cockroach-operator-system.svc:443/mutate-crdb-cockroachlabs-com-v1alpha1-crdbcluster?timeout=10s\": dial tcp 10.96.49.83:443: connect: connection refused\n"
+            },
+            "system_state": {},
+            "operator_log": "Bug! Exception raised when waiting for converge."
+      },
+      "originals": [
+            {
+                  "trial": "trial-11-0000",
+                  "gen": 1
+            },
+            {
+                  "trial": "trial-01-0007",
+                  "gen": 5
+            }
+      ]
+}

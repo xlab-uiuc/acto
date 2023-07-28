@@ -1,0 +1,138 @@
+---------- INPUT DELTA  ----------
+{
+      "dictionary_item_added": {
+            "root['spec']['backup']['resources'][limits][cpu]": {
+                  "prev": "NotPresent",
+                  "curr": "800m",
+                  "path": [
+                        "spec",
+                        "backup",
+                        "resources",
+                        "limits",
+                        "cpu"
+                  ]
+            },
+            "root['spec']['backup']['resources'][requests][ACTOKEY]": {
+                  "prev": "NotPresent",
+                  "curr": 0,
+                  "path": [
+                        "spec",
+                        "backup",
+                        "resources",
+                        "requests",
+                        "ACTOKEY"
+                  ]
+            }
+      }
+}
+---------- SYSTEM DELTA ----------
+{
+      "pod": {},
+      "deployment_pods": {},
+      "stateful_set": {},
+      "deployment": {},
+      "config_map": {},
+      "service": {},
+      "service_account": {},
+      "pvc": {},
+      "cronjob": {},
+      "ingress": {},
+      "network_policy": {},
+      "pod_disruption_budget": {},
+      "secret": {},
+      "endpoints": {},
+      "job": {},
+      "role": {},
+      "role_binding": {},
+      "custom_resource_spec": {
+            "dictionary_item_added": {
+                  "root['backup']['resources'][limits][cpu]": {
+                        "prev": "NotPresent",
+                        "curr": "800m",
+                        "path": [
+                              "backup",
+                              "resources",
+                              "limits",
+                              "cpu"
+                        ]
+                  },
+                  "root['backup']['resources'][requests][ACTOKEY]": {
+                        "prev": "NotPresent",
+                        "curr": 0,
+                        "path": [
+                              "backup",
+                              "resources",
+                              "requests",
+                              "ACTOKEY"
+                        ]
+                  }
+            }
+      },
+      "custom_resource_status": {
+            "iterable_item_added": {
+                  "root['conditions'][10][lastTransitionTime]": {
+                        "prev": "NotPresent",
+                        "curr": "2023-03-31T18:58:20Z",
+                        "path": [
+                              "conditions",
+                              10,
+                              "lastTransitionTime"
+                        ]
+                  },
+                  "root['conditions'][10][message]": {
+                        "prev": "NotPresent",
+                        "curr": "reconcile backup tasks: create or update backup job: CronJob.batch \"test-cluster-backup-daily-s3-us-west\" is invalid: [spec.jobTemplate.spec.template.spec.containers[0].resources.requests[ACTOKEY]: Invalid value: \"ACTOKEY\": must be a standard resource type or fully qualified, spec.jobTemplate.spec.template.spec.containers[0].resources.requests[ACTOKEY]: Invalid value: \"ACTOKEY\": must be a standard resource for containers]",
+                        "path": [
+                              "conditions",
+                              10,
+                              "message"
+                        ]
+                  },
+                  "root['conditions'][10][reason]": {
+                        "prev": "NotPresent",
+                        "curr": "ErrorReconcile",
+                        "path": [
+                              "conditions",
+                              10,
+                              "reason"
+                        ]
+                  },
+                  "root['conditions'][10][status]": {
+                        "prev": "NotPresent",
+                        "curr": "True",
+                        "path": [
+                              "conditions",
+                              10,
+                              "status"
+                        ]
+                  },
+                  "root['conditions'][10][type]": {
+                        "prev": "NotPresent",
+                        "curr": "error",
+                        "path": [
+                              "conditions",
+                              10,
+                              "type"
+                        ]
+                  }
+            },
+            "dictionary_item_added": {
+                  "root['message']": {
+                        "prev": "NotPresent",
+                        "curr": "Error: reconcile backup tasks: create or update backup job: CronJob.batch \"test-cluster-backup-daily-s3-us-west\" is invalid: [spec.jobTemplate.spec.template.spec.containers[0].resources.requests[ACTOKEY]: Invalid value: \"ACTOKEY\": must be a standard resource type or fully qualified, spec.jobTemplate.spec.template.spec.containers[0].resources.requests[ACTOKEY]: Invalid value: \"ACTOKEY\": must be a standard resource for containers]",
+                        "path": [
+                              "message"
+                        ]
+                  }
+            },
+            "values_changed": {
+                  "root['state']": {
+                        "prev": "ready",
+                        "curr": "error",
+                        "path": [
+                              "state"
+                        ]
+                  }
+            }
+      }
+}

@@ -1,0 +1,401 @@
+apiVersion: pxc.percona.com/v1-11-0
+kind: PerconaXtraDBCluster
+metadata:
+  finalizers:
+  - delete-pxc-pods-in-order
+  name: test-cluster
+spec:
+  allowUnsafeConfigurations: false
+  backup:
+    image: percona/percona-xtradb-cluster-operator:1.11.0-pxc8.0-backup
+    imagePullPolicy: IfNotPresent
+    pitr:
+      enabled: false
+      storageName: STORAGE-NAME-HERE
+      timeBetweenUploads: 60
+    schedule:
+    - keep: 3
+      name: sat-night-backup
+      schedule: 0 0 * * 6
+      storageName: s3-us-west
+    - keep: 5
+      name: daily-backup
+      schedule: 0 0 * * *
+      storageName: fs-pvc
+    storages:
+      fs-pvc:
+        type: filesystem
+        volume:
+          persistentVolumeClaim:
+            accessModes:
+            - ReadWriteOnce
+            resources:
+              requests:
+                storage: 6G
+      s3-us-west:
+        s3:
+          bucket: S3-BACKUP-BUCKET-NAME-HERE
+          credentialsSecret: my-cluster-name-backup-s3
+          region: us-west-2
+        type: s3
+        verifyTLS: true
+  crVersion: 1.11.0
+  enableCRValidationWebhook: true
+  haproxy:
+    affinity:
+      antiAffinityTopologyKey: kubernetes.io/hostname
+    enabled: true
+    gracePeriod: 30
+    image: percona/percona-xtradb-cluster-operator:1.11.0-haproxy
+    imagePullPolicy: IfNotPresent
+    podDisruptionBudget:
+      maxUnavailable: 1
+    resources:
+      requests:
+        cpu: 600m
+        memory: 1G
+    size: 3
+  logcollector:
+    enabled: true
+    image: percona/percona-xtradb-cluster-operator:1.11.0-logcollector
+    imagePullPolicy: IfNotPresent
+    resources:
+      requests:
+        cpu: 200m
+        memory: 100M
+  pmm:
+    enabled: false
+    image: percona/pmm-client:2.28.0
+    imagePullPolicy: IfNotPresent
+    resources:
+      requests:
+        cpu: 300m
+        memory: 150M
+    serverHost: monitoring-service
+  proxysql:
+    affinity:
+      antiAffinityTopologyKey: kubernetes.io/hostname
+    enabled: false
+    gracePeriod: 30
+    image: percona/percona-xtradb-cluster-operator:1.11.0-proxysql
+    imagePullPolicy: IfNotPresent
+    podDisruptionBudget:
+      maxUnavailable: 1
+    resources:
+      requests:
+        cpu: 600m
+        memory: 1G
+    sidecarVolumes:
+    - awsElasticBlockStore:
+        fsType: ACTOKEY
+        partition: 5
+        readOnly: false
+        volumeID: ACTOKEY
+      azureDisk:
+        cachingMode: ACTOKEY
+        diskName: ACTOKEY
+        diskURI: ACTOKEY
+        fsType: null
+        kind: ACTOKEY
+        readOnly: null
+      azureFile:
+        readOnly: true
+        secretName: ACTOKEY
+        shareName: ACTOKEY
+      cephfs:
+        monitors:
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+        path: ACTOKEY
+        readOnly: true
+        secretFile: ACTOKEY
+        secretRef:
+          name: ACTOKEY
+        user: ACTOKEY
+      cinder:
+        fsType: ACTOKEY
+        readOnly: false
+        secretRef:
+          name: ACTOKEY
+        volumeID: ACTOKEY
+      configMap:
+        defaultMode: 5
+        items: null
+        name: ACTOKEY
+        optional: false
+      csi:
+        driver: ACTOKEY
+        fsType: ACTOKEY
+        nodePublishSecretRef:
+          name: ACTOKEY
+        readOnly: null
+        volumeAttributes:
+          ACTOKEY: ACTOKEY
+      downwardAPI:
+        defaultMode: 4
+        items: []
+      emptyDir:
+        medium: ACTOKEY
+        sizeLimit: 4
+      ephemeral:
+        volumeClaimTemplate: null
+      fc:
+        fsType: ACTOKEY
+        lun: 5
+        readOnly: null
+        targetWWNs:
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+        wwids:
+        - ACTOKEY
+        - ACTOKEY
+      flexVolume:
+        driver: ACTOKEY
+        fsType: ACTOKEY
+        options: null
+        readOnly: false
+        secretRef:
+          name: ACTOKEY
+      flocker:
+        datasetName: ACTOKEY
+        datasetUUID: ACTOKEY
+      gcePersistentDisk: null
+      gitRepo: null
+      glusterfs:
+        endpoints: ACTOKEY
+        path: ACTOKEY
+        readOnly: true
+      hostPath:
+        path: ACTOKEY
+        type: ACTOKEY
+      iscsi:
+        chapAuthDiscovery: true
+        chapAuthSession: true
+        fsType: null
+        initiatorName: null
+        iqn: ACTOKEY
+        iscsiInterface: ACTOKEY
+        lun: 1
+        portals: []
+        readOnly: false
+        secretRef:
+          name: null
+        targetPortal: ACTOKEY
+      name: ACTOKEY
+      nfs:
+        path: ACTOKEY
+        readOnly: false
+        server: ACTOKEY
+      persistentVolumeClaim:
+        claimName: ACTOKEY
+        readOnly: true
+      photonPersistentDisk:
+        fsType: ACTOKEY
+        pdID: ACTOKEY
+      portworxVolume:
+        fsType: ACTOKEY
+        readOnly: true
+        volumeID: ACTOKEY
+      projected:
+        defaultMode: 1
+        sources:
+        - configMap:
+            items:
+            - key: ACTOKEY
+              mode: 2
+              path: ACTOKEY
+            - key: ACTOKEY
+              mode: null
+              path: ACTOKEY
+            - key: ACTOKEY
+              mode: 1
+              path: ACTOKEY
+            - key: ACTOKEY
+              mode: 0
+              path: ACTOKEY
+            - key: ACTOKEY
+              mode: 4
+              path: ACTOKEY
+            name: ACTOKEY
+            optional: true
+          downwardAPI:
+            items:
+            - fieldRef:
+                apiVersion: ACTOKEY
+                fieldPath: ACTOKEY
+              mode: 1
+              path: ACTOKEY
+              resourceFieldRef:
+                containerName: ACTOKEY
+                divisor: 3
+                resource: ACTOKEY
+            - fieldRef:
+                apiVersion: ACTOKEY
+                fieldPath: ACTOKEY
+              mode: 0
+              path: ACTOKEY
+              resourceFieldRef:
+                containerName: ACTOKEY
+                divisor: 4
+                resource: ACTOKEY
+            - fieldRef:
+                apiVersion: ACTOKEY
+                fieldPath: ACTOKEY
+              mode: 2
+              path: ACTOKEY
+              resourceFieldRef:
+                containerName: null
+                divisor: -.87777
+                resource: ACTOKEY
+          secret:
+            items: null
+            name: null
+            optional: false
+          serviceAccountToken:
+            audience: ACTOKEY
+            expirationSeconds: 1
+            path: ACTOKEY
+        - configMap:
+            items:
+            - key: ACTOKEY
+              mode: 5
+              path: ACTOKEY
+            name: ACTOKEY
+            optional: false
+          downwardAPI:
+            items:
+            - fieldRef:
+                apiVersion: ACTOKEY
+                fieldPath: ACTOKEY
+              mode: 1
+              path: ACTOKEY
+              resourceFieldRef:
+                containerName: ACTOKEY
+                divisor: '.663638761'
+                resource: ACTOKEY
+            - fieldRef:
+                apiVersion: ACTOKEY
+                fieldPath: ACTOKEY
+              mode: 4
+              path: ACTOKEY
+              resourceFieldRef:
+                containerName: ACTOKEY
+                divisor: 1
+                resource: ACTOKEY
+            - fieldRef:
+                apiVersion: ACTOKEY
+                fieldPath: ACTOKEY
+              mode: 0
+              path: ACTOKEY
+              resourceFieldRef:
+                containerName: ACTOKEY
+                divisor: '.196'
+                resource: ACTOKEY
+          secret:
+            items:
+            - key: ACTOKEY
+              mode: 2
+              path: ACTOKEY
+            - key: ACTOKEY
+              mode: 2
+              path: ACTOKEY
+            - key: ACTOKEY
+              mode: 4
+              path: ACTOKEY
+            - key: ACTOKEY
+              mode: 3
+              path: ACTOKEY
+            name: ACTOKEY
+            optional: false
+          serviceAccountToken:
+            audience: ACTOKEY
+            expirationSeconds: 2
+            path: ACTOKEY
+      quobyte:
+        group: ACTOKEY
+        readOnly: true
+        registry: ACTOKEY
+        tenant: ACTOKEY
+        user: ACTOKEY
+        volume: ACTOKEY
+      rbd:
+        fsType: ACTOKEY
+        image: ACTOKEY
+        keyring: ACTOKEY
+        monitors:
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+        - ACTOKEY
+        pool: ACTOKEY
+        readOnly: true
+        secretRef:
+          name: null
+        user: ACTOKEY
+      scaleIO:
+        fsType: ACTOKEY
+        gateway: ACTOKEY
+        protectionDomain: ACTOKEY
+        readOnly: true
+        secretRef:
+          name: ACTOKEY
+        sslEnabled: null
+        storageMode: ACTOKEY
+        storagePool: ACTOKEY
+        system: ACTOKEY
+        volumeName: ACTOKEY
+      secret:
+        defaultMode: 5
+        items:
+        - key: ACTOKEY
+          mode: 4
+          path: ACTOKEY
+        optional: true
+        secretName: ACTOKEY
+      storageos:
+        fsType: ACTOKEY
+        readOnly: false
+        secretRef:
+          name: ACTOKEY
+        volumeName: ACTOKEY
+        volumeNamespace: ACTOKEY
+      vsphereVolume:
+        fsType: null
+        storagePolicyID: ACTOKEY
+        storagePolicyName: ACTOKEY
+        volumePath: ACTOKEY
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 2G
+  pxc:
+    affinity:
+      antiAffinityTopologyKey: kubernetes.io/hostname
+    autoRecovery: true
+    enabled: true
+    gracePeriod: 30
+    image: percona/percona-xtradb-cluster:8.0.27-18.1
+    imagePullPolicy: IfNotPresent
+    livenessDelaySec: 300
+    podDisruptionBudget:
+      maxUnavailable: 1
+    resources:
+      requests:
+        cpu: 600m
+        memory: 1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 6G
+  updateStrategy: SmartUpdate
+  upgradeOptions:
+    apply: 8.0-recommended
+    schedule: 0 4 * * *
+    versionServiceEndpoint: https://check.percona.com
