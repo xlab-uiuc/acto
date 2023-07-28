@@ -1,11 +1,17 @@
-"""Variable number of nodes in a lan. You have the option of picking from one
-of several standard images we provide, or just use the default (typically a recent
-version of Ubuntu). You may also optionally pick the specific hardware type for
-all the nodes in the lan.
+"""Profile for running Acto on CloudLab. There is one single physical node. The
+OS image is hardwired to Ubuntu 20.04. The hardware type is configurable by you
+during the instantiation stage. We recommend `c6420` for the best results (the
+default), but if that's not currently available, you may also select another
+type, e.g. `c8220`.
 
 Instructions:
-Wait for the experiment to start, and then log into one or more of the nodes
-by clicking on them in the toplogy, and choosing the `shell` menu option.
+Wait for the experiment to start, and then log into the node by either way:
+
+1. (Web-based) clicking on it in the toplogy, and choosing the `shell` menu
+option.
+2. (Terminal-based) the SSH command you need to login will be provided to you on
+the web dashboard, in the form of `ssh <user>@<node>.<cluster>.cloudlab.us`.
+
 Use `sudo` to run root commands.
 """
 
