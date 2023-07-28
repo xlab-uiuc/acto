@@ -23,7 +23,7 @@ def generate_table_6():
 
     print(tabulate(table_6, headers=['Consequence', '# Bugs']))
 
-    with open('table_6.txt', 'w') as f:
+    with open('table6.txt', 'w') as f:
         f.write(tabulate(table_6, headers=['Consequence', '# Bugs']))
 
 if __name__ == '__main__':
