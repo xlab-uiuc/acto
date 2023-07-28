@@ -1,4 +1,5 @@
 import argparse
+from datetime import datetime
 from enum import Enum
 import glob
 import json
@@ -46,7 +47,8 @@ def check_postdiff_runtime_error(workdir_path: str) -> bool:
 
 class ReproWorker:
 
-    def __init__(self, workqueue: multiprocessing.Queue, acto_namespace: int) -> None:
+    def __init__(self, repro_result_dir: str, workqueue: multiprocessing.Queue, acto_namespace: int) -> None:
+        self._repro_result_dir = repro_result_dir
         self._workqueue = workqueue
         self._acto_namespace = acto_namespace
 
@@ -60,7 +62,7 @@ class ReproWorker:
             for i in range(3):
                 operator, bug_id, bug_config = bug_tuple
                 repro_dir = bug_config.dir
-                work_dir = f'testrun-{bug_id}'
+                work_dir = f'{self._repro_result_dir}/testrun-{bug_id}'
                 operator_config = f'data/{operator}/config.json'
 
                 reproduced: bool = False
@@ -72,7 +74,7 @@ class ReproWorker:
                 if bug_config.difftest:
                     if bug_config.diffdir != None:
                         diff_repro_dir = bug_config.diffdir
-                        work_dir = f'testrun-{bug_id}-diff'
+                        work_dir = f'{self._repro_result_dir}/testrun-{bug_id}-diff'
                         reproduce(work_dir,
                                   diff_repro_dir,
                                   operator_config,
@@ -177,6 +179,7 @@ if __name__ == '__main__':
 
     failed_reproductions = {}
     total_reproduced = 0
+    repro_result_dir = os.path.join(os.getcwd(), 'repro_results-%s' % datetime.now().strftime('%Y-%m-%d-%H-%M') )
 
     workqueue = multiprocessing.Queue()
 
@@ -192,7 +195,7 @@ if __name__ == '__main__':
 
     workers: List[ReproWorker] = []
     for i in range(args.num_workers):
-        worker = ReproWorker(workqueue, i)
+        worker = ReproWorker(repro_result_dir, workqueue, i)
         workers.append(worker)
 
     processes = []
@@ -211,6 +214,7 @@ if __name__ == '__main__':
             for category, count in results.items():
                 total_reproduced += count
 
+        reproduce_results['knative-operator'] = {}
         reproduce_results['knative-operator'][
             BugCateogry.UNDESIRED_STATE] = reproduce_results['knative-operator-serving'][
                 BugCateogry.UNDESIRED_STATE] + reproduce_results['knative-operator-eventing'][
