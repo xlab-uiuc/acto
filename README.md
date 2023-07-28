@@ -1,11 +1,11 @@
-# Acto: Push-Button End-to-End Testing of Kubernetes Operators
+# Acto: Push-Button End-to-End Testing of Kubernetes Operators/Controllers
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Regression Test](https://github.com/xlab-uiuc/acto/actions/workflows/unittest.yaml/badge.svg)](https://github.com/xlab-uiuc/acto/actions/workflows/unittest.yaml)
 
 
 ## Overview
 
-Acto is a fully automatic end-to-end testing tool for Kubernetes operators. 
+Acto is a fully automatic end-to-end testing tool for Kubernetes operators/controllers. 
 
 Acto implements a state-centric approach to test the target operator together with the managed system. 
 It continuously instructs the operator to reconcile the system to different states and checks if the system reaches those desired states. 
