@@ -11,6 +11,7 @@ from acto.checker.impl.health import HealthChecker
 from acto.common import PassResult
 from acto.reproduce import reproduce, reproduce_postdiff
 from acto.snapshot import EmptySnapshot
+from produce_table_6 import generate_table_6
 from test.utils import BugConfig, all_bugs, operator_pretty_name_mapping
 
 
@@ -142,8 +143,6 @@ class ReproWorker:
                 else:
                     failed_reproductions[bug_id] = True
 
-        print(f"Worker {self._acto_namespace} finished!")
-        print(f"Local reproduce results: {reproduce_results}")
 
 
 if __name__ == '__main__':
@@ -206,6 +205,7 @@ if __name__ == '__main__':
         p.join()
 
     if produce_table:
+        print("Reproduction results:")
         # aggregate results from each worker
         for operator, results in reproduce_results.items():
             for category, count in results.items():
@@ -276,6 +276,8 @@ if __name__ == '__main__':
                             'Operator', 'Undesired State', 'System Error', 'Operator Error',
                             'Recovery Failure', 'Total'
                         ]))
+            
+        generate_table_6()
 
         print(f"Total reproduced: {total_reproduced}")
         table7 = []
