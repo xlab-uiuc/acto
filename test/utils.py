@@ -1,5 +1,6 @@
 from enum import Enum
 import json
+from typing import List
 
 import yaml
 
@@ -53,7 +54,8 @@ class BugConfig:
                  declaration: bool = False,
                  difftest: bool = False,
                  runtime_error: bool = False,
-                 recovery: bool = False) -> None:
+                 recovery: bool = False,
+                 consequences: List[BugConsequence] = None) -> None:
         self.category = category
         self.dir = dir
         self.diffdir = diffdir
@@ -61,6 +63,11 @@ class BugConfig:
         self.difftest = difftest
         self.runtime_error = runtime_error
         self.recovery = recovery
+
+        if consequences is None:
+            self.consequences = []
+        else:
+            self.consequences = consequences
 
 
 all_bugs = {
@@ -70,6 +77,7 @@ all_bugs = {
                 category=BugCateogry.RECOVERY_FAILURE,
                 dir='test/cassop-315/inputs',
                 recovery=True,
+                consequences=[BugConsequence.OPERATION_OUTAGE]
             ),
         'cassop-330':
             BugConfig(
@@ -77,18 +85,21 @@ all_bugs = {
                 dir='test/cassop-330/trial-demo',
                 declaration=True,
                 difftest=True,
+                consequences=[BugConsequence.MISCONFIGURATION]
             ),
         'cassop-334':
             BugConfig(
                 category=BugCateogry.RECOVERY_FAILURE,
                 dir='test/cassop-334',
                 recovery=True,
+                consequences=[BugConsequence.RELIABILITY_ISSUE, BugConsequence.OPERATION_OUTAGE]
             ),
         'cassop-471':
             BugConfig(
                 category=BugCateogry.UNDESIRED_STATE,
                 dir='test/cassop-471',
                 declaration=True,
+                consequences=[BugConsequence.RELIABILITY_ISSUE]
             ),
     },
     'cockroach-operator': {
@@ -97,12 +108,14 @@ all_bugs = {
                 category=BugCateogry.OPERATOR_ERROR,
                 dir='test/crdbop-918',
                 runtime_error=True,
+                consequences=[BugConsequence.OPERATION_OUTAGE, BugConsequence.MISCONFIGURATION]
             ),
         'crdbop-919':
             BugConfig(
                 category=BugCateogry.UNDESIRED_STATE,
                 dir='test/crdbop-919',
                 difftest=True,
+                consequences=[BugConsequence.RESOURCE_ISSUE]
             ),
         'crdbop-920':
             BugConfig(
@@ -110,6 +123,7 @@ all_bugs = {
                 dir='test/crdbop-920/inputs',
                 declaration=True,
                 difftest=True,
+                consequences=[BugConsequence.SECURITY_ISSUE]
             ),
         'crdbop-927':
             BugConfig(
@@ -117,12 +131,14 @@ all_bugs = {
                 dir='test/crdbop-927',
                 declaration=True,
                 difftest=True,
+                consequences=[BugConsequence.MISCONFIGURATION]
             ),
         'crdbop-953':
             BugConfig(
                 category=BugCateogry.OPERATOR_ERROR,
                 dir='test/crdbop-953',
                 runtime_error=True,
+                consequences=[BugConsequence.OPERATION_OUTAGE]
             ),
     },
     'knative-operator-serving': {
@@ -131,12 +147,14 @@ all_bugs = {
                 category=BugCateogry.OPERATOR_ERROR,
                 dir='test/knop-1137',
                 runtime_error=True,
+                consequences=[BugConsequence.OPERATION_OUTAGE]
             ),
         'knop-1157':
             BugConfig(
                 category=BugCateogry.OPERATOR_ERROR,
                 dir='test/knop-1157',
                 difftest=True,
+                consequences=[BugConsequence.MISCONFIGURATION]
             ),
     },
     'knative-operator-eventing': {
@@ -145,6 +163,7 @@ all_bugs = {
                 category=BugCateogry.UNDESIRED_STATE,
                 dir='test/knop-1158',
                 runtime_error=True,
+                consequences=[BugConsequence.SYSTEM_FAILURE, BugConsequence.RELIABILITY_ISSUE]
             ),
     },
     'mongodb-community-operator': {
@@ -153,37 +172,43 @@ all_bugs = {
                 category=BugCateogry.SYSTEM_ERROR,
                 dir='test/mgopone-1024',
                 difftest=True,
-                runtime_error=True,  # need to implement how to output this
+                runtime_error=True,
+                consequences=[BugConsequence.SYSTEM_FAILURE]
             ),
         'mgopone-1054':
             BugConfig(
                 category=BugCateogry.OPERATOR_ERROR,
                 dir='test/mgopone-1054',
                 runtime_error=True,
+                consequences=[BugConsequence.OPERATION_OUTAGE]
             ),
         'mgopone-1055':
             BugConfig(
                 category=BugCateogry.OPERATOR_ERROR,
                 dir='test/mgopone-1055',
                 runtime_error=True,
+                consequences=[BugConsequence.OPERATION_OUTAGE]
             ),
         'mgopone-1072':
             BugConfig(
                 category=BugCateogry.RECOVERY_FAILURE,
                 dir='test/mgopone-1072',
                 recovery=True,
+                consequences=[BugConsequence.SYSTEM_FAILURE, BugConsequence.RELIABILITY_ISSUE]
             ),
         'mgopone-1074':
             BugConfig(
                 category=BugCateogry.UNDESIRED_STATE,
                 dir='test/mgopone-1074',
                 difftest=True,
+                consequences=[BugConsequence.SECURITY_ISSUE]
             ),
         'mgopone-1245':
             BugConfig(
                 category=BugCateogry.RECOVERY_FAILURE,
                 dir='test/mgopone-1245',
                 recovery=True,
+                consequences=[BugConsequence.OPERATION_OUTAGE]
             ),
         'mgopone-1251':
             BugConfig(
@@ -191,12 +216,14 @@ all_bugs = {
                 dir='test/mgopone-1251',
                 declaration=True,
                 difftest=True,
+                consequences=[BugConsequence.RELIABILITY_ISSUE]
             ),
         'mgopone-1252':
             BugConfig(
                 category=BugCateogry.UNDESIRED_STATE,
                 dir='test/mgopone-1252',
                 difftest=True,
+                consequences=[BugConsequence.RELIABILITY_ISSUE, BugConsequence.OPERATION_OUTAGE]
             ),
     },
     'percona-server-mongodb-operator': {
@@ -206,12 +233,14 @@ all_bugs = {
                 dir='test/mgoptwo-696',
                 declaration=True,
                 difftest=True,
+                consequences=[BugConsequence.MISCONFIGURATION]
             ),
         'mgoptwo-738':
             BugConfig(
                 category=BugCateogry.UNDESIRED_STATE,
                 dir='test/mgoptwo-738',
                 declaration=True,
+                consequences=[BugConsequence.RESOURCE_ISSUE]
             ),
         'mgoptwo-742':
             BugConfig(
@@ -219,18 +248,21 @@ all_bugs = {
                 dir='test/mgoptwo-742',
                 declaration=True,
                 difftest=True,
+                consequences=[BugConsequence.MISCONFIGURATION]
             ),
         'mgoptwo-895':
             BugConfig(
                 category=BugCateogry.UNDESIRED_STATE,
                 dir='test/mgoptwo-895',
                 difftest=True,
+                consequences=[BugConsequence.MISCONFIGURATION]
             ),
         'mgoptwo-897':
             BugConfig(
                 category=BugCateogry.RECOVERY_FAILURE,
                 dir='test/mgoptwo-897',
                 recovery=True,
+                consequences=[BugConsequence.OPERATION_OUTAGE]
             ),
     },
     'percona-xtradb-cluster-operator': {
@@ -239,6 +271,7 @@ all_bugs = {
                 category=BugCateogry.OPERATOR_ERROR,
                 dir='test/xtop-1060',
                 runtime_error=True,
+                consequences=[BugConsequence.OPERATION_OUTAGE]
             ),
         'xtop-1061':
             BugConfig(
@@ -246,6 +279,7 @@ all_bugs = {
                 dir='test/xtop-1061',
                 declaration=True,
                 difftest=True,
+                consequences=[BugConsequence.MISCONFIGURATION]
             ),
         'xtop-1067':
             BugConfig(
@@ -253,6 +287,7 @@ all_bugs = {
                 dir='test/xtop-1067',
                 declaration=True,
                 difftest=True,
+                consequences=[BugConsequence.MISCONFIGURATION]
             ),
         'xtop-1068':
             BugConfig(
@@ -260,18 +295,21 @@ all_bugs = {
                 dir='test/xtop-1068',
                 declaration=True,
                 difftest=True,
+                consequences=[BugConsequence.MISCONFIGURATION]
             ),
         'xtop-1069':
             BugConfig(
                 category=BugCateogry.UNDESIRED_STATE,
                 dir='test/xtop-1069',
                 declaration=True,
+                consequences=[BugConsequence.RESOURCE_ISSUE]
             ),
         'xtop-1155':
             BugConfig(
                 category=BugCateogry.RECOVERY_FAILURE,
                 dir='test/xtop-1155',
                 recovery=True,
+                consequences=[BugConsequence.OPERATION_OUTAGE]
             ),
     },
     'rabbitmq-operator': {
@@ -280,6 +318,7 @@ all_bugs = {
                 category=BugCateogry.UNDESIRED_STATE,
                 dir='test/rbop-928',
                 declaration=True,
+                consequences=[BugConsequence.RELIABILITY_ISSUE]
             ),
         'rbop-968':
             BugConfig(
@@ -287,12 +326,14 @@ all_bugs = {
                 dir='test/rbop-968',
                 declaration=True,
                 difftest=True,
+                consequences=[BugConsequence.MISCONFIGURATION]
             ),
         'rbop-992':
             BugConfig(
                 category=BugCateogry.UNDESIRED_STATE,
                 dir='test/rbop-992',
                 difftest=True,
+                consequences=[BugConsequence.RESOURCE_ISSUE]
             ),
     },
     'redis-operator': {
@@ -302,18 +343,21 @@ all_bugs = {
                 dir='test/rdopone-400',
                 difftest=True,
                 declaration=True,
+                consequences=[BugConsequence.MISCONFIGURATION]
             ),
         'rdopone-407':
             BugConfig(
                 category=BugCateogry.UNDESIRED_STATE,
                 dir='test/rdopone-407',
                 declaration=True,
+                consequences=[BugConsequence.RESOURCE_ISSUE]
             ),
         'rdopone-552':
             BugConfig(
                 category=BugCateogry.RECOVERY_FAILURE,
                 dir='test/rdopone-552',
                 recovery=True,
+                consequences=[BugConsequence.RELIABILITY_ISSUE]
             ),
     },
     'redis-ot-container-kit-operator': {
@@ -323,54 +367,63 @@ all_bugs = {
                 dir='test/rdoptwo-280',
                 declaration=True,
                 difftest=True,
+                consequences=[BugConsequence.RESOURCE_ISSUE]
             ),
         'rdoptwo-283':
             BugConfig(
                 category=BugCateogry.OPERATOR_ERROR,
                 dir='test/rdoptwo-283',
                 runtime_error=True,
+                consequences=[BugConsequence.OPERATION_OUTAGE]
             ),
         'rdoptwo-286':
             BugConfig(
                 category=BugCateogry.OPERATOR_ERROR,
                 dir='test/rdoptwo-286',
                 runtime_error=True,
+                consequences=[BugConsequence.OPERATION_OUTAGE]
             ),
         'rdoptwo-287':
             BugConfig(
                 category=BugCateogry.UNDESIRED_STATE,
                 dir='test/rdoptwo-287',
                 declaration=True,
+                consequences=[BugConsequence.RELIABILITY_ISSUE]
             ),
         'rdoptwo-290':
             BugConfig(
                 category=BugCateogry.UNDESIRED_STATE,
                 dir='test/rdoptwo-290',
                 declaration=True,
+                consequences=[BugConsequence.RESOURCE_ISSUE]
             ),
         'rdoptwo-292':
             BugConfig(
                 category=BugCateogry.OPERATOR_ERROR,
                 dir='test/rdoptwo-291',
                 runtime_error=True,
+                consequences=[BugConsequence.OPERATION_OUTAGE]
             ),
         'rdoptwo-297':
             BugConfig(
                 category=BugCateogry.SYSTEM_ERROR,
                 dir='test/rdoptwo-297',
                 runtime_error=True,
+                consequences=[BugConsequence.SYSTEM_FAILURE, BugConsequence.RELIABILITY_ISSUE]
             ),
         'rdoptwo-474':
             BugConfig(
                 category=BugCateogry.UNDESIRED_STATE,
                 dir='test/rdoptwo-474',
                 difftest=True,
+                consequences=[BugConsequence.MISCONFIGURATION]
             ),
         'rdoptwo-480':
             BugConfig(
                 category=BugCateogry.RECOVERY_FAILURE,
                 dir='test/rdoptwo-480',
                 recovery=True,
+                consequences=[BugConsequence.OPERATION_OUTAGE]
             ),
     },
     'tidb-operator': {
@@ -381,24 +434,28 @@ all_bugs = {
                 diffdir='test/tiop-4613/diff',
                 declaration=True,
                 difftest=True,
+                consequences=[BugConsequence.RESOURCE_ISSUE]
             ),
         'tiop-4684':
             BugConfig(
                 category=BugCateogry.UNDESIRED_STATE,
                 dir='test/tiop-4684',
                 declaration=True,
+                consequences=[BugConsequence.RELIABILITY_ISSUE]
             ),
         'tiop-4945':
             BugConfig(
                 category=BugCateogry.SYSTEM_ERROR,
                 dir='test/tiop-4945',
                 runtime_error=True,
+                consequences=[BugConsequence.SYSTEM_FAILURE, BugConsequence.RELIABILITY_ISSUE]
             ),
         'tiop-4946':
             BugConfig(
                 category=BugCateogry.RECOVERY_FAILURE,
                 dir='test/tiop-4946',
                 recovery=True,
+                consequences=[BugConsequence.OPERATION_OUTAGE, BugConsequence.RELIABILITY_ISSUE]
             ),
     },
     'zookeeper-operator': {
@@ -407,6 +464,7 @@ all_bugs = {
                 category=BugCateogry.UNDESIRED_STATE,
                 dir='test/zkop-454',
                 difftest=True,
+                consequences=[BugConsequence.MISCONFIGURATION]
             ),
         'zkop-474':
             BugConfig(
@@ -414,12 +472,14 @@ all_bugs = {
                 dir='test/zkop-474',
                 declaration=True,
                 difftest=True,
+                consequences=[BugConsequence.MISCONFIGURATION]
             ),
         'zkop-513':
             BugConfig(
                 category=BugCateogry.SYSTEM_ERROR,
                 dir='test/zkop-513',
                 runtime_error=True,
+                consequences=[BugConsequence.RELIABILITY_ISSUE]
             ),
         'zkop-540':
             BugConfig(
@@ -427,18 +487,21 @@ all_bugs = {
                 dir='test/zkop-540',
                 declaration=True,
                 difftest=True,
+                consequences=[BugConsequence.RESOURCE_ISSUE]
             ),
         'zkop-541':
             BugConfig(
                 category=BugCateogry.UNDESIRED_STATE,
                 dir='test/zkop-541',
                 difftest=True,
+                consequences=[BugConsequence.RELIABILITY_ISSUE]
             ),
         'zkop-547':
             BugConfig(
                 category=BugCateogry.RECOVERY_FAILURE,
                 dir='test/zkop-547',
                 recovery=True,
+                consequences=[BugConsequence.OPERATION_OUTAGE]
             ),
     }
 }
