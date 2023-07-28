@@ -59,6 +59,8 @@ Please proceed to the Kick-the-tire Instructions to validate.
 
 
 ## Setting up local environment (skip this if using the CloudLab profile)
+<details><summary>Click to show details</summary>
+ 
 * A Linux system with Docker support
 * Python 3.8 or newer
 * Install `pip3` by running `sudo apt install python3-pip`
@@ -69,6 +71,8 @@ Please proceed to the Kick-the-tire Instructions to validate.
 * Configure inotify limits (need to rerun after reboot)
   * `sudo sysctl fs.inotify.max_user_instances=1024`
   * `sudo sysctl fs.inotify.max_user_watches=1048576`
+
+</details>
 
 # 3. Kick-the-tire Instructions (10 minutes)
 
