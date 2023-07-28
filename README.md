@@ -43,7 +43,7 @@ ansible-galaxy collection install community.general
 Second, clone Acto’s AE branch to your local machine to run the Ansible script:
 ```
 git clone –branch sosp-ae https://github.com/xlab-uiuc/acto.git
-cd scripts/ansbile
+cd acto/scripts/ansbile
 ```
 
 Finally, build the Ansible inventory and run the script
@@ -54,7 +54,7 @@ echo "$domain ansible_connection=ssh ansible_user=$user ansible_port=22" > ansib
 ansible-playbook -i ansible_hosts configure.yaml
 ```
 
-After the setup is finished, Acto is installed on the CloudLab machine under your home directory.
+After the setup is finished, Acto is installed on the CloudLab machine under the path `workdir/acto` in your home directory.
 Please proceed to the Kick-the-tire Instructions to validate.
 
 
