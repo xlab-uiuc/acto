@@ -214,7 +214,7 @@ if __name__ == '__main__':
             for category, count in results.items():
                 total_reproduced += count
 
-        reproduce_results['knative-operator'] = {}
+        reproduce_results['knative-operator'] = manager.dict()
         reproduce_results['knative-operator'][
             BugCateogry.UNDESIRED_STATE] = reproduce_results['knative-operator-serving'][
                 BugCateogry.UNDESIRED_STATE] + reproduce_results['knative-operator-eventing'][
