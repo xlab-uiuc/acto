@@ -8,7 +8,7 @@ The entire artifact process can take around 2 hours if run with a concurrency of
 
 If you have any questions, please contact us via email or HotCRP.
 
-# 2. Getting Started
+# 2. Prerequisites
 
 ## Setting up [CloudLab](https://www.cloudlab.us/) machines
 
