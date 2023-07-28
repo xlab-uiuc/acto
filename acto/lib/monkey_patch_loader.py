@@ -12,11 +12,11 @@ def load_monkey_patch(config: OperatorConfig):
     else:
         open(monkey_patch_load_path, 'w').write('')
 
-    if actoConfig.ray.enabled:
+    if actoConfig.parallel.executor == 'ray':
         import ansible_runner
 
-        ansible_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'scripts',
-                                   'ansible')
-        ansible_runner.run(inventory=actoConfig.ray.ansible_inventory,
+        ansible_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+                                   'scripts', 'ansible')
+        ansible_runner.run(inventory=actoConfig.parallel.ansible_inventory,
                            playbook=os.path.join(ansible_dir, 'monkey_patch.yaml'))
     import acto.monkey_patch.monkey_patch

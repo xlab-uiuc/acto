@@ -1,4 +1,3 @@
-import concurrent
 import glob
 import hashlib
 import json
@@ -9,10 +8,9 @@ import re
 import sys
 import threading
 import time
-from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict
 from functools import partial
-from typing import Dict, List, Tuple, Generator, Iterator
+from typing import Dict, List, Tuple, Generator, Iterator, Type, Callable, Iterable
 
 import pandas as pd
 from deepdiff.helper import CannotCompare
@@ -25,16 +23,18 @@ from acto.checker.impl import recovery
 from acto.checker.impl.recovery import RecoveryResult
 
 from acto.constant import CONST
+from acto.deploy import Deploy
 from acto.input import TestCase
 from acto.kubernetes_engine.kind import Kind
-from acto.runner.trial import Trial
+from acto.ray_acto import ray
+from acto.runner.trial import Trial, unpack_history_iterator_or_raise
 from acto.serialization import ActoEncoder
 from acto.snapshot import Snapshot
 from acto.utils import get_thread_logger, handle_excepthook, thread_excepthook
 from acto.lib.operator_config import OperatorConfig
-from acto.lib.fp import drop_first_parameter, create_constant_function, unreachable
+from acto.lib.fp import drop_first_parameter, unreachable
 from acto.ray_acto.util import ActorPool
-from acto.runner.runner import Runner
+from acto.runner.runner import Runner, Engine
 from acto.runner.snapshot_collector import CollectorContext, with_context, snapshot_collector
 
 from .post_process import PostProcessor
@@ -87,14 +87,16 @@ def compare_func(x, y, level: DiffLevel = None):
 
 
 class NameOperator(BaseOperator):
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.regex = re.compile(r"^.+-([A-Za-z0-9]{5})$")
 
     def give_up_diffing(self, level, diff_instance):
         x_name = level.t1
         y_name = level.t2
         if x_name is None or y_name is None:
             return False
-        if re.search(r"^.+-([A-Za-z0-9]{5})$", x_name) and re.search(r"^.+-([A-Za-z0-9]{5})$",
-                                                                     y_name):
+        if self.regex.search(x_name) and self.regex.search(y_name):
             return x_name[:5] == y_name[:5]
         return False
 
@@ -175,13 +177,106 @@ class TrialSingleInputIterator:
         unreachable()
 
     @staticmethod
-    def swap_iterator(_: Iterator[Tuple[List[str], TestCase]]) -> Iterator[
-        Tuple[List[str], TestCase]]:
+    def redo():
+        unreachable()
+
+    @staticmethod
+    def swap_iterator(_: Iterator[Tuple[List[str], TestCase]]) -> Iterator[Tuple[List[str], TestCase]]:
         return iter(())
 
     @property
     def history(self) -> List[Tuple[dict, dict]]:
         return self.__history
+
+
+def post_process_task(runner: 'PostDiffRunner', data: Tuple[dict, str]) -> Trial:
+    system_input, system_input_hash = data
+    collector = with_context(CollectorContext(
+        namespace=runner.context['namespace'],
+        crd_meta_info=runner.context['crd'],
+    ), snapshot_collector)
+
+    # Inject the deploy step into the collector, to deploy the operator before running the test
+    collector = runner.deploy.chain_with(drop_first_parameter(collector))
+
+    trial = Trial(TrialSingleInputIterator(system_input, system_input_hash), None, num_mutation=10)
+    return runner.run.remote(trial, collector)
+
+
+def post_diff_compare_task(runner: 'PostDiffRunner', data: Tuple[Snapshot, DataFrame, bool]) -> OracleResult:
+    snapshot, originals, run_check_indeterministic = data
+    return runner.check_trial.remote(snapshot, originals, run_check_indeterministic)
+
+
+@ray.remote(scheduling_strategy="SPREAD", num_cpus=1, resources={"disk": 10})
+class PostDiffRunner(Runner):
+    def __init__(self, context: dict, deploy: Deploy, diff_ignore_fields: List[str], engine_class: Type[Engine],
+                 engine_version: str, num_nodes: int, preload_images: List[str] = None,
+                 preload_images_store: Callable[[str], str] = None):
+        super().__init__(engine_class, engine_version, num_nodes, preload_images, preload_images_store)
+        self.context = context
+        self.deploy = deploy
+        self.diff_ignore_fields = diff_ignore_fields
+
+    def check_trial(self, diff_snapshot: Snapshot, originals: DataFrame, run_check_indeterministic: bool = False):
+        group_errs = []
+        diff_system_input = diff_snapshot.input
+        digest = digest_input(diff_system_input)
+
+        for _, original in originals.iterrows():
+            snapshot: Snapshot = original['snapshot']
+            gen = original['gen']
+
+            if gen == 0:
+                continue
+            result = compare_system_equality(diff_snapshot.system_state,
+                                             snapshot.system_state,
+                                             additional_exclude_paths=self.diff_ignore_fields)
+            if result.means(OracleControlFlow.ok):
+                continue
+
+            errored = False
+            if run_check_indeterministic:
+                additional_trial = post_process_task(self, (diff_system_input, digest))
+                try:
+                    additional_snapshot, _ = unpack_history_iterator_or_raise(additional_trial.history_iterator())
+                except RuntimeError as e:
+                    logging.error(str(e))
+                    continue
+                additional_snapshot: Snapshot
+                indeterministic_fields = get_nondeterministic_fields(snapshot.system_state,
+                                                                     additional_snapshot.system_state,
+                                                                     self.diff_ignore_fields)
+                result: RecoveryResult
+                for delta_category in result.diff:
+                    for delta in result.diff[delta_category]:
+                        if delta.path(output_format='list') not in indeterministic_fields:
+                            errored = True
+                            break
+            else:
+                errored = True
+            if errored:
+                group_errs.append({
+                    'digest': digest,
+                    'id': original['trial'],
+                    'gen': gen,
+                    'diff_test': asdict(result),
+                    'diff_test_status': ','.join(result.all_meanings()),
+                    'input': original['snapshot'].input
+                })
+        return group_errs
+
+
+def load_snapshots(workdir: str) -> Generator[Snapshot, None, None]:
+    diff_files = glob.glob(os.path.join(workdir, '**', 'difftest-*.pkl'))
+    for diff_file in diff_files:
+        trial = pickle.load(open(diff_file, 'rb'))
+        try:
+            snapshot, _ = unpack_history_iterator_or_raise(trial.history_iterator())
+        except RuntimeError as e:
+            logging.error(str(e))
+            continue
+        yield snapshot
 
 
 class PostDiffTest(PostProcessor):
@@ -225,26 +320,14 @@ class PostDiffTest(PostProcessor):
         print(groups.count())
         series = groups.count().sort_values('trial', ascending=False)
         print(series.head())
-        if num_workers > 0:
+        if num_workers:
             self._runners = ActorPool(
-                [Runner.remote(Kind, CONST.K8S_VERSION, config.num_nodes, self._context['preload_images']) for _ in
-                 range(num_workers)])
+                [PostDiffRunner.remote(self._context, self._deploy, self.diff_ignore_fields, Kind, CONST.K8S_VERSION,
+                                       config.num_nodes, self._context['preload_images']) for _ in range(num_workers)]
+            )
         else:
             self._runners = None
         self.num_workers = num_workers
-
-    def post_process_task(self, runner: Runner, data: Tuple[dict, str]) -> Trial:
-        system_input, system_input_hash = data
-        collector = with_context(CollectorContext(
-            namespace=self._context['namespace'],
-            crd_meta_info=self._context['crd'],
-        ), snapshot_collector)
-
-        # Inject the deploy step into the collector, to deploy the operator before running the test
-        collector = self._deploy.chain_with(drop_first_parameter(collector))
-
-        trial = Trial(TrialSingleInputIterator(system_input, system_input_hash), None, num_mutation=10)
-        return runner.run.remote(trial, collector)
 
     def post_process(self, workdir: str):
         if not os.path.exists(workdir):
@@ -253,23 +336,24 @@ class PostDiffTest(PostProcessor):
         test_case_list = list(self.unique_inputs.items())
         while len(test_case_list) != 0:
             (digest, group) = test_case_list.pop()
-            self._runners.submit(self.post_process_task, (group.iloc[0]['input'], group.iloc[0]['input_digest']))
+            trial_name = group.iloc[0]['trial']
+            if os.path.exists(os.path.join(workdir, trial_name, f'difftest-{digest}.pkl')):
+                continue
+            self._runners.submit(post_process_task, (group.iloc[0]['input'], group.iloc[0]['input_digest']))
 
         while self._runners.has_next():
             # As long as there are still runners running, or we have remaining test cases
             # we keep running
             trial = self._runners.get_next_unordered()
 
-            history_iterator = trial.history_iterator()
-            testcase = next(history_iterator, None)
-            if not testcase:
+            try:
+                snapshot, _ = unpack_history_iterator_or_raise(trial.history_iterator())
+            except RuntimeError as e:
+                logging.error(str(e))
                 continue
-            ((system_input, _), exception_or_snapshot) = testcase
-            if isinstance(exception_or_snapshot, Exception):
-                continue
-            snapshot, _ = exception_or_snapshot
+
             snapshot: Snapshot
-            digest = digest_input(system_input)
+            digest = digest_input(snapshot.input)
 
             trial_save_dir = self.unique_inputs[digest].iloc[0]['trial']
             trial_save_dir = os.path.join(workdir, trial_save_dir)
@@ -286,81 +370,21 @@ class PostDiffTest(PostProcessor):
             pickle.dump(trial, open(os.path.join(trial_save_dir, f'difftest-{digest}.pkl'), 'wb'))
 
     def check(self, workdir: str, run_check_indeterministic: bool = False):
-        diff_files = glob.glob(os.path.join(workdir, '**', 'difftest-*.pkl'))
-        pool = ThreadPoolExecutor(max_workers=self.num_workers)
-        futures = [pool.submit(self.check_for_a_trial, pickle.load(open(diff_file, 'rb')), run_check_indeterministic) for diff_file in diff_files]
-        results = []
-        for future in concurrent.futures.as_completed(futures):
-            results.extend(future.result())
+        results = self.check_by_snapshots(load_snapshots(workdir), run_check_indeterministic)
         results_df = pd.DataFrame(results)
         results_df.to_csv(os.path.join(workdir, 'diff_test.csv'))
+        pickle.dump(results, open(os.path.join(workdir, 'diff_test.pkl'), 'wb'))
 
-    def check_for_a_trial(self, diff_test_trial: Trial, run_check_indeterministic: bool = False):
-        group_errs = []
-        trial_history = next(diff_test_trial.history_iterator(), None)
-        if trial_history is None:
-            logging.error(f"it should produce at lease a trial step")
-            return group_errs
-        ((diff_system_input, _), exception_or_data) = trial_history
-        if isinstance(exception_or_data, Exception):
-            logging.error(f"it should collect system status successfully")
-            return group_errs
-        (diff_snapshot, diff_run_result) = exception_or_data
-        diff_snapshot: Snapshot
-
-        digest = digest_input(diff_system_input)
-        originals = self.unique_inputs[digest]
-        for _, original in originals.iterrows():
-            snapshot: Snapshot = original['snapshot']
-            gen = original['gen']
-
-            if gen == 0:
-                continue
-
-            result = compare_system_equality(diff_snapshot.system_state,
-                                             snapshot.system_state,
-                                             additional_exclude_paths=self.diff_ignore_fields)
-            if result.means(OracleControlFlow.ok):
-                continue
-            errored = False
-            if run_check_indeterministic:
-                runner = self._runners.pop_idle()
-                assert runner is not None
-                runner: Runner
-                additional_trial = self.post_process_task(runner, (diff_system_input, digest))
-                self._runners.push(runner)
-
-                additional_trial_history = next(additional_trial.history_iterator(), None)
-                if additional_trial_history is None:
-                    logging.error(f"it should produce at lease a trial step")
-                    continue
-                (_, exception_or_data) = trial_history
-                if isinstance(exception_or_data, Exception):
-                    logging.error(f"it should collect system status successfully")
-                    continue
-                (additional_snapshot, _) = exception_or_data
-                additional_snapshot: Snapshot
-                indeterministic_fields = get_nondeterministic_fields(snapshot.system_state,
-                                                                     additional_snapshot.system_state,
-                                                                     self.diff_ignore_fields)
-                result: RecoveryResult
-                for delta_category in result.diff:
-                    for delta in result.diff[delta_category]:
-                        if delta.path(output_format='list') not in indeterministic_fields:
-                            errored = True
-                            break
-            else:
-                errored = True
-            if errored:
-                group_errs.append({
-                    'digest': digest,
-                    'id': original['trial'],
-                    'gen': gen,
-                    'diff_test': asdict(result),
-                    'diff_test_status': ','.join(result.all_meanings()),
-                    'input': original['snapshot'].input
-                })
-        return group_errs
+    def check_by_snapshots(self, snapshots: Iterable[Snapshot], run_check_indeterministic: bool = False) -> List[OracleResult]:
+        for snapshot in snapshots:
+            digest = digest_input(snapshot.input)
+            self._runners.submit(post_diff_compare_task,
+                                 (snapshot, self.unique_inputs[digest], run_check_indeterministic))
+        results = []
+        while self._runners.has_next():
+            result = self._runners.get_next_unordered()
+            results.extend(result)
+        return results
 
     def teardown(self):
         while True:

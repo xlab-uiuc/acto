@@ -46,6 +46,12 @@ let
           pkgs.rustPlatform.maturinBuildHook
         ];
       });
+      ray = super.ray.overrideAttrs (old: rec {
+        postInstall = let patchFile = ./ray-dashboard.patch; in (old.postInstall or "") + ''
+            find $out/${super.python.sitePackages}/ray -name metrics_head.py | xargs -I {} sh -c "patch {} < ${patchFile}"
+            find $out/${super.python.sitePackages}/ray -name 'metrics_head.*.pyc' -type f -delete
+        '';
+      });
     });
   };
 in

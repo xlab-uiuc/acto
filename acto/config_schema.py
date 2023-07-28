@@ -1,7 +1,7 @@
 import os
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class AlarmsConfig(BaseModel):
@@ -20,8 +20,8 @@ class CheckersConfig(BaseModel):
     state: StateCheckerConfig
 
 
-class RayConfig(BaseModel):
-    enabled: bool = True
+class ParallelConfig(BaseModel):
+    executor: Literal['ray', 'thread', 'process'] = 'process'
     ansible_inventory: str = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'scripts',
                                           'ansible', 'ansible_hosts')
 
@@ -32,4 +32,4 @@ class Config(BaseModel):
     mode: Literal['whitebox', 'blackbox'] = 'whitebox'
     notifications: NotificationsConfig
     strict: bool = True
-    ray: RayConfig
+    parallel: ParallelConfig = Field(default_factory=ParallelConfig)

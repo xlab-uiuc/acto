@@ -5,8 +5,7 @@ After=syslog.target network.target
 
 [Service]
 Type=simple
-ExecStart=/bin/bash -c 'source {{ user_home }}/.profile && nix develop --command ray start --head --port=6379 --dashboard-host "0.0.0.0" --resources=\'{"disk": 40}\' && tail -f /dev/null'
-ExecStop=/bin/bash -c 'source {{ user_home }}/.profile && nix develop --command ray stop'
+ExecStart=/bin/bash -c "source {{ user_home }}/.profile && nix develop --command ray start --head --port=6379 --dashboard-host 0.0.0.0 --resources=\"{\\\"disk\\\": `df /var/lib/docker/ | tail -n +2 | awk '{print $4}' | xargs -I {} echo '{}/1024/1024'| bc`}\" --block"
 User={{ ansible_user }}
 WorkingDirectory={{ user_home }}/acto
 

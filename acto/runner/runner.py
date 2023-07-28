@@ -2,11 +2,12 @@ import logging
 import os
 import hashlib
 import subprocess
-import threading
 import traceback
 import uuid
 from typing import Type, TypeVar, Callable, List
 
+# this is a side effect import
+import acto.monkey_patch.monkey_patch
 from acto import ray_acto as ray
 from acto.kubectl_client import KubectlClient
 from acto.kubernetes_engine.base import KubernetesEngine
@@ -39,14 +40,11 @@ class Runner:
         self.kubernetes_engine_class = engine_class
         self.engine_version = engine_version
         self.num_nodes = num_nodes
-        self.cluster_ok_event: threading.Event = threading.Event()
-        self.cluster_started_event: threading.Event = threading.Event()
-        threading.Thread(target=self.__setup_cluster_and_set_available).start()
 
     def run(self, trial: Trial, snapshot_collector: Callable[['Runner', Trial, dict], Snapshot]) -> Trial:
         '''This method uses the snapshot_collector to execute the trial
         '''
-        self.cluster_ok_event.wait()
+        self.setup_cluster()
         for system_input in trial:
             snapshot = None
             error = None
@@ -57,25 +55,15 @@ class Runner:
                 # TODO: do not use print
                 print(traceback.format_exc())
             trial.send_snapshot(snapshot, error)
-        self.cluster_ok_event.clear()
-        threading.Thread(target=self.__reset_cluster_and_set_available).start()
+        self.teardown_cluster()
         return trial
 
-    def __reset_cluster_and_set_available(self):
-        self.teardown_cluster()
-        self.__setup_cluster()
-        self.cluster_ok_event.set()
-
-    def __setup_cluster_and_set_available(self):
-        self.__setup_cluster()
-        self.cluster_ok_event.set()
-
-    def __setup_cluster(self):
+    def setup_cluster(self):
         self.cluster_name = str(uuid.uuid4())
         kube_dir = os.path.join(os.path.expanduser('~'), '.kube')
         os.makedirs(kube_dir, exist_ok=True)
 
-        self.__prefetch_image()
+        self.prefetch_image()
 
         self.cluster = self.kubernetes_engine_class()
         self.cluster.configure_cluster(self.num_nodes, self.engine_version)
@@ -87,9 +75,8 @@ class Runner:
             self.cluster.load_images(self.preload_images_store, self.cluster_name)
 
         self.kubectl_client = KubectlClient(kubeconfig, context_name)
-        self.cluster_started_event.set()
 
-    def __prefetch_image(self):
+    def prefetch_image(self):
         if not self.preload_images:
             return
         lock_path = self.preload_images_store + '.lock'
@@ -105,8 +92,6 @@ class Runner:
                            list(self.preload_images), stdout=subprocess.DEVNULL)
 
     def teardown_cluster(self):
-        self.cluster_started_event.wait()
-        self.cluster_started_event.clear()
         self.cluster.delete_cluster(self.cluster_name, self.kubectl_client.kubeconfig)
         self.cluster_name = None
         try:

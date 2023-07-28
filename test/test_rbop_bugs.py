@@ -7,6 +7,10 @@ import unittest
 import yaml
 
 import acto.config as acto_config
+
+# prepare feature gate
+acto_config.load_config(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'rbop_bugs_config.yaml'))
+
 from acto.checker.checker import OracleControlFlow
 from acto.checker.checker_set import CheckerSet
 from acto.input import DeterministicInputModel, InputModel
@@ -33,9 +37,6 @@ class TestRabbitMQOpBugs(unittest.TestCase):
         with open(context_file, 'r') as context_fin:
             self.context = json.load(context_fin)
             self.context['preload_images'] = set(self.context['preload_images'])
-
-        # prepare feature gate
-        acto_config.load_config(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'rbop_bugs_config.yaml'))
 
         # prepare input model
         with open(self.config.seed_custom_resource, 'r') as cr_file:

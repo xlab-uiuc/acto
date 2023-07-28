@@ -196,6 +196,7 @@ class Trial:
             self.__generation -= 1
             self.__snapshots.pop()
             self.__run_results.pop()
+            self.__next_input.redo()
             return
 
         if any(map(lambda x: x.means(OracleControlFlow.revert), result)):
@@ -263,3 +264,15 @@ class Trial:
 
     def recycle_testcases(self) -> Iterator[Tuple[List[str], TestCase]]:
         return self.__next_input.swap_iterator(iter(()))
+
+
+def unpack_history_iterator_or_raise(it: Generator[Tuple[Tuple[dict, dict], Union[Exception, Tuple[Snapshot, List[OracleResult]]]], None, None]) -> Tuple[Snapshot, List[OracleResult]]:
+    trial_history = next(it, None)
+    if trial_history is None:
+        raise RuntimeError("it should produce at lease a trial step")
+    (_, exception_or_data) = trial_history
+    if isinstance(exception_or_data, Exception):
+        raise RuntimeError("it should collect system status successfully")
+    (snapshot, run_result) = exception_or_data
+    snapshot: Snapshot
+    return snapshot, run_result
