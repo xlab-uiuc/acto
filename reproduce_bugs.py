@@ -59,6 +59,7 @@ class ReproWorker:
             except queue.Empty:
                 break
 
+            retry = False
             for i in range(3):
                 operator, bug_id, bug_config = bug_tuple
                 repro_dir = bug_config.dir
@@ -87,6 +88,7 @@ class ReproWorker:
                         reproduced = True
                         table_7_results['diff_oracle'] += 1
                     else:
+                        retry = True
                         print(f"Bug {bug_id} not reproduced!")
                         failed_reproductions[bug_id] = True
 
@@ -102,6 +104,7 @@ class ReproWorker:
                             reproduced = True
                             table_7_results['declaration_oracle'] += 1
                     else:
+                        retry = True
                         print(f"Bug {bug_id} not reproduced!")
                         failed_reproductions[bug_id] = True
 
@@ -117,6 +120,7 @@ class ReproWorker:
                             reproduced = True
                             table_7_results['recovery_oracle'] += 1
                     else:
+                        retry = True
                         print(f"Bug {bug_id} not reproduced!")
                         failed_reproductions[bug_id] = True
 
@@ -131,11 +135,12 @@ class ReproWorker:
                             reproduced = True
                             table_7_results['runtime_oracle'] += 1
                     else:
+                        retry = True
                         print(f"Bug {bug_id} not reproduced!")
                         failed_reproductions[bug_id] = True
 
                 # check if reproduced for table 5, and write results
-                if reproduced:
+                if reproduced and not retry:
                     print(f"Bug {bug_id} reproduced!")
                     print(f"Bug category: {bug_config.category}")
                     reproduce_results[operator][bug_config.category] += 1
