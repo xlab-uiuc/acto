@@ -198,10 +198,18 @@ Please note that running all the test campaigns on the CloudLab Clemson c6420 co
 
 You can refer to [test_campaign.md](test_campaign.md) for detailed commands for running each test campaign.
 
-If you would like to try out an end-to-end test campaign, you can do it with the following command (taking the RabbitMQ operator as an example):
+If you would like to try out an end-to-end test campaign, you can do it with the following commands (taking the RabbitMQ operator as an example).
 
+Build the dependant modules as in previous sections if you haven't done so:
+
+```sh
+make
 ```
-python3 -m acto --config data/rabbitmq-operator/config.json –num-workers 16
+
+Run the test campaign:
+
+```sh
+python3 -m acto --config data/rabbitmq-operator/config.json --num-workers 16 --workdir testrun-rabbitmq
 ```
 
 </details>
