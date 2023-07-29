@@ -154,12 +154,12 @@ Misconfiguration         15
 The `table7.txt` should look like below:
 
 ```
-Test Oracle # Bugs (Percentage)
---------------------------------------------------- ---------------------
-Consistency oracle 23 (41.07%)
-Differential oracle for normal state transition 25 (44.64%)
-Differential oracle for rollback state transition 10 (17.86%)
-Regular error check (e.g., exceptions, error codes) 14 (25.00%)
+Test Oracle                                          # Bugs (Percentage)
+---------------------------------------------------  ---------------------
+Consistency oracle                                   23 (41.07%)
+Differential oracle for normal state transition      25 (44.64%)
+Differential oracle for rollback state transition    10 (17.86%)
+Regular error check (e.g., exceptions, error codes)  14 (25.00%)
 ```
 
 ## Reproducing Table 8 (1 minute)
