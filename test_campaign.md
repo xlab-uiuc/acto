@@ -2,6 +2,12 @@
 
 We provide the scripts to run the test campaigns for each operator below.
 
+If you are going to run multiple test campaigns serially on one machine, you will have to do the following between runs for a cleanup:
+
+```sh
+bash scripts/teardown.sh
+```
+
 ## [Cassop](https://github.com/k8ssandra/cass-operator)
 This script runs the test campaign for the [Cassop](https://github.com/k8ssandra/cass-operator).
 This test campaign takes ~10 hours, and the results will be stored at `testrun-cass` directory.
@@ -9,7 +15,7 @@ This test campaign takes ~10 hours, and the results will be stored at `testrun-c
 python3 -m acto \
         --config data/cass-operator/config.json \
         --num-workers 16 \
-        --workdir testrun-cass \
+        --workdir testrun-cass
 ```
 
 ## [CockroachOp](https://github.com/cockroachdb/cockroach-operator)
@@ -50,7 +56,7 @@ python3 -m acto \
 ## [OFC/MongoOp](https://github.com/mongodb/mongodb-kubernetes-operator)
 This script runs the test campaign for the [OFC/MongoOp](https://github.com/mongodb/mongodb-kubernetes-operator).
 This test campaign takes ~6 hours, and the results will be stored at `testrun-mongodb-comm` directory.
-```
+```sh
 python3 -m acto \
         --config data/mongodb-community-operator/config.json \
         --num-workers 16 \
@@ -80,7 +86,7 @@ python3 -m acto \
 ## [SAH/RedisOp](https://github.com/spotahome/redis-operator)
 This script runs the test campaign for the [SAH/RedisOp](https://github.com/spotahome/redis-operator).
 This test campaign takes ~8 hours, and the results will be stored at `testrun-redis` directory.
-```
+```sh
 python3 -m acto \
         --config data/redis-operator/config.json \
         --num-workers 16 \
