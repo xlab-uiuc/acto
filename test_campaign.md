@@ -2,7 +2,7 @@
 
 We provide the scripts to run the test campaigns for each operator below.
 
-If you are going to run multiple test campaigns serially on one machine, you will have to do the following for a cleanup:
+If you are going to run multiple test campaigns serially on one machine, you will have to do the following between runs for a cleanup:
 
 ```sh
 bash scripts/teardown.sh
