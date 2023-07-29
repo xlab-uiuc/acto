@@ -25,7 +25,7 @@ import geni.rspec.emulab as emulab
 import os
 
 cl_repo_path              = "/local/repository/"
-bootstrap_script_rel_path = "scripts/cl_bootstrap.sh"
+startup_script_rel_path = "scripts/cloudlab_startup_run_by_geniuser.sh"
 hostname                  = "acto-physical-worker-0"
 
 # Create a portal context, needed to defined parameters
@@ -54,9 +54,9 @@ node = request.RawPC(hostname)
 node.disk_image = osImage
 node.hardware_type = params.phystype
 
-# Acto bootstrap
-bootstrap_script_path = os.path.join(cl_repo_path, bootstrap_script_rel_path)
-node.addService(pg.Execute(shell="bash", command=bootstrap_script_path))
+# Acto startup
+startup_script_path = os.path.join(cl_repo_path, startup_script_rel_path)
+node.addService(pg.Execute(shell="bash", command=startup_script_path))
 
 # Print the RSpec to the enclosing page.
 pc.printRequestRSpec(request)
