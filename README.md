@@ -12,11 +12,14 @@ If you have any questions, please contact us via email or HotCRP.
 
 ## Setting up [CloudLab](https://www.cloudlab.us/) machines
 
-If you are a first timer of CloudLab, we encourage you to read the CloudLab doc for an overview of how Artifact Evaluation is generally conducted on CloudLab. 
+If you are a first timer of CloudLab, we encourage you to read the CloudLab doc for an overview of how Artifact Evaluation is generally conducted on CloudLab.
 
-[CloudLab For Artifact Evaluation](https://docs.cloudlab.us/repeatable-research.html)
+[CloudLab For Artifact Evaluation](https://docs.cloudlab.us/repeatable-research.html#%28part._aec-members%29)
 
-We recommend you to use the machine type, [c6420](https://www.cloudlab.us/p/Sieve-Acto/c6420) (CloudLab profile), which was used by the evaluation. Note that the machine may not be available all the time. You would need to submit a resource reservation to guarantee the availability of the resource.
+If you do not already have a CloudLab account, please apply for one following this [link](https://www.cloudlab.us/signup.php),
+  and ask the SOSP AEC chair to add you to the SOSP AEC project.
+
+We recommend you to use the machine type, [c6420](https://www.cloudlab.us/instantiate.php?project=Sieve-Acto&profile=acto-cloudlab&refspec=refs/heads/main) (CloudLab profile), which was used by the evaluation. Note that the machine may not be available all the time. You would need to submit a resource reservation to guarantee the availability of the resource.
 
 ## Reserve nodes with preferred hardware type
 
@@ -26,7 +29,29 @@ To reserve machines, click the “Reserve Nodes” tab from the dropdown menu fr
 
 Note: Reservation does not automatically start the experiment.
 
-## Setting up environment for CloudLab machine c6420
+## Setting up environment for CloudLab machine c6420 using the profile
+
+We provide CloudLab profile to automatically select the c6420 as the machine type and set up
+  all the environment.
+
+To use the profile, follow the [link](https://www.cloudlab.us/instantiate.php?project=Sieve-Acto&profile=acto-cloudlab&refspec=refs/heads/main)
+and keep hitting `next` to create the experiment.
+You should see that CloudLab starts to provision the machine and our profile will run a StartUp
+  script to set the environment up.
+
+The start up would take around 10 minutes.
+After you see both the `Status` and `Startup` becomes `Ready`,
+  Acto is installed at the `workdir/acto` directory under your $home directory.
+
+Access the machine using `ssh` or through the `shell` provided by the CloudLab Web UI.
+
+### Seeing error message from CloudLab `No available physical nodes of type c6420 found (1 requested)`?
+<details><summary>Click to show details</summary>
+This means that currently there is no c6420 machines available for experiments. 
+Please check the [Reserve nodes with preferred hardware type](#reserve-nodes-with-preferred-hardware-type) section or check back later.
+</details>
+
+## Setting up environment for CloudLab machine c6420 using Ansible
 
 We provide Ansible scripts to set up the environment on the CloudLab machine.
 
