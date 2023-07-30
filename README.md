@@ -47,8 +47,10 @@ Access the machine using `ssh` or through the `shell` provided by the CloudLab W
 
 ### Seeing error message from CloudLab `No available physical nodes of type c6420 found (1 requested)`?
 <details><summary>Click to show details</summary>
+
 This means that currently there is no c6420 machines available for experiments. 
-Please check the [Reserve nodes with preferred hardware type](#reserve-nodes-with-preferred-hardware-type) section or check back later.
+Please check the [Reserve nodes with preferred hardware](#reserve-nodes-with-preferred-hardware-type) section or check back later.
+
 </details>
 
 ## Setting up environment for CloudLab machine c6420 using Ansible
