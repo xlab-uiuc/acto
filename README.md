@@ -29,7 +29,7 @@ To reserve machines, click the “Reserve Nodes” tab from the dropdown menu fr
 
 Note: Reservation does not automatically start the experiment.
 
-## Setting up environment for CloudLab machine c6420 using the profile
+## Setting up environment for CloudLab machine c6420 using the profile (recommended)
 
 We provide CloudLab profile to automatically select the c6420 as the machine type and set up
   all the environment.
@@ -40,10 +40,11 @@ You should see that CloudLab starts to provision the machine and our profile wil
   script to set the environment up.
 
 The start up would take around 10 minutes.
-After you see both the `Status` and `Startup` becomes `Ready`,
-  Acto is installed at the `workdir/acto` directory under your $home directory.
+Please patiently wait for both the `Status` and `Startup` becomes `Ready`.
+After that, Acto is installed at the `workdir/acto` directory under your $home directory.
 
 Access the machine using `ssh` or through the `shell` provided by the CloudLab Web UI.
+Please proceed to the [Kick-the-tire Instructions](#3-kick-the-tire-instructions-10-minutes) to validate.
 
 ### Seeing error message from CloudLab `No available physical nodes of type c6420 found (1 requested)`?
 <details><summary>Click to show details</summary>
@@ -55,7 +56,7 @@ Please check the [Reserve nodes with preferred hardware](#reserve-nodes-with-pre
 
 ## Setting up environment for CloudLab machine c6420 using Ansible
 
-We provide Ansible scripts to set up the environment on the CloudLab machine.
+We provide Ansible scripts to set up the environment on the CloudLab machine if you did not use our profile to set up the CloudLab experiment.
 
 First, on your local machine, install Ansible and its modules:
 ```
@@ -82,7 +83,7 @@ ansible-playbook -i ansible_hosts configure.yaml
 ```
 
 After the setup is finished, Acto is installed on the CloudLab machine under the path `workdir/acto` in your home directory.
-Please proceed to the Kick-the-tire Instructions to validate.
+Please proceed to the [Kick-the-tire Instructions](#3-kick-the-tire-instructions-10-minutes) to validate.
 
 
 ## Setting up local environment (skip this if using the CloudLab profile)
