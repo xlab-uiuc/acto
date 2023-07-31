@@ -70,7 +70,7 @@ ansible-galaxy collection install community.general
 
 Second, clone Acto’s AE branch to your local machine to run the Ansible script:
 ```
-git clone –branch sosp-ae https://github.com/xlab-uiuc/acto.git
+git clone --branch sosp-ae https://github.com/xlab-uiuc/acto.git
 cd acto/scripts/ansbile
 ```
 
