@@ -93,9 +93,10 @@ Please proceed to the [Kick-the-tire Instructions](#3-kick-the-tire-instructions
 * Python 3.8 or newer
 * Install `pip3` by running `sudo apt install python3-pip`
 * Install [Golang](https://go.dev/doc/install)
-* Install Python dependencies by running `pip3 install -r requirements.txt`
+* Clone the repo recursively by running `git clone --recursive --branch sosp-ae https://github.com/xlab-uiuc/acto.git`
+* Install Python dependencies by running `pip3 install -r requirements.txt` in the project
 * Install `Kind` by running `go install sigs.k8s.io/kind@v0.20.0`
-* Install `Kubectl` by running `curl -LO https://dl.k8s.io/release/v1.22.9/bin/linux/amd64/kubectl` and `install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl`
+* Install `Kubectl` by running `curl -LO https://dl.k8s.io/release/v1.22.9/bin/linux/amd64/kubectl` and `sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl`
 * Configure inotify limits (need to rerun after reboot)
   * `sudo sysctl fs.inotify.max_user_instances=1024`
   * `sudo sysctl fs.inotify.max_user_watches=1048576`
