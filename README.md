@@ -239,6 +239,7 @@ If you would like to try out an end-to-end test campaign, you can do it with the
 Build the dependant modules as in previous sections if you haven't done so:
 
 ```sh
+cd ~/workdir/acto/
 make
 ```
 
