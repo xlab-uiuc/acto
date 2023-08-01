@@ -139,9 +139,10 @@ Bug category: undesired_state
 
 To reproduce the 56 bugs in Table 5, please execute the tests by running:
 
-```
+```sh
+cd ~/workdir/acto/
 make
-python3 reproduce_bugs.py -n NUM_WORKERS
+python3 reproduce_bugs.py -n <NUM_WORKERS>
 ```
 
 Using the CloudLab machine we recommend, run the tests with 16 workers `-n 16` and it will take about 80 minutes to finish.
@@ -154,25 +155,26 @@ After it finishes, you will find `table5.txt`, and `table6.txt`, and `table7.txt
 
 The `table5.txt` should look like below:
 
-```
-Operator                           Undesired State    System Error    Operator Error    Recovery Failure    Total
--------------------------------  -----------------  --------------  ----------------  ------------------  -------
-CassOp                                           2               0                 0                   2        4
-CockroachOp                                      3               0                 2                   0        5
-KnativeOp                                        1               0                 2                   0        3
-OCK/RedisOp                                      4               1                 3                   1        9
-OFC/MongoOp                                      3               1                 2                   2        8
-PCN/MongoOp                                      4               0                 0                   1        5
-RabbitMQOp                                       3               0                 0                   0        3
-SAH/RedisOp                                      2               0                 0                   1        3
-TiDBOp                                           2               1                 0                   1        4
-XtraDBOp                                         4               0                 1                   1        6
-ZooKeeperOp                                      4               1                 0                   1        6
-Total                                           32               4                10                  10       56
+```text
+Operator         Undesired State    System Error    Operator Error    Recovery Failure    Total
+-------------  -----------------  --------------  ----------------  ------------------  -------
+CassOp                         2               0                 0                   2        4
+CockroachOp                    3               0                 2                   0        5
+KnativeOp                      1               0                 2                   0        3
+OCK-RedisOp                    4               1                 3                   1        9
+OFC-MongoDBOp                  3               1                 2                   2        8
+PCN-MongoDBOp                  4               0                 0                   1        5
+RabbitMQOp                     3               0                 0                   0        3
+SAH-RedisOp                    2               0                 0                   1        3
+TiDBOp                         2               1                 0                   1        4
+XtraDBOp                       4               0                 1                   1        6
+ZookeeperOp                    4               1                 0                   1        6
+Total                         32               4                10                  10       56
 ```
 
 The `table6.txt` should look like below:
-```
+
+```text
 Consequence          # Bugs
 -----------------  --------
 System failure            5
@@ -185,7 +187,7 @@ Misconfiguration         15
 
 The `table7.txt` should look like below:
 
-```
+```text
 Test Oracle                                          # Bugs (Percentage)
 ---------------------------------------------------  ---------------------
 Consistency oracle                                   23 (41.07%)
