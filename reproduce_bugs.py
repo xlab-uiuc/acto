@@ -167,7 +167,7 @@ if __name__ == '__main__':
 
     if args.bug_id:
         (operator, bug_config) = bug_id_map[args.bug_id]
-        print(f"Reproducing single bug {args.bug_id} in {operator_pretty_name_mapping[operator]}!")
+        print(f"Reproducing bug {args.bug_id} in {operator_pretty_name_mapping[operator]}!")
         to_reproduce = {operator: {args.bug_id: bug_config}}
         produce_table = False
     else:
