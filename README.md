@@ -108,25 +108,28 @@ Please proceed to the [Kick-the-tire Instructions](#3-kick-the-tire-instructions
 We prepared a simple example –  reproducing a bug found by Acto – to help check obvious setup problems. 
 
 First, build the dependant modules:
-```
+
+```sh
+cd ~/workdir/acto/
 make
 ```
 
 Then, reproduce the OCK-RedisOp-287 bug by running:
-```
+
+```sh
 python3 reproduce_bugs.py --bug-id rdoptwo-287
 ```
 
 Expected results:
 
-```
-Reproducing bug rdoptwo-287 in OCK-RedisOp!                                                                                                                                                     
-Preparing required images...                                                                                                                                                                                        
-Deleting cluster "acto-0-cluster-0" ...                                                                                                                                                                             
-Creating a Kind cluster...                                                                                                                                                                                            
-Deploying operator...                                                                                                                                                                                               
-Operator deployed                                                                                                                             
-Bug rdoptwo-287 reproduced!                                                                                                                                                                                         
+```text
+Reproducing bug rdoptwo-287 in OCK-RedisOp!
+Preparing required images...
+Deleting cluster "acto-0-cluster-0" ...
+Creating a Kind cluster...
+Deploying operator...
+Operator deployed
+Bug rdoptwo-287 reproduced!
 Bug category: undesired_state
 ```
 
@@ -136,9 +139,10 @@ Bug category: undesired_state
 
 To reproduce the 56 bugs in Table 5, please execute the tests by running:
 
-```
+```sh
+cd ~/workdir/acto/
 make
-python3 reproduce_bugs.py -n NUM_WORKERS
+python3 reproduce_bugs.py -n <NUM_WORKERS>
 ```
 
 Using the CloudLab machine we recommend, run the tests with 16 workers `-n 16` and it will take about 80 minutes to finish.
@@ -151,25 +155,26 @@ After it finishes, you will find `table5.txt`, and `table6.txt`, and `table7.txt
 
 The `table5.txt` should look like below:
 
-```
-Operator                           Undesired State    System Error    Operator Error    Recovery Failure    Total
--------------------------------  -----------------  --------------  ----------------  ------------------  -------
-CassOp                                           2               0                 0                   2        4
-CockroachOp                                      3               0                 2                   0        5
-KnativeOp                                        1               0                 2                   0        3
-OCK/RedisOp                                      4               1                 3                   1        9
-OFC/MongoOp                                      3               1                 2                   2        8
-PCN/MongoOp                                      4               0                 0                   1        5
-RabbitMQOp                                       3               0                 0                   0        3
-SAH/RedisOp                                      2               0                 0                   1        3
-TiDBOp                                           2               1                 0                   1        4
-XtraDBOp                                         4               0                 1                   1        6
-ZooKeeperOp                                      4               1                 0                   1        6
-Total                                           32               4                10                  10       56
+```text
+Operator         Undesired State    System Error    Operator Error    Recovery Failure    Total
+-------------  -----------------  --------------  ----------------  ------------------  -------
+CassOp                         2               0                 0                   2        4
+CockroachOp                    3               0                 2                   0        5
+KnativeOp                      1               0                 2                   0        3
+OCK-RedisOp                    4               1                 3                   1        9
+OFC-MongoDBOp                  3               1                 2                   2        8
+PCN-MongoDBOp                  4               0                 0                   1        5
+RabbitMQOp                     3               0                 0                   0        3
+SAH-RedisOp                    2               0                 0                   1        3
+TiDBOp                         2               1                 0                   1        4
+XtraDBOp                       4               0                 1                   1        6
+ZookeeperOp                    4               1                 0                   1        6
+Total                         32               4                10                  10       56
 ```
 
 The `table6.txt` should look like below:
-```
+
+```text
 Consequence          # Bugs
 -----------------  --------
 System failure            5
@@ -182,7 +187,7 @@ Misconfiguration         15
 
 The `table7.txt` should look like below:
 
-```
+```text
 Test Oracle                                          # Bugs (Percentage)
 ---------------------------------------------------  ---------------------
 Consistency oracle                                   23 (41.07%)
@@ -199,12 +204,14 @@ Note: Running test campaigns of all the 11 operators with a single worker would 
 
 
 To collect #Ops Acto generated for each test campaign, run the following script,
-```
+
+```sh
 python3 collect_number_of_ops.py
 ```
 
 The output should look like this:
-```
+
+```text
 Operator         # Operations
 -------------  --------------
 CassOp                    568
@@ -232,6 +239,7 @@ If you would like to try out an end-to-end test campaign, you can do it with the
 Build the dependant modules as in previous sections if you haven't done so:
 
 ```sh
+cd ~/workdir/acto/
 make
 ```
 
