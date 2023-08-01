@@ -108,25 +108,28 @@ Please proceed to the [Kick-the-tire Instructions](#3-kick-the-tire-instructions
 We prepared a simple example –  reproducing a bug found by Acto – to help check obvious setup problems. 
 
 First, build the dependant modules:
-```
+
+```sh
+cd ~/workdir/acto/
 make
 ```
 
 Then, reproduce the OCK-RedisOp-287 bug by running:
-```
+
+```sh
 python3 reproduce_bugs.py --bug-id rdoptwo-287
 ```
 
 Expected results:
 
-```
-Reproducing bug rdoptwo-287 in OCK-RedisOp!                                                                                                                                                     
-Preparing required images...                                                                                                                                                                                        
-Deleting cluster "acto-0-cluster-0" ...                                                                                                                                                                             
-Creating a Kind cluster...                                                                                                                                                                                            
-Deploying operator...                                                                                                                                                                                               
-Operator deployed                                                                                                                             
-Bug rdoptwo-287 reproduced!                                                                                                                                                                                         
+```text
+Reproducing bug rdoptwo-287 in OCK-RedisOp!
+Preparing required images...
+Deleting cluster "acto-0-cluster-0" ...
+Creating a Kind cluster...
+Deploying operator...
+Operator deployed
+Bug rdoptwo-287 reproduced!
 Bug category: undesired_state
 ```
 
