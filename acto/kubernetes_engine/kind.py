@@ -63,7 +63,7 @@ class Kind(base.KubernetesEngine):
             config: path of the config file for cluster
             version: k8s version
         '''
-        print_event('Creating kind cluster...')
+        print_event('Creating a Kind cluster...')
         cmd = ['kind', 'create', 'cluster']
 
         if name:
