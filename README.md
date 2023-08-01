@@ -202,12 +202,14 @@ Note: Running test campaigns of all the 11 operators with a single worker would 
 
 
 To collect #Ops Acto generated for each test campaign, run the following script,
-```
+
+```sh
 python3 collect_number_of_ops.py
 ```
 
 The output should look like this:
-```
+
+```text
 Operator         # Operations
 -------------  --------------
 CassOp                    568
