@@ -61,6 +61,7 @@ class ReproWorker:
 
             retry = False
             for i in range(3):
+                retry = False
                 operator, bug_id, bug_config = bug_tuple
                 repro_dir = bug_config.dir
                 work_dir = f'{self._repro_result_dir}/testrun-{bug_id}'

@@ -494,7 +494,7 @@ def invalid_input_message(log_msg: str, input_delta: dict) -> Tuple[bool, list]:
 
             # if delta.curr is an int, we do exact match to avoid matching a short
             # int (e.g. 1) to a log line and consider the int as invalid input
-            elif isinstance(delta.curr, int):
+            elif isinstance(delta.curr, int) and len(str(delta.curr)) > 1:
                 for item in log_msg.split(' '):
                     if item == str(delta.curr):
                         logger.info(
