@@ -20,6 +20,14 @@ If you do not already have a CloudLab account, please apply for one following th
   and ask the SOSP AEC chair to add you to the SOSP AEC project.
 
 We recommend you to use the machine type, [c6420](https://www.cloudlab.us/instantiate.php?project=Sieve-Acto&profile=acto-cloudlab&refspec=refs/heads/main) (CloudLab profile), which was used by the evaluation. Note that the machine may not be available all the time. You would need to submit a resource reservation to guarantee the availability of the resource.
+You can also use the alternative machine type via our profile, [c8220](https://www.cloudlab.us/p/Sieve-Acto/acto-cloudlab?refspec=refs/heads/c8220). The c8220 machine is available most of the time, but has less memory than c6420.
+
+Note that our results in the evaluation are all produced using the [c6420](https://www.cloudlab.us/instantiate.php?project=Sieve-Acto&profile=acto-cloudlab&refspec=refs/heads/main) profile.
+
+Below, we provide three ways to set up the environment:
+1. [Set up environment on CloudLab c6420 using the profile (recommended)](#setting-up-environment-for-cloudlab-machine-c6420-using-the-profile)
+2. [Set up environment on CloudLab c8220 using the profile](#setting-up-environment-for-cloudlab-machine-c8220-using-the-profile)
+3. [Set up environment on a local machine](#setting-up-local-environment-skip-this-if-using-the-cloudlab-profile)
 
 ## Reserve nodes with preferred hardware type
 
@@ -54,35 +62,22 @@ Please check the [Reserve nodes with preferred hardware](#reserve-nodes-with-pre
 
 </details>
 
-## Setting up environment for CloudLab machine c6420 using Ansible
+## Setting up environment for CloudLab machine c8220 using the profile
 
-We provide Ansible scripts to set up the environment on the CloudLab machine if you did not use our profile to set up the CloudLab experiment.
+We provide CloudLab profile to automatically select the c8220 as the machine type and set up
+  all the environment, in case the c6420 machine is not available at the time of starting experiment,
+  or reviewers do not have enough time to make a resource reservation.
 
-First, on your local machine, install Ansible and its modules:
-```
-sudo apt update
-sudo apt install software-properties-common
-sudo add-apt-repository --yes --update ppa:ansible/ansible
-sudo apt install ansible
-ansible-galaxy collection install ansible.posix
-ansible-galaxy collection install community.general
-```
+To use the profile, follow the [link](https://www.cloudlab.us/p/Sieve-Acto/acto-cloudlab?refspec=refs/heads/c8220)
+and keep hitting `next` to create the experiment.
+You should see that CloudLab starts to provision the machine and our profile will run a StartUp
+  script to set the environment up.
 
-Second, clone Acto’s AE branch to your local machine to run the Ansible script:
-```
-git clone --branch sosp-ae https://github.com/xlab-uiuc/acto.git
-cd acto/scripts/ansbile
-```
+The start up would take around 10 minutes.
+Please patiently wait for both the `Status` and `Startup` becomes `Ready`.
+After that, Acto is installed at the `workdir/acto` directory under your $home directory.
 
-Finally, build the Ansible inventory and run the script
-```
-domain="clnodeXXX.clemson.cloudlab.us" # the domain name of the CloudLab machine
-user="USER_NAME" # your cloudlab username
-echo "$domain ansible_connection=ssh ansible_user=$user ansible_port=22" > ansible_hosts
-ansible-playbook -i ansible_hosts configure.yaml
-```
-
-After the setup is finished, Acto is installed on the CloudLab machine under the path `workdir/acto` in your home directory.
+Access the machine using `ssh` or through the `shell` provided by the CloudLab Web UI.
 Please proceed to the [Kick-the-tire Instructions](#3-kick-the-tire-instructions-10-minutes) to validate.
 
 
@@ -145,7 +140,9 @@ make
 python3 reproduce_bugs.py -n <NUM_WORKERS>
 ```
 
-Using the CloudLab machine we recommend, run the tests with 16 workers `-n 16` and it will take about 80 minutes to finish.
+Using the c6420 profile we recommend, run the tests with 16 workers `-n 16` and it will take about 80 minutes to finish.
+
+Using the c8220 profile we cecommend, run the tests with 8 workers `-n 8` and it will take about 3 hours to finish.
 
 **Caution**: running too many workers at the same time may overload your machine, and Kind would fail to bootstrap Kubernetes clusters. If you are not running the experiment using our recommended CloudLab profile, please default the number of workers to `1`. Running this step sequentially takes approximately 17 hours.
 
