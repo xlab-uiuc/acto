@@ -1,9 +1,12 @@
+import logging
 from enum import auto, unique
 from functools import wraps, partial
 from typing import TypeVar, Callable
 
 import yaml
 from strenum import StrEnum
+
+from acto.monkey_patch import monkey_patch
 
 import acto.utils as utils
 from acto.checker.checker_set import CheckerSet
@@ -150,7 +153,6 @@ class YamlDeploy(Deploy):
            the namespace from the provided object "rabbitmq-system" does not
            match the namespace "acto-namespace". You must pass '--namespace=rabbitmq-system' to perform this operation.
         """
-        logger = get_thread_logger(with_prefix=True)
         print_event('Deploying operator...')
 
         kubectl_client = runner.kubectl_client
@@ -158,7 +160,7 @@ class YamlDeploy(Deploy):
         namespace = utils.get_yaml_existing_namespace(self.crd_yaml_files) or CONST.ACTO_NAMESPACE
         ret = utils.create_namespace(kubectl_client.api_client, namespace)
         if ret is None:
-            logger.critical('Failed to create namespace')
+            logging.critical('Failed to create namespace')
         # use server side apply to avoid last-applied-configuration
         if self.init_yaml_files:
             kubectl_client.apply(self.init_yaml_files, server_side=None)

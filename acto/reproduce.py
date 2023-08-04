@@ -29,7 +29,14 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     from acto.lib.monkey_patch_loader import load_monkey_patch
-    load_monkey_patch(args.config)
+    from acto.lib.operator_config import OperatorConfig
+    with open(args.config, 'r') as config_file:
+        config = OperatorConfig(**json.load(config_file))
+    load_monkey_patch(config)
+
+    import acto.ray_acto as ray
+
+    ray.start_service()
 
     from acto.engine_new import Acto
     from acto.input import TestCase
@@ -54,6 +61,9 @@ if __name__ == '__main__':
             pass
 
         def revert(self):
+            pass
+
+        def redo(self):
             pass
 
         def swap_iterator(self, _: Iterator[Tuple[List[str], 'TestCase']]) -> Iterator[Tuple[List[str], 'TestCase']]:

@@ -11,6 +11,7 @@ def load_config(path=os.path.join(os.path.dirname(os.path.dirname(os.path.abspat
     global actoConfig
     config = yaml.safe_load(open(path))
     actoConfig = Config.parse_obj(config)
+    return actoConfig
 
 
 load_config()

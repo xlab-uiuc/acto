@@ -72,4 +72,4 @@ class KubectlCliChecker(BinaryChecker):
 
         logger.log(logging.CRITICAL if actoConfig.strict else logging.ERROR,
                    f'stderr is not empty, but invalid_input_message mark it as valid: {stderr}')
-        return KubectlCliResult()
+        return KubectlCliResult(f'Invalid input, field path: None, error {stderr}')

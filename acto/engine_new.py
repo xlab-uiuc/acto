@@ -34,6 +34,11 @@ from acto.utils import get_thread_logger, update_preload_images, process_crd
 from ssa.analysis import analyze
 
 
+def task(runner: Runner, data: Tuple[Callable[[Runner, Trial, dict],Snapshot], CheckerSet, int, TrialInputIteratorLike]) -> Trial:
+    collector, checkers, num_of_mutations, iterator = data
+    trial = Trial(iterator, checkers, num_mutation=num_of_mutations)
+    return runner.run.remote(trial, collector)
+
 class Acto:
     def __init__(self,
                  workdir_path: str,
@@ -149,7 +154,7 @@ class Acto:
         for oracle_modules in operator_config.custom_oracles:
             module = importlib.import_module(oracle_modules)
             for name, obj in inspect.getmembers(module):
-                if inspect.isclass(obj) and issubclass(obj, Checker) and obj != Checker:
+                if inspect.isclass(obj) and issubclass(obj, Checker) and not inspect.isabstract(obj):
                     checker_generators.append(obj)
 
         self.checkers = CheckerSet(self.context, self.input_model, checker_generators)
@@ -207,24 +212,19 @@ class Acto:
             json.dump(self.context, context_fout, cls=ContextEncoder, indent=4, sort_keys=True)
 
     def run_trials(self, iterators: Sequence[TrialInputIteratorLike], _collector: Callable[[Runner, Trial, dict], Snapshot] = None):
-        def task(runner: Runner, iterator: TrialInputIteratorLike) -> Trial:
-            if _collector is None:
-                collector = with_context(CollectorContext(
-                    namespace=self.context['namespace'],
-                    crd_meta_info=self.context['crd'],
-                    collect_coverage=self.collect_coverage,
-                ), snapshot_collector)
-            else:
-                collector = _collector
-            # Inject the deploy step into the collector, to deploy the operator before running the test
-            collector = self.deploy.chain_with(drop_first_parameter(collector))
-            assert isinstance(self.input_model.get_root_schema(), ObjectSchema)
-
-            trial = Trial(iterator, self.checkers, num_mutation=self.num_of_mutations)
-            return runner.run.remote(trial, collector)
-
+        if _collector is None:
+            collector = with_context(CollectorContext(
+                namespace=self.context['namespace'],
+                crd_meta_info=self.context['crd'],
+                collect_coverage=self.collect_coverage,
+            ), snapshot_collector)
+        else:
+            collector = _collector
+        # Inject the deploy step into the collector, to deploy the operator before running the test
+        collector = self.deploy.chain_with(drop_first_parameter(collector))
+        assert isinstance(self.input_model.get_root_schema(), ObjectSchema)
         for it in iterators:
-            self.runners.submit(task, it)
+            self.runners.submit(task, (collector, self.checkers, self.num_of_mutations, it))
 
         while self.runners.has_next():
             # As long as we have remaining test cases
@@ -267,13 +267,6 @@ class Acto:
             run_test_plan(self.test_plan['additional_semantic_subgroups'])
 
         logger.info('All tests finished')
-
-    def teardown(self):
-        while True:
-            runner = self.runners.pop_idle()
-            if not runner:
-                break
-            runner.teardown_cluster.remote()
 
 
 def do_static_analysis(analysis: AnalysisConfig):

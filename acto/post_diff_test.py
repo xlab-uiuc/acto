@@ -11,15 +11,13 @@ __test__ = False
 
 if __name__ == '__main__':
 
-    from acto.config import actoConfig
     import acto.config as acto_config
 
-    acto_config.load_config(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    actoConfig = acto_config.load_config(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                                          'config_post_diff_test.yaml'))
 
     from acto.lib.monkey_patch_loader import load_monkey_patch
     from acto.lib.operator_config import OperatorConfig
-    from acto.post_process import PostDiffTest
 
     # for debugging, set random seed to 0
     random.seed(0)
@@ -53,23 +51,13 @@ if __name__ == '__main__':
         format='%(asctime)s %(levelname)-7s, %(name)s, %(filename)-9s:%(lineno)d, %(message)s')
     logging.getLogger("kubernetes").setLevel(logging.ERROR)
     logging.getLogger("sh").setLevel(logging.ERROR)
-    if actoConfig.parallel.executor == 'ray':
-        import ansible_runner
-        import ray
-
-        ansible_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'scripts', 'ansible')
-        ansible_runner.run(inventory=actoConfig.parallel.ansible_inventory,
-                           playbook=os.path.join(ansible_dir, 'acto_ray.yaml'))
-        head_result = ansible_runner.run(inventory=actoConfig.parallel.ansible_inventory,
-                                         playbook=os.path.join(ansible_dir, 'ray_head.yaml'))
-        ansible_runner.run(inventory=actoConfig.parallel.ansible_inventory,
-                           playbook=os.path.join(ansible_dir, 'ray_worker.yaml'))
-        if head_result.stats['changed'] != {}:
-            time.sleep(5)
-        ray.init(address='auto')
+    import acto.ray_acto as ray
+    ray.start_service()
 
 
     def main():
+        from acto.post_process import PostDiffTest
+
         post_diff_test_dir = os.path.join(args.workdir_path, 'post_diff_test')
         trials = {}
         trial_paths = glob.glob(os.path.join(args.workdir_path, '**', 'trial.pkl'))
@@ -81,7 +69,6 @@ if __name__ == '__main__':
         if not args.checkonly:
             p.post_process(post_diff_test_dir)
         p.check(post_diff_test_dir)
-        p.teardown()
 
 
     main()

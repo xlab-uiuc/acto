@@ -18,6 +18,8 @@ from deepdiff.model import DiffLevel
 from deepdiff.operator import BaseOperator
 from pandas import DataFrame
 
+from acto.monkey_patch import monkey_patch
+
 from acto.checker.checker import OracleResult, OracleControlFlow
 from acto.checker.impl import recovery
 from acto.checker.impl.recovery import RecoveryResult
@@ -191,18 +193,18 @@ class TrialSingleInputIterator:
         return self.__history
 
 
-def post_process_task(runner: 'PostDiffRunner', data: Tuple[dict, str]) -> Trial:
-    system_input, system_input_hash = data
+def post_process_task(runner: 'PostDiffRunner', data: Tuple[dict, str, dict, Deploy]) -> Trial:
+    system_input, system_input_hash, context, deploy = data
     collector = with_context(CollectorContext(
-        namespace=runner.context['namespace'],
-        crd_meta_info=runner.context['crd'],
+        namespace=context['namespace'],
+        crd_meta_info=context['crd'],
     ), snapshot_collector)
 
     # Inject the deploy step into the collector, to deploy the operator before running the test
-    collector = runner.deploy.chain_with(drop_first_parameter(collector))
+    collector = deploy.chain_with(drop_first_parameter(collector))
 
     trial = Trial(TrialSingleInputIterator(system_input, system_input_hash), None, num_mutation=10)
-    return runner.run.remote(trial, collector)
+    return ray.get(runner.run.remote(trial, collector))
 
 
 def post_diff_compare_task(runner: 'PostDiffRunner', data: Tuple[Snapshot, DataFrame, bool]) -> OracleResult:
@@ -211,14 +213,17 @@ def post_diff_compare_task(runner: 'PostDiffRunner', data: Tuple[Snapshot, DataF
 
 
 @ray.remote(scheduling_strategy="SPREAD", num_cpus=1, resources={"disk": 10})
-class PostDiffRunner(Runner):
+class PostDiffRunner:
     def __init__(self, context: dict, deploy: Deploy, diff_ignore_fields: List[str], engine_class: Type[Engine],
                  engine_version: str, num_nodes: int, preload_images: List[str] = None,
                  preload_images_store: Callable[[str], str] = None):
-        super().__init__(engine_class, engine_version, num_nodes, preload_images, preload_images_store)
+        self.trial_runner = Runner.remote(engine_class, engine_version, num_nodes, preload_images, preload_images_store)
         self.context = context
         self.deploy = deploy
         self.diff_ignore_fields = diff_ignore_fields
+
+    def run(self, trial: Trial, snapshot_collector: Callable[['Runner', Trial, dict], Snapshot])-> Trial:
+        return self.trial_runner.run.remote(trial, snapshot_collector)
 
     def check_trial(self, diff_snapshot: Snapshot, originals: DataFrame, run_check_indeterministic: bool = False):
         group_errs = []
@@ -239,7 +244,7 @@ class PostDiffRunner(Runner):
 
             errored = False
             if run_check_indeterministic:
-                additional_trial = post_process_task(self, (diff_system_input, digest))
+                additional_trial = post_process_task(self, (diff_system_input, digest, self.context, self.deploy))
                 try:
                     additional_snapshot, _ = unpack_history_iterator_or_raise(additional_trial.history_iterator())
                 except RuntimeError as e:
@@ -341,7 +346,7 @@ class PostDiffTest(PostProcessor):
             trial_name = group.iloc[0]['trial']
             if os.path.exists(os.path.join(workdir, trial_name, f'difftest-{digest}.pkl')):
                 continue
-            self._runners.submit(post_process_task, (group.iloc[0]['input'], group.iloc[0]['input_digest']))
+            self._runners.submit(post_process_task, (group.iloc[0]['input'], group.iloc[0]['input_digest'], self._context, self._deploy))
 
         while self._runners.has_next():
             # As long as there are still runners running, or we have remaining test cases
@@ -388,12 +393,6 @@ class PostDiffTest(PostProcessor):
             results.extend(result)
         return results
 
-    def teardown(self):
-        while True:
-            runner = self._runners.pop_idle()
-            if not runner:
-                break
-            runner.teardown_cluster.remote()
 
 
 if __name__ == '__main__':

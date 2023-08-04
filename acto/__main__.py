@@ -9,8 +9,6 @@ import threading
 import time
 import random
 
-from acto.config import actoConfig
-
 from acto.lib.monkey_patch_loader import load_monkey_patch
 from acto.lib.operator_config import OperatorConfig
 
@@ -95,19 +93,8 @@ logging.basicConfig(
 logging.getLogger("kubernetes").setLevel(logging.ERROR)
 logging.getLogger("sh").setLevel(logging.ERROR)
 
-if actoConfig.parallel.executor == 'ray':
-    import ansible_runner
-    import ray
-
-    ansible_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'scripts', 'ansible')
-    ansible_runner.run(inventory=actoConfig.parallel.ansible_inventory, playbook=os.path.join(ansible_dir, 'acto_ray.yaml'))
-    head_result = ansible_runner.run(inventory=actoConfig.parallel.ansible_inventory,
-                                     playbook=os.path.join(ansible_dir, 'ray_head.yaml'))
-    ansible_runner.run(inventory=actoConfig.parallel.ansible_inventory,
-                       playbook=os.path.join(ansible_dir, 'ray_worker.yaml'))
-    if head_result.stats['changed'] != {}:
-        time.sleep(5)
-    ray.init(address='auto')
+import acto.ray_acto as ray
+ray.start_service()
 
 
 from acto import common
@@ -170,7 +157,6 @@ if args.additional_semantic:
 elif not args.learn:
     acto.run(modes=['normal'])
 normal_finish_time = datetime.now()
-acto.teardown()
 logger.info('Acto normal run finished in %s', normal_finish_time - start_time)
 logger.info('Start post processing steps')
 
