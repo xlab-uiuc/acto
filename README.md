@@ -17,7 +17,7 @@ If you are a first timer of CloudLab, we encourage you to read the CloudLab doc 
 [CloudLab For Artifact Evaluation](https://docs.cloudlab.us/repeatable-research.html#%28part._aec-members%29)
 
 If you do not already have a CloudLab account, please apply for one following this [link](https://www.cloudlab.us/signup.php),
-  and ask the SOSP AEC chair to add you to the SOSP AEC project.
+  and ask the SOSP AEC chair to add you to the SOSP AEC project. Please let us know if you have trouble accessing cloudlab, we can help set up the experiment and give you access.
 
 We recommend you to use the machine type, [c6420](https://www.cloudlab.us/instantiate.php?project=Sieve-Acto&profile=acto-cloudlab&refspec=refs/heads/main) (CloudLab profile), which was used by the evaluation. Note that the machine may not be available all the time. You would need to submit a resource reservation to guarantee the availability of the resource.
 You can also use the alternative machine type via our profile, [c8220](https://www.cloudlab.us/p/Sieve-Acto/acto-cloudlab?refspec=refs/heads/c8220). The c8220 machine is available most of the time, but has less memory than c6420.
@@ -163,6 +163,8 @@ python3 reproduce_bugs.py -n <NUM_WORKERS>
 Using the c6420 profile we recommend, run the tests with 16 workers `-n 16` and it will take about 80 minutes to finish.
 
 Using the c8220 profile we cecommend, run the tests with 8 workers `-n 8` and it will take about 3 hours to finish.
+
+We suggest starting this long-running experiment in a tmux or screen session.
 
 **Caution**: running too many workers at the same time may overload your machine, and Kind would fail to bootstrap Kubernetes clusters. If you are not running the experiment using our recommended CloudLab profile, please default the number of workers to `1`. Running this step sequentially takes approximately 17 hours.
 
