@@ -47,12 +47,32 @@ and keep hitting `next` to create the experiment.
 You should see that CloudLab starts to provision the machine and our profile will run a StartUp
   script to set the environment up.
 
-The start up would take around 10 minutes.
-Please patiently wait for both the `Status` and `Startup` become `Ready`.
+The start up would take around 15 minutes.
+Please patiently wait for "Status" to become `Ready` and "Startup" to become `Finished`.
 After that, Acto is installed at the `workdir/acto` directory under your `$HOME` directory.
 
 Access the machine using `ssh` or through the `shell` provided by the CloudLab Web UI.
 Please proceed to the [Kick-the-tire Instructions](#3-kick-the-tire-instructions-10-minutes) to validate.
+
+### Seeing `Exited (2)` in the "Startup" column?
+
+<details><summary>Click to show details</summary>
+
+There could sometimes be transient network issues within the CloudLab cluster, which prevent e.g. `pip install` in the startup scripts from functioning as expected.
+
+To circumvent the problem, either
+
+1. Recreate the experiment using the same profile, or
+2. SSH into the machine and manually rerun the startup:
+
+    ```sh
+    sudo su - geniuser
+    bash /local/repository/scripts/cloudlab_startup_run_by_geniuser.sh
+    exit
+    ```
+
+</details>
+
 
 ### Seeing error message from CloudLab `No available physical nodes of type c6420 found (1 requested)`?
 <details><summary>Click to show details</summary>
@@ -73,9 +93,9 @@ and keep hitting `next` to create the experiment.
 You should see that CloudLab starts to provision the machine and our profile will run a StartUp
   script to set the environment up.
 
-The start up would take around 10 minutes.
-Please patiently wait for both the `Status` and `Startup` becomes `Ready`.
-After that, Acto is installed at the `workdir/acto` directory under your $home directory.
+The start up would take around 20 minutes.
+Please patiently wait for "Status" to become `Ready` and "Startup" to become `Finished`.
+After that, Acto is installed at the `workdir/acto` directory under your `$HOME` directory.
 
 Access the machine using `ssh` or through the `shell` provided by the CloudLab Web UI.
 Please proceed to the [Kick-the-tire Instructions](#3-kick-the-tire-instructions-10-minutes) to validate.
