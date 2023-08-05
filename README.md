@@ -25,7 +25,7 @@ You can also use the alternative machine type via our profile, [c8220](https://w
 Note that our results in the evaluation are all produced using the [c6420](https://www.cloudlab.us/instantiate.php?project=Sieve-Acto&profile=acto-cloudlab&refspec=refs/heads/main) profile.
 
 Below, we provide three ways to set up the environment:
-1. [Set up environment on CloudLab c6420 using the profile (recommended)](#setting-up-environment-for-cloudlab-machine-c6420-using-the-profile)
+1. [Set up environment on CloudLab c6420 using the profile (recommended)](#setting-up-environment-for-cloudlab-machine-c6420-using-the-profile-recommended)
 2. [Set up environment on CloudLab c8220 using the profile](#setting-up-environment-for-cloudlab-machine-c8220-using-the-profile)
 3. [Set up environment on a local machine](#setting-up-local-environment-skip-this-if-using-the-cloudlab-profile)
 
@@ -48,8 +48,8 @@ You should see that CloudLab starts to provision the machine and our profile wil
   script to set the environment up.
 
 The start up would take around 10 minutes.
-Please patiently wait for both the `Status` and `Startup` becomes `Ready`.
-After that, Acto is installed at the `workdir/acto` directory under your $home directory.
+Please patiently wait for both the `Status` and `Startup` become `Ready`.
+After that, Acto is installed at the `workdir/acto` directory under your `$HOME` directory.
 
 Access the machine using `ssh` or through the `shell` provided by the CloudLab Web UI.
 Please proceed to the [Kick-the-tire Instructions](#3-kick-the-tire-instructions-10-minutes) to validate.
