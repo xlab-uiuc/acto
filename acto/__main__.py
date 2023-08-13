@@ -151,7 +151,8 @@ acto = Acto(workdir_path=args.workdir_path,
             is_reproduce=is_reproduce,
             input_model=input_model,
             apply_testcase_f=apply_testcase_f,
-            delta_from=args.delta_from)
+            delta_from=args.delta_from,
+            focus_fields=config.focus_fields,)
 generation_time = datetime.now()
 logger.info('Acto initialization finished in %s', generation_time - start_time)
 if args.additional_semantic:

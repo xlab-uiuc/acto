@@ -1,10 +1,14 @@
 from enum import Enum
+import glob
 import json
+import os
 from typing import Dict, List
 
 import yaml
+from acto.checker.impl.health import HealthChecker
+from acto.common import PassResult
 
-from acto.snapshot import Snapshot
+from acto.snapshot import EmptySnapshot, Snapshot
 
 
 def construct_snapshot(trial_dir: str, generation: int):
@@ -576,3 +580,23 @@ all_bugs: Dict[str, Dict[str, BugConfig]] = {
             ),
     }
 }
+
+
+def check_postdiff_runtime_error(workdir_path: str) -> bool:
+    '''Checks if there is runtime error manifested in the postdiff run'''
+    post_diff_test_dir = os.path.join(workdir_path, 'post_diff_test')
+    compare_results = glob.glob(os.path.join(post_diff_test_dir, 'compare-results-*.json'))
+    if len(compare_results) == 0:
+        return False
+    else:
+        for compare_result in compare_results:
+            with open(compare_result) as f:
+                result = json.load(f)[0]
+                to_state = result['to']
+                snapshot = EmptySnapshot({})
+                snapshot.system_state = to_state
+                health_result = HealthChecker().check(0, snapshot, {})
+                if not isinstance(health_result, PassResult):
+                    return True
+
+    return False

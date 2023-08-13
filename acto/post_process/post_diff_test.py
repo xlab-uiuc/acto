@@ -88,6 +88,12 @@ def compare_system_equality(curr_system_state: Dict,
                     obj['data'][key] = json.loads(data)
                 except:
                     pass
+    
+    if len(curr_system_state['secret']) != len(prev_system_state['secret']):
+        logger.debug(f"failed attempt recovering to seed state - secret count mismatch")
+        return RecoveryResult(
+            delta=DeepDiff(len(curr_system_state['secret']), len(prev_system_state['secret'])), 
+            from_=prev_system_state, to_=curr_system_state)
 
     # remove custom resource from both states
     curr_system_state.pop('custom_resource_spec', None)
@@ -256,15 +262,15 @@ def get_nondeterministic_fields(s1, s2, additional_exclude_paths):
 class AdditionalRunner:
 
     def __init__(self, context: Dict, deploy: Deploy, workdir: str, cluster: base.KubernetesEngine,
-                 worker_id):
+                 worker_id, acto_namespace: int):
 
         self._context = context
         self._deploy = deploy
         self._workdir = workdir
         self._cluster = cluster
         self._worker_id = worker_id
-        self._cluster_name = f"acto-cluster-{worker_id}"
-        self._context_name = cluster.get_context_name(f"acto-cluster-{worker_id}")
+        self._cluster_name = f"acto-{acto_namespace}-cluster-{worker_id}"
+        self._context_name = cluster.get_context_name(f"acto-{acto_namespace}-cluster-{worker_id}")
         self._kubeconfig = os.path.join(os.path.expanduser('~'), '.kube', self._context_name)
         self._generation = 0
 
@@ -297,15 +303,15 @@ class AdditionalRunner:
 class DeployRunner:
 
     def __init__(self, workqueue: multiprocessing.Queue, context: Dict, deploy: Deploy,
-                 workdir: str, cluster: base.KubernetesEngine, worker_id):
+                 workdir: str, cluster: base.KubernetesEngine, worker_id, acto_namespace: int):
         self._workqueue = workqueue
         self._context = context
         self._deploy = deploy
         self._workdir = workdir
         self._cluster = cluster
         self._worker_id = worker_id
-        self._cluster_name = f"acto-cluster-{worker_id}"
-        self._context_name = cluster.get_context_name(f"acto-cluster-{worker_id}")
+        self._cluster_name = f"acto-{acto_namespace}-cluster-{worker_id}"
+        self._context_name = cluster.get_context_name(f"acto-{acto_namespace}-cluster-{worker_id}")
         self._kubeconfig = os.path.join(os.path.expanduser('~'), '.kube', self._context_name)
         self._images_archive = os.path.join(workdir, 'images.tar')
 
@@ -315,18 +321,21 @@ class DeployRunner:
         trial_dir = os.path.join(self._workdir, 'trial-%02d' % self._worker_id)
         os.makedirs(trial_dir, exist_ok=True)
 
+        before_k8s_bootstrap_time = time.time()
         # Start the cluster and deploy the operator
         self._cluster.restart_cluster(self._cluster_name, self._kubeconfig, CONST.K8S_VERSION)
         self._cluster.load_images(self._images_archive, self._cluster_name)
         apiclient = kubernetes_client(self._kubeconfig, self._context_name)
+        after_k8s_bootstrap_time = time.time()
         deployed = self._deploy.deploy_with_retry(self._context, self._kubeconfig,
                                                   self._context_name)
-        add_acto_label(apiclient, self._context)
+        after_operator_deploy_time = time.time()
 
         trial_dir = os.path.join(self._workdir, 'trial-%02d' % self._worker_id)
         os.makedirs(trial_dir, exist_ok=True)
         runner = Runner(self._context, trial_dir, self._kubeconfig, self._context_name)
         while True:
+            after_k8s_bootstrap_time = time.time()
             try:
                 group = self._workqueue.get(block=False)
             except queue.Empty:
@@ -335,26 +344,34 @@ class DeployRunner:
             cr = group.iloc[0]['input']
 
             snapshot, err = runner.run(cr, generation=generation)
+            after_run_time = time.time()
             err = True
             difftest_result = {
                 'input_digest': group.iloc[0]['input_digest'],
                 'snapshot': snapshot.to_dict(),
                 'originals': group[['trial', 'gen']].to_dict('records'),
+                'time': {
+                    'k8s_bootstrap': after_k8s_bootstrap_time - before_k8s_bootstrap_time,
+                    'operator_deploy': after_operator_deploy_time - after_k8s_bootstrap_time,
+                    'run': after_run_time - after_operator_deploy_time,
+                },
             }
             difftest_result_path = os.path.join(trial_dir, 'difftest-%03d.json' % generation)
             with open(difftest_result_path, 'w') as f:
                 json.dump(difftest_result, f, cls=ActoEncoder, indent=6)
 
             if err:
+                before_k8s_bootstrap_time = time.time()
                 logger.error(f'Restart cluster due to error: {err}')
                 # Start the cluster and deploy the operator
                 self._cluster.restart_cluster(self._cluster_name, self._kubeconfig,
                                               CONST.K8S_VERSION)
                 self._cluster.load_images(self._images_archive, self._cluster_name)
                 apiclient = kubernetes_client(self._kubeconfig, self._context_name)
+                after_k8s_bootstrap_time = time.time()
                 deployed = self._deploy.deploy_with_retry(self._context, self._kubeconfig,
                                                           self._context_name)
-                add_acto_label(apiclient, self._context)
+                after_operator_deploy_time = time.time()
                 runner = Runner(self._context, trial_dir, self._kubeconfig, self._context_name)
 
             generation += 1
@@ -362,7 +379,8 @@ class DeployRunner:
 
 class PostDiffTest(PostProcessor):
 
-    def __init__(self, testrun_dir: str, config: OperatorConfig):
+    def __init__(self, testrun_dir: str, config: OperatorConfig, ignore_invalid: bool = False, acto_namespace: int = 0):
+        self.acto_namespace = acto_namespace
         super().__init__(testrun_dir, config)
         logger = get_thread_logger(with_prefix=True)
 
@@ -370,7 +388,7 @@ class PostDiffTest(PostProcessor):
         for trial, steps in self.trial_to_steps.items():
             for step in steps.values():
                 invalid, _ = step.runtime_result.is_invalid()
-                if invalid:
+                if invalid and not ignore_invalid:
                     continue
                 self.all_inputs.append({
                     'trial': trial,
@@ -402,7 +420,7 @@ class PostDiffTest(PostProcessor):
     def post_process(self, workdir: str, num_workers: int = 1):
         if not os.path.exists(workdir):
             os.mkdir(workdir)
-        cluster = kind.Kind()
+        cluster = kind.Kind(acto_namespace=self.acto_namespace)
         cluster.configure_cluster(self.config.num_nodes, CONST.K8S_VERSION)
         deploy = Deploy(DeployMethod.YAML, self.config.deploy.file, self.config.deploy.init).new()
         # Build an archive to be preloaded
@@ -420,7 +438,7 @@ class PostDiffTest(PostProcessor):
 
         runners: List[DeployRunner] = []
         for i in range(num_workers):
-            runner = DeployRunner(workqueue, self.context, deploy, workdir, cluster, i)
+            runner = DeployRunner(workqueue, self.context, deploy, workdir, cluster, i, self.acto_namespace)
             runners.append(runner)
 
         processes = []
@@ -458,7 +476,7 @@ class PostDiffTest(PostProcessor):
 
         generation = 0  # for additional runner
         additional_runner_dir = os.path.join(workdir, f'additional-runner-{worker_id}')
-        cluster = kind.Kind()
+        cluster = kind.Kind(acto_namespace=self.acto_namespace)
         cluster.configure_cluster(self.config.num_nodes, CONST.K8S_VERSION)
 
         deploy = Deploy(DeployMethod.YAML, self.config.deploy.file, self.config.deploy.init).new()
@@ -467,7 +485,8 @@ class PostDiffTest(PostProcessor):
                                   deploy=deploy,
                                   workdir=additional_runner_dir,
                                   cluster=cluster,
-                                  worker_id=worker_id)
+                                  worker_id=worker_id, 
+                                  acto_namespace=self.acto_namespace)
 
         while True:
             try:
@@ -513,8 +532,7 @@ class PostDiffTest(PostProcessor):
         trial_dir = original_result.trial_dir
         gen = original_result.gen
 
-        invalid, _ = original_result.runtime_result.is_invalid()
-        if isinstance(original_result.runtime_result.health_result, ErrorResult) or invalid:
+        if isinstance(original_result.runtime_result.health_result, ErrorResult):
             return
 
         original_operator_log = original_result.operator_log
