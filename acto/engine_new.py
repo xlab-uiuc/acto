@@ -3,7 +3,7 @@ import importlib
 import inspect
 import json
 import os
-import pickle
+import dill as pickle
 import subprocess
 import tempfile
 from typing import List, Tuple, Callable, Sequence

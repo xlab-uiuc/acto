@@ -10,6 +10,10 @@
     ansible.posix.synchronize:
       src: "{{ playbook_dir }}/../../data"
       dest: ~/acto
+  - name: Copy acto ssa
+    ansible.posix.synchronize:
+      src: "{{ playbook_dir }}/../../ssa"
+      dest: ~/acto
   - name: Copy acto project metadata
     ansible.posix.synchronize:
       src: "{{ playbook_dir }}/../../"
@@ -20,13 +24,30 @@
         - "--include='config.yaml'"
         - "--include='README.md'"
         - "--include='*.nix'"
+        - "--include='*.patch'"
+        - "--include='Makefile'"
         - "--exclude='*'"
+    notify:
+    - Install Acto python dependencies
+  - name: Check if acto ssa is built
+    ansible.builtin.stat:
+      path: ~/acto/ssa/libanalysis.so
+    register: ssa_result
+  - name: Check if acto k8s lib is made
+    ansible.builtin.stat:
+      path: ~/acto/acto/k8s_util/lib/k8sutil.so
+    register: k8s_result
+  - name: Show result
+    ansible.builtin.debug:
+      msg: "The libs are not fully built."
+    when: not ssa_result.stat.exists or not k8s_result.stat.exists
+    changed_when: true
     notify:
     - Install Acto python dependencies
 
   handlers:
   - name: Install Acto python dependencies
-    ansible.builtin.shell: source ~/.profile && nix develop --command 'echo'
+    ansible.builtin.shell: source ~/.profile && nix develop --command 'make'
     args:
       executable: /bin/bash
       chdir: ~/acto

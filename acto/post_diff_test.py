@@ -3,7 +3,7 @@ import glob
 import json
 import os
 import logging
-import pickle
+import dill as pickle
 import random
 import time
 

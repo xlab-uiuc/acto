@@ -666,7 +666,10 @@ class ArrayGenerator(ArraySchema, ValueGenerator):
                                 (self.path, self.examples[0]))
                     return example
         if prev == None:
-            return self.gen()
+            result = []
+            while not result:
+                result = self.gen()
+            return result
         return self.gen(size=self.max_items)
 
     def empty_precondition(self, prev):

@@ -61,7 +61,7 @@ def snapshot_collector(ctx: CollectorContext, runner: Runner, trial: Trial, syst
     }
 
     if not skip_waiting_for_converge:
-        asyncio.run(wait_for_system_converge(ctx.kubectl_collector, ctx.timeout))
+        asyncio.run(wait_for_system_converge_expect_more_events(ctx.kubectl_collector, ctx.timeout))
 
     system_state = ctx.kubectl_collector.collect_system_state()
     operator_log = ctx.kubectl_collector.collect_operator_log()
@@ -136,4 +136,4 @@ async def wait_for_system_converge_expect_more_events(collector: Collector, no_e
         if health_result.means(OracleControlFlow.ok):
             return True
         # TODO: if the system is not healthy, but we have no events, do we need to wait more?
-        futures = pending_futures + [asyncio.create_task(wait_until_no_future_events(collector.coreV1Api, no_events_threshold))]
+        futures = list(pending_futures) + [asyncio.create_task(wait_until_no_future_events(collector.coreV1Api, no_events_threshold))]

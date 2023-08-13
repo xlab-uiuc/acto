@@ -2,6 +2,7 @@ import base64
 import io
 import json
 import tarfile
+from functools import wraps
 from typing import Optional, Dict
 
 import kubernetes
@@ -12,6 +13,19 @@ from acto.kubectl_client import KubectlClient
 from acto.lib.dict import visit_dict
 from acto.snapshot import PodLog
 from acto.utils import get_thread_logger
+
+
+def except_and_return_default(default):
+    def impl(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            try:
+                return fn(*args, **kwargs)
+            except:
+                return default
+
+        return wrapper
+    return impl
 
 
 class Collector:
@@ -80,6 +94,7 @@ class Collector:
 
         return resources
 
+    @except_and_return_default([])
     def collect_operator_log(self) -> List[str]:
         """
         Queries operator log in the test namespace, computes delta and returns the system state.
@@ -114,6 +129,7 @@ class Collector:
 
         return json.loads(events.data)
 
+    @except_and_return_default({})
     def collect_not_ready_pods_logs(self) -> Dict[str, PodLog]:
         logs = {}
         pods = self.coreV1Api.list_namespaced_pod(self.namespace)

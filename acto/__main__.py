@@ -137,7 +137,9 @@ input_model = DeterministicInputModel
 is_reproduce = False
 
 start_time = datetime.now()
-acto = Acto(workdir_path=args.workdir_path,
+import pdb, traceback, sys
+try:
+    acto = Acto(workdir_path=args.workdir_path,
             operator_config=config,
             cluster_runtime=args.cluster_runtime,
             enable_analysis=False,
@@ -150,13 +152,17 @@ acto = Acto(workdir_path=args.workdir_path,
             analysis_only=args.learn_analysis_only,
             is_reproduce=is_reproduce,
             delta_from=args.delta_from)
-generation_time = datetime.now()
-logger.info('Acto initialization finished in %s', generation_time - start_time)
-if args.additional_semantic:
-    acto.run(modes=[InputModel.ADDITIONAL_SEMANTIC])
-elif not args.learn:
-    acto.run(modes=['normal'])
-normal_finish_time = datetime.now()
+    generation_time = datetime.now()
+    logger.info('Acto initialization finished in %s', generation_time - start_time)
+    if args.additional_semantic:
+        acto.run(modes=[InputModel.ADDITIONAL_SEMANTIC])
+    elif not args.learn:
+        acto.run(modes=['normal'])
+    normal_finish_time = datetime.now()
+except:
+    extype, value, tb = sys.exc_info()
+    traceback.print_exc()
+    pdb.post_mortem(tb)
 logger.info('Acto normal run finished in %s', normal_finish_time - start_time)
 logger.info('Start post processing steps')
 

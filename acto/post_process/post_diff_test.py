@@ -3,7 +3,7 @@ import hashlib
 import json
 import logging
 import os
-import pickle
+import dill as pickle
 import re
 import sys
 import threading

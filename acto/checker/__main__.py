@@ -1,7 +1,7 @@
 import argparse
 import glob
 import os
-import pickle
+import dill as pickle
 from dataclasses import asdict
 from typing import Tuple, List
 

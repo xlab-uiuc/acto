@@ -1,0 +1,8 @@
+---
+- name: Remove any container left
+  hosts: all
+  tasks:
+  - name: Remove containers
+    ansible.builtin.shell: docker ps | awk "{print $1}" | tail +2 | xargs --no-run-if-empty docker rm -f
+  - name: Prune dokcer volume
+    ansible.builtin.shell: docker volume prune -f
