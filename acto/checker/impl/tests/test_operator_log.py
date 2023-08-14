@@ -3,7 +3,7 @@ import pytest
 from acto.checker.impl.operator_log import OperatorLogChecker
 from acto.checker.impl.tests import load_snapshot
 from acto.common import OracleResult, PassResult
-from acto.snapshot import Snapshot, EmptySnapshot
+from acto.snapshot import Snapshot
 
 # Crash checker is stateless, so we can use the same instance for all tests
 checker = OperatorLogChecker()

@@ -29,7 +29,7 @@ from acto.kubernetes_engine import base, k3d, kind
 from acto.oracle_handle import OracleHandle
 from acto.runner import Runner
 from acto.serialization import ActoEncoder, ContextEncoder
-from acto.snapshot import EmptySnapshot, Snapshot
+from acto.snapshot import Snapshot
 from acto.utils import (add_acto_label, delete_operator_pod, process_crd,
                         update_preload_images)
 from acto.utils.config import OperatorConfig
@@ -301,7 +301,7 @@ class TrialRunner:
         checker: CheckerSet = self.checker_t(self.context, trial_dir, self.input_model, oracle_handle, self.custom_oracle)
 
         curr_input = self.input_model.get_seed_input()
-        self.snapshots.append(EmptySnapshot(curr_input))
+        self.snapshots.append(Snapshot(curr_input))
 
         generation = 0
         while generation < num_mutation:  # every iteration gets a new list of next tests
