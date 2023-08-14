@@ -1,0 +1,41 @@
+[tool.poetry]
+name = "acto"
+version = "0.1.0"
+description = "Push-Button End-to-End Testing of Kubernetes Operators"
+authors = ["Tyler Gu <jiaweig3@illinois.edu>", "Kashun Cheng <kashun@berkeley.edu>"]
+license = "Apache-2.0"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.8"
+deepdiff = "^6.3.1"
+kubernetes = "^26.1.0"
+exrex = "^0.11.0"
+jsonschema = "<=4.17.3"
+jsonpatch = "^1.33"
+pandas = "<2.0.0"
+pyyaml = "^6.0"
+requests = "^2.31.0"
+pydantic = "<2.0.0"
+strenum = "^0.4.15"
+filelock = "^3.12.2"
+ray = { extras = ["default"], version = "^2.5.1", optional = true }
+ansible-runner = { version = "^2.3.3", optional = true }
+ansible-core = { version = "~2.13.0", optional = true }
+pre-commit = "^3.3.3"
+dill = "^0.3.7"
+
+[tool.poetry.group.dev]
+optional = true
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
+pytest-cov = "^4.1.0"
+pytest-timeout = "^2.1.0"
+
+[tool.poetry.extras]
+ray = ["ansible-runner", "ansible-core", "ray"]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

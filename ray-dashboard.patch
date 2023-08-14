@@ -1,0 +1,12 @@
+diff --git a/dashboard/modules/metrics/metrics_head.py b/dashboard/modules/metrics/metrics_head.py
+index 24a049e4b2..50b4f05155 100644
+--- a/dashboard/modules/metrics/metrics_head.py
++++ b/dashboard/modules/metrics/metrics_head.py
+@@ -192,6 +192,7 @@ class MetricsHead(dashboard_utils.DashboardHeadModule):
+             shutil.rmtree(grafana_config_output_path)
+         os.makedirs(os.path.dirname(grafana_config_output_path), exist_ok=True)
+         shutil.copytree(GRAFANA_CONFIG_INPUT_PATH, grafana_config_output_path)
++        os.chmod(grafana_config_output_path, 0o777)
+
+         # Overwrite grafana's dashboard provisioning directory based on env var
+         dashboard_provisioning_path = os.path.join(
