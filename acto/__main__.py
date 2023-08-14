@@ -93,7 +93,7 @@ from acto import common
 from acto.engine import Acto, apply_testcase
 from acto.input.input import DeterministicInputModel, InputModel
 from acto.post_process import PostDiffTest
-from acto.utils.config import OperatorConfig
+from acto.lib.operator_config import OperatorConfig
 from acto.utils.error_handler import handle_excepthook, thread_excepthook
 
 from acto.utils.thread_logger import get_thread_logger

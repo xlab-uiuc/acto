@@ -28,7 +28,8 @@ from acto.deploy import Deploy, DeployMethod
 from acto.kubernetes_engine import base, kind
 from acto.runner import Runner
 from acto.serialization import ActoEncoder
-from acto.utils import (OperatorConfig, add_acto_label, get_thread_logger,
+from acto.lib.operator_config import OperatorConfig
+from acto.utils import (add_acto_label, get_thread_logger,
                         handle_excepthook, thread_excepthook)
 
 from .post_process import PostProcessor, Step

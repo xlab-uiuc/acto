@@ -32,7 +32,7 @@ from acto.serialization import ActoEncoder, ContextEncoder
 from acto.snapshot import EmptySnapshot, Snapshot
 from acto.utils import (add_acto_label, delete_operator_pod, process_crd,
                         update_preload_images)
-from acto.utils.config import OperatorConfig
+from acto.lib.operator_config import OperatorConfig
 from acto.utils.thread_logger import (get_thread_logger,
                                       set_thread_logger_prefix)
 from ssa.analysis import analyze
