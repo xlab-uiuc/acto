@@ -37,7 +37,7 @@ from acto.utils.thread_logger import (get_thread_logger,
                                       set_thread_logger_prefix)
 from ssa.analysis import analyze
 
-def save_result(trial_dir: str, trial_result: RunResult, num_tests: int, trial_elapsed):
+def save_result(trial_dir: str, trial_result: RunResult, num_tests: int, trial_elapsed, time_breakdown):
     logger = get_thread_logger(with_prefix=False)
 
     result_dict = {}
@@ -47,6 +47,7 @@ def save_result(trial_dir: str, trial_result: RunResult, num_tests: int, trial_e
     except:
         result_dict['trial_num'] = trial_dir
     result_dict['duration'] = trial_elapsed
+    result_dict['time_breakdown'] = time_breakdown
     result_dict['num_tests'] = num_tests
     if trial_result == None:
         logger.info('Trial %s completed without error', trial_dir)
@@ -198,7 +199,7 @@ class TrialRunner:
                  checker_t: type, wait_time: int, custom_on_init: List[callable],
                  custom_oracle: List[callable], workdir: str, cluster: base.KubernetesEngine,
                  worker_id: int, sequence_base: int, dryrun: bool, is_reproduce: bool,
-                 apply_testcase_f: FunctionType) -> None:
+                 apply_testcase_f: FunctionType, acto_namespace: int) -> None:
         self.context = context
         self.workdir = workdir
         self.base_workdir = workdir
@@ -206,9 +207,9 @@ class TrialRunner:
         self.images_archive = os.path.join(workdir, 'images.tar')
         self.worker_id = worker_id
         self.sequence_base = sequence_base  # trial number to start with
-        self.context_name = cluster.get_context_name(f"acto-cluster-{worker_id}")
+        self.context_name = cluster.get_context_name(f"acto-{acto_namespace}-cluster-{worker_id}")
         self.kubeconfig = os.path.join(os.path.expanduser('~'), '.kube', self.context_name)
-        self.cluster_name = f"acto-cluster-{worker_id}"
+        self.cluster_name = f"acto-{acto_namespace}-cluster-{worker_id}"
         self.input_model = input_model
         self.deploy = deploy
         self.runner_t = runner_t
@@ -226,7 +227,7 @@ class TrialRunner:
 
         self.curr_trial = 0
 
-    def run(self, mode: str = InputModel.NORMAL):
+    def run(self, errors: List[RunResult], mode: str = InputModel.NORMAL):
         logger = get_thread_logger(with_prefix=True)
 
         self.input_model.set_worker_id(self.worker_id)
@@ -246,12 +247,13 @@ class TrialRunner:
             self.cluster.restart_cluster(self.cluster_name, self.kubeconfig, CONST.K8S_VERSION)
             apiclient = kubernetes_client(self.kubeconfig, self.context_name)
             self.cluster.load_images(self.images_archive, self.cluster_name)
+            trial_k8s_bootstrap_time = time.time()
             deployed = self.deploy.deploy_with_retry(self.context, self.kubeconfig,
                                                      self.context_name)
             if not deployed:
                 logger.info('Not deployed. Try again!')
                 continue
-
+            operator_deploy_time = time.time()
             trial_dir = os.path.join(
                 self.workdir,
                 'trial-%02d-%04d' % (self.worker_id + self.sequence_base, self.curr_trial))
@@ -260,13 +262,22 @@ class TrialRunner:
             trial_err, num_tests = self.run_trial(trial_dir=trial_dir, curr_trial=self.curr_trial)
             self.snapshots = []
 
-            trial_elapsed = time.strftime("%H:%M:%S", time.gmtime(time.time() - trial_start_time))
+            trial_finished_time = time.time()
+            trial_elapsed = time.strftime("%H:%M:%S", time.gmtime(trial_finished_time - trial_start_time))
             logger.info('Trial %d finished, completed in %s' % (self.curr_trial, trial_elapsed))
+            logger.info(f'Kubernetes bootstrap: {trial_k8s_bootstrap_time - trial_start_time}')
+            logger.info(f'Operator deploy: {operator_deploy_time - trial_k8s_bootstrap_time}')
+            logger.info(f'Trial run: {trial_finished_time - operator_deploy_time}')
             logger.info('---------------------------------------\n')
 
             delete_operator_pod(apiclient, self.context['namespace'])
-            save_result(trial_dir, trial_err, num_tests, trial_elapsed)
+            save_result(trial_dir, trial_err, num_tests, trial_elapsed, {
+                'k8s_bootstrap': trial_k8s_bootstrap_time - trial_start_time,
+                'operator_deploy': operator_deploy_time - trial_k8s_bootstrap_time,
+                'trial_run': trial_finished_time - operator_deploy_time
+            })
             self.curr_trial = self.curr_trial + 1
+            errors.append(trial_err)
 
             if self.input_model.is_empty():
                 logger.info('Test finished')
@@ -602,7 +613,8 @@ class Acto:
                  reproduce_dir: str = None,
                  delta_from: str = None,
                  mount: list = None,
-                 focus_fields: list = None) -> None:
+                 focus_fields: list = None,
+                 acto_namespace: int = 0) -> None:
         logger = get_thread_logger(with_prefix=False)
 
         try:
@@ -625,13 +637,13 @@ class Acto:
             raise UnknownDeployMethodError()
 
         if cluster_runtime == "KIND":
-            cluster = kind.Kind()
+            cluster = kind.Kind(acto_namespace=acto_namespace)
         elif cluster_runtime == "K3D":
             cluster = k3d.K3D()
         else:
             logger.warning(
                 f"Cluster Runtime {cluster_runtime} is not supported, defaulted to use kind")
-            cluster = kind.Kind()
+            cluster = kind.Kind(acto_namespace=acto_namespace)
 
         self.cluster = cluster
         self.deploy = deploy
@@ -644,6 +656,7 @@ class Acto:
         self.is_reproduce = is_reproduce
         self.apply_testcase_f = apply_testcase_f
         self.reproduce_dir = reproduce_dir
+        self.acto_namespace = acto_namespace
 
         self.runner_type = Runner
         self.checker_type = CheckerSet
@@ -674,6 +687,7 @@ class Acto:
         if operator_config.k8s_fields is not None:
             module = importlib.import_module(operator_config.k8s_fields)
             if hasattr(module,'BLACKBOX') and actoConfig.mode == 'blackbox':
+                applied_custom_k8s_fields = True
                 for k8s_field in module.BLACKBOX:
                     self.input_model.apply_k8s_schema(k8s_field)
             elif hasattr(module,'WHITEBOX') and actoConfig.mode == 'whitebox':
@@ -814,7 +828,8 @@ class Acto:
             with open(context_file, 'w') as context_fout:
                 json.dump(self.context, context_fout, cls=ContextEncoder, indent=4, sort_keys=True)
 
-    def run(self, modes: list = ['normal', 'overspecified', 'copiedover']):
+    def run(self, modes: list = ['normal', 'overspecified', 'copiedover']) -> List[RunResult]:
+        # TODO: return the alarms here
         logger = get_thread_logger(with_prefix=True)
 
         # Build an archive to be preloaded
@@ -829,19 +844,20 @@ class Acto:
 
         start_time = time.time()
 
+        errors: List[RunResult] = []
         runners: List[TrialRunner] = []
         for i in range(self.num_workers):
             runner = TrialRunner(self.context, self.input_model, self.deploy, self.runner_type,
                                  self.checker_type, self.operator_config.wait_time,
                                  self.custom_on_init, self.custom_oracle, self.workdir_path,
                                  self.cluster, i, self.sequence_base, self.dryrun,
-                                 self.is_reproduce, self.apply_testcase_f)
+                                 self.is_reproduce, self.apply_testcase_f, self.acto_namespace)
             runners.append(runner)
 
         if 'normal' in modes:
             threads = []
             for runner in runners:
-                t = threading.Thread(target=runner.run, args=([]))
+                t = threading.Thread(target=runner.run, args=([errors]))
                 t.start()
                 threads.append(t)
 
@@ -853,7 +869,7 @@ class Acto:
         if 'overspecified' in modes:
             threads = []
             for runner in runners:
-                t = threading.Thread(target=runner.run, args=([InputModel.OVERSPECIFIED]))
+                t = threading.Thread(target=runner.run, args=([errors, InputModel.OVERSPECIFIED]))
                 t.start()
                 threads.append(t)
 
@@ -865,7 +881,7 @@ class Acto:
         if 'copiedover' in modes:
             threads = []
             for runner in runners:
-                t = threading.Thread(target=runner.run, args=([InputModel.COPIED_OVER]))
+                t = threading.Thread(target=runner.run, args=([errors, InputModel.COPIED_OVER]))
                 t.start()
                 threads.append(t)
 
@@ -877,7 +893,7 @@ class Acto:
         if InputModel.ADDITIONAL_SEMANTIC in modes:
             threads = []
             for runner in runners:
-                t = threading.Thread(target=runner.run, args=([InputModel.ADDITIONAL_SEMANTIC]))
+                t = threading.Thread(target=runner.run, args=([errors, InputModel.ADDITIONAL_SEMANTIC]))
                 t.start()
                 threads.append(t)
 
@@ -904,3 +920,4 @@ class Acto:
             json.dump(testrun_info, info_file, cls=ActoEncoder, indent=4)
 
         logger.info('All tests finished')
+        return errors

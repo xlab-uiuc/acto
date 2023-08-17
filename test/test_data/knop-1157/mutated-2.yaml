@@ -1,0 +1,45 @@
+apiVersion: operator.knative.dev/v1beta1
+kind: KnativeServing
+metadata:
+  name: test-cluster
+  namespace: knative-serving
+spec:
+  version: 1.6.0
+  registry:
+    default: gcr.io/knative-releases/knative.dev/serving/cmd/${NAME}:v1.6.0
+    override:
+      net-kourier-controller/controller: gcr.io/knative-releases/knative.dev/net-kourier/cmd/kourier:v1.6.0
+      kourier-gateway: docker.io/envoyproxy/envoy:v1.20-latest
+      migrate: gcr.io/knative-releases/knative.dev/pkg/apiextensions/storageversion/cmd/migrate:latest
+  ingress:
+    contour:
+      enabled: false
+    kourier:
+      enabled: true
+  services:
+  - name: webhook
+  deployments:
+  - name: controller
+    resources:
+    - container: controller
+      requests:
+        cpu: 300m
+        memory: 125Mi
+      limits:
+        cpu: 950m
+        memory: 250Mi
+    env:
+    - container: controller
+      envVars:
+      - name: ENVAR_1
+        value: VALUE_1
+  podDisruptionBudgets:
+  - name: activator-pdb
+    minAvailable: 50%
+  - name: webhook-pdb
+    minAvailable: 50%
+  config:
+    config-autoscaler:
+      key1: value1
+    network:
+      ingress-class: "kourier.ingress.networking.knative.dev"
