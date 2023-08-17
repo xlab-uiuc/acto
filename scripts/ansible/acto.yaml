@@ -4,51 +4,15 @@
 
   tasks:
 
-    - name: Clean up previous acto repo
-      file:
-        path: /tmp/acto
-        state: absent
-
-    - name: Download acto repo
-      local_action:
-        module: ansible.builtin.git
-        archive: /tmp/acto.tar.gz
-        clone: yes
-        dest: /tmp/acto
-        repo: git@github.com:xlab-uiuc/acto.git
-        version: main
-      run_once: true
-
-    - name: Get the home directory
-      become: false
-      command: echo $HOME
-      register: home
-
-    - name: Copy Acto archive to remote
-      ansible.builtin.copy:
-        src: /tmp/acto.tar.gz
-        dest: "{{ home.stdout }}"
-
-    # - name: Ansible delete file glob
-    #   find:
-    #     paths: "{{ home.stdout }}/acto"
-    #     patterns: "*"
-    #   register: files_to_delete
-
-    # - name: Ansible remove file glob
-    #   file:
-    #     path: "{{ item.path }}"
-    #     state: absent
-    #   with_items: "{{ files_to_delete.files }}"
-
     - name: create Acto dir
       become: false
       ansible.builtin.file:
-        path: "{{ home.stdout }}/acto"
+        path: "{{ home.stdout }}/workdir/acto"
         state: directory
 
-    - name: open archive
-      ansible.builtin.unarchive:
-        copy: true
-        dest: "{{ home.stdout }}/acto"
-        src: /tmp/acto.tar.gz
+    - name: clone Acto repo
+      become: false
+      ansible.builtin.git:
+        dest: "{{ home.stdout }}/workdir/acto"
+        repo: https://github.com/xlab-uiuc/acto.git
+        version: main
