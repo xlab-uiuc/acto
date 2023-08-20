@@ -6,7 +6,8 @@ import pytest
 
 from acto.lib.operator_config import OperatorConfig
 
-data_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data")
+data_dir = os.path.join(os.path.dirname(os.path.dirname(
+    os.path.dirname(os.path.abspath(__file__)))), "data")
 
 
 @pytest.mark.parametrize("path", glob.glob(os.path.join(data_dir, '**', 'config.json')))

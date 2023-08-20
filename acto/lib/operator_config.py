@@ -10,7 +10,7 @@ class DeployMethod(str, Enum):
     KUSTOMIZE = 'KUSTOMIZE'
 
 
-class DeployConfig(BaseModel):
+class DeployConfig(BaseModel, extra='forbid'):
     """Configuration for deploying the operator"""
     method: DeployMethod = DeployMethod.YAML
     file: str = Field(
@@ -18,7 +18,7 @@ class DeployConfig(BaseModel):
     init: Optional[str] = Field(description='Path to the init file')
 
 
-class AnalysisConfig(BaseModel):
+class AnalysisConfig(BaseModel, extra='forbid'):
     "Configuration for static analysis"
     github_link: str = Field(
         description='HTTPS URL for cloning the operator repo')
@@ -31,10 +31,12 @@ class AnalysisConfig(BaseModel):
         description='The relative path of the main package for the operator')
 
 
-class OperatorConfig(BaseModel):
+class OperatorConfig(BaseModel, extra='forbid'):
     """Configuration for porting operators to Acto"""
     deploy: DeployConfig
-    analysis: Optional[AnalysisConfig]
+    analysis: Optional[AnalysisConfig] = Field(
+        default=None,
+        description='Configuration for static analysis')
 
     seed_custom_resource: str = Field(description='Path to the seed CR file')
     num_nodes: int = Field(
@@ -43,14 +45,23 @@ class OperatorConfig(BaseModel):
         description='Timeout duration (seconds) for the resettable timer for system convergence',
         default=60)
     collect_coverage: bool = False
-    custom_oracles: List[str] = Field(default_factory=list)
+    custom_oracle: Optional[str] = Field(
+        default=None, description='Path to the custom oracle file')
     diff_ignore_fields: List[str] = Field(default_factory=list)
 
-    monkey_patch: Optional[str]
-    custom_fields: Optional[str]
-    crd_name: Optional[str]
-    blackbox_custom_fields: Optional[str]
-    k8s_fields: Optional[str]
-    example_dir: Optional[str]
-    context: Optional[str]
-    focus_fields: Optional[List[List[str]]]
+    monkey_patch: Optional[str] = Field(
+        default=None, description='Path to the monkey patch file')
+    custom_fields: Optional[str] = Field(
+        default=None, description='Path to the custom fields file')
+    crd_name: Optional[str] = Field(
+        default=None, description='Name of the CRD')
+    blackbox_custom_fields: Optional[str] = Field(
+        default=None, description='Path to the blackbox custom fields file')
+    k8s_fields: Optional[str] = Field(
+        default=None, description='Path to the k8s fields file')
+    example_dir: Optional[str] = Field(
+        default=None, description='Path to the example dir')
+    context: Optional[str] = Field(
+        default=None, description='Path to the context file')
+    focus_fields: Optional[List[List[str]]] = Field(default=None,
+                                                    description='List of focus fields')
