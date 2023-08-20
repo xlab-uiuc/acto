@@ -1,4 +1,3 @@
-import functools
 import importlib
 import os
 import tempfile
@@ -13,12 +12,11 @@ import jsonpatch
 from acto.checker.checker_set import CheckerSet
 from acto.common import *
 from acto.constant import CONST
-from acto.deploy import Deploy, DeployMethod
-from acto.exception import UnknownDeployMethodError
+from acto.deploy import Deploy
 from acto.input import InputModel
 from acto.input.input import OverSpecifiedField
 from acto.input.known_schemas.base import K8sField
-from acto.input.known_schemas.known_schema import find_all_matched_schemas, find_all_matched_schemas_type
+from acto.input.known_schemas.known_schema import find_all_matched_schemas_type
 from acto.input.testcase import TestCase
 from acto.input.testplan import TreeNode
 from acto.input.value_with_schema import (ValueWithSchema,
@@ -30,7 +28,7 @@ from acto.oracle_handle import OracleHandle
 from acto.runner import Runner
 from acto.serialization import ActoEncoder, ContextEncoder
 from acto.snapshot import EmptySnapshot, Snapshot
-from acto.utils import (add_acto_label, delete_operator_pod, process_crd,
+from acto.utils import (delete_operator_pod, process_crd,
                         update_preload_images)
 from acto.lib.operator_config import OperatorConfig
 from acto.utils.thread_logger import (get_thread_logger,
@@ -624,17 +622,8 @@ class Acto:
             logger.error('Failed to read seed yaml, aborting')
             quit()
 
-        if operator_config.deploy.method == 'HELM':
-            deploy = Deploy(DeployMethod.HELM, operator_config.deploy.file,
-                            operator_config.deploy.init).new()
-        elif operator_config.deploy.method == 'YAML':
-            deploy = Deploy(DeployMethod.YAML, operator_config.deploy.file,
-                            operator_config.deploy.init).new()
-        elif operator_config.deploy.method == 'KUSTOMIZE':
-            deploy = Deploy(DeployMethod.KUSTOMIZE, operator_config.deploy.file,
-                            operator_config.deploy.init).new()
-        else:
-            raise UnknownDeployMethodError()
+        deploy = Deploy(operator_config.deploy.method, operator_config.deploy.file,
+                        operator_config.deploy.init).new()
 
         if cluster_runtime == "KIND":
             cluster = kind.Kind(acto_namespace=acto_namespace)
