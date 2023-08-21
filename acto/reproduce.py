@@ -18,7 +18,8 @@ from acto.post_process.post_diff_test import PostDiffTest
 
 from acto.input.value_with_schema import ValueWithSchema
 from acto.input import TestCase
-from acto.utils import OperatorConfig, get_thread_logger
+from acto.lib.operator_config import OperatorConfig
+from acto.utils import get_thread_logger
 from acto.input import InputModel
 
 

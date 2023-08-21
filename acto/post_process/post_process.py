@@ -12,7 +12,7 @@ sys.path.append('.')
 sys.path.append('..')
 
 from acto.common import RunResult, oracle_result_from_dict
-from acto.utils import OperatorConfig
+from acto.lib.operator_config import OperatorConfig
 
 
 class Step:

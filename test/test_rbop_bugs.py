@@ -9,7 +9,7 @@ import yaml
 import acto.config as acto_config
 from acto.checker.checker_set import CheckerSet
 from acto.input import DeterministicInputModel, InputModel
-from acto.utils import OperatorConfig
+from acto.lib.operator_config import OperatorConfig
 
 from .utils import construct_snapshot
 
