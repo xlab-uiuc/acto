@@ -1,10 +1,10 @@
 import json
 import time
-from enum import Enum, auto, unique
 
 import kubernetes
 
 import acto.exception
+from acto.lib.operator_config import DeployMethod
 import acto.utils as utils
 from acto.common import *
 from acto.constant import CONST
@@ -12,13 +12,6 @@ from acto.utils import get_thread_logger
 from acto.utils.preprocess import add_acto_label
 
 CONST = CONST()
-
-
-@unique
-class DeployMethod(Enum):
-    HELM = auto()
-    YAML = auto()
-    KUSTOMIZE = auto()
 
 
 class Deploy:
@@ -50,7 +43,8 @@ class Deploy:
             nss = corev1Api.list_namespace().items
             for ns in nss:
                 if ns.metadata.name == context['namespace']:
-                    logger.info('Namespace %s still exists' % context['namespace'])
+                    logger.info('Namespace %s still exists' %
+                                context['namespace'])
                     time.sleep(5)
                     continue
             break
@@ -189,12 +183,15 @@ class Yaml(Deploy):
         if self.init_yaml:
             kubectl(['apply', '--server-side', '-f', self.init_yaml], kubeconfig=kubeconfig,
                     context_name=context_name)
-        self.check_status(context, kubeconfig=kubeconfig, context_name=context_name)
+        self.check_status(context, kubeconfig=kubeconfig,
+                          context_name=context_name)
         kubectl(['apply', '--server-side', '-f', self.path, '-n', context['namespace']], kubeconfig=kubeconfig,
                 context_name=context_name)
-        self.check_status(context, kubeconfig=kubeconfig, context_name=context_name)
+        self.check_status(context, kubeconfig=kubeconfig,
+                          context_name=context_name)
         add_acto_label(kubernetes_client(kubeconfig, context_name), context)
-        self.check_status(context, kubeconfig=kubeconfig, context_name=context_name)
+        self.check_status(context, kubeconfig=kubeconfig,
+                          context_name=context_name)
         time.sleep(20)
 
         # TODO: Return True if deploy successfully
@@ -210,11 +207,13 @@ class Kustomize(Deploy):
         context['namespace'] = namespace
         if self.init_yaml:
             kubectl(['apply', '--server-side', '-f', self.init_yaml], kubeconfig=kubeconfig,
-                context_name=context_name)
-        self.check_status(context, kubeconfig=kubeconfig, context_name=context_name)
+                    context_name=context_name)
+        self.check_status(context, kubeconfig=kubeconfig,
+                          context_name=context_name)
         kubectl(['apply', '--server-side', '-k', self.path, '-n', context['namespace']], kubeconfig=kubeconfig,
                 context_name=context_name)
-        self.check_status(context, kubeconfig=kubeconfig, context_name=context_name)
+        self.check_status(context, kubeconfig=kubeconfig,
+                          context_name=context_name)
         return True
 
 

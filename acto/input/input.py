@@ -11,13 +11,14 @@ from typing import List, Tuple
 import yaml
 from deepdiff import DeepDiff
 
-from acto.common import random_string
+from acto.common import is_subfield, random_string
 from acto.input import known_schemas
 from acto.input.get_matched_schemas import find_matched_schema
 from acto.input.valuegenerator import extract_schema_with_value_generator
 from acto.schema import BaseSchema, IntegerSchema, extract_schema
 from acto.serialization import ActoEncoder
-from acto.utils import get_thread_logger, is_prefix, OperatorConfig
+from acto.utils import get_thread_logger, is_prefix
+from acto.lib.operator_config import OperatorConfig
 
 from .known_schemas import K8sField
 from .testcase import TestCase
@@ -693,7 +694,7 @@ class DeterministicInputModel(InputModel):
                 focused = False
                 for focus_field in focus_fields:
                     logger.info(f'Comparing {schema.path} with {focus_field}')
-                    if focus_field == schema.path:
+                    if is_subfield(schema.path, focus_field):
                         focused = True
                         break
                 if not focused:
@@ -732,6 +733,18 @@ class DeterministicInputModel(InputModel):
                 #     num_additional_semantic_testcases += len(k8s_str_tests)
 
         for schema in pruned_by_overspecified:
+            # Skip if the schema is not in the focus fields
+            if focus_fields is not None:
+                logger.info(f'focusing on {focus_fields}')
+                focused = False
+                for focus_field in focus_fields:
+                    logger.info(f'Comparing {schema.path} with {focus_field}')
+                    if is_subfield(schema.path, focus_field):
+                        focused = True
+                        break
+                if not focused:
+                    continue
+
             testcases, semantic_testcases_ = schema.test_cases()
             path = json.dumps(schema.path).replace('\"ITEM\"',
                                                    '0').replace('additional_properties',
@@ -754,6 +767,18 @@ class DeterministicInputModel(InputModel):
                     num_total_semantic_tests += 1
 
         for schema in pruned_by_copied:
+            # Skip if the schema is not in the focus fields
+            if focus_fields is not None:
+                logger.info(f'focusing on {focus_fields}')
+                focused = False
+                for focus_field in focus_fields:
+                    logger.info(f'Comparing {schema.path} with {focus_field}')
+                    if is_subfield(schema.path, focus_field):
+                        focused = True
+                        break
+                if not focused:
+                    continue
+
             testcases, semantic_testcases_ = schema.test_cases()
             path = json.dumps(schema.path).replace('\"ITEM\"',
                                                    '0').replace('additional_properties',

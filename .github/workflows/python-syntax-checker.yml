@@ -30,7 +30,7 @@ jobs:
           make
       - name: Run unittest
         run: |
-          pytest --junitxml=pytest.xml --cov-report=term-missing:skip-covered --cov=acto | tee pytest-coverage.txt
+          pytest -m "not local" --junitxml=pytest.xml --cov-report=term-missing:skip-covered --cov=acto | tee pytest-coverage.txt
       - name: Pytest coverage comment
         uses: MishaKav/pytest-coverage-comment@main
         with:

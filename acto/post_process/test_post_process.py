@@ -3,7 +3,7 @@ import os
 import pathlib
 import unittest
 
-from acto.utils import OperatorConfig
+from acto.lib.operator_config import OperatorConfig
 
 from .post_diff_test import PostDiffTest
 from .post_process import PostProcessor

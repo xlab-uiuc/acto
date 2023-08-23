@@ -93,7 +93,7 @@ from acto import common
 from acto.engine import Acto, apply_testcase
 from acto.input.input import DeterministicInputModel, InputModel
 from acto.post_process import PostDiffTest
-from acto.utils.config import OperatorConfig
+from acto.lib.operator_config import OperatorConfig
 from acto.utils.error_handler import handle_excepthook, thread_excepthook
 
 from acto.utils.thread_logger import get_thread_logger
@@ -151,7 +151,8 @@ acto = Acto(workdir_path=args.workdir_path,
             is_reproduce=is_reproduce,
             input_model=input_model,
             apply_testcase_f=apply_testcase_f,
-            delta_from=args.delta_from)
+            delta_from=args.delta_from,
+            focus_fields=config.focus_fields,)
 generation_time = datetime.now()
 logger.info('Acto initialization finished in %s', generation_time - start_time)
 if args.additional_semantic:
