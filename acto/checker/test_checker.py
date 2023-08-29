@@ -7,7 +7,7 @@ from acto.checker.checker_set import CheckerSet
 from acto.common import RunResult, RecoveryResult, ErrorResult, Oracle
 from acto.input import InputModel
 from acto.serialization import ActoEncoder
-from acto.snapshot import EmptySnapshot, Snapshot
+from acto.snapshot import Snapshot
 
 if __name__ == "__main__":
     import argparse
@@ -70,7 +70,7 @@ if __name__ == "__main__":
                                              trial_dir=trial_dir,
                                              input_model=input_model)
             snapshots = []
-            snapshots.append(EmptySnapshot(seed))
+            snapshots.append(Snapshot(seed))
 
             alarm = False
             for generation in range(0, 20):
