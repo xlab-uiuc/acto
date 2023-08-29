@@ -7,7 +7,8 @@ import yaml
 
 import acto.utils.acto_timer as acto_timer
 from acto.common import *
-from acto.kubectl_client import KubectlClient
+from acto.kubernetes_io import KubectlClient
+from acto.kubernetes_io.kubernetes_exporter import KubernetesExporter
 from acto.serialization import ActoEncoder
 from acto.snapshot import Snapshot
 from acto.utils import get_thread_logger
@@ -27,38 +28,15 @@ class Runner(object):
         self.kubeconfig = kubeconfig
         self.context_name = context_name
         self.wait_time = wait_time
-        self.log_length = 0
 
         self.kubectl_client = KubectlClient(kubeconfig, context_name)
-
-        apiclient = kubernetes_client(kubeconfig, context_name)
-        self.coreV1Api = kubernetes.client.CoreV1Api(apiclient)
-        self.appV1Api = kubernetes.client.AppsV1Api(apiclient)
-        self.batchV1Api = kubernetes.client.BatchV1Api(apiclient)
-        self.customObjectApi = kubernetes.client.CustomObjectsApi(apiclient)
-        self.policyV1Api = kubernetes.client.PolicyV1Api(apiclient)
-        self.networkingV1Api = kubernetes.client.NetworkingV1Api(apiclient)
-        self.rbacAuthorizationV1Api = kubernetes.client.RbacAuthorizationV1Api(apiclient)
-        self.storageV1Api = kubernetes.client.StorageV1Api(apiclient)
-        self.schedulingV1Api = kubernetes.client.SchedulingV1Api(apiclient)
-        self.resource_methods = {
-            'pod': self.coreV1Api.list_namespaced_pod,
-            'stateful_set': self.appV1Api.list_namespaced_stateful_set,
-            'deployment': self.appV1Api.list_namespaced_deployment,
-            'config_map': self.coreV1Api.list_namespaced_config_map,
-            'service': self.coreV1Api.list_namespaced_service,
-            'pvc': self.coreV1Api.list_namespaced_persistent_volume_claim,
-            'cronjob': self.batchV1Api.list_namespaced_cron_job,
-            'ingress': self.networkingV1Api.list_namespaced_ingress,
-            'network_policy': self.networkingV1Api.list_namespaced_network_policy,
-            'pod_disruption_budget': self.policyV1Api.list_namespaced_pod_disruption_budget,
-            'secret': self.coreV1Api.list_namespaced_secret,
-            'endpoints': self.coreV1Api.list_namespaced_endpoints,
-            'service_account': self.coreV1Api.list_namespaced_service_account,
-            'job': self.batchV1Api.list_namespaced_job,
-            'role': self.rbacAuthorizationV1Api.list_namespaced_role,
-            'role_binding': self.rbacAuthorizationV1Api.list_namespaced_role_binding,
-        }
+        self.kube_exporter = KubernetesExporter(namespace=self.namespace,
+                                                kubectl_client=self.kubectl_client,
+                                                crd_meta_info=self.crd_metainfo)
+        # TODO: remove these two apis in future commits
+        # because we will move wait_system_converge out of the file
+        self.coreV1Api = self.kube_exporter.coreV1Api
+        self.appV1Api = self.kube_exporter.appV1Api
 
     def run(self, input: dict, generation: int) -> Tuple[Snapshot, bool]:
         '''Simply run the cmd and dumps system_state, delta, operator log, events and input files without checking. 
@@ -103,10 +81,19 @@ class Runner(object):
 
         # when client API raise an exception, catch it and write to log instead of crashing Acto
         try:
-            system_state = self.collect_system_state()
-            operator_log = self.collect_operator_log()
-            self.collect_events()
-            self.collect_not_ready_pods_logs()
+            system_state = self.kube_exporter.collect_system_state()
+            # Dump system state
+            with open(self.system_state_path, 'w') as fout:
+                json.dump(system_state, fout, cls=ActoEncoder, indent=6)
+            operator_log = self.kube_exporter.collect_operator_log()
+            with open(self.operator_log_path, 'a') as f:
+                for line in operator_log:
+                    f.write("%s\n" % line)
+            events = self.kube_exporter.collect_events()
+            with open(self.events_log_path, 'w') as f:
+                f.write(json.dumps(events))
+            unsaved = self.kube_exporter.collect_not_ready_pods_logs()
+            # TODO: Fix unsaved not_ready_pods_logs
         except (KeyError, ValueError) as e:
             logger.error('Bug! Exception raised when waiting for converge.', exc_info=e)
             system_state = {}
@@ -128,134 +115,6 @@ class Runner(object):
             system_state = {}
             operator_log = 'Bug! Exception raised when waiting for converge.'
 
-    def delete(self, generation: int) -> bool:
-        logger = get_thread_logger(with_prefix=True)
-        start = time.time()
-        mutated_filename = '%s/mutated-%d.yaml' % (self.trial_dir, generation)
-        logger.info('Deleting : ' + mutated_filename)
-
-        cmd = ['delete', '-f', mutated_filename, '-n', self.namespace]
-        try:
-            cli_result = self.kubectl_client.kubectl(cmd,
-                                                     capture_output=True,
-                                                     text=True,
-                                                     timeout=120)
-        except subprocess.TimeoutExpired as e:
-            logger.error('kubectl delete timeout.')
-            return True
-
-        logger.debug('STDOUT: ' + cli_result.stdout)
-        logger.debug('STDERR: ' + cli_result.stderr)
-
-        for tick in range(0, 600):
-            crs = self.__get_custom_resources(self.namespace, self.crd_metainfo['group'],
-                                              self.crd_metainfo['version'],
-                                              self.crd_metainfo['plural'])
-            if len(crs) == 0:
-                break
-            time.sleep(1)
-
-        if len(crs) != 0:
-            logger.error('Failed to delete custom resource.')
-            return True
-        else:
-            logger.info(f'Successfully deleted custom resource in {time.time() - start}s.')
-            return False
-
-    def collect_system_state(self) -> dict:
-        '''Queries resources in the test namespace, computes delta
-
-        Args:
-        '''
-        logger = get_thread_logger(with_prefix=True)
-
-        resources = {}
-
-        for resource, method in self.resource_methods.items():
-            resources[resource] = self.__get_all_objects(method)
-            if resource == 'pod':
-                # put pods managed by deployment / replicasets into an array
-                all_pods = self.__get_all_objects(method)
-                resources['deployment_pods'], resources['pod'] = group_pods(all_pods)
-            elif resource == 'secret':
-                resources[resource] = decode_secret_data(resources[resource])
-
-        current_cr = self.__get_custom_resources(self.namespace, self.crd_metainfo['group'],
-                                                 self.crd_metainfo['version'],
-                                                 self.crd_metainfo['plural'])
-        logger.debug(current_cr)
-
-        resources['custom_resource_spec'] = current_cr['test-cluster']['spec'] \
-            if 'spec' in current_cr['test-cluster'] else None
-        resources['custom_resource_status'] = current_cr['test-cluster']['status'] \
-            if 'status' in current_cr['test-cluster'] else None
-
-        # Dump system state
-        with open(self.system_state_path, 'w') as fout:
-            json.dump(resources, fout, cls=ActoEncoder, indent=6)
-
-        return resources
-
-    def collect_operator_log(self) -> list:
-        '''Queries operator log in the test namespace
-
-        Args:
-        '''
-        logger = get_thread_logger(with_prefix=True)
-
-        operator_pod_list = self.coreV1Api.list_namespaced_pod(
-            namespace=self.namespace, watch=False, label_selector="acto/tag=operator-pod").items
-
-        if len(operator_pod_list) >= 1:
-            logger.debug('Got operator pod: pod name:' + operator_pod_list[0].metadata.name)
-        else:
-            logger.error('Failed to find operator pod')
-            # TODO: refine what should be done if no operator pod can be found
-
-        log = self.coreV1Api.read_namespaced_pod_log(name=operator_pod_list[0].metadata.name,
-                                                     namespace=self.namespace)
-
-        # only get the new log since previous result
-        new_log = log.split('\n')
-        new_log = new_log[self.log_length:]
-        self.log_length += len(new_log)
-
-        with open(self.operator_log_path, 'a') as f:
-            for line in new_log:
-                f.write("%s\n" % line)
-
-        return new_log
-
-    def collect_events(self):
-        events = self.coreV1Api.list_namespaced_event(self.namespace,
-                                                      pretty=True,
-                                                      _preload_content=False,
-                                                      watch=False)
-
-        with open(self.events_log_path, 'wb') as f:
-            f.write(events.data)
-
-    def collect_not_ready_pods_logs(self):
-        pods = self.coreV1Api.list_namespaced_pod(self.namespace)
-        for pod in pods.items:
-            for container_statuses in [pod.status.container_statuses or [], pod.status.init_container_statuses or []]:
-                for container_status in container_statuses:
-                    if not container_status.ready:
-                        try:
-                            log = self.coreV1Api.read_namespaced_pod_log(pod.metadata.name, self.namespace,
-                                                                        container=container_status.name)
-                            if len(log) != 0:
-                                with open(self.not_ready_pod_log_path.format(container_status.name), 'w') as f:
-                                    f.write(log)
-                            if container_status.last_state.terminated is not None:
-                                log = self.coreV1Api.read_namespaced_pod_log(pod.metadata.name, self.namespace,
-                                                                            container=container_status.name, previous=True)
-                                if len(log) != 0:
-                                    with open(self.not_ready_pod_log_path.format('prev-'+container_status.name), 'w') as f:
-                                        f.write(log)
-                        except kubernetes.client.rest.ApiException as e:
-                            logger = get_thread_logger(with_prefix=True)
-                            logger.error('Failed to get previous log of pod %s' % pod.metadata.name, exc_info=e)
 
     def collect_cli_result(self, p: subprocess.CompletedProcess):
         cli_output = {}
@@ -281,24 +140,6 @@ class Runner(object):
             result_dict[object.metadata.name] = object.to_dict()
         return result_dict
 
-    def __get_custom_resources(self, namespace: str, group: str, version: str, plural: str) -> dict:
-        '''Get custom resource object
-
-        Args:
-            namespace: namespace of the cr
-            group: API group of the cr
-            version: version of the cr
-            plural: plural name of the cr
-
-        Returns:
-            custom resouce object
-        '''
-        result_dict = {}
-        custom_resources = self.customObjectApi.list_namespaced_custom_object(
-            group, version, namespace, plural)['items']
-        for cr in custom_resources:
-            result_dict[cr['metadata']['name']] = cr
-        return result_dict
 
     def wait_for_system_converge(self, hard_timeout=480) -> bool:
         '''This function blocks until the system converges. It keeps 
@@ -413,40 +254,6 @@ def decode_secret_data(secrets: dict) -> dict:
             # skip secret if decoding fails
             logger.error(e)
     return secrets
-
-
-def group_pods(all_pods: dict) -> Tuple[dict, dict]:
-    '''Groups pods into deployment pods and other pods
-
-    For deployment pods, they are further grouped by their owner reference
-
-    Return:
-        Tuple of (deployment_pods, other_pods)
-    '''
-    deployment_pods = {}
-    other_pods = {}
-    for name, pod in all_pods.items():
-        if 'acto/tag' in pod['metadata']['labels'] and pod['metadata']['labels'][
-                'acto/tag'] == 'custom-oracle':
-            # skip pods spawned by users' custom oracle
-            continue
-        elif pod['metadata']['owner_references'] != None:
-            owner_reference = pod['metadata']['owner_references'][0]
-            if owner_reference['kind'] == 'ReplicaSet' or owner_reference['kind'] == 'Deployment':
-                owner_name = owner_reference['name']
-                if owner_reference['kind'] == 'ReplicaSet':
-                    # chop off the suffix of the ReplicaSet name to get the deployment name
-                    owner_name = '-'.join(owner_name.split('-')[:-1])
-                if owner_name not in deployment_pods:
-                    deployment_pods[owner_name] = [pod]
-                else:
-                    deployment_pods[owner_name].append(pod)
-            else:
-                other_pods[name] = pod
-        else:
-            other_pods[name] = pod
-
-    return deployment_pods, other_pods
 
 
 # standalone runner for acto

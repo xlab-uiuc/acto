@@ -22,7 +22,7 @@ from acto.input.testplan import TreeNode
 from acto.input.value_with_schema import (ValueWithSchema,
                                           attach_schema_to_value)
 from acto.input.valuegenerator import ArrayGenerator
-from acto.kubectl_client import KubectlClient
+from acto.kubernetes_io import KubectlClient
 from acto.kubernetes_engine import base, k3d, kind
 from acto.oracle_handle import OracleHandle
 from acto.runner import Runner

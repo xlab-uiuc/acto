@@ -5,7 +5,7 @@ from typing import List, Optional
 import kubernetes
 import yaml
 
-from acto.kubectl_client import KubectlClient
+from acto.kubernetes_io import KubectlClient
 
 from .thread_logger import get_thread_logger
 
