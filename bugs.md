@@ -25,7 +25,7 @@
 | mongodb/mongodb-kubernetes-operator | [mongodb/mongodb-kubernetes-operator#1074](https://github.com/mongodb/mongodb-kubernetes-operator/issues/1074)                       | fixed     |
 | mongodb/mongodb-kubernetes-operator | [mongodb/mongodb-kubernetes-operator#1245](https://github.com/mongodb/mongodb-kubernetes-operator/issues/1245)                       |           |
 | mongodb/mongodb-kubernetes-operator | [mongodb/mongodb-kubernetes-operator#1251](https://github.com/mongodb/mongodb-kubernetes-operator/issues/1251)                       |           |
-| mongodb/mongodb-kubernetes-operator | [mongodb/mongodb-kubernetes-operator#1252](https://github.com/mongodb/mongodb-kubernetes-operator/issues/1252)                       |           |
+| mongodb/mongodb-kubernetes-operator | [mongodb/mongodb-kubernetes-operator#1252](https://github.com/mongodb/mongodb-kubernetes-operator/issues/1252)                       | fixed     |
 | mongodb/mongodb-kubernetes-operator | [https://github.com/mongodb/mongodb-kubernetes-operator/pull/1024](https://github.com/mongodb/mongodb-kubernetes-operator/pull/1024) | fixed     |
 | percona-server-mongodb-operator     | [https://jira.percona.com/browse/K8SPSMDB-696](https://jira.percona.com/browse/K8SPSMDB-696)                                         | fixed     |
 | percona-server-mongodb-operator     | [https://jira.percona.com/browse/K8SPSMDB-738](https://jira.percona.com/browse/K8SPSMDB-738)                                         | fixed     |
@@ -52,7 +52,7 @@
 | OT-CONTAINER-KIT/redis-operator     | [https://github.com/OT-CONTAINER-KIT/redis-operator/pull/292](https://github.com/OT-CONTAINER-KIT/redis-operator/pull/292)           | fixed     |
 | OT-CONTAINER-KIT/redis-operator     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/297](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/297)       | fixed     |
 | OT-CONTAINER-KIT/redis-operator     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/474](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/474)       | fixed     |
-| OT-CONTAINER-KIT/redis-operator     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/480](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/480)       |           |
+| OT-CONTAINER-KIT/redis-operator     | [https://github.com/OT-CONTAINER-KIT/redis-operator/issues/480](https://github.com/OT-CONTAINER-KIT/redis-operator/issues/480)       | fixed     |
 | pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/issues/4613](https://github.com/pingcap/tidb-operator/issues/4613)                         | fixed     |
 | pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/issues/4684](https://github.com/pingcap/tidb-operator/issues/4684)                         |           |
 | pingcap/tidb-operator               | [https://github.com/pingcap/tidb-operator/issues/4945](https://github.com/pingcap/tidb-operator/issues/4945)                         | confirmed |
