@@ -1,0 +1,514 @@
+SOSP 2023 Artifacts Paper #77 Reviews and Comments
+===========================================================================
+Paper #77 Automatic Testing for Correct Operations of Cloud Systems
+
+
+Comment @A1 by Reviewer A
+---------------------------------------------------------------------------
+Hi Authors,
+Thanks for providing useful instructions for reproducing your results. I am facing two issues with the current set of instructions. I am hoping that we can work together to resolve these issues.
+
+1. While I found your Cloudlab instructions sufficient to provision servers that can run your evaluation scripts, I also attempted to manually provision c6420 Cloudlab servers by following the "Setting up local environment" section of the README. Unfortunately, when running the following command to test the deployment, I face dependency issues related to 'kind':
+```
+python3 reproduce_bugs.py --bug-id rdoptwo-287
+```
+The error log is attached and I made certain that 'kind' is already installed.
+Can you confirm that following the steps you specified in "Setting up local environment" is all we need to do before running your experiment scripts?
+
+
+2. I have also tried to run all the optional test campaigns as specified at the end of the README file. While I can confirm that the elapsed times to run the test campaigns match those that are reported in your paper, is there any other observation we should be looking for? Perhaps some instructions on how to interpret the campaign output would be helpful.
+
+Thanks!
+
+
+Comment @A2 by Jiawei Tyler Gu <jiaweig3@illinois.edu> (Author)
+---------------------------------------------------------------------------
+# Reply for comment #A1
+
+## Question 1
+
+We believe the errors you are encountering are because `Kind` is not in the PATH. When installing `Golang`, you would need to add both the global and user gobin to the PATH.
+
+`export PATH=$PATH:/usr/local/go/bin` 
+
+`export PATH=$PATH:$HOME/go/bin`.
+
+Please note that our cloudlab profile prepares the entire environment, you don’t need to run the instructions in the `Setting up local environment` if you are using our cloudlab profile.
+
+In case you want to manually set up the environment on `c6420`, we attached the concrete commands that you need to run to set up the environment, because we think there might be other issue you may encounter:
+```
+# prepare the directories for docker and workdir
+sudo mkdir /var/lib/docker
+sudo mount -t tmpfs -o size=350G tmpfs /var/lib/docker
+sudo mkfs -t ext4 /dev/sda4
+mkdir $HOME/workdir
+sudo mount -t ext4 /dev/sda4 $HOME/workdir
+sudo chmod -R 777 $HOME/workdir
+
+# A Linux system with Docker support
+sudo apt-get update
+sudo apt-get install ca-certificates curl gnupg
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+echo \
+  "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# Create docker group and add yourself to it
+# You may need to relogin for this to be effective
+# sudo groupadd docker # already there
+sudo usermod -aG docker $USER # p.s. exit and login again to let it take effect
+
+# Python 3.8 or newer
+# Install `pip3` by running 
+sudo apt install python3-pip
+
+# Install [Golang](https://go.dev/doc/install)
+wget https://go.dev/dl/go1.21.0.linux-amd64.tar.gz
+sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.21.0.linux-amd64.tar.gz
+cat << EOF >> ~/.bashrc
+export PATH=\$PATH:/usr/local/go/bin
+export GOPATH=\$HOME/go
+export PATH=\$PATH:\$GOPATH/bin
+EOF
+source ~/.bashrc
+go version
+
+# Go to workdir
+cd $HOME/workdir
+
+# Clone the repo recursively by running
+git clone --recursive --branch sosp-ae https://github.com/xlab-uiuc/acto.git
+cd acto
+
+# Install Python dependencies by running in Acto
+pip3 install -r requirements.txt
+
+# Install `Kind` by running
+go install sigs.k8s.io/kind@v0.14.0
+
+# Install `Kubectl` by running
+curl -LO https://dl.k8s.io/release/v1.22.9/bin/linux/amd64/kubectl
+sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+
+# Configure inotify limits (need to rerun after reboot)
+sudo sysctl fs.inotify.max_user_instances=1024
+sudo sysctl fs.inotify.max_user_watches=1048576
+```
+
+## Question 2
+Please note that the goal of the second part of our AE is to reproduce the number of operations Acto generates, so inspecting the results that Acto generates is not required for the AE process. If you are particularly interested in interpreting the results Acto generates and making sure the results are meaningful, we provide the instructions to interpret the files Acto generates below: 
+Inside the `testrun-*` directory, there is a list of `trial-*` directories. Inside each `trial-*` directories, you can find the following files:
+
+- `mutated-*.yaml`: These files are the CRs Acto submitted to Kubernetes to run the state transitions. Concretely, Acto first applies `mutated-0.yaml`, and wait for the system to converge, and then applies `mutated-1.yaml`, and so on.
+- `system-state-*.json`: After each step submitting `mutated-*.yaml`, Acto collects the system state and store it as `system-state-*.json`
+- `cli-output-*.log` and `operator-*.log`: The command line result and operator log
+- `delta-*.log`: For quick debugging purposes, Acto serializes the delta of each step and its previous step
+- `result.json`: The result for this trial. It contains results for each oracle Acto runs. If an oracle fails, the corresponding field in the `result.json` would contain a error message. Otherwise, the corresponding field in the `result.json` would be `Pass` or `None`. Note that Acto writes `result.json` even if there is no error, in that case every oracle field in the `result.json` is `Pass` or `None`. Legend for relevant fields in the `result.json`:
+    - `duration`: amount of time taken for this trial
+    - `error`:
+        - `crash_result`: if any container crashed or not
+        - `health_result`: if any statefulset or deployment is unhealthy
+        - `state_result`: consistency oracle, checking if the desired system state matches the actual system state
+        - `log_result`: if the log indicates invalid input
+        - `custom_result`: result of custom oracles
+        - `recovery_result`: if recovery is successful or not
+
+
+
+Review #77A
+===========================================================================
+
+Paper summary
+-------------
+The paper introduces an automatic, state-based testing scheme that targets cloud operator software.
+Cloud operators use a declarative interface to ease the deployment and configuration of complex cloud setups. However, a bug or fault in the operation of an operator can leave the system in an undesired state. Operator bugs are usually not easy to detect using unit or semantic tests. Acto aims to provide a way to test operators. Acto is able to detect various bugs and vulnerabilities in Kubernetes.
+
+Artifacts summary
+-----------------
+- The artifacts can be found in a public Github repository.
+- The test system and evaluation scripts are implemented in Python and Golang.
+- Various README files are provided to explain the operations and usage of the system.
+- The README file in the repository root clearly explains how to use the Cloudlab platform to reproduce paper results. For the reproduction process, Cloudlab is recommended by the authors, and a pre-configured Cloudlab profile is provided.
+- Additionally, instructions to manually provision the evaluation servers is provided to the reviewers.
+
+Environment used for evaluation
+-------------------------------
+I used the instruction provided in the README file to create a C6420 machine in Cloudlab. The instructions were sufficient to reproduce part of the results. 
+I also tried to provision another c6420 Cloudlab machine without using the provided Cloudlab profile, using the instructions provided by the authors through HotCRP.
+
+Steps taken in evaluation
+-------------------------
+- The instructions for provisioning a Cloudlab server using the custom profiles are sufficient for reproducing the results of tables 5, 6, 7, and 8.
+- The authors initially provided instructions on how to use Ansible to provision the testing environment. I wasn't able to successfully follow the instructions at the moment and then those instructions were removed from the README file. I suggest using a changelog to communicate the changes made to the instructions while the evaluation is in process. This, however, does not change my evaluation score for the artifacts.
+- The authors also provide instructions on how to manually set up the software environment for testing, in the Github repository. The corresponding section in the README file is titled "Setting up local environment". I tried to follow the instructions, but was unable to reproduce the bug in the "Kick the tires instructions".  The errors indicate that the scripts cannot find the "Kind" dependency and therefore fail to provision the environment. After communicating with the authors, a full set of instructions was provided through HotCRP to provision the test servers. Those instructions were clear and sufficient for reproducing paper results.
+- The individual test campaign reproduction has been performed using the Cloudlab profile c6420.
+
+Artifacts Available: Overall score
+----------------------------------
+3. Available
+
+Artifact Evaluated - Functional: Overall score
+----------------------------------------------
+5. Exceeded expectations
+
+Results Reproduced: Overall score
+---------------------------------
+5. Exceeded expectations
+
+Reviewer confidence
+-------------------
+3. High
+
+Support for the paper's claims
+------------------------------
+Acto is a testing tool tailored for finding bugs in large-scale automated deployments that use cloud operators. Therefore, the scale of the repository clearly demonstrates the efforts that have been made. I find the artifact documentation sufficient for interested users to use or extended Acto. The reproduction instructions provided in the README file are also enough for achieving the same results as the paper suggests. Finally, I found the author's answer to the reviewer's comments useful and I suggest the authors make those explanations available for public audiences.
+
+Comments for author
+-------------------
+Kudos to the authors for taking the time to provide a detailed artifact base, and for working with the reviewers to improve the artifacts. After doing a thorough review, I suggest all three badges be granted. I also invite the authors to make their additional comments to the reviewer's question publicly available.
+
+For the "Available" badge:
+- The artifacts can be found on a public Github repository.
+- A reference to the paper exists in the README file.
+- The repository is under Apache License 2.
+- I believe the artifacts meet the criteria for earning the "Available" badge.
+
+For the "Functional" badge:
+- I suggest adding a description of how the files and directories are organized in the repository.
+- A list of requirements and two pre-configured Cloudlab profiles are provided.
+- Manual steps for installing the testing environment are provided. However, I faced dependency issues concerning "Kind". After communicating with the authors, a full set of instructions for setting up servers is provided. Those instructions were sufficient to provision a test environment. Thanks!
+- Instructions for reproducing a minimal working example are provided and were executed successfully on the Cloudlab profiles.
+- The codebase in the repository is relatively large. Therefore, I suggest including more README files explaining the general functionality of files and scripts and the code structure. I notice that only a few of the functions are documented. This can be gradually improved to help the community understand your codebase. Also, I found some parts of the code that are commented out. These parts can be polished (e.g., acto/acto/schema/schema.py).
+- The scripts constantly run various containerized environments. The process is well automated and I did not find any hardcoded constants or platform-specific settings. Nice job!
+
+
+For the "Reproduced" badge:
+- The exact environment for reproducing the paper results and the time it takes to run the scripts are provided in the README file.
+- It is straightforward to run test campaigns that aim to reproduce full paper results.
+- The "/data" directory that configures the environment for each test campaign can use documentation on how the environment is set up. After communicating with the authors, an explanation of Acto's output has been provided and proved to be super helpful. Thanks!
+- The provided documentation and sources follow the paper's claims and similar results can be extracted from the environment on my part. I suggest granting the "Reproduced" badge.
+
+
+
+Comment @A3 by Reviewer A
+---------------------------------------------------------------------------
+Thank you @Authors for providing the detailed answer to our questions!
+I found your explanations useful and have been able to follow your instructions to set up the test server. At your discretion, I suggest adding these to the public README file. You will be able to see the full review after a decision has been made. Thanks!
+
+
+
+Review #77B
+===========================================================================
+
+Paper summary
+-------------
+The paper addresses the need for quality assurance in cloud-native operators, programs that automate management tasks in the cloud-native ecosystem. Recognizing the limitations of current e2e testing methods, which don't effectively model operational semantics or system states, the authors present "Acto", a novel state-centric tool for end-to-end testing of these operators. Acto's foundational principle is to transition systems from their current state to a desired state, based on specific declarations. Implemented and evaluated on Kubernetes operators, Acto discerned 56 new bugs across eleven prevalent operators, highlighting its practicality and precision.
+
+Artifacts summary
+-----------------
+The authors provide several ways to evaluate the artifacts including pre-configured cloudlab profiles and steps for setting up the environment on a local machine. Authors provide appropriate steps for reproducing the following tables in the paper (a) table 5: list of new bugs detected by Acto-□ (Acto-■) in the evaluated operators, (b) table 6: consequences of the 56 detected bugs, (c) table 7: The breakdown of the number of bugs detected by the oracles, (d) table 8: Acto-□ test campaign time per operator. The author additionally provide steps for running test campaigns for each operator including the time estimates for execution.
+
+Environment used for evaluation
+-------------------------------
+A cloudlab machine type c8220 was used and author-provided profile was used. The profile uses the following OS:
+
+Description:	Ubuntu 20.04 LTS
+Release:	20.04
+Codename:	focal
+
+Steps taken in evaluation
+-------------------------
+In-order to complete the artifact evaluation the following steps were followed:
+
+(a) Set up environment for CloudLab machine c8220 using the profile provided in the repository.
+(b) SSH into the Cloudlab machine and switched to using bash shell to carry on the evaluation.
+(c) Built the dependant modules using the make command.
+(d) Ran the reproduce_bugs.py script for a single bug (i.e., OCK-RedisOp-287) to make sure the above steps worked as expected.
+(e) Ran the reproduce_bugs.py for all bugs with 8 workers  to reproduce contents of table 5-7.
+(f) Ran the collect_number_of_ops.py for reproducing table-8 and uses the test campaign data already uploaded by the authors.
+
+Artifacts Available: Overall score
+----------------------------------
+3. Available
+
+Artifact Evaluated - Functional: Overall score
+----------------------------------------------
+4. Met expectations
+
+Results Reproduced: Overall score
+---------------------------------
+4. Met expectations
+
+Reviewer confidence
+-------------------
+2. Medium
+
+Support for the paper's claims
+------------------------------
+The artifacts are in line with the claims made in the paper:
+(a) Using the provided artifacts 56 bugs can be reproduced in the selected set of operators.
+(b) The percentage distribution of bugs as identified by each oracle aligns with the paper.
+(c) The number of operations conducted during the test campaign for the operators is consistent with the data provided by the authors.
+
+Few minor comments: 
+
+- Regarding the claims related to the execution time for test campaigns: Reproducing these is definitely more challenging and time-intensive. A suggestion for the authors would be to incorporate time logs from their past successful test campaigns directly into the dataset. Doing so would reinforce claims related to execution durations, exemplified by the assertion: "Acto-■ takes 8.47% less time on average than Acto-□ due to its generation of, on average, 48 fewer test operations per operator compared to Acto-□."
+
+Comments for author
+-------------------
+**Artifact Available**
+
+ ✔ The artifact is available on a public website with a specific version such as a git commit.
+
+ ✔ The artifact has a “read me” file with a reference to the paper.
+
+⚠ The artifact does not have a license that allows use for comparison purposes; this is not necessary but it would be great to have.
+
+I recommend awarding the badge.
+
+**Artifact Evaluated**
+
+✔ The artifact has a “read me” file with high-level documentation:
+ 
+     ✔ The README has a description.
+
+      ✔ List of instructions for setting up the artifacts on both cloudlab and local machine.
+
+      ✔ Compilation and running instructions, including dependencies and pre-installation steps.
+
+      ✔ Instruction for minimal working example to test the setup.
+
+⚠ The artifact lacks detailed documentation explaining the high-level organization of modules, and and doesn't have code comments for functions or classes. Adding these details would be really helpful for other external contributors as well as researchers to extend their codebase.
+
+I hope authors can fix the issues regarding the documentation and code comments which would improve the extensibility of the project.
+
+**Results Reproduced**
+
+I considered the 3 claims as per the artifact appendix. All experiments were carried out on CloudLab using the authors’ profile with machine type c8220. I cloned all software from the artifact’s GitHub repository, commit 8d7fcda and branch sosp-ae.
+
+✔ The artifact has a “read me” file that documents.
+
+      ✔ The exact environment the authors used.
+
+      ✔ The exact commands to run to reproduce each claim from the paper.
+
+      ⚠ The time used per claim, but not the approximate resources which would be nice to 
+      indicate.
+
+      ⚠ The scripts to reproduce claims have well defined naming conventions for the function 
+      names and variables but more code comments could be helpful.
+
+✔ The artifact’s external dependencies are fetched from well-known sources.
+
+
+
+Review #77C
+===========================================================================
+
+Paper summary
+-------------
+This paper presents an end-to-end testing tool named Acto to automatically detect bugs in cloud-native operators. The most important results to reproduce are the 56 bugs detected by Acto, along with some analysis on the bug distribution and testing time cost.
+
+Artifacts summary
+-----------------
+The artifacts are available in a public Github repo with a detailed and accurate “readme” file that documents system specs and every step to reproduce the major results.
+
+Environment used for evaluation
+-------------------------------
+I used the CloudLab machine (c6420) and the pre-installed Acto source to reproduce major results of this paper. According to the official documents of cloudlab, the spec of the c6420 machine is as follows (double-checked):
+```
+CPU: Two Sixteen-core Intel Xeon Gold 6142 CPUs at 2.6 GHz
+RAM: 384GB ECC DDR4-2666 Memory
+Disk: Two Seagate 1TB 7200 RPM 6G SATA HDs
+NIC: Dual-port Intel X710 10Gbe NIC
+```
+
+Steps taken in evaluation
+-------------------------
+The instructions provided by the author are straightforward: major results of tables 5-8 are reproduced like a charm. The README is detailed and accurate. Specifically, I went through the following steps:
+1. Setting up environment for CloudLab machine c6420 using the profile.
+2. SSH to the terminal via CloudLab interface.
+3. `make` the acto environment in the working directory of Acto.
+4. Execute reproduce_bugs.py with 16 workers (took ~1.5hrs). All 56 bugs in Table 5 will be reproduced, followed by their consequences and other statistics in Table 6-8.
+
+Artifacts Available: Overall score
+----------------------------------
+3. Available
+
+Artifact Evaluated - Functional: Overall score
+----------------------------------------------
+4. Met expectations
+
+Results Reproduced: Overall score
+---------------------------------
+4. Met expectations
+
+Reviewer confidence
+-------------------
+2. Medium
+
+Support for the paper's claims
+------------------------------
+The artifacts are well organized with and align with the major claims in the paper. All 56 bugs can be properly reproduced. Statistics related to these bugs (e.g., number of bugs detected by different oracles and testing time) are consistent with those provided in the paper.
+
+Comments for author
+-------------------
+Thank you for participating in the artifact evaluation process. Overall, the submitted artifacts are sufficient for receiving all three badges.
+
+### Artifact Available
+✔ The artifact is available on a public GitHub repository
+
+✔ The artifact has a “readme” file with a reference to the paper
+
+✔ The artifact has a license that allows use for comparison purposes
+
+I suggest awarding the badge.
+
+### Artifact Functional
+✔ The artifact ‘s “readme” file is detailed and accurate.
+
+⚠ I do not find documentation (or comments in code snippets) for functions. It would be good to add them for better clarity and code reusability in this line of work.
+
+I suggest awarding the badge.
+
+### Results Reproduced
+I considered the 3 claims as per the artifact appendix. All experiments were carried out on CloudLab (machine:c6420) using the authors’ profile. I obtained all software from the artifact’s GitHub repository, on branch sosp-ae and commit 8d7fcd1. The artifact has a “readme” file that documents the exact environment the authors used with the exact commands to run to reproduce each claim from the paper
+
+I suggest awarding the badge.
+
+
+
+Review #77D
+===========================================================================
+
+Paper summary
+-------------
+This paper addresses the challenge of validating operator correctness within cloud systems by presenting Acto, a state-centric testing technique that automates comprehensive end-to-end testing for cloud-native operators. Acto is able to generate state declarations, infer their semantics, and verify their correctness. It has been released as an open-source project and applied to detect bugs in Kubernetes operators.
+
+Artifacts summary
+-----------------
+This artifact is a public repository on GitHub. It has a README file and some scripts to reproduce the test campaign generation and bug detection. The README file provides detailed instructions on setting up the testing environment and reproducing the tables and shows their expected results.
+
+Environment used for evaluation
+-------------------------------
+I ran all experiments on a Cloudlab c6420 machine with the provided profile.
+
+Steps taken in evaluation
+-------------------------
+1. Initiate a CloudLab machine using the recommended profile (c6420)
+2. Follow the Kick-the-tire Instructions to check setup problems
+3. Run all the scripts to reproduce tables 5-8 in the paper
+4. Compare the reproduced tables to the tables in paper
+
+Artifacts Available: Overall score
+----------------------------------
+3. Available
+
+Artifact Evaluated - Functional: Overall score
+----------------------------------------------
+5. Exceeded expectations
+
+Results Reproduced: Overall score
+---------------------------------
+5. Exceeded expectations
+
+Reviewer confidence
+-------------------
+2. Medium
+
+Support for the paper's claims
+------------------------------
+The data reproduced are consistent with those in the paper. I believe the artifacts support the paper's claim.
+
+Comments for author
+-------------------
+Artifact Available:
+- The artifact is publicly available. It has a README file and an associated license.
+
+Artifact Evaluated - Functional:
+- The artifact has a README file explaining the usage of scripts.
+- I would recommend including the high-level organization into the README file, which was shared with reviewers but hasn't been merged yet.
+
+Results Reproduced:
+- The README file offers detailed instructions on setting up a testing environment in different machines.
+- No need to install additional packages with the provided CloudLab profile.
+
+
+
+Review #77E
+===========================================================================
+
+Paper summary
+-------------
+The paper introduces Acto, a novel end-to-end automatic testing technique specifically designed for cloud-native operators. The key idea behind Acto is its "state centric" approach, where operations are modeled as transitions between system states. The testing process continuously instructs an operator to reconcile a system to different desired states and checks if the outcomes match the expectations. 
+
+Acto is implemented primarily for Kubernetes. It constantly generates new operations during testing and uses oracles to ensure the system correctly transitions from its current state to the desired state, sounding an alarm if discrepancies arise. Apart from identifying bugs that compromise operation correctness, Acto also detects vulnerabilities leading to explicit error states. Specifically, it automatically creates minimized end-to-end test code for every detected issue, facilitating reliable reproduction of bugs or vulnerabilities. Acto is fully automatic, requires no manual intervention, and operates in two modes: blackbox and whitebox. The former needs only operator deployment and state declaration details, while the latter additionally requiring the operator's source code.
+
+The authors evaluate Acto on 11 popular Kubernetes operators and identifies 56 new operator bugs, (40 confirmed, 28 fixed) with only a 0.19% false positive rate. Notably, Acto can be deployed to assist nightly builds/testing, making it practical for commercial cloud systems.
+
+Artifacts summary
+-----------------
+Acto is publicly hosted on a Github repository. This repository includes the core of Acto, a detailed, ste-by-step "how to" guide, and supporting scripts. 
+
+1. Source code:
+* a mix of Python and Golang code implementing Acto
+* a set of Golang scripts that help users bootstrap and build
+* a set of bash scripts that help replicate and trigger bugs found by Acto
+
+2. A detailed README providing:
+* instructions on how to bootstrap, build, install, and run Acto 
+* a "minimal working example" or "kick-the-tires" experiment
+* steps to run the scripts helping to replicate the key results in the original paper (tables 5 to 8)
+
+Artifacts Available: Overall score
+----------------------------------
+3. Available
+
+Artifact Evaluated - Functional: Overall score
+----------------------------------------------
+6. Greatly exceeded applications
+
+Results Reproduced: Overall score
+---------------------------------
+6. Greatly exceeded applications
+
+Reviewer confidence
+-------------------
+3. High
+
+Support for the paper's claims
+------------------------------
+The authors packaged Acto as an artifact, providing automation and detailed steps about installing, building and replicating the main results of the paper. 
+
+* Artifact Available (✅):
+
+--- The is made publicly available via Github. However, I'd suggest that the authors make the artifact should be available somewhere with persistent storage, like those offered by Zenodo, FigShare, or the ACM Digital Library itself at the moment of publication.
+
+--- The artifact includes a license permissive enough to allow use for comparison purposes.
+
+--- The artifact references the original paper.
+
+* Artifact Functional (✅):
+
+--- The artifact contains a README file which provide extensive documentation for Acto: a summary of the artifact, installation steps, guidelines on how to replicate key experiments. The authors further provide details on how users can run "test campaigns" from scratch.
+
+--- The artifact contains a "minimal working example" for triggering the `rdoptwo-287` bug. The authors provide a script that indicates whether or not the bug was triggered as well as which category it belongs to.
+
+--- The artifact contains all components/modules of Acto and uses the same terminology as the original paper.
+
+* Results Reproduced (✅):
+
+--- Following the workflow and using the tooling provided in the artifact, I was able to replicate the results of tables 5 through 8, and match them exactly to the numbers in the paper.
+
+--- The authors include estimates on the compute time needed to complete experiments. I'd encourage the authors to also include the compute breakdown per bug.
+
+--- Additionally, the authors communicated details about the structure and format of Acto's output. It'd be great if they include these details in the README. This could help more curious users to drill into Acto
+
+Comments for author
+-------------------
+Kudos to the authors for such a detailed, streamlined, almost "push-button" artifact. One tiny, tiny nit: It would be awesome if the authors could point the more curios users towards the by-products of Acto, namely the e2e test and execution logs.
