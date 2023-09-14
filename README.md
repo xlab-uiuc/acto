@@ -270,3 +270,27 @@ python3 -m acto --config data/rabbitmq-operator/config.json --num-workers 16 --w
 
 </details>
 
+## Interpreting the test results (Optional)
+
+We provide the instructions for interpreting the results produced by Acto's test campaign.
+
+Acto's test campaign creates a work directory (specific by the argument `--workdir`).
+Inside the work directory, there are a list of `trial-*` directories (Acto creates a new `trial-*` directory when it raises an alarm).
+Inside each `trial-*` directory, you can find the following files:
+- `mutated-*.yaml`: These files are the inputs Acto submitted to Kubernetes to run the state transitions. Concretely, Acto first applies `mutated-0.yaml`, and wait for the system to converge, and then applies `mutated-1.yaml`, and so on.
+- `system-state-*.json`: After each step submitting `mutated-*.yaml`, Acto collects the system state and store it as `system-state-*.json`. This file contains the serialized state objects from Kubernetes.
+- `cli-output-*.log` and `operator-*.log`: The command line result and operator log after submitting the input.
+- `delta-*.log`: This file contains two parts. This file is for convenient debug purposes:
+  - Input delta: The delta between current input and last input
+  - System delta: The delta between current system state and last system state
+- `events.log`: The list of Kubernetes events happened throughout this trial, to help diagnosis.
+- `result.json`: The result for this trial. It contains results for each oracle Acto runs. If an oracle fails, the corresponding field in the `result.json` would contain an error message. Otherwise, the corresponding field in the `result.json` would be `Pass` or `None`. Note that Acto could write `result.json` even if there is no error (e.g. when the test campaign is finished), in that case every oracle field in the `result.json` will be `Pass` or `None`. Legend for relevant fields in the `result.json`:
+  - `duration`: amount of time taken for this trial
+  - `error`:
+    - `crash_result`: if any container crashed or not
+    - `health_result`: if any statefulset or deployment is unhealthy, by comparing the ready replicas in status and desired replicas in spec
+    - `state_result`: consistency oracle, checking if the desired system state matches the actual system state
+    - `log_result`: if the log indicates invalid input
+    - `custom_result`: result of custom oracles
+    - `recovery_result`: if the recovery step is successful after the error state
+
