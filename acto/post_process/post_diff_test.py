@@ -276,7 +276,7 @@ class AdditionalRunner:
         self._generation = 0
 
     def run_cr(self, cr, trial, gen):
-        self._cluster.restart_cluster(self._cluster_name, self._kubeconfig, CONST.K8S_VERSION)
+        self._cluster.restart_cluster(self._cluster_name, self._kubeconfig)
         self._cluster.load_images(self._images_archive, self._cluster_name)
         apiclient = kubernetes_client(self._kubeconfig, self._context_name)
         deployed = self._deploy.deploy_with_retry(self._context, self._kubeconfig,
@@ -324,7 +324,7 @@ class DeployRunner:
 
         before_k8s_bootstrap_time = time.time()
         # Start the cluster and deploy the operator
-        self._cluster.restart_cluster(self._cluster_name, self._kubeconfig, CONST.K8S_VERSION)
+        self._cluster.restart_cluster(self._cluster_name, self._kubeconfig)
         self._cluster.load_images(self._images_archive, self._cluster_name)
         apiclient = kubernetes_client(self._kubeconfig, self._context_name)
         after_k8s_bootstrap_time = time.time()
@@ -365,8 +365,7 @@ class DeployRunner:
                 before_k8s_bootstrap_time = time.time()
                 logger.error(f'Restart cluster due to error: {err}')
                 # Start the cluster and deploy the operator
-                self._cluster.restart_cluster(self._cluster_name, self._kubeconfig,
-                                              CONST.K8S_VERSION)
+                self._cluster.restart_cluster(self._cluster_name, self._kubeconfig)
                 self._cluster.load_images(self._images_archive, self._cluster_name)
                 apiclient = kubernetes_client(self._kubeconfig, self._context_name)
                 after_k8s_bootstrap_time = time.time()
@@ -422,7 +421,7 @@ class PostDiffTest(PostProcessor):
         if not os.path.exists(workdir):
             os.mkdir(workdir)
         cluster = kind.Kind(acto_namespace=self.acto_namespace)
-        cluster.configure_cluster(self.config.num_nodes, CONST.K8S_VERSION)
+        cluster.configure_cluster(self.config.num_nodes, self.config.kubernetes_version)
         deploy = Deploy(DeployMethod.YAML, self.config.deploy.file, self.config.deploy.init).new()
         # Build an archive to be preloaded
         images_archive = os.path.join(workdir, 'images.tar')
@@ -478,7 +477,7 @@ class PostDiffTest(PostProcessor):
         generation = 0  # for additional runner
         additional_runner_dir = os.path.join(workdir, f'additional-runner-{worker_id}')
         cluster = kind.Kind(acto_namespace=self.acto_namespace)
-        cluster.configure_cluster(self.config.num_nodes, CONST.K8S_VERSION)
+        cluster.configure_cluster(self.config.num_nodes, self.config.kubernetes_version)
 
         deploy = Deploy(DeployMethod.YAML, self.config.deploy.file, self.config.deploy.init).new()
 

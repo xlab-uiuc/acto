@@ -50,13 +50,15 @@ class Kind(base.KubernetesEngine):
         with open(self.config_path, 'w') as config_file:
             yaml.dump(config_dict, config_file)
 
+        self._k8s_version = version
+
     def get_context_name(self, cluster_name: str) -> str:
         '''Returns the kubecontext based onthe cluster name
         KIND always adds `kind` before the cluster name
         '''
         return f'kind-{cluster_name}'
 
-    def create_cluster(self, name: str, kubeconfig: str, version: str):
+    def create_cluster(self, name: str, kubeconfig: str):
         '''Use subprocess to create kind cluster
         Args:
             name: name of the kind cluster
@@ -79,8 +81,7 @@ class Kind(base.KubernetesEngine):
 
         cmd.extend(['--config', self.config_path])
 
-        if version:
-            cmd.extend(['--image', f"kindest/node:v{version}"])
+        cmd.extend(['--image', f"kindest/node:{self._k8s_version}"])
 
         p = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         while p.returncode != 0:

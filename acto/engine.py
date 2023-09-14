@@ -242,7 +242,7 @@ class TrialRunner:
                 break
 
             trial_start_time = time.time()
-            self.cluster.restart_cluster(self.cluster_name, self.kubeconfig, CONST.K8S_VERSION)
+            self.cluster.restart_cluster(self.cluster_name, self.kubeconfig)
             apiclient = kubernetes_client(self.kubeconfig, self.context_name)
             self.cluster.load_images(self.images_archive, self.cluster_name)
             trial_k8s_bootstrap_time = time.time()
@@ -652,7 +652,7 @@ class Acto:
         self.snapshots = []
 
         # generate configuration files for the cluster runtime
-        self.cluster.configure_cluster(operator_config.num_nodes, CONST.K8S_VERSION)
+        self.cluster.configure_cluster(operator_config.num_nodes, self.operator_config.kubernetes_version)
 
         self.__learn(context_file=context_file, helper_crd=helper_crd, analysis_only=analysis_only)
 
@@ -777,7 +777,7 @@ class Acto:
             learn_kubeconfig = os.path.join(os.path.expanduser('~'), '.kube', learn_context_name)
 
             while True:
-                self.cluster.restart_cluster('learn', learn_kubeconfig, CONST.K8S_VERSION)
+                self.cluster.restart_cluster('learn', learn_kubeconfig)
                 deployed = self.deploy.deploy_with_retry(self.context, learn_kubeconfig,
                                                          learn_context_name)
                 if deployed:

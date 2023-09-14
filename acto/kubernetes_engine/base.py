@@ -16,7 +16,7 @@ class KubernetesEngine(ABC):
         pass
 
     @abstractmethod
-    def create_cluster(self, name: str, kubeconfig: str, version: str):
+    def create_cluster(self, name: str, kubeconfig: str):
         pass
 
     @abstractmethod
@@ -27,7 +27,7 @@ class KubernetesEngine(ABC):
     def delete_cluster(self, name: str, kubeconfig: str, ):
         pass
 
-    def restart_cluster(self, name: str, kubeconfig: str, version: str):
+    def restart_cluster(self, name: str, kubeconfig: str):
         logger = get_thread_logger(with_prefix=False)
         
         retry_count = 3
@@ -36,7 +36,7 @@ class KubernetesEngine(ABC):
             try:
                 self.delete_cluster(name, kubeconfig)
                 time.sleep(1)
-                self.create_cluster(name, kubeconfig, version)
+                self.create_cluster(name, kubeconfig)
                 time.sleep(1)
                 logger.info('Created cluster')
             except Exception as e:

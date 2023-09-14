@@ -48,6 +48,8 @@ class OperatorConfig(BaseModel, extra='forbid'):
     custom_oracle: Optional[str] = Field(
         default=None, description='Path to the custom oracle file')
     diff_ignore_fields: List[str] = Field(default_factory=list)
+    kubernetes_version: str = Field(
+        default='v1.22.9', description='Kubernetes version')
 
     monkey_patch: Optional[str] = Field(
         default=None, description='Path to the monkey patch file')
