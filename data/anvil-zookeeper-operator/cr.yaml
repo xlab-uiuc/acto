@@ -1,0 +1,33 @@
+apiVersion: anvil.dev/v1
+kind: ZookeeperCluster
+metadata:
+  name: zookeeper
+spec:
+  replicas: 3
+  image: pravega/zookeeper:0.2.14
+  ports:
+    client: 2181
+    quorum: 2888
+    leaderElection: 3888
+    metrics: 7000
+    adminServer: 8080
+  conf:
+    initLimit: 10
+    syncLimit: 2
+    tickTime: 2000
+    globalOutstandingLimit: 1000
+    preAllocSize: 65536
+    snapCount: 10000
+    commitLogCount: 500
+    snapSizeLimitInKb: 4194304
+    maxCnxns: 0
+    maxClientCnxns: 60
+    minSessionTimeout: 4000
+    maxSessionTimeout: 40000
+    autoPurgeSnapRetainCount: 3
+    autoPurgePurgeInterval: 1
+    quorumListenOnAllIps: false
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "500m"

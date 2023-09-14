@@ -1,0 +1,275 @@
+{
+    "crd": {
+        "body": {
+            "apiVersion": "apiextensions.k8s.io/v1",
+            "kind": "CustomResourceDefinition",
+            "metadata": {
+                "creationTimestamp": "2023-09-14T05:02:37Z",
+                "generation": 1,
+                "name": "zookeeperclusters.anvil.dev",
+                "resourceVersion": "612",
+                "uid": "2597e178-65a7-4c86-8e68-da944f7d1fcf"
+            },
+            "spec": {
+                "conversion": {
+                    "strategy": "None"
+                },
+                "group": "anvil.dev",
+                "names": {
+                    "kind": "ZookeeperCluster",
+                    "listKind": "ZookeeperClusterList",
+                    "plural": "zookeeperclusters",
+                    "shortNames": [
+                        "zk"
+                    ],
+                    "singular": "zookeepercluster"
+                },
+                "scope": "Namespaced",
+                "versions": [
+                    {
+                        "name": "v1",
+                        "schema": {
+                            "openAPIV3Schema": {
+                                "description": "Auto-generated derived type for ZookeeperClusterSpec via `CustomResource`",
+                                "properties": {
+                                    "spec": {
+                                        "properties": {
+                                            "conf": {
+                                                "properties": {
+                                                    "autoPurgePurgeInterval": {
+                                                        "format": "int32",
+                                                        "type": "integer"
+                                                    },
+                                                    "autoPurgeSnapRetainCount": {
+                                                        "format": "int32",
+                                                        "type": "integer"
+                                                    },
+                                                    "commitLogCount": {
+                                                        "format": "int32",
+                                                        "type": "integer"
+                                                    },
+                                                    "globalOutstandingLimit": {
+                                                        "format": "int32",
+                                                        "type": "integer"
+                                                    },
+                                                    "initLimit": {
+                                                        "format": "int32",
+                                                        "type": "integer"
+                                                    },
+                                                    "maxClientCnxns": {
+                                                        "format": "int32",
+                                                        "type": "integer"
+                                                    },
+                                                    "maxCnxns": {
+                                                        "format": "int32",
+                                                        "type": "integer"
+                                                    },
+                                                    "maxSessionTimeout": {
+                                                        "format": "int32",
+                                                        "type": "integer"
+                                                    },
+                                                    "minSessionTimeout": {
+                                                        "format": "int32",
+                                                        "type": "integer"
+                                                    },
+                                                    "preAllocSize": {
+                                                        "format": "int32",
+                                                        "type": "integer"
+                                                    },
+                                                    "quorumListenOnAllIps": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "snapCount": {
+                                                        "format": "int32",
+                                                        "type": "integer"
+                                                    },
+                                                    "snapSizeLimitInKb": {
+                                                        "format": "int32",
+                                                        "type": "integer"
+                                                    },
+                                                    "syncLimit": {
+                                                        "format": "int32",
+                                                        "type": "integer"
+                                                    },
+                                                    "tickTime": {
+                                                        "format": "int32",
+                                                        "type": "integer"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "autoPurgePurgeInterval",
+                                                    "autoPurgeSnapRetainCount",
+                                                    "commitLogCount",
+                                                    "globalOutstandingLimit",
+                                                    "initLimit",
+                                                    "maxClientCnxns",
+                                                    "maxCnxns",
+                                                    "maxSessionTimeout",
+                                                    "minSessionTimeout",
+                                                    "preAllocSize",
+                                                    "quorumListenOnAllIps",
+                                                    "snapCount",
+                                                    "snapSizeLimitInKb",
+                                                    "syncLimit",
+                                                    "tickTime"
+                                                ],
+                                                "type": "object"
+                                            },
+                                            "image": {
+                                                "type": "string"
+                                            },
+                                            "ports": {
+                                                "properties": {
+                                                    "adminServer": {
+                                                        "format": "int32",
+                                                        "type": "integer"
+                                                    },
+                                                    "client": {
+                                                        "format": "int32",
+                                                        "type": "integer"
+                                                    },
+                                                    "leaderElection": {
+                                                        "format": "int32",
+                                                        "type": "integer"
+                                                    },
+                                                    "metrics": {
+                                                        "format": "int32",
+                                                        "type": "integer"
+                                                    },
+                                                    "quorum": {
+                                                        "format": "int32",
+                                                        "type": "integer"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "adminServer",
+                                                    "client",
+                                                    "leaderElection",
+                                                    "metrics",
+                                                    "quorum"
+                                                ],
+                                                "type": "object",
+                                                "x-kubernetes-validations": [
+                                                    {
+                                                        "message": "changing ports is not supported",
+                                                        "rule": "self == oldSelf"
+                                                    }
+                                                ]
+                                            },
+                                            "replicas": {
+                                                "format": "int32",
+                                                "type": "integer"
+                                            },
+                                            "resources": {
+                                                "default": {},
+                                                "description": "ResourceRequirements describes the compute resource requirements.",
+                                                "properties": {
+                                                    "claims": {
+                                                        "description": "Claims lists the names of resources, defined in spec.resourceClaims, that are used by this container.\n\nThis is an alpha field and requires enabling the DynamicResourceAllocation feature gate.\n\nThis field is immutable.",
+                                                        "items": {
+                                                            "description": "ResourceClaim references one entry in PodSpec.ResourceClaims.",
+                                                            "properties": {
+                                                                "name": {
+                                                                    "description": "Name must match the name of one entry in pod.spec.resourceClaims of the Pod where this field is used. It makes that resource available inside a container.",
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "name"
+                                                            ],
+                                                            "type": "object"
+                                                        },
+                                                        "type": "array"
+                                                    },
+                                                    "limits": {
+                                                        "additionalProperties": {
+                                                            "description": "Quantity is a fixed-point representation of a number. It provides convenient marshaling/unmarshaling in JSON and YAML, in addition to String() and AsInt64() accessors.\n\nThe serialization format is:\n\n``` <quantity>        ::= <signedNumber><suffix>\n\n\t(Note that <suffix> may be empty, from the \"\" case in <decimalSI>.)\n\n<digit>           ::= 0 | 1 | ... | 9 <digits>          ::= <digit> | <digit><digits> <number>          ::= <digits> | <digits>.<digits> | <digits>. | .<digits> <sign>            ::= \"+\" | \"-\" <signedNumber>    ::= <number> | <sign><number> <suffix>          ::= <binarySI> | <decimalExponent> | <decimalSI> <binarySI>        ::= Ki | Mi | Gi | Ti | Pi | Ei\n\n\t(International System of units; See: http://physics.nist.gov/cuu/Units/binary.html)\n\n<decimalSI>       ::= m | \"\" | k | M | G | T | P | E\n\n\t(Note that 1024 = 1Ki but 1000 = 1k; I didn't choose the capitalization.)\n\n<decimalExponent> ::= \"e\" <signedNumber> | \"E\" <signedNumber> ```\n\nNo matter which of the three exponent forms is used, no quantity may represent a number greater than 2^63-1 in magnitude, nor may it have more than 3 decimal places. Numbers larger or more precise will be capped or rounded up. (E.g.: 0.1m will rounded up to 1m.) This may be extended in the future if we require larger or smaller quantities.\n\nWhen a Quantity is parsed from a string, it will remember the type of suffix it had, and will use the same type again when it is serialized.\n\nBefore serializing, Quantity will be put in \"canonical form\". This means that Exponent/suffix will be adjusted up or down (with a corresponding increase or decrease in Mantissa) such that:\n\n- No precision is lost - No fractional digits will be emitted - The exponent (or suffix) is as large as possible.\n\nThe sign will be omitted unless the number is negative.\n\nExamples:\n\n- 1.5 will be serialized as \"1500m\" - 1.5Gi will be serialized as \"1536Mi\"\n\nNote that the quantity will NEVER be internally represented by a floating point number. That is the whole point of this exercise.\n\nNon-canonical values will still parse as long as they are well formed, but will be re-emitted in their canonical form. (So always use canonical form, or don't diff.)\n\nThis format is intended to make it difficult to use these numbers without writing some sort of special handling code in the hopes that that will cause implementors to also use a fixed point implementation.",
+                                                            "type": "string"
+                                                        },
+                                                        "description": "Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/",
+                                                        "type": "object"
+                                                    },
+                                                    "requests": {
+                                                        "additionalProperties": {
+                                                            "description": "Quantity is a fixed-point representation of a number. It provides convenient marshaling/unmarshaling in JSON and YAML, in addition to String() and AsInt64() accessors.\n\nThe serialization format is:\n\n``` <quantity>        ::= <signedNumber><suffix>\n\n\t(Note that <suffix> may be empty, from the \"\" case in <decimalSI>.)\n\n<digit>           ::= 0 | 1 | ... | 9 <digits>          ::= <digit> | <digit><digits> <number>          ::= <digits> | <digits>.<digits> | <digits>. | .<digits> <sign>            ::= \"+\" | \"-\" <signedNumber>    ::= <number> | <sign><number> <suffix>          ::= <binarySI> | <decimalExponent> | <decimalSI> <binarySI>        ::= Ki | Mi | Gi | Ti | Pi | Ei\n\n\t(International System of units; See: http://physics.nist.gov/cuu/Units/binary.html)\n\n<decimalSI>       ::= m | \"\" | k | M | G | T | P | E\n\n\t(Note that 1024 = 1Ki but 1000 = 1k; I didn't choose the capitalization.)\n\n<decimalExponent> ::= \"e\" <signedNumber> | \"E\" <signedNumber> ```\n\nNo matter which of the three exponent forms is used, no quantity may represent a number greater than 2^63-1 in magnitude, nor may it have more than 3 decimal places. Numbers larger or more precise will be capped or rounded up. (E.g.: 0.1m will rounded up to 1m.) This may be extended in the future if we require larger or smaller quantities.\n\nWhen a Quantity is parsed from a string, it will remember the type of suffix it had, and will use the same type again when it is serialized.\n\nBefore serializing, Quantity will be put in \"canonical form\". This means that Exponent/suffix will be adjusted up or down (with a corresponding increase or decrease in Mantissa) such that:\n\n- No precision is lost - No fractional digits will be emitted - The exponent (or suffix) is as large as possible.\n\nThe sign will be omitted unless the number is negative.\n\nExamples:\n\n- 1.5 will be serialized as \"1500m\" - 1.5Gi will be serialized as \"1536Mi\"\n\nNote that the quantity will NEVER be internally represented by a floating point number. That is the whole point of this exercise.\n\nNon-canonical values will still parse as long as they are well formed, but will be re-emitted in their canonical form. (So always use canonical form, or don't diff.)\n\nThis format is intended to make it difficult to use these numbers without writing some sort of special handling code in the hopes that that will cause implementors to also use a fixed point implementation.",
+                                                            "type": "string"
+                                                        },
+                                                        "description": "Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/",
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "required": [
+                                            "conf",
+                                            "image",
+                                            "ports",
+                                            "replicas"
+                                        ],
+                                        "type": "object"
+                                    }
+                                },
+                                "required": [
+                                    "spec"
+                                ],
+                                "title": "ZookeeperCluster",
+                                "type": "object"
+                            }
+                        },
+                        "served": true,
+                        "storage": true,
+                        "subresources": {}
+                    }
+                ]
+            },
+            "status": {
+                "acceptedNames": {
+                    "kind": "ZookeeperCluster",
+                    "listKind": "ZookeeperClusterList",
+                    "plural": "zookeeperclusters",
+                    "shortNames": [
+                        "zk"
+                    ],
+                    "singular": "zookeepercluster"
+                },
+                "conditions": [
+                    {
+                        "lastTransitionTime": "2023-09-14T05:02:37Z",
+                        "message": "no conflicts found",
+                        "reason": "NoConflicts",
+                        "status": "True",
+                        "type": "NamesAccepted"
+                    },
+                    {
+                        "lastTransitionTime": "2023-09-14T05:02:37Z",
+                        "message": "the initial names have been accepted",
+                        "reason": "InitialNamesAccepted",
+                        "status": "True",
+                        "type": "Established"
+                    }
+                ],
+                "storedVersions": [
+                    "v1"
+                ]
+            }
+        },
+        "group": "anvil.dev",
+        "plural": "zookeeperclusters",
+        "version": "v1"
+    },
+    "learnrun_time": 221.50943088531494,
+    "namespace": "zookeeper",
+    "preload_images": [
+        "registry.k8s.io/etcd:3.5.6-0",
+        "registry.k8s.io/kube-controller-manager:v1.26.6",
+        "registry.k8s.io/pause:3.7",
+        "registry.k8s.io/kube-proxy:v1.26.6",
+        "registry.k8s.io/coredns/coredns:v1.9.3",
+        "registry.k8s.io/kube-apiserver:v1.26.6",
+        "ghcr.io/vmware-research/verifiable-controllers/zookeeper-controller:latest",
+        "registry.k8s.io/kube-scheduler:v1.26.6",
+        "docker.io/pravega/zookeeper:0.2.14"
+    ],
+    "static_analysis_time": 4.76837158203125e-06
+}
