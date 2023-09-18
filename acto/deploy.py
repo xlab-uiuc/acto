@@ -51,15 +51,15 @@ class Deploy:
         time.sleep(5)
         logger.info('Namespace %s deleted' % context['namespace'])
 
-    def deploy(self, context: dict, kubeconfig: str, context_name: str):
+    def deploy(self, kubeconfig: str, context_name: str, namespace: str):
         # XXX: context param is temporary, need to figure out why rabbitmq complains about namespace
         pass
 
-    def deploy_with_retry(self, context, kubeconfig: str, context_name: str, retry_count=3):
+    def deploy_with_retry(self, kubeconfig: str, context_name: str, namespace: str, retry_count=3):
         logger = get_thread_logger(with_prefix=False)
         while retry_count > 0:
             try:
-                return self.deploy(context, kubeconfig, context_name)
+                return self.deploy(kubeconfig, context_name, namespace)
             except Exception as e:
                 logger.warn(e)
                 logger.info(
@@ -68,7 +68,7 @@ class Deploy:
                 retry_count -= 1
         return False
 
-    def check_status(self, context: dict, kubeconfig: str, context_name: str):
+    def check_status(self, kubeconfig: str, context_name: str):
         '''
 
         We need to make sure operator to be ready before applying test cases, because Acto would
@@ -163,7 +163,7 @@ class Helm(Deploy):
 
 class Yaml(Deploy):
 
-    def deploy(self, context: dict, kubeconfig: str, context_name: str):
+    def deploy(self, kubeconfig: str, context_name: str, namespace: str):
         # TODO: We cannot specify namespace ACTO_NAMESPACE here.
         # rabbitMQ operator will report the error message
         '''
@@ -173,9 +173,6 @@ class Yaml(Deploy):
         logger = get_thread_logger(with_prefix=True)
         print_event('Deploying operator...')
 
-        namespace = utils.get_yaml_existing_namespace(
-            self.path) or CONST.ACTO_NAMESPACE
-        context['namespace'] = namespace
         ret = utils.create_namespace(
             kubernetes_client(kubeconfig, context_name), namespace)
         if ret == None:
@@ -183,14 +180,14 @@ class Yaml(Deploy):
         if self.init_yaml:
             kubectl(['apply', '--server-side', '-f', self.init_yaml], kubeconfig=kubeconfig,
                     context_name=context_name)
-        self.check_status(context, kubeconfig=kubeconfig,
+        self.check_status(kubeconfig=kubeconfig,
                           context_name=context_name)
-        kubectl(['apply', '--server-side', '-f', self.path, '-n', context['namespace']], kubeconfig=kubeconfig,
+        kubectl(['apply', '--server-side', '-f', self.path, '-n', namespace], kubeconfig=kubeconfig,
                 context_name=context_name)
-        self.check_status(context, kubeconfig=kubeconfig,
+        self.check_status(kubeconfig=kubeconfig,
                           context_name=context_name)
-        add_acto_label(kubernetes_client(kubeconfig, context_name), context)
-        self.check_status(context, kubeconfig=kubeconfig,
+        add_acto_label(kubernetes_client(kubeconfig, context_name), namespace)
+        self.check_status(kubeconfig=kubeconfig,
                           context_name=context_name)
         time.sleep(20)
 
@@ -201,18 +198,15 @@ class Yaml(Deploy):
 
 class Kustomize(Deploy):
 
-    def deploy(self, context, kubeconfig, context_name):
-        # TODO: We need to remove hardcoded namespace.
-        namespace = "cass-operator"
-        context['namespace'] = namespace
+    def deploy(self, kubeconfig, context_name, namespace):
         if self.init_yaml:
             kubectl(['apply', '--server-side', '-f', self.init_yaml], kubeconfig=kubeconfig,
                     context_name=context_name)
-        self.check_status(context, kubeconfig=kubeconfig,
+        self.check_status(kubeconfig=kubeconfig,
                           context_name=context_name)
-        kubectl(['apply', '--server-side', '-k', self.path, '-n', context['namespace']], kubeconfig=kubeconfig,
+        kubectl(['apply', '--server-side', '-k', self.path, '-n', namespace], kubeconfig=kubeconfig,
                 context_name=context_name)
-        self.check_status(context, kubeconfig=kubeconfig,
+        self.check_status(kubeconfig=kubeconfig,
                           context_name=context_name)
         return True
 

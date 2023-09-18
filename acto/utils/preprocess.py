@@ -3,6 +3,7 @@ import subprocess
 from typing import List, Optional
 
 import kubernetes
+import kubernetes.client.models as k8s_models
 import yaml
 
 from acto.kubectl_client import KubectlClient
@@ -19,6 +20,7 @@ def update_preload_images(context: dict, worker_list):
     if not namespace:
         return
 
+    # block list when getting the operator specific images
     k8s_images = [
         'docker.io/kindest/kindnetd',
         'docker.io/rancher/local-path-provisioner',
@@ -39,6 +41,15 @@ def update_preload_images(context: dict, worker_list):
         'docker.io/rancher/mirrored-library-traefik',
         'docker.io/rancher/mirrored-metrics-server',
         'docker.io/rancher/mirrored-paus',
+
+        # new k8s images
+        'registry.k8s.io/etcd',
+        'registry.k8s.io/kube-controller-manager',
+        'registry.k8s.io/pause',
+        'registry.k8s.io/kube-proxy',
+        'registry.k8s.io/coredns/coredns',
+        'registry.k8s.io/kube-apiserver',
+        'registry.k8s.io/kube-scheduler',
     ]
 
     for worker in worker_list:
@@ -62,12 +73,20 @@ def update_preload_images(context: dict, worker_list):
             context['preload_images'].add(image)
 
 
-def process_crd(context: dict,
-                apiclient: kubernetes.client.ApiClient,
+def process_crd(apiclient: kubernetes.client.ApiClient,
                 kubectl_client: KubectlClient,
                 crd_name: Optional[str] = None,
-                helper_crd: Optional[str] = None):
+                helper_crd: Optional[str] = None) -> dict:
     ''' Get crd from k8s and set context['crd']
+
+    Args:
+        apiclient: k8s api client
+        kubectl_client: kubectl client
+        crd_name: name of the crd
+        helper_crd: helper crd file path
+    
+    Returns:
+        crd_data: crd dict
 
     When there are more than one crd in the cluster, user should set crd_name
     '''
@@ -76,9 +95,9 @@ def process_crd(context: dict,
     if helper_crd == None:
         apiextensionsV1Api = kubernetes.client.ApiextensionsV1Api(apiclient)
         crds: List[
-            kubernetes.client.models.
+            k8s_models.
             V1CustomResourceDefinition] = apiextensionsV1Api.list_custom_resource_definition().items
-        crd: Optional[kubernetes.client.models.V1CustomResourceDefinition] = None
+        crd: Optional[k8s_models.V1CustomResourceDefinition] = None
         if len(crds) == 0:
             logger.error('No crd is found')
             quit()
@@ -100,7 +119,7 @@ def process_crd(context: dict,
             crd_result = kubectl_client.kubectl(['get', 'crd', crd.metadata.name, "-o", "json"],
                                                 True, True)
             crd_obj = json.loads(crd_result.stdout)
-            spec: kubernetes.client.models.V1CustomResourceDefinitionSpec = crd.spec
+            spec: k8s_models.V1CustomResourceDefinitionSpec = crd.spec
             crd_data = {
                 'group': spec.group,
                 'plural': spec.names.plural,
@@ -108,7 +127,7 @@ def process_crd(context: dict,
                 'version': spec.versions[0].name,
                 'body': crd_obj
             }
-            context['crd'] = crd_data
+            return crd_data
     else:
         with open(helper_crd, 'r') as helper_crd_f:
             helper_crd_doc = yaml.load(helper_crd_f, Loader=yaml.FullLoader)
@@ -119,17 +138,16 @@ def process_crd(context: dict,
                        ['name'],  # TODO: Handle multiple versions
             'body': helper_crd_doc
         }
-        context['crd'] = crd_data
-    logger.debug('CRD data: %s' % crd_data)
+        return crd_data
 
 
-def add_acto_label(apiclient: kubernetes.client.ApiClient, context: dict):
+def add_acto_label(apiclient: kubernetes.client.ApiClient, namespace: str):
     '''Add acto label to deployment, stateful_state and corresponding pods.
     '''
     appv1Api = kubernetes.client.AppsV1Api(apiclient)
-    operator_deployments = appv1Api.list_namespaced_deployment(context['namespace'],
+    operator_deployments = appv1Api.list_namespaced_deployment(namespace,
                                                                watch=False).items
-    operator_stateful_states = appv1Api.list_namespaced_stateful_set(context['namespace'],
+    operator_stateful_states = appv1Api.list_namespaced_stateful_set(namespace,
                                                                      watch=False).items
     for deployment in operator_deployments:
         patches = [{

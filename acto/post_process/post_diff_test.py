@@ -279,9 +279,10 @@ class AdditionalRunner:
         self._cluster.restart_cluster(self._cluster_name, self._kubeconfig)
         self._cluster.load_images(self._images_archive, self._cluster_name)
         apiclient = kubernetes_client(self._kubeconfig, self._context_name)
-        deployed = self._deploy.deploy_with_retry(self._context, self._kubeconfig,
-                                                  self._context_name)
-        add_acto_label(apiclient, self._context)
+        deployed = self._deploy.deploy_with_retry(self._kubeconfig,
+                                                  self._context_name,
+                                                  self._context['namespace'])
+        add_acto_label(apiclient, self._context['namespace'])
         trial_dir = os.path.join(self._workdir, 'trial-%02d' % self._worker_id)
         os.makedirs(trial_dir, exist_ok=True)
         runner = Runner(self._context, trial_dir, self._kubeconfig, self._context_name)
@@ -328,8 +329,9 @@ class DeployRunner:
         self._cluster.load_images(self._images_archive, self._cluster_name)
         apiclient = kubernetes_client(self._kubeconfig, self._context_name)
         after_k8s_bootstrap_time = time.time()
-        deployed = self._deploy.deploy_with_retry(self._context, self._kubeconfig,
-                                                  self._context_name)
+        deployed = self._deploy.deploy_with_retry(self._kubeconfig,
+                                                  self._context_name,
+                                                  self._context['namespace'])
         after_operator_deploy_time = time.time()
 
         trial_dir = os.path.join(self._workdir, 'trial-%02d' % self._worker_id)
@@ -369,8 +371,9 @@ class DeployRunner:
                 self._cluster.load_images(self._images_archive, self._cluster_name)
                 apiclient = kubernetes_client(self._kubeconfig, self._context_name)
                 after_k8s_bootstrap_time = time.time()
-                deployed = self._deploy.deploy_with_retry(self._context, self._kubeconfig,
-                                                          self._context_name)
+                deployed = self._deploy.deploy_with_retry(self._kubeconfig,
+                                                          self._context_name,
+                                                          self._context['namespace'])
                 after_operator_deploy_time = time.time()
                 runner = Runner(self._context, trial_dir, self._kubeconfig, self._context_name)
 

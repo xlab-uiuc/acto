@@ -63,6 +63,7 @@ class Runner(object):
     def run(self, input: dict, generation: int) -> Tuple[Snapshot, bool]:
         '''Simply run the cmd and dumps system_state, delta, operator log, events and input files without checking. 
            The function blocks until system converges.
+           TODO: move the serialization part to a separate function
 
         Args:
 
@@ -93,6 +94,7 @@ class Runner(object):
             logger.error('STDERR: ' + cli_result.stderr)
             return Snapshot(input, self.collect_cli_result(cli_result), {}, []), True
         err = None
+        
         try:
             err = self.wait_for_system_converge()
         except (KeyError, ValueError) as e:

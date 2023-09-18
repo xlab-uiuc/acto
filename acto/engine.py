@@ -29,7 +29,7 @@ from acto.runner import Runner
 from acto.serialization import ActoEncoder, ContextEncoder
 from acto.snapshot import Snapshot
 from acto.utils import (delete_operator_pod, process_crd,
-                        update_preload_images)
+                        update_preload_images, get_yaml_existing_namespace)
 from acto.lib.operator_config import OperatorConfig
 from acto.utils.thread_logger import (get_thread_logger,
                                       set_thread_logger_prefix)
@@ -246,8 +246,9 @@ class TrialRunner:
             apiclient = kubernetes_client(self.kubeconfig, self.context_name)
             self.cluster.load_images(self.images_archive, self.cluster_name)
             trial_k8s_bootstrap_time = time.time()
-            deployed = self.deploy.deploy_with_retry(self.context, self.kubeconfig,
-                                                     self.context_name)
+            deployed = self.deploy.deploy_with_retry(self.kubeconfig,
+                                                     self.context_name,
+                                                     self.context['namespace'])
             if not deployed:
                 logger.info('Not deployed. Try again!')
                 continue
@@ -778,8 +779,11 @@ class Acto:
 
             while True:
                 self.cluster.restart_cluster('learn', learn_kubeconfig)
-                deployed = self.deploy.deploy_with_retry(self.context, learn_kubeconfig,
-                                                         learn_context_name)
+                namespace = get_yaml_existing_namespace(self.deploy.path) or CONST.ACTO_NAMESPACE
+                self.context['namespace'] = namespace
+                deployed = self.deploy.deploy_with_retry(learn_kubeconfig,
+                                                         learn_context_name,
+                                                         namespace)
                 if deployed:
                     break
             apiclient = kubernetes_client(learn_kubeconfig, learn_context_name)
@@ -787,8 +791,8 @@ class Acto:
             runner.run_without_collect(self.operator_config.seed_custom_resource)
 
             update_preload_images(self.context, self.cluster.get_node_list('learn'))
-            process_crd(self.context, apiclient, KubectlClient(learn_kubeconfig, learn_context_name),
-                        self.crd_name, helper_crd)
+            self.context['crd'] = process_crd(apiclient, KubectlClient(learn_kubeconfig, learn_context_name),
+                                              self.crd_name, helper_crd)
             self.cluster.delete_cluster('learn', learn_kubeconfig)
 
             run_end_time = time.time()
