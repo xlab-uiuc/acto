@@ -2,6 +2,7 @@ apiVersion: anvil.dev/v1
 kind: ZookeeperCluster
 metadata:
   name: zookeeper
+  namespace: default
 spec:
   replicas: 3
   image: pravega/zookeeper:0.2.14
@@ -27,7 +28,6 @@ spec:
     autoPurgeSnapRetainCount: 3
     autoPurgePurgeInterval: 1
     quorumListenOnAllIps: false
-  resources:
-    requests:
-      memory: "256Mi"
-      cpu: "500m"
+  persistence:
+    enabled: true
+    storageSize: 20Gi
