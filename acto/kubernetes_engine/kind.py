@@ -2,11 +2,12 @@ import logging
 import os
 import subprocess
 import time
+from typing import List
 
 import kubernetes
 import yaml
-from acto.common import print_event
 
+from acto.common import kubernetes_client, print_event
 from acto.constant import CONST
 
 from . import base
@@ -14,8 +15,11 @@ from . import base
 
 class Kind(base.KubernetesEngine):
 
-    def __init__(self, acto_namespace: int):
+    def __init__(
+            self, acto_namespace: int, posthooks: List[base.KubernetesEnginePostHookType] = None):
         self.config_path = os.path.join(CONST.CLUSTER_CONFIG_FOLDER, f'KIND-{acto_namespace}.yaml')
+        if posthooks is not None:
+            self.posthooks = posthooks
 
     def configure_cluster(self, num_nodes: int, version: str):
         '''Create config file for kind'''
@@ -93,11 +97,16 @@ class Kind(base.KubernetesEngine):
         try:
             kubernetes.config.load_kube_config(config_file=kubeconfig,
                                                context=self.get_context_name(name))
+            apiclient = kubernetes_client(kubeconfig, self.get_context_name(name))
         except Exception as e:
             logging.debug("Incorrect kube config file:")
             with open(kubeconfig) as f:
                 logging.debug(f.read())
             raise e
+
+        if self.posthooks:
+            for posthook in self.posthooks:
+                posthook(apiclient=apiclient)
 
     def load_images(self, images_archive_path: str, name: str):
         logging.info('Loading preload images')

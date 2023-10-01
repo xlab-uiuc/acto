@@ -1,12 +1,22 @@
 import subprocess
 import time
 from abc import ABC, abstractmethod
+from typing import Callable, List
+
+import kubernetes
 
 from acto.constant import CONST
 from acto.utils import get_thread_logger
 
+KubernetesEnginePostHookType = Callable[[kubernetes.client.ApiClient], None]
+
 
 class KubernetesEngine(ABC):
+
+    @abstractmethod
+    def __init__(self, acto_namespace: int,
+                 posthooks: List[KubernetesEnginePostHookType] = None) -> None: ...
+
     @abstractmethod
     def configure_cluster(self, num_nodes: int, version: str):
         pass
@@ -29,7 +39,7 @@ class KubernetesEngine(ABC):
 
     def restart_cluster(self, name: str, kubeconfig: str):
         logger = get_thread_logger(with_prefix=False)
-        
+
         retry_count = 3
 
         while (retry_count > 0):
