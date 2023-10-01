@@ -16,6 +16,12 @@ class KubernetesEngine(ABC):
     @abstractmethod
     def __init__(self, acto_namespace: int,
                  posthooks: List[KubernetesEnginePostHookType] = None) -> None: ...
+    '''Constructor for KubernetesEngine
+    
+    Args:
+        acto_namespace: the namespace of the acto
+        posthooks: a list of posthooks to be executed after the cluster is created
+    '''
 
     @abstractmethod
     def configure_cluster(self, num_nodes: int, version: str):

@@ -18,8 +18,7 @@ class Kind(base.KubernetesEngine):
     def __init__(
             self, acto_namespace: int, posthooks: List[base.KubernetesEnginePostHookType] = None):
         self.config_path = os.path.join(CONST.CLUSTER_CONFIG_FOLDER, f'KIND-{acto_namespace}.yaml')
-        if posthooks is not None:
-            self.posthooks = posthooks
+        self.posthooks = posthooks
 
     def configure_cluster(self, num_nodes: int, version: str):
         '''Create config file for kind'''
