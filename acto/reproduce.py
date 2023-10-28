@@ -138,7 +138,7 @@ def repro_setup(v):
     return None
 
 
-def reproduce(workdir_path: str, reproduce_dir: str, operator_config: OperatorConfig, acto_namespace: int, **kwargs) -> List[RunResult]:
+def reproduce(workdir_path: str, reproduce_dir: str, operator_config: OperatorConfig, **kwargs) -> List[RunResult]:
     os.makedirs(workdir_path, exist_ok=True)
     # Setting up log infra
     logging.basicConfig(
@@ -169,8 +169,7 @@ def reproduce(workdir_path: str, reproduce_dir: str, operator_config: OperatorCo
                 is_reproduce=True,
                 input_model=input_model,
                 apply_testcase_f=apply_testcase_f,
-                reproduce_dir=reproduce_dir,
-                acto_namespace=acto_namespace)
+                reproduce_dir=reproduce_dir)
 
     errors = acto.run(modes=['normal'])
     return [error for error in errors if error is not None]
@@ -217,3 +216,4 @@ if __name__ == '__main__':
               operator_config=args.config,
               cluster_runtime=args.cluster_runtime)
     end_time = datetime.now()
+
