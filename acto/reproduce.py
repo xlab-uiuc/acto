@@ -205,6 +205,11 @@ if __name__ == '__main__':
         dest='cluster_runtime',
         default="KIND",
         help='Cluster runtime for kubernetes, can be KIND (Default), K3D or MINIKUBE')
+    parser.add_argument(
+        '--acto-namespace',
+        dest='acto_namespace',
+        default=0,
+        help='Kubernetes namespace for acto')
     parser.add_argument('--context', dest='context', help='Cached context data')
     args = parser.parse_args()
 
@@ -215,5 +220,6 @@ if __name__ == '__main__':
     reproduce(workdir_path=workdir_path,
               reproduce_dir=args.reproduce_dir,
               operator_config=args.config,
+              acto_namespace=args.acto_namespace,
               cluster_runtime=args.cluster_runtime)
     end_time = datetime.now()
