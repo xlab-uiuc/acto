@@ -1,7 +1,7 @@
 import base64
 import queue
 import time
-from multiprocessing import Process, Queue
+from multiprocessing import Process, Queue, set_start_method, get_start_method
 
 import yaml
 
@@ -59,6 +59,9 @@ class Runner(object):
             'role': self.rbacAuthorizationV1Api.list_namespaced_role,
             'role_binding': self.rbacAuthorizationV1Api.list_namespaced_role_binding,
         }
+
+        if get_start_method() != "fork":
+            set_start_method("fork")
 
     def run(self, input: dict, generation: int) -> Tuple[Snapshot, bool]:
         '''Simply run the cmd and dumps system_state, delta, operator log, events and input files without checking. 
