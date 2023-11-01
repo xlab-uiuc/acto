@@ -1,8 +1,8 @@
 name: End-to-End Test
 on:
   pull_request:
-  schedule:
-    - cron: '0 0 * * 0'  # Run every Sunday at 00:00 UTC
+  # schedule:
+  #   - cron: '0 0 * * 0'  # Run every Sunday at 00:00 UTC
 jobs:
   bug_reproduction:
     timeout-minutes: 1440
@@ -26,4 +26,4 @@ jobs:
           mkdir -m 777 -p profile/data
       - name: Run bug reproduction
         run: |
-          pytest -m "local"
+          pytest -m "regression"
