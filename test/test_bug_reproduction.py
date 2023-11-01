@@ -148,8 +148,8 @@ class TestBugReproduction(unittest.TestCase):
         
         self.assertFalse(errors, f'Test failed with {errors}')
 
-@pytest.mark.regression
-class TestRegression(unittest.TestCase):
+@pytest.mark.singleBugReproduction
+class TestSingleBugReproduction(unittest.TestCase):
 
     def __init__(self, methodName: str = "runTest") -> None:
         super().__init__(methodName)
