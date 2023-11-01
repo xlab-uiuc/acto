@@ -2,6 +2,7 @@ import multiprocessing
 import os
 import pathlib
 import queue
+import random
 from typing import Dict, List, Tuple
 import unittest
 
@@ -118,6 +119,7 @@ class TestBugReproduction(unittest.TestCase):
     def __init__(self, methodName: str = "runTest") -> None:
         super().__init__(methodName)
 
+        # TODO: make _num_workers a command line argument
         self._num_workers = 2 # Number of workers to run the test
 
     def test_all_bugs(self):
@@ -127,6 +129,40 @@ class TestBugReproduction(unittest.TestCase):
         for operator, bugs in all_bugs.items():
             for bug_id, bug_config in bugs.items():
                 workqueue.put((operator, bug_id, bug_config))
+
+        reproduction_results: Dict[str, bool] = manager.dict() # workers write reproduction results
+                                                               # to this dict. Bug ID -> if success
+        processes: List[multiprocessing.Process] = []
+        for i in range(self._num_workers):
+            p = multiprocessing.Process(target=run_worker, args=(workqueue, i, reproduction_results))
+            p.start()
+            processes.append(p)
+
+        for p in processes:
+            p.join()
+
+        errors = []
+        for bug_id, if_reproduced in reproduction_results.items():
+            if not if_reproduced:
+                errors.append(bug_id)
+        
+        self.assertFalse(errors, f'Test failed with {errors}')
+
+@pytest.mark.regression
+class TestRegression(unittest.TestCase):
+
+    def __init__(self, methodName: str = "runTest") -> None:
+        super().__init__(methodName)
+
+        self._num_workers = 1 # Number of workers to run the test
+
+    def test_all_bugs(self):
+        manager = multiprocessing.Manager()
+        workqueue = multiprocessing.Queue()
+
+        operator, bugs = random.choice(list(all_bugs.items()))
+        bug_id, bug_config = random.choice(list(bugs.items()))
+        workqueue.put((operator, bug_id, bug_config))
 
         reproduction_results: Dict[str, bool] = manager.dict() # workers write reproduction results
                                                                # to this dict. Bug ID -> if success
