@@ -2,7 +2,7 @@ import logging
 import os
 import subprocess
 import time
-from typing import List
+from typing import Dict, List
 
 import kubernetes
 import yaml
@@ -16,9 +16,11 @@ from . import base
 class Kind(base.KubernetesEngine):
 
     def __init__(
-            self, acto_namespace: int, posthooks: List[base.KubernetesEnginePostHookType] = None):
-        self.config_path = os.path.join(CONST.CLUSTER_CONFIG_FOLDER, f'KIND-{acto_namespace}.yaml')
-        self.posthooks = posthooks
+            self, acto_namespace: int, posthooks: List[base.KubernetesEnginePostHookType] = None,
+            feature_gates: Dict[str, bool] = None):
+        self._config_path = os.path.join(CONST.CLUSTER_CONFIG_FOLDER, f'KIND-{acto_namespace}.yaml')
+        self._posthooks = posthooks
+        self._feature_gates = feature_gates
 
     def configure_cluster(self, num_nodes: int, version: str):
         '''Create config file for kind'''
@@ -45,12 +47,17 @@ class Kind(base.KubernetesEngine):
                 }]
             })
 
+        if self._feature_gates:
+            config_dict['featureGates'] = {}
+            for key, value in self._feature_gates.items():
+                config_dict['featureGates'][key] = value
+
         try:
             os.mkdir(CONST.CLUSTER_CONFIG_FOLDER)
         except FileExistsError:
             pass
 
-        with open(self.config_path, 'w') as config_file:
+        with open(self._config_path, 'w') as config_file:
             yaml.dump(config_dict, config_file)
 
         self._k8s_version = version
@@ -82,12 +89,13 @@ class Kind(base.KubernetesEngine):
         else:
             raise Exception('Missing kubeconfig for kind create')
 
-        cmd.extend(['--config', self.config_path])
+        cmd.extend(['--config', self._config_path])
 
         cmd.extend(['--image', f"kindest/node:{self._k8s_version}"])
 
         p = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         while p.returncode != 0:
+            # TODO: retry for three times
             logging.error('Failed to create kind cluster, retrying')
             self.delete_cluster(name, kubeconfig)
             time.sleep(5)
@@ -103,8 +111,8 @@ class Kind(base.KubernetesEngine):
                 logging.debug(f.read())
             raise e
 
-        if self.posthooks:
-            for posthook in self.posthooks:
+        if self._posthooks:
+            for posthook in self._posthooks:
                 posthook(apiclient=apiclient)
 
     def load_images(self, images_archive_path: str, name: str):
