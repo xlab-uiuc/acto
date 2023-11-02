@@ -423,7 +423,8 @@ class PostDiffTest(PostProcessor):
     def post_process(self, workdir: str, num_workers: int = 1):
         if not os.path.exists(workdir):
             os.mkdir(workdir)
-        cluster = kind.Kind(acto_namespace=self.acto_namespace)
+        cluster = kind.Kind(acto_namespace=self.acto_namespace,
+                            feature_gates=self.config.kubernetes_engine.feature_gates)
         cluster.configure_cluster(self.config.num_nodes, self.config.kubernetes_version)
         deploy = Deploy(DeployMethod.YAML, self.config.deploy.file, self.config.deploy.init).new()
         # Build an archive to be preloaded
@@ -479,7 +480,8 @@ class PostDiffTest(PostProcessor):
 
         generation = 0  # for additional runner
         additional_runner_dir = os.path.join(workdir, f'additional-runner-{worker_id}')
-        cluster = kind.Kind(acto_namespace=self.acto_namespace)
+        cluster = kind.Kind(acto_namespace=self.acto_namespace,
+                            feature_gates=self.config.kubernetes_engine.feature_gates)
         cluster.configure_cluster(self.config.num_nodes, self.config.kubernetes_version)
 
         deploy = Deploy(DeployMethod.YAML, self.config.deploy.file, self.config.deploy.init).new()

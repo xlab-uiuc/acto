@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -31,6 +31,11 @@ class AnalysisConfig(BaseModel, extra='forbid'):
         description='The relative path of the main package for the operator')
 
 
+class KubernetesEngineConfig(BaseModel, extra='forbid'):
+    feature_gates: Dict[str, bool] = Field(
+        description='Path to the feature gates file', default=None)
+
+
 class OperatorConfig(BaseModel, extra='forbid'):
     """Configuration for porting operators to Acto"""
     deploy: DeployConfig
@@ -50,6 +55,9 @@ class OperatorConfig(BaseModel, extra='forbid'):
     diff_ignore_fields: List[str] = Field(default_factory=list)
     kubernetes_version: str = Field(
         default='v1.22.9', description='Kubernetes version')
+    kubernetes_engine: KubernetesEngineConfig = Field(
+        default=KubernetesEngineConfig(), description='Configuration for the Kubernetes engine'
+    )
 
     monkey_patch: Optional[str] = Field(
         default=None, description='Path to the monkey patch file')

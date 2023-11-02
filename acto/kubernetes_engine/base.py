@@ -1,7 +1,7 @@
 import subprocess
 import time
 from abc import ABC, abstractmethod
-from typing import Callable, List
+from typing import Callable, Dict, List
 
 import kubernetes
 
@@ -15,12 +15,14 @@ class KubernetesEngine(ABC):
 
     @abstractmethod
     def __init__(self, acto_namespace: int,
-                 posthooks: List[KubernetesEnginePostHookType] = None) -> None: ...
+                 posthooks: List[KubernetesEnginePostHookType] = None,
+                 feature_gates: Dict[str, bool] = None) -> None: ...
     '''Constructor for KubernetesEngine
     
     Args:
         acto_namespace: the namespace of the acto
         posthooks: a list of posthooks to be executed after the cluster is created
+        feature_gates: a list of feature gates to be enabled
     '''
 
     @abstractmethod

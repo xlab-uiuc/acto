@@ -6,8 +6,8 @@ import time
 from copy import deepcopy
 from types import FunctionType
 
-import yaml
 import jsonpatch
+import yaml
 
 from acto.checker.checker_set import CheckerSet
 from acto.common import *
@@ -24,16 +24,17 @@ from acto.input.value_with_schema import (ValueWithSchema,
 from acto.input.valuegenerator import ArrayGenerator
 from acto.kubectl_client import KubectlClient
 from acto.kubernetes_engine import base, k3d, kind
+from acto.lib.operator_config import OperatorConfig
 from acto.oracle_handle import OracleHandle
 from acto.runner import Runner
 from acto.serialization import ActoEncoder, ContextEncoder
 from acto.snapshot import Snapshot
-from acto.utils import (delete_operator_pod, process_crd,
-                        update_preload_images, get_yaml_existing_namespace)
-from acto.lib.operator_config import OperatorConfig
+from acto.utils import (delete_operator_pod, get_yaml_existing_namespace,
+                        process_crd, update_preload_images)
 from acto.utils.thread_logger import (get_thread_logger,
                                       set_thread_logger_prefix)
 from ssa.analysis import analyze
+
 
 def save_result(trial_dir: str, trial_result: RunResult, num_tests: int, trial_elapsed, time_breakdown):
     logger = get_thread_logger(with_prefix=False)
@@ -307,7 +308,7 @@ class TrialRunner:
                 on_init(oracle_handle)
 
         runner: Runner = self.runner_t(self.context, trial_dir, self.kubeconfig, self.context_name,
-                                       self.wait_time)
+                                       wait_time=self.wait_time)
         checker: CheckerSet = self.checker_t(self.context, trial_dir, self.input_model, oracle_handle, self.custom_oracle)
 
         curr_input = self.input_model.get_seed_input()
@@ -627,13 +628,15 @@ class Acto:
                         operator_config.deploy.init).new()
 
         if cluster_runtime == "KIND":
-            cluster = kind.Kind(acto_namespace=acto_namespace)
+            cluster = kind.Kind(acto_namespace=acto_namespace,
+                                feature_gates=operator_config.kubernetes_engine.feature_gates)
         elif cluster_runtime == "K3D":
             cluster = k3d.K3D()
         else:
             logger.warning(
                 f"Cluster Runtime {cluster_runtime} is not supported, defaulted to use kind")
-            cluster = kind.Kind(acto_namespace=acto_namespace)
+            cluster = kind.Kind(acto_namespace=acto_namespace,
+                                feature_gates=operator_config.kubernetes_engine.feature_gates)
 
         self.cluster = cluster
         self.deploy = deploy
@@ -687,6 +690,7 @@ class Acto:
         if not applied_custom_k8s_fields:
             # default to use the known_schema module to automatically find the mapping
             # from CRD to K8s schema
+            logger.info('Using known_schema to find the mapping from CRD to K8s schema')
             tuples = find_all_matched_schemas_type(self.input_model.root_schema)
             for tuple in tuples:
                 logger.debug(f'Found matched schema: {tuple[0].path} -> {tuple[1]}')
