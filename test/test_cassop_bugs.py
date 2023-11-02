@@ -8,9 +8,9 @@ import yaml
 from acto import config as acto_config
 from acto.checker.checker_set import CheckerSet
 from acto.input import DeterministicInputModel, InputModel
-from acto.post_process.post_diff_test import PostDiffTest
-from acto.post_process.post_process import construct_step
 from acto.lib.operator_config import OperatorConfig
+from acto.post_process.post_diff_test import DiffTestResult, PostDiffTest
+from acto.post_process.post_process import construct_step
 
 from .utils import construct_snapshot
 
@@ -61,8 +61,7 @@ class TestCassOpBugs(unittest.TestCase):
 
     def test_cassop_330_diff(self):
         diff_test_result_path = os.path.join(test_dir, 'cassop-330', 'difftest-006.json')
-        with open(diff_test_result_path, 'r') as f:
-            diff_test_result = json.load(f)
+        diff_test_result = DiffTestResult.from_file(diff_test_result_path)
 
         trial_dir = os.path.join(test_dir, 'cassop-330/trial-00-0001')
         step = construct_step(trial_dir, 8)
@@ -72,9 +71,7 @@ class TestCassOpBugs(unittest.TestCase):
 
     def test_cassop_928(self):
         diff_test_result_path = os.path.join(test_dir, 'cassop-315', 'difftest-002.json')
-        with open(diff_test_result_path, 'r') as f:
-            diff_test_result = json.load(f)
-
+        diff_test_result = DiffTestResult.from_file(diff_test_result_path)
         trial_dir = os.path.join(test_dir, 'cassop-315/trial-04-0000')
         step = construct_step(trial_dir, 2)
 
