@@ -11,6 +11,7 @@ import sys
 import threading
 import time
 from copy import deepcopy
+from dataclasses import dataclass
 from typing import Dict, List
 
 import pandas as pd
@@ -19,25 +20,62 @@ from deepdiff.helper import CannotCompare
 from deepdiff.model import DiffLevel
 from deepdiff.operator import BaseOperator
 
-sys.path.append('.')
-sys.path.append('..')
-from acto.common import (ErrorResult, PassResult, RecoveryResult, RunResult,
+from acto.common import (ErrorResult, PassResult, RecoveryResult,
                          invalid_input_message_regex, kubernetes_client)
-from acto.constant import CONST
 from acto.deploy import Deploy, DeployMethod
 from acto.kubernetes_engine import base, kind
+from acto.lib.operator_config import OperatorConfig
 from acto.runner import Runner
 from acto.serialization import ActoEncoder
-from acto.lib.operator_config import OperatorConfig
-from acto.utils import (add_acto_label, get_thread_logger,
-                        handle_excepthook, thread_excepthook)
+from acto.utils import (add_acto_label, get_thread_logger, handle_excepthook,
+                        thread_excepthook)
 
 from .post_process import PostProcessor, Step
+
+sys.path.append('.')
+sys.path.append('..')
+
+
+@dataclass
+class DiffTestResult:
+    '''The result of a diff test
+    It contains the input digest, the snapshot, the original trial and generation, 
+        and the time spent on each step
+        The oracle result is separated from this dataclass, so that it can easily recomputed 
+        after changing the oracle
+    '''
+    input_digest: str
+    snapshot: Dict
+    originals: List[Dict]
+    time: Dict
+
+    def from_file(file_path: str) -> 'DiffTestResult':
+        with open(file_path, 'r') as f:
+            diff_test_result = json.load(f)
+        return DiffTestResult(
+            input_digest=diff_test_result['input_digest'],
+            snapshot=diff_test_result['snapshot'],
+            originals=diff_test_result['originals'],
+            time=diff_test_result['time'],
+        )
+
+    def to_file(self, file_path: str):
+        with open(file_path, 'w') as f:
+            json.dump(self.to_dict(), f, cls=ActoEncoder, indent=6)
+
+    def to_dict(self) -> Dict:
+        return {
+            'input_digest': self.input_digest,
+            'snapshot': self.snapshot,
+            'originals': self.originals,
+            'time': self.time,
+        }
 
 
 def dict_hash(d: dict) -> int:
     '''Hash a dict'''
     return hash(json.dumps(d, sort_keys=True))
+
 
 def compare_system_equality(curr_system_state: Dict,
                             prev_system_state: Dict,
@@ -61,16 +99,16 @@ def compare_system_equality(curr_system_state: Dict,
     new_pods = {}
     for k, v in curr_pods.items():
         if 'metadata' in v and 'owner_references' in v[
-            'metadata'] and v['metadata']['owner_references'] != None and v['metadata'][
-            'owner_references'][0]['kind'] != 'Job':
+                'metadata'] and v['metadata']['owner_references'] != None and v['metadata'][
+                'owner_references'][0]['kind'] != 'Job':
             new_pods[k] = v
     curr_system_state['pod'] = new_pods
 
     new_pods = {}
     for k, v in prev_pods.items():
         if 'metadata' in v and 'owner_references' in v[
-            'metadata'] and v['metadata']['owner_references'] != None and v['metadata'][
-            'owner_references'][0]['kind'] != 'Job':
+                'metadata'] and v['metadata']['owner_references'] != None and v['metadata'][
+                'owner_references'][0]['kind'] != 'Job':
             new_pods[k] = v
     prev_system_state['pod'] = new_pods
 
@@ -89,11 +127,11 @@ def compare_system_equality(curr_system_state: Dict,
                     obj['data'][key] = json.loads(data)
                 except:
                     pass
-    
+
     if len(curr_system_state['secret']) != len(prev_system_state['secret']):
         logger.debug(f"failed attempt recovering to seed state - secret count mismatch")
         return RecoveryResult(
-            delta=DeepDiff(len(curr_system_state['secret']), len(prev_system_state['secret'])), 
+            delta=DeepDiff(len(curr_system_state['secret']), len(prev_system_state['secret'])),
             from_=prev_system_state, to_=curr_system_state)
 
     # remove custom resource from both states
@@ -238,7 +276,6 @@ class TypeChangeOperator(BaseOperator):
         return False
 
 
-
 def get_nondeterministic_fields(s1, s2, additional_exclude_paths):
     nondeterministic_fields = []
     result = compare_system_equality(s1, s2, additional_exclude_paths=additional_exclude_paths)
@@ -349,19 +386,18 @@ class DeployRunner:
             snapshot, err = runner.run(cr, generation=generation)
             after_run_time = time.time()
             err = True
-            difftest_result = {
-                'input_digest': group.iloc[0]['input_digest'],
-                'snapshot': snapshot.to_dict(),
-                'originals': group[['trial', 'gen']].to_dict('records'),
-                'time': {
+            difftest_result = DiffTestResult(
+                input_digest=group.iloc[0]['input_digest'],
+                snapshot=snapshot.to_dict(),
+                originals=group[['trial', 'gen']].to_dict('records'),
+                time={
                     'k8s_bootstrap': after_k8s_bootstrap_time - before_k8s_bootstrap_time,
                     'operator_deploy': after_operator_deploy_time - after_k8s_bootstrap_time,
                     'run': after_run_time - after_operator_deploy_time,
                 },
-            }
+            )
             difftest_result_path = os.path.join(trial_dir, 'difftest-%03d.json' % generation)
-            with open(difftest_result_path, 'w') as f:
-                json.dump(difftest_result, f, cls=ActoEncoder, indent=6)
+            difftest_result.to_file(difftest_result_path)
 
             if err:
                 before_k8s_bootstrap_time = time.time()
@@ -382,7 +418,9 @@ class DeployRunner:
 
 class PostDiffTest(PostProcessor):
 
-    def __init__(self, testrun_dir: str, config: OperatorConfig, ignore_invalid: bool = False, acto_namespace: int = 0):
+    def __init__(
+            self, testrun_dir: str, config: OperatorConfig, ignore_invalid: bool = False,
+            acto_namespace: int = 0):
         self.acto_namespace = acto_namespace
         super().__init__(testrun_dir, config)
         logger = get_thread_logger(with_prefix=True)
@@ -442,7 +480,8 @@ class PostDiffTest(PostProcessor):
 
         runners: List[DeployRunner] = []
         for i in range(num_workers):
-            runner = DeployRunner(workqueue, self.context, deploy, workdir, cluster, i, self.acto_namespace)
+            runner = DeployRunner(workqueue, self.context, deploy,
+                                  workdir, cluster, i, self.acto_namespace)
             runners.append(runner)
 
         processes = []
@@ -490,7 +529,7 @@ class PostDiffTest(PostProcessor):
                                   deploy=deploy,
                                   workdir=additional_runner_dir,
                                   cluster=cluster,
-                                  worker_id=worker_id, 
+                                  worker_id=worker_id,
                                   acto_namespace=self.acto_namespace)
 
         while True:
@@ -499,9 +538,8 @@ class PostDiffTest(PostProcessor):
             except queue.Empty:
                 break
 
-            with open(diff_test_result_path, 'r') as f:
-                diff_test_result = json.load(f)
-            originals = diff_test_result['originals']
+            diff_test_result = DiffTestResult.from_file(diff_test_result_path)
+            originals = diff_test_result.originals
 
             group_errs = []
             for original in originals:
@@ -522,13 +560,13 @@ class PostDiffTest(PostProcessor):
             if len(group_errs) > 0:
                 with open(
                         os.path.join(workdir,
-                                     f'compare-results-{diff_test_result["input_digest"]}.json'),
+                                     f'compare-results-{diff_test_result.input_digest}.json'),
                         'w') as result_f:
                     json.dump(group_errs, result_f, cls=ActoEncoder, indent=6)
 
         return None
 
-    def check_diff_test_step(diff_test_result: Dict,
+    def check_diff_test_step(diff_test_result: DiffTestResult,
                              original_result: Step,
                              config: OperatorConfig,
                              run_check_indeterministic: bool = False,
@@ -545,13 +583,13 @@ class PostDiffTest(PostProcessor):
             return
 
         original_system_state = original_result.system_state
-        result = compare_system_equality(diff_test_result['snapshot']['system_state'],
+        result = compare_system_equality(diff_test_result.snapshot['system_state'],
                                          original_system_state, config.diff_ignore_fields)
         if isinstance(result, PassResult):
             logger.info(f'Pass diff test for trial {trial_dir} gen {gen}')
             return None
         elif run_check_indeterministic:
-            add_snapshot = additional_runner.run_cr(diff_test_result['snapshot']['input'],
+            add_snapshot = additional_runner.run_cr(diff_test_result.snapshot['input'],
                                                     trial_dir, gen)
             indeterministic_fields = get_nondeterministic_fields(original_system_state,
                                                                  add_snapshot.system_state,
