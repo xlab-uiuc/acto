@@ -14,7 +14,7 @@ def InitResourceSchema(self, schema_obj: BaseSchema):
     self.additional_properties = QuantitySchema(schema_obj)
 
 
-MonkeyPatchSupportMetaClass.override_class_attrs['ResourceSchema'] = {
+MonkeyPatchSupportMetaClass.override_class_methods['ResourceSchema'] = {
     'Match': MatchResourceSchema,
     '__init__': InitResourceSchema
 }
@@ -34,11 +34,11 @@ def MatchResourceRequirementsSchema(schema: ObjectSchema) -> bool:
     return True
 
 
-MonkeyPatchSupportMetaClass.override_class_attrs['ResourceRequirementsSchema'] = {
+MonkeyPatchSupportMetaClass.override_class_methods['ResourceRequirementsSchema'] = {
     'Match': MatchResourceRequirementsSchema
 }
 
-MonkeyPatchSupportMetaClass.override_class_attrs['PodSpecSchema'] = {
+MonkeyPatchSupportMetaClass.override_class_methods['PodSpecSchema'] = {
     'fields': {
         "metadata": K8sObjectSchema,
         "affinity": AffinitySchema,
