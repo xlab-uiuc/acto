@@ -531,9 +531,6 @@ spec:
                     syncLimit:
                       format: int32
                       type: integer
-                      x-kubernetes-validations:
-                        - rule: "self >= 1"
-                          message: syncLimit should be greater than or equal to 1
                     tickTime:
                       format: int32
                       type: integer
@@ -554,9 +551,6 @@ spec:
                     - syncLimit
                     - tickTime
                   type: object
-                  x-kubernetes-validations:
-                    - rule: "self.minSessionTimeout <= self.maxSessionTimeout"
-                      message: minSessionTimeout must be less than or equal to maxSessionTimeout
                 image:
                   type: string
                 labels:
@@ -794,4 +788,7 @@ spec:
       containers:
         - image: ghcr.io/vmware-research/verifiable-controllers/zookeeper-controller:f926600a79ae139364f5b80c10c22f83dba4d365
           name: controller
+          command:
+          - /usr/local/bin/controller
+          - crash
       serviceAccountName: zookeeper-controller

@@ -1,8 +1,13 @@
 {
     "deploy": {
-        "method": "YAML",
-        "file": "data/percona-xtradb-cluster-operator/cw-bundle.yaml",
-        "init": null
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/percona-xtradb-cluster-operator/cw-bundle.yaml",
+                    "operator": true
+                }
+            }
+        ]
     },
     "crd_name": "perconaxtradbclusters.pxc.percona.com",
     "custom_fields": "data.percona-xtradb-cluster-operator.prune",

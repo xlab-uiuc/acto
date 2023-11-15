@@ -247,9 +247,11 @@ class TrialRunner:
             apiclient = kubernetes_client(self.kubeconfig, self.context_name)
             self.cluster.load_images(self.images_archive, self.cluster_name)
             trial_k8s_bootstrap_time = time.time()
+            kubectl_client = KubectlClient(self.kubeconfig, self.context_name)
             deployed = self.deploy.deploy_with_retry(self.kubeconfig,
                                                      self.context_name,
-                                                     self.context['namespace'])
+                                                     kubectl_client=kubectl_client,
+                                                     namespace=self.context['namespace'])
             if not deployed:
                 logger.info('Not deployed. Try again!')
                 continue
@@ -624,8 +626,7 @@ class Acto:
             logger.error('Failed to read seed yaml, aborting')
             quit()
 
-        deploy = Deploy(operator_config.deploy.method, operator_config.deploy.file,
-                        operator_config.deploy.init).new()
+        deploy = Deploy(operator_config.deploy)
 
         if cluster_runtime == "KIND":
             cluster = kind.Kind(acto_namespace=acto_namespace,
@@ -783,11 +784,14 @@ class Acto:
 
             while True:
                 self.cluster.restart_cluster('learn', learn_kubeconfig)
-                namespace = get_yaml_existing_namespace(self.deploy.path) or CONST.ACTO_NAMESPACE
+                namespace = get_yaml_existing_namespace(
+                    self.deploy.operator_yaml) or CONST.ACTO_NAMESPACE
                 self.context['namespace'] = namespace
+                kubectl_client = KubectlClient(learn_kubeconfig, learn_context_name)
                 deployed = self.deploy.deploy_with_retry(learn_kubeconfig,
                                                          learn_context_name,
-                                                         namespace)
+                                                         kubectl_client=kubectl_client,
+                                                         namespace=namespace)
                 if deployed:
                     break
             apiclient = kubernetes_client(learn_kubeconfig, learn_context_name)

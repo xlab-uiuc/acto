@@ -1,8 +1,13 @@
 {
     "deploy": {
-        "method": "YAML",
-        "file": "data/cockroach-operator/operator.yaml",  
-        "init": null
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/cockroach-operator/operator.yaml",
+                    "operator": true
+                }
+            }
+        ]
     },
     "crd_name": null, 
     "custom_fields": "data.cockroach-operator.prune",

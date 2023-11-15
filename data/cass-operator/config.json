@@ -1,8 +1,23 @@
 {
     "deploy": {
-        "method": "YAML",
-        "file": "data/cass-operator/bundle.yaml",
-        "init": "data/cass-operator/init.yaml"
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/cass-operator/init.yaml"
+                }
+            },
+            {
+                "wait": {
+                    "duration": 10
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/cass-operator/bundle.yaml",
+                    "operator": true
+                }
+            }
+        ]
     },
     "crd_name": "cassandradatacenters.cassandra.datastax.com",
     "custom_fields": "data.cass-operator.prune",

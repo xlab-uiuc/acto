@@ -1,8 +1,13 @@
 {
     "deploy": {
-        "method": "YAML",
-        "file": "data/knative-operator-eventing/operator-1.6.0.yaml",
-        "init": null
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/knative-operator-eventing/operator-1.6.0.yaml",
+                    "operator": true
+                }
+            }
+        ]
     },
     "crd_name": "knativeeventings.operator.knative.dev",
     "custom_fields": "data.knative-operator-eventing.prune",

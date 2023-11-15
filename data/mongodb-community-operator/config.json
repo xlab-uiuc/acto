@@ -1,8 +1,13 @@
 {
     "deploy": {
-        "method": "YAML",
-        "file": "data/mongodb-community-operator/operator.yaml",  
-        "init": null
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/mongodb-community-operator/operator.yaml",
+                    "operator": true
+                }
+            }
+        ]
     },
     "crd_name": null, 
     "custom_fields": "data.mongodb-community-operator.prune",

@@ -1,21 +1,42 @@
-from enum import Enum
 from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
 
-class DeployMethod(str, Enum):
-    YAML = 'YAML'
-    HELM = 'HELM'
-    KUSTOMIZE = 'KUSTOMIZE'
+class ApplyStep(BaseModel, extra='forbid'):
+    """Configuration for each step of kubectl apply"""
+    file: str = Field(
+        description='Path to the file for kubectl apply')
+    operator: Optional[bool] = Field(
+        description='If the file contains the operator deployment',
+        default=False)
+
+
+class WaitStep(BaseModel, extra='forbid'):
+    """Configuration for each step of waiting for the operator"""
+    duration: int = Field(
+        description='Wait for the specified seconds',
+        default=10)
+
+
+class DeployStep(BaseModel, extra='forbid'):
+    apply: ApplyStep = Field(
+        description='Configuration for each step of kubectl apply', default=None)
+    wait: WaitStep = Field(
+        description='Configuration for each step of waiting for the operator', default=None)
+
+    # TODO: Add support for helm and kustomize
+    # helm: str = Field(
+    #     description='Path to the file for helm install')
+    # kustomize: str = Field(
+    #     description='Path to the file for kustomize build')
 
 
 class DeployConfig(BaseModel, extra='forbid'):
     """Configuration for deploying the operator"""
-    method: DeployMethod = DeployMethod.YAML
-    file: str = Field(
-        description='Path to the file for deploying the operator')
-    init: Optional[str] = Field(description='Path to the init file')
+    steps: List[DeployStep] = Field(
+        description='Steps to deploy the operator',
+        min_items=1,)
 
 
 class AnalysisConfig(BaseModel, extra='forbid'):

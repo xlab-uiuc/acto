@@ -1,8 +1,18 @@
 {
     "deploy": {
-        "method": "YAML",
-        "file": "data/redis-operator/operator_cov.yaml",
-        "init": "data/redis-operator/databases.spotahome.com_redisfailovers.yaml"
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/redis-operator/databases.spotahome.com_redisfailovers.yaml"
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/redis-operator/operator_cov.yaml",
+                    "operator": true
+                }
+            }
+        ]
     },
     "crd_name": null,
     "custom_fields": "data.redis-operator.prune",
