@@ -3,7 +3,7 @@
         "steps": [
             {
                 "apply": {
-                    "file": "data/anvil-zookeeper-operator/operator.yaml",
+                    "file": "data/anvil-zookeeper-operator/operator-crash.yaml",
                     "operator": true
                 }
             }
@@ -16,7 +16,8 @@
     "wait_time": 120,
     "diff_ignore_fields": [
         "\\[\\'metadata\\'\\]\\[\\'annotations\\'\\]\\[\\'config\\'\\]",
-        "\\['metadata'\\]\\['annotations'\\]\\['anvil\\.dev\\\/lastRestartAt'\\]"
+        "\\['metadata'\\]\\['annotations'\\]\\['anvil\\.dev\\\/lastRestartAt'\\]",
+        "\\['spec'\\]\\['containers'\\]\\[0\\]\\['command'\\]"
     ],
     "kubernetes_engine": {
         "feature_gates": {

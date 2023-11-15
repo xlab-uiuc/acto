@@ -1,13 +1,8 @@
 {
     "deploy": {
-        "steps": [
-            {
-                "apply": {
-                    "file": "data/zookeeper-operator/bundle.yaml",
-                    "operator": true
-                }
-            }
-        ]
+        "method": "YAML",
+        "file": "data/zookeeper-operator/v0.2.15/operator.yaml",
+        "init": null
     },
     "crd_name": "zookeeperclusters.zookeeper.pravega.io",
     "custom_fields": "data.zookeeper-operator.prune",
@@ -23,7 +18,8 @@
         "type": "ZookeeperCluster",
         "package": "github.com/pravega/zookeeper-operator/pkg/apis/zookeeper/v1beta1"
     },
-    "wait_time": 45,
+    "kubernetes_version": "v1.26.3",
+    "wait_time": 120,
     "diff_ignore_fields": [
         "\\['config_map'\\]\\['zookeeper\\-operator\\-lock'\\]\\['metadata'\\]\\['owner_references'\\]\\[.*\\]\\['name'\\]",
         "\\['service'\\]\\['test\\-cluster\\-admin\\-server'\\]\\['spec'\\]\\['ports'\\]\\[.*\\]\\['node_port'\\]"

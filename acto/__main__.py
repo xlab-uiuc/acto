@@ -3,11 +3,14 @@ import importlib
 import json
 import logging
 import os
+import random
 import signal
 import sys
 import threading
 import time
 from datetime import datetime
+
+random.seed(0)
 
 start_time = time.time()
 workdir_path = 'testrun-%s' % datetime.now().strftime('%Y-%m-%d-%H-%M')

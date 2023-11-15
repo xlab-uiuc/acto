@@ -22,7 +22,8 @@ from deepdiff.operator import BaseOperator
 
 from acto.common import (ErrorResult, PassResult, RecoveryResult,
                          invalid_input_message_regex, kubernetes_client)
-from acto.deploy import Deploy, DeployMethod
+from acto.deploy import Deploy
+from acto.kubectl_client.kubectl import KubectlClient
 from acto.kubernetes_engine import base, kind
 from acto.lib.operator_config import OperatorConfig
 from acto.runner import Runner
@@ -316,9 +317,11 @@ class AdditionalRunner:
         self._cluster.restart_cluster(self._cluster_name, self._kubeconfig)
         self._cluster.load_images(self._images_archive, self._cluster_name)
         apiclient = kubernetes_client(self._kubeconfig, self._context_name)
+        kubectl_client = KubectlClient(self._kubeconfig, self._context_name)
         deployed = self._deploy.deploy_with_retry(self._kubeconfig,
                                                   self._context_name,
-                                                  self._context['namespace'])
+                                                  kubectl_client=kubectl_client,
+                                                  namespace=self._context['namespace'])
         add_acto_label(apiclient, self._context['namespace'])
         trial_dir = os.path.join(self._workdir, 'trial-%02d' % self._worker_id)
         os.makedirs(trial_dir, exist_ok=True)
@@ -365,10 +368,12 @@ class DeployRunner:
         self._cluster.restart_cluster(self._cluster_name, self._kubeconfig)
         self._cluster.load_images(self._images_archive, self._cluster_name)
         apiclient = kubernetes_client(self._kubeconfig, self._context_name)
+        kubectl_client = KubectlClient(self._kubeconfig, self._context_name)
         after_k8s_bootstrap_time = time.time()
         deployed = self._deploy.deploy_with_retry(self._kubeconfig,
                                                   self._context_name,
-                                                  self._context['namespace'])
+                                                  kubectl_client=kubectl_client,
+                                                  namespace=self._context['namespace'])
         after_operator_deploy_time = time.time()
 
         trial_dir = os.path.join(self._workdir, 'trial-%02d' % self._worker_id)
@@ -406,10 +411,12 @@ class DeployRunner:
                 self._cluster.restart_cluster(self._cluster_name, self._kubeconfig)
                 self._cluster.load_images(self._images_archive, self._cluster_name)
                 apiclient = kubernetes_client(self._kubeconfig, self._context_name)
+                kubectl_client = KubectlClient(self._kubeconfig, self._context_name)
                 after_k8s_bootstrap_time = time.time()
                 deployed = self._deploy.deploy_with_retry(self._kubeconfig,
                                                           self._context_name,
-                                                          self._context['namespace'])
+                                                          kubectl_client=kubectl_client,
+                                                          namespace=self._context['namespace'])
                 after_operator_deploy_time = time.time()
                 runner = Runner(self._context, trial_dir, self._kubeconfig, self._context_name)
 
@@ -464,7 +471,7 @@ class PostDiffTest(PostProcessor):
         cluster = kind.Kind(acto_namespace=self.acto_namespace,
                             feature_gates=self.config.kubernetes_engine.feature_gates)
         cluster.configure_cluster(self.config.num_nodes, self.config.kubernetes_version)
-        deploy = Deploy(DeployMethod.YAML, self.config.deploy.file, self.config.deploy.init).new()
+        deploy = Deploy(self.config.deploy)
         # Build an archive to be preloaded
         images_archive = os.path.join(workdir, 'images.tar')
         if len(self.context['preload_images']) > 0:
@@ -523,7 +530,7 @@ class PostDiffTest(PostProcessor):
                             feature_gates=self.config.kubernetes_engine.feature_gates)
         cluster.configure_cluster(self.config.num_nodes, self.config.kubernetes_version)
 
-        deploy = Deploy(DeployMethod.YAML, self.config.deploy.file, self.config.deploy.init).new()
+        deploy = Deploy(self.config.deploy)
 
         runner = AdditionalRunner(context=self.context,
                                   deploy=deploy,

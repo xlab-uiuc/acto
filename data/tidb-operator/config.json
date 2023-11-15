@@ -1,8 +1,18 @@
 {
     "deploy": {
-        "method": "YAML",
-        "file": "data/tidb-operator/bundle.yaml",  
-        "init": "data/tidb-operator/crd.yaml" 
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/tidb-operator/crd.yaml"
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/tidb-operator/bundle.yaml",
+                    "operator": true
+                }
+            }
+        ]
     },
     "crd_name": "tidbclusters.pingcap.com", 
     "custom_fields": "data.tidb-operator.prune",

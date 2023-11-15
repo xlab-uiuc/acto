@@ -1,8 +1,13 @@
 {
     "deploy": {
-        "method": "YAML",
-        "file": "data/redis-ot-container-kit-operator/bundle_f1c547e.yaml",
-        "init": null
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/redis-ot-container-kit-operator/bundle_f1c547e.yaml",
+                    "operator": true
+                }
+            }
+        ]
     },
     "crd_name": "redisclusters.redis.redis.opstreelabs.in",
     "custom_fields": "data.redis-ot-container-kit-operator.prune",
