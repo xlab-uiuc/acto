@@ -1,7 +1,8 @@
 import base64
 import queue
 import time
-from multiprocessing import Process, Queue, set_start_method, get_start_method
+from multiprocessing import Process, Queue, get_start_method, set_start_method
+from typing import Callable
 
 import yaml
 
@@ -12,6 +13,9 @@ from acto.serialization import ActoEncoder
 from acto.snapshot import Snapshot
 from acto.utils import get_thread_logger
 
+RunnerHookType = Callable[[kubernetes.client.ApiClient], None]
+CustomSystemStateHookType = Callable[[kubernetes.client.ApiClient, str, int], dict]
+
 
 class Runner(object):
 
@@ -20,6 +24,7 @@ class Runner(object):
                  trial_dir: str,
                  kubeconfig: str,
                  context_name: str,
+                 custom_system_state_f: Callable[[], dict] = None,
                  wait_time: int = 45):
         self.namespace = context["namespace"]
         self.crd_metainfo: dict = context['crd']
@@ -32,6 +37,7 @@ class Runner(object):
         self.kubectl_client = KubectlClient(kubeconfig, context_name)
 
         apiclient = kubernetes_client(kubeconfig, context_name)
+        self.apiclient = apiclient
         self.coreV1Api = kubernetes.client.CoreV1Api(apiclient)
         self.appV1Api = kubernetes.client.AppsV1Api(apiclient)
         self.batchV1Api = kubernetes.client.BatchV1Api(apiclient)
@@ -63,12 +69,21 @@ class Runner(object):
         if get_start_method() != "fork":
             set_start_method("fork")
 
-    def run(self, input: dict, generation: int) -> Tuple[Snapshot, bool]:
+        self._custom_system_state_f = custom_system_state_f
+
+    def _run_with_serialization(self, input: dict, generation: int) -> Tuple[Snapshot, bool]:
+        snapshot, err = self.run(input, generation)
+        snapshot.serialize(self.trial_dir)
+        return snapshot, err
+
+    def run(self, input: dict, generation: int, hooks: List[RunnerHookType] = None) -> Tuple[Snapshot, bool]:
         '''Simply run the cmd and dumps system_state, delta, operator log, events and input files without checking. 
            The function blocks until system converges.
            TODO: move the serialization part to a separate function
 
         Args:
+            input: CR to be applied in the format of dict
+            generation: the generation number of the input file
 
         Returns:
             result, err
@@ -79,7 +94,13 @@ class Runner(object):
         self.system_state_path = "%s/system-state-%03d.json" % (self.trial_dir, generation)
         self.events_log_path = "%s/events-%d.json" % (self.trial_dir, generation)
         self.cli_output_path = "%s/cli-output-%d.log" % (self.trial_dir, generation)
-        self.not_ready_pod_log_path = "{}/not-ready-pod-{}-{{}}.log".format(self.trial_dir, generation)
+        self.not_ready_pod_log_path = "{}/not-ready-pod-{}-{{}}.log".format(
+            self.trial_dir, generation)
+
+        # call user-defined hooks
+        if hooks is not None:
+            for hook in hooks:
+                hook(self.apiclient)
 
         mutated_filename = '%s/mutated-%d.yaml' % (self.trial_dir, generation)
         with open(mutated_filename, 'w') as mutated_cr_file:
@@ -87,6 +108,7 @@ class Runner(object):
 
         cmd = ['apply', '-f', mutated_filename, '-n', self.namespace]
 
+        # submit the CR
         cli_result = self.kubectl_client.kubectl(cmd, capture_output=True, text=True)
         logger.debug('STDOUT: ' + cli_result.stdout)
         logger.debug('STDERR: ' + cli_result.stderr)
@@ -97,7 +119,7 @@ class Runner(object):
             logger.error('STDERR: ' + cli_result.stderr)
             return Snapshot(input, self.collect_cli_result(cli_result), {}, []), True
         err = None
-        
+
         try:
             err = self.wait_for_system_converge()
         except (KeyError, ValueError) as e:
@@ -108,6 +130,8 @@ class Runner(object):
 
         # when client API raise an exception, catch it and write to log instead of crashing Acto
         try:
+            if self._custom_system_state_f is not None:
+                _ = self._custom_system_state_f(self.apiclient, self.trial_dir, generation)
             system_state = self.collect_system_state()
             operator_log = self.collect_operator_log()
             self.collect_events()
@@ -243,24 +267,28 @@ class Runner(object):
     def collect_not_ready_pods_logs(self):
         pods = self.coreV1Api.list_namespaced_pod(self.namespace)
         for pod in pods.items:
-            for container_statuses in [pod.status.container_statuses or [], pod.status.init_container_statuses or []]:
+            for container_statuses in [
+                    pod.status.container_statuses or [],
+                    pod.status.init_container_statuses or []]:
                 for container_status in container_statuses:
                     if not container_status.ready:
                         try:
-                            log = self.coreV1Api.read_namespaced_pod_log(pod.metadata.name, self.namespace,
-                                                                        container=container_status.name)
+                            log = self.coreV1Api.read_namespaced_pod_log(
+                                pod.metadata.name, self.namespace, container=container_status.name)
                             if len(log) != 0:
                                 with open(self.not_ready_pod_log_path.format(container_status.name), 'w') as f:
                                     f.write(log)
                             if container_status.last_state.terminated is not None:
-                                log = self.coreV1Api.read_namespaced_pod_log(pod.metadata.name, self.namespace,
-                                                                            container=container_status.name, previous=True)
+                                log = self.coreV1Api.read_namespaced_pod_log(
+                                    pod.metadata.name, self.namespace,
+                                    container=container_status.name, previous=True)
                                 if len(log) != 0:
                                     with open(self.not_ready_pod_log_path.format('prev-'+container_status.name), 'w') as f:
                                         f.write(log)
                         except kubernetes.client.rest.ApiException as e:
                             logger = get_thread_logger(with_prefix=True)
-                            logger.error('Failed to get previous log of pod %s' % pod.metadata.name, exc_info=e)
+                            logger.error('Failed to get previous log of pod %s' %
+                                         pod.metadata.name, exc_info=e)
 
     def collect_cli_result(self, p: subprocess.CompletedProcess):
         cli_output = {}
