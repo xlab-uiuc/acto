@@ -1,5 +1,5 @@
 import argparse
-from datetime import datetime
+import importlib
 import json
 import logging
 import os
@@ -7,8 +7,7 @@ import signal
 import sys
 import threading
 import time
-import importlib
-
+from datetime import datetime
 
 start_time = time.time()
 workdir_path = 'testrun-%s' % datetime.now().strftime('%Y-%m-%d-%H-%M')
@@ -92,10 +91,9 @@ with open(args.config, 'r') as config_file:
 from acto import common
 from acto.engine import Acto, apply_testcase
 from acto.input.input import DeterministicInputModel, InputModel
-from acto.post_process import PostDiffTest
 from acto.lib.operator_config import OperatorConfig
+from acto.post_process.post_diff_test import PostDiffTest
 from acto.utils.error_handler import handle_excepthook, thread_excepthook
-
 from acto.utils.thread_logger import get_thread_logger
 
 logger = get_thread_logger(with_prefix=False)

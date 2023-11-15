@@ -93,7 +93,7 @@ class Kind(base.KubernetesEngine):
 
         cmd.extend(['--image', f"kindest/node:{self._k8s_version}"])
 
-        p = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        p = subprocess.run(cmd)
         while p.returncode != 0:
             # TODO: retry for three times
             logging.error('Failed to create kind cluster, retrying')
