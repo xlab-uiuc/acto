@@ -7,13 +7,13 @@ import (
 	"os"
 	"strings"
 
-	"github.com/go-yaml/yaml"
 	"github.com/goki/ki/ki"
 	"github.com/xlab-uiuc/acto/scripts/fieldCount/util"
 	"go.uber.org/zap"
 	"golang.org/x/tools/go/packages"
 	"golang.org/x/tools/go/ssa"
 	"golang.org/x/tools/go/ssa/ssautil"
+	"gopkg.in/yaml.v3"
 )
 
 func CountFieldYaml(filePath string, fieldSet StringSet, kind string) {

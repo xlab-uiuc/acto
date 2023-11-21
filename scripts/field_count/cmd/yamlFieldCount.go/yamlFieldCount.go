@@ -5,9 +5,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/go-yaml/yaml"
 	"github.com/goki/ki/ki"
 	fieldcount "github.com/xlab-uiuc/acto/scripts/fieldCount"
+	"gopkg.in/yaml.v3"
 )
 
 func main() {
