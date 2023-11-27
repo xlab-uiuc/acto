@@ -2,10 +2,10 @@ import time
 
 import kubernetes
 
-from acto.kubectl_client.kubectl import KubectlClient
-from acto.lib.operator_config import DeployConfig
 import acto.utils as utils
 from acto.common import *
+from acto.kubectl_client.kubectl import KubectlClient
+from acto.lib.operator_config import DeployConfig
 from acto.utils import get_thread_logger
 from acto.utils.preprocess import add_acto_label
 
@@ -73,9 +73,10 @@ class Deploy():
         # Run the steps in the deploy config one by one
         for step in self._deploy_config.steps:
             if step.apply:
+                step_namespace = step.apply.namespace if step.apply.namespace else namespace
                 # Apply the yaml file and then wait for the pod to be ready
                 kubectl_client.kubectl(
-                    ['apply', '--server-side', '-f', step.apply.file, '-n', namespace,
+                    ['apply', '--server-side', '-f', step.apply.file, '-n', step_namespace,
                      '--context', context_name])
                 if not wait_for_pod_ready(api_client):
                     logger.error('Failed to deploy operator')

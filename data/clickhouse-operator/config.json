@@ -1,0 +1,27 @@
+{
+    "deploy": {
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/clickhouse-operator/zookeeper.yaml",
+                    "namespace": "zoo3ns"
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/clickhouse-operator/operator.yaml",
+                    "operator": true
+                }
+            }
+        ]
+    },
+    "crd_name": "clickhouseinstallations.clickhouse.altinity.com",
+    "seed_custom_resource": "data/clickhouse-operator/cr.yaml",
+    "kubernetes_version": "v1.26.3",
+    "wait_time": 60,
+    "kubernetes_engine": {
+        "feature_gates": {
+            "StatefulSetAutoDeletePVC": true
+        }
+    }
+}

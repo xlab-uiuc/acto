@@ -10,6 +10,9 @@ class ApplyStep(BaseModel, extra='forbid'):
     operator: Optional[bool] = Field(
         description='If the file contains the operator deployment',
         default=False)
+    namespace: Optional[str] = Field(
+        description='Namespace for applying the file',
+        default=None)
 
 
 class WaitStep(BaseModel, extra='forbid'):
