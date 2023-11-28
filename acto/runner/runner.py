@@ -93,6 +93,7 @@ class Runner(object):
         self.operator_log_path = "%s/operator-%d.log" % (self.trial_dir, generation)
         self.system_state_path = "%s/system-state-%03d.json" % (self.trial_dir, generation)
         self.events_log_path = "%s/events-%d.json" % (self.trial_dir, generation)
+        self.events_timestamped_log_path = "%s/events-timestamped-%d.json" % (self.trial_dir, generation)
         self.cli_output_path = "%s/cli-output-%d.log" % (self.trial_dir, generation)
         self.not_ready_pod_log_path = "{}/not-ready-pod-{}-{{}}.log".format(
             self.trial_dir, generation)
@@ -412,7 +413,6 @@ class Runner(object):
 
         event_stream.close()
         timer_hard_timeout.cancel()
-        watch_process.terminate()
 
         time_elapsed = time.strftime("%H:%M:%S", time.gmtime(time.time() - start_timestamp))
         if converge:
@@ -425,12 +425,26 @@ class Runner(object):
     def watch_system_events(self, event_stream, queue: Queue):
         '''A process that watches namespaced events
         '''
-        for _ in event_stream:
-            try:
-                queue.put("event")
-            except (ValueError, AssertionError):
-                pass
+        start_timestamp = time.time()       
+        events_timestamped = []
 
+        try:
+            for event in event_stream:
+                event_obj = json.loads(event)
+                events_timestamped.append({
+                        "time": time.time() - start_timestamp, 
+                        "event": event_obj
+                    })
+                try:
+                    queue.put("event")
+                except (ValueError, AssertionError):
+                    pass
+        except ValueError:
+            # event stream is closed by the main process
+            pass
+
+        with open(self.events_timestamped_log_path, "w") as f:
+            json.dump(events_timestamped, f, cls=ActoEncoder, indent=6)
 
 def decode_secret_data(secrets: dict) -> dict:
     '''Decodes secret's b64-encrypted data in the secret object
