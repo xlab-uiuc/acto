@@ -16,7 +16,8 @@ class HealthChecker(Checker):
             'statefulset': [],
             'deployment': [],
             'pod': [],
-            'cr': []
+            'cr': [],
+            'daemon_set': [],
         }
 
         # check Health of Statefulsets
@@ -53,6 +54,16 @@ class HealthChecker(Checker):
                         (dp['metadata']['name'], condition['type'], condition['status'],
                          condition['message']))
 
+        for daemonset in system_state['daemon_set'].values():
+            if (daemonset['status']['desired_number_scheduled'] != daemonset['status'][
+                'number_ready']
+                    or daemonset['status']['desired_number_scheduled'] != daemonset['status']['number_available']):
+                unhealthy_resources['daemon_set'].append(
+                    '%s desired_number_scheduled [%s] number_ready [%s]' %
+                    (daemonset['metadata']['name'],
+                     daemonset['status']['desired_number_scheduled'],
+                     daemonset['status']['number_ready']))
+
         # check Health of Pods
         for pod in system_state['pod'].values():
             if pod['status']['phase'] in ['Running', 'Completed', 'Succeeded']:
@@ -74,10 +85,10 @@ class HealthChecker(Checker):
 
         # check Health of CRs
         if system_state['custom_resource_status'] is not None and 'conditions' in system_state[
-            'custom_resource_status']:
+                'custom_resource_status']:
             for condition in system_state['custom_resource_status']['conditions']:
                 if condition['type'] == 'Ready' and condition[
-                    'status'] != 'True' and 'is forbidden' in condition['message'].lower():
+                        'status'] != 'True' and 'is forbidden' in condition['message'].lower():
                     unhealthy_resources['cr'].append('%s condition [%s] status [%s] message [%s]' %
                                                      ('CR status unhealthy', condition['type'],
                                                       condition['status'], condition['message']))

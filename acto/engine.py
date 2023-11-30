@@ -79,7 +79,9 @@ def apply_testcase(value_with_schema: ValueWithSchema,
     logger.info('JSON patch: %s' % patch)
     return patch
 
-def check_state_equality(snapshot: Snapshot, prev_snapshot: Snapshot) -> OracleResult:
+
+def check_state_equality(snapshot: Snapshot, prev_snapshot: Snapshot,
+                         additional_exclude_paths: List[str] = []) -> OracleResult:
     '''Check whether two system state are semantically equivalent
 
     Args:
@@ -171,6 +173,7 @@ def check_state_equality(snapshot: Snapshot, prev_snapshot: Snapshot) -> OracleR
         r".*\['cluster_ip'\]$",
         r".*\['cluster_i_ps'\].*$",
         r".*\['deployment_pods'\].*\['metadata'\]\['name'\]$",
+        r".*\['daemonset_pods'\].*\['metadata'\]\['name'\]$",
         r"\[\'config_map\'\]\[\'kube\-root\-ca\.crt\'\]\[\'data\'\]\[\'ca\.crt\'\]$",
         r".*\['secret'\].*$",
         r"\['secrets'\]\[.*\]\['name'\]",
@@ -179,6 +182,8 @@ def check_state_equality(snapshot: Snapshot, prev_snapshot: Snapshot) -> OracleR
         r".*\['metadata'\]\['labels'\]\['pod\-template\-hash'\]",
         r"\['deployment_pods'\].*\['metadata'\]\['owner_references'\]\[.*\]\['name'\]",
     ]
+
+    exclude_paths.extend(additional_exclude_paths)
 
     diff = DeepDiff(prev_system_state,
                     curr_system_state,
@@ -194,11 +199,13 @@ def check_state_equality(snapshot: Snapshot, prev_snapshot: Snapshot) -> OracleR
 
 class TrialRunner:
 
-    def __init__(self, context: dict, input_model: InputModel, deploy: Deploy, runner_t: type,
-                 checker_t: type, wait_time: int, custom_on_init: List[callable],
-                 custom_oracle: List[callable], workdir: str, cluster: base.KubernetesEngine,
-                 worker_id: int, sequence_base: int, dryrun: bool, is_reproduce: bool,
-                 apply_testcase_f: FunctionType, acto_namespace: int) -> None:
+    def __init__(
+            self, context: dict, input_model: InputModel, deploy: Deploy, runner_t: type,
+            checker_t: type, wait_time: int, custom_on_init: List[callable],
+            custom_oracle: List[callable],
+            workdir: str, cluster: base.KubernetesEngine, worker_id: int, sequence_base: int,
+            dryrun: bool, is_reproduce: bool, apply_testcase_f: FunctionType, acto_namespace: int,
+            additional_exclude_paths: List[str]=[]) ->None:
         self.context = context
         self.workdir = workdir
         self.base_workdir = workdir
@@ -214,6 +221,7 @@ class TrialRunner:
         self.runner_t = runner_t
         self.checker_t = checker_t
         self.wait_time = wait_time  # seconds of the resettable timer
+        self.additional_exclude_paths = additional_exclude_paths
 
         self.custom_on_init = custom_on_init
         self.custom_oracle = custom_oracle
@@ -574,7 +582,7 @@ class TrialRunner:
         logger.debug('Running recovery')
         recovery_input = self.snapshots[RECOVERY_SNAPSHOT].input
         snapshot, err = runner.run(recovery_input, generation=-1)
-        result = check_state_equality(snapshot, self.snapshots[RECOVERY_SNAPSHOT])
+        result = check_state_equality(snapshot, self.snapshots[RECOVERY_SNAPSHOT], self.additional_exclude_paths)
 
         return result
 
@@ -852,7 +860,8 @@ class Acto:
                                  self.checker_type, self.operator_config.wait_time,
                                  self.custom_on_init, self.custom_oracle, self.workdir_path,
                                  self.cluster, i, self.sequence_base, self.dryrun,
-                                 self.is_reproduce, self.apply_testcase_f, self.acto_namespace)
+                                 self.is_reproduce, self.apply_testcase_f, self.acto_namespace,
+                                 self.operator_config.diff_ignore_fields)
             runners.append(runner)
 
         if 'normal' in modes:
