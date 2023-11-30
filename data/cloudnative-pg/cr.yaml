@@ -1,0 +1,79 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: test-cluster
+spec:
+  description: "Example of cluster"
+  imageName: ghcr.io/cloudnative-pg/postgresql:16.1
+  # imagePullSecret is only required if the images are located in a private registry
+  # imagePullSecrets:
+  #   - name: private_registry_access
+  instances: 3
+  startDelay: 300
+  stopDelay: 300
+  primaryUpdateStrategy: unsupervised
+
+  postgresql:
+    parameters:
+      shared_buffers: 256MB
+      pg_stat_statements.max: '10000'
+      pg_stat_statements.track: all
+      auto_explain.log_min_duration: '10s'
+    pg_hba:
+      - host all all 10.244.0.0/16 md5
+
+  bootstrap:
+    initdb:
+      database: app
+      owner: app
+      secret:
+        name: cluster-example-app-user
+    # Alternative bootstrap method: start from a backup
+    #recovery:
+    #  backup:
+    #    name: backup-example
+
+  enableSuperuserAccess: true
+  superuserSecret:
+    name: cluster-example-superuser
+
+  storage:
+    storageClass: standard
+    size: 1Gi
+
+  backup:
+    barmanObjectStore:
+      destinationPath: s3://cluster-example-full-backup/
+      endpointURL: http://custom-endpoint:1234
+      s3Credentials:
+        accessKeyId:
+          name: backup-creds
+          key: ACCESS_KEY_ID
+        secretAccessKey:
+          name: backup-creds
+          key: ACCESS_SECRET_KEY
+      wal:
+        compression: gzip
+        encryption: AES256
+      data:
+        compression: gzip
+        encryption: AES256
+        immediateCheckpoint: false
+        jobs: 2
+    retentionPolicy: "30d"
+
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "1"
+    limits:
+      memory: "1Gi"
+      cpu: "2"
+
+  affinity:
+    enablePodAntiAffinity: true
+    topologyKey: failure-domain.beta.kubernetes.io/zone
+
+  nodeMaintenanceWindow:
+    inProgress: false
+    reusePVC: false

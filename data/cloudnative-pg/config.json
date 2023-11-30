@@ -1,0 +1,26 @@
+{
+    "deploy": {
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/cloudnative-pg/operator.yaml",
+                    "operator": true
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/cloudnative-pg/secrets.yaml"
+                }
+            }
+        ]
+    },
+    "crd_name": "clusters.postgresql.cnpg.io",
+    "seed_custom_resource": "data/cloudnative-pg/cr.yaml",
+    "kubernetes_version": "v1.26.3",
+    "wait_time": 60,
+    "kubernetes_engine": {
+        "feature_gates": {
+            "StatefulSetAutoDeletePVC": true
+        }
+    }
+}
