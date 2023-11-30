@@ -242,7 +242,8 @@ class Runner(object):
             # TODO: refine what should be done if no operator pod can be found
 
         log = self.coreV1Api.read_namespaced_pod_log(name=operator_pod_list[0].metadata.name,
-                                                     namespace=self.namespace)
+                                                     namespace=self.namespace,
+                                                     container=operator_pod_list[0].spec.containers[0].name)
 
         # only get the new log since previous result
         new_log = log.split('\n')

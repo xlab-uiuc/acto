@@ -1,11 +1,51 @@
 from typing import List, Tuple
 
+from kubernetes.client.models import V1ObjectMeta
+
 from acto.input.testcase import K8sInvalidTestCase, K8sTestCase, TestCase
 from acto.schema import ArraySchema, BaseSchema, ObjectSchema
 
 from .base import (K8sArraySchema, K8sBooleanSchema, K8sIntegerSchema,
                    K8sObjectSchema, K8sStringSchema)
 from .resource_schemas import ComputeResourceRequirementsSchema
+
+
+class MapSchema(K8sObjectSchema):
+
+    def Match(schema: ObjectSchema) -> bool:
+        return isinstance(schema, ObjectSchema)
+
+    def __str__(self) -> str:
+        return "Map"
+
+
+class MetadataSchema(V1ObjectMeta):
+
+    fields = {
+        "annotations": K8sObjectSchema,
+        "clusterName": K8sStringSchema,
+        "creationTimestamp": K8sStringSchema,
+        "deletionGracePeriodSeconds": K8sIntegerSchema,
+        "deletionTimestamp": K8sStringSchema,
+        "finalizers": K8sArraySchema,
+        "generateName": K8sStringSchema,
+        "generation": K8sIntegerSchema,
+        "initializers": K8sObjectSchema,
+        "labels": K8sObjectSchema,
+        "managedFields": K8sArraySchema,
+        "name": K8sStringSchema,
+        "namespace": K8sStringSchema,
+        "ownerReferences": K8sArraySchema,
+        "resourceVersion": K8sStringSchema,
+        "selfLink": K8sStringSchema,
+        "uid": K8sStringSchema
+    }
+
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        super().__init__(schema_obj)
+        for field, field_schema in MetadataSchema.fields.items():
+            if field in schema_obj.properties:
+                self.properties[field] = field_schema(schema_obj.properties[field])
 
 
 class HandlerSchema(K8sObjectSchema):
