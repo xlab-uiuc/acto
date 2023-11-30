@@ -51,6 +51,7 @@ class Runner(object):
             'pod': self.coreV1Api.list_namespaced_pod,
             'stateful_set': self.appV1Api.list_namespaced_stateful_set,
             'deployment': self.appV1Api.list_namespaced_deployment,
+            'daemon_set': self.appV1Api.list_namespaced_daemon_set,
             'config_map': self.coreV1Api.list_namespaced_config_map,
             'service': self.coreV1Api.list_namespaced_service,
             'pvc': self.coreV1Api.list_namespaced_persistent_volume_claim,
@@ -205,7 +206,8 @@ class Runner(object):
             if resource == 'pod':
                 # put pods managed by deployment / replicasets into an array
                 all_pods = self.__get_all_objects(method)
-                resources['deployment_pods'], resources['pod'] = group_pods(all_pods)
+                resources['deployment_pods'], resources['daemonset_pods'], resources['pod'] = group_pods(
+                    all_pods)
             elif resource == 'secret':
                 resources[resource] = decode_secret_data(resources[resource])
 
@@ -372,6 +374,7 @@ class Runner(object):
                 ready = True
                 statefulsets = self.__get_all_objects(self.appV1Api.list_namespaced_stateful_set)
                 deployments = self.__get_all_objects(self.appV1Api.list_namespaced_deployment)
+                daemonsets = self.__get_all_objects(self.appV1Api.list_namespaced_daemon_set)
 
                 for sfs in statefulsets.values():
                     if sfs['status']['ready_replicas'] == None and sfs['status']['replicas'] == 0:
@@ -404,6 +407,21 @@ class Runner(object):
                             ready = False
                             logger.info("Deployment %s is not ready yet" % dp['metadata']['name'])
                             break
+
+                for ds in daemonsets.values():
+                    if ds['status']['number_ready'] != ds['status']['current_number_scheduled']:
+                        ready = False
+                        logger.info("Daemonset %s is not ready yet" % ds['metadata']['name'])
+                        break
+                    if ds['status']['desired_number_scheduled'] != ds['status']['number_ready']:
+                        ready = False
+                        logger.info("Daemonset %s is not ready yet" % ds['metadata']['name'])
+                        break
+                    if 'updated_number_scheduled' in ds['status'] and ds['status'][
+                            'updated_number_scheduled'] != ds['status']['desired_number_scheduled']:
+                        ready = False
+                        logger.info("Daemonset %s is not ready yet" % ds['metadata']['name'])
+                        break
 
                 if ready:
                     # only stop waiting if all deployments and statefulsets are ready
@@ -448,15 +466,16 @@ def decode_secret_data(secrets: dict) -> dict:
     return secrets
 
 
-def group_pods(all_pods: dict) -> Tuple[dict, dict]:
-    '''Groups pods into deployment pods and other pods
+def group_pods(all_pods: dict) -> Tuple[dict, dict, dict]:
+    '''Groups pods into deployment pods, daemonset pods, and other pods
 
     For deployment pods, they are further grouped by their owner reference
 
     Return:
-        Tuple of (deployment_pods, other_pods)
+        Tuple of (deployment_pods, daemonset_pods, other_pods)
     '''
     deployment_pods = {}
+    daemonset_pods = {}
     other_pods = {}
     for name, pod in all_pods.items():
         if 'acto/tag' in pod['metadata']['labels'] and pod['metadata']['labels'][
@@ -474,12 +493,18 @@ def group_pods(all_pods: dict) -> Tuple[dict, dict]:
                     deployment_pods[owner_name] = [pod]
                 else:
                     deployment_pods[owner_name].append(pod)
+            elif owner_reference['kind'] == 'DaemonSet':
+                owner_name = owner_reference['name']
+                if owner_name not in daemonset_pods:
+                    daemonset_pods[owner_name] = [pod]
+                else:
+                    daemonset_pods[owner_name].append(pod)
             else:
                 other_pods[name] = pod
         else:
             other_pods[name] = pod
 
-    return deployment_pods, other_pods
+    return deployment_pods, daemonset_pods, other_pods
 
 
 # standalone runner for acto
