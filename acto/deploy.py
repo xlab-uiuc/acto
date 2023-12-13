@@ -1,18 +1,19 @@
 import time
 
 import kubernetes
+import yaml
 
-from acto.kubectl_client.kubectl import KubectlClient
-from acto.lib.operator_config import DeployConfig
 import acto.utils as utils
 from acto.common import *
+from acto.kubectl_client.kubectl import KubectlClient
+from acto.lib.operator_config import DELEGATED_NAMESPACE, DeployConfig
 from acto.utils import get_thread_logger
 from acto.utils.preprocess import add_acto_label
 
 
 def wait_for_pod_ready(apiclient: kubernetes.client.ApiClient):
     logger = get_thread_logger(with_prefix=True)
-    logger.debug('Waiting for all pods to be ready')
+    logger.debug("Waiting for all pods to be ready")
     time.sleep(5)
     pod_ready = False
     for tick in range(600):
@@ -22,17 +23,17 @@ def wait_for_pod_ready(apiclient: kubernetes.client.ApiClient):
 
         all_pods_ready = True
         for pod in pods:
-            if pod.status.phase == 'Succeeded':
+            if pod.status.phase == "Succeeded":
                 continue
             if not utils.is_pod_ready(pod):
                 all_pods_ready = False
 
         if all_pods_ready:
-            logger.info('Operator ready')
+            logger.info("Operator ready")
             pod_ready = True
             break
         time.sleep(5)
-    logger.info('All pods took %d seconds to get ready' % (tick * 5))
+    logger.info("All pods took %d seconds to get ready" % (tick * 5))
     if not pod_ready:
         logger.error("Some pods failed to be ready within timeout")
         return False
@@ -51,7 +52,7 @@ class Deploy():
                 self._operator_yaml = step.apply.file
                 break
         else:
-            raise Exception('No operator yaml found in deploy config')
+            raise Exception("No operator yaml found in deploy config")
 
     @property
     def operator_yaml(self) -> str:
@@ -63,22 +64,41 @@ class Deploy():
                kubectl_client: KubectlClient,
                namespace: str):
         logger = get_thread_logger(with_prefix=True)
-        print_event('Deploying operator...')
+        print_event("Deploying operator...")
         api_client = kubernetes_client(kubeconfig, context_name)
 
         ret = utils.create_namespace(api_client, namespace)
-        if ret == None:
-            logger.error('Failed to create namespace')
+        if ret is None:
+            logger.error("Failed to create namespace")
 
         # Run the steps in the deploy config one by one
         for step in self._deploy_config.steps:
             if step.apply:
+                args = ["apply", "--server-side", "-f", step.apply.file,
+                        "--context", context_name]
+
+                # Use the namespace from the argument if the namespace is delegated
+                # If the namespace from the config is explicitly specified,
+                # use the specified namespace
+                # If the namespace from the config is set to None, do not apply
+                # with namespace
+                if step.apply.namespace == DELEGATED_NAMESPACE:
+                    args += ["-n", namespace]
+                elif step.apply.namespace is not None:
+                    args += ["-n", step.apply.namespace]
+
                 # Apply the yaml file and then wait for the pod to be ready
-                kubectl_client.kubectl(
-                    ['apply', '--server-side', '-f', step.apply.file, '-n', namespace,
-                     '--context', context_name])
-                if not wait_for_pod_ready(api_client):
-                    logger.error('Failed to deploy operator')
+                p = kubectl_client.kubectl(args)
+                if p.returncode != 0:
+                    logger.error(
+                        "Failed to deploy operator due to error from kubectl" +
+                        f" (returncode={p.returncode})" +
+                        f" (stdout={p.stdout})" +
+                        f" (stderr={p.stderr})")
+                    return False
+                elif not wait_for_pod_ready(api_client):
+                    logger.error(
+                        "Failed to deploy operator due to timeout waiting for pod to be ready")
                     return False
             elif step.wait:
                 # Simply wait for the specified duration
@@ -87,10 +107,12 @@ class Deploy():
         # Add acto label to the operator pod
         add_acto_label(api_client, namespace)
         if not wait_for_pod_ready(api_client):
-            logger.error('Failed to deploy operator')
+            logger.error("Failed to deploy operator")
             return False
 
-        print_event('Operator deployed')
+        time.sleep(20)
+
+        print_event("Operator deployed")
         return True
 
     def deploy_with_retry(self,
@@ -104,5 +126,13 @@ class Deploy():
             if self.deploy(kubeconfig, context_name, kubectl_client, namespace):
                 return True
             else:
-                logger.error('Failed to deploy operator, retrying...')
+                logger.error("Failed to deploy operator, retrying...")
         return False
+
+    def operator_name(self) -> str:
+        with open(self._operator_yaml) as f:
+            operator_yamls = yaml.load_all(f, Loader=yaml.FullLoader)
+            for yaml_ in operator_yamls:
+                if yaml_["kind"] == "Deployment":
+                    return yaml_["metadata"]["name"]
+        return None
