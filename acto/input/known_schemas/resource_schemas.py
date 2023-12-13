@@ -1,18 +1,23 @@
 from typing import List, Tuple
 
 from acto.input.testcase import K8sInvalidTestCase, K8sTestCase, TestCase
-from acto.k8s_util.k8sutil import (canonicalize_quantity, double_quantity,
-                                   half_quantity)
-from acto.schema import (AnyOfSchema, BaseSchema, IntegerSchema, ObjectSchema,
-                         StringSchema, extract_schema)
+from acto.k8s_util.k8sutil import canonicalize_quantity, double_quantity, half_quantity
+from acto.schema import (
+    AnyOfSchema,
+    BaseSchema,
+    IntegerSchema,
+    ObjectSchema,
+    StringSchema,
+    extract_schema,
+)
 
-from .base import K8sAnyOfSchema, K8sObjectSchema
+from .base import K8sAnyOfSchema, K8sIntegerSchema, K8sObjectSchema, K8sStringSchema
 
 
 class QuantitySchema(K8sAnyOfSchema):
 
     def increase_precondition(prev) -> bool:
-        if prev == None:
+        if prev is None:
             return False
         elif canonicalize_quantity(prev) == 'INVALID':
             return False
@@ -25,7 +30,7 @@ class QuantitySchema(K8sAnyOfSchema):
         return "1000m"
 
     def decrease_precondition(prev) -> bool:
-        if prev == None:
+        if prev is None:
             return False
         elif canonicalize_quantity(prev) == 'INVALID':
             return False
@@ -37,8 +42,31 @@ class QuantitySchema(K8sAnyOfSchema):
     def decrease_setup(prev):
         return "1000m"
 
-    Increase = K8sTestCase(increase_precondition, quantity_increase, increase_setup)
-    Decrease = K8sTestCase(decrease_precondition, quantity_decrease, decrease_setup)
+    Increase = K8sTestCase(
+        increase_precondition,
+        quantity_increase,
+        increase_setup)
+    Decrease = K8sTestCase(
+        decrease_precondition,
+        quantity_decrease,
+        decrease_setup)
+
+    def __init__(self, schema_obj: BaseSchema) -> None:
+        # hack: this Quantity type is anyof schema for Golang operators, but
+        # string schema for Rust operators
+        if isinstance(schema_obj, AnyOfSchema):
+            super().__init__(schema_obj)
+        elif isinstance(schema_obj, StringSchema):
+            BaseSchema.__init__(self, schema_obj.path, schema_obj.raw_schema)
+            str_schema = K8sStringSchema(schema_obj)
+            self.possibilities = [str_schema]
+        elif isinstance(schema_obj, IntegerSchema):
+            BaseSchema.__init__(self, schema_obj.path, schema_obj.raw_schema)
+            int_schema = K8sIntegerSchema(schema_obj)
+            self.possibilities = [int_schema]
+        else:
+            raise Exception(
+                "QuantitySchema can only be constructed from StringSchema or IntegerSchema")
 
     def Match(schema: AnyOfSchema) -> bool:
         if not K8sAnyOfSchema.Match(schema):
@@ -55,7 +83,8 @@ class QuantitySchema(K8sAnyOfSchema):
 
     def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
         base_test_cases = super().test_cases()
-        base_test_cases[1].extend([QuantitySchema.Increase, QuantitySchema.Decrease])
+        base_test_cases[1].extend(
+            [QuantitySchema.Increase, QuantitySchema.Decrease])
         return base_test_cases
 
     def __str__(self) -> str:
@@ -76,7 +105,8 @@ class ResourceSchema(K8sObjectSchema):
             return False
         if schema.additional_properties is None:
             return False
-        return ResourceSchema.default_additional_properties.Match(schema.additional_properties)
+        return ResourceSchema.default_additional_properties.Match(
+            schema.additional_properties)
 
     def __str__(self) -> str:
         return "Resource"
@@ -86,7 +116,9 @@ class ComputeResourceSchema(ResourceSchema):
 
     def __init__(self, schema_obj: BaseSchema) -> None:
         super().__init__(schema_obj)
-        cpu_schema = extract_schema(self.path + ['cpu'], self.additional_properties.raw_schema)
+        cpu_schema = extract_schema(
+            self.path + ['cpu'],
+            self.additional_properties.raw_schema)
         memory_schema = extract_schema(self.path + ['memory'],
                                        self.additional_properties.raw_schema)
         self.properties['cpu'] = QuantitySchema(cpu_schema)
@@ -113,9 +145,11 @@ class StorageResourceSchema(ResourceSchema):
 
 class ComputeResourceRequirementsSchema(K8sObjectSchema):
 
-    fields = {"limits": ComputeResourceSchema, "requests": ComputeResourceSchema}
+    fields = {"limits": ComputeResourceSchema,
+              "requests": ComputeResourceSchema}
 
-    INVALID_COMPUTE_RESOURCE_REQUIREMENTS = {"requests": {"hugepages-2Mi": "1000m",}}
+    INVALID_COMPUTE_RESOURCE_REQUIREMENTS = {
+        "requests": {"hugepages-2Mi": "1000m", }}
 
     def invalid_compute_resource(prev):
         return ComputeResourceRequirementsSchema.INVALID_COMPUTE_RESOURCE_REQUIREMENTS
@@ -128,7 +162,8 @@ class ComputeResourceRequirementsSchema(K8sObjectSchema):
         super().__init__(schema_obj)
         for field, field_schema in ComputeResourceRequirementsSchema.fields.items():
             if field in schema_obj.properties:
-                self.properties[field] = field_schema(schema_obj.properties[field])
+                self.properties[field] = field_schema(
+                    schema_obj.properties[field])
 
     def gen(self, exclude_value=None, minimum: bool = False, **kwargs) -> dict:
         return {
@@ -158,7 +193,8 @@ class ComputeResourceRequirementsSchema(K8sObjectSchema):
     def test_cases(self) -> Tuple[List[TestCase], List[TestCase]]:
         base_test_cases = super().test_cases()
         base_test_cases[0].clear()
-        base_test_cases[1].append(ComputeResourceRequirementsSchema.invalid_compute_resource_test)
+        base_test_cases[1].append(
+            ComputeResourceRequirementsSchema.invalid_compute_resource_test)
         return base_test_cases
 
     def __str__(self) -> str:
@@ -167,13 +203,15 @@ class ComputeResourceRequirementsSchema(K8sObjectSchema):
 
 class StorageResourceRequirementsSchema(K8sObjectSchema):
 
-    fields = {"limits": StorageResourceSchema, "requests": StorageResourceSchema}
+    fields = {"limits": StorageResourceSchema,
+              "requests": StorageResourceSchema}
 
     def __init__(self, schema_obj: BaseSchema) -> None:
         super().__init__(schema_obj)
         for field, field_schema in StorageResourceRequirementsSchema.fields.items():
             if field in schema_obj.properties:
-                self.properties[field] = field_schema(schema_obj.properties[field])
+                self.properties[field] = field_schema(
+                    schema_obj.properties[field])
 
     def gen(self, exclude_value=None, minimum: bool = False, **kwargs) -> dict:
         return {
@@ -207,7 +245,8 @@ class ResourceRequirementsSchema(K8sObjectSchema):
         super().__init__(schema_obj)
         for field, field_schema in ResourceRequirementsSchema.fields.items():
             if field in schema_obj.properties:
-                self.properties[field] = field_schema(schema_obj.properties[field])
+                self.properties[field] = field_schema(
+                    schema_obj.properties[field])
 
     def gen(self, exclude_value=None, minimum: bool = False, **kwargs) -> dict:
         return {
