@@ -1,13 +1,36 @@
 name: Regression Test
-on: [push]
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 jobs:
+  check_should_skip:
+    runs-on: ubuntu-latest
+    outputs:
+      should_skip: ${{ steps.skip_check.outputs.should_skip }}
+    steps:
+      - id: skip_check
+        uses: fkirc/skip-duplicate-actions@v5.3.1
+        with:
+          skip_after_successful_duplicate: 'true'
   unittest:
     runs-on: ubuntu-latest
+    needs: check_should_skip
+    if: ${{ needs.check_should_skip.outputs.should_skip != 'true' }}
+    permissions:
+      # Gives the action the necessary permissions for publishing new
+      # comments in pull requests.
+      pull-requests: write
+      # Gives the action the necessary permissions for pushing data to the
+      # python-coverage-comment-action branch, and for editing existing
+      # comments (to avoid publishing multiple comments in the same PR)
+      contents: write
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
         with:
-          python-version: "3.8"
+          python-version: "3.10"
       - name: Install Packages
         run: pip install codespell flake8 
       - name: Check Spelling
@@ -23,11 +46,79 @@ jobs:
           pip install -r requirements.txt
           make
       - name: Run unittest
-        run: |
-          pytest -m "not local and not singleBugReproduction" --junitxml=pytest.xml --cov-report=term-missing:skip-covered --cov=acto | tee pytest-coverage.txt
-      - name: Pytest coverage comment
-        if: ${{ github.event == 'pull_request' }}
-        uses: MishaKav/pytest-coverage-comment@main
+        run: >
+          COVERAGE_FILE=.coverage.${{ github.sha }}.unittest
+          pytest acto
+          --junitxml=pytest.xml
+          --cov-report=
+          --cov=acto
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
         with:
-          pytest-coverage-path: ./pytest-coverage.txt
-          junitxml-path: ./pytest.xml
+          name: .coverage.${{ github.sha }}.unittest
+          path: .coverage.${{ github.sha }}.unittest
+          retention-days: 1
+  integration-test:
+    runs-on: ubuntu-latest
+    needs: check_should_skip
+    if: ${{ needs.check_should_skip.outputs.should_skip != 'true' }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
+      - name: Install Packages
+        run: pip install codespell flake8 
+      - name: Check Spelling
+        run: codespell --skip="./data"|| true  
+      - name: Check Syntax Error
+        run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '1.20.5'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          make
+      - name: Run integration test
+        run: >
+          COVERAGE_FILE=.coverage.${{ github.sha }}.integration-test
+          pytest test/integration_tests
+          --junitxml=pytest.xml
+          --cov-report=
+          --cov=acto
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: .coverage.${{ github.sha }}.integration-test
+          path: .coverage.${{ github.sha }}.integration-test
+          retention-days: 1
+  coverage-report:
+    runs-on: ubuntu-latest
+    needs: [unittest, integration-test]
+    if: ${{ github.event_name == 'pull_request' }}
+    permissions:
+      pull-requests: write
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+      - name: Download unittest coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: .coverage.${{ github.sha }}.unittest
+      - name: Download integration test coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: .coverage.${{ github.sha }}.integration-test
+      - name: Merge coverage files
+        run: |
+          pip install coverage
+          coverage combine
+      - name: list files
+        run: ls -al
+      - name: Coverage comment
+        uses: py-cov-action/python-coverage-comment-action@v3
+        with:
+          GITHUB_TOKEN: ${{ github.token }}
+          ANNOTATE_MISSING_LINES: true
