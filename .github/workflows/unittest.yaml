@@ -18,14 +18,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: check_should_skip
     if: ${{ needs.check_should_skip.outputs.should_skip != 'true' }}
-    permissions:
-      # Gives the action the necessary permissions for publishing new
-      # comments in pull requests.
-      pull-requests: write
-      # Gives the action the necessary permissions for pushing data to the
-      # python-coverage-comment-action branch, and for editing existing
-      # comments (to avoid publishing multiple comments in the same PR)
-      contents: write
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
@@ -97,7 +89,7 @@ jobs:
   coverage-report:
     runs-on: ubuntu-latest
     needs: [unittest, integration-test]
-    if: ${{ github.event_name == 'pull_request' }}
+    if: always()
     permissions:
       pull-requests: write
       contents: write
