@@ -8,23 +8,136 @@ To port a new operator to Acto and test it, users would need to create a configu
 The minimum requirement for Acto to test an operator is to provide a way to deploy the operator.
 
 Acto supports three different ways for specifying the deployment method: YAML, Helm, and Kustomize.
+  (Helm and Kustomize is lacking support right now, please first use YAML)
 To specify operators' deployment method in a YAML way, users need to bundle all the required 
-  resources into a yaml file, e.g. Namespace, ClusterRole, ServiceAccount, and Deployment.
+  resources into a YAML file, e.g. Namespace, ClusterRole, ServiceAccount, and Deployment.
 
-After aggregating the required resources into a file
-Then, specify the deployment in the configuration file through the `deploy` property, e.g.:
+Deploying operator can be expressed as a sequence of steps to be applied through
+  the `deploy` property.
+For example, to deploy the cass-operator, we need to first apply the `init.yaml`
+  which deploys the cert-manager required by the cass-operator,
+  and then apply the `bundle.yaml` which contains all the required resource
+  definitions for deploying the cass-operator.
+  The `deploy` property would be written as:
 ```json
-{
-  "deploy": {
-    "method": "YAML",
-    "file": "data/cass-operator/bundle.yaml",
-    "init": "data/cass-operator/init.yaml"
-  }
+"deploy": {
+    "steps": [
+        {
+            "apply": {
+                "file": "data/cass-operator/init.yaml",
+                "namespace": null
+            }
+        },
+        {
+            "wait": {
+                "duration": 10
+            }
+        },
+        {
+            "apply": {
+                "file": "data/cass-operator/bundle.yaml",
+                "operator": true
+            }
+        }
+    ]
 }
 ```
 
+<details>
+  <summary>*JsonSchema* for the `deploy` property</summary>
+  
+  ```json
+"deploy": {
+    "additionalProperties": false,
+    "description": "Configuration for deploying the operator",
+    "properties": {
+        "steps": {
+            "description": "Steps to deploy the operator",
+            "items": {
+                "additionalProperties": false,
+                "properties": {
+                    "apply": {
+                        "allOf": [
+                            {
+                                "additionalProperties": false,
+                                "description": "Configuration for each step of kubectl apply",
+                                "properties": {
+                                    "file": {
+                                        "description": "Path to the file for kubectl apply",
+                                        "title": "File",
+                                        "type": "string"
+                                    },
+                                    "operator": {
+                                        "default": false,
+                                        "description": "If the file contains the operator deployment",
+                                        "title": "Operator",
+                                        "type": "boolean"
+                                    },
+                                    "namespace": {
+                                        "anyOf": [
+                                            {
+                                                "type": "string"
+                                            },
+                                            {
+                                                "type": "null"
+                                            }
+                                        ],
+                                        "default": "__DELEGATED__",
+                                        "description": "Namespace for applying the file. If not specified, use the namespace in the file or Acto namespace. If set to null, use the namespace in the file",
+                                        "title": "Namespace"
+                                    }
+                                },
+                                "required": [
+                                    "file"
+                                ],
+                                "title": "ApplyStep",
+                                "type": "object"
+                            }
+                        ],
+                        "default": null,
+                        "description": "Configuration for each step of kubectl apply"
+                    },
+                    "wait": {
+                        "allOf": [
+                            {
+                                "additionalProperties": false,
+                                "description": "Configuration for each step of waiting for the operator",
+                                "properties": {
+                                    "duration": {
+                                        "default": 10,
+                                        "description": "Wait for the specified seconds",
+                                        "title": "Duration",
+                                        "type": "integer"
+                                    }
+                                },
+                                "title": "WaitStep",
+                                "type": "object"
+                            }
+                        ],
+                        "default": null,
+                        "description": "Configuration for each step of waiting for the operator"
+                    }
+                },
+                "title": "DeployStep",
+                "type": "object"
+            },
+            "minItems": 1,
+            "title": "Steps",
+            "type": "array"
+        }
+    },
+    "required": [
+        "steps"
+    ],
+    "title": "DeployConfig",
+    "type": "object"
+}
+  ```
+</details>
+
 ### Providing the name of the CRD to be tested
-Specify the name of the CRD to be tested in the configuration through the `crd_name` property. Only required if the operator defines multiple CRDs.
+Specify the name of the CRD to be tested in the configuration through the `crd_name` property. 
+Only required if the operator defines multiple CRDs.
 E.g.:
 ```json
 {
@@ -33,7 +146,9 @@ E.g.:
 ```
 
 ### Providing a seed CR for Acto to start with
-Provide a sample CR which will be used by Acto as the seed. This can be any valid CR, usually operator repos contain multiple sample CRs. Specify this through the `seed_custom_resource` property in the configuration.
+Provide a sample CR which will be used by Acto as the seed. 
+This can be any valid CR, usually operator repos contain multiple sample CRs.
+Specify this through the `seed_custom_resource` property in the configuration.
 
 ### Providing source code information for whitebox mode (optional)
 Acto supports a whitebox mode to enable more accurate testing by utilizing source code information.
