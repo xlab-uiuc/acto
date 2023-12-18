@@ -22,13 +22,15 @@ Acto has been applied to 11 popular Kuberentes, where it found 50+ new bugs
 See [the lists of bugs](bugs.md) found by Acto.
 
 ## Prerequisites
+- [Docker](https://docs.docker.com/engine/install/)
 - [Golang](https://go.dev/doc/install)
-- Python dependencies
-    - `pip3 install -r requirements.txt`
 - [k8s Kind cluster](https://kind.sigs.k8s.io/)  
     - `go install sigs.k8s.io/kind@v0.20.0`
-- kubectl
-    - [Install kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/)
+- Python dependencies
+    - `pip3 install -r requirements.txt`
+- [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/)
+
+[optional]
 - helm
     - [Install Helm](https://helm.sh/docs/intro/install/)
 
