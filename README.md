@@ -63,7 +63,7 @@
 | acto/kubernetes\_engine/minikube.py                           |        3 |        0 |    100% |           |
 | acto/lib/\_\_init\_\_.py                                      |        0 |        0 |    100% |           |
 | acto/lib/dict.py                                              |       13 |        0 |    100% |           |
-| acto/lib/operator\_config.py                                  |       41 |        0 |    100% |           |
+| acto/lib/operator\_config.py                                  |       45 |        3 |     93% |   112-115 |
 | acto/lib/test\_dict.py                                        |       15 |        0 |    100% |           |
 | acto/lib/test\_operator\_config.py                            |        9 |        0 |    100% |           |
 | acto/monkey\_patch/\_\_init\_\_.py                            |        0 |        0 |    100% |           |
@@ -101,7 +101,7 @@
 | acto/utils/preprocess.py                                      |       69 |       58 |     16% |17-73, 93-141, 147-192 |
 | acto/utils/process\_with\_except.py                           |        9 |        9 |      0% |      1-13 |
 | acto/utils/thread\_logger.py                                  |       15 |        3 |     80% | 9, 18, 28 |
-|                                                     **TOTAL** | **8348** | **4497** | **46%** |           |
+|                                                     **TOTAL** | **8352** | **4500** | **46%** |           |
 
 
 ## Setup coverage badge
