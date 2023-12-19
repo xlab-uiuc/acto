@@ -1,0 +1,17 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.2.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+  - repo: https://github.com/jazzband/pip-tools
+    rev: 7.3.0
+    hooks:
+      - id: pip-compile
+        name: pip-compile
+        args: [--output-file=requirements.txt]
+        files: ^pyproject.toml$
+      - id: pip-compile
+        name: pip-compile-dev
+        args: [--extra=dev, --output-file=requirements-dev.txt]
+        files: ^pyproject.toml$
