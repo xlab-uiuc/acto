@@ -14,9 +14,9 @@ jobs:
         with:
           python-version: "3.10"
       - name: Install Packages
-        run: pip install codespell flake8 
+        run: pip install codespell flake8
       - name: Check Spelling
-        run: codespell --skip="./data"|| true  
+        run: codespell --skip="./data"|| true
       - name: Check Syntax Error
         run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
       - uses: actions/setup-go@v4
@@ -25,7 +25,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
           make
       - name: Run unittest
         run: >
@@ -48,9 +48,9 @@ jobs:
         with:
           python-version: "3.10"
       - name: Install Packages
-        run: pip install codespell flake8 
+        run: pip install codespell flake8
       - name: Check Spelling
-        run: codespell --skip="./data"|| true  
+        run: codespell --skip="./data"|| true
       - name: Check Syntax Error
         run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
       - uses: actions/setup-go@v4
@@ -59,7 +59,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
           make
       - name: Run integration test
         run: >

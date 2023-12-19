@@ -19,11 +19,11 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
           make
       - name: Create profile dir with 777 mode
         run: |
           mkdir -m 777 -p profile/data
       - name: Run bug reproduction
         run: |
-          pytest test/e2e_tests -m "all_bug_reproduction" -s
+          python -m pytest test/e2e_tests -m "all_bug_reproduction" -s
