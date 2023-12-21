@@ -28,8 +28,10 @@ dev = [
     "pre-commit~=3.6.0",
     "ansible-core~=2.16.2",
     "isort",
-    "autopep8",
     "mypy",
+    "black",
+    "pylint",
+    "jsonref",
 ]
 
 [build-system]
@@ -39,10 +41,9 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 where = ["acto"]
 
-[tool.autopep8]
-max_line_length = 80
-aggressive = 3
-experimental = true
+[tool.black]
+line-length = 80
+target-version = ["py310", "py311"]
 
 [tool.isort]
 profile = "black"
