@@ -1,0 +1,24 @@
+{
+    "deploy": {
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/anvil-rabbitmq-operator/operator.yaml",
+                    "operator": true
+                }
+            }
+        ]
+    },
+    "crd_name": "rabbitmqclusters.anvil.dev",
+    "seed_custom_resource": "data/anvil-rabbitmq-operator/cr.yaml",
+    "kubernetes_version": "v1.26.3",
+    "diff_ignore_fields": [
+        "\\['metadata'\\]\\['annotations'\\]\\['anvil\\.dev\\\/lastRestartAt'\\]"
+    ],
+    "num_nodes": 6,
+    "kubernetes_engine": {
+        "feature_gates": {
+            "StatefulSetAutoDeletePVC": true
+        }
+    }
+}

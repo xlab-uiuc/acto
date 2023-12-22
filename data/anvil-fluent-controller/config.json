@@ -1,0 +1,33 @@
+{
+    "deploy": {
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/anvil-fluent-controller/operator.yaml",
+                    "operator": true
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/anvil-fluent-controller/fluent-big-config.yaml"
+                }
+            }
+        ]
+    },
+    "crd_name": "fluentbits.anvil.dev",
+    "blackbox_custom_fields": "data.anvil-fluent-controller.prune",
+    "k8s_fields": "data.anvil-fluent-controller.k8s_mapping",
+    "seed_custom_resource": "data/anvil-fluent-controller/cr.yaml",
+    "kubernetes_version": "v1.26.3",
+    "diff_ignore_fields": [
+        "\\['metadata'\\]\\['annotations'\\]\\['anvil\\.dev\\\/lastRestartAt'\\]",
+        "\\['daemonset_pods'\\]\\['test\\-cluster'\\]\\[.*\\]\\['metadata'\\]\\['labels'\\]\\['pod\\-template\\-generation'\\]",
+        "\\['daemonset_pods'\\]\\['test\\-cluster'\\]\\[.*\\]\\['spec'\\]\\['affinity'\\]",
+        "\\['metadata'\\]\\['annotations'\\]\\['deprecated\\.daemonset\\.template\\.generation'\\]"
+    ],
+    "kubernetes_engine": {
+        "feature_gates": {
+            "StatefulSetAutoDeletePVC": true
+        }
+    }
+}
