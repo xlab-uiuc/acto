@@ -1,3 +1,5 @@
+"""This module contains the input generator for the rabbitmq controller."""
+
 import os
 import sys
 
@@ -97,6 +99,7 @@ class RabbitMQInputGenerator(ChainInputs):
                 previous_input = input["input"]
                 index += 1
 
+    @staticmethod
     def convert(anvil_cr: dict) -> dict:
         rabbitmq_cr = {
             "apiVersion": "rabbitmq.com/v1beta1",

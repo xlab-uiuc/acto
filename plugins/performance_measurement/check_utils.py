@@ -1,3 +1,4 @@
+"""This module contains the check functions for the performance measurement plugin."""
 import logging
 from typing import List
 
@@ -8,7 +9,7 @@ import kubernetes.client.models as k8s_models
 def check_resources(
     desired_resources: dict, sts_object: k8s_models.V1StatefulSet
 ) -> bool:
-    # check if resources match
+    """Check if resources match"""
     if desired_resources is not None:
         resource_matched = True
         if "limits" in desired_resources and desired_resources["limits"]:
@@ -96,7 +97,7 @@ def check_resources(
 def check_tolerations(
     desired_tolerations: List[dict], sts_object: k8s_models.V1StatefulSet
 ) -> bool:
-    # check if tolerations match
+    """Check if tolerations match"""
     if desired_tolerations is None or len(desired_tolerations) == 0:
         return (
             sts_object["spec"]["template"]["spec"]["tolerations"] is None
@@ -170,7 +171,7 @@ def check_tolerations(
 def check_affinity(
     desired_affinity: dict, sts_object: k8s_models.V1StatefulSet
 ) -> bool:
-    # check if affinity match
+    """Check if affinity match"""
     current_affinity = sts_object["spec"]["template"]["spec"]["affinity"]
     if desired_affinity is None or len(desired_affinity) == 0:
         return current_affinity is None or len(current_affinity) == 0
@@ -181,7 +182,7 @@ def check_affinity(
 def check_persistent_volume_claim_retention_policy(
     desired_policy: dict, sts_object: k8s_models.V1StatefulSet
 ) -> bool:
-    # check if persistent volume claim retention policy match
+    """Check if persistent volume claim retention policy match"""
     current_policy = sts_object["spec"][
         "persistent_volume_claim_retention_policy"
     ]
@@ -204,12 +205,13 @@ def check_persistent_volume_claim_retention_policy(
 
 
 def check_pods_ready(
-    input: dict, apiclient: kubernetes.client.ApiClient, namespace: str
+    input_dict: dict, apiclient: kubernetes.client.ApiClient, namespace: str
 ):
-    coreV1Api = kubernetes.client.CoreV1Api(apiclient)
-    appV1Api = kubernetes.client.AppsV1Api(apiclient)
-    statefulsets = appV1Api.list_namespaced_stateful_set(namespace)
-    daemonsets = appV1Api.list_namespaced_daemon_set(namespace)
+    """Check if pods are ready"""
+    core_v1_api = kubernetes.client.CoreV1Api(apiclient)
+    app_v1_api = kubernetes.client.AppsV1Api(apiclient)
+    statefulsets = app_v1_api.list_namespaced_stateful_set(namespace)
+    daemonsets = app_v1_api.list_namespaced_daemon_set(namespace)
 
     for statefulset in statefulsets.items:
         sts_object = statefulset.to_dict()
@@ -220,7 +222,10 @@ def check_pods_ready(
         ):
             return False
 
-        if sts_object["status"]["ready_replicas"] != input["spec"]["replicas"]:
+        if (
+            sts_object["status"]["ready_replicas"]
+            != input_dict["spec"]["replicas"]
+        ):
             return False
 
     for daemonset in daemonsets.items:
@@ -235,7 +240,7 @@ def check_pods_ready(
             )
             return False
 
-    pods = coreV1Api.list_namespaced_pod(namespace)
+    pods = core_v1_api.list_namespaced_pod(namespace)
     for pod in pods.items:
         pod_object = pod.to_dict()
 
@@ -245,7 +250,7 @@ def check_pods_ready(
 
         containers_ready = True
         for container_status in pod_object["status"]["container_statuses"]:
-            if container_status["ready"] != True:
+            if container_status["ready"] is not True:
                 containers_ready = False
                 break
         if not containers_ready:

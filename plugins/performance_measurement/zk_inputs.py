@@ -1,12 +1,10 @@
+"""This module generates ZooKeeper CRs from Anvil inputs."""
+
 import os
 import sys
 
 import jsonpatch
 import yaml
-
-sys.path.insert(
-    0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-)
 
 from acto.post_process.post_chain_inputs import ChainInputs
 
@@ -40,6 +38,7 @@ class ZooKeeperInputGenerator(ChainInputs):
                 with open(
                     os.path.join(anvil_input_dir, f"input-{index:03d}.yaml"),
                     "w",
+                    encoding="utf-8",
                 ) as f:
                     yaml.dump(input["input"], f)
                 with open(
@@ -47,17 +46,21 @@ class ZooKeeperInputGenerator(ChainInputs):
                         reference_input_dir, f"input-{index:03d}.yaml"
                     ),
                     "w",
+                    encoding="utf-8",
                 ) as f:
                     yaml.dump(
                         ZooKeeperInputGenerator.convert(input["input"]), f
                     )
                 with open(
-                    os.path.join(output_dir, f"input-{index:03d}.patch"), "w"
+                    os.path.join(output_dir, f"input-{index:03d}.patch"),
+                    "w",
+                    encoding="utf-8",
                 ) as f:
                     f.write(str(patch))
                 previous_input = input["input"]
                 index += 1
 
+    @staticmethod
     def convert(anvil_cr: dict) -> dict:
         zk_cr = {
             "apiVersion": "zookeeper.pravega.io/v1beta1",

@@ -1,3 +1,5 @@
+"""Measure the performance of an operator"""
+
 import argparse
 import dataclasses
 import glob
@@ -11,12 +13,8 @@ from typing import Callable
 
 import kubernetes
 import yaml
-from fluent_inputs import FluentInputGenerator
-from measure_runner import MeasurementRunner
 from performance_measurement.cadvisor_watcher import CAdvisorWatcher
 from performance_measurement.metrics_api_watcher import MetricsApiWatcher
-from rabbitmq_inputs import RabbitMQInputGenerator
-from zk_inputs import ZooKeeperInputGenerator
 
 from acto import utils
 from acto.common import kubernetes_client
@@ -28,26 +26,33 @@ from acto.lib.operator_config import OperatorConfig
 from acto.post_process.post_chain_inputs import ChainInputs
 from acto.utils.preprocess import process_crd
 
+from .fluent_inputs import FluentInputGenerator
+from .measure_runner import MeasurementRunner
+from .rabbitmq_inputs import RabbitMQInputGenerator
+from .zk_inputs import ZooKeeperInputGenerator
 
-def load_inputs_from_dir(dir: str) -> list:
+
+def load_inputs_from_dir(dir_: str) -> list[object]:
+    """Load inputs from a directory"""
     inputs = []
-    files = sorted(glob.glob(f"{dir}/input-*.yaml"))
-    logging.info(f"Loading {len(files)} inputs from {dir}")
+    files = sorted(glob.glob(f"{dir_}/input-*.yaml"))
+    logging.info("Loading %d inputs from %s", len(files), dir_)
     for file in files:
-        with open(file, "r") as f:
+        with open(file, "r", encoding="utf-8") as f:
             inputs.append(yaml.load(f, Loader=yaml.FullLoader))
     return inputs
 
 
 def deploy_metrics_server(
-    apiclient: kubernetes.client.ApiClient, kubectl_client: KubectlClient
-):
+    _: kubernetes.client.ApiClient, kubectl_client: KubectlClient
+) -> bool:
     """Deploy metrics server"""
     logging.info("Deploying metrics server")
     p = kubectl_client.kubectl(["apply", "-f", "data/metrics-server.yaml"])
     if p.returncode != 0:
         logging.error("Failed to deploy metrics server")
         return False
+    return True
 
 
 def test_normal(
@@ -58,8 +63,10 @@ def test_normal(
     ds_name_f: Callable[[dict], str],
     modes: list,
 ):
+    """Run the normal test"""
+
     # prepare workloads
-    workloads = load_inputs_from_dir(dir=input_dir)
+    workloads = load_inputs_from_dir(input_dir)
 
     configuration = kubernetes.client.Configuration()
     configuration.verify_ssl = False
@@ -81,7 +88,7 @@ def test_normal(
     cluster.restart_cluster(name="anvil", kubeconfig=kubeconfig)
 
     # deploy the operator
-    context_name = cluster.get_context_name(f"anvil")
+    context_name = cluster.get_context_name("anvil")
     deploy = Deploy(config.deploy)
     namespace = (
         utils.get_yaml_existing_namespace(deploy.operator_yaml)
@@ -139,7 +146,7 @@ def test_normal(
                 measurement_result_file = (
                     f"{trial_dir}/measurement_result_{gen:03d}.json"
                 )
-                with open(measurement_result_file, "w") as f:
+                with open(measurement_result_file, "w", encoding="UTF-8") as f:
                     json.dump(dataclasses.asdict(measurement_result), f)
             gen += 1
 
@@ -152,7 +159,7 @@ def test_normal(
     if "single-operation" in modes:
         # single operation
         # prepare workloads
-        workloads = load_inputs_from_dir(dir=input_dir)
+        workloads = load_inputs_from_dir(input_dir)
 
         single_operation_trial_dir = f"{workdir}/trial-single-operation"
         os.makedirs(single_operation_trial_dir, exist_ok=True)
@@ -200,7 +207,7 @@ def test_normal(
             )
             if measurement_result is not None:
                 measurement_result_file = f"{single_operation_trial_dir}/measurement_result_{gen:03d}.json"
-                with open(measurement_result_file, "w") as f:
+                with open(measurement_result_file, "w", encoding="UTF-8") as f:
                     json.dump(dataclasses.asdict(measurement_result), f)
             gen += 1
 
@@ -214,12 +221,14 @@ def test_normal(
 def generate_inputs(
     testrun_dir: str, input_generator: ChainInputs, config: OperatorConfig
 ):
+    """Generate inputs"""
     chain_inputs = input_generator(testrun_dir=testrun_dir, config=config)
     os.makedirs(f"{testrun_dir}/inputs", exist_ok=True)
     chain_inputs.serialize(f"{testrun_dir}/inputs")
 
 
 def main(args):
+    """Main function"""
     input_generator: ChainInputs = None
     sts_name_f = None
     if args.project == "rabbitmq-operator":
@@ -236,7 +245,7 @@ def main(args):
         daemonset_name_f = MeasurementRunner.fluent_ds_name
 
     # parse the inputs
-    with open(args.anvil_config, "r") as config_file:
+    with open(args.anvil_config, "r", encoding="UTF-8") as config_file:
         config = json.load(config_file)
         if "monkey_patch" in config:
             del config["monkey_patch"]

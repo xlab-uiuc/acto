@@ -1,3 +1,5 @@
+"""Process the time series data collected from the experiment."""
+
 import csv
 import datetime
 import glob

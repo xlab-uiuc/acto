@@ -1,9 +1,9 @@
+"""Runner for performance measurement"""
+
 import hashlib
 import json
 import logging
-import os
 import queue
-import sys
 import time
 from dataclasses import dataclass
 from datetime import datetime
@@ -15,17 +15,6 @@ import jsonpatch
 import kubernetes
 import kubernetes.client.models as k8s_models
 import yaml
-from check_utils import (
-    check_affinity,
-    check_persistent_volume_claim_retention_policy,
-    check_pods_ready,
-    check_resources,
-    check_tolerations,
-)
-
-sys.path.insert(
-    0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-)
 
 from acto.common import kubernetes_client
 from acto.kubectl_client.kubectl import KubectlClient
@@ -34,11 +23,21 @@ from acto.serialization import ActoEncoder
 from acto.utils import acto_timer
 from acto.utils.thread_logger import get_thread_logger
 
+from .check_utils import (
+    check_affinity,
+    check_persistent_volume_claim_retention_policy,
+    check_pods_ready,
+    check_resources,
+    check_tolerations,
+)
+
 ConditionFuncType = Callable[[dict, kubernetes.client.ApiClient, str], bool]
 
 
 @dataclass
 class MeasurementResult:
+    """Schema for measurement result"""
+
     start_ts: float
     condition_1_ts: float
     condition_2_ts: float
@@ -47,7 +46,7 @@ class MeasurementResult:
 def check_annotations(
     desired_annotations: dict, sts_object: k8s_models.V1StatefulSet
 ) -> bool:
-    # check if annotations match
+    """Check if annotations match"""
     annotation_matched = True
     if desired_annotations is not None:
         # check if input annotations are in sts
@@ -104,7 +103,7 @@ def check_annotations(
 def check_labels(
     desired_labels: dict, sts_object: k8s_models.V1StatefulSet
 ) -> bool:
-    # check if labels match
+    """Check if labels match"""
     label_matched = True
     if desired_labels is not None:
         # check if input labels are in sts
@@ -150,6 +149,8 @@ def check_labels(
 
 
 class MeasurementRunner(Runner):
+    """Runner for performance measurement"""
+
     cr_config_to_zk_config = {
         "autoPurgePurgeInterval": "autopurge.purgeInterval",
         "autoPurgeSnapRetainCount": "autopurge.snapRetainCount",
@@ -436,6 +437,7 @@ class MeasurementRunner(Runner):
 
         return MeasurementResult(start_time, condition_1, condition_2)
 
+    @staticmethod
     def wait_for_reference_zk_spec(
         input: dict, apiclient: kubernetes.client.ApiClient, namespace: str
     ) -> bool:
@@ -679,6 +681,7 @@ class MeasurementRunner(Runner):
 
             break
 
+    @staticmethod
     def wait_for_zk_spec(
         input: dict, apiclient: kubernetes.client.ApiClient, namespace: str
     ) -> bool:
@@ -851,6 +854,7 @@ class MeasurementRunner(Runner):
 
         return True
 
+    @staticmethod
     def wait_for_reference_rabbitmq_spec(
         input: dict, apiclient: kubernetes.client.ApiClient, namespace: str
     ) -> bool:
@@ -1016,6 +1020,7 @@ class MeasurementRunner(Runner):
 
             break
 
+    @staticmethod
     def wait_for_rabbitmq_spec(
         input: dict, apiclient: kubernetes.client.ApiClient, namespace: str
     ) -> bool:
@@ -1152,6 +1157,7 @@ class MeasurementRunner(Runner):
 
             break
 
+    @staticmethod
     def wait_for_pod_ready(
         input: dict, apiclient: kubernetes.client.ApiClient, namespace: str
     ) -> bool:
@@ -1199,6 +1205,7 @@ class MeasurementRunner(Runner):
 
         return True
 
+    @staticmethod
     def wait_for_converge(
         input: dict,
         apiclient: kubernetes.client.ApiClient,
@@ -1259,6 +1266,7 @@ class MeasurementRunner(Runner):
 
         return statefulset_updates
 
+    @staticmethod
     def watch_system_events(event_stream, queue: Queue):
         """A process that watches namespaced events"""
         for object in event_stream:
@@ -1269,11 +1277,14 @@ class MeasurementRunner(Runner):
             except (ValueError, AssertionError):
                 pass
 
+    @staticmethod
     def zk_sts_name(input: dict):
         return input["metadata"]["name"]
 
+    @staticmethod
     def rabbitmq_sts_name(input: dict):
         return f"{input['metadata']['name']}-server"
 
+    @staticmethod
     def fluent_ds_name(input: dict):
         return f"{input['metadata']['name']}"

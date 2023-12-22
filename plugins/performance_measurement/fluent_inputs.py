@@ -1,18 +1,17 @@
+"""This module generates the inputs for the fluent-bit controller."""
+
 import os
-import sys
 from typing import Any, Dict
 
 import jsonpatch
 import yaml
 
-sys.path.insert(
-    0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-)
-
 from acto.post_process.post_chain_inputs import ChainInputs
 
 
 class FluentInputGenerator(ChainInputs):
+    """This class generates the inputs for the fluent-bit controller."""
+
     def serialize(self, output_dir: str):
         previous_input: Dict[str, Any] = {}
         index = 0
@@ -67,6 +66,7 @@ class FluentInputGenerator(ChainInputs):
                 with open(
                     os.path.join(anvil_input_dir, f"input-{index:03d}.yaml"),
                     "w",
+                    encoding="utf-8",
                 ) as f:
                     yaml.dump(input_["input"], f)
                 with open(
@@ -74,10 +74,13 @@ class FluentInputGenerator(ChainInputs):
                         reference_input_dir, f"input-{index:03d}.yaml"
                     ),
                     "w",
+                    encoding="utf-8",
                 ) as f:
                     yaml.dump(FluentInputGenerator.convert(input_["input"]), f)
                 with open(
-                    os.path.join(output_dir, f"input-{index:03d}.patch"), "w"
+                    os.path.join(output_dir, f"input-{index:03d}.patch"),
+                    "w",
+                    encoding="utf-8",
                 ) as f:
                     f.write(str(patch))
                 previous_input = input_["input"]
@@ -85,6 +88,8 @@ class FluentInputGenerator(ChainInputs):
 
     @staticmethod
     def convert(anvil_cr: dict) -> dict:
+        """Convert the anvil CR to the fluent-bit CR."""
+
         fluent_cr: Dict[str, Any] = {
             "apiVersion": "fluentbit.fluent.io/v1alpha2",
             "kind": "FluentBit",
