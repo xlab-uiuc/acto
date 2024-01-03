@@ -6,15 +6,16 @@
 |-------------------------------------------------------------- | -------: | -------: | ------: | --------: |
 | acto/\_\_init\_\_.py                                          |        0 |        0 |    100% |           |
 | acto/\_\_main\_\_.py                                          |       88 |       88 |      0% |     1-175 |
+| acto/acto\_config.py                                          |       32 |        3 |     91% |     96-98 |
 | acto/checker/\_\_init\_\_.py                                  |        0 |        0 |    100% |           |
 | acto/checker/checker.py                                       |       13 |        2 |     85% |    12, 19 |
-| acto/checker/checker\_set.py                                  |       57 |       12 |     79% |41-42, 67-78 |
+| acto/checker/checker\_set.py                                  |       55 |       12 |     78% |68-69, 99-110 |
 | acto/checker/impl/\_\_init\_\_.py                             |        0 |        0 |    100% |           |
 | acto/checker/impl/crash.py                                    |       30 |        2 |     93% |    14, 16 |
 | acto/checker/impl/health.py                                   |       52 |        5 |     90% |37, 58-61, 76, 92 |
-| acto/checker/impl/kubectl\_cli.py                             |       30 |        4 |     87% |32-33, 44-46 |
-| acto/checker/impl/operator\_log.py                            |       24 |        1 |     96% |        32 |
-| acto/checker/impl/state.py                                    |      225 |       50 |     78% |55, 63-64, 69-93, 104-105, 133, 147-149, 166, 265, 288, 317, 319-323, 329-336 |
+| acto/checker/impl/kubectl\_cli.py                             |       27 |        4 |     85% |42-43, 56-60 |
+| acto/checker/impl/operator\_log.py                            |       24 |        1 |     96% |        46 |
+| acto/checker/impl/state.py                                    |      225 |       50 |     78% |75, 87-88, 96-132, 144-145, 177, 192-197, 229, 349, 381, 425, 427-445, 454-471 |
 | acto/checker/impl/state\_compare.py                           |       76 |        3 |     96% |62, 73, 80 |
 | acto/checker/impl/state\_condition.py                         |       39 |       13 |     67% |18, 24, 29-37, 47, 53 |
 | acto/checker/impl/test\_state\_compare.py                     |        9 |        0 |    100% |           |
@@ -23,15 +24,13 @@
 | acto/checker/impl/tests/test\_health.py                       |       14 |        0 |    100% |           |
 | acto/checker/impl/tests/test\_kubectl\_cli.py                 |       17 |        0 |    100% |           |
 | acto/checker/impl/tests/test\_operator\_log.py                |       15 |        0 |    100% |           |
-| acto/checker/impl/tests/test\_snapshot.py                     |       11 |        0 |    100% |           |
+| acto/checker/impl/tests/test\_snapshot.py                     |       12 |        0 |    100% |           |
 | acto/checker/impl/tests/test\_state.py                        |       41 |        0 |    100% |           |
 | acto/checker/test\_checker.py                                 |      163 |      153 |      6% |    13-246 |
-| acto/common.py                                                |      354 |       97 |     73% |97-98, 102-116, 119-126, 129, 132, 136, 138, 140, 142, 144, 148, 153-162, 203, 236, 249, 291, 315-316, 325, 327, 330, 334-343, 363-366, 415, 460-461, 498-503, 505-507, 514-517, 521, 537-538, 544-555, 614-623, 634-639 |
-| acto/config.py                                                |        8 |        0 |    100% |           |
-| acto/config\_schema.py                                        |       25 |        0 |    100% |           |
+| acto/common.py                                                |      340 |       84 |     75% |111-112, 116-138, 142-148, 152, 156, 161, 163, 165, 167, 169, 174, 179-187, 243, 283, 299, 359, 385-386, 396, 398, 401, 405-414, 434-437, 486, 539-542, 582-589, 591-596, 603-606, 621-622, 629-640 |
 | acto/constant.py                                              |        6 |        0 |    100% |           |
 | acto/deploy.py                                                |       88 |       71 |     19% |15-41, 47-55, 59, 66-116, 124-130, 133-138 |
-| acto/engine.py                                                |      541 |      541 |      0% |     1-933 |
+| acto/engine.py                                                |      547 |      547 |      0% |    3-1268 |
 | acto/exception.py                                             |        2 |        2 |      0% |       1-2 |
 | acto/input/\_\_init\_\_.py                                    |        2 |        0 |    100% |           |
 | acto/input/get\_matched\_schemas.py                           |       54 |       22 |     59% |12, 47-51, 55-74 |
@@ -60,7 +59,7 @@
 | acto/kubernetes\_engine/base.py                               |       54 |       22 |     59% |30, 34, 38, 42, 46, 49-67, 79 |
 | acto/kubernetes\_engine/k3d.py                                |       85 |       85 |      0% |     1-139 |
 | acto/kubernetes\_engine/kind.py                               |       99 |       32 |     68% |51-53, 57-58, 84, 90, 99-102, 108-112, 115-116, 119-131, 139, 144, 147, 158 |
-| acto/kubernetes\_engine/minikube.py                           |        3 |        0 |    100% |           |
+| acto/kubernetes\_engine/minikube.py                           |        3 |        3 |      0% |       1-5 |
 | acto/lib/\_\_init\_\_.py                                      |        0 |        0 |    100% |           |
 | acto/lib/dict.py                                              |       13 |        0 |    100% |           |
 | acto/lib/operator\_config.py                                  |       45 |        3 |     93% |   112-115 |
@@ -77,9 +76,9 @@
 | acto/post\_process/post\_process.py                           |      104 |       22 |     79% |51, 55, 67, 77-88, 100, 103, 138-142, 146, 150, 158, 162 |
 | acto/post\_process/simple\_crash\_test.py                     |      163 |      127 |     22% |35-44, 52-65, 79-101, 119-126, 130-173, 201-210, 214-286, 290-325 |
 | acto/post\_process/test\_post\_process.py                     |       28 |        1 |     96% |        53 |
-| acto/reproduce.py                                             |      122 |      122 |      0% |     1-225 |
+| acto/reproduce.py                                             |      120 |      120 |      0% |     1-222 |
 | acto/runner/\_\_init\_\_.py                                   |        1 |        0 |    100% |           |
-| acto/runner/runner.py                                         |      323 |      291 |     10% |29-73, 76-78, 92-147, 150-159, 162-193, 200-228, 235-258, 261-267, 270-292, 296-301, 312-317, 331-336, 349-441, 446-450, 456-466, 477-507, 512-545 |
+| acto/runner/runner.py                                         |      308 |      275 |     11% |41-93, 112-193, 197-204, 210-246, 253-293, 300-329, 333-338, 342-386, 394-399, 410-415, 431-437, 450-605, 609-613, 618-632, 643-680 |
 | acto/schema/\_\_init\_\_.py                                   |       10 |        0 |    100% |           |
 | acto/schema/anyof.py                                          |       44 |       20 |     55% |26, 30-38, 41, 44, 47-49, 52, 55-60 |
 | acto/schema/array.py                                          |       70 |       29 |     59% |31, 43-52, 57, 59-62, 71-78, 81-83, 86-88, 91, 94, 97, 103 |
@@ -96,12 +95,12 @@
 | acto/snapshot.py                                              |       62 |       26 |     58% |32, 48, 58-79, 82-86, 89 |
 | acto/utils/\_\_init\_\_.py                                    |       13 |        1 |     92% |        11 |
 | acto/utils/acto\_timer.py                                     |       31 |       22 |     29% |10-15, 19, 22-33, 38-40, 44-47 |
-| acto/utils/error\_handler.py                                  |       43 |       33 |     23% |13-30, 38-52, 56-74 |
+| acto/utils/error\_handler.py                                  |       43 |       33 |     23% |15-35, 43-58, 63-82 |
 | acto/utils/k8s\_helper.py                                     |       64 |       51 |     20% |21-27, 39-45, 57-61, 73-79, 83-91, 95-102, 106-127 |
 | acto/utils/preprocess.py                                      |       69 |       58 |     16% |17-73, 93-141, 147-192 |
 | acto/utils/process\_with\_except.py                           |        9 |        9 |      0% |      1-13 |
 | acto/utils/thread\_logger.py                                  |       15 |        3 |     80% | 9, 18, 28 |
-|                                                     **TOTAL** | **8351** | **4499** | **46%** |           |
+|                                                     **TOTAL** | **8321** | **4480** | **46%** |           |
 
 
 ## Setup coverage badge
