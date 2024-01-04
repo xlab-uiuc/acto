@@ -31,3 +31,7 @@ Inside each `trial-*` directory, you can find the following files:
     - `log_result`: if the log indicates invalid input
     - `custom_result`: result of custom oracles, defined by users
     - `recovery_result`: if the recovery step is successful after the error state
+
+## Schema Matching and Pruning for Testcase Generation
+![Input Model Diagram](./input_model.jpg)
+The diagram illustrates the sequence of operation applied to the `DeterministicInputModel` class from within the `Acto.__init__`, detailing the steps for automatic and manual CRD schema matching and pruning for generating test cases. Furthermore, it provides a visual representation of the class inheritance hierarchy for both schemas and value generator classes.
