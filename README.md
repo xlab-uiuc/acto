@@ -5,11 +5,11 @@
 | Name                                                          |    Stmts |     Miss |   Cover |   Missing |
 |-------------------------------------------------------------- | -------: | -------: | ------: | --------: |
 | acto/\_\_init\_\_.py                                          |        0 |        0 |    100% |           |
-| acto/\_\_main\_\_.py                                          |       88 |       88 |      0% |     1-175 |
+| acto/\_\_main\_\_.py                                          |       88 |       88 |      0% |     1-174 |
 | acto/acto\_config.py                                          |       32 |        3 |     91% |     96-98 |
 | acto/checker/\_\_init\_\_.py                                  |        0 |        0 |    100% |           |
 | acto/checker/checker.py                                       |       13 |        2 |     85% |    12, 19 |
-| acto/checker/checker\_set.py                                  |       55 |       12 |     78% |68-69, 99-110 |
+| acto/checker/checker\_set.py                                  |       56 |       12 |     79% |69-70, 100-111 |
 | acto/checker/impl/\_\_init\_\_.py                             |        0 |        0 |    100% |           |
 | acto/checker/impl/crash.py                                    |       30 |        2 |     93% |    14, 16 |
 | acto/checker/impl/health.py                                   |       52 |        5 |     90% |37, 58-61, 76, 92 |
@@ -73,7 +73,7 @@
 | acto/post\_process/\_\_init\_\_.py                            |        0 |        0 |    100% |           |
 | acto/post\_process/post\_chain\_inputs.py                     |       41 |       41 |      0% |      1-65 |
 | acto/post\_process/post\_diff\_test.py                        |      409 |      237 |     42% |64-65, 68, 78, 93-94, 133-134, 205, 215, 219, 224-233, 268, 270, 272-276, 281-298, 306-314, 317-342, 349-358, 361-423, 437-441, 461, 469-501, 504-521, 525-574, 586, 590, 596-597, 599-620, 630-666 |
-| acto/post\_process/post\_process.py                           |      104 |       22 |     79% |51, 55, 67, 77-88, 100, 103, 138-142, 146, 150, 158, 162 |
+| acto/post\_process/post\_process.py                           |      101 |       22 |     78% |60, 65, 80, 91-102, 117, 120, 181-185, 192, 196, 206, 211 |
 | acto/post\_process/simple\_crash\_test.py                     |      163 |      127 |     22% |35-44, 52-65, 79-101, 119-126, 130-173, 201-210, 214-286, 290-325 |
 | acto/post\_process/test\_post\_process.py                     |       28 |        1 |     96% |        53 |
 | acto/reproduce.py                                             |      120 |      120 |      0% |     1-222 |
@@ -100,7 +100,7 @@
 | acto/utils/preprocess.py                                      |       69 |       58 |     16% |17-73, 93-141, 147-192 |
 | acto/utils/process\_with\_except.py                           |        9 |        9 |      0% |      1-13 |
 | acto/utils/thread\_logger.py                                  |       15 |        3 |     80% | 9, 18, 28 |
-|                                                     **TOTAL** | **8321** | **4480** | **46%** |           |
+|                                                     **TOTAL** | **8319** | **4480** | **46%** |           |
 
 
 ## Setup coverage badge
