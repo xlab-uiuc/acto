@@ -232,7 +232,7 @@ class StateChecker(Checker):
 
     def write_delta_log(self, generation: int, input_delta, system_delta):
         """Write the input delta and system delta to a log file"""
-        delta_log_path = f"{self.trial_dir}/delta-{generation}.log"
+        delta_log_path = f"{self.trial_dir}/delta-{generation:03d}.log"
         with open(delta_log_path, "w", encoding="utf-8") as f:
             f.write("---------- INPUT DELTA  ----------\n")
             f.write(json.dumps(input_delta, cls=ActoEncoder, indent=6))

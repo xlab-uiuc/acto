@@ -4,7 +4,7 @@ import logging
 import sys
 
 from acto.checker.checker_set import CheckerSet
-from acto.common import RunResult, RecoveryResult, ErrorResult, Oracle
+from acto.common import ErrorResult, Oracle, RecoveryResult, RunResult
 from acto.input import InputModel
 from acto.serialization import ActoEncoder
 from acto.snapshot import Snapshot
@@ -74,12 +74,12 @@ if __name__ == "__main__":
 
             alarm = False
             for generation in range(0, 20):
-                mutated_filename = '%s/mutated-%d.yaml' % (trial_dir, generation)
-                operator_log_path = "%s/operator-%d.log" % (trial_dir, generation)
-                system_state_path = "%s/system-state-%03d.json" % (trial_dir, generation)
-                events_log_path = "%s/events-%d.json" % (trial_dir, generation)
-                cli_output_path = "%s/cli-output-%d.log" % (trial_dir, generation)
-                runtime_result_path = "%s/generation-%d-runtime.json" % (trial_dir, generation)
+                events_log_path = f"{trial_dir}/events-{generation:03d}.json"
+                mutated_filename = f"{trial_dir}/mutated-{generation:03d}.yaml"
+                operator_log_path = f"{trial_dir}/operator-{generation:03d}.log"
+                system_state_path = f"{trial_dir}/system-state-{generation:03d}.json"
+                cli_output_path = f"{trial_dir}/cli-output-{generation:03d}.log"
+                runtime_result_path = f"{trial_dir}/generation-{generation:03d}-runtime.json"
 
                 if not os.path.exists(mutated_filename):
                     break
