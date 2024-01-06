@@ -2,6 +2,7 @@
 
 import json
 import os
+from typing import Optional
 
 from acto.checker.impl.crash import CrashChecker
 from acto.checker.impl.health import HealthChecker
@@ -25,7 +26,7 @@ class CheckerSet:
         trial_dir: str,
         input_model: InputModel,
         oracle_handle: OracleHandle,
-        checker_generators: list = None,
+        checker_generators: Optional[list] = None,
     ):
         checker_generators = [
             CrashChecker,
@@ -87,7 +88,7 @@ class CheckerSet:
             )
 
         generation_result_path = os.path.join(
-            self.trial_dir, f"generation-{generation}-runtime.json"
+            self.trial_dir, f"generation-{generation:03d}-runtime.json"
         )
         with open(generation_result_path, "w", encoding="utf-8") as f:
             json.dump(run_result.to_dict(), f, cls=ActoEncoder, indent=4)

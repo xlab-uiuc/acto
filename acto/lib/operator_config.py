@@ -45,7 +45,7 @@ class DeployConfig(BaseModel, extra="forbid"):
     """Configuration for deploying the operator"""
     steps: List[DeployStep] = Field(
         description="Steps to deploy the operator",
-        min_length=1,)
+        min_length=1)
 
 
 class AnalysisConfig(BaseModel, extra="forbid"):
