@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Callable
+from difflib import SequenceMatcher
 
 import requests
 
@@ -258,6 +259,10 @@ class K8sSchemaMatcher:
             elif schema_spec["type"] == "number":
                 return KubernetesFloatSchema()
             elif schema_spec["type"] == "object":
+                if "additionalProperties" in schema_spec:
+                    return KubernetesDictSchema(
+                        resolve(schema_spec["additionalProperties"])
+                    )
                 return KubernetesOpaqueSchema()
             elif schema_spec["type"] == "array":
                 return KubernetesListSchema(resolve(schema_spec["items"]))
@@ -280,13 +285,34 @@ class K8sSchemaMatcher:
 
         return k8s_models
 
+    def _rank_matched_k8s_schemas(
+        self,
+        schema: BaseSchema,
+        matched_schemas: [tuple[BaseSchema, KubernetesSchema]],
+    ) -> int:
+        """returns the index of the best matched schemas using heuristic"""
+        seq_matcher = SequenceMatcher()
+        seq_matcher.set_seq1(
+            schema.path[-2] if schema.path[-1] == "ITEM" else schema.path[-1])
+        max_ratio = 0
+        max_ratio_schema_idx = 0
+        for i, (_, matched_schema) in enumerate(matched_schemas):
+            seq_matcher.set_seq2(matched_schema.k8s_schema_name.split(".")[-1])
+            ratio = seq_matcher.ratio()
+            if ratio > max_ratio:
+                max_ratio = ratio
+                max_ratio_schema_idx = i
+        return max_ratio_schema_idx
+
     def find_matched_schemas(self, schema: BaseSchema) -> BaseSchema:
         """Finds all Kubernetes schemas that match the given schema"""
         matched_schemas = []
         for kubernetes_schema in self._k8s_models.values():
             if kubernetes_schema.match(schema):
                 matched_schemas.append((schema, kubernetes_schema))
-                return matched_schemas
+        if matched_schemas:
+            idx = self._rank_matched_k8s_schemas(schema, matched_schemas)
+            return [matched_schemas[idx]]
         if isinstance(schema, ObjectSchema):
             for sub_schema in schema.properties.values():
                 matched_schemas.extend(self.find_matched_schemas(sub_schema))
@@ -322,9 +348,9 @@ if __name__ == "__main__":
     matched = schema_matcher.find_matched_schemas(spec_schema)
 
     for schema, k8s_schema in matched:
-        print(
-            f"Matched: '.../{'/'.join(schema.path[-2:])}' -> {k8s_schema.k8s_schema_name}"
-        )
+        path_ending = '/'.join(schema.path[-2:])
+        schema_name = k8s_schema.k8s_schema_name.split(".")[-1]
+        print(f"Matched: '.../{path_ending}' -> {schema_name}")
 
     df = pd.DataFrame(
         [
@@ -339,8 +365,8 @@ if __name__ == "__main__":
     print(df["k8s_schema_name"].value_counts())
     print(f"{len(matched)} schemas matched in total")
 
-    print("Dumping k8s schemas to './schemas' ...")
-    os.makedirs("schemas", exist_ok=True)
-    for schema_name, schema in schema_matcher.dump_k8s_schemas().items():
-        with open(f"schemas/{schema_name}.json", "w") as f:
-            yaml.dump(schema, f, indent=2)
+    # print("Dumping k8s schemas to './schemas' ...")
+    # os.makedirs("schemas", exist_ok=True)
+    # for schema_name, schema in schema_matcher.dump_k8s_schemas().items():
+    #     with open(f"schemas/{schema_name}.json", "w") as f:
+    #         yaml.dump(schema, f, indent=2)
