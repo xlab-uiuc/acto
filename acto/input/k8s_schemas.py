@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import Callable
+from collections import defaultdict
 from difflib import SequenceMatcher
+from typing import Callable
 
 import requests
 
@@ -222,6 +223,11 @@ class K8sSchemaMatcher:
             schema_definitions (dict): schema definitions from the Kubernetes schema spec
         """
         self._k8s_models = self._generate_k8s_models(schema_definitions)
+        self._schema_name_to_property_name = (
+            self._generate_schema_name_to_property_name_mapping(
+                schema_definitions
+            )
+        )
 
     @classmethod
     def from_version(cls, version: str):
@@ -237,9 +243,29 @@ class K8sSchemaMatcher:
         schema_definitions = fetch_k8s_schema_spec(version)["definitions"]
         return cls(schema_definitions)
 
+    def _generate_schema_name_to_property_name_mapping(
+        self, schema_definitions: dict
+    ) -> dict:
+        """Builds a dictionary that maps property names to Kubernetes schema name"""
+        schema_name_to_property_name = defaultdict(set)
+        for schema_name, schema_spec in schema_definitions.items():
+            if schema_name.startswith("io.k8s.apiextensions-apiserver"):
+                continue
+
+            properties = schema_spec.get("properties", {})
+            for property_name, property_schema in properties.items():
+                if ref := (
+                    property_schema.get("$ref")
+                    or property_schema.get("items", {}).get("$ref")
+                ):
+                    schema_name = ref.split("/")[-1]
+                    schema_name_to_property_name[schema_name].add(property_name)
+
+        return schema_name_to_property_name
+
     def _generate_k8s_models(self, schema_definitions: dict) -> dict:
         """Generates a dictionary of Kubernetes models for schema matching"""
-        k8s_models = dict()
+        k8s_models = {}
 
         def resolve(schema_spec: dict) -> KubernetesSchema:
             """Resolves schema type from k8s schema spec"""
@@ -291,17 +317,49 @@ class K8sSchemaMatcher:
         matched_schemas: [tuple[BaseSchema, KubernetesSchema]],
     ) -> int:
         """returns the index of the best matched schemas using heuristic"""
+        # 1. Give priority to the schemas that have been used with the same
+        #    property name in k8s schema specs
+        schema_name = (
+            schema.path[-2] if schema.path[-1] == "ITEM" else schema.path[-1]
+        )
+        name_matched = []
+        for i, (_, k8s_schema) in enumerate(matched_schemas):
+            observed_schema_names = self._schema_name_to_property_name.get(
+                k8s_schema.k8s_schema_name, set()
+            )
+            for observed_schema_name in observed_schema_names:
+                if schema_name in observed_schema_name:
+                    name_matched.append(i)
+
+        # 2. Use the edit distance between the last salient segment of the
+        #    schema path and the last salient segment of the k8s schema name
+        #    to rank the matched schemas
         seq_matcher = SequenceMatcher()
-        seq_matcher.set_seq1(
-            schema.path[-2] if schema.path[-1] == "ITEM" else schema.path[-1])
+        # set seq1 to the last salient segment of the schema path
+        schema_name = "/".join(
+            schema.path[-3:-1]
+            if schema.path[-1] == "ITEM"
+            else schema.path[-2:]
+        )
+        seq_matcher.set_seq1(schema_name)
         max_ratio = 0
         max_ratio_schema_idx = 0
         for i, (_, matched_schema) in enumerate(matched_schemas):
+            if name_matched and i not in name_matched:
+                continue
             seq_matcher.set_seq2(matched_schema.k8s_schema_name.split(".")[-1])
             ratio = seq_matcher.ratio()
+            if len(matched_schemas) > 1:
+                print(ratio, matched_schema.k8s_schema_name.split(".")[-1])
             if ratio > max_ratio:
                 max_ratio = ratio
                 max_ratio_schema_idx = i
+        if len(matched_schemas) > 1:
+            print(
+                schema.path,
+                "choose",
+                matched_schemas[max_ratio_schema_idx][1].k8s_schema_name,
+            )
         return max_ratio_schema_idx
 
     def find_matched_schemas(self, schema: BaseSchema) -> BaseSchema:
@@ -332,9 +390,10 @@ class K8sSchemaMatcher:
 
 
 if __name__ == "__main__":
-    import yaml
-    import pandas as pd
     import os
+
+    import pandas as pd
+    import yaml
 
     # with open("kafka-crd.yml", "r") as f:
     with open("./test/integration_tests/test_data/rabbitmq_crd.yaml", "r") as f:
@@ -348,7 +407,7 @@ if __name__ == "__main__":
     matched = schema_matcher.find_matched_schemas(spec_schema)
 
     for schema, k8s_schema in matched:
-        path_ending = '/'.join(schema.path[-2:])
+        path_ending = "/".join(schema.path[-2:])
         schema_name = k8s_schema.k8s_schema_name.split(".")[-1]
         print(f"Matched: '.../{path_ending}' -> {schema_name}")
 
