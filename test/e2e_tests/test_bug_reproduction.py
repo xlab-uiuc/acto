@@ -194,6 +194,11 @@ class TestSingleBugReproduction(unittest.TestCase):
 
         operator, bugs = random.choice(list(all_bugs.items()))
         bug_id, bug_config = random.choice(list(bugs.items()))
+        operator, bug_id, bug_config = (
+            "cass-operator",
+            "cassop-330",
+            all_bugs["cass-operator"]["cassop-330"],
+        )
         workqueue.put((operator, bug_id, bug_config))
 
         # workers write reproduction results

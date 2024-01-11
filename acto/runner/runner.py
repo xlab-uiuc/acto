@@ -1,12 +1,11 @@
 """Runner module for Acto"""
 import base64
-import binascii
 import json
 import multiprocessing
 import queue
 import subprocess
 import time
-from typing import Callable
+from typing import Callable, Optional
 
 import kubernetes
 import yaml
@@ -35,7 +34,7 @@ class Runner:
         trial_dir: str,
         kubeconfig: str,
         context_name: str,
-        custom_system_state_f: Callable[[], dict] = None,
+        custom_system_state_f: Optional[Callable[..., dict]] = None,
         wait_time: int = 45,
     ):
         self.namespace = context["namespace"]
@@ -82,7 +81,7 @@ class Runner:
         }
 
         if multiprocessing.get_start_method() != "fork":
-            multiprocessing.get_start_method("fork")
+            multiprocessing.set_start_method("fork")
 
         self._custom_system_state_f = custom_system_state_f
 
@@ -96,7 +95,7 @@ class Runner:
         self,
         input_cr: dict,
         generation: int,
-        hooks: list[RunnerHookType] = None,
+        hooks: Optional[list[RunnerHookType]] = None,
     ) -> tuple[Snapshot, bool]:
         """Simply run the cmd and dumps system_state, delta, operator log,
         events and input files without checking.
@@ -163,7 +162,7 @@ class Runner:
                 "Bug! Exception raised when waiting for converge.", exc_info=e
             )
             system_state = {}
-            operator_log = "Bug! Exception raised when waiting for converge."
+            operator_log = ["Bug! Exception raised when waiting for converge."]
             err = True
 
         # when client API raise an exception, catch it and write to log instead of crashing Acto
@@ -181,7 +180,7 @@ class Runner:
                 "Bug! Exception raised when waiting for converge.", exc_info=e
             )
             system_state = {}
-            operator_log = "Bug! Exception raised when waiting for converge."
+            operator_log = ["Bug! Exception raised when waiting for converge."]
             err = True
 
         snapshot = Snapshot(
@@ -224,7 +223,7 @@ class Runner:
         logger.debug("STDOUT: %s", cli_result.stdout)
         logger.debug("STDERR: %s", cli_result.stderr)
 
-        for _ in range(0, 600):
+        for __ in range(0, 600):
             crs = self.__get_custom_resources(
                 self.namespace,
                 self.crd_metainfo["group"],
@@ -456,7 +455,9 @@ class Runner:
             self.namespace, _preload_content=False, watch=True
         )
 
-        combined_event_queue = multiprocessing.Queue(maxsize=0)
+        combined_event_queue: multiprocessing.Queue = multiprocessing.Queue(
+            maxsize=0
+        )
         timer_hard_timeout = acto_timer.ActoTimer(
             hard_timeout, combined_event_queue, "timeout"
         )
@@ -626,7 +627,7 @@ def decode_secret_data(secrets: dict) -> dict:
                     secrets[secret]["data"][key] = base64.b64decode(
                         secrets[secret]["data"][key]
                     ).decode("utf-8")
-        except binascii.Error as e:
+        except UnicodeDecodeError as e:
             # skip secret if decoding fails
             logger.error(e)
     return secrets
