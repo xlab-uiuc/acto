@@ -168,6 +168,10 @@ class TestSchema(unittest.TestCase):
         self.assert_exists("tolerations/ITEM", "v1.Toleration", matches)
         self.assert_exists("hostAliases/ITEM", "v1.HostAlias", matches)
         self.assert_exists("networkPolicyPeers/ITEM/ipBlock", "v1.IPBlock", matches)
+        # The following are schemas that are descendants of already matched schemas
+        self.assert_exists("capabilities", "v1.Capabilities", matches)
+        self.assert_exists("seLinuxOptions", "v1.SELinuxOptions", matches)
+        self.assert_exists("seccompProfile", "v1.SeccompProfile", matches)
 
     def test_statefulset_match(self):
         with open(

@@ -390,7 +390,6 @@ class K8sSchemaMatcher:
         if matched_schemas:
             idx = self._rank_matched_k8s_schemas(schema, matched_schemas)
             matched_schemas = [matched_schemas[idx]]
-            return matched_schemas
         if isinstance(schema, ObjectSchema):
             for sub_schema in schema.properties.values():
                 matched_schemas.extend(self.find_matched_schemas(sub_schema))
