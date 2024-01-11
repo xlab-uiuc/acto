@@ -389,7 +389,8 @@ class K8sSchemaMatcher:
                 matched_schemas.append((schema, kubernetes_schema))
         if matched_schemas:
             idx = self._rank_matched_k8s_schemas(schema, matched_schemas)
-            return [matched_schemas[idx]]
+            matched_schemas = [matched_schemas[idx]]
+            return matched_schemas
         if isinstance(schema, ObjectSchema):
             for sub_schema in schema.properties.values():
                 matched_schemas.extend(self.find_matched_schemas(sub_schema))
@@ -415,6 +416,7 @@ if __name__ == "__main__":
     import yaml
 
     with open(
+        # "./test/integration_tests/test_data/cassop_crd.yaml",
         # "./test/integration_tests/test_data/kafka_crd.yaml",
         "./test/integration_tests/test_data/rabbitmq_crd.yaml",
         "r",
@@ -435,6 +437,13 @@ if __name__ == "__main__":
         schema_name = k8s_schema.k8s_schema_name.split(".")[-1]
         print(f"Matched: '.../{path_ending}' -> {schema_name}")
 
+    # # generate integration test code
+    # for schema, k8s_schema in matched:
+    #     # pylint: disable-next=invalid-name
+    #     path_ending = "/".join(schema.path[-3:])
+    #     schema_name = '.'.join(k8s_schema.k8s_schema_name.split(".")[-2:])
+    #     print(f'self.assert_exists("{path_ending}", "{schema_name}", matches)')
+
     df = pd.DataFrame(
         [
             {
@@ -445,7 +454,7 @@ if __name__ == "__main__":
         ]
     )
 
-    print(df["k8s_schema_name"].value_counts())
+    print(df["k8s_schema_name"].value_counts().to_string())
     print(f"{len(matched)} schemas matched in total")
 
     # print("Dumping k8s schemas to './schemas' ...")
