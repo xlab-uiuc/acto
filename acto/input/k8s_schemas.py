@@ -135,8 +135,8 @@ class KubernetesFloatSchema(KubernetesSchema):
         return {"type": "number"}
 
 
-class KubernetesDictSchema(KubernetesSchema):
-    """Class for Kubernetes dict schema matching"""
+class KubernetesMapSchema(KubernetesSchema):
+    """Class for Kubernetes map schema matching"""
 
     def __init__(self, value_cls: KubernetesSchema) -> None:
         super().__init__()
@@ -163,8 +163,8 @@ class KubernetesDictSchema(KubernetesSchema):
         }
 
 
-class KubernetesListSchema(KubernetesSchema):
-    """Class for Kubernetes list schema matching"""
+class KubernetesArraySchema(KubernetesSchema):
+    """Class for Kubernetes array schema matching"""
 
     def __init__(self, item_cls: KubernetesSchema) -> None:
         super().__init__()
@@ -313,12 +313,12 @@ class K8sSchemaMatcher:
                 return KubernetesFloatSchema()
             elif schema_spec["type"] == "object":
                 if "additionalProperties" in schema_spec:
-                    return KubernetesDictSchema(
+                    return KubernetesMapSchema(
                         resolve(schema_spec["additionalProperties"])
                     )
                 return KubernetesOpaqueSchema()
             elif schema_spec["type"] == "array":
-                return KubernetesListSchema(resolve(schema_spec["items"]))
+                return KubernetesArraySchema(resolve(schema_spec["items"]))
             else:
                 raise KeyError(f"Cannot resolve type {schema_spec}")
 
