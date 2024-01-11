@@ -1,3 +1,12 @@
+"""A module that contains the Kubernetes schema matcher
+
+This module contains the Kubernetes schema matcher that matches acto schemas
+to Kubernetes schemas. It is used for generating Kubernetes CRD schemas from
+acto schemas.
+"""
+# pylint: disable=redefined-outer-name
+
+import sys
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from difflib import SequenceMatcher
@@ -24,15 +33,15 @@ class KubernetesSchema(ABC):
     @abstractmethod
     def match(self, schema: BaseSchema) -> bool:
         """Determines if the schema matches the Kubernetes schema"""
-        ...
 
     @abstractmethod
     def dump_schema(self) -> dict:
         """Dumps the Kubernetes schema into a dictionary (for debugging)"""
-        ...
 
 
 class KubernetesObjectSchema(KubernetesSchema):
+    """Class for Kubernetes object schema matching"""
+
     def __init__(self, schema_name, schema_spec) -> None:
         self.k8s_schema_name: str = schema_name
         self.schema_spec = schema_spec
@@ -47,7 +56,7 @@ class KubernetesObjectSchema(KubernetesSchema):
         ].items():
             self.properties[property_name] = resolve(property_spec)
 
-    def match(self, schema: BaseSchema) -> bool:
+    def match(self, schema) -> bool:
         if (
             not isinstance(schema, ObjectSchema)
             or len(self.properties) != len(schema.properties)
@@ -75,15 +84,14 @@ class KubernetesObjectSchema(KubernetesSchema):
                 ] = property_schema.dump_schema()
         except RecursionError:
             print(f"Recursion error in {self.k8s_schema_name}")
-            exit(1)
+            sys.exit(1)
         return schema
 
 
 class KubernetesStringSchema(KubernetesSchema):
-    def __init__(self) -> None:
-        super().__init__()
+    """Class for Kubernetes string schema matching"""
 
-    def match(self, schema: BaseSchema) -> bool:
+    def match(self, schema) -> bool:
         if isinstance(schema, StringSchema):
             return True
         elif isinstance(schema, AnyOfSchema):
@@ -98,7 +106,9 @@ class KubernetesStringSchema(KubernetesSchema):
 
 
 class KubernetesBooleanSchema(KubernetesSchema):
-    def match(self, schema: BaseSchema) -> bool:
+    """Class for Kubernetes boolean schema matching"""
+
+    def match(self, schema) -> bool:
         return isinstance(schema, BooleanSchema)
 
     def dump_schema(self) -> dict:
@@ -106,7 +116,9 @@ class KubernetesBooleanSchema(KubernetesSchema):
 
 
 class KubernetesIntegerSchema(KubernetesSchema):
-    def match(self, schema: BaseSchema) -> bool:
+    """Class for Kubernetes integer schema matching"""
+
+    def match(self, schema) -> bool:
         return isinstance(schema, IntegerSchema)
 
     def dump_schema(self) -> dict:
@@ -114,7 +126,9 @@ class KubernetesIntegerSchema(KubernetesSchema):
 
 
 class KubernetesFloatSchema(KubernetesSchema):
-    def match(self, schema: BaseSchema) -> bool:
+    """Class for Kubernetes float schema matching"""
+
+    def match(self, schema) -> bool:
         return isinstance(schema, NumberSchema)
 
     def dump_schema(self) -> dict:
@@ -122,11 +136,13 @@ class KubernetesFloatSchema(KubernetesSchema):
 
 
 class KubernetesDictSchema(KubernetesSchema):
+    """Class for Kubernetes dict schema matching"""
+
     def __init__(self, value_cls: KubernetesSchema) -> None:
         super().__init__()
         self.value: KubernetesSchema = value_cls
 
-    def match(self, schema: BaseSchema) -> bool:
+    def match(self, schema) -> bool:
         # Dict schema requires additional_properties to be set
         # and the value of additional_properties to match the
         # additional_properties schema
@@ -148,11 +164,13 @@ class KubernetesDictSchema(KubernetesSchema):
 
 
 class KubernetesListSchema(KubernetesSchema):
+    """Class for Kubernetes list schema matching"""
+
     def __init__(self, item_cls: KubernetesSchema) -> None:
         super().__init__()
         self.item: KubernetesSchema = item_cls
 
-    def match(self, schema: BaseSchema) -> bool:
+    def match(self, schema) -> bool:
         # List schema requires items to be set
         # and the value of items to match the
         # items schema
@@ -171,7 +189,9 @@ class KubernetesListSchema(KubernetesSchema):
 
 
 class KubernetesDatetimeSchema(KubernetesSchema):
-    def match(self, schema: BaseSchema) -> bool:
+    """Class for Kubernetes datetime schema matching"""
+
+    def match(self, schema) -> bool:
         return isinstance(schema, StringSchema)
 
     def dump_schema(self) -> dict:
@@ -179,7 +199,9 @@ class KubernetesDatetimeSchema(KubernetesSchema):
 
 
 class KubernetesOpaqueSchema(KubernetesSchema):
-    def match(self, schema: BaseSchema) -> bool:
+    """Class for Kubernetes opaque schema matching"""
+
+    def match(self, schema) -> bool:
         return True
 
     def dump_schema(self) -> dict:
@@ -187,11 +209,14 @@ class KubernetesOpaqueSchema(KubernetesSchema):
 
 
 class ObjectMetaSchema(KubernetesObjectSchema):
-    def match(self, schema: BaseSchema) -> bool:
+    """Class for Kubernetes ObjectMeta schema matching"""
+
+    def match(self, schema) -> bool:
         if isinstance(schema, OpaqueSchema):
             return True
-        elif isinstance(schema, ObjectSchema):
+        if isinstance(schema, ObjectSchema):
             return super().match(schema)
+        return False
 
 
 KUBERNETES_SKIP_LIST = []
@@ -206,10 +231,12 @@ def fetch_k8s_schema_spec(version: str) -> dict:
     Returns:
         dict: the Kubernetes schema spec
     """
-    r = requests.get(
-        f"https://raw.githubusercontent.com/kubernetes/kubernetes/release-{version}/api/openapi-spec/swagger.json"
+    # pylint: disable=line-too-long
+    resp = requests.get(
+        f"https://raw.githubusercontent.com/kubernetes/kubernetes/release-{version}/api/openapi-spec/swagger.json",
+        timeout=5,
     )
-    return r.json()
+    return resp.json()
 
 
 class K8sSchemaMatcher:
@@ -274,8 +301,8 @@ class K8sSchemaMatcher:
                 type_str = schema_spec["$ref"].split("/")[-1]
                 try:
                     return k8s_models[type_str]
-                except KeyError:
-                    raise KeyError(f"Cannot resolve type {type_str}")
+                except KeyError as exc:
+                    raise KeyError(f"Cannot resolve type {type_str}") from exc
             elif schema_spec["type"] == "string":
                 return KubernetesStringSchema()
             elif schema_spec["type"] == "boolean":
@@ -349,17 +376,9 @@ class K8sSchemaMatcher:
                 continue
             seq_matcher.set_seq2(matched_schema.k8s_schema_name.split(".")[-1])
             ratio = seq_matcher.ratio()
-            if len(matched_schemas) > 1:
-                print(ratio, matched_schema.k8s_schema_name.split(".")[-1])
             if ratio > max_ratio:
                 max_ratio = ratio
                 max_ratio_schema_idx = i
-        if len(matched_schemas) > 1:
-            print(
-                schema.path,
-                "choose",
-                matched_schemas[max_ratio_schema_idx][1].k8s_schema_name,
-            )
         return max_ratio_schema_idx
 
     def find_matched_schemas(self, schema: BaseSchema) -> BaseSchema:
@@ -390,13 +409,17 @@ class K8sSchemaMatcher:
 
 
 if __name__ == "__main__":
-    import os
+    # import os
 
     import pandas as pd
     import yaml
 
-    # with open("kafka-crd.yml", "r") as f:
-    with open("./test/integration_tests/test_data/rabbitmq_crd.yaml", "r") as f:
+    with open(
+        # "./test/integration_tests/test_data/kafka_crd.yaml",
+        "./test/integration_tests/test_data/rabbitmq_crd.yaml",
+        "r",
+        encoding="utf-8",
+    ) as f:
         crd = yaml.load(f, Loader=yaml.FullLoader)
 
     spec_schema = ObjectSchema(
@@ -407,6 +430,7 @@ if __name__ == "__main__":
     matched = schema_matcher.find_matched_schemas(spec_schema)
 
     for schema, k8s_schema in matched:
+        # pylint: disable-next=invalid-name
         path_ending = "/".join(schema.path[-2:])
         schema_name = k8s_schema.k8s_schema_name.split(".")[-1]
         print(f"Matched: '.../{path_ending}' -> {schema_name}")
