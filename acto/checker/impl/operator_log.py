@@ -1,28 +1,23 @@
 """Checks the operator log for error/invalid messages."""
-from acto.acto_config import ACTO_CONFIG
-from acto.checker.checker import Checker
-from acto.common import (
-    ErrorResult,
-    InvalidInputResult,
-    Oracle,
-    OracleResult,
-    PassResult,
-    invalid_input_message,
-)
+from typing import Optional
+
+from acto.checker.checker import CheckerInterface
+from acto.common import invalid_input_message
 from acto.lib.dict import visit_dict
 from acto.parse_log import parse_log
+from acto.result import InvalidInputResult
 from acto.snapshot import Snapshot
 
 
-class OperatorLogChecker(Checker):
+class OperatorLogChecker(CheckerInterface):
     """Checks the operator log for error messages."""
 
     name = "log"
 
     def check(
         self, _: int, snapshot: Snapshot, prev_snapshot: Snapshot
-    ) -> OracleResult:
-        input_delta, _ = snapshot.delta(prev_snapshot)
+    ) -> Optional[InvalidInputResult]:
+        input_delta, __ = snapshot.delta(prev_snapshot)
 
         for line in snapshot.operator_log:
             parsed_log = parse_log(line)
@@ -38,10 +33,12 @@ class OperatorLogChecker(Checker):
                     value, input_delta
                 )
                 if is_invalid:
-                    return InvalidInputResult(invalid_field_path)
+                    return InvalidInputResult(
+                        responsible_property=invalid_field_path
+                    )
             # We reported error if we found error in the operator log
             # But it turned out the result was too fragile
-            # So we disable it by default
-            if ACTO_CONFIG.alarms.warning_in_operator_logs:
-                return ErrorResult(Oracle.ERROR_LOG, line)
-        return PassResult()
+            # # So we disable it by default
+            # if ACTO_CONFIG.alarms.warning_in_operator_logs:
+            #     return ErrorResult(Oracle.ERROR_LOG, line)
+        return None

@@ -9,7 +9,7 @@ import tempfile
 import threading
 import time
 from copy import deepcopy
-from types import FunctionType
+from typing import Callable, Optional
 
 import deepdiff
 import jsonpatch
@@ -17,29 +17,30 @@ import yaml
 
 from acto.acto_config import ACTO_CONFIG
 from acto.checker.checker_set import CheckerSet
-from acto.common import (
-    ErrorResult,
-    OracleResult,
-    PassResult,
-    RecoveryResult,
-    RunResult,
-    kubernetes_client,
-    print_event,
-)
+from acto.common import kubernetes_client, print_event
 from acto.constant import CONST
 from acto.deploy import Deploy
 from acto.input import InputModel
-from acto.input.input import OverSpecifiedField
+from acto.input.input import DeterministicInputModel, OverSpecifiedField
 from acto.input.known_schemas.base import K8sField
 from acto.input.known_schemas.known_schema import find_all_matched_schemas_type
 from acto.input.testcase import TestCase
-from acto.input.testplan import TreeNode
+from acto.input.testplan import TestGroup
 from acto.input.value_with_schema import ValueWithSchema, attach_schema_to_value
 from acto.input.valuegenerator import ArrayGenerator
 from acto.kubectl_client import KubectlClient
-from acto.kubernetes_engine import base, k3d, kind
+from acto.kubernetes_engine import base, kind
 from acto.lib.operator_config import OperatorConfig
 from acto.oracle_handle import OracleHandle
+from acto.result import (
+    CliStatus,
+    DifferentialOracleResult,
+    OracleResults,
+    RunResult,
+    StepID,
+    TrialResult,
+    check_kubectl_cli,
+)
 from acto.runner import Runner
 from acto.serialization import ActoEncoder, ContextEncoder
 from acto.snapshot import Snapshot
@@ -53,34 +54,6 @@ from acto.utils.thread_logger import get_thread_logger, set_thread_logger_prefix
 from ssa.analysis import analyze
 
 RECOVERY_SNAPSHOT = -2  # the immediate snapshot before the error
-
-
-def save_result(
-    trial_dir: str,
-    trial_result: RunResult,
-    num_tests: int,
-    trial_elapsed,
-    time_breakdown,
-):
-    """Save the result of a trial to a json file"""
-    logger = get_thread_logger(with_prefix=False)
-
-    result_dict = {}
-    try:
-        trial_num = "-".join(trial_dir.split("-")[-2:])
-        result_dict["trial_num"] = trial_num
-    except IndexError as _:
-        result_dict["trial_num"] = trial_dir
-    result_dict["duration"] = trial_elapsed
-    result_dict["time_breakdown"] = time_breakdown
-    result_dict["num_tests"] = num_tests
-    if trial_result is None:
-        logger.info("Trial %s completed without error", trial_dir)
-    else:
-        result_dict["error"] = trial_result.to_dict()
-    result_path = os.path.join(trial_dir, "result.json")
-    with open(result_path, "w", encoding="utf-8") as result_file:
-        json.dump(result_dict, result_file, cls=ActoEncoder, indent=6)
 
 
 def apply_testcase(
@@ -116,8 +89,8 @@ def apply_testcase(
 def check_state_equality(
     snapshot: Snapshot,
     prev_snapshot: Snapshot,
-    additional_exclude_paths: list[str] = None,
-) -> OracleResult:
+    additional_exclude_paths: Optional[list[str]] = None,
+) -> Optional[deepdiff.DeepDiff]:
     """Check whether two system state are semantically equivalent
 
     Args:
@@ -137,7 +110,7 @@ def check_state_equality(
     prev_system_state = deepcopy(prev_snapshot.system_state)
 
     if len(curr_system_state) == 0 or len(prev_system_state) == 0:
-        return PassResult()
+        return None
 
     del curr_system_state["endpoints"]
     del prev_system_state["endpoints"]
@@ -158,7 +131,7 @@ def check_state_equality(
         if v["metadata"]["owner_references"][0]["kind"] != "Job"
     }
 
-    for _, obj in prev_system_state["secret"].items():
+    for obj in prev_system_state["secret"].values():
         if "data" in obj and obj["data"] is not None:
             for key, data in obj["data"].items():
                 try:
@@ -166,7 +139,7 @@ def check_state_equality(
                 except json.JSONDecodeError as _:
                     pass
 
-    for _, obj in curr_system_state["secret"].items():
+    for obj in curr_system_state["secret"].values():
         if "data" in obj and obj["data"] is not None:
             for key, data in obj["data"].items():
                 try:
@@ -237,11 +210,9 @@ def check_state_equality(
             "failed attempt recovering to seed state - system state diff: %s",
             diff,
         )
-        return RecoveryResult(
-            delta=diff, from_=prev_system_state, to_=curr_system_state
-        )
+        return diff
 
-    return PassResult()
+    return None
 
 
 class TrialRunner:
@@ -257,17 +228,17 @@ class TrialRunner:
         runner_t: type,
         checker_t: type,
         wait_time: int,
-        custom_on_init: list[callable],
-        custom_oracle: list[callable],
+        custom_on_init: list[Callable],
+        custom_oracle: list[Callable],
         workdir: str,
         cluster: base.KubernetesEngine,
         worker_id: int,
         sequence_base: int,
         dryrun: bool,
         is_reproduce: bool,
-        apply_testcase_f: FunctionType,
+        apply_testcase_f: Callable,
         acto_namespace: int,
-        additional_exclude_paths: list[str] = None,
+        additional_exclude_paths: Optional[list[str]] = None,
     ) -> None:
         self.context = context
         self.workdir = workdir
@@ -299,13 +270,19 @@ class TrialRunner:
         self.dryrun = dryrun
         self.is_reproduce = is_reproduce
 
-        self.snapshots = []
-        self.discarded_testcases = {}  # List of test cases failed to run
+        self.snapshots: list[Snapshot] = []
+        self.discarded_testcases: dict[
+            str, list[TestCase]
+        ] = {}  # List of test cases failed to run
         self.apply_testcase_f = apply_testcase_f
 
         self.curr_trial = 0
 
-    def run(self, errors: list[RunResult], mode: str = InputModel.NORMAL):
+    def run(
+        self,
+        errors: list[Optional[OracleResults]],
+        mode: str = InputModel.NORMAL,
+    ):
         """Start running the test cases"""
         logger = get_thread_logger(with_prefix=True)
 
@@ -344,9 +321,11 @@ class TrialRunner:
             )
             os.makedirs(trial_dir, exist_ok=True)
 
-            trial_err, num_tests = self.run_trial(
+            trial_result = self.run_trial(
                 trial_dir=trial_dir, curr_trial=self.curr_trial
             )
+            if trial_result is not None:
+                errors.append(trial_result.error)
             self.snapshots = []
 
             trial_finished_time = time.time()
@@ -372,23 +351,10 @@ class TrialRunner:
             logger.info("---------------------------------------\n")
 
             delete_operator_pod(apiclient, self.context["namespace"])
-            save_result(
-                trial_dir,
-                trial_err,
-                num_tests,
-                trial_elapsed,
-                {
-                    "k8s_bootstrap": trial_k8s_bootstrap_time
-                    - trial_start_time,
-                    "operator_deploy": operator_deploy_time
-                    - trial_k8s_bootstrap_time,
-                    "trial_run": trial_finished_time - operator_deploy_time,
-                },
-            )
+            trial_result.dump(os.path.join(trial_dir, "result.json"))
             self.curr_trial = self.curr_trial + 1
-            errors.append(trial_err)
 
-            if self.input_model.is_empty():
+            if trial_result is None or self.input_model.is_empty():
                 logger.info("Test finished")
                 break
 
@@ -399,7 +365,7 @@ class TrialRunner:
 
     def run_trial(
         self, trial_dir: str, curr_trial: int, num_mutation: int = 10
-    ) -> tuple[ErrorResult, int]:
+    ) -> TrialResult:
         """Run a trial starting with the initial input, mutate with the candidate_dict,
         and mutate for num_mutation times
 
@@ -409,6 +375,7 @@ class TrialRunner:
             trial_num: how many trials have been run
             num_mutation: how many mutations to run at each trial
         """
+        trial_start_time = time.time()
         oracle_handle = OracleHandle(
             KubectlClient(self.kubeconfig, self.context_name),
             kubernetes_client(self.kubeconfig, self.context_name),
@@ -437,7 +404,7 @@ class TrialRunner:
         )
 
         curr_input = self.input_model.get_seed_input()
-        self.snapshots.append(Snapshot(curr_input))
+        self.snapshots.append(Snapshot(input_cr=curr_input))
 
         generation = 0
         while (
@@ -448,19 +415,24 @@ class TrialRunner:
             logger = get_thread_logger(with_prefix=True)
 
             curr_input_with_schema = attach_schema_to_value(
-                self.snapshots[-1].input, self.input_model.root_schema
+                self.snapshots[-1].input_cr, self.input_model.get_root_schema()
             )
 
             ready_testcases = []
             if generation > 0:
                 if self.input_model.is_empty():
+                    logger.info("Input model is empty")
                     break
                 test_groups = self.input_model.next_test()
 
                 # if test_group is None, it means this group is exhausted
                 # break and move to the next trial
                 if test_groups is None:
-                    break
+                    return TrialResult(
+                        trial_id=curr_trial,
+                        duration=time.time() - trial_start_time,
+                        error=None,
+                    )
 
                 # First make sure all the next tests are valid
                 for (
@@ -515,21 +487,29 @@ class TrialRunner:
                         )
                         generation += 1
 
-                        if run_result.is_connection_refused():
+                        if (
+                            run_result.cli_status
+                            == CliStatus.CONNECTION_REFUSED
+                        ):
                             logger.error("Connection refused, exiting")
-                            return run_result, generation
-
-                        is_invalid, _ = run_result.is_invalid()
-                        if run_result.is_basic_error():
+                            return TrialResult(
+                                trial_id=curr_trial,
+                                duration=time.time() - trial_start_time,
+                                error=None,
+                            )
+                        if run_result.oracle_result.is_error():
                             group.discard_testcase(self.discarded_testcases)
                             # before return, run the recovery test case
-                            run_result.recovery_result = self.run_recovery(
+                            run_result.oracle_result.differential = self.run_recovery(  # pylint: disable=assigning-non-slot
                                 runner
                             )
                             generation += 1
-
-                            return run_result, generation
-                        elif is_invalid:
+                            return TrialResult(
+                                trial_id=curr_trial,
+                                duration=time.time() - trial_start_time,
+                                error=run_result.oracle_result,
+                            )
+                        if run_result.is_invalid_input():
                             logger.info("Setup produced invalid input")
                             self.snapshots.pop()
                             group.discard_testcase(self.discarded_testcases)
@@ -537,18 +517,9 @@ class TrialRunner:
                                 runner, checker, generation
                             )
                             generation += 1
-                        elif run_result.is_unchanged():
+                        elif run_result.cli_status == CliStatus.UNCHANGED:
                             logger.info("Setup produced unchanged input")
                             group.discard_testcase(self.discarded_testcases)
-                        elif run_result.is_error():
-                            group.discard_testcase(self.discarded_testcases)
-                            # before return, run the recovery test case
-                            run_result.recovery_result = self.run_recovery(
-                                runner
-                            )
-                            generation += 1
-
-                            return run_result, generation
                         else:
                             ready_testcases.append((group, testcase_with_path))
 
@@ -557,36 +528,41 @@ class TrialRunner:
                     continue
                 logger.info("Running bundled testcases")
 
-            t = self.run_testcases(
+            run_result, generation = self.run_testcases(
                 curr_input_with_schema,
                 ready_testcases,
                 runner,
                 checker,
                 generation,
             )
-            run_result, generation = t
-            is_invalid, _ = run_result.is_invalid()
-            if (
-                not is_invalid and run_result.is_error()
-            ) or run_result.is_basic_error():
+            if run_result.oracle_result.is_error():
                 # before return, run the recovery test case
-
                 logger.info("Error result, running recovery")
-                run_result.recovery_result = self.run_recovery(runner)
+                run_result.oracle_result.differential = self.run_recovery(
+                    runner
+                )
                 generation += 1
 
-                return run_result, generation
+                return TrialResult(
+                    trial_id=curr_trial,
+                    duration=time.time() - trial_start_time,
+                    error=run_result.oracle_result,
+                )
 
             if self.input_model.is_empty():
                 logger.info("Input model is empty, break")
                 break
 
-        return None, generation
+        return TrialResult(
+            trial_id=curr_trial,
+            duration=time.time() - trial_start_time,
+            error=None,
+        )
 
     def run_testcases(
         self,
         curr_input_with_schema,
-        testcases: list[tuple[TreeNode, TestCase]],
+        testcases: list[tuple[TestGroup, tuple[str, TestCase]]],
         runner,
         checker,
         generation,
@@ -595,7 +571,7 @@ class TrialRunner:
         logger = get_thread_logger(with_prefix=True)
 
         testcase_patches = []
-        testcase_signature = None
+        testcase_signature = {}
         for group, testcase_with_path in testcases:
             field_path_str, testcase = testcase_with_path
             field_path = json.loads(field_path_str)
@@ -619,103 +595,22 @@ class TrialRunner:
             testcase_signature=testcase_signature,
         )
         generation += 1
-        if run_result.is_connection_refused():
+        if run_result.cli_status == CliStatus.CONNECTION_REFUSED:
             logger.error("Connection refused, exiting")
             return run_result, generation
 
-        is_invalid, invalid_result = run_result.is_invalid()
-        if is_invalid:
-            # If the result indicates our input is invalid, we need to first run revert to
-            # go back to previous system state, then construct a new input without the
-            # responsible testcase and re-apply
-
-            # 1. revert
+        if run_result.is_invalid_input():
+            # If the result indicates our input is invalid, we need to first run
+            # revert to go back to previous system state
             logger.debug("Invalid input, revert")
             self.snapshots.pop()
             curr_input_with_schema = self.revert(runner, checker, generation)
             generation += 1
 
-            # 2. Construct a new input and re-apply
-            if len(testcase_patches) == 1:
-                # if only one testcase, then no need to isolate
-                testcase_patches[0][0].finish_testcase()  # finish testcase
-                logger.debug("Only one patch, no need to isolate")
-                return run_result, generation
-            else:
-                responsible_field = invalid_result.responsible_field
-                if responsible_field is None:
-                    # Unable to pinpoint the exact responsible testcase, try one by one
-                    logger.debug(
-                        "Unable to pinpoint the exact responsible field, try one by one"
-                    )
-                    for group, testcase_with_path, patch in testcase_patches:
-                        iso_result, generation = self.run_testcases(
-                            curr_input_with_schema,
-                            [(group, testcase_with_path)],
-                            runner,
-                            checker,
-                            generation,
-                        )
-                        if (
-                            not iso_result.is_invalid()[0]
-                            and iso_result.is_error()
-                        ) or iso_result.is_basic_error():
-                            return iso_result, generation
-                    return run_result, generation
-                else:
-                    jsonpatch_path = "".join(
-                        "/" + str(item) for item in responsible_field
-                    )
-                    logger.debug("Responsible patch path: %s", jsonpatch_path)
-                    # isolate the responsible invalid testcase and re-apply
-                    ready_testcases = []
-                    for group, testcase_with_path, patch in testcase_patches:
-                        responsible = False
-                        for op in patch:
-                            if op["path"] == jsonpatch_path:
-                                logger.info(
-                                    "Determine the responsible field to be %s",
-                                    jsonpatch_path,
-                                )
-                                responsible = True
-                                group.finish_testcase()  # finish testcase
-                                break
-                        if not responsible:
-                            ready_testcases.append((group, testcase_with_path))
-                    if len(ready_testcases) == 0:
-                        return run_result, generation
-
-                    if len(ready_testcases) == len(testcase_patches):
-                        logger.error(
-                            "Fail to determine the responsible patch, try one by one"
-                        )
-                        for (
-                            group,
-                            testcase_with_path,
-                            patch,
-                        ) in testcase_patches:
-                            iso_result, generation = self.run_testcases(
-                                curr_input_with_schema,
-                                [(group, testcase_with_path)],
-                                runner,
-                                checker,
-                                generation,
-                            )
-                            if (
-                                not iso_result.is_invalid()[0]
-                                and iso_result.is_error()
-                            ) or iso_result.is_basic_error():
-                                return iso_result, generation
-                        return run_result, generation
-                    else:
-                        logger.debug("Rerunning the remaining ready testcases")
-                        return self.run_testcases(
-                            curr_input_with_schema,
-                            ready_testcases,
-                            runner,
-                            checker,
-                            generation,
-                        )
+            for patch in testcase_patches:
+                patch[0].finish_testcase()  # finish testcase
+            logger.debug("Only one patch, no need to isolate")
+            return run_result, generation
         else:
             if not self.is_reproduce:
                 for patch in testcase_patches:
@@ -729,7 +624,7 @@ class TrialRunner:
         input_cr: dict,
         snapshots: list,
         generation: int,
-        testcase_signature: dict,
+        testcase_signature: dict[str, str],
         revert: bool = False,
     ) -> RunResult:
         """Run the test case and use oracles to check the result"""
@@ -739,16 +634,8 @@ class TrialRunner:
         retry = 0
         while True:
             snapshot, _ = runner.run(input_cr, generation)
-            run_result = checker.check(
-                snapshot,
-                snapshots[-1],
-                revert,
-                generation,
-                testcase_signature=testcase_signature,
-            )
-            snapshots.append(snapshot)
-
-            if run_result.is_connection_refused():
+            cli_result = check_kubectl_cli(snapshot)
+            if cli_result == CliStatus.CONNECTION_REFUSED:
                 # Connection refused due to webhook not ready, let's wait for a bit
                 logger.info(
                     "Connection failed. Retry the test after 60 seconds"
@@ -761,15 +648,31 @@ class TrialRunner:
                     break
             else:
                 break
+        oracle_result = checker.check(
+            snapshot,
+            snapshots[-1],
+            generation,
+        )
+        snapshots.append(snapshot)
 
+        run_result = RunResult(
+            testcase=testcase_signature,
+            generation=generation,
+            oracle_result=oracle_result,
+            cli_status=cli_result,
+            is_revert=revert,
+        )
+        run_result.dump(trial_dir=runner.trial_dir)
         return run_result
 
-    def run_recovery(self, runner: Runner) -> OracleResult:
+    def run_recovery(
+        self, runner: Runner
+    ) -> Optional[DifferentialOracleResult]:
         """Runs the recovery test case after an error is reported"""
         logger = get_thread_logger(with_prefix=True)
 
         logger.debug("Running recovery")
-        recovery_input = self.snapshots[RECOVERY_SNAPSHOT].input
+        recovery_input = self.snapshots[RECOVERY_SNAPSHOT].input_cr
         snapshot, _ = runner.run(recovery_input, generation=-1)
         result = check_state_equality(
             snapshot,
@@ -777,12 +680,29 @@ class TrialRunner:
             self.additional_exclude_paths,
         )
 
-        return result
+        if result:
+            trial_dir = f"trial-{self.worker_id + self.sequence_base:02d}-{self.curr_trial:04d}"
+            return DifferentialOracleResult(
+                message="Recovery test case",
+                diff=result,
+                from_step=StepID(
+                    trial=trial_dir,
+                    generation=-2,
+                ),
+                from_state=self.snapshots[RECOVERY_SNAPSHOT].system_state,
+                to_step=StepID(
+                    trial=trial_dir,
+                    generation=-1,
+                ),
+                to_state=snapshot.system_state,
+            )
+        else:
+            return None
 
     def revert(self, runner, checker, generation) -> ValueWithSchema:
         """Revert to the previous system state"""
         curr_input_with_schema = attach_schema_to_value(
-            self.snapshots[-1].input, self.input_model.root_schema
+            self.snapshots[-1].input_cr, self.input_model.get_root_schema()
         )
 
         testcase_sig = {"field": "", "testcase": "revert"}
@@ -807,20 +727,19 @@ class Acto:
         workdir_path: str,
         operator_config: OperatorConfig,
         cluster_runtime: str,
-        preload_images_: list,
+        preload_images_: Optional[list],
         context_file: str,
-        helper_crd: str,
+        helper_crd: Optional[str],
         num_workers: int,
         num_cases: int,
         dryrun: bool,
         analysis_only: bool,
         is_reproduce: bool,
-        input_model: type,
-        apply_testcase_f: FunctionType,
-        reproduce_dir: str = None,
-        delta_from: str = None,
-        mount: list = None,
-        focus_fields: list = None,
+        input_model: type[DeterministicInputModel],
+        apply_testcase_f: Callable,
+        delta_from: Optional[str] = None,
+        mount: Optional[list] = None,
+        focus_fields: Optional[list] = None,
         acto_namespace: int = 0,
     ) -> None:
         logger = get_thread_logger(with_prefix=False)
@@ -841,8 +760,6 @@ class Acto:
                 acto_namespace=acto_namespace,
                 feature_gates=operator_config.kubernetes_engine.feature_gates,
             )
-        elif cluster_runtime == "K3D":
-            cluster = k3d.K3D()
         else:
             logger.warning(
                 "Cluster Runtime %s is not supported, defaulted to use kind",
@@ -863,12 +780,10 @@ class Acto:
         self.dryrun = dryrun
         self.is_reproduce = is_reproduce
         self.apply_testcase_f = apply_testcase_f
-        self.reproduce_dir = reproduce_dir
         self.acto_namespace = acto_namespace
 
         self.runner_type = Runner
         self.checker_type = CheckerSet
-        self.snapshots = []
 
         # generate configuration files for the cluster runtime
         self.cluster.configure_cluster(
@@ -890,16 +805,15 @@ class Acto:
             used_fields = self.context["analysis_result"]["used_fields"]
         else:
             used_fields = None
-        self.input_model: InputModel = input_model(
-            self.context["crd"]["body"],
-            used_fields,
-            operator_config.example_dir,
-            num_workers,
-            num_cases,
-            self.reproduce_dir,
-            mount,
+        self.input_model: DeterministicInputModel = input_model(
+            crd=self.context["crd"]["body"],
+            seed_input=self.seed,
+            used_fields=used_fields,
+            example_dir=operator_config.example_dir,
+            num_workers=num_workers,
+            num_cases=num_cases,
+            mount=mount,
         )
-        self.input_model.initialize(self.seed)
 
         applied_custom_k8s_fields = False
 
@@ -1140,7 +1054,7 @@ class Acto:
 
     def run(
         self, modes: list = ["normal", "overspecified", "copiedover"]
-    ) -> list[RunResult]:
+    ) -> list[OracleResults]:
         """Run the test cases"""
         logger = get_thread_logger(with_prefix=True)
 
@@ -1164,7 +1078,7 @@ class Acto:
 
         start_time = time.time()
 
-        errors: list[RunResult] = []
+        errors: list[OracleResults] = []
         runners: list[TrialRunner] = []
         for i in range(self.num_workers):
             runner = TrialRunner(
@@ -1191,7 +1105,9 @@ class Acto:
         if "normal" in modes:
             threads = []
             for runner in runners:
-                t = threading.Thread(target=runner.run, args=[errors])
+                t = threading.Thread(
+                    target=runner.run, args=[errors, InputModel.NORMAL]
+                )
                 t.start()
                 threads.append(t)
 

@@ -46,14 +46,13 @@ class TestCRDBOpBugs(unittest.TestCase):
         ) as cr_file:
             self.seed = yaml.load(cr_file, Loader=yaml.FullLoader)
         self.input_model: InputModel = DeterministicInputModel(
-            self.context["crd"]["body"],
-            self.context["analysis_result"]["used_fields"],
-            self.config.example_dir,
-            1,
-            1,
-            None,
+            crd=self.context["crd"]["body"],
+            seed_input=self.seed,
+            used_fields=self.context["analysis_result"]["used_fields"],
+            example_dir=self.config.example_dir,
+            num_workers=1,
+            num_cases=1,
         )
-        self.input_model.initialize(self.seed)
 
     def test_crdbop_920(self):
         """Test cockroach-operator cockroach-operator-920."""
@@ -65,7 +64,7 @@ class TestCRDBOpBugs(unittest.TestCase):
         snapshot_0 = construct_snapshot(trial_dir, 1)
         snapshot_1 = construct_snapshot(trial_dir, 2)
 
-        run_result = checker.check(snapshot_1, snapshot_0, False, 2, {})
+        run_result = checker.check(snapshot_1, snapshot_0, 2)
         self.assertTrue(run_result.is_error())
 
 
