@@ -12,6 +12,9 @@ class ApplyStep(BaseModel, extra="forbid"):
     operator: bool = Field(
         description="If the file contains the operator deployment",
         default=False)
+    operator_container_name: Optional[str] = Field(
+        description="The container name of the operator in the operator pod",
+        default=None)
     namespace: Optional[str] = Field(
         description="Namespace for applying the file. If not specified, " +
         "use the namespace in the file or Acto namespace. " +

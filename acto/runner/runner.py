@@ -34,6 +34,7 @@ class Runner:
         trial_dir: str,
         kubeconfig: str,
         context_name: str,
+        operator_container_name: str,
         custom_system_state_f: Optional[Callable[..., dict]] = None,
         wait_time: int = 45,
     ):
@@ -42,6 +43,7 @@ class Runner:
         self.trial_dir = trial_dir
         self.kubeconfig = kubeconfig
         self.context_name = context_name
+        self.operator_container_name = operator_container_name
         self.wait_time = wait_time
         self.log_length = 0
 
@@ -311,10 +313,17 @@ class Runner:
             )
         else:
             logger.error("Failed to find operator pod")
-
-        log = self.core_v1_api.read_namespaced_pod_log(
-            name=operator_pod_list[0].metadata.name, namespace=self.namespace
-        )
+        if self.operator_container_name == None:
+            log = self.core_v1_api.read_namespaced_pod_log(
+            name=operator_pod_list[0].metadata.name, 
+            namespace=self.namespace,
+            container=self.operator_container_name
+            )
+        else: 
+            log = self.core_v1_api.read_namespaced_pod_log(
+                name=operator_pod_list[0].metadata.name, 
+                namespace=self.namespace,
+            )
 
         # only get the new log since previous result
         new_log = log.split("\n")
