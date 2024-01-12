@@ -53,6 +53,13 @@ class Deploy():
                 break
         else:
             raise Exception("No operator yaml found in deploy config")
+        
+        # Extract the operator_container_name from config
+        self._operator_container_name = None
+        for step in self._deploy_config.steps:
+            if step.apply and step.apply.operator:
+                self._operator_container_name = step.apply.operator_container_name
+                break
 
     @property
     def operator_yaml(self) -> str:
@@ -136,3 +143,7 @@ class Deploy():
                 if yaml_["kind"] == "Deployment":
                     return yaml_["metadata"]["name"]
         return None
+
+    @property
+    def operator_container_name(self) -> str:
+        return self._operator_container_name

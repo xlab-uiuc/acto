@@ -34,9 +34,9 @@ class Runner:
         trial_dir: str,
         kubeconfig: str,
         context_name: str,
-        operator_container_name: str,
         custom_system_state_f: Optional[Callable[..., dict]] = None,
         wait_time: int = 45,
+        operator_container_name: str = None
     ):
         self.namespace = context["namespace"]
         self.crd_metainfo: dict = context["crd"]
@@ -313,7 +313,7 @@ class Runner:
             )
         else:
             logger.error("Failed to find operator pod")
-        if self.operator_container_name == None:
+        if self.operator_container_name != None:
             log = self.core_v1_api.read_namespaced_pod_log(
             name=operator_pod_list[0].metadata.name, 
             namespace=self.namespace,

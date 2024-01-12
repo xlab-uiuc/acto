@@ -267,7 +267,6 @@ class TrialRunner:
         is_reproduce: bool,
         apply_testcase_f: FunctionType,
         acto_namespace: int,
-        operator_container_name: str,
         additional_exclude_paths: list[str] = None,
     ) -> None:
         self.context = context
@@ -294,7 +293,6 @@ class TrialRunner:
             if additional_exclude_paths is not None
             else []
         )
-        self.operator_container_name = operator_container_name
 
         self.custom_on_init = custom_on_init
         self.custom_oracle = custom_oracle
@@ -427,8 +425,8 @@ class TrialRunner:
             trial_dir,
             self.kubeconfig,
             self.context_name,
-            self.operator_container_name,
             wait_time=self.wait_time,
+            operator_container_name=self.deploy.operator_container_name
         )
         checker: CheckerSet = self.checker_t(
             self.context,
@@ -872,12 +870,6 @@ class Acto:
         self.checker_type = CheckerSet
         self.snapshots = []
 
-        # Extract the operator_container_name from config
-        for deploy_step in self.operator_config.deploy.steps:
-            if deploy_step.apply != None and deploy_step.apply.operator:
-                self.operator_container_name = deploy_step.apply.operator_container_name
-                break
-
         # generate configuration files for the cluster runtime
         self.cluster.configure_cluster(
             operator_config.num_nodes, self.operator_config.kubernetes_version
@@ -1079,7 +1071,7 @@ class Acto:
                     break
             apiclient = kubernetes_client(learn_kubeconfig, learn_context_name)
             runner = Runner(
-                self.context, "learn", learn_kubeconfig, learn_context_name
+                self.context, "learn", learn_kubeconfig, learn_context_name, self.deploy.operator_container_name
             )
             runner.run_without_collect(
                 self.operator_config.seed_custom_resource
@@ -1192,7 +1184,6 @@ class Acto:
                 self.is_reproduce,
                 self.apply_testcase_f,
                 self.acto_namespace,
-                self.operator_container_name,
                 self.operator_config.diff_ignore_fields
             )
             runners.append(runner)
