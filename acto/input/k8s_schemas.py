@@ -459,5 +459,5 @@ if __name__ == "__main__":
     # print("Dumping k8s schemas to './schemas' ...")
     # os.makedirs("schemas", exist_ok=True)
     # for schema_name, schema in schema_matcher.dump_k8s_schemas().items():
-    #     with open(f"schemas/{schema_name}.json", "w") as f:
+    #     with open(f"schemas/{schema_name}.yaml", "w") as f:
     #         yaml.dump(schema, f, indent=2)
