@@ -151,7 +151,7 @@ class CrashTrialRunner(DeployRunner):
 
             runner = Runner(
                 self._context, trial_dir, self._kubeconfig, self._context_name,
-                custom_system_state_f=get_crash_config_map)
+                custom_system_state_f=get_crash_config_map, operator_container_name=self._deploy.operator_container_name)
 
             steps: Dict[str, Step]
             for key in sorted(steps, key=lambda x: int(x)):

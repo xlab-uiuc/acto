@@ -325,7 +325,7 @@ class AdditionalRunner:
         add_acto_label(apiclient, self._context['namespace'])
         trial_dir = os.path.join(self._workdir, 'trial-%02d' % self._worker_id)
         os.makedirs(trial_dir, exist_ok=True)
-        runner = Runner(self._context, trial_dir, self._kubeconfig, self._context_name)
+        runner = Runner(self._context, trial_dir, self._kubeconfig, self._context_name, operator_container_name=self._deploy.operator_container_name)
         snapshot, err = runner.run(cr, generation=self._generation)
         difftest_result = {
             'input_digest': hashlib.md5(json.dumps(cr, sort_keys=True).encode("utf-8")).hexdigest(),
@@ -378,7 +378,7 @@ class DeployRunner:
 
         trial_dir = os.path.join(self._workdir, 'trial-%02d' % self._worker_id)
         os.makedirs(trial_dir, exist_ok=True)
-        runner = Runner(self._context, trial_dir, self._kubeconfig, self._context_name)
+        runner = Runner(self._context, trial_dir, self._kubeconfig, self._context_name, operator_container_name=self._deploy.operator_container_name)
         while True:
             after_k8s_bootstrap_time = time.time()
             try:
@@ -418,7 +418,7 @@ class DeployRunner:
                                                           kubectl_client=kubectl_client,
                                                           namespace=self._context['namespace'])
                 after_operator_deploy_time = time.time()
-                runner = Runner(self._context, trial_dir, self._kubeconfig, self._context_name)
+                runner = Runner(self._context, trial_dir, self._kubeconfig, self._context_name, operator_container_name=self._deploy.operator_container_name)
 
             generation += 1
 

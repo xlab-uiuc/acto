@@ -426,6 +426,7 @@ class TrialRunner:
             self.kubeconfig,
             self.context_name,
             wait_time=self.wait_time,
+            operator_container_name=self.deploy.operator_container_name
         )
         checker: CheckerSet = self.checker_t(
             self.context,
@@ -1070,7 +1071,7 @@ class Acto:
                     break
             apiclient = kubernetes_client(learn_kubeconfig, learn_context_name)
             runner = Runner(
-                self.context, "learn", learn_kubeconfig, learn_context_name
+                self.context, "learn", learn_kubeconfig, learn_context_name, self.deploy.operator_container_name
             )
             runner.run_without_collect(
                 self.operator_config.seed_custom_resource
@@ -1183,7 +1184,7 @@ class Acto:
                 self.is_reproduce,
                 self.apply_testcase_f,
                 self.acto_namespace,
-                self.operator_config.diff_ignore_fields,
+                self.operator_config.diff_ignore_fields
             )
             runners.append(runner)
 

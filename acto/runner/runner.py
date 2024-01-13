@@ -36,12 +36,14 @@ class Runner:
         context_name: str,
         custom_system_state_f: Optional[Callable[..., dict]] = None,
         wait_time: int = 45,
+        operator_container_name: str = None
     ):
         self.namespace = context["namespace"]
         self.crd_metainfo: dict = context["crd"]
         self.trial_dir = trial_dir
         self.kubeconfig = kubeconfig
         self.context_name = context_name
+        self.operator_container_name = operator_container_name
         self.wait_time = wait_time
         self.log_length = 0
 
@@ -311,10 +313,20 @@ class Runner:
             )
         else:
             logger.error("Failed to find operator pod")
-
-        log = self.core_v1_api.read_namespaced_pod_log(
-            name=operator_pod_list[0].metadata.name, namespace=self.namespace
-        )
+        
+        if self.operator_container_name != None:
+            log = self.core_v1_api.read_namespaced_pod_log(
+                name=operator_pod_list[0].metadata.name, 
+                namespace=self.namespace,
+                container=self.operator_container_name
+            )
+        else: 
+            if len(operator_pod_list[0].spec.containers) > 1:
+                logger.error("Multiple containers detected, please specify the target operator container")
+            log = self.core_v1_api.read_namespaced_pod_log(
+                name=operator_pod_list[0].metadata.name, 
+                namespace=self.namespace,
+            )
 
         # only get the new log since previous result
         new_log = log.split("\n")
