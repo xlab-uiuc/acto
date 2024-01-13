@@ -313,13 +313,16 @@ class Runner:
             )
         else:
             logger.error("Failed to find operator pod")
+        
         if self.operator_container_name != None:
             log = self.core_v1_api.read_namespaced_pod_log(
-            name=operator_pod_list[0].metadata.name, 
-            namespace=self.namespace,
-            container=self.operator_container_name
+                name=operator_pod_list[0].metadata.name, 
+                namespace=self.namespace,
+                container=self.operator_container_name
             )
         else: 
+            if len(operator_pod_list[0].spec.containers) > 1:
+                logger.error("Multiple containers detected, please specify the target operator container")
             log = self.core_v1_api.read_namespaced_pod_log(
                 name=operator_pod_list[0].metadata.name, 
                 namespace=self.namespace,
