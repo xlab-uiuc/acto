@@ -29,8 +29,8 @@
 | acto/checker/test\_checker.py                                 |      163 |      153 |      6% |    13-246 |
 | acto/common.py                                                |      340 |       84 |     75% |111-112, 116-138, 142-148, 152, 156, 161, 163, 165, 167, 169, 174, 179-187, 243, 283, 299, 359, 385-386, 396, 398, 401, 405-414, 434-437, 486, 539-542, 582-589, 591-596, 603-606, 621-622, 629-640 |
 | acto/constant.py                                              |        6 |        0 |    100% |           |
-| acto/deploy.py                                                |       88 |       71 |     19% |15-41, 47-55, 59, 66-116, 124-130, 133-138 |
-| acto/engine.py                                                |      547 |      547 |      0% |    3-1268 |
+| acto/deploy.py                                                |       96 |       77 |     20% |15-41, 47-62, 66, 73-123, 131-137, 140-145, 149 |
+| acto/engine.py                                                |      547 |      547 |      0% |    3-1269 |
 | acto/exception.py                                             |        2 |        2 |      0% |       1-2 |
 | acto/input/\_\_init\_\_.py                                    |        2 |        0 |    100% |           |
 | acto/input/get\_matched\_schemas.py                           |       54 |       22 |     59% |12, 47-51, 55-74 |
@@ -62,7 +62,7 @@
 | acto/kubernetes\_engine/minikube.py                           |        3 |        3 |      0% |       1-5 |
 | acto/lib/\_\_init\_\_.py                                      |        0 |        0 |    100% |           |
 | acto/lib/dict.py                                              |       13 |        0 |    100% |           |
-| acto/lib/operator\_config.py                                  |       45 |        3 |     93% |   112-115 |
+| acto/lib/operator\_config.py                                  |       46 |        3 |     93% |   115-118 |
 | acto/lib/test\_dict.py                                        |       15 |        0 |    100% |           |
 | acto/lib/test\_operator\_config.py                            |        9 |        0 |    100% |           |
 | acto/monkey\_patch/\_\_init\_\_.py                            |        0 |        0 |    100% |           |
@@ -78,7 +78,7 @@
 | acto/post\_process/test\_post\_process.py                     |       28 |        1 |     96% |        53 |
 | acto/reproduce.py                                             |      120 |      120 |      0% |     1-222 |
 | acto/runner/\_\_init\_\_.py                                   |        1 |        0 |    100% |           |
-| acto/runner/runner.py                                         |      307 |      275 |     10% |40-92, 111-192, 196-203, 209-245, 252-292, 299-328, 332-337, 341-385, 393-398, 409-414, 430-436, 449-606, 610-614, 619-633, 644-681 |
+| acto/runner/runner.py                                         |      312 |      280 |     10% |41-94, 113-194, 198-205, 211-247, 254-294, 301-340, 344-349, 353-397, 405-410, 421-426, 442-448, 461-618, 622-626, 631-645, 656-693 |
 | acto/schema/\_\_init\_\_.py                                   |       10 |        0 |    100% |           |
 | acto/schema/anyof.py                                          |       44 |       20 |     55% |26, 30-38, 41, 44, 47-49, 52, 55-60 |
 | acto/schema/array.py                                          |       70 |       29 |     59% |31, 43-52, 57, 59-62, 71-78, 81-83, 86-88, 91, 94, 97, 103 |
@@ -100,7 +100,7 @@
 | acto/utils/preprocess.py                                      |       69 |       58 |     16% |17-73, 93-141, 147-192 |
 | acto/utils/process\_with\_except.py                           |        9 |        9 |      0% |      1-13 |
 | acto/utils/thread\_logger.py                                  |       15 |        3 |     80% | 9, 18, 28 |
-|                                                     **TOTAL** | **8318** | **4480** | **46%** |           |
+|                                                     **TOTAL** | **8332** | **4491** | **46%** |           |
 
 
 ## Setup coverage badge
