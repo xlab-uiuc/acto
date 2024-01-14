@@ -1,4 +1,6 @@
+import decimal
 import json
+import uuid
 from datetime import date, datetime
 
 import ordered_set
@@ -10,32 +12,50 @@ from acto.input import TestCase
 from acto.result import DifferentialOracleResult
 
 
+def _serialize_decimal(value: decimal.Decimal):
+    if value.as_tuple().exponent == 0:
+        return int(value)
+    else:
+        return float(value)
+
+
 class ActoEncoder(json.JSONEncoder):
     """Encoder for acto oects"""
 
     def default(self, o):
         """Default encoder"""
 
+        # this section is for pydantic basemodels
         if hasattr(o, "serialize"):
             return o.serialize()
 
+        # this section is from deepdiff
+        if isinstance(o, ordered_set.OrderedSet):
+            return list(o)
+        if isinstance(o, decimal.Decimal):
+            return _serialize_decimal(o)
+        if isinstance(o, type):
+            return o.__name__
+        if isinstance(o, bytes):
+            return o.decode("utf-8")
+        if isinstance(o, uuid.UUID):
+            return str(o)
+
         if isinstance(o, Diff):
             return o.to_dict()
-        elif isinstance(o, NotPresent):
+        if isinstance(o, NotPresent):
             return "NotPresent"
-        elif isinstance(o, (datetime, date)):
+        if isinstance(o, (datetime, date)):
             return o.isoformat()
-        elif isinstance(o, TestCase):
+        if isinstance(o, TestCase):
             return str(o)
-        elif isinstance(o, set):
+        if isinstance(o, set):
             return list(o)
-        elif isinstance(o, ordered_set.OrderedSet):
-            return list(o)
-        elif isinstance(o, DeepDiff):
+        if isinstance(o, DeepDiff):
             return o.to_dict()
-        elif isinstance(o, PropertyPath):
+        if isinstance(o, PropertyPath):
             return str(o)
-        elif isinstance(o, DifferentialOracleResult):
+        if isinstance(o, DifferentialOracleResult):
             return o.serialize()
         return json.JSONEncoder.default(self, o)
 
