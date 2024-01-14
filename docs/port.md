@@ -18,6 +18,11 @@ For example, to deploy the cass-operator, we need to first apply the `init.yaml`
   which deploys the cert-manager required by the cass-operator,
   and then apply the `bundle.yaml` which contains all the required resource
   definitions for deploying the cass-operator.
+You would need to specify the Step which contains the operator Deployment resource
+    by setting the `operator` property in the `Step` to `true`.
+In the case where there are more than one container in the operator Pod (e.g. metrics exporter),
+    you would need to specify the actual operator container's name through
+    the `operator_container_name` property in the `Step`.
   The `deploy` property would be written as:
 ```json
 "deploy": {
@@ -72,6 +77,19 @@ For example, to deploy the cass-operator, we need to first apply the `init.yaml`
                                         "description": "If the file contains the operator deployment",
                                         "title": "Operator",
                                         "type": "boolean"
+                                    },
+                                    "operator_container_name": {
+                                        "anyOf": [
+                                            {
+                                                "type": "string"
+                                            },
+                                            {
+                                                "type": "null"
+                                            }
+                                        ],
+                                        "default": null,
+                                        "description": "The container name of the operator in the operator pod",
+                                        "title": "Operator Container Name"
                                     },
                                     "namespace": {
                                         "anyOf": [
@@ -131,7 +149,7 @@ For example, to deploy the cass-operator, we need to first apply the `init.yaml`
     ],
     "title": "DeployConfig",
     "type": "object"
-}
+},
   ```
 </details>
 
