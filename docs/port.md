@@ -1,10 +1,10 @@
 # Testing a new operator
 
-## Porting
+## Porting an operator to Acto
 To port a new operator to Acto and test it, users would need to create a configuration file in JSON 
-  following the steps below.
+  format following the steps below.
 
-### Providing operator deployment script
+### Providing the steps to deploy the operator
 The minimum requirement for Acto to test an operator is to provide a way to deploy the operator.
 
 Acto supports three different ways for specifying the deployment method: YAML, Helm, and Kustomize.
@@ -14,15 +14,13 @@ To specify operators' deployment method in a YAML way, users need to bundle all 
 
 Deploying operator can be expressed as a sequence of steps to be applied through
   the `deploy` property.
+You would need to specify the Step which contains the operator Deployment resource
+    by setting the `operator` property in the `Step` to `true`.
+
 For example, to deploy the cass-operator, we need to first apply the `init.yaml`
   which deploys the cert-manager required by the cass-operator,
   and then apply the `bundle.yaml` which contains all the required resource
   definitions for deploying the cass-operator.
-You would need to specify the Step which contains the operator Deployment resource
-    by setting the `operator` property in the `Step` to `true`.
-In the case where there are more than one container in the operator Pod (e.g. metrics exporter),
-    you would need to specify the actual operator container's name through
-    the `operator_container_name` property in the `Step`.
   The `deploy` property would be written as:
 ```json
 "deploy": {
@@ -48,8 +46,12 @@ In the case where there are more than one container in the operator Pod (e.g. me
 }
 ```
 
+In case there are more than one container in the operator Pod (e.g. metrics exporter),
+    you would need to specify the actual operator container's name through
+    the `operator_container_name` property in the `Step`.
+
 <details>
-  <summary>*JsonSchema* for the `deploy` property</summary>
+  <summary>Full JsonSchema for the deploy property</summary>
   
   ```json
 "deploy": {
@@ -154,8 +156,12 @@ In the case where there are more than one container in the operator Pod (e.g. me
 </details>
 
 ### Providing the name of the CRD to be tested
-Specify the name of the CRD to be tested in the configuration through the `crd_name` property. 
 Only required if the operator defines multiple CRDs.
+Some operator developers define separate CRDs for other purposes, e.g., backup tasks to be run.
+In case there are more than one CRD in the deploy steps, you need to specify the full name of
+    the CRD to be tested.
+
+Specify the name of the CRD to be tested in the configuration through the `crd_name` property. 
 E.g.:
 ```json
 {
@@ -168,7 +174,11 @@ Provide a sample CR which will be used by Acto as the seed.
 This can be any valid CR, usually operator repos contain multiple sample CRs.
 Specify this through the `seed_custom_resource` property in the configuration.
 
-### Providing source code information for whitebox mode (optional)
+For example, cass-operator provides a list of sample CRs in their [repo](https://github.com/k8ssandra/cass-operator/tree/master/config/samples)
+
+Copy one CR into the port directory, and specify the path of the copied CR in the `seed_custom_resource` property
+
+### Providing source code information for whitebox mode (advanced)
 Acto supports a whitebox mode to enable more accurate testing by utilizing source code information.
 To provide the source code information to Acto, users need to specify the following fields in the port config file:
 - `github_link`: the Github link to the operator repo
@@ -191,7 +201,7 @@ Example:
 }
 ```
 
-## Testing
+## Run Acto's test campaign
 After creating the configuration file for the operator,
   users can start the test campaign by invoking Acto:
 First run `make` to build the required shared object:
