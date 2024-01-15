@@ -2,7 +2,7 @@
 import copy
 import json
 import re
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 from acto.acto_config import ACTO_CONFIG
 from acto.checker.checker import CheckerInterface
@@ -21,11 +21,7 @@ from acto.common import (
 from acto.input import InputModel
 from acto.input.get_matched_schemas import find_matched_schema
 from acto.k8s_util.k8sutil import canonicalize_quantity
-from acto.result import (
-    ConsistencyOracleResult,
-    InvalidInputResult,
-    OracleResult,
-)
+from acto.result import ConsistencyOracleResult, InvalidInputResult
 from acto.schema import ArraySchema, BaseSchema, ObjectSchema, extract_schema
 from acto.serialization import ActoEncoder
 from acto.snapshot import Snapshot
@@ -291,7 +287,7 @@ class ConsistencyChecker(CheckerInterface):
 
     def check(
         self, generation: int, snapshot: Snapshot, prev_snapshot: Snapshot
-    ) -> Optional[OracleResult]:
+    ) -> Optional[Union[ConsistencyOracleResult, InvalidInputResult]]:
         """
         System state oracle
 

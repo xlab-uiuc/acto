@@ -4,6 +4,7 @@ import uuid
 from datetime import date, datetime
 
 import ordered_set
+import pydantic
 from deepdiff import DeepDiff
 from deepdiff.helper import NotPresent
 
@@ -25,8 +26,8 @@ class ActoEncoder(json.JSONEncoder):
         """Default encoder"""
 
         # this section is for pydantic basemodels
-        if hasattr(o, "serialize"):
-            return o.serialize()
+        if isinstance(o, pydantic.BaseModel):
+            return o.model_dump()
 
         # this section is from deepdiff
         if isinstance(o, ordered_set.OrderedSet):

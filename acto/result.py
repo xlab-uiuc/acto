@@ -4,7 +4,7 @@
 import enum
 import json
 import os
-from typing import Optional
+from typing import Optional, Union
 
 import deepdiff
 import deepdiff.helper
@@ -111,7 +111,9 @@ class OracleResults(pydantic.BaseModel):
         description="The result of the operator log oracle",
         default=None,
     )
-    consistency: Optional[OracleResult] = pydantic.Field(
+    consistency: Optional[
+        Union[ConsistencyOracleResult, InvalidInputResult]
+    ] = pydantic.Field(
         description="The result of the state consistentcy oracle",
         default=None,
     )
@@ -133,6 +135,15 @@ class OracleResults(pydantic.BaseModel):
             or self.differential is not None
             or self.custom is not None
         )
+
+    @pydantic.field_serializer("consistency")
+    def serialize_consistency(
+        self, value: Union[ConsistencyOracleResult, InvalidInputResult]
+    ):
+        """Serialize the consistency oracle result"""
+        if value is None:
+            return None
+        return value.model_dump()
 
 
 class CliStatus(enum.Enum):
