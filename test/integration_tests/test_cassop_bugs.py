@@ -48,37 +48,40 @@ class TestCassOpBugs(unittest.TestCase):
         ) as cr_file:
             self.seed = yaml.load(cr_file, Loader=yaml.FullLoader)
         self.input_model: InputModel = DeterministicInputModel(
-            self.context["crd"]["body"],
-            self.context["analysis_result"]["used_fields"],
-            self.config.example_dir,
-            1,
-            1,
-            None,
+            crd=self.context["crd"]["body"],
+            seed_input=self.seed,
+            used_fields=self.context["analysis_result"]["used_fields"],
+            example_dir=self.config.example_dir,
+            num_workers=1,
+            num_cases=1,
         )
-        self.input_model.initialize(self.seed)
 
     def test_cassop_330(self):
         """Test cassop-330."""
         # https://github.com/k8ssandra/cass-operator/issues/330
 
-        trial_dir = os.path.join(test_data_dir, "cassop-330")
+        trial_dir = os.path.join(test_data_dir, "cassop-330", "trial-00-0000")
         checker = CheckerSet(self.context, trial_dir, self.input_model, [])
 
         snapshot_0 = construct_snapshot(trial_dir, 1)
         snapshot_1 = construct_snapshot(trial_dir, 2)
 
-        run_result = checker.check(snapshot_1, snapshot_0, False, 2, {})
+        run_result = checker.check(snapshot_1, snapshot_0, 2)
         self.assertTrue(run_result.is_error())
 
     def test_cassop_330_diff(self):
         """Test cassop-330 diff test."""
         diff_test_result_path = os.path.join(
-            test_data_dir, "cassop-330", "difftest-006.json"
+            test_data_dir,
+            "cassop-330",
+            "post_diff_test",
+            "trial-00",
+            "difftest-001.json",
         )
         diff_test_result = DiffTestResult.from_file(diff_test_result_path)
 
-        trial_dir = os.path.join(test_data_dir, "cassop-330", "trial-00-0001")
-        step = construct_step(trial_dir, 8)
+        trial_dir = os.path.join(test_data_dir, "cassop-330", "trial-00-0000")
+        step = construct_step(trial_dir, 2)
 
         result = PostDiffTest.check_diff_test_step(
             diff_test_result, step, self.config
@@ -88,10 +91,14 @@ class TestCassOpBugs(unittest.TestCase):
     def test_cassop_928(self):
         """Test cassop-928."""
         diff_test_result_path = os.path.join(
-            test_data_dir, "cassop-315", "difftest-002.json"
+            test_data_dir,
+            "cassop-315",
+            "post_diff_test",
+            "trial-00",
+            "difftest-000.json",
         )
         diff_test_result = DiffTestResult.from_file(diff_test_result_path)
-        trial_dir = os.path.join(test_data_dir, "cassop-315", "trial-04-0000")
+        trial_dir = os.path.join(test_data_dir, "cassop-315", "trial-00-0000")
         step = construct_step(trial_dir, 2)
 
         result = PostDiffTest.check_diff_test_step(

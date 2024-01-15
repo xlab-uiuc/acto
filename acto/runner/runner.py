@@ -152,7 +152,12 @@ class Runner:
             logger.error("STDOUT: %s", cli_result.stdout)
             logger.error("STDERR: %s", cli_result.stderr)
             return (
-                Snapshot(input_cr, self.collect_cli_result(cli_result), {}, []),
+                Snapshot(
+                    input_cr=input_cr,
+                    cli_result=self.collect_cli_result(cli_result),
+                    system_state={},
+                    operator_log=[],
+                ),
                 True,
             )
         err = None
@@ -186,10 +191,10 @@ class Runner:
             err = True
 
         snapshot = Snapshot(
-            input_cr,
-            self.collect_cli_result(cli_result),
-            system_state,
-            operator_log,
+            input_cr=input_cr,
+            cli_result=self.collect_cli_result(cli_result),
+            system_state=system_state,
+            operator_log=operator_log,
         )
         return snapshot, err
 

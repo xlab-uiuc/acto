@@ -8,8 +8,8 @@ from typing import Dict, List, Optional
 
 import yaml
 
-from acto.common import RunResult
 from acto.lib.operator_config import OperatorConfig
+from acto.result import RunResult
 
 
 class Step:
@@ -42,7 +42,7 @@ class Step:
         self._operator_log = operator_log
         self._system_state = system_state
         self._cli_output = cli_output
-        self._runtime_result = RunResult.from_dict(runtime_result)
+        self._runtime_result = RunResult(**runtime_result)
 
     @property
     def trial_dir(self) -> str:
@@ -159,6 +159,7 @@ def construct_step(trial_dir, generation) -> Optional[Step]:
 
 class PostProcessor(object):
     """Post processor base class"""
+
     def __init__(self, testrun_dir: str, config: OperatorConfig):
         # Set config and context
         self.config = config

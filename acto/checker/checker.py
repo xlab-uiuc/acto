@@ -1,19 +1,20 @@
+"""Checker interface"""
 from abc import ABC, abstractmethod
+from typing import Optional
 
-from acto.common import OracleResult
+from acto.result import OracleResult
 from acto.snapshot import Snapshot
 
 
-class Checker(ABC):
+class CheckerInterface(ABC):
+    """Interface for checkers"""
 
-    @property
-    @abstractmethod
-    def name(self):
-        raise NotImplementedError
-
-    def __init__(self, **kwargs):
+    def __init__(self):
         pass
 
     @abstractmethod
-    def check(self, generation: int, snapshot: Snapshot, prev_snapshot: Snapshot) -> OracleResult:
+    def check(
+        self, generation: int, snapshot: Snapshot, prev_snapshot: Snapshot
+    ) -> Optional[OracleResult]:
+        """Check the given step and return the result of the check"""
         raise NotImplementedError()

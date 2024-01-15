@@ -10,7 +10,6 @@ from typing import Dict, List, Tuple
 
 import pytest
 
-from acto.common import PassResult
 from acto.reproduce import reproduce, reproduce_postdiff
 
 test_dir = pathlib.Path(__file__).parent.resolve()
@@ -62,13 +61,9 @@ def run_bug_config(
     if bug_config.declaration:
         if len(normal_run_result) != 0:
             last_error = normal_run_result[-1]
-            if last_error.state_result is not None and not isinstance(
-                last_error.state_result, PassResult
-            ):
+            if last_error.consistency is not None:
                 reproduced = True
-            elif last_error.recovery_result is not None and not isinstance(
-                last_error.recovery_result, PassResult
-            ):
+            elif last_error.differential is not None:
                 reproduced = True
         else:
             print(f"Bug {bug_id} not reproduced!")
@@ -77,13 +72,9 @@ def run_bug_config(
     if bug_config.recovery:
         if len(normal_run_result) != 0:
             last_error = normal_run_result[-1]
-            if last_error.recovery_result is not None and not isinstance(
-                last_error.recovery_result, PassResult
-            ):
+            if last_error.differential is not None:
                 reproduced = True
-            elif last_error.state_result is not None and not isinstance(
-                last_error.state_result, PassResult
-            ):
+            elif last_error.consistency is not None:
                 reproduced = True
         else:
             print(f"Bug {bug_id} not reproduced!")
@@ -94,9 +85,7 @@ def run_bug_config(
             reproduced = True
         elif len(normal_run_result) != 0:
             last_error = normal_run_result[-1]
-            if last_error.health_result is not None and not isinstance(
-                last_error.health_result, PassResult
-            ):
+            if last_error.health is not None:
                 reproduced = True
         else:
             print(f"Bug {bug_id} not reproduced!")

@@ -2,12 +2,11 @@ import glob
 import json
 import os
 from enum import Enum
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import yaml
 
 from acto.checker.impl.health import HealthChecker
-from acto.common import PassResult
 from acto.snapshot import Snapshot
 
 
@@ -18,19 +17,24 @@ def construct_snapshot(trial_dir: str, generation: int):
     system_state_path = f"{trial_dir}/system-state-{generation:03d}.json"
     cli_output_path = f"{trial_dir}/cli-output-{generation:03d}.log"
 
-    with open(mutated_path, "r") as mutated_file, open(
-        operator_log_path, "r"
+    with open(mutated_path, "r", encoding="utf-8") as mutated_file, open(
+        operator_log_path, "r", encoding="utf-8"
     ) as operator_log_file, open(
-        system_state_path, "r"
+        system_state_path, "r", encoding="utf-8"
     ) as system_state_file, open(
-        cli_output_path, "r"
+        cli_output_path, "r", encoding="utf-8"
     ) as cli_output_file:
         mutated = yaml.load(mutated_file, Loader=yaml.FullLoader)
         operator_log = operator_log_file.read().splitlines()
         system_state = json.load(system_state_file)
         cli_output = json.load(cli_output_file)
 
-        return Snapshot(mutated, cli_output, system_state, operator_log)
+        return Snapshot(
+            input_cr=mutated,
+            cli_result=cli_output,
+            system_state=system_state,
+            operator_log=operator_log,
+        )
 
 
 class BugCateogry(str, Enum):
@@ -57,12 +61,12 @@ class BugConfig:
         self,
         category: BugCateogry,
         dir: str,
-        diffdir: str = None,
+        diffdir: Optional[str] = None,
         declaration: bool = False,
         difftest: bool = False,
         runtime_error: bool = False,
         recovery: bool = False,
-        consequences: List[BugConsequence] = None,
+        consequences: Optional[List[BugConsequence]] = None,
     ) -> None:
         self._category = category
         self._dir = dir
@@ -87,7 +91,7 @@ class BugConfig:
         return self._dir
 
     @property
-    def diffdir(self) -> str:
+    def diffdir(self) -> Optional[str]:
         """The relative directory containing the inputs for reproducing this bug through difftest
 
         Only specified when "dir" cannot does not trigger the difftest alarm for this bug
@@ -115,7 +119,7 @@ class BugConfig:
         return self._recovery
 
     @property
-    def consequences(self) -> List[str]:
+    def consequences(self) -> Optional[list[BugConsequence]]:
         """The list of consequence categories this bug cause"""
         return self._consequences
 
@@ -564,13 +568,17 @@ def check_postdiff_runtime_error(workdir_path: str) -> bool:
         return False
     else:
         for compare_result in compare_results:
-            with open(compare_result) as f:
+            with open(compare_result, "r", encoding="utf-8") as f:
                 result = json.load(f)[0]
                 to_state = result["to"]
-                snapshot = Snapshot({})
+                snapshot = Snapshot(input_cr={}, cli_result={}, operator_log=[])
                 snapshot.system_state = to_state
-                health_result = HealthChecker().check(0, snapshot, {})
-                if not isinstance(health_result, PassResult):
+                health_result = HealthChecker().check(
+                    0,
+                    snapshot,
+                    Snapshot(input_cr={}, cli_result={}, operator_log=[]),
+                )
+                if health_result is not None:
                     return True
 
     return False
