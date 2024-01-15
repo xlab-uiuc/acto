@@ -9,7 +9,6 @@ from deepdiff.helper import NotPresent
 
 from acto.common import Diff, PropertyPath
 from acto.input import TestCase
-from acto.result import DifferentialOracleResult
 
 
 def _serialize_decimal(value: decimal.Decimal):
@@ -55,8 +54,6 @@ class ActoEncoder(json.JSONEncoder):
             return o.to_dict()
         if isinstance(o, PropertyPath):
             return str(o)
-        if isinstance(o, DifferentialOracleResult):
-            return o.serialize()
         return json.JSONEncoder.default(self, o)
 
 

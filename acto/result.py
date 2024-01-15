@@ -2,6 +2,7 @@
 
 
 import enum
+import json
 import os
 from typing import Optional
 
@@ -10,6 +11,7 @@ import deepdiff.helper
 import pydantic
 
 from acto.common import Diff, PropertyPath
+from acto.serialization import ActoEncoder
 from acto.snapshot import Snapshot
 from acto.utils.thread_logger import get_thread_logger
 
@@ -75,17 +77,10 @@ class DifferentialOracleResult(OracleResult):
         description="The state that the diff was generated to"
     )
 
-    @pydantic.model_serializer
-    def serialize(self):
-        """Serialize the result of a differential oracle run"""
-        return {
-            "message": self.message,
-            "diff": self.diff.to_dict(view_override=deepdiff.helper.TEXT_VIEW),
-            "from_step": self.from_step,
-            "from_state": self.from_state,
-            "to_step": self.to_step,
-            "to_state": self.to_state,
-        }
+    @pydantic.field_serializer("diff")
+    def serialize_diff(self, value: deepdiff.DeepDiff):
+        """Serialize the diff"""
+        return value.to_dict(view_override=deepdiff.helper.TEXT_VIEW)
 
 
 class InvalidInputResult(OracleResult):
@@ -226,4 +221,4 @@ class TrialResult(pydantic.BaseModel):
     def dump(self, filename: str):
         """Dump the trial result to a file"""
         with open(filename, "w", encoding="utf-8") as file:
-            file.write(self.model_dump_json(indent=4))
+            file.write(json.dumps(self.model_dump(), indent=4, cls=ActoEncoder))
