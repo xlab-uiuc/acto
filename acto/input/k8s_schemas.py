@@ -73,19 +73,17 @@ class KubernetesObjectSchema(KubernetesSchema):
         return True
 
     def dump_schema(self) -> dict:
-        schema = {
-            "type": "object",
-            "properties": {},
-        }
+        properties = {}
         try:
             for property_name, property_schema in self.properties.items():
-                schema["properties"][
-                    property_name
-                ] = property_schema.dump_schema()
+                properties[property_name] = property_schema.dump_schema()
         except RecursionError:
             print(f"Recursion error in {self.k8s_schema_name}")
             sys.exit(1)
-        return schema
+        return {
+            "type": "object",
+            "properties": properties,
+        }
 
 
 class KubernetesStringSchema(KubernetesSchema):
@@ -219,9 +217,6 @@ class ObjectMetaSchema(KubernetesObjectSchema):
         return False
 
 
-KUBERNETES_SKIP_LIST = []
-
-
 def fetch_k8s_schema_spec(version: str) -> dict:
     """Fetches the Kubernetes schema spec from the Kubernetes repo
 
@@ -272,7 +267,7 @@ class K8sSchemaMatcher:
 
     def _generate_schema_name_to_property_name_mapping(
         self, schema_definitions: dict
-    ) -> dict:
+    ) -> dict[str, set[str]]:
         """Builds a dictionary that maps property names to Kubernetes schema name"""
         schema_name_to_property_name = defaultdict(set)
         for schema_name, schema_spec in schema_definitions.items():
@@ -288,11 +283,13 @@ class K8sSchemaMatcher:
                     schema_name = ref.split("/")[-1]
                     schema_name_to_property_name[schema_name].add(property_name)
 
-        return schema_name_to_property_name
+        return dict(schema_name_to_property_name)
 
-    def _generate_k8s_models(self, schema_definitions: dict) -> dict:
+    def _generate_k8s_models(
+        self, schema_definitions: dict
+    ) -> dict[str, KubernetesObjectSchema]:
         """Generates a dictionary of Kubernetes models for schema matching"""
-        k8s_models = {}
+        k8s_models: dict[str, KubernetesObjectSchema] = {}
 
         def resolve(schema_spec: dict) -> KubernetesSchema:
             """Resolves schema type from k8s schema spec"""
@@ -326,6 +323,7 @@ class K8sSchemaMatcher:
             if schema_name.startswith("io.k8s.apiextensions-apiserver"):
                 continue
 
+            schema: KubernetesObjectSchema
             if schema_name.endswith("ObjectMeta"):
                 schema = ObjectMetaSchema(schema_name, schema_spec)
             else:
@@ -369,7 +367,7 @@ class K8sSchemaMatcher:
             else schema.path[-2:]
         )
         seq_matcher.set_seq1(schema_name)
-        max_ratio = 0
+        max_ratio = 0.0
         max_ratio_schema_idx = 0
         for i, (_, matched_schema) in enumerate(matched_schemas):
             if name_matched and i not in name_matched:
@@ -381,9 +379,11 @@ class K8sSchemaMatcher:
                 max_ratio_schema_idx = i
         return max_ratio_schema_idx
 
-    def find_matched_schemas(self, schema: BaseSchema) -> BaseSchema:
+    def find_matched_schemas(
+        self, schema: BaseSchema
+    ) -> list[tuple[BaseSchema, KubernetesSchema]]:
         """Finds all Kubernetes schemas that match the given schema"""
-        matched_schemas = []
+        matched_schemas: list[tuple[BaseSchema, KubernetesSchema]] = []
         for kubernetes_schema in self._k8s_models.values():
             if kubernetes_schema.match(schema):
                 matched_schemas.append((schema, kubernetes_schema))
