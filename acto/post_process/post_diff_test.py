@@ -27,14 +27,14 @@ from acto.deploy import Deploy
 from acto.kubectl_client.kubectl import KubectlClient
 from acto.kubernetes_engine import base, kind
 from acto.lib.operator_config import OperatorConfig
+from acto.post_process.post_process import PostProcessor
 from acto.result import DifferentialOracleResult, StepID
 from acto.runner import Runner
 from acto.serialization import ActoEncoder
 from acto.snapshot import Snapshot
+from acto.trial import Step
 from acto.utils import add_acto_label, get_thread_logger
 from acto.utils.error_handler import handle_excepthook, thread_excepthook
-
-from .post_process import PostProcessor, Step
 
 
 class DiffTestResult(pydantic.BaseModel):
@@ -66,7 +66,7 @@ class DiffTestResult(pydantic.BaseModel):
         """Dump the DiffTestResult to a file"""
         with open(file_path, "w", encoding="utf-8") as f:
             json.dump(
-                self.model_dump(mode="json"), f, cls=ActoEncoder, indent=6
+                self.model_dump(), f, cls=ActoEncoder, indent=4
             )
 
 
@@ -456,7 +456,7 @@ class DeployRunner:
             err = True
             difftest_result = DiffTestResult(
                 input_digest=group.iloc[0]["input_digest"],
-                snapshot=snapshot.serialize(),
+                snapshot=snapshot,
                 originals=group[["trial", "gen"]].to_dict("records"),
                 time={
                     "k8s_bootstrap": after_k8s_bootstrap_time
@@ -519,21 +519,24 @@ class PostDiffTest(PostProcessor):
         logger = get_thread_logger(with_prefix=True)
 
         self.all_inputs = []
-        for trial, steps in self.trial_to_steps.items():
-            for step in steps.values():
-                invalid = step.runtime_result.is_invalid_input()
+        for trial_name, trial in self.trial_to_steps.items():
+            for step in trial.steps.values():
+                invalid = step.run_result.is_invalid_input()
                 if invalid and not ignore_invalid:
                     continue
                 self.all_inputs.append(
                     {
-                        "trial": trial,
-                        "gen": step.gen,
-                        "input": step.input,
-                        "input_digest": step.input_digest,
-                        "operator_log": step.operator_log,
-                        "system_state": step.system_state,
-                        "cli_output": step.cli_output,
-                        "runtime_result": step.runtime_result,
+                        "trial": trial_name,
+                        "gen": step.run_result.step_id.generation,
+                        "input": step.snapshot.input_cr,
+                        "input_digest": hashlib.md5(
+                            json.dumps(
+                                step.snapshot.input_cr, sort_keys=True
+                            ).encode("utf-8")
+                        ).hexdigest(),
+                        "operator_log": step.snapshot.operator_log,
+                        "system_state": step.snapshot.system_state,
+                        "cli_output": step.snapshot.cli_result,
                     }
                 )
 
@@ -547,7 +550,6 @@ class PostDiffTest(PostProcessor):
                 "operator_log",
                 "system_state",
                 "cli_output",
-                "runtime_result",
             ],
         )
 
@@ -680,7 +682,9 @@ class PostDiffTest(PostProcessor):
                     continue
 
                 trial_basename = os.path.basename(trial)
-                original_result = self.trial_to_steps[trial_basename][str(gen)]
+                original_result = self.trial_to_steps[trial_basename].steps[
+                    str(gen)
+                ]
                 step_result = PostDiffTest.check_diff_test_step(
                     diff_test_result,
                     original_result,
@@ -714,17 +718,17 @@ class PostDiffTest(PostProcessor):
         additional_runner: Optional[AdditionalRunner] = None,
     ) -> Optional[DifferentialOracleResult]:
         logger = get_thread_logger(with_prefix=True)
-        trial_dir = original_result.trial_dir
-        gen = original_result.gen
+        trial_dir = original_result.run_result.step_id.trial
+        gen = original_result.run_result.step_id.generation
 
-        if original_result.runtime_result.oracle_result.health is not None:
+        if original_result.run_result.oracle_result.health is not None:
             return None
 
-        original_operator_log = original_result.operator_log
+        original_operator_log = original_result.snapshot.operator_log
         if invalid_input_message_regex(original_operator_log):
             return None
 
-        original_system_state = original_result.system_state
+        original_system_state = original_result.snapshot.system_state
         result = compare_system_equality(
             diff_test_result.snapshot.system_state,
             original_system_state,

@@ -3,7 +3,6 @@ import json
 import os
 import pathlib
 import unittest
-from test.utils import construct_snapshot
 
 import yaml
 
@@ -11,6 +10,7 @@ from acto import acto_config
 from acto.checker.checker_set import CheckerSet
 from acto.input import DeterministicInputModel, InputModel
 from acto.lib.operator_config import OperatorConfig
+from acto.snapshot import Snapshot
 
 test_dir = pathlib.Path(__file__).parent.resolve()
 test_data_dir = os.path.join(test_dir, "test_data")
@@ -61,10 +61,10 @@ class TestCRDBOpBugs(unittest.TestCase):
         trial_dir = os.path.join(test_data_dir, "crdbop-920")
         checker = CheckerSet(self.context, trial_dir, self.input_model, [])
 
-        snapshot_0 = construct_snapshot(trial_dir, 1)
-        snapshot_1 = construct_snapshot(trial_dir, 2)
+        snapshot_0 = Snapshot.load(trial_dir, 2)
+        snapshot_1 = Snapshot.load(trial_dir, 3)
 
-        run_result = checker.check(snapshot_1, snapshot_0, 2)
+        run_result = checker.check(snapshot_1, snapshot_0, 3)
         self.assertTrue(run_result.is_error())
 
 

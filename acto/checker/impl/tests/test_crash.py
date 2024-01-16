@@ -16,7 +16,15 @@ def checker_func(s: Snapshot) -> Optional[OracleResult]:
     return checker.check(
         0,
         s,
-        Snapshot(input_cr={}, cli_result={}, system_state={}, operator_log=[]),
+        Snapshot(
+            input_cr={},
+            cli_result={},
+            system_state={},
+            operator_log=[],
+            events={},
+            not_ready_pods_logs=None,
+            generation=0,
+        ),
     )
 
 
@@ -33,7 +41,7 @@ def checker_func(s: Snapshot) -> Optional[OracleResult]:
         )
     ),
 )
-def test_check(test_case_id, result_dict):
+def test_crash(test_case_id, result_dict):
     snapshot = load_snapshot("crash", test_case_id)
     oracle_result = checker_func(snapshot)
     assert oracle_result == result_dict

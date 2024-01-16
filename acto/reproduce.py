@@ -240,7 +240,7 @@ if __name__ == "__main__":
         "--reproduce-dir",
         dest="reproduce_dir",
         required=True,
-        help='The directory of the trial folder to reproduce. '
+        help="The directory of the trial folder to reproduce. "
         'CR files should have names starting with "mutated-"',
     )
     parser.add_argument(

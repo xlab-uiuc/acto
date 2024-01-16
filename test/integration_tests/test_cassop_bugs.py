@@ -3,7 +3,6 @@ import json
 import os
 import pathlib
 import unittest
-from test.utils import construct_snapshot
 
 import yaml
 
@@ -12,7 +11,8 @@ from acto.checker.checker_set import CheckerSet
 from acto.input import DeterministicInputModel, InputModel
 from acto.lib.operator_config import OperatorConfig
 from acto.post_process.post_diff_test import DiffTestResult, PostDiffTest
-from acto.post_process.post_process import construct_step
+from acto.snapshot import Snapshot
+from acto.trial import Step
 
 test_dir = pathlib.Path(__file__).parent.resolve()
 test_data_dir = os.path.join(test_dir, "test_data")
@@ -29,7 +29,7 @@ class TestCassOpBugs(unittest.TestCase):
             test_dir.parent.parent, "data", "cass-operator", "config.json"
         )
         with open(config_path, "r", encoding="utf-8") as config_file:
-            self.config = OperatorConfig(**json.load(config_file))
+            self.config = OperatorConfig.model_validate(json.load(config_file))
 
         # prepare context
         context_file = os.path.join(
@@ -63,8 +63,8 @@ class TestCassOpBugs(unittest.TestCase):
         trial_dir = os.path.join(test_data_dir, "cassop-330", "trial-00-0000")
         checker = CheckerSet(self.context, trial_dir, self.input_model, [])
 
-        snapshot_0 = construct_snapshot(trial_dir, 1)
-        snapshot_1 = construct_snapshot(trial_dir, 2)
+        snapshot_0 = Snapshot.load(trial_dir, 1)
+        snapshot_1 = Snapshot.load(trial_dir, 2)
 
         run_result = checker.check(snapshot_1, snapshot_0, 2)
         self.assertTrue(run_result.is_error())
@@ -81,7 +81,7 @@ class TestCassOpBugs(unittest.TestCase):
         diff_test_result = DiffTestResult.from_file(diff_test_result_path)
 
         trial_dir = os.path.join(test_data_dir, "cassop-330", "trial-00-0000")
-        step = construct_step(trial_dir, 2)
+        step = Step.load(trial_dir, 2)
 
         result = PostDiffTest.check_diff_test_step(
             diff_test_result, step, self.config
@@ -99,7 +99,7 @@ class TestCassOpBugs(unittest.TestCase):
         )
         diff_test_result = DiffTestResult.from_file(diff_test_result_path)
         trial_dir = os.path.join(test_data_dir, "cassop-315", "trial-00-0000")
-        step = construct_step(trial_dir, 2)
+        step = Step.load(trial_dir, 2)
 
         result = PostDiffTest.check_diff_test_step(
             diff_test_result, step, self.config

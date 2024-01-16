@@ -83,4 +83,7 @@ def load_snapshot(
         cli_result=load_cli_output(checker_name, test_case_id, load_prev),
         system_state=load_system_state(checker_name, test_case_id, load_prev),
         operator_log=load_operator_log(checker_name, test_case_id, load_prev),
+        events={},
+        not_ready_pods_logs=None,
+        generation=0,
     )

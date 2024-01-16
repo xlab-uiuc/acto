@@ -1,3 +1,4 @@
+"""Temporary code, do not use"""
 import glob
 import json
 import logging
@@ -26,9 +27,9 @@ from acto.post_process.post_diff_test import (
     DiffTestResult,
     PostDiffTest,
 )
-from acto.post_process.post_process import Step
 from acto.runner.runner import Runner
 from acto.serialization import ActoEncoder
+from acto.trial import Step
 from acto.utils.error_handler import handle_excepthook, thread_excepthook
 
 
@@ -36,7 +37,7 @@ def get_crash_config_map(
     apiclient: kubernetes.client.ApiClient, trial_dir: str, generation: int
 ) -> dict:
     logging.info(
-        f"Getting the configmap for the crash test along with system states"
+        "Getting the configmap for the crash test along with system states"
     )
     core_v1_api = kubernetes.client.CoreV1Api(apiclient)
     config_map = core_v1_api.read_namespaced_config_map(
@@ -173,7 +174,8 @@ class CrashTrialRunner(DeployRunner):
                 trial_dir,
                 self._kubeconfig,
                 self._context_name,
-                custom_system_state_f=get_crash_config_map, operator_container_name=self._deploy.operator_container_name,
+                custom_system_state_f=get_crash_config_map,
+                operator_container_name=self._deploy.operator_container_name,
             )
 
             steps: Dict[str, Step]
@@ -235,10 +237,10 @@ class SimpleCrashTest(PostDiffTest):
             )
         )
         for compare_results_file in compare_results_files:
-            digest = re.search(
+            if mathces := re.search(
                 r"compare-results-(\w+).json", compare_results_file
-            ).group(1)
-            del self.unique_inputs[digest]
+            ):
+                del self.unique_inputs[mathces.group(1)]
 
         logging.info(
             f"Running Unique inputs excluding errorneous ones: {len(self.unique_inputs)}"
@@ -283,11 +285,13 @@ class SimpleCrashTest(PostDiffTest):
         ################## Operation sequence crash test ######################
         num_ops = 0
         workqueue = multiprocessing.Queue()
-        for trial, steps in self._trial_to_steps.items():
+        for trial_name, trial in self._trial_to_steps.items():
             new_steps = {}
-            for step_key in list(steps.keys()):
-                if not steps[step_key].runtime_result.is_error():
-                    new_steps[step_key] = steps[step_key]
+            for step_key in list(trial.steps.keys()):
+                if not trial.steps[
+                    step_key
+                ].run_result.oracle_result.is_error():
+                    new_steps[step_key] = trial.steps[step_key]
                     num_ops += 1
             workqueue.put((trial, new_steps))
         logging.info(f"Running {num_ops} trials")
@@ -319,9 +323,9 @@ class SimpleCrashTest(PostDiffTest):
         for unique_input_group in self.unique_inputs.values():
             workqueue.put(unique_input_group)
 
-        runners: List[DeployRunner] = []
+        deploy_runners: List[DeployRunner] = []
         for i in range(num_workers):
-            runner = DeployRunner(
+            deploy_runner = DeployRunner(
                 workqueue,
                 self.context,
                 deploy,
@@ -330,11 +334,11 @@ class SimpleCrashTest(PostDiffTest):
                 i,
                 self.acto_namespace,
             )
-            runners.append(runner)
+            deploy_runners.append(deploy_runner)
 
         processes = []
-        for runner in runners:
-            p = multiprocessing.Process(target=runner.run)
+        for deploy_runner in deploy_runners:
+            p = multiprocessing.Process(target=deploy_runner.run)
             p.start()
             processes.append(p)
 

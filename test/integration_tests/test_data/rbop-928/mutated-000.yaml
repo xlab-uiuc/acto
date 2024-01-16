@@ -18,6 +18,22 @@ spec:
         topologyKey: kubernetes.io/hostname
   image: null
   imagePullSecrets: null
+  override:
+    statefulSet:
+      spec:
+        template:
+          spec:
+            affinity:
+              podAntiAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                - labelSelector:
+                    matchExpressions:
+                    - key: app.kubernetes.io/name
+                      operator: In
+                      values:
+                      - test-cluster
+                  topologyKey: kubernetes.io/hostname
+            containers: []
   persistence:
     storage: 50Gi
   rabbitmq:
