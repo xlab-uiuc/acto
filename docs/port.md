@@ -260,7 +260,7 @@ Acto waits for the operator to reconcile the system to match the CR,
 It then runs a collection of oracles(checkers) over the snapshot to detect bugs.
 Acto serializes the "snapshot" and the runtime result from the oracles in the `trial-xx-yyyy` directory.
 
-The schema of the "snapshot" is defined at [acto/snapshot.py](acto/snapshot.py).
+The schema of the "snapshot" is defined at [acto/snapshot.py](../acto/snapshot.py).
 It is serialized to the following files:
 - `mutated-*.yaml`: These files are the inputs Acto submitted to Kubernetes to run the state transitions. Concretely, Acto first applies `mutated-0.yaml`, and wait for the system to converge, and then applies `mutated-1.yaml`, and so on.
 - `cli-output-*.log` and `operator-*.log`: These two files contain the command line result and operator log after submitting the input.
@@ -268,7 +268,7 @@ It is serialized to the following files:
 - `events-*.log`: This file contains the list of detailed Kubernetes event objects happened after each step.
 - `not-ready-pod-*.log`: Acto collects the log from pods which are in `unready` state. This information is helpful for debugging the reason the pod crashed or is unhealthy.
 
-The schema of the runtime result is defined at [acto/result.py](acto/result.py).
+The schema of the runtime result is defined at [acto/result.py](../acto/result.py).
 It is serialized to the `generation-XXX-runtime.json` files.
 It mainly includes the result from the oracles:
 - `crash`: if any container crashed or not
