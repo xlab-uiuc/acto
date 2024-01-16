@@ -184,7 +184,9 @@ def runtime_result_path(trial_dir: str, generation: int) -> str:
 
 
 class RunResult(pydantic.BaseModel):
-    """Model for the result of a run of an Acto"""
+    """Model for the runtime result of a run of an Acto.
+    It mainly contains the result of the oracles, with some auxiliary information such as
+    the CLI status, testcase, StepID, and whether this run is a revert."""
 
     testcase: dict[str, str] = pydantic.Field(
         description="The description of the testcase that was run"

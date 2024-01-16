@@ -42,14 +42,24 @@ def operator_log_path(trial_dir: str, generation: int) -> str:
 
 
 class Snapshot(pydantic.BaseModel):
-    """A snapshot of a run, including input, operator log, system state, and cli output"""
+    """A Snapshot is a snapshot of the system state at a point of time.
+    It contains the input_cr, CLI result of the kubectl, operator log, 
+    system state containing all Kubernetes resources"""
 
-    input_cr: dict
-    cli_result: dict
-    system_state: dict
+    input_cr: dict = pydantic.Field(
+        description="Input CR of the trial in python dict format"
+    )
+    cli_result: dict = pydantic.Field(
+        description="CLI result of the kubectl command"
+    )
+    system_state: dict = pydantic.Field(
+        description="System state of the cluster, including all Kubernetes resources"
+    )
     operator_log: list[str]
-    events: dict
-    not_ready_pods_logs: Optional[dict] = None
+    events: dict = pydantic.Field(description="Serialized Kubernetes V1EventList object")
+    not_ready_pods_logs: Optional[dict] = pydantic.Field(
+        description="Logs from unready pods", default=None
+    )
     generation: int
 
     def delta(
