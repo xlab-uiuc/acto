@@ -1,3 +1,4 @@
+"""Temporary code, do not use"""
 import glob
 import json
 import logging
@@ -26,7 +27,6 @@ from acto.post_process.post_diff_test import (
     DiffTestResult,
     PostDiffTest,
 )
-from acto.post_process.post_process import Step
 from acto.runner.runner import Runner
 from acto.serialization import ActoEncoder
 from acto.utils.error_handler import handle_excepthook, thread_excepthook
@@ -36,7 +36,7 @@ def get_crash_config_map(
     apiclient: kubernetes.client.ApiClient, trial_dir: str, generation: int
 ) -> dict:
     logging.info(
-        f"Getting the configmap for the crash test along with system states"
+        "Getting the configmap for the crash test along with system states"
     )
     core_v1_api = kubernetes.client.CoreV1Api(apiclient)
     config_map = core_v1_api.read_namespaced_config_map(
@@ -173,7 +173,8 @@ class CrashTrialRunner(DeployRunner):
                 trial_dir,
                 self._kubeconfig,
                 self._context_name,
-                custom_system_state_f=get_crash_config_map, operator_container_name=self._deploy.operator_container_name,
+                custom_system_state_f=get_crash_config_map,
+                operator_container_name=self._deploy.operator_container_name,
             )
 
             steps: Dict[str, Step]

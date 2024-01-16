@@ -235,3 +235,45 @@ It generates the `result.xlsx` file under the `testrun-cass` which contains
   all the oracle results.
 You can easily inspect the alarms by importing it into Google Sheet or Excel
   and filter by `alarm==True`.
+
+## Interpreting Acto's test result
+
+Acto will first generate a test plan using the operator's CRD and the semantic information.
+The test plan is serialized at `testrun-cass/testplan.json` (You don't need to manually inspect the `testplan.json`, it is just to give an overview of the tests going to be run).
+Note that Acto does not run the tests according to the order in the `testplan.json`, the tests are run in a random order at runtime.
+
+Acto then constructs the number of Kubernetes clusters according to the `--num-workers` argument,
+  and start to run tests.
+Tests are run in parallel in separate Kubernetes clusters.
+Under the `testrun-cass` directory, Acto creates directories `trial-XX-YYYY`. `XX` corresponds to the worker ID, i.e. `XX` ranges from `0` to `3` if there are 4 workers.
+`YYYY` starts from `0000`, and Acto increments `YYYY` every time it has to restart the cluster.
+This means every step inside the same `trial-xx-yyyy` directory runs in the same instance of Kubernetes cluster.
+
+Acto takes steps to run the testcases over the previous CR one by one.
+One testcase is to change the current CR to provide the next CR to be applied.
+Acto starts from the sample CR given from the operator configuration.
+
+At each step, Acto applies a test case over the existing CR to produce the next CR.
+It then uses `kubectl apply` to apply the CR in a declarative fashion.
+Acto waits for the operator to reconcile the system to match the CR,
+    then collects a "snapshot" of the system state at this point of time.
+It then runs a collection of oracles(checkers) over the snapshot to detect bugs.
+Acto serializes the "snapshot" and the runtime result from the oracles in the `trial-xx-yyyy` directory.
+
+The schema of the "snapshot" is defined at [acto/snapshot.py](acto/snapshot.py).
+It is serialized to the following files:
+- `mutated-*.yaml`: These files are the inputs Acto submitted to Kubernetes to run the state transitions. Concretely, Acto first applies `mutated-0.yaml`, and wait for the system to converge, and then applies `mutated-1.yaml`, and so on.
+- `cli-output-*.log` and `operator-*.log`: These two files contain the command line result and operator log after submitting the input.
+- `system-state-*.json`: After each step submitting `mutated-*.yaml`, Acto collects the system state and store it as `system-state-*.json`. This file contains the serialized state objects from Kubernetes.
+- `events-*.log`: This file contains the list of detailed Kubernetes event objects happened after each step.
+- `not-ready-pod-*.log`: Acto collects the log from pods which are in `unready` state. This information is helpful for debugging the reason the pod crashed or is unhealthy.
+
+The schema of the runtime result is defined at [acto/result.py](acto/result.py).
+It is serialized to the `generation-XXX-runtime.json` files.
+It mainly includes the result from the oracles:
+- `crash`: if any container crashed or not
+- `health`: if any StatefulSet or Deployment is unhealthy, by comparing the ready replicas in status and desired replicas in spec
+- `consistency`: consistency oracle, checking if the desired system state matches the actual system state
+- `operator_log`: if the log indicates invalid input
+- `custom`: result of custom oracles, defined by users
+- `differential`: if the recovery step is successful after the error state

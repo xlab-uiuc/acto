@@ -1,6 +1,5 @@
 """Runner module for Acto"""
 import base64
-import json
 import multiprocessing
 import queue
 import subprocess
@@ -8,11 +7,11 @@ import time
 from typing import Callable, Optional
 
 import kubernetes
+import kubernetes.client.models as kubernetes_models
 import yaml
 
 from acto.common import kubernetes_client
 from acto.kubectl_client import KubectlClient
-from acto.serialization import ActoEncoder
 from acto.snapshot import Snapshot
 from acto.utils import acto_timer, get_thread_logger
 
@@ -36,7 +35,7 @@ class Runner:
         context_name: str,
         custom_system_state_f: Optional[Callable[..., dict]] = None,
         wait_time: int = 45,
-        operator_container_name: str = None
+        operator_container_name: Optional[str] = None,
     ):
         self.namespace = context["namespace"]
         self.crd_metainfo: dict = context["crd"]
@@ -87,12 +86,6 @@ class Runner:
 
         self._custom_system_state_f = custom_system_state_f
 
-        self.operator_log_path = ""
-        self.system_state_path = ""
-        self.events_log_path = ""
-        self.cli_output_path = ""
-        self.not_ready_pod_log_path = ""
-
     def run(
         self,
         input_cr: dict,
@@ -111,20 +104,6 @@ class Runner:
                 result, err
         """
         logger = get_thread_logger(with_prefix=True)
-
-        self.operator_log_path = (
-            f"{self.trial_dir}/operator-{generation:03d}.log"
-        )
-        self.system_state_path = (
-            f"{self.trial_dir}/system-state-{generation:03d}.json"
-        )
-        self.events_log_path = f"{self.trial_dir}/events-{generation:03d}.json"
-        self.cli_output_path = (
-            f"{self.trial_dir}/cli-output-{generation:03d}.log"
-        )
-        self.not_ready_pod_log_path = (
-            f"{self.trial_dir}/not-ready-pod-{generation:03d}-{{}}.log"
-        )
 
         # call user-defined hooks
         if hooks is not None:
@@ -151,15 +130,18 @@ class Runner:
             )
             logger.error("STDOUT: %s", cli_result.stdout)
             logger.error("STDERR: %s", cli_result.stderr)
-            return (
-                Snapshot(
-                    input_cr=input_cr,
-                    cli_result=self.collect_cli_result(cli_result),
-                    system_state={},
-                    operator_log=[],
-                ),
-                True,
+            snapshot = Snapshot(
+                input_cr=input_cr,
+                cli_result=self.collect_cli_result(cli_result),
+                system_state={},
+                operator_log=[],
+                events={},
+                not_ready_pods_logs=None,
+                generation=generation,
             )
+            snapshot.dump(self.trial_dir)
+            return snapshot, True
+
         err = None
 
         try:
@@ -180,8 +162,6 @@ class Runner:
                 )
             system_state = self.collect_system_state()
             operator_log = self.collect_operator_log()
-            self.collect_events()
-            self.collect_not_ready_pods_logs()
         except (KeyError, ValueError) as e:
             logger.error(
                 "Bug! Exception raised when waiting for converge.", exc_info=e
@@ -189,13 +169,19 @@ class Runner:
             system_state = {}
             operator_log = ["Bug! Exception raised when waiting for converge."]
             err = True
+        events = self.collect_events()
+        unready_pod_logs = self.collect_not_ready_pods_logs()
 
         snapshot = Snapshot(
             input_cr=input_cr,
             cli_result=self.collect_cli_result(cli_result),
             system_state=system_state,
             operator_log=operator_log,
+            events=events,
+            not_ready_pods_logs=unready_pod_logs,
+            generation=generation,
         )
+        snapshot.dump(self.trial_dir)
         return snapshot, err
 
     def run_without_collect(self, seed_file: str):
@@ -292,10 +278,6 @@ class Runner:
             else None
         )
 
-        # Dump system state
-        with open(self.system_state_path, "w", encoding="utf-8") as fout:
-            json.dump(resources, fout, cls=ActoEncoder, indent=6)
-
         return resources
 
     def collect_operator_log(self) -> list:
@@ -318,18 +300,20 @@ class Runner:
             )
         else:
             logger.error("Failed to find operator pod")
-        
-        if self.operator_container_name != None:
+
+        if self.operator_container_name is not None:
             log = self.core_v1_api.read_namespaced_pod_log(
-                name=operator_pod_list[0].metadata.name, 
+                name=operator_pod_list[0].metadata.name,
                 namespace=self.namespace,
-                container=self.operator_container_name
+                container=self.operator_container_name,
             )
-        else: 
+        else:
             if len(operator_pod_list[0].spec.containers) > 1:
-                logger.error("Multiple containers detected, please specify the target operator container")
+                logger.error(
+                    "Multiple containers detected, please specify the target operator container"
+                )
             log = self.core_v1_api.read_namespaced_pod_log(
-                name=operator_pod_list[0].metadata.name, 
+                name=operator_pod_list[0].metadata.name,
                 namespace=self.namespace,
             )
 
@@ -338,25 +322,22 @@ class Runner:
         new_log = new_log[self.log_length :]
         self.log_length += len(new_log)
 
-        with open(self.operator_log_path, "a", encoding="utf-8") as f:
-            for line in new_log:
-                f.write(f"{line}\n")
-
         return new_log
 
-    def collect_events(self):
+    def collect_events(self) -> dict:
         """Queries events in the test namespace"""
         events = self.core_v1_api.list_namespaced_event(
-            self.namespace, pretty=True, _preload_content=False, watch=False
+            self.namespace, watch=False, pretty=True
         )
+        return events.to_dict()
 
-        with open(self.events_log_path, "wb") as f:
-            f.write(events.data)
-
-    def collect_not_ready_pods_logs(self):
+    def collect_not_ready_pods_logs(self) -> Optional[dict[str, list[str]]]:
         """Queries logs of not ready pods in the test namespace"""
-        pods = self.core_v1_api.list_namespaced_pod(self.namespace)
-        for pod in pods.items:
+        ret = {}
+        pods: list[kubernetes_models.V1Pod] = (
+            self.core_v1_api.list_namespaced_pod(self.namespace)
+        ).items
+        for pod in pods:
             for container_statuses in [
                 pod.status.container_statuses or [],
                 pod.status.init_container_statuses or [],
@@ -369,15 +350,7 @@ class Runner:
                                 self.namespace,
                                 container=container_status.name,
                             )
-                            if len(log) != 0:
-                                with open(
-                                    self.not_ready_pod_log_path.format(
-                                        container_status.name
-                                    ),
-                                    "w",
-                                    encoding="utf-8",
-                                ) as f:
-                                    f.write(log)
+                            ret[pod.metadata.name] = log.splitlines()
                             if (
                                 container_status.last_state.terminated
                                 is not None
@@ -388,15 +361,9 @@ class Runner:
                                     container=container_status.name,
                                     previous=True,
                                 )
-                                if len(log) != 0:
-                                    with open(
-                                        self.not_ready_pod_log_path.format(
-                                            "prev-" + container_status.name
-                                        ),
-                                        "w",
-                                        encoding="utf-8",
-                                    ) as f:
-                                        f.write(log)
+                                ret[
+                                    f"{pod.metadata.name}-previous"
+                                ] = log.splitlines()
                         except kubernetes.client.rest.ApiException as e:
                             logger = get_thread_logger(with_prefix=True)
                             logger.error(
@@ -404,14 +371,16 @@ class Runner:
                                 pod.metadata.name,
                                 exc_info=e,
                             )
+        if len(ret) > 0:
+            return ret
+        else:
+            return None
 
     def collect_cli_result(self, p: subprocess.CompletedProcess):
         """Collects the result of the kubectl command"""
         cli_output = {}
         cli_output["stdout"] = p.stdout.strip()
         cli_output["stderr"] = p.stderr.strip()
-        with open(self.cli_output_path, "w", encoding="utf-8") as f:
-            f.write(json.dumps(cli_output, cls=ActoEncoder, indent=6))
         return cli_output
 
     def __get_all_objects(self, method) -> dict:

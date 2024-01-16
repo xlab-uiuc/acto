@@ -16,7 +16,15 @@ def checker_func(s: Snapshot) -> Optional[OracleResult]:
     return checker.check(
         0,
         s,
-        Snapshot(input_cr={}, cli_result={}, system_state={}, operator_log=[]),
+        Snapshot(
+            input_cr={},
+            cli_result={},
+            system_state={},
+            operator_log=[],
+            events={},
+            not_ready_pods_logs=None,
+            generation=0,
+        ),
     )
 
 

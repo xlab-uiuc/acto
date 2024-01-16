@@ -3,12 +3,12 @@
 
 import enum
 import json
-import os
 from typing import Optional, Union
 
 import deepdiff
 import deepdiff.helper
 import pydantic
+from typing_extensions import Self
 
 from acto.common import Diff, PropertyPath
 from acto.serialization import ActoEncoder
@@ -55,11 +55,7 @@ class StepID(pydantic.BaseModel):
     generation: int
 
     def __str__(self) -> str:
-        return f"{self.trial}-{self.generation:04d}"
-
-    @pydantic.model_serializer
-    def serialize(self):
-        return f"{self.trial}-{self.generation:04d}"
+        return f"{self.trial}/{self.generation:04d}"
 
 
 class DifferentialOracleResult(OracleResult):
@@ -81,6 +77,9 @@ class DifferentialOracleResult(OracleResult):
     def serialize_diff(self, value: deepdiff.DeepDiff):
         """Serialize the diff"""
         return value.to_dict(view_override=deepdiff.helper.TEXT_VIEW)
+
+    def __str__(self) -> str:
+        return f"{self.from_step} -> {self.to_step}: {self.message}"
 
 
 class InvalidInputResult(OracleResult):
@@ -179,15 +178,18 @@ def check_kubectl_cli(snapshot: Snapshot) -> CliStatus:
     return CliStatus.INVALID
 
 
+def runtime_result_path(trial_dir: str, generation: int) -> str:
+    """Return the path of the runtime result"""
+    return f"{trial_dir}/generation-{generation:03d}-runtime.json"
+
+
 class RunResult(pydantic.BaseModel):
     """Model for the result of a run of an Acto"""
 
     testcase: dict[str, str] = pydantic.Field(
         description="The description of the testcase that was run"
     )
-    generation: int = pydantic.Field(
-        description="The sequence number of the run"
-    )
+    step_id: StepID
     oracle_result: OracleResults
     cli_status: CliStatus
     is_revert: bool = pydantic.Field(description="Whether the run was a revert")
@@ -206,22 +208,35 @@ class RunResult(pydantic.BaseModel):
             )
         )
 
+    @pydantic.field_serializer("cli_status", return_type=str)
+    def serialize_cli_status(self, value: CliStatus):
+        """Serialize the CLI status"""
+        return value.value
+
     def dump(self, trial_dir: str):
         """Dump the run result to a file"""
         with open(
-            os.path.join(
-                trial_dir, f"generation-{self.generation:03d}-runtime.json"
-            ),
+            runtime_result_path(trial_dir, self.step_id.generation),
             "w",
             encoding="utf-8",
         ) as file:
-            file.write(self.model_dump_json(indent=4))
+            json.dump(self.model_dump(), file, indent=4, cls=ActoEncoder)
+
+    @classmethod
+    def load(cls, trial_dir: str, generation: int) -> Self:
+        """Load a run result from a file"""
+        with open(
+            runtime_result_path(trial_dir, generation),
+            "r",
+            encoding="utf-8",
+        ) as file:
+            return cls.model_validate(json.load(file))
 
 
 class TrialResult(pydantic.BaseModel):
     """Model for the result of a trial of an Acto"""
 
-    trial_id: int
+    trial_id: str
     duration: float = pydantic.Field(
         description="The duration of the trial in seconds"
     )

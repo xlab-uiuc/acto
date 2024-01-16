@@ -4,37 +4,8 @@ import os
 from enum import Enum
 from typing import Dict, List, Optional
 
-import yaml
-
 from acto.checker.impl.health import HealthChecker
 from acto.snapshot import Snapshot
-
-
-def construct_snapshot(trial_dir: str, generation: int):
-    """Constructs a snapshot from the trial directory and generation"""
-    mutated_path = f"{trial_dir}/mutated-{generation:03d}.yaml"
-    operator_log_path = f"{trial_dir}/operator-{generation:03d}.log"
-    system_state_path = f"{trial_dir}/system-state-{generation:03d}.json"
-    cli_output_path = f"{trial_dir}/cli-output-{generation:03d}.log"
-
-    with open(mutated_path, "r", encoding="utf-8") as mutated_file, open(
-        operator_log_path, "r", encoding="utf-8"
-    ) as operator_log_file, open(
-        system_state_path, "r", encoding="utf-8"
-    ) as system_state_file, open(
-        cli_output_path, "r", encoding="utf-8"
-    ) as cli_output_file:
-        mutated = yaml.load(mutated_file, Loader=yaml.FullLoader)
-        operator_log = operator_log_file.read().splitlines()
-        system_state = json.load(system_state_file)
-        cli_output = json.load(cli_output_file)
-
-        return Snapshot(
-            input_cr=mutated,
-            cli_result=cli_output,
-            system_state=system_state,
-            operator_log=operator_log,
-        )
 
 
 class BugCateogry(str, Enum):
@@ -571,12 +542,28 @@ def check_postdiff_runtime_error(workdir_path: str) -> bool:
             with open(compare_result, "r", encoding="utf-8") as f:
                 result = json.load(f)[0]
                 to_state = result["to"]
-                snapshot = Snapshot(input_cr={}, cli_result={}, operator_log=[])
+                snapshot = Snapshot(
+                    input_cr={},
+                    cli_result={},
+                    operator_log=[],
+                    system_state={},
+                    events={},
+                    not_ready_pods_logs={},
+                    generation=0,
+                )
                 snapshot.system_state = to_state
                 health_result = HealthChecker().check(
                     0,
                     snapshot,
-                    Snapshot(input_cr={}, cli_result={}, operator_log=[]),
+                    Snapshot(
+                        input_cr={},
+                        cli_result={},
+                        operator_log=[],
+                        system_state={},
+                        events={},
+                        not_ready_pods_logs={},
+                        generation=0,
+                    ),
                 )
                 if health_result is not None:
                     return True

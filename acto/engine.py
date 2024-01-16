@@ -393,7 +393,7 @@ class TrialRunner:
             self.kubeconfig,
             self.context_name,
             wait_time=self.wait_time,
-            operator_container_name=self.deploy.operator_container_name
+            operator_container_name=self.deploy.operator_container_name,
         )
         checker: CheckerSet = self.checker_t(
             self.context,
@@ -404,7 +404,17 @@ class TrialRunner:
         )
 
         curr_input = self.input_model.get_seed_input()
-        self.snapshots.append(Snapshot(input_cr=curr_input))
+        self.snapshots.append(
+            Snapshot(
+                input_cr=curr_input,
+                cli_result={},
+                generation=0,
+                system_state={},
+                operator_log=[],
+                not_ready_pods_logs={},
+                events={},
+            )
+        )
 
         generation = 0
         while (
@@ -429,7 +439,7 @@ class TrialRunner:
                 # break and move to the next trial
                 if test_groups is None:
                     return TrialResult(
-                        trial_id=curr_trial,
+                        trial_id=f"trial-{self.worker_id + self.sequence_base:02d}-{self.curr_trial:04d}",
                         duration=time.time() - trial_start_time,
                         error=None,
                     )
@@ -493,7 +503,7 @@ class TrialRunner:
                         ):
                             logger.error("Connection refused, exiting")
                             return TrialResult(
-                                trial_id=curr_trial,
+                                trial_id=f"trial-{self.worker_id + self.sequence_base:02d}-{self.curr_trial:04d}",
                                 duration=time.time() - trial_start_time,
                                 error=None,
                             )
@@ -505,7 +515,7 @@ class TrialRunner:
                             )
                             generation += 1
                             return TrialResult(
-                                trial_id=curr_trial,
+                                trial_id=f"trial-{self.worker_id + self.sequence_base:02d}-{self.curr_trial:04d}",
                                 duration=time.time() - trial_start_time,
                                 error=run_result.oracle_result,
                             )
@@ -544,7 +554,8 @@ class TrialRunner:
                 generation += 1
 
                 return TrialResult(
-                    trial_id=curr_trial,
+                    trial_id=f"trial-{self.worker_id + self.sequence_base:02d}"
+                    + f"-{self.curr_trial:04d}",
                     duration=time.time() - trial_start_time,
                     error=run_result.oracle_result,
                 )
@@ -554,7 +565,7 @@ class TrialRunner:
                 break
 
         return TrialResult(
-            trial_id=curr_trial,
+            trial_id=f"trial-{self.worker_id + self.sequence_base:02d}-{self.curr_trial:04d}",
             duration=time.time() - trial_start_time,
             error=None,
         )
@@ -657,7 +668,10 @@ class TrialRunner:
 
         run_result = RunResult(
             testcase=testcase_signature,
-            generation=generation,
+            step_id=StepID(
+                trial=runner.trial_dir,
+                generation=generation,
+            ),
             oracle_result=oracle_result,
             cli_status=cli_result,
             is_revert=revert,
@@ -985,7 +999,11 @@ class Acto:
                     break
             apiclient = kubernetes_client(learn_kubeconfig, learn_context_name)
             runner = Runner(
-                self.context, "learn", learn_kubeconfig, learn_context_name, self.deploy.operator_container_name
+                self.context,
+                "learn",
+                learn_kubeconfig,
+                learn_context_name,
+                self.deploy.operator_container_name,
             )
             runner.run_without_collect(
                 self.operator_config.seed_custom_resource
@@ -1098,7 +1116,7 @@ class Acto:
                 self.is_reproduce,
                 self.apply_testcase_f,
                 self.acto_namespace,
-                self.operator_config.diff_ignore_fields
+                self.operator_config.diff_ignore_fields,
             )
             runners.append(runner)
 
