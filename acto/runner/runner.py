@@ -81,8 +81,7 @@ class Runner:
             "role_binding": self.rbac_authorization_v1_api.list_namespaced_role_binding,
         }
 
-        if multiprocessing.get_start_method() != "fork":
-            multiprocessing.set_start_method("fork")
+        self.mp_ctx = multiprocessing.get_context("fork")
 
         self._custom_system_state_f = custom_system_state_f
 
@@ -441,13 +440,11 @@ class Runner:
             self.namespace, _preload_content=False, watch=True
         )
 
-        combined_event_queue: multiprocessing.Queue = multiprocessing.Queue(
-            maxsize=0
-        )
+        combined_event_queue = self.mp_ctx.Queue(maxsize=0)
         timer_hard_timeout = acto_timer.ActoTimer(
             hard_timeout, combined_event_queue, "timeout"
         )
-        watch_process = multiprocessing.Process(
+        watch_process = self.mp_ctx.Process(
             target=self.watch_system_events,
             args=(event_stream, combined_event_queue),
         )
