@@ -1,10 +1,10 @@
 """This module provides a decorator for generating test cases for a schema and
 a function to get all test cases for a schema."""
 
-from collections import namedtuple
+from dataclasses import dataclass
 from typing import Callable, Literal, Optional
 
-from acto.input.k8s_schemas import KubernetesObjectSchema, KubernetesSchema
+from acto.input.k8s_schemas import KubernetesObjectSchema
 from acto.input.testcase import TestCase
 from acto.schema import (
     AnyOfSchema,
@@ -19,21 +19,34 @@ from acto.schema import (
     StringSchema,
 )
 
-TestGenerator = namedtuple(
-    "TestGeneratorObject",
-    [
-        "k8s_schema_name",
-        "field_name",
-        "field_type",
-        "paths",
-        "priority",
-        "func",
-    ],
-)
+
+@dataclass
+class TestGenerator:
+    """A test generator object"""
+
+    k8s_schema_name: Optional[str]
+    field_name: Optional[str]
+    field_type: Optional[
+        Literal[
+            "AnyOf",
+            "Array",
+            "Boolean",
+            "Integer",
+            "Number",
+            "Object",
+            "OneOf",
+            "Opaque",
+            "String",
+        ]
+    ]
+    paths: Optional[list[str]]
+    priority: int
+    func: Callable[[BaseSchema], list[TestCase]]
 
 
+# singleton
 # global variable for registered test generators
-test_generators: TestGenerator = []
+TEST_GENERATORS: list[TestGenerator] = []
 
 
 def generator(
@@ -79,7 +92,7 @@ def generator(
             priority,
             func,
         )
-        test_generators.append(gen_obj)
+        TEST_GENERATORS.append(gen_obj)
         return func
 
     return wrapped_func
@@ -87,67 +100,76 @@ def generator(
 
 def get_testcases(
     schema: BaseSchema,
-    matched_schemas: [tuple[BaseSchema, KubernetesSchema]],
-) -> list[tuple[list[str], TestCase]]:
+    matched_schemas: list[tuple[BaseSchema, KubernetesObjectSchema]],
+) -> list[tuple[list[str], list[TestCase]]]:
     """Get all test cases for a schema from registered test generators"""
-    matched_schemas: dict[str, KubernetesObjectSchema] = {
+    matched_schemas_dict: dict[str, KubernetesObjectSchema] = {
         "/".join(s.path): m for s, m in matched_schemas
     }
 
-    def get_testcases_helper(schema: BaseSchema, field_name: Optional[str]):
+    def get_testcases_helper(
+        schema: BaseSchema, field_name: Optional[str]
+    ) -> list[tuple[list[str], list[TestCase]]]:
         # print(schema_name, schema.path, type(schema))
-        test_cases = []
-        generator_candidates = []
+        test_cases: list[tuple[list[str], list[TestCase]]] = []
+        generator_candidates: list[TestGenerator] = []
         # check paths
         path_str = "/".join(schema.path)
-        matched_schema = matched_schemas.get(path_str)
-        for test_gen in test_generators:
+        matched_schema = matched_schemas_dict.get(path_str)
+        for test_generator in TEST_GENERATORS:
             # check paths
-            for path in test_gen.paths or []:
+            for path in test_generator.paths or []:
                 if path_str.endswith(path):
-                    generator_candidates.append(test_gen)
+                    generator_candidates.append(test_generator)
                     continue
 
             # check field name
             if (
-                test_gen.field_name is not None
-                and test_gen.field_name == field_name
+                test_generator.field_name is not None
+                and test_generator.field_name == field_name
             ):
-                generator_candidates.append(test_gen)
+                generator_candidates.append(test_generator)
                 continue
 
             # check k8s schema name
             if (
-                test_gen.k8s_schema_name is not None
+                test_generator.k8s_schema_name is not None
                 and matched_schema is not None
                 and matched_schema.k8s_schema_name.endswith(
-                    test_gen.k8s_schema_name
+                    test_generator.k8s_schema_name
                 )
             ):
-                generator_candidates.append(test_gen)
+                generator_candidates.append(test_generator)
                 continue
 
             # check type
-            matching_types = {
-                "AnyOf": AnyOfSchema,
-                "Array": ArraySchema,
-                "Boolean": BooleanSchema,
-                "Integer": IntegerSchema,
-                "Number": NumberSchema,
-                "Object": ObjectSchema,
-                "OneOf": OneOfSchema,
-                "Opaque": OpaqueSchema,
-                "String": StringSchema,
-            }
-            if schema_type_obj := matching_types.get(test_gen.field_type):
-                if isinstance(schema, schema_type_obj):
-                    generator_candidates.append(test_gen)
+            if test_generator.field_type is not None:
+                matching_types = {
+                    "AnyOf": AnyOfSchema,
+                    "Array": ArraySchema,
+                    "Boolean": BooleanSchema,
+                    "Integer": IntegerSchema,
+                    "Number": NumberSchema,
+                    "Object": ObjectSchema,
+                    "OneOf": OneOfSchema,
+                    "Opaque": OpaqueSchema,
+                    "String": StringSchema,
+                }
+                if schema_type_obj := matching_types.get(
+                    test_generator.field_type
+                ):
+                    if isinstance(schema, schema_type_obj):
+                        generator_candidates.append(test_generator)
+                else:
+                    raise ValueError(
+                        f"Unknown schema type: {test_generator.field_type}"
+                    )
 
         # sort by priority
         generator_candidates.sort(key=lambda x: x.priority, reverse=True)
         if len(generator_candidates) > 0:
             test_cases.append(
-                (schema.path, generator_candidates[0].func(schema))
+                (schema.path, generator_candidates[0].func(schema)),
             )
 
         # check sub schemas
