@@ -4,6 +4,8 @@ a function to get all test cases for a schema."""
 from dataclasses import dataclass
 from typing import Callable, Literal, Optional
 
+import pydantic
+
 from acto.input.k8s_schemas import KubernetesObjectSchema
 from acto.input.testcase import TestCase
 from acto.schema import (
@@ -84,6 +86,7 @@ def generator(
     ), "One of k8s_schema_name, schema_name, schema_type, paths must be specified"
 
     def wrapped_func(func: Callable[[BaseSchema], list[TestCase]]):
+        func = pydantic.validate_call(func)
         gen_obj = TestGenerator(
             k8s_schema_name,
             field_name,

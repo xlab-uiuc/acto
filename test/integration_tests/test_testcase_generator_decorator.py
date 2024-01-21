@@ -6,8 +6,12 @@ import unittest
 
 import yaml
 
-from acto.input.generator import TEST_GENERATORS, generator, get_testcases
 from acto.input.k8s_schemas import K8sSchemaMatcher
+from acto.input.test_generators.generator import (
+    TEST_GENERATORS,
+    generator,
+    get_testcases,
+)
 from acto.input.testcase import TestCase
 from acto.schema import extract_schema
 
