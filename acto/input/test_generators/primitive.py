@@ -20,7 +20,7 @@ from acto.schema import (
 from acto.utils.thread_logger import get_thread_logger
 
 
-def get_testcases(schema: BaseSchema):
+def get_testcases(schema: BaseSchema) -> list[TestCase]:
     """Get testcases for a schema"""
     if isinstance(schema, AnyOfSchema):
         return any_of_tests(schema)
@@ -46,7 +46,7 @@ def get_testcases(schema: BaseSchema):
 def any_of_tests(schema: AnyOfSchema):
     """Generate testcases for AnyOf type"""
 
-    ret = []
+    ret: list[TestCase] = []
     if schema.enum is not None:
         for case in schema.enum:
             ret.append(EnumTestCase(case))
@@ -180,7 +180,7 @@ def array_tests(schema: ArraySchema):
         ret.append(
             TestCase(EMPTY_TEST, empty_precondition, empty_mutator, empty_setup)
         )
-    return ret, []
+    return ret
 
 
 @generator(property_type="Boolean")
@@ -266,7 +266,7 @@ def boolean_tests(schema: BooleanSchema):
                 toggle_on_setup,
             )
         )
-    return ret, []
+    return ret
 
 
 @generator(property_type="Number")
@@ -566,7 +566,7 @@ def object_tests(schema: ObjectSchema):
         ret.append(
             TestCase(EMPTY_TEST, empty_precondition, empty_mutator, empty_setup)
         )
-    return ret, []
+    return ret
 
 
 @generator(property_type="Opaque")
@@ -683,4 +683,4 @@ def string_tests(schema: StringSchema):
                 empty_setup,
             )
         )
-    return ret, []
+    return ret
