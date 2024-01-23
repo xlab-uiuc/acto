@@ -23,7 +23,7 @@ def scale_up_down_precondition(prev, store: Store) -> bool:
         return True
 
 
-@generator(field_name="replicas")
+@generator(property_name="replicas")
 def replicas_tests(schema: IntegerSchema) -> list[TestCase]:
     """Generate test cases for replicas field"""
     invalid_test = TestCase(
@@ -61,7 +61,7 @@ def replicas_tests(schema: IntegerSchema) -> list[TestCase]:
     return [invalid_test, scale_down_up_test, scale_up_down_test, overload_test]
 
 
-@generator(field_name="StatefulSetUpdateStrategy")
+@generator(property_name="StatefulSetUpdateStrategy")
 def stateful_set_update_strategy_tests(schema: ObjectSchema) -> list[TestCase]:
     """Generate test cases for StatefulSetUpdateStrategy field"""
     invalid_test = TestCase(

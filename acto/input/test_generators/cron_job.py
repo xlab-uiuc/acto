@@ -5,7 +5,7 @@ from acto.schema.object import ObjectSchema
 from acto.schema.string import StringSchema
 
 
-@generator(field_name="concurrentPolicy")
+@generator(property_name="concurrentPolicy")
 def concurrent_policy_tests(schema: StringSchema) -> list[TestCase]:
     """Generate test cases for concurrentPolicy field"""
     invalid_test = TestCase(
@@ -26,7 +26,7 @@ def concurrent_policy_tests(schema: StringSchema) -> list[TestCase]:
     return [invalid_test, change_test]
 
 
-@generator(field_name="schedule")
+@generator(property_name="schedule")
 def schedule_tests(schema: ObjectSchema) -> list[TestCase]:
     """Generate test cases for schedule field"""
     invalid_test = TestCase(

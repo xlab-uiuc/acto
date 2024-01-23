@@ -320,7 +320,7 @@ class ImagePullPolicyValues(enum.Enum):
     IF_NOT_PRESENT = "IfNotPresent"
 
 
-@generator(field_name="imagePullPolicy")
+@generator(property_name="imagePullPolicy")
 def image_pull_policy_tests(schema: StringSchema) -> list[TestCase]:
     """Test generator for imagePullPolicy"""
     change_test = TestCase(
@@ -399,7 +399,7 @@ def container_tests(schema: ObjectSchema) -> list[TestCase]:
     return [invalid_test]
 
 
-@generator(field_name="name")
+@generator(property_name="name")
 def invalid_name_tests(schema: StringSchema) -> list[TestCase]:
     """Test generator for invalid name"""
     # TODO: inherit basic tests
@@ -421,7 +421,7 @@ class PreemptionPolicyValues(enum.Enum):
     PREMEPTION_LOW_PRIORITY = "PreemptLowerPriority"
 
 
-@generator(field_name="preemptionPolicy")
+@generator(property_name="preemptionPolicy")
 def preemption_policy_tests(schema: StringSchema) -> list[TestCase]:
     """Test generator for preemption policy"""
     policy_change_test = TestCase(
@@ -434,7 +434,7 @@ def preemption_policy_tests(schema: StringSchema) -> list[TestCase]:
     return [policy_change_test]
 
 
-@generator(field_name="restartPolicy")
+@generator(property_name="restartPolicy")
 def restart_policy_tests(schema: StringSchema) -> list[TestCase]:
     """Test generator for restart policy"""
     invalid_test = TestCase(
@@ -455,7 +455,7 @@ def restart_policy_tests(schema: StringSchema) -> list[TestCase]:
     return [invalid_test, change_test]
 
 
-@generator(field_name="priorityClassName")
+@generator(property_name="priorityClassName")
 def priority_class_name_tests(schema: StringSchema) -> list[TestCase]:
     """Test generator for priority class name"""
     invalid_test = TestCase(
@@ -476,7 +476,7 @@ def priority_class_name_tests(schema: StringSchema) -> list[TestCase]:
     return [invalid_test, change_test]
 
 
-@generator(field_name="serviceAccountName")
+@generator(property_name="serviceAccountName")
 def service_account_name_tests(schema: StringSchema) -> list[TestCase]:
     """Test generator for service account name"""
     invalid_test = TestCase(
@@ -497,7 +497,7 @@ def service_account_name_tests(schema: StringSchema) -> list[TestCase]:
     return [invalid_test, change_test]
 
 
-@generator(field_name="whenUnsatisfiable")
+@generator(property_name="whenUnsatisfiable")
 def when_unsatisfiable_tests(schema: StringSchema) -> list[TestCase]:
     """Test generator for when unsatisfiable"""
     invalid_test = TestCase(

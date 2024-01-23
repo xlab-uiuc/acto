@@ -69,43 +69,43 @@ class TestSchema(unittest.TestCase):
 
     def test_field_name(self):
         TEST_GENERATORS.clear()
-        generator(field_name="ports")(gen)
+        generator(property_name="ports")(gen)
         testcases = get_testcases(self.spec_schema, self.matches)
         self.assertEqual(len(testcases), 4)
 
         TEST_GENERATORS.clear()
-        generator(field_name="image")(gen)
+        generator(property_name="image")(gen)
         testcases = get_testcases(self.spec_schema, self.matches)
         self.assertEqual(len(testcases), 5)
 
     def test_field_type(self):
         TEST_GENERATORS.clear()
-        generator(field_type="AnyOf")(gen)
+        generator(property_type="AnyOf")(gen)
         testcases = get_testcases(self.spec_schema, self.matches)
         self.assertEqual(len(testcases), 38)
 
         TEST_GENERATORS.clear()
-        generator(field_type="Array")(gen)
+        generator(property_type="Array")(gen)
         testcases = get_testcases(self.spec_schema, self.matches)
         self.assertEqual(len(testcases), 173)
 
         TEST_GENERATORS.clear()
-        generator(field_type="Boolean")(gen)
+        generator(property_type="Boolean")(gen)
         testcases = get_testcases(self.spec_schema, self.matches)
         self.assertEqual(len(testcases), 73)
 
         TEST_GENERATORS.clear()
-        generator(field_type="Integer")(gen)
+        generator(property_type="Integer")(gen)
         testcases = get_testcases(self.spec_schema, self.matches)
         self.assertEqual(len(testcases), 106)
 
         TEST_GENERATORS.clear()
-        generator(field_type="Number")(gen)
+        generator(property_type="Number")(gen)
         testcases = get_testcases(self.spec_schema, self.matches)
         self.assertEqual(len(testcases), 106)
 
         TEST_GENERATORS.clear()
-        generator(field_type="Object")(gen)
+        generator(property_type="Object")(gen)
         testcases = get_testcases(self.spec_schema, self.matches)
         self.assertEqual(len(testcases), 368)
 
@@ -120,14 +120,14 @@ class TestSchema(unittest.TestCase):
         # self.assertEqual(len(testcases), 0)
 
         TEST_GENERATORS.clear()
-        generator(field_type="String")(gen)
+        generator(property_type="String")(gen)
         testcases = get_testcases(self.spec_schema, self.matches)
         self.assertEqual(len(testcases), 550)
 
     def test_priority(self):
         TEST_GENERATORS.clear()
 
-        @generator(field_type="Integer", priority=0)
+        @generator(property_type="Integer", priority=0)
         def gen0(_):
             return [
                 TestCase(
@@ -138,7 +138,7 @@ class TestSchema(unittest.TestCase):
                 )
             ]
 
-        @generator(field_name="replicas", priority=1)
+        @generator(property_name="replicas", priority=1)
         def gen1(_):
             return [
                 TestCase(
@@ -155,3 +155,24 @@ class TestSchema(unittest.TestCase):
                 self.assertEqual(tests[0].name, "replicas-test")
             else:
                 self.assertEqual(tests[0].name, "integer-test")
+
+    def test_multiple_constraints(self):
+        TEST_GENERATORS.clear()
+
+        generator(
+            property_type="Integer",
+            property_name="type",
+        )(gen)
+
+        generator(
+            property_name="type",
+            paths=["seLinuxOptions/type"],
+        )(gen)
+
+        generator(
+            property_type="String",
+            paths=["hostPath/type"],
+        )(gen)
+
+        testcases = get_testcases(self.spec_schema, self.matches)
+        self.assertEqual(len(testcases), 0 + 4 + 1)

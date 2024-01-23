@@ -27,8 +27,8 @@ class TestGenerator:
     """A test generator object"""
 
     k8s_schema_name: Optional[str]
-    field_name: Optional[str]
-    field_type: Optional[
+    property_name: Optional[str]
+    property_type: Optional[
         Literal[
             "AnyOf",
             "Array",
@@ -45,6 +45,62 @@ class TestGenerator:
     priority: int
     func: Callable[[BaseSchema], list[TestCase]]
 
+    def match(
+        self,
+        schema: BaseSchema,
+        matched_schema: Optional[KubernetesObjectSchema],
+    ) -> bool:
+        return all(
+            [
+                self._match_path(schema),
+                self._match_property_name(schema),
+                self._match_property_type(schema),
+                self._match_k8s_schema_name(matched_schema),
+            ]
+        )
+
+    def _match_path(self, schema: BaseSchema) -> bool:
+        if not self.paths:
+            return True
+        path_str = "/".join(schema.path)
+        return any(path_str.endswith(path) for path in self.paths)
+
+    def _match_property_name(self, schema: BaseSchema) -> bool:
+        return (
+            self.property_name is None
+            or len(schema.path) > 0
+            and self.property_name == schema.path[-1]
+        )
+
+    def _match_property_type(self, schema: BaseSchema) -> bool:
+        if self.property_type is None:
+            return True
+        matching_types = {
+            "AnyOf": AnyOfSchema,
+            "Array": ArraySchema,
+            "Boolean": BooleanSchema,
+            "Integer": IntegerSchema,
+            "Number": NumberSchema,
+            "Object": ObjectSchema,
+            "OneOf": OneOfSchema,
+            "Opaque": OpaqueSchema,
+            "String": StringSchema,
+        }
+        if schema_type_obj := matching_types.get(self.property_type):
+            if isinstance(schema, schema_type_obj):
+                return True
+        else:
+            raise ValueError(f"Unknown schema type: {self.property_type}")
+
+    def _match_k8s_schema_name(
+        self, matched_schema: Optional[KubernetesObjectSchema]
+    ) -> bool:
+        return (
+            self.k8s_schema_name is None
+            or matched_schema is not None
+            and matched_schema.k8s_schema_name.endswith(self.k8s_schema_name)
+        )
+
 
 # singleton
 # global variable for registered test generators
@@ -53,8 +109,8 @@ TEST_GENERATORS: list[TestGenerator] = []
 
 def generator(
     k8s_schema_name: Optional[str] = None,
-    field_name: Optional[str] = None,
-    field_type: Optional[
+    property_name: Optional[str] = None,
+    property_type: Optional[
         Literal[
             "AnyOf",
             "Array",
@@ -80,8 +136,8 @@ def generator(
         priority (int, optional): Priority. Defaults to 0."""
     assert (
         k8s_schema_name is not None
-        or field_name is not None
-        or field_type is not None
+        or property_name is not None
+        or property_type is not None
         or paths is not None
     ), "One of k8s_schema_name, schema_name, schema_type, paths must be specified"
 
@@ -89,8 +145,8 @@ def generator(
         func = pydantic.validate_call(func)
         gen_obj = TestGenerator(
             k8s_schema_name,
-            field_name,
-            field_type,
+            property_name,
+            property_type,
             paths,
             priority,
             func,
@@ -111,62 +167,18 @@ def get_testcases(
     }
 
     def get_testcases_helper(
-        schema: BaseSchema, field_name: Optional[str]
+        schema: BaseSchema,
     ) -> list[tuple[list[str], list[TestCase]]]:
-        # print(schema_name, schema.path, type(schema))
         test_cases: list[tuple[list[str], list[TestCase]]] = []
         generator_candidates: list[TestGenerator] = []
+
         # check paths
         path_str = "/".join(schema.path)
         matched_schema = matched_schemas_dict.get(path_str)
+
         for test_generator in TEST_GENERATORS:
-            # check paths
-            for path in test_generator.paths or []:
-                if path_str.endswith(path):
-                    generator_candidates.append(test_generator)
-                    continue
-
-            # check field name
-            if (
-                test_generator.field_name is not None
-                and test_generator.field_name == field_name
-            ):
+            if test_generator.match(schema, matched_schema):
                 generator_candidates.append(test_generator)
-                continue
-
-            # check k8s schema name
-            if (
-                test_generator.k8s_schema_name is not None
-                and matched_schema is not None
-                and matched_schema.k8s_schema_name.endswith(
-                    test_generator.k8s_schema_name
-                )
-            ):
-                generator_candidates.append(test_generator)
-                continue
-
-            # check type
-            if test_generator.field_type is not None:
-                matching_types = {
-                    "AnyOf": AnyOfSchema,
-                    "Array": ArraySchema,
-                    "Boolean": BooleanSchema,
-                    "Integer": IntegerSchema,
-                    "Number": NumberSchema,
-                    "Object": ObjectSchema,
-                    "OneOf": OneOfSchema,
-                    "Opaque": OpaqueSchema,
-                    "String": StringSchema,
-                }
-                if schema_type_obj := matching_types.get(
-                    test_generator.field_type
-                ):
-                    if isinstance(schema, schema_type_obj):
-                        generator_candidates.append(test_generator)
-                else:
-                    raise ValueError(
-                        f"Unknown schema type: {test_generator.field_type}"
-                    )
 
         # sort by priority
         generator_candidates.sort(key=lambda x: x.priority, reverse=True)
@@ -177,12 +189,10 @@ def get_testcases(
 
         # check sub schemas
         if isinstance(schema, ArraySchema):
-            test_cases.extend(
-                get_testcases_helper(schema.get_item_schema(), "ITEM")
-            )
+            test_cases.extend(get_testcases_helper(schema.get_item_schema()))
         elif isinstance(schema, ObjectSchema):
-            for field, sub_schema in schema.properties.items():
-                test_cases.extend(get_testcases_helper(sub_schema, field))
+            for sub_schema in schema.properties.values():
+                test_cases.extend(get_testcases_helper(sub_schema))
         return test_cases
 
-    return get_testcases_helper(schema, None)
+    return get_testcases_helper(schema)

@@ -5,7 +5,7 @@ from acto.schema.array import ArraySchema
 from acto.schema.string import StringSchema
 
 
-@generator(field_name="accessModes")
+@generator(property_name="accessModes")
 def access_mode_tests(schema: ArraySchema) -> list[TestCase]:
     """Generate test cases for accessModes field"""
     invalid_test = TestCase(
@@ -28,7 +28,7 @@ def access_mode_tests(schema: ArraySchema) -> list[TestCase]:
     return [invalid_test, change_test]
 
 
-@generator(field_name="apiVersion")
+@generator(property_name="apiVersion")
 def api_version_tests(schema: StringSchema) -> list[TestCase]:
     """Generate test cases for apiVersion field"""
     change_test = TestCase(
