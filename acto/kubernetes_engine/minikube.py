@@ -58,7 +58,7 @@ class Minikube(base.KubernetesEngine):
         cmd.extend(['--nodes', str(self.num_nodes)])
         
         if self._k8s_version != "":
-            cmd.extend(['--kubernetes-version', str(self._k8s_version)])
+            cmd.extend(['--kubernetes-version', str(self._k8s_version)])              
         p = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         
         i = 0
@@ -74,7 +74,6 @@ class Minikube(base.KubernetesEngine):
             time.sleep(5)
             p = subprocess.run(cmd)
 
-        os.environ.pop('KUBECONFIG', None)
 
         # minikube mount
         cmd = ['minikube', 'mount', 'profile/data:/tmp/profile']
@@ -82,8 +81,40 @@ class Minikube(base.KubernetesEngine):
         print(cmd)
         p2 = subprocess.Popen(cmd)
         
-        print("hello")
+        # csi driver
+        cmd = ['minikube', 'addons', 'enable', 'volumesnapshots']
+        cmd.extend(['--profile', name])
+        p = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        i = 0
+        print(cmd)
+        while p.returncode != 0:
+            if i == 3:
+                # tried 3 times, still failed
+                logging.error('Failed to create minikube cluster, aborting')
+                raise Exception('Failed to create minikube cluster')
 
+            logging.error('Failed to create minikube cluster, retrying')
+            i += 1
+            self.delete_cluster(name, kubeconfig)
+            time.sleep(5)
+            p = subprocess.run(cmd)
+        
+        cmd = ['minikube', 'addons', 'enable', 'csi-hostpath-driver']
+        cmd.extend(['--profile', name])
+        p = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        i = 0
+        print(cmd)
+        while p.returncode != 0:
+            if i == 3:
+                # tried 3 times, still failed
+                logging.error('Failed to create minikube cluster, aborting')
+                raise Exception('Failed to create minikube cluster')
+
+            logging.error('Failed to create minikube cluster, retrying')
+            i += 1
+            self.delete_cluster(name, kubeconfig)
+            time.sleep(5)
+            p = subprocess.run(cmd)
 
         try:
             kubernetes.config.load_kube_config(config_file=kubeconfig,
@@ -94,6 +125,7 @@ class Minikube(base.KubernetesEngine):
             with open(kubeconfig) as f:
                 logging.debug(f.read())
             raise e
+        os.environ.pop('KUBECONFIG', None)
 
     def load_images(self, images_archive_path: str, name: str):
         logging.info('Loading preload images')
