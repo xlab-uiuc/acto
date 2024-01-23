@@ -12,11 +12,14 @@ def deployment_strategy_tests(schema: ObjectSchema) -> list[TestCase]:
         lambda x: True,
         lambda x: {"type": "INVALID_DEPLOYMENT_STRATEGY"},
         lambda x: None,
+        invalid=True,
+        semantic=True,
     )
     change_test = TestCase(
         "k8s-deployment_strategy_change",
         lambda x: x != {"type": "RollingUpdate"},
         lambda x: {"type": "RollingUpdate"},
         lambda x: {"type": "Recreate"},
+        semantic=True,
     )
     return [invalid_test, change_test]

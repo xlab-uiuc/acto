@@ -13,12 +13,15 @@ def concurrent_policy_tests(schema: StringSchema) -> list[TestCase]:
         lambda x: True,
         lambda x: "InvalidConcurrencyPolicy",
         lambda x: "Forbid",
+        invalid=True,
+        semantic=True,
     )
     change_test = TestCase(
         "k8s-concurrency_policy_change",
         lambda x: True,
         lambda x: "Forbid" if x == "Replace" else "Replace",
         lambda x: "Forbid",
+        semantic=True,
     )
     return [invalid_test, change_test]
 
@@ -31,11 +34,14 @@ def schedule_tests(schema: ObjectSchema) -> list[TestCase]:
         lambda x: True,
         lambda x: "InvalidSchedule",
         lambda x: "0 * * * *",
+        invalid=True,
+        semantic=True,
     )
     change_test = TestCase(
         "k8s-cronjob_schedule_change",
         lambda x: True,
         lambda x: "0 * * * *" if x == "1 * * * *" else "1 * * * *",
         lambda x: "0 * * * *",
+        semantic=True,
     )
     return [invalid_test, change_test]

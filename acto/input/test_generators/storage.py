@@ -13,6 +13,8 @@ def access_mode_tests(schema: ArraySchema) -> list[TestCase]:
         lambda x: True,
         lambda x: ["InvalidAccessMode"],
         lambda x: ["ReadWriteOnce"],
+        invalid=True,
+        semantic=True,
     )
     change_test = TestCase(
         "k8s-change_access_mode",
@@ -21,6 +23,7 @@ def access_mode_tests(schema: ArraySchema) -> list[TestCase]:
         if x == ["ReadWriteMany"]
         else ["ReadWriteMany"],
         lambda x: ["ReadWriteOnce"],
+        semantic=True,
     )
     return [invalid_test, change_test]
 
@@ -33,5 +36,6 @@ def api_version_tests(schema: StringSchema) -> list[TestCase]:
         lambda x: True,
         lambda x: "v1" if x == "v2" else "v2",
         lambda x: "v1",
+        semantic=True,
     )
     return [change_test]

@@ -30,11 +30,14 @@ def ingress_tls_tests(schema: ObjectSchema) -> list[TestCase]:
         lambda x: True,
         lambda x: {"hosts": ["test.com"], "secretName": "non-existent"},
         lambda x: None,
+        invalid=True,
+        semantic=True,
     )
     change_test = TestCase(
         "k8s-ingressTLS-change",
         lambda x: x != {"hosts": ["example.com"]},
         lambda x: {"hosts": ["example.com"]},
         lambda x: {"hosts": ["example.org"]},
+        semantic=True,
     )
     return [invalid_test, change_test]

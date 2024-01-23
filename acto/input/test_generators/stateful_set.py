@@ -31,6 +31,8 @@ def replicas_tests(schema: IntegerSchema) -> list[TestCase]:
         lambda x: True,
         lambda x: 0,
         lambda x: 1,
+        invalid=True,
+        semantic=True,
     )
     scale_down_up_test = TestCase(
         "k8s-scaleDownUp",
@@ -38,6 +40,7 @@ def replicas_tests(schema: IntegerSchema) -> list[TestCase]:
         lambda x: 4 if x is None else x + 2,
         lambda x: 1 if x is None else x - 2,
         Store(),
+        semantic=True,
     )
     scale_up_down_test = TestCase(
         "k8s-scaleUpDown",
@@ -45,12 +48,15 @@ def replicas_tests(schema: IntegerSchema) -> list[TestCase]:
         lambda x: 1 if x is None else x - 2,
         lambda x: 5 if x is None else x + 2,
         Store(),
+        semantic=True,
     )
     overload_test = TestCase(
         "k8s-overload",
         lambda x: True,
         lambda x: 1000,
         lambda x: 1,
+        invalid=True,
+        semantic=True,
     )
     return [invalid_test, scale_down_up_test, scale_up_down_test, overload_test]
 
@@ -63,11 +69,14 @@ def stateful_set_update_strategy_tests(schema: ObjectSchema) -> list[TestCase]:
         lambda x: True,
         lambda x: {"type": "INVALID_STATEFUL_SET_UPDATE_STRATEGY"},
         lambda x: None,
+        invalid=True,
+        semantic=True,
     )
     change_test = TestCase(
         "k8s-update_strategy_change",
         lambda x: x != {"type": "RollingUpdate"},
         lambda x: {"type": "RollingUpdate"},
         lambda x: {"type": "OnDelete"},
+        semantic=True,
     )
     return [invalid_test, change_test]

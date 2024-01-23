@@ -36,12 +36,15 @@ def resource_requirements_tests(schema: ObjectSchema) -> list[TestCase]:
         lambda x: True,
         lambda x: {"limits": {"hugepages-2Mi": "1000m"}},
         lambda x: None,
+        invalid=True,
+        semantic=True,
     )
     change_test = TestCase(
         "resourceRequirements-change",
         lambda x: x != {"limits": {"cpu": "1000m"}},
         lambda x: {"limits": {"cpu": "1000m"}},
         lambda x: {"limits": {"cpu": "2000m"}},
+        semantic=True,
     )
     return [invalid_test, change_test]
 
@@ -54,11 +57,14 @@ def volume_resource_requirements_tests(schema: ObjectSchema) -> list[TestCase]:
         lambda x: True,
         lambda x: {"request": {"INVALID": "1000m"}},
         lambda x: None,
+        invalid=True,
+        semantic=True,
     )
     change_test = TestCase(
         "k8s-volumeResourceRequirements-change",
         lambda x: x != {"request": {"storage": "1000Mi"}},
         lambda x: {"request": {"storage": "1000Mi"}},
         lambda x: {"request": {"storage": "2000Mi"}},
+        semantic=True,
     )
     return [invalid_test, change_test]
