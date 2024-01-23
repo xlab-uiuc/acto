@@ -87,7 +87,7 @@ class InvalidInputResult(OracleResult):
 
     message: str = pydantic.Field(
         description="The message of the oracle run",
-        default="Found no matching fields for input",
+        default="Invalid input detected",
     )
     responsible_property: Optional[PropertyPath] = pydantic.Field(
         description="The fields that were not present in the input",
