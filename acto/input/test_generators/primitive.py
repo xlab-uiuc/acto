@@ -3,7 +3,7 @@
 import random
 
 import exrex
-from generator import generator
+from acto.input.test_generators.generator import generator
 
 from acto.input.testcase import EnumTestCase, SchemaPrecondition, TestCase
 from acto.schema import (
