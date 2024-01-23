@@ -20,7 +20,7 @@ from acto.schema import (
 from acto.utils.thread_logger import get_thread_logger
 
 
-def get_testcases(schema: BaseSchema) -> list[TestCase]:
+def resolve_testcases(schema: BaseSchema) -> list[TestCase]:
     """Get testcases for a schema"""
     if isinstance(schema, AnyOfSchema):
         return any_of_tests(schema)
@@ -52,7 +52,7 @@ def any_of_tests(schema: AnyOfSchema):
             ret.append(EnumTestCase(case))
     else:
         for sub_schema in schema.possibilities:
-            testcases = get_testcases(sub_schema)
+            testcases = resolve_testcases(sub_schema)
             for testcase in testcases:
                 testcase.add_precondition(
                     SchemaPrecondition(sub_schema).precondition
