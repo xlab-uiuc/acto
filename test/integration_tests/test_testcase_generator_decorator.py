@@ -14,6 +14,7 @@ from acto.input.test_generators.generator import (
 )
 from acto.input.testcase import TestCase
 from acto.schema import extract_schema
+from acto.schema.integer import IntegerSchema
 
 test_dir = pathlib.Path(__file__).parent.resolve()
 test_data_dir = os.path.join(test_dir, "test_data")
@@ -23,7 +24,7 @@ def gen(_):
     return [TestCase("test", lambda x: True, lambda x: None, lambda x: None)]
 
 
-class TestSchema(unittest.TestCase):
+class TestTestGeneratorDecorator(unittest.TestCase):
     """This class tests the schema matching code for various CRDs."""
 
     @classmethod
@@ -176,3 +177,14 @@ class TestSchema(unittest.TestCase):
 
         testcases = get_testcases(self.spec_schema, self.matches)
         self.assertEqual(len(testcases), 0 + 4 + 1)
+
+    def test_func_call_validation(self):
+        TEST_GENERATORS.clear()
+
+        # pylint: disable=unused-argument
+        @generator(property_type="String")
+        def gen0(schema: IntegerSchema):
+            return []
+
+        with self.assertRaises(ValueError):
+            get_testcases(self.spec_schema, self.matches)

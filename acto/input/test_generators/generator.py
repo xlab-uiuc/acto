@@ -1,10 +1,10 @@
 """This module provides a decorator for generating test cases for a schema and
 a function to get all test cases for a schema."""
 
+import inspect
 from dataclasses import dataclass
+from functools import wraps
 from typing import Callable, Literal, Optional
-
-import pydantic
 
 from acto.input.k8s_schemas import KubernetesObjectSchema
 from acto.input.testcase import TestCase
@@ -50,6 +50,7 @@ class TestGenerator:
         schema: BaseSchema,
         matched_schema: Optional[KubernetesObjectSchema],
     ) -> bool:
+        """Check if the test generator matches the schema"""
         return all(
             [
                 self._match_path(schema),
@@ -91,6 +92,7 @@ class TestGenerator:
                 return True
         else:
             raise ValueError(f"Unknown schema type: {self.property_type}")
+        return False
 
     def _match_k8s_schema_name(
         self, matched_schema: Optional[KubernetesObjectSchema]
@@ -105,6 +107,27 @@ class TestGenerator:
 # singleton
 # global variable for registered test generators
 TEST_GENERATORS: list[TestGenerator] = []
+
+
+def validate_call(func: Callable) -> Callable:
+    """Validates the `schema` argument type for call to a test generator
+    function"""
+
+    error_msg = (
+        "Argument `schema` of function {} got type {} but expected type {}"
+    )
+
+    @wraps(func)
+    def wrapped_func(*args, **kwargs):
+        # TODO: handle parameter name other than `schema` and improve error msg
+        if schema_arg := inspect.signature(func).parameters.get("schema"):
+            if not isinstance(args[0], schema_arg.annotation):
+                raise TypeError(
+                    error_msg.format(func, schema_arg.annotation, type(args[0]))
+                )
+        return func(*args, **kwargs)
+
+    return wrapped_func
 
 
 def generator(
@@ -142,7 +165,7 @@ def generator(
     ), "One of k8s_schema_name, schema_name, schema_type, paths must be specified"
 
     def wrapped_func(func: Callable[[BaseSchema], list[TestCase]]):
-        func = pydantic.validate_call(func)
+        func = validate_call(func)
         gen_obj = TestGenerator(
             k8s_schema_name,
             property_name,
