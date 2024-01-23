@@ -1,5 +1,5 @@
 # pylint: disable=unused-argument
-from acto.input.test_generators.generator import generator
+from acto.input.test_generators.generator import test_generator
 from acto.input.testcase import Store, TestCase
 from acto.schema.integer import IntegerSchema
 from acto.schema.object import ObjectSchema
@@ -23,7 +23,7 @@ def scale_up_down_precondition(prev, store: Store) -> bool:
         return True
 
 
-@generator(property_name="replicas")
+@test_generator(property_name="replicas")
 def replicas_tests(schema: IntegerSchema) -> list[TestCase]:
     """Generate test cases for replicas field"""
     invalid_test = TestCase(
@@ -61,7 +61,7 @@ def replicas_tests(schema: IntegerSchema) -> list[TestCase]:
     return [invalid_test, scale_down_up_test, scale_up_down_test, overload_test]
 
 
-@generator(property_name="StatefulSetUpdateStrategy")
+@test_generator(property_name="StatefulSetUpdateStrategy")
 def stateful_set_update_strategy_tests(schema: ObjectSchema) -> list[TestCase]:
     """Generate test cases for StatefulSetUpdateStrategy field"""
     invalid_test = TestCase(

@@ -1,5 +1,5 @@
 # pylint: disable=unused-argument
-from acto.input.test_generators.generator import generator
+from acto.input.test_generators.generator import test_generator
 from acto.input.testcase import TestCase
 from acto.k8s_util.k8sutil import (
     canonicalize_quantity,
@@ -10,7 +10,7 @@ from acto.schema.object import ObjectSchema
 from acto.schema.string import StringSchema
 
 
-@generator(k8s_schema_name="apimachinery.pkg.api.resource.Quantity")
+@test_generator(k8s_schema_name="apimachinery.pkg.api.resource.Quantity")
 def quantity_tests(schema: StringSchema) -> list[TestCase]:
     """Generate test cases for quantity field"""
     increase_test = TestCase(
@@ -28,7 +28,7 @@ def quantity_tests(schema: StringSchema) -> list[TestCase]:
     return [increase_test, decrease_test]
 
 
-@generator(k8s_schema_name="core.v1.ResourceRequirements")
+@test_generator(k8s_schema_name="core.v1.ResourceRequirements")
 def resource_requirements_tests(schema: ObjectSchema) -> list[TestCase]:
     """Generate test cases for resourceRequirements field"""
     invalid_test = TestCase(
@@ -49,7 +49,7 @@ def resource_requirements_tests(schema: ObjectSchema) -> list[TestCase]:
     return [invalid_test, change_test]
 
 
-@generator(k8s_schema_name="core.v1.VolumeResourceRequirements")
+@test_generator(k8s_schema_name="core.v1.VolumeResourceRequirements")
 def volume_resource_requirements_tests(schema: ObjectSchema) -> list[TestCase]:
     """Generate test cases for volumeResourceRequirements field"""
     invalid_test = TestCase(

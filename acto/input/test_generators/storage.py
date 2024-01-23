@@ -1,11 +1,11 @@
 # pylint: disable=unused-argument
-from acto.input.test_generators.generator import generator
+from acto.input.test_generators.generator import test_generator
 from acto.input.testcase import TestCase
 from acto.schema.array import ArraySchema
 from acto.schema.string import StringSchema
 
 
-@generator(property_name="accessModes")
+@test_generator(property_name="accessModes")
 def access_mode_tests(schema: ArraySchema) -> list[TestCase]:
     """Generate test cases for accessModes field"""
     invalid_test = TestCase(
@@ -28,7 +28,7 @@ def access_mode_tests(schema: ArraySchema) -> list[TestCase]:
     return [invalid_test, change_test]
 
 
-@generator(property_name="apiVersion")
+@test_generator(property_name="apiVersion")
 def api_version_tests(schema: StringSchema) -> list[TestCase]:
     """Generate test cases for apiVersion field"""
     change_test = TestCase(

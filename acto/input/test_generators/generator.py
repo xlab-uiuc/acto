@@ -130,7 +130,7 @@ def validate_call(func: Callable) -> Callable:
     return wrapped_func
 
 
-def generator(
+def test_generator(
     k8s_schema_name: Optional[str] = None,
     property_name: Optional[str] = None,
     property_type: Optional[
@@ -199,9 +199,9 @@ def get_testcases(
         path_str = "/".join(schema.path)
         matched_schema = matched_schemas_dict.get(path_str)
 
-        for test_generator in TEST_GENERATORS:
-            if test_generator.match(schema, matched_schema):
-                generator_candidates.append(test_generator)
+        for test_generator_ in TEST_GENERATORS:
+            if test_generator_.match(schema, matched_schema):
+                generator_candidates.append(test_generator_)
 
         # sort by priority
         generator_candidates.sort(key=lambda x: x.priority, reverse=True)

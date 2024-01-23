@@ -1,10 +1,11 @@
 """Testcase generators for primitive types"""
+# pylint: disable=unused-argument, invalid-name, unused-variable
 
 import random
 
 import exrex
-from acto.input.test_generators.generator import generator
 
+from acto.input.test_generators.generator import test_generator
 from acto.input.testcase import EnumTestCase, SchemaPrecondition, TestCase
 from acto.schema import (
     AnyOfSchema,
@@ -42,7 +43,7 @@ def get_testcases(schema: BaseSchema) -> list[TestCase]:
         raise NotImplementedError
 
 
-@generator(property_type="AnyOf")
+@test_generator(property_type="AnyOf")
 def any_of_tests(schema: AnyOfSchema):
     """Generate testcases for AnyOf type"""
 
@@ -61,7 +62,7 @@ def any_of_tests(schema: AnyOfSchema):
     return ret
 
 
-@generator(property_type="Array")
+@test_generator(property_type="Array")
 def array_tests(schema: ArraySchema):
     """Representation of an array node
 
@@ -80,7 +81,7 @@ def array_tests(schema: ArraySchema):
     EMPTY_TEST = "array-empty"
 
     def push_precondition(prev):
-        if prev == None:
+        if prev is None:
             return False
         if len(prev) >= schema.max_items:
             return False
@@ -96,16 +97,17 @@ def array_tests(schema: ArraySchema):
             for example in schema.examples:
                 if len(example) > 1:
                     logger.info(
-                        "Using example for setting up field [%s]: [%s]"
-                        % (schema.path, schema.examples[0])
+                        "Using example for setting up field [%s]: [%s]",
+                        schema.path,
+                        schema.examples[0],
                     )
                     return example
-        if prev == None:
+        if prev is None:
             return schema.gen()
         return schema.gen(size=schema.min_items)
 
     def pop_precondition(prev):
-        if prev == None:
+        if prev is None:
             return False
         if len(prev) <= schema.min_items:
             return False
@@ -124,11 +126,12 @@ def array_tests(schema: ArraySchema):
             for example in schema.examples:
                 if len(example) > 1:
                     logger.info(
-                        "Using example for setting up field [%s]: [%s]"
-                        % (schema.path, schema.examples[0])
+                        "Using example for setting up field [%s]: [%s]",
+                        schema.path,
+                        schema.examples[0],
                     )
                     return example
-        if prev == None:
+        if prev is None:
             return schema.gen()
         return schema.gen(size=schema.max_items)
 
@@ -146,7 +149,7 @@ def array_tests(schema: ArraySchema):
 
     def delete_precondition(schema, prev):
         return (
-            prev != None
+            prev is not None
             and prev != schema.default
             and prev != schema.empty_value()
         )
@@ -155,8 +158,9 @@ def array_tests(schema: ArraySchema):
         logger = get_thread_logger(with_prefix=True)
         if len(schema.examples) > 0:
             logger.info(
-                "Using example for setting up field [%s]: [%s]"
-                % (schema.path, schema.examples[0])
+                "Using example for setting up field [%s]: [%s]",
+                schema.path,
+                schema.examples[0],
             )
             example_without_default = [
                 x for x in schema.enum if x != schema.default
@@ -183,7 +187,7 @@ def array_tests(schema: ArraySchema):
     return ret
 
 
-@generator(property_type="Boolean")
+@test_generator(property_type="Boolean")
 def boolean_tests(schema: BooleanSchema):
     """Generate testcases for Boolean type"""
     DELETION_TEST = "boolean-deletion"
@@ -191,9 +195,9 @@ def boolean_tests(schema: BooleanSchema):
     TOGGLE_ON_TEST = "boolean-toggle-on"
 
     def toggle_on_precondition(prev):
-        if prev == None and schema.default == False:
+        if prev is None and schema.default is False:
             return True
-        elif prev == False:
+        elif prev is False:
             return True
         else:
             return False
@@ -205,9 +209,9 @@ def boolean_tests(schema: BooleanSchema):
         return False
 
     def toggle_off_precondition(prev):
-        if prev == None and schema.default == True:
+        if prev is None and schema.default is True:
             return True
-        elif prev == True:
+        elif prev is True:
             return True
         else:
             return False
@@ -223,7 +227,7 @@ def boolean_tests(schema: BooleanSchema):
 
     def delete_precondition(prev):
         return (
-            prev != None
+            prev is not None
             and prev != schema.default
             and prev != schema.empty_value()
         )
@@ -232,8 +236,9 @@ def boolean_tests(schema: BooleanSchema):
         logger = get_thread_logger(with_prefix=True)
         if len(schema.examples) > 0:
             logger.info(
-                "Using example for setting up field [%s]: [%s]"
-                % (schema.path, schema.examples[0])
+                "Using example for setting up field [%s]: [%s]",
+                schema.path,
+                schema.examples[0],
             )
             example_without_default = [
                 x for x in schema.enum if x != schema.default
@@ -269,7 +274,7 @@ def boolean_tests(schema: BooleanSchema):
     return ret
 
 
-@generator(property_type="Number")
+@test_generator(property_type="Number")
 def number_tests(schema: NumberSchema):
     """Generate testcases for Number type
 
@@ -291,15 +296,15 @@ def number_tests(schema: NumberSchema):
     CHANGE_TEST = "number-change"
 
     def increase_precondition(prev):
-        if prev == None:
+        if prev is None:
             return False
-        if schema.multiple_of == None:
+        if schema.multiple_of is None:
             return prev < schema.maximum
         else:
             return prev < schema.maximum - schema.multiple_of
 
     def increase(prev):
-        if schema.multiple_of != None:
+        if schema.multiple_of is not None:
             return prev + schema.multiple_of
         else:
             return random.uniform(prev, schema.maximum)
@@ -308,15 +313,15 @@ def number_tests(schema: NumberSchema):
         return schema.minimum
 
     def decrease_precondition(prev):
-        if prev == None:
+        if prev is None:
             return False
-        if schema.multiple_of == None:
+        if schema.multiple_of is None:
             return prev > schema.minimum
         else:
             return prev > schema.minimum + schema.multiple_of
 
     def decrease(prev):
-        if schema.multiple_of != None:
+        if schema.multiple_of is not None:
             return prev - schema.multiple_of
         else:
             return random.uniform(schema.minimum, prev)
@@ -334,16 +339,16 @@ def number_tests(schema: NumberSchema):
         return 1
 
     def change_precondition(prev):
-        return prev != None
+        return prev is not None
 
     def change(prev):
         """Test case to change the value to another one"""
         logger = get_thread_logger(with_prefix=True)
-        if schema.enum != None:
+        if schema.enum is not None:
             logger.fatal(
                 "Number field with enum should not call change to mutate"
             )
-        if schema.multiple_of != None:
+        if schema.multiple_of is not None:
             new_number = random.randrange(
                 schema.minimum, schema.maximum + 1, schema.multiple_of
             )
@@ -363,7 +368,7 @@ def number_tests(schema: NumberSchema):
 
     def delete_precondition(prev):
         return (
-            prev != None
+            prev is not None
             and prev != schema.default
             and prev != schema.empty_value()
         )
@@ -372,8 +377,9 @@ def number_tests(schema: NumberSchema):
         logger = get_thread_logger(with_prefix=True)
         if len(schema.examples) > 0:
             logger.info(
-                "Using example for setting up field [%s]: [%s]"
-                % (schema.path, schema.examples[0])
+                "Using example for setting up field [%s]: [%s]",
+                schema.path,
+                schema.examples[0],
             )
             example_without_default = [
                 x for x in schema.enum if x != schema.default
@@ -398,7 +404,7 @@ def number_tests(schema: NumberSchema):
     return testcases
 
 
-@generator(property_type="Integer")
+@test_generator(property_type="Integer")
 def integer_tests(schema: IntegerSchema):
     """Generate testcases for Integer type
 
@@ -419,15 +425,15 @@ def integer_tests(schema: IntegerSchema):
     CHANGE_TEST = "integer-change"
 
     def increase_precondition(prev):
-        if prev == None:
+        if prev is None:
             return False
-        if schema.multiple_of == None:
+        if schema.multiple_of is None:
             return prev < schema.maximum
         else:
             return prev < schema.maximum - schema.multiple_of
 
     def increase(prev):
-        if schema.multiple_of != None:
+        if schema.multiple_of is not None:
             return random.randrange(
                 prev, schema.maximum + 1, schema.multiple_of
             )
@@ -438,15 +444,15 @@ def integer_tests(schema: IntegerSchema):
         return schema.minimum
 
     def decrease_precondition(prev):
-        if prev == None:
+        if prev is None:
             return False
-        if schema.multiple_of == None:
+        if schema.multiple_of is None:
             return prev > schema.minimum
         else:
             return prev > schema.minimum + schema.multiple_of
 
     def decrease(prev):
-        if schema.multiple_of != None:
+        if schema.multiple_of is not None:
             return random.randrange(schema.minimum, prev, schema.multiple_of)
         else:
             return max(schema.minimum, int(prev / 2))
@@ -455,7 +461,7 @@ def integer_tests(schema: IntegerSchema):
         return schema.maximum
 
     def change_precondition(prev):
-        return prev != None
+        return prev is not None
 
     def change(prev):
         return prev + 2
@@ -468,7 +474,7 @@ def integer_tests(schema: IntegerSchema):
 
     def delete_precondition(prev):
         return (
-            prev != None
+            prev is not None
             and prev != schema.default
             and prev != schema.empty_value()
         )
@@ -477,8 +483,9 @@ def integer_tests(schema: IntegerSchema):
         logger = get_thread_logger(with_prefix=True)
         if len(schema.examples) > 0:
             logger.info(
-                "Using example for setting up field [%s]: [%s]"
-                % (schema.path, schema.examples[0])
+                "Using example for setting up field [%s]: [%s]",
+                schema.path,
+                schema.examples[0],
             )
             example_without_default = [
                 x for x in schema.enum if x != schema.default
@@ -503,7 +510,7 @@ def integer_tests(schema: IntegerSchema):
     return testcases
 
 
-@generator(property_type="Object")
+@test_generator(property_type="Object")
 def object_tests(schema: ObjectSchema):
     """Generate testcases for Object type
 
@@ -536,7 +543,7 @@ def object_tests(schema: ObjectSchema):
 
     def delete_precondition(prev):
         return (
-            prev != None
+            prev is not None
             and prev != schema.default
             and prev != schema.empty_value()
         )
@@ -545,8 +552,9 @@ def object_tests(schema: ObjectSchema):
         logger = get_thread_logger(with_prefix=True)
         if len(schema.examples) > 0:
             logger.info(
-                "Using example for setting up field [%s]: [%s]"
-                % (schema.path, schema.examples[0])
+                "Using example for setting up field [%s]: [%s]",
+                schema.path,
+                schema.examples[0],
             )
             example_without_default = [
                 x for x in schema.enum if x != schema.default
@@ -569,13 +577,13 @@ def object_tests(schema: ObjectSchema):
     return ret
 
 
-@generator(property_type="Opaque")
+@test_generator(property_type="Opaque")
 def opaque_gen(schema: OpaqueSchema):
     """Opaque schema to handle the fields that do not have a schema"""
     return []
 
 
-@generator(property_type="String")
+@test_generator(property_type="String")
 def string_tests(schema: StringSchema):
     """Representation of a generic value generator for string schema
 
@@ -590,16 +598,16 @@ def string_tests(schema: StringSchema):
     EMPTY_TEST = "string-empty"
 
     def change_precondition(prev):
-        return prev != None
+        return prev is not None
 
     def change(prev):
         """Test case to change the value to another one"""
         logger = get_thread_logger(with_prefix=True)
-        if schema.enum != None:
+        if schema.enum is not None:
             logger.fatal(
                 "String field with enum should not call change to mutate"
             )
-        if schema.pattern != None:
+        if schema.pattern is not None:
             new_string = exrex.getone(schema.pattern, schema.max_length)
         else:
             new_string = "ACTOKEY"
@@ -613,8 +621,9 @@ def string_tests(schema: StringSchema):
         logger = get_thread_logger(with_prefix=True)
         if len(schema.examples) > 0:
             logger.info(
-                "Using example for setting up field [%s]: [%s]"
-                % (schema.path, schema.examples[0])
+                "Using example for setting up field [%s]: [%s]",
+                schema.path,
+                schema.examples[0],
             )
             return schema.examples[0]
         else:
@@ -634,7 +643,7 @@ def string_tests(schema: StringSchema):
 
     def delete_precondition(prev):
         return (
-            prev != None
+            prev is not None
             and prev != schema.default
             and prev != schema.empty_value()
         )
@@ -643,8 +652,9 @@ def string_tests(schema: StringSchema):
         logger = get_thread_logger(with_prefix=True)
         if len(schema.examples) > 0:
             logger.info(
-                "Using example for setting up field [%s]: [%s]"
-                % (schema.path, schema.examples[0])
+                "Using example for setting up field [%s]: [%s]",
+                schema.path,
+                schema.examples[0],
             )
             example_without_default = [
                 x for x in schema.enum if x != schema.default

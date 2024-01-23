@@ -9,8 +9,8 @@ import yaml
 from acto.input.k8s_schemas import K8sSchemaMatcher
 from acto.input.test_generators.generator import (
     TEST_GENERATORS,
-    generator,
     get_testcases,
+    test_generator,
 )
 from acto.input.testcase import TestCase
 from acto.schema import extract_schema
@@ -43,12 +43,12 @@ class TestTestGeneratorDecorator(unittest.TestCase):
 
     def test_path_suffix(self):
         TEST_GENERATORS.clear()
-        generator(paths=["serviceAccountToken/expirationSeconds"])(gen)
+        test_generator(paths=["serviceAccountToken/expirationSeconds"])(gen)
         testcases = get_testcases(self.spec_schema, self.matches)
         self.assertEqual(len(testcases), 1)
 
         TEST_GENERATORS.clear()
-        generator(
+        test_generator(
             paths=[
                 "serviceAccountToken/expirationSeconds",
                 "volumes/ITEM/quobyte/user",
@@ -59,54 +59,54 @@ class TestTestGeneratorDecorator(unittest.TestCase):
 
     def test_k8s_schema_name(self):
         TEST_GENERATORS.clear()
-        generator(k8s_schema_name="v1.NodeAffinity")(gen)
+        test_generator(k8s_schema_name="v1.NodeAffinity")(gen)
         testcases = get_testcases(self.spec_schema, self.matches)
         self.assertEqual(len(testcases), 2)
 
         TEST_GENERATORS.clear()
-        generator(k8s_schema_name="HTTPHeader")(gen)
+        test_generator(k8s_schema_name="HTTPHeader")(gen)
         testcases = get_testcases(self.spec_schema, self.matches)
         self.assertEqual(len(testcases), 15)
 
     def test_field_name(self):
         TEST_GENERATORS.clear()
-        generator(property_name="ports")(gen)
+        test_generator(property_name="ports")(gen)
         testcases = get_testcases(self.spec_schema, self.matches)
         self.assertEqual(len(testcases), 4)
 
         TEST_GENERATORS.clear()
-        generator(property_name="image")(gen)
+        test_generator(property_name="image")(gen)
         testcases = get_testcases(self.spec_schema, self.matches)
         self.assertEqual(len(testcases), 5)
 
     def test_field_type(self):
         TEST_GENERATORS.clear()
-        generator(property_type="AnyOf")(gen)
+        test_generator(property_type="AnyOf")(gen)
         testcases = get_testcases(self.spec_schema, self.matches)
         self.assertEqual(len(testcases), 38)
 
         TEST_GENERATORS.clear()
-        generator(property_type="Array")(gen)
+        test_generator(property_type="Array")(gen)
         testcases = get_testcases(self.spec_schema, self.matches)
         self.assertEqual(len(testcases), 173)
 
         TEST_GENERATORS.clear()
-        generator(property_type="Boolean")(gen)
+        test_generator(property_type="Boolean")(gen)
         testcases = get_testcases(self.spec_schema, self.matches)
         self.assertEqual(len(testcases), 73)
 
         TEST_GENERATORS.clear()
-        generator(property_type="Integer")(gen)
+        test_generator(property_type="Integer")(gen)
         testcases = get_testcases(self.spec_schema, self.matches)
         self.assertEqual(len(testcases), 106)
 
         TEST_GENERATORS.clear()
-        generator(property_type="Number")(gen)
+        test_generator(property_type="Number")(gen)
         testcases = get_testcases(self.spec_schema, self.matches)
         self.assertEqual(len(testcases), 106)
 
         TEST_GENERATORS.clear()
-        generator(property_type="Object")(gen)
+        test_generator(property_type="Object")(gen)
         testcases = get_testcases(self.spec_schema, self.matches)
         self.assertEqual(len(testcases), 368)
 
@@ -121,14 +121,14 @@ class TestTestGeneratorDecorator(unittest.TestCase):
         # self.assertEqual(len(testcases), 0)
 
         TEST_GENERATORS.clear()
-        generator(property_type="String")(gen)
+        test_generator(property_type="String")(gen)
         testcases = get_testcases(self.spec_schema, self.matches)
         self.assertEqual(len(testcases), 550)
 
     def test_priority(self):
         TEST_GENERATORS.clear()
 
-        @generator(property_type="Integer", priority=0)
+        @test_generator(property_type="Integer", priority=0)
         def gen0(_):
             return [
                 TestCase(
@@ -139,7 +139,7 @@ class TestTestGeneratorDecorator(unittest.TestCase):
                 )
             ]
 
-        @generator(property_name="replicas", priority=1)
+        @test_generator(property_name="replicas", priority=1)
         def gen1(_):
             return [
                 TestCase(
@@ -160,17 +160,17 @@ class TestTestGeneratorDecorator(unittest.TestCase):
     def test_multiple_constraints(self):
         TEST_GENERATORS.clear()
 
-        generator(
+        test_generator(
             property_type="Integer",
             property_name="type",
         )(gen)
 
-        generator(
+        test_generator(
             property_name="type",
             paths=["seLinuxOptions/type"],
         )(gen)
 
-        generator(
+        test_generator(
             property_type="String",
             paths=["hostPath/type"],
         )(gen)
@@ -182,7 +182,7 @@ class TestTestGeneratorDecorator(unittest.TestCase):
         TEST_GENERATORS.clear()
 
         # pylint: disable=unused-argument
-        @generator(property_type="String")
+        @test_generator(property_type="String")
         def gen0(schema: IntegerSchema):
             return []
 
