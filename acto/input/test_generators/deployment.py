@@ -1,10 +1,12 @@
 # pylint: disable=unused-argument
-from acto.input.test_generators.generator import test_generator
+from acto.input.test_generators.generator import Priority, test_generator
 from acto.input.testcase import TestCase
 from acto.schema.object import ObjectSchema
 
 
-@test_generator(k8s_schema_name="apps.v1.DeploymentStrategy")
+@test_generator(
+    k8s_schema_name="apps.v1.DeploymentStrategy", priority=Priority.SEMANTIC
+)
 def deployment_strategy_tests(schema: ObjectSchema) -> list[TestCase]:
     """Generate test cases for deploymentStrategy field"""
     invalid_test = TestCase(

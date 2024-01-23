@@ -1,5 +1,5 @@
 # pylint: disable=unused-argument
-from acto.input.test_generators.generator import test_generator
+from acto.input.test_generators.generator import Priority, test_generator
 from acto.input.testcase import TestCase
 from acto.schema.object import ObjectSchema
 
@@ -22,7 +22,9 @@ from acto.schema.object import ObjectSchema
 #     return [invalid_test, change_test]
 
 
-@test_generator(k8s_schema_name="networking.v1.IngressTLS")
+@test_generator(
+    k8s_schema_name="networking.v1.IngressTLS", priority=Priority.SEMANTIC
+)
 def ingress_tls_tests(schema: ObjectSchema) -> list[TestCase]:
     """Generate test cases for ingressTLS field"""
     invalid_test = TestCase(

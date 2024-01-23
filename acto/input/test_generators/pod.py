@@ -1,7 +1,7 @@
 # pylint: disable=unused-argument
 import enum
 
-from acto.input.test_generators.generator import test_generator
+from acto.input.test_generators.generator import Priority, test_generator
 from acto.input.testcase import TestCase
 from acto.schema.array import ArraySchema
 from acto.schema.object import ObjectSchema
@@ -149,7 +149,7 @@ class AffinityValues(enum.Enum):
     }
 
 
-@test_generator(k8s_schema_name="core.v1.Affinity")
+@test_generator(k8s_schema_name="core.v1.Affinity", priority=Priority.SEMANTIC)
 def affinity_tests(schema: ObjectSchema) -> list[TestCase]:
     """Test generator for CoreV1 Affinity"""
     all_on_one_node_test = TestCase(
@@ -210,7 +210,9 @@ class PodSecurityContextValues(enum.Enum):
     }
 
 
-@test_generator(k8s_schema_name="core.v1.PodSecurityContext")
+@test_generator(
+    k8s_schema_name="core.v1.PodSecurityContext", priority=Priority.SEMANTIC
+)
 def pod_security_context_tests(schema: ObjectSchema) -> list[TestCase]:
     """Test generator for PodSecurityContext"""
     bad_security_context_test = TestCase(
@@ -267,7 +269,9 @@ class TolerationValues(enum.Enum):
     }
 
 
-@test_generator(k8s_schema_name="core.v1.Toleration")
+@test_generator(
+    k8s_schema_name="core.v1.Toleration", priority=Priority.SEMANTIC
+)
 def toleration_tests(schema: ObjectSchema) -> list[TestCase]:
     """Test generator for Toleration"""
     plain_toleration_test = TestCase(
@@ -299,7 +303,9 @@ def toleration_tests(schema: ObjectSchema) -> list[TestCase]:
     ]
 
 
-@test_generator(k8s_schema_name="core.v1.Tolerations")
+@test_generator(
+    k8s_schema_name="core.v1.Tolerations", priority=Priority.SEMANTIC
+)
 def tolerations_tests(schema: ArraySchema) -> list[TestCase]:
     """Test generator for Tolerations"""
     tolerations_pop_test = TestCase(
@@ -320,7 +326,7 @@ class ImagePullPolicyValues(enum.Enum):
     IF_NOT_PRESENT = "IfNotPresent"
 
 
-@test_generator(property_name="imagePullPolicy")
+@test_generator(property_name="imagePullPolicy", priority=Priority.SEMANTIC)
 def image_pull_policy_tests(schema: StringSchema) -> list[TestCase]:
     """Test generator for imagePullPolicy"""
     change_test = TestCase(
@@ -341,7 +347,9 @@ def image_pull_policy_tests(schema: StringSchema) -> list[TestCase]:
     return [change_test, invalid_test]
 
 
-@test_generator(k8s_schema_name="core.v1.GRPCAction")
+@test_generator(
+    k8s_schema_name="core.v1.GRPCAction", priority=Priority.SEMANTIC
+)
 def grpc_action_tests(schema: ObjectSchema) -> list[TestCase]:
     """Test generator for grpc action"""
     invalid_test = TestCase(
@@ -355,7 +363,7 @@ def grpc_action_tests(schema: ObjectSchema) -> list[TestCase]:
     return [invalid_test]
 
 
-@test_generator(k8s_schema_name="core.v1.Probe")
+@test_generator(k8s_schema_name="core.v1.Probe", priority=Priority.SEMANTIC)
 def liveness_probe_tests(schema: ObjectSchema) -> list[TestCase]:
     """Test generator for liveness probe"""
     invalid_test = TestCase(
@@ -385,7 +393,7 @@ def liveness_probe_tests(schema: ObjectSchema) -> list[TestCase]:
     return [invalid_test, invalid_tcp_test, invalid_exec_test]
 
 
-@test_generator(k8s_schema_name="core.v1.Container")
+@test_generator(k8s_schema_name="core.v1.Container", priority=Priority.SEMANTIC)
 def container_tests(schema: ObjectSchema) -> list[TestCase]:
     """Test generator for container"""
     invalid_test = TestCase(
@@ -399,7 +407,7 @@ def container_tests(schema: ObjectSchema) -> list[TestCase]:
     return [invalid_test]
 
 
-@test_generator(property_name="name")
+@test_generator(property_name="name", priority=Priority.SEMANTIC)
 def invalid_name_tests(schema: StringSchema) -> list[TestCase]:
     """Test generator for invalid name"""
     # TODO: inherit basic tests
@@ -421,7 +429,7 @@ class PreemptionPolicyValues(enum.Enum):
     PREMEPTION_LOW_PRIORITY = "PreemptLowerPriority"
 
 
-@test_generator(property_name="preemptionPolicy")
+@test_generator(property_name="preemptionPolicy", priority=Priority.SEMANTIC)
 def preemption_policy_tests(schema: StringSchema) -> list[TestCase]:
     """Test generator for preemption policy"""
     policy_change_test = TestCase(
@@ -434,7 +442,7 @@ def preemption_policy_tests(schema: StringSchema) -> list[TestCase]:
     return [policy_change_test]
 
 
-@test_generator(property_name="restartPolicy")
+@test_generator(property_name="restartPolicy", priority=Priority.SEMANTIC)
 def restart_policy_tests(schema: StringSchema) -> list[TestCase]:
     """Test generator for restart policy"""
     invalid_test = TestCase(
@@ -455,7 +463,7 @@ def restart_policy_tests(schema: StringSchema) -> list[TestCase]:
     return [invalid_test, change_test]
 
 
-@test_generator(property_name="priorityClassName")
+@test_generator(property_name="priorityClassName", priority=Priority.SEMANTIC)
 def priority_class_name_tests(schema: StringSchema) -> list[TestCase]:
     """Test generator for priority class name"""
     invalid_test = TestCase(
@@ -476,7 +484,7 @@ def priority_class_name_tests(schema: StringSchema) -> list[TestCase]:
     return [invalid_test, change_test]
 
 
-@test_generator(property_name="serviceAccountName")
+@test_generator(property_name="serviceAccountName", priority=Priority.SEMANTIC)
 def service_account_name_tests(schema: StringSchema) -> list[TestCase]:
     """Test generator for service account name"""
     invalid_test = TestCase(
@@ -497,7 +505,7 @@ def service_account_name_tests(schema: StringSchema) -> list[TestCase]:
     return [invalid_test, change_test]
 
 
-@test_generator(property_name="whenUnsatisfiable")
+@test_generator(property_name="whenUnsatisfiable", priority=Priority.SEMANTIC)
 def when_unsatisfiable_tests(schema: StringSchema) -> list[TestCase]:
     """Test generator for when unsatisfiable"""
     invalid_test = TestCase(
@@ -518,7 +526,10 @@ def when_unsatisfiable_tests(schema: StringSchema) -> list[TestCase]:
     return [invalid_test, change_test]
 
 
-@test_generator(k8s_schema_name="core.v1.TopologySpreadConstraint")
+@test_generator(
+    k8s_schema_name="core.v1.TopologySpreadConstraint",
+    priority=Priority.SEMANTIC,
+)
 def topology_spread_constraint_tests(schema: ObjectSchema) -> list[TestCase]:
     """Test generator for topology spread constraint"""
     invalid_test = TestCase(

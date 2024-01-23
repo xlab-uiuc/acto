@@ -3,6 +3,7 @@ a function to get all test cases for a schema."""
 
 import inspect
 from dataclasses import dataclass
+from enum import IntEnum
 from functools import wraps
 from typing import Callable, Literal, Optional
 
@@ -22,6 +23,14 @@ from acto.schema import (
     OpaqueSchema,
     StringSchema,
 )
+
+
+class Priority(IntEnum):
+    """Priority enum for test generators"""
+
+    PRIMITIVE = 0
+    SEMANTIC = 1
+    CUSTOM = 2
 
 
 @dataclass
@@ -44,7 +53,7 @@ class TestGenerator:
         ]
     ]
     paths: Optional[list[str]]
-    priority: int
+    priority: Priority
     func: Callable[[BaseSchema], list[TestCase]]
 
     def match(
@@ -150,7 +159,7 @@ def test_generator(
         ]
     ] = None,
     paths: Optional[list[str]] = None,
-    priority: int = 0,
+    priority: Priority = Priority.CUSTOM,
 ):
     """Annotates a function as a test generator
 

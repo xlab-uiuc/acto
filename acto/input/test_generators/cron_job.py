@@ -1,11 +1,11 @@
 # pylint: disable=unused-argument
-from acto.input.test_generators.generator import test_generator
+from acto.input.test_generators.generator import Priority, test_generator
 from acto.input.testcase import TestCase
 from acto.schema.object import ObjectSchema
 from acto.schema.string import StringSchema
 
 
-@test_generator(property_name="concurrentPolicy")
+@test_generator(property_name="concurrentPolicy", priority=Priority.SEMANTIC)
 def concurrent_policy_tests(schema: StringSchema) -> list[TestCase]:
     """Generate test cases for concurrentPolicy field"""
     invalid_test = TestCase(
@@ -26,7 +26,7 @@ def concurrent_policy_tests(schema: StringSchema) -> list[TestCase]:
     return [invalid_test, change_test]
 
 
-@test_generator(property_name="schedule")
+@test_generator(property_name="schedule", priority=Priority.SEMANTIC)
 def schedule_tests(schema: ObjectSchema) -> list[TestCase]:
     """Generate test cases for schedule field"""
     invalid_test = TestCase(
