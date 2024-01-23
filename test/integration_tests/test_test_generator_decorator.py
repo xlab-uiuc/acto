@@ -186,5 +186,5 @@ class TestTestGeneratorDecorator(unittest.TestCase):
         def gen0(schema: IntegerSchema):
             return []
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             get_testcases(self.spec_schema, self.matches)
