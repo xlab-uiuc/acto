@@ -417,6 +417,7 @@ class TrialRunner:
         )
 
         generation = 0
+        trial_id = f"trial-{self.worker_id + self.sequence_base:02d}-{self.curr_trial:04d}"
         while (
             generation < num_mutation
         ):  # every iteration gets a new list of next tests
@@ -439,7 +440,7 @@ class TrialRunner:
                 # break and move to the next trial
                 if test_groups is None:
                     return TrialResult(
-                        trial_id=f"trial-{self.worker_id + self.sequence_base:02d}-{self.curr_trial:04d}",
+                        trial_id=trial_id,
                         duration=time.time() - trial_start_time,
                         error=None,
                     )
@@ -503,23 +504,16 @@ class TrialRunner:
                         ):
                             logger.error("Connection refused, exiting")
                             return TrialResult(
-                                trial_id=f"trial-{self.worker_id + self.sequence_base:02d}-{self.curr_trial:04d}",
+                                trial_id=trial_id,
                                 duration=time.time() - trial_start_time,
                                 error=None,
                             )
-                        if run_result.oracle_result.is_error():
-                            group.discard_testcase(self.discarded_testcases)
-                            # before return, run the recovery test case
-                            run_result.oracle_result.differential = self.run_recovery(  # pylint: disable=assigning-non-slot
-                                runner
-                            )
-                            generation += 1
-                            return TrialResult(
-                                trial_id=f"trial-{self.worker_id + self.sequence_base:02d}-{self.curr_trial:04d}",
-                                duration=time.time() - trial_start_time,
-                                error=run_result.oracle_result,
-                            )
-                        if run_result.is_invalid_input():
+                        if (
+                            run_result.is_invalid_input()
+                            and run_result.oracle_result.health is None
+                            and run_result.oracle_result.crash is None
+                            and run_result.oracle_result.custom is None
+                        ):
                             logger.info("Setup produced invalid input")
                             self.snapshots.pop()
                             group.discard_testcase(self.discarded_testcases)
@@ -527,6 +521,18 @@ class TrialRunner:
                                 runner, checker, generation
                             )
                             generation += 1
+                        elif run_result.oracle_result.is_error():
+                            group.discard_testcase(self.discarded_testcases)
+                            # before return, run the recovery test case
+                            run_result.oracle_result.differential = self.run_recovery(  # pylint: disable=assigning-non-slot
+                                runner
+                            )
+                            generation += 1
+                            return TrialResult(
+                                trial_id=trial_id,
+                                duration=time.time() - trial_start_time,
+                                error=run_result.oracle_result,
+                            )
                         elif run_result.cli_status == CliStatus.UNCHANGED:
                             logger.info("Setup produced unchanged input")
                             group.discard_testcase(self.discarded_testcases)
@@ -610,7 +616,12 @@ class TrialRunner:
             logger.error("Connection refused, exiting")
             return run_result, generation
 
-        if run_result.is_invalid_input():
+        if (
+            run_result.is_invalid_input()
+            and run_result.oracle_result.health is None
+            and run_result.oracle_result.crash is None
+            and run_result.oracle_result.custom is None
+        ):
             # If the result indicates our input is invalid, we need to first run
             # revert to go back to previous system state
             logger.debug("Invalid input, revert")
