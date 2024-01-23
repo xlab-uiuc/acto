@@ -21,13 +21,13 @@
 | acto/checker/impl/tests/\_\_init\_\_.py                       |       39 |        0 |    100% |           |
 | acto/checker/impl/tests/test\_crash.py                        |       15 |        0 |    100% |           |
 | acto/checker/impl/tests/test\_health.py                       |       15 |        0 |    100% |           |
-| acto/checker/impl/tests/test\_operator\_log.py                |       16 |        0 |    100% |           |
+| acto/checker/impl/tests/test\_operator\_log.py                |       17 |        0 |    100% |           |
 | acto/checker/impl/tests/test\_snapshot.py                     |       12 |        0 |    100% |           |
 | acto/checker/impl/tests/test\_state.py                        |       42 |        0 |    100% |           |
 | acto/common.py                                                |      164 |       31 |     81% |33, 66, 450-453, 504, 563-566, 608-615, 617-622, 629-632, 647-648, 655-666 |
 | acto/constant.py                                              |        6 |        0 |    100% |           |
 | acto/deploy.py                                                |       96 |       77 |     20% |15-41, 47-62, 66, 73-123, 131-137, 140-145, 149 |
-| acto/engine.py                                                |      494 |      494 |      0% |    3-1203 |
+| acto/engine.py                                                |      495 |      495 |      0% |    3-1214 |
 | acto/exception.py                                             |        2 |        2 |      0% |       1-2 |
 | acto/input/\_\_init\_\_.py                                    |        2 |        0 |    100% |           |
 | acto/input/get\_matched\_schemas.py                           |       54 |       22 |     59% |12, 47-51, 55-74 |
@@ -102,7 +102,7 @@
 | acto/utils/preprocess.py                                      |       69 |       58 |     16% |17-73, 93-141, 147-192 |
 | acto/utils/process\_with\_except.py                           |        9 |        9 |      0% |      1-13 |
 | acto/utils/thread\_logger.py                                  |       15 |        3 |     80% | 9, 18, 28 |
-|                                                     **TOTAL** | **8039** | **4086** | **49%** |           |
+|                                                     **TOTAL** | **8041** | **4087** | **49%** |           |
 
 
 ## Setup coverage badge
