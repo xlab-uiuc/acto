@@ -14,13 +14,13 @@ from acto.schema.string import StringSchema
 def quantity_tests(schema: StringSchema) -> list[TestCase]:
     """Generate test cases for quantity field"""
     increase_test = TestCase(
-        "quantity-increase",
+        "k8s-quantity_increase",
         lambda x: x is not None and canonicalize_quantity(x) != "INVALID",
         double_quantity,
         lambda x: "2000m",
     )
     decrease_test = TestCase(
-        "quantity-decrease",
+        "k8s-quantity_decrease",
         lambda x: x is not None and canonicalize_quantity(x) != "INVALID",
         half_quantity,
         lambda x: "1000m",
@@ -34,7 +34,7 @@ def resource_requirements_tests(schema: ObjectSchema) -> list[TestCase]:
     invalid_test = TestCase(
         "invalid-resourceRequirements",
         lambda x: True,
-        lambda x: {"limits": {"cpu": "INVALID"}},
+        lambda x: {"limits": {"hugepages-2Mi": "1000m"}},
         lambda x: None,
     )
     change_test = TestCase(
@@ -50,13 +50,13 @@ def resource_requirements_tests(schema: ObjectSchema) -> list[TestCase]:
 def volume_resource_requirements_tests(schema: ObjectSchema) -> list[TestCase]:
     """Generate test cases for volumeResourceRequirements field"""
     invalid_test = TestCase(
-        "invalid-volumeResourceRequirements",
+        "k8s-invalid-volumeResourceRequirements",
         lambda x: True,
         lambda x: {"request": {"INVALID": "1000m"}},
         lambda x: None,
     )
     change_test = TestCase(
-        "volumeResourceRequirements-change",
+        "k8s-volumeResourceRequirements-change",
         lambda x: x != {"request": {"storage": "1000Mi"}},
         lambda x: {"request": {"storage": "1000Mi"}},
         lambda x: {"request": {"storage": "2000Mi"}},

@@ -26,13 +26,13 @@ from acto.schema.object import ObjectSchema
 def ingress_tls_tests(schema: ObjectSchema) -> list[TestCase]:
     """Generate test cases for ingressTLS field"""
     invalid_test = TestCase(
-        "invalid-ingressTLS",
+        "k8s-non_existent_secret",
         lambda x: True,
         lambda x: {"hosts": ["test.com"], "secretName": "non-existent"},
         lambda x: None,
     )
     change_test = TestCase(
-        "ingressTLS-change",
+        "k8s-ingressTLS-change",
         lambda x: x != {"hosts": ["example.com"]},
         lambda x: {"hosts": ["example.com"]},
         lambda x: {"hosts": ["example.org"]},

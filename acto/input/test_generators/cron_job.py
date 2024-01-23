@@ -9,13 +9,13 @@ from acto.schema.string import StringSchema
 def concurrent_policy_tests(schema: StringSchema) -> list[TestCase]:
     """Generate test cases for concurrentPolicy field"""
     invalid_test = TestCase(
-        "invalid-concurrentPolicy",
+        "k8s-invalid_concurrency_policy_change",
         lambda x: True,
         lambda x: "InvalidConcurrencyPolicy",
         lambda x: "Forbid",
     )
     change_test = TestCase(
-        "concurrentPolicy-change",
+        "k8s-concurrency_policy_change",
         lambda x: True,
         lambda x: "Forbid" if x == "Replace" else "Replace",
         lambda x: "Forbid",
@@ -27,13 +27,13 @@ def concurrent_policy_tests(schema: StringSchema) -> list[TestCase]:
 def schedule_tests(schema: ObjectSchema) -> list[TestCase]:
     """Generate test cases for schedule field"""
     invalid_test = TestCase(
-        "invalid-schedule",
+        "k8s-invalid_cronjob_schedule_change",
         lambda x: True,
         lambda x: "InvalidSchedule",
         lambda x: "0 * * * *",
     )
     change_test = TestCase(
-        "schedule-change",
+        "k8s-cronjob_schedule_change",
         lambda x: True,
         lambda x: "0 * * * *" if x == "1 * * * *" else "1 * * * *",
         lambda x: "0 * * * *",

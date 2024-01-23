@@ -9,13 +9,13 @@ from acto.schema.string import StringSchema
 def access_mode_tests(schema: ArraySchema) -> list[TestCase]:
     """Generate test cases for accessModes field"""
     invalid_test = TestCase(
-        "invalid-accessModes",
+        "k8s-invalid_access_mode",
         lambda x: True,
         lambda x: ["InvalidAccessMode"],
         lambda x: ["ReadWriteOnce"],
     )
     change_test = TestCase(
-        "accessModes-change",
+        "k8s-change_access_mode",
         lambda x: True,
         lambda x: ["ReadWriteOnce"]
         if x == ["ReadWriteMany"]
@@ -29,7 +29,7 @@ def access_mode_tests(schema: ArraySchema) -> list[TestCase]:
 def api_version_tests(schema: StringSchema) -> list[TestCase]:
     """Generate test cases for apiVersion field"""
     change_test = TestCase(
-        "apiVersion-change",
+        "k8s-change_api_version",
         lambda x: True,
         lambda x: "v1" if x == "v2" else "v2",
         lambda x: "v1",

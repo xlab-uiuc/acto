@@ -8,13 +8,13 @@ from acto.schema.object import ObjectSchema
 def deployment_strategy_tests(schema: ObjectSchema) -> list[TestCase]:
     """Generate test cases for deploymentStrategy field"""
     invalid_test = TestCase(
-        "invalid-deploymentStrategy",
+        "k8s-invalid_deployment_strategy",
         lambda x: True,
         lambda x: {"type": "INVALID_DEPLOYMENT_STRATEGY"},
         lambda x: None,
     )
     change_test = TestCase(
-        "deploymentStrategy-change",
+        "k8s-deployment_strategy_change",
         lambda x: x != {"type": "RollingUpdate"},
         lambda x: {"type": "RollingUpdate"},
         lambda x: {"type": "Recreate"},
