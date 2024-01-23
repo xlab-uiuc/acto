@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from functools import wraps
 from typing import Callable, Literal, Optional
 
+import pytest
+
 from acto.input.k8s_schemas import KubernetesObjectSchema
 from acto.input.testcase import TestCase
 from acto.schema import (
@@ -130,6 +132,7 @@ def validate_call(func: Callable) -> Callable:
     return wrapped_func
 
 
+@pytest.mark.skip(reason="not a test")
 def test_generator(
     k8s_schema_name: Optional[str] = None,
     property_name: Optional[str] = None,
