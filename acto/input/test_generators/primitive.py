@@ -29,10 +29,10 @@ def get_testcases(schema: BaseSchema) -> list[TestCase]:
         return array_tests(schema)
     elif isinstance(schema, BooleanSchema):
         return boolean_tests(schema)
-    elif isinstance(schema, NumberSchema):
-        return number_tests(schema)
     elif isinstance(schema, IntegerSchema):
         return integer_tests(schema)
+    elif isinstance(schema, NumberSchema):
+        return number_tests(schema)
     elif isinstance(schema, ObjectSchema):
         return object_tests(schema)
     elif isinstance(schema, OpaqueSchema):
