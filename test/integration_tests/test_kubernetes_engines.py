@@ -40,10 +40,3 @@ def test_kubernetes_engines(
         # get_node_list should raise RuntimeError when cluster is not found
         cluster_instance.get_node_list(name)
 
-    # def test_minikube_load_image():
-    #     num_nodes = 3
-    #     name = "hz"
-    #     version = "v1.27.4"
-    #     cluster = minikube.Minikube(acto_namespace = 0, num_nodes=num_nodes, version=version)
-    #     # cluster.create_cluster(name, "/users/hzeng21/.kube/config2")
-    #     cluster.load_images("/users/hzeng21/.kube/sleepy.tar", name=name)

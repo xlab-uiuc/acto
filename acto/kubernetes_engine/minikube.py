@@ -74,14 +74,43 @@ class Minikube(base.KubernetesEngine):
             time.sleep(5)
             p = subprocess.run(cmd)
 
-
-        # minikube mount
-        cmd = ['minikube', 'mount', 'profile/data:/tmp/profile']
-        cmd.extend(['--profile', name])
-        print(cmd)
-        p2 = subprocess.Popen(cmd)
-        
         # csi driver
+        cmd = ['minikube', 'addons', 'disable', 'storage-provisioner']
+        cmd.extend(['--profile', name])
+        
+        p = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        i = 0
+        print(cmd)
+        while p.returncode != 0:
+            if i == 3:
+                # tried 3 times, still failed
+                logging.error('Failed to create minikube cluster, aborting')
+                raise Exception('Failed to create minikube cluster')
+
+            logging.error('Failed to create minikube cluster, retrying')
+            i += 1
+            self.delete_cluster(name, kubeconfig)
+            time.sleep(5)
+            p = subprocess.run(cmd)
+        
+        cmd = ['minikube', 'addons', 'disable', 'default-storageclass']
+        cmd.extend(['--profile', name])
+        
+        p = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        i = 0
+        print(cmd)
+        while p.returncode != 0:
+            if i == 3:
+                # tried 3 times, still failed
+                logging.error('Failed to create minikube cluster, aborting')
+                raise Exception('Failed to create minikube cluster')
+
+            logging.error('Failed to create minikube cluster, retrying')
+            i += 1
+            self.delete_cluster(name, kubeconfig)
+            time.sleep(5)
+            p = subprocess.run(cmd)
+        
         cmd = ['minikube', 'addons', 'enable', 'volumesnapshots']
         cmd.extend(['--profile', name])
         p = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -114,8 +143,30 @@ class Minikube(base.KubernetesEngine):
             i += 1
             self.delete_cluster(name, kubeconfig)
             time.sleep(5)
-            p = subprocess.run(cmd)
+            p = subprocess.run(cmd) 
+        
+        cmd = ['kubectl', 'patch', 'storageclass', 'csi-hostpath-sc', '-p', '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}']
+        p = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        i = 0
+        print(cmd)
+        while p.returncode != 0:
+            if i == 3:
+                # tried 3 times, still failed
+                logging.error('Failed to create minikube cluster, aborting')
+                raise Exception('Failed to create minikube cluster')
 
+            logging.error('Failed to create minikube cluster, retrying')
+            i += 1
+            self.delete_cluster(name, kubeconfig)
+            time.sleep(5)
+            p = subprocess.run(cmd)
+            
+        # minikube mount
+        cmd = ['minikube', 'mount', 'profile/data:/tmp/profile']
+        cmd.extend(['--profile', name])
+        print(cmd)
+        p2 = subprocess.Popen(cmd)
+        
         try:
             kubernetes.config.load_kube_config(config_file=kubeconfig,
                                                context=name)
