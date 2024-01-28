@@ -1,30 +1,167 @@
 # Testing a new operator
 
-## Porting
+## Porting an operator to Acto
 To port a new operator to Acto and test it, users would need to create a configuration file in JSON 
-  following the steps below.
+  format following the steps below.
 
-### Providing operator deployment script
+### Providing the steps to deploy the operator
 The minimum requirement for Acto to test an operator is to provide a way to deploy the operator.
 
 Acto supports three different ways for specifying the deployment method: YAML, Helm, and Kustomize.
+  (Helm and Kustomize is lacking support right now, please first use YAML)
 To specify operators' deployment method in a YAML way, users need to bundle all the required 
-  resources into a yaml file, e.g. Namespace, ClusterRole, ServiceAccount, and Deployment.
+  resources into a YAML file, e.g. Namespace, ClusterRole, ServiceAccount, and Deployment.
 
-After aggregating the required resources into a file
-Then, specify the deployment in the configuration file through the `deploy` property, e.g.:
+Deploying operator can be expressed as a sequence of steps to be applied through
+  the `deploy` property.
+You would need to specify the Step which contains the operator Deployment resource
+    by setting the `operator` property in the `Step` to `true`.
+
+For example, to deploy the cass-operator, we need to first apply the `init.yaml`
+  which deploys the cert-manager required by the cass-operator,
+  and then apply the `bundle.yaml` which contains all the required resource
+  definitions for deploying the cass-operator.
+  The `deploy` property would be written as:
 ```json
-{
-  "deploy": {
-    "method": "YAML",
-    "file": "data/cass-operator/bundle.yaml",
-    "init": "data/cass-operator/init.yaml"
-  }
+"deploy": {
+    "steps": [
+        {
+            "apply": {
+                "file": "data/cass-operator/init.yaml",
+                "namespace": null
+            }
+        },
+        {
+            "wait": {
+                "duration": 10
+            }
+        },
+        {
+            "apply": {
+                "file": "data/cass-operator/bundle.yaml",
+                "operator": true
+            }
+        }
+    ]
 }
 ```
 
+In case there are more than one container in the operator Pod (e.g. metrics exporter),
+    you would need to specify the actual operator container's name through
+    the `operator_container_name` property in the `Step`.
+
+<details>
+  <summary>Full JsonSchema for the deploy property</summary>
+  
+  ```json
+"deploy": {
+    "additionalProperties": false,
+    "description": "Configuration for deploying the operator",
+    "properties": {
+        "steps": {
+            "description": "Steps to deploy the operator",
+            "items": {
+                "additionalProperties": false,
+                "properties": {
+                    "apply": {
+                        "allOf": [
+                            {
+                                "additionalProperties": false,
+                                "description": "Configuration for each step of kubectl apply",
+                                "properties": {
+                                    "file": {
+                                        "description": "Path to the file for kubectl apply",
+                                        "title": "File",
+                                        "type": "string"
+                                    },
+                                    "operator": {
+                                        "default": false,
+                                        "description": "If the file contains the operator deployment",
+                                        "title": "Operator",
+                                        "type": "boolean"
+                                    },
+                                    "operator_container_name": {
+                                        "anyOf": [
+                                            {
+                                                "type": "string"
+                                            },
+                                            {
+                                                "type": "null"
+                                            }
+                                        ],
+                                        "default": null,
+                                        "description": "The container name of the operator in the operator pod",
+                                        "title": "Operator Container Name"
+                                    },
+                                    "namespace": {
+                                        "anyOf": [
+                                            {
+                                                "type": "string"
+                                            },
+                                            {
+                                                "type": "null"
+                                            }
+                                        ],
+                                        "default": "__DELEGATED__",
+                                        "description": "Namespace for applying the file. If not specified, use the namespace in the file or Acto namespace. If set to null, use the namespace in the file",
+                                        "title": "Namespace"
+                                    }
+                                },
+                                "required": [
+                                    "file"
+                                ],
+                                "title": "ApplyStep",
+                                "type": "object"
+                            }
+                        ],
+                        "default": null,
+                        "description": "Configuration for each step of kubectl apply"
+                    },
+                    "wait": {
+                        "allOf": [
+                            {
+                                "additionalProperties": false,
+                                "description": "Configuration for each step of waiting for the operator",
+                                "properties": {
+                                    "duration": {
+                                        "default": 10,
+                                        "description": "Wait for the specified seconds",
+                                        "title": "Duration",
+                                        "type": "integer"
+                                    }
+                                },
+                                "title": "WaitStep",
+                                "type": "object"
+                            }
+                        ],
+                        "default": null,
+                        "description": "Configuration for each step of waiting for the operator"
+                    }
+                },
+                "title": "DeployStep",
+                "type": "object"
+            },
+            "minItems": 1,
+            "title": "Steps",
+            "type": "array"
+        }
+    },
+    "required": [
+        "steps"
+    ],
+    "title": "DeployConfig",
+    "type": "object"
+},
+  ```
+</details>
+
 ### Providing the name of the CRD to be tested
-Specify the name of the CRD to be tested in the configuration through the `crd_name` property. Only required if the operator defines multiple CRDs.
+Only required if the operator defines multiple CRDs.
+Some operator developers define separate CRDs for other purposes, e.g., backup tasks to be run.
+In case there are more than one CRD in the deploy steps, you need to specify the full name of
+    the CRD to be tested.
+
+Specify the name of the CRD to be tested in the configuration through the `crd_name` property. 
 E.g.:
 ```json
 {
@@ -33,9 +170,15 @@ E.g.:
 ```
 
 ### Providing a seed CR for Acto to start with
-Provide a sample CR which will be used by Acto as the seed. This can be any valid CR, usually operator repos contain multiple sample CRs. Specify this through the `seed_custom_resource` property in the configuration.
+Provide a sample CR which will be used by Acto as the seed. 
+This can be any valid CR, usually operator repos contain multiple sample CRs.
+Specify this through the `seed_custom_resource` property in the configuration.
 
-### Providing source code information for whitebox mode (optional)
+For example, cass-operator provides a list of sample CRs in their [repo](https://github.com/k8ssandra/cass-operator/tree/master/config/samples)
+
+Copy one CR into the port directory, and specify the path of the copied CR in the `seed_custom_resource` property
+
+### Providing source code information for whitebox mode (advanced)
 Acto supports a whitebox mode to enable more accurate testing by utilizing source code information.
 To provide the source code information to Acto, users need to specify the following fields in the port config file:
 - `github_link`: the Github link to the operator repo
@@ -58,7 +201,7 @@ Example:
 }
 ```
 
-## Testing
+## Run Acto's test campaign
 After creating the configuration file for the operator,
   users can start the test campaign by invoking Acto:
 First run `make` to build the required shared object:
@@ -92,3 +235,45 @@ It generates the `result.xlsx` file under the `testrun-cass` which contains
   all the oracle results.
 You can easily inspect the alarms by importing it into Google Sheet or Excel
   and filter by `alarm==True`.
+
+## Interpreting Acto's test result
+
+Acto will first generate a test plan using the operator's CRD and the semantic information.
+The test plan is serialized at `testrun-cass/testplan.json` (You don't need to manually inspect the `testplan.json`, it is just to give an overview of the tests going to be run).
+Note that Acto does not run the tests according to the order in the `testplan.json`, the tests are run in a random order at runtime.
+
+Acto then constructs the number of Kubernetes clusters according to the `--num-workers` argument,
+  and start to run tests.
+Tests are run in parallel in separate Kubernetes clusters.
+Under the `testrun-cass` directory, Acto creates directories `trial-XX-YYYY`. `XX` corresponds to the worker ID, i.e. `XX` ranges from `0` to `3` if there are 4 workers.
+`YYYY` starts from `0000`, and Acto increments `YYYY` every time it has to restart the cluster.
+This means every step inside the same `trial-xx-yyyy` directory runs in the same instance of Kubernetes cluster.
+
+Acto takes steps to run the testcases over the previous CR one by one.
+One testcase is to change the current CR to provide the next CR to be applied.
+Acto starts from the sample CR given from the operator configuration.
+
+At each step, Acto applies a test case over the existing CR to produce the next CR.
+It then uses `kubectl apply` to apply the CR in a declarative fashion.
+Acto waits for the operator to reconcile the system to match the CR,
+    then collects a "snapshot" of the system state at this point of time.
+It then runs a collection of oracles(checkers) over the snapshot to detect bugs.
+Acto serializes the "snapshot" and the runtime result from the oracles in the `trial-xx-yyyy` directory.
+
+The schema of the "snapshot" is defined at [acto/snapshot.py](../acto/snapshot.py).
+It is serialized to the following files:
+- `mutated-*.yaml`: These files are the inputs Acto submitted to Kubernetes to run the state transitions. Concretely, Acto first applies `mutated-0.yaml`, and wait for the system to converge, and then applies `mutated-1.yaml`, and so on.
+- `cli-output-*.log` and `operator-*.log`: These two files contain the command line result and operator log after submitting the input.
+- `system-state-*.json`: After each step submitting `mutated-*.yaml`, Acto collects the system state and store it as `system-state-*.json`. This file contains the serialized state objects from Kubernetes.
+- `events-*.log`: This file contains the list of detailed Kubernetes event objects happened after each step.
+- `not-ready-pod-*.log`: Acto collects the log from pods which are in `unready` state. This information is helpful for debugging the reason the pod crashed or is unhealthy.
+
+The schema of the runtime result is defined at [acto/result.py](../acto/result.py).
+It is serialized to the `generation-XXX-runtime.json` files.
+It mainly includes the result from the oracles:
+- `crash`: if any container crashed or not
+- `health`: if any StatefulSet or Deployment is unhealthy, by comparing the ready replicas in status and desired replicas in spec
+- `consistency`: consistency oracle, checking if the desired system state matches the actual system state
+- `operator_log`: if the log indicates invalid input
+- `custom`: result of custom oracles, defined by users
+- `differential`: if the recovery step is successful after the error state

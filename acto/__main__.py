@@ -141,7 +141,6 @@ start_time = datetime.now()
 acto = Acto(workdir_path=args.workdir_path,
             operator_config=config,
             cluster_runtime=args.cluster_runtime,
-            enable_analysis=False,
             preload_images_=args.preload_images,
             context_file=context_cache,
             helper_crd=args.helper_crd,

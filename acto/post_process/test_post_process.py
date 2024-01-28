@@ -10,33 +10,46 @@ from .post_process import PostProcessor
 
 test_dir = pathlib.Path(__file__).parent.resolve()
 
+
 class TestPostProcessor(unittest.TestCase):
+    """Test PostProcessor"""
 
     def __init__(self, methodName: str = "runTest") -> None:
         super().__init__(methodName)
-        config_path = os.path.join(test_dir.parent.parent, 'data', 'cass-operator', 'config.json')
-        self.testrun_dir = os.path.join(test_dir, 'test_data', 'testrun-cass-whitebox-1')
+        config_path = os.path.join(
+            test_dir.parent.parent, "data", "cass-operator", "config.json"
+        )
+        self.testrun_dir = os.path.join(
+            test_dir, "test_data", "testrun-cass-whitebox-1"
+        )
 
-        with open(config_path, 'r') as config_file:
+        with open(config_path, "r", encoding="utf-8") as config_file:
             self.config = OperatorConfig(**json.load(config_file))
 
     def test_construction(self):
-        p = PostProcessor(testrun_dir=self.testrun_dir,
-                          config=self.config)
-        
+        """Test construction"""
+        _ = PostProcessor(testrun_dir=self.testrun_dir, config=self.config)
+
+
 class TestPostDiffTest(unittest.TestCase):
+    """Test PostDiffTest"""
+
     def __init__(self, methodName: str = "runTest") -> None:
         super().__init__(methodName)
-        config_path = os.path.join(test_dir.parent.parent, 'data', 'cass-operator', 'config.json')
-        self.testrun_dir = os.path.join(test_dir, 'test_data', 'testrun-cass-whitebox-1')
+        config_path = os.path.join(
+            test_dir.parent.parent, "data", "cass-operator", "config.json"
+        )
+        self.testrun_dir = os.path.join(
+            test_dir, "test_data", "testrun-cass-whitebox-1"
+        )
 
-        with open(config_path, 'r') as config_file:
+        with open(config_path, "r", encoding="utf-8") as config_file:
             self.config = OperatorConfig(**json.load(config_file))
 
     def test_construction(self):
-        p = PostDiffTest(testrun_dir=self.testrun_dir,
-                          config=self.config)
-        
+        """Test class construction"""
+        _ = PostDiffTest(testrun_dir=self.testrun_dir, config=self.config)
+
     # FIXME
     # def test_comparison(self):
     #     p = PostDiffTest(testrun_dir=self.testrun_dir,
@@ -49,5 +62,6 @@ class TestPostDiffTest(unittest.TestCase):
     #         if error:
     #             result_f.write(json.dumps(error.to_dict(), indent=6))
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

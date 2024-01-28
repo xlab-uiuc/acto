@@ -1,39 +1,71 @@
+import decimal
 import json
+import uuid
 from datetime import date, datetime
 
+import ordered_set
+import pydantic
 from deepdiff import DeepDiff
 from deepdiff.helper import NotPresent
 
-from acto.common import Diff
+from acto.common import Diff, PropertyPath
+from acto.input import TestCase
+
+
+def _serialize_decimal(value: decimal.Decimal):
+    if value.as_tuple().exponent == 0:
+        return int(value)
+    else:
+        return float(value)
 
 
 class ActoEncoder(json.JSONEncoder):
+    """Encoder for acto oects"""
 
-    def default(self, obj):
-        from acto.input import TestCase
+    def default(self, o):
+        """Default encoder"""
 
-        if isinstance(obj, Diff):
-            return obj.to_dict()
-        elif isinstance(obj, NotPresent):
-            return 'NotPresent'
-        elif isinstance(obj, (datetime, date)):
-            return obj.isoformat()
-        elif isinstance(obj, TestCase):
-            return obj.__str__()
-        elif isinstance(obj, set):
-            return list(obj)
-        elif isinstance(obj, DeepDiff):
-            return obj.to_json()
-        return json.JSONEncoder.default(self, obj)
+        # this section is for pydantic basemodels
+        if isinstance(o, pydantic.BaseModel):
+            return o.model_dump()
+
+        # this section is from deepdiff
+        if isinstance(o, ordered_set.OrderedSet):
+            return list(o)
+        if isinstance(o, decimal.Decimal):
+            return _serialize_decimal(o)
+        if isinstance(o, type):
+            return o.__name__
+        if isinstance(o, bytes):
+            return o.decode("utf-8")
+        if isinstance(o, uuid.UUID):
+            return str(o)
+
+        if isinstance(o, Diff):
+            return o.to_dict()
+        if isinstance(o, NotPresent):
+            return "NotPresent"
+        if isinstance(o, (datetime, date)):
+            return o.isoformat()
+        if isinstance(o, TestCase):
+            return str(o)
+        if isinstance(o, set):
+            return list(o)
+        if isinstance(o, DeepDiff):
+            return o.to_dict()
+        if isinstance(o, PropertyPath):
+            return str(o)
+        return json.JSONEncoder.default(self, o)
 
 
 class ContextEncoder(json.JSONEncoder):
+    """Encoder for context oects"""
 
-    def default(self, obj):
-        if isinstance(obj, set):
-            return list(obj)
-        elif isinstance(obj, str) and obj == 'true':
+    def default(self, o):
+        if isinstance(o, set):
+            return list(o)
+        elif isinstance(o, str) and o == "true":
             return True
-        elif isinstance(obj, str) and obj == 'false':
+        elif isinstance(o, str) and o == "false":
             return False
-        return json.JSONEncoder.default(self, obj)
+        return json.JSONEncoder.default(self, o)

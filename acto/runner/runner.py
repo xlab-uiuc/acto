@@ -1,36 +1,48 @@
+"""Runner module for Acto"""
 import base64
+import multiprocessing
 import queue
+import subprocess
 import time
-from multiprocessing import Process, Queue, get_start_method, set_start_method
-from typing import Callable
+from typing import Callable, Optional
 
+import kubernetes
+import kubernetes.client.models as kubernetes_models
 import yaml
 
-import acto.utils.acto_timer as acto_timer
-from acto.common import *
+from acto.common import kubernetes_client
 from acto.kubectl_client import KubectlClient
-from acto.serialization import ActoEncoder
 from acto.snapshot import Snapshot
-from acto.utils import get_thread_logger
+from acto.utils import acto_timer, get_thread_logger
 
 RunnerHookType = Callable[[kubernetes.client.ApiClient], None]
-CustomSystemStateHookType = Callable[[kubernetes.client.ApiClient, str, int], dict]
+CustomSystemStateHookType = Callable[
+    [kubernetes.client.ApiClient, str, int], dict
+]
 
 
-class Runner(object):
+class Runner:
+    """Runner class for Acto.
+    This class is used to run the cmd and collect system state,
+    delta, operator log, events and input files.
+    """
 
-    def __init__(self,
-                 context: dict,
-                 trial_dir: str,
-                 kubeconfig: str,
-                 context_name: str,
-                 custom_system_state_f: Callable[[], dict] = None,
-                 wait_time: int = 45):
+    def __init__(
+        self,
+        context: dict,
+        trial_dir: str,
+        kubeconfig: str,
+        context_name: str,
+        custom_system_state_f: Optional[Callable[..., dict]] = None,
+        wait_time: int = 45,
+        operator_container_name: Optional[str] = None,
+    ):
         self.namespace = context["namespace"]
-        self.crd_metainfo: dict = context['crd']
+        self.crd_metainfo: dict = context["crd"]
         self.trial_dir = trial_dir
         self.kubeconfig = kubeconfig
         self.context_name = context_name
+        self.operator_container_name = operator_container_name
         self.wait_time = wait_time
         self.log_length = 0
 
@@ -38,286 +50,358 @@ class Runner(object):
 
         apiclient = kubernetes_client(kubeconfig, context_name)
         self.apiclient = apiclient
-        self.coreV1Api = kubernetes.client.CoreV1Api(apiclient)
-        self.appV1Api = kubernetes.client.AppsV1Api(apiclient)
-        self.batchV1Api = kubernetes.client.BatchV1Api(apiclient)
-        self.customObjectApi = kubernetes.client.CustomObjectsApi(apiclient)
-        self.policyV1Api = kubernetes.client.PolicyV1Api(apiclient)
-        self.networkingV1Api = kubernetes.client.NetworkingV1Api(apiclient)
-        self.rbacAuthorizationV1Api = kubernetes.client.RbacAuthorizationV1Api(apiclient)
-        self.storageV1Api = kubernetes.client.StorageV1Api(apiclient)
-        self.schedulingV1Api = kubernetes.client.SchedulingV1Api(apiclient)
+        self.core_v1_api = kubernetes.client.CoreV1Api(apiclient)
+        self.app_v1_api = kubernetes.client.AppsV1Api(apiclient)
+        self.batch_v1_api = kubernetes.client.BatchV1Api(apiclient)
+        self.custom_object_api = kubernetes.client.CustomObjectsApi(apiclient)
+        self.policy_v1_api = kubernetes.client.PolicyV1Api(apiclient)
+        self.networking_v1_api = kubernetes.client.NetworkingV1Api(apiclient)
+        self.rbac_authorization_v1_api = (
+            kubernetes.client.RbacAuthorizationV1Api(apiclient)
+        )
+        self.storage_v1_api = kubernetes.client.StorageV1Api(apiclient)
+        self.scheduling_v1_api = kubernetes.client.SchedulingV1Api(apiclient)
         self.resource_methods = {
-            'pod': self.coreV1Api.list_namespaced_pod,
-            'stateful_set': self.appV1Api.list_namespaced_stateful_set,
-            'deployment': self.appV1Api.list_namespaced_deployment,
-            'daemon_set': self.appV1Api.list_namespaced_daemon_set,
-            'config_map': self.coreV1Api.list_namespaced_config_map,
-            'service': self.coreV1Api.list_namespaced_service,
-            'pvc': self.coreV1Api.list_namespaced_persistent_volume_claim,
-            'cronjob': self.batchV1Api.list_namespaced_cron_job,
-            'ingress': self.networkingV1Api.list_namespaced_ingress,
-            'network_policy': self.networkingV1Api.list_namespaced_network_policy,
-            'pod_disruption_budget': self.policyV1Api.list_namespaced_pod_disruption_budget,
-            'secret': self.coreV1Api.list_namespaced_secret,
-            'endpoints': self.coreV1Api.list_namespaced_endpoints,
-            'service_account': self.coreV1Api.list_namespaced_service_account,
-            'job': self.batchV1Api.list_namespaced_job,
-            'role': self.rbacAuthorizationV1Api.list_namespaced_role,
-            'role_binding': self.rbacAuthorizationV1Api.list_namespaced_role_binding,
+            "pod": self.core_v1_api.list_namespaced_pod,
+            "stateful_set": self.app_v1_api.list_namespaced_stateful_set,
+            "deployment": self.app_v1_api.list_namespaced_deployment,
+            "daemon_set": self.app_v1_api.list_namespaced_daemon_set,
+            "config_map": self.core_v1_api.list_namespaced_config_map,
+            "service": self.core_v1_api.list_namespaced_service,
+            "pvc": self.core_v1_api.list_namespaced_persistent_volume_claim,
+            "cronjob": self.batch_v1_api.list_namespaced_cron_job,
+            "ingress": self.networking_v1_api.list_namespaced_ingress,
+            "network_policy": self.networking_v1_api.list_namespaced_network_policy,
+            "pod_disruption_budget": self.policy_v1_api.list_namespaced_pod_disruption_budget,
+            "secret": self.core_v1_api.list_namespaced_secret,
+            "endpoints": self.core_v1_api.list_namespaced_endpoints,
+            "service_account": self.core_v1_api.list_namespaced_service_account,
+            "job": self.batch_v1_api.list_namespaced_job,
+            "role": self.rbac_authorization_v1_api.list_namespaced_role,
+            "role_binding": self.rbac_authorization_v1_api.list_namespaced_role_binding,
         }
 
-        if get_start_method() != "fork":
-            set_start_method("fork")
+        self.mp_ctx = multiprocessing.get_context("fork")
 
         self._custom_system_state_f = custom_system_state_f
 
-    def _run_with_serialization(self, input: dict, generation: int) -> Tuple[Snapshot, bool]:
-        snapshot, err = self.run(input, generation)
-        snapshot.serialize(self.trial_dir)
-        return snapshot, err
+    def run(
+        self,
+        input_cr: dict,
+        generation: int,
+        hooks: Optional[list[RunnerHookType]] = None,
+    ) -> tuple[Snapshot, bool]:
+        """Simply run the cmd and dumps system_state, delta, operator log,
+        events and input files without checking.
+        The function blocks until system converges.
 
-    def run(self, input: dict, generation: int, hooks: List[RunnerHookType] = None) -> Tuple[Snapshot, bool]:
-        '''Simply run the cmd and dumps system_state, delta, operator log, events and input files without checking. 
-           The function blocks until system converges.
-           TODO: move the serialization part to a separate function
+            Args:
+                input_cr: CR to be applied in the format of dict
+                generation: the generation number of the input file
 
-        Args:
-            input: CR to be applied in the format of dict
-            generation: the generation number of the input file
-
-        Returns:
-            result, err
-        '''
+            Returns:
+                result, err
+        """
         logger = get_thread_logger(with_prefix=True)
-
-        self.operator_log_path = "%s/operator-%d.log" % (self.trial_dir, generation)
-        self.system_state_path = "%s/system-state-%03d.json" % (self.trial_dir, generation)
-        self.events_log_path = "%s/events-%d.json" % (self.trial_dir, generation)
-        self.cli_output_path = "%s/cli-output-%d.log" % (self.trial_dir, generation)
-        self.not_ready_pod_log_path = "{}/not-ready-pod-{}-{{}}.log".format(
-            self.trial_dir, generation)
 
         # call user-defined hooks
         if hooks is not None:
             for hook in hooks:
                 hook(self.apiclient)
 
-        mutated_filename = '%s/mutated-%d.yaml' % (self.trial_dir, generation)
-        with open(mutated_filename, 'w') as mutated_cr_file:
-            yaml.dump(input, mutated_cr_file)
+        mutated_filename = f"{self.trial_dir}/mutated-{generation:03d}.yaml"
+        with open(mutated_filename, "w", encoding="utf-8") as mutated_cr_file:
+            yaml.dump(input_cr, mutated_cr_file)
 
-        cmd = ['apply', '-f', mutated_filename, '-n', self.namespace]
+        cmd = ["apply", "-f", mutated_filename, "-n", self.namespace]
 
         # submit the CR
-        cli_result = self.kubectl_client.kubectl(cmd, capture_output=True, text=True)
-        logger.debug('STDOUT: ' + cli_result.stdout)
-        logger.debug('STDERR: ' + cli_result.stderr)
+        cli_result = self.kubectl_client.kubectl(
+            cmd, capture_output=True, text=True
+        )
+        logger.debug("STDOUT: %s", cli_result.stdout)
+        logger.debug("STDERR: %s", cli_result.stderr)
 
         if cli_result.returncode != 0:
-            logger.error('kubectl apply failed with return code %d' % cli_result.returncode)
-            logger.error('STDOUT: ' + cli_result.stdout)
-            logger.error('STDERR: ' + cli_result.stderr)
-            return Snapshot(input, self.collect_cli_result(cli_result), {}, []), True
+            logger.error(
+                "kubectl apply failed with return code %d",
+                cli_result.returncode,
+            )
+            logger.error("STDOUT: %s", cli_result.stdout)
+            logger.error("STDERR: %s", cli_result.stderr)
+            snapshot = Snapshot(
+                input_cr=input_cr,
+                cli_result=self.collect_cli_result(cli_result),
+                system_state={},
+                operator_log=[],
+                events={},
+                not_ready_pods_logs=None,
+                generation=generation,
+            )
+            snapshot.dump(self.trial_dir)
+            return snapshot, True
+
         err = None
 
         try:
             err = self.wait_for_system_converge()
         except (KeyError, ValueError) as e:
-            logger.error('Bug! Exception raised when waiting for converge.', exc_info=e)
+            logger.error(
+                "Bug! Exception raised when waiting for converge.", exc_info=e
+            )
             system_state = {}
-            operator_log = 'Bug! Exception raised when waiting for converge.'
+            operator_log = ["Bug! Exception raised when waiting for converge."]
             err = True
 
         # when client API raise an exception, catch it and write to log instead of crashing Acto
         try:
             if self._custom_system_state_f is not None:
-                _ = self._custom_system_state_f(self.apiclient, self.trial_dir, generation)
+                _ = self._custom_system_state_f(
+                    self.apiclient, self.trial_dir, generation
+                )
             system_state = self.collect_system_state()
             operator_log = self.collect_operator_log()
-            self.collect_events()
-            self.collect_not_ready_pods_logs()
         except (KeyError, ValueError) as e:
-            logger.error('Bug! Exception raised when waiting for converge.', exc_info=e)
+            logger.error(
+                "Bug! Exception raised when waiting for converge.", exc_info=e
+            )
             system_state = {}
-            operator_log = 'Bug! Exception raised when waiting for converge.'
+            operator_log = ["Bug! Exception raised when waiting for converge."]
             err = True
+        events = self.collect_events()
+        unready_pod_logs = self.collect_not_ready_pods_logs()
 
-        snapshot = Snapshot(input, self.collect_cli_result(cli_result), system_state, operator_log)
+        snapshot = Snapshot(
+            input_cr=input_cr,
+            cli_result=self.collect_cli_result(cli_result),
+            system_state=system_state,
+            operator_log=operator_log,
+            events=events,
+            not_ready_pods_logs=unready_pod_logs,
+            generation=generation,
+        )
+        snapshot.dump(self.trial_dir)
         return snapshot, err
 
     def run_without_collect(self, seed_file: str):
-        cmd = ['apply', '-f', seed_file, '-n', self.namespace]
+        """Simply run the cmd without collecting system_state"""
+        cmd = ["apply", "-f", seed_file, "-n", self.namespace]
         _ = self.kubectl_client.kubectl(cmd)
 
         try:
-            err = self.wait_for_system_converge()
+            _ = self.wait_for_system_converge()
         except (KeyError, ValueError) as e:
             logger = get_thread_logger(with_prefix=True)
-            logger.error('Bug! Exception raised when waiting for converge.', exc_info=e)
-            system_state = {}
-            operator_log = 'Bug! Exception raised when waiting for converge.'
+            logger.error(
+                "Bug! Exception raised when waiting for converge.", exc_info=e
+            )
 
     def delete(self, generation: int) -> bool:
+        """Delete the mutated CR"""
         logger = get_thread_logger(with_prefix=True)
         start = time.time()
-        mutated_filename = '%s/mutated-%d.yaml' % (self.trial_dir, generation)
-        logger.info('Deleting : ' + mutated_filename)
+        mutated_filename = f"{self.trial_dir}/mutated-{generation}.yaml"
+        logger.info("Deleting: %s", mutated_filename)
 
-        cmd = ['delete', '-f', mutated_filename, '-n', self.namespace]
+        cmd = ["delete", "-f", mutated_filename, "-n", self.namespace]
         try:
-            cli_result = self.kubectl_client.kubectl(cmd,
-                                                     capture_output=True,
-                                                     text=True,
-                                                     timeout=120)
-        except subprocess.TimeoutExpired as e:
-            logger.error('kubectl delete timeout.')
+            cli_result = self.kubectl_client.kubectl(
+                cmd, capture_output=True, text=True, timeout=120
+            )
+        except subprocess.TimeoutExpired as _:
+            logger.error("kubectl delete timeout.")
             return True
 
-        logger.debug('STDOUT: ' + cli_result.stdout)
-        logger.debug('STDERR: ' + cli_result.stderr)
+        logger.debug("STDOUT: %s", cli_result.stdout)
+        logger.debug("STDERR: %s", cli_result.stderr)
 
-        for tick in range(0, 600):
-            crs = self.__get_custom_resources(self.namespace, self.crd_metainfo['group'],
-                                              self.crd_metainfo['version'],
-                                              self.crd_metainfo['plural'])
+        for __ in range(0, 600):
+            crs = self.__get_custom_resources(
+                self.namespace,
+                self.crd_metainfo["group"],
+                self.crd_metainfo["version"],
+                self.crd_metainfo["plural"],
+            )
             if len(crs) == 0:
                 break
             time.sleep(1)
 
         if len(crs) != 0:
-            logger.error('Failed to delete custom resource.')
+            logger.error("Failed to delete custom resource.")
             return True
         else:
-            logger.info(f'Successfully deleted custom resource in {time.time() - start}s.')
+            logger.info(
+                "Successfully deleted custom resource in %ds.",
+                time.time() - start,
+            )
             return False
 
     def collect_system_state(self) -> dict:
-        '''Queries resources in the test namespace, computes delta
+        """Queries resources in the test namespace, computes delta
 
         Args:
-        '''
+        """
         logger = get_thread_logger(with_prefix=True)
 
         resources = {}
 
         for resource, method in self.resource_methods.items():
             resources[resource] = self.__get_all_objects(method)
-            if resource == 'pod':
+            if resource == "pod":
                 # put pods managed by deployment / replicasets into an array
                 all_pods = self.__get_all_objects(method)
-                resources['deployment_pods'], resources['daemonset_pods'], resources['pod'] = group_pods(
-                    all_pods)
-            elif resource == 'secret':
+                (
+                    resources["deployment_pods"],
+                    resources["daemonset_pods"],
+                    resources["pod"],
+                ) = group_pods(all_pods)
+            elif resource == "secret":
                 resources[resource] = decode_secret_data(resources[resource])
 
-        current_cr = self.__get_custom_resources(self.namespace, self.crd_metainfo['group'],
-                                                 self.crd_metainfo['version'],
-                                                 self.crd_metainfo['plural'])
+        current_cr = self.__get_custom_resources(
+            self.namespace,
+            self.crd_metainfo["group"],
+            self.crd_metainfo["version"],
+            self.crd_metainfo["plural"],
+        )
         logger.debug(current_cr)
 
-        resources['custom_resource_spec'] = current_cr['test-cluster']['spec'] \
-            if 'spec' in current_cr['test-cluster'] else None
-        resources['custom_resource_status'] = current_cr['test-cluster']['status'] \
-            if 'status' in current_cr['test-cluster'] else None
-
-        # Dump system state
-        with open(self.system_state_path, 'w') as fout:
-            json.dump(resources, fout, cls=ActoEncoder, indent=6)
+        resources["custom_resource_spec"] = (
+            current_cr["test-cluster"]["spec"]
+            if "spec" in current_cr["test-cluster"]
+            else None
+        )
+        resources["custom_resource_status"] = (
+            current_cr["test-cluster"]["status"]
+            if "status" in current_cr["test-cluster"]
+            else None
+        )
 
         return resources
 
     def collect_operator_log(self) -> list:
-        '''Queries operator log in the test namespace
+        """Queries operator log in the test namespace
 
         Args:
-        '''
+        """
         logger = get_thread_logger(with_prefix=True)
 
-        operator_pod_list = self.coreV1Api.list_namespaced_pod(
-            namespace=self.namespace, watch=False, label_selector="acto/tag=operator-pod").items
+        operator_pod_list = self.core_v1_api.list_namespaced_pod(
+            namespace=self.namespace,
+            watch=False,
+            label_selector="acto/tag=operator-pod",
+        ).items
 
         if len(operator_pod_list) >= 1:
-            logger.debug('Got operator pod: pod name:' + operator_pod_list[0].metadata.name)
+            logger.debug(
+                "Got operator pod: pod name: %s",
+                operator_pod_list[0].metadata.name,
+            )
         else:
-            logger.error('Failed to find operator pod')
-            # TODO: refine what should be done if no operator pod can be found
+            logger.error("Failed to find operator pod")
 
-        log = self.coreV1Api.read_namespaced_pod_log(name=operator_pod_list[0].metadata.name,
-                                                     namespace=self.namespace)
+        if self.operator_container_name is not None:
+            log = self.core_v1_api.read_namespaced_pod_log(
+                name=operator_pod_list[0].metadata.name,
+                namespace=self.namespace,
+                container=self.operator_container_name,
+            )
+        else:
+            if len(operator_pod_list[0].spec.containers) > 1:
+                logger.error(
+                    "Multiple containers detected, please specify the target operator container"
+                )
+            log = self.core_v1_api.read_namespaced_pod_log(
+                name=operator_pod_list[0].metadata.name,
+                namespace=self.namespace,
+            )
 
         # only get the new log since previous result
-        new_log = log.split('\n')
-        new_log = new_log[self.log_length:]
+        new_log = log.split("\n")
+        new_log = new_log[self.log_length :]
         self.log_length += len(new_log)
-
-        with open(self.operator_log_path, 'a') as f:
-            for line in new_log:
-                f.write("%s\n" % line)
 
         return new_log
 
-    def collect_events(self):
-        events = self.coreV1Api.list_namespaced_event(self.namespace,
-                                                      pretty=True,
-                                                      _preload_content=False,
-                                                      watch=False)
+    def collect_events(self) -> dict:
+        """Queries events in the test namespace"""
+        events = self.core_v1_api.list_namespaced_event(
+            self.namespace, watch=False, pretty=True
+        )
+        return events.to_dict()
 
-        with open(self.events_log_path, 'wb') as f:
-            f.write(events.data)
-
-    def collect_not_ready_pods_logs(self):
-        pods = self.coreV1Api.list_namespaced_pod(self.namespace)
-        for pod in pods.items:
+    def collect_not_ready_pods_logs(self) -> Optional[dict[str, list[str]]]:
+        """Queries logs of not ready pods in the test namespace"""
+        ret = {}
+        pods: list[kubernetes_models.V1Pod] = (
+            self.core_v1_api.list_namespaced_pod(self.namespace)
+        ).items
+        for pod in pods:
             for container_statuses in [
-                    pod.status.container_statuses or [],
-                    pod.status.init_container_statuses or []]:
+                pod.status.container_statuses or [],
+                pod.status.init_container_statuses or [],
+            ]:
                 for container_status in container_statuses:
                     if not container_status.ready:
                         try:
-                            log = self.coreV1Api.read_namespaced_pod_log(
-                                pod.metadata.name, self.namespace, container=container_status.name)
-                            if len(log) != 0:
-                                with open(self.not_ready_pod_log_path.format(container_status.name), 'w') as f:
-                                    f.write(log)
-                            if container_status.last_state.terminated is not None:
-                                log = self.coreV1Api.read_namespaced_pod_log(
-                                    pod.metadata.name, self.namespace,
-                                    container=container_status.name, previous=True)
-                                if len(log) != 0:
-                                    with open(self.not_ready_pod_log_path.format('prev-'+container_status.name), 'w') as f:
-                                        f.write(log)
+                            log = self.core_v1_api.read_namespaced_pod_log(
+                                pod.metadata.name,
+                                self.namespace,
+                                container=container_status.name,
+                            )
+                            ret[pod.metadata.name] = log.splitlines()
+                            if (
+                                container_status.last_state.terminated
+                                is not None
+                            ):
+                                log = self.core_v1_api.read_namespaced_pod_log(
+                                    pod.metadata.name,
+                                    self.namespace,
+                                    container=container_status.name,
+                                    previous=True,
+                                )
+                                ret[
+                                    f"{pod.metadata.name}-previous"
+                                ] = log.splitlines()
                         except kubernetes.client.rest.ApiException as e:
                             logger = get_thread_logger(with_prefix=True)
-                            logger.error('Failed to get previous log of pod %s' %
-                                         pod.metadata.name, exc_info=e)
+                            logger.error(
+                                "Failed to get previous log of pod %s",
+                                pod.metadata.name,
+                                exc_info=e,
+                            )
+        if len(ret) > 0:
+            return ret
+        else:
+            return None
 
     def collect_cli_result(self, p: subprocess.CompletedProcess):
+        """Collects the result of the kubectl command"""
         cli_output = {}
         cli_output["stdout"] = p.stdout.strip()
         cli_output["stderr"] = p.stderr.strip()
-        with open(self.cli_output_path, 'w') as f:
-            f.write(json.dumps(cli_output, cls=ActoEncoder, indent=6))
         return cli_output
 
     def __get_all_objects(self, method) -> dict:
-        '''Get resources in the application namespace
+        """Get resources in the application namespace
 
         Args:
             method: function pointer for getting the object
 
         Returns
             resource in dict
-        '''
+        """
         result_dict = {}
         resource_objects = method(namespace=self.namespace, watch=False).items
 
-        for object in resource_objects:
-            result_dict[object.metadata.name] = object.to_dict()
+        for obj in resource_objects:
+            result_dict[obj.metadata.name] = obj.to_dict()
         return result_dict
 
-    def __get_custom_resources(self, namespace: str, group: str, version: str, plural: str) -> dict:
-        '''Get custom resource object
+    def __get_custom_resources(
+        self, namespace: str, group: str, version: str, plural: str
+    ) -> dict:
+        """Get custom resource object
 
         Args:
             namespace: namespace of the cr
@@ -327,44 +411,49 @@ class Runner(object):
 
         Returns:
             custom resouce object
-        '''
+        """
         result_dict = {}
-        custom_resources = self.customObjectApi.list_namespaced_custom_object(
-            group, version, namespace, plural)['items']
+        custom_resources = self.custom_object_api.list_namespaced_custom_object(
+            group, version, namespace, plural
+        )["items"]
         for cr in custom_resources:
-            result_dict[cr['metadata']['name']] = cr
+            result_dict[cr["metadata"]["name"]] = cr
         return result_dict
 
     def wait_for_system_converge(self, hard_timeout=480) -> bool:
-        '''This function blocks until the system converges. It keeps 
-           watching for incoming events. If there is no event within 
-           60 seconds, the system is considered to have converged. 
+        """This function blocks until the system converges. It keeps
+           watching for incoming events. If there is no event within
+           60 seconds, the system is considered to have converged.
 
         Args:
             hard_timeout: the maximal wait time for system convergence
 
         Returns:
             True if the system fails to converge within the hard timeout
-        '''
+        """
         logger = get_thread_logger(with_prefix=True)
 
         start_timestamp = time.time()
         logger.info("Waiting for system to converge... ")
 
-        event_stream = self.coreV1Api.list_namespaced_event(self.namespace,
-                                                            _preload_content=False,
-                                                            watch=True)
+        event_stream = self.core_v1_api.list_namespaced_event(
+            self.namespace, _preload_content=False, watch=True
+        )
 
-        combined_event_queue = Queue(maxsize=0)
-        timer_hard_timeout = acto_timer.ActoTimer(hard_timeout, combined_event_queue, "timeout")
-        watch_process = Process(target=self.watch_system_events,
-                                args=(event_stream, combined_event_queue))
+        combined_event_queue = self.mp_ctx.Queue(maxsize=0)
+        timer_hard_timeout = acto_timer.ActoTimer(
+            hard_timeout, combined_event_queue, "timeout"
+        )
+        watch_process = self.mp_ctx.Process(
+            target=self.watch_system_events,
+            args=(event_stream, combined_event_queue),
+        )
 
         timer_hard_timeout.start()
         watch_process.start()
 
         converge = True
-        while (True):
+        while True:
             try:
                 event = combined_event_queue.get(timeout=self.wait_time)
                 if event == "timeout":
@@ -372,55 +461,110 @@ class Runner(object):
                     break
             except queue.Empty:
                 ready = True
-                statefulsets = self.__get_all_objects(self.appV1Api.list_namespaced_stateful_set)
-                deployments = self.__get_all_objects(self.appV1Api.list_namespaced_deployment)
-                daemonsets = self.__get_all_objects(self.appV1Api.list_namespaced_daemon_set)
+                statefulsets = self.__get_all_objects(
+                    self.app_v1_api.list_namespaced_stateful_set
+                )
+                deployments = self.__get_all_objects(
+                    self.app_v1_api.list_namespaced_deployment
+                )
+                daemonsets = self.__get_all_objects(
+                    self.app_v1_api.list_namespaced_daemon_set
+                )
 
                 for sfs in statefulsets.values():
-                    if sfs['status']['ready_replicas'] == None and sfs['status']['replicas'] == 0:
+                    if (
+                        sfs["status"]["ready_replicas"] is None
+                        and sfs["status"]["replicas"] == 0
+                    ):
                         # replicas could be 0
                         continue
-                    if sfs['status']['replicas'] != sfs['status']['ready_replicas']:
+                    if (
+                        sfs["status"]["replicas"]
+                        != sfs["status"]["ready_replicas"]
+                    ):
                         ready = False
-                        logger.info("Statefulset %s is not ready yet" % sfs['metadata']['name'])
+                        logger.info(
+                            "Statefulset %s is not ready yet",
+                            sfs["metadata"]["name"],
+                        )
                         break
-                    if sfs['spec']['replicas'] != sfs['status']['replicas']:
+                    if sfs["spec"]["replicas"] != sfs["status"]["replicas"]:
                         ready = False
-                        logger.info("Statefulset %s is not ready yet" % sfs['metadata']['name'])
+                        logger.info(
+                            "Statefulset %s is not ready yet",
+                            sfs["metadata"]["name"],
+                        )
                         break
 
                 for dp in deployments.values():
-                    if dp['spec']['replicas'] == 0:
+                    if dp["spec"]["replicas"] == 0:
                         continue
 
-                    if dp['status']['replicas'] != dp['status']['ready_replicas']:
+                    if (
+                        dp["status"]["replicas"]
+                        != dp["status"]["ready_replicas"]
+                    ):
                         ready = False
-                        logger.info("Deployment %s is not ready yet" % dp['metadata']['name'])
+                        logger.info(
+                            "Deployment %s is not ready yet",
+                            dp["metadata"]["name"],
+                        )
                         break
 
-                    for condition in dp['status']['conditions']:
-                        if condition['type'] == 'Available' and condition['status'] != 'True':
+                    for condition in dp["status"]["conditions"]:
+                        if (
+                            condition["type"] == "Available"
+                            and condition["status"] != "True"
+                        ):
                             ready = False
-                            logger.info("Deployment %s is not ready yet" % dp['metadata']['name'])
+                            logger.info(
+                                "Deployment %s is not ready yet",
+                                dp["metadata"]["name"],
+                            )
                             break
-                        elif condition['type'] == 'Progressing' and condition['status'] != 'True':
+
+                        if (
+                            condition["type"] == "Progressing"
+                            and condition["status"] != "True"
+                        ):
                             ready = False
-                            logger.info("Deployment %s is not ready yet" % dp['metadata']['name'])
+                            logger.info(
+                                "Deployment %s is not ready yet",
+                                dp["metadata"]["name"],
+                            )
                             break
 
                 for ds in daemonsets.values():
-                    if ds['status']['number_ready'] != ds['status']['current_number_scheduled']:
+                    if (
+                        ds["status"]["number_ready"]
+                        != ds["status"]["current_number_scheduled"]
+                    ):
                         ready = False
-                        logger.info("Daemonset %s is not ready yet" % ds['metadata']['name'])
+                        logger.info(
+                            "Daemonset %s is not ready yet",
+                            ds["metadata"]["name"],
+                        )
                         break
-                    if ds['status']['desired_number_scheduled'] != ds['status']['number_ready']:
+                    if (
+                        ds["status"]["desired_number_scheduled"]
+                        != ds["status"]["number_ready"]
+                    ):
                         ready = False
-                        logger.info("Daemonset %s is not ready yet" % ds['metadata']['name'])
+                        logger.info(
+                            "Daemonset %s is not ready yet",
+                            ds["metadata"]["name"],
+                        )
                         break
-                    if 'updated_number_scheduled' in ds['status'] and ds['status'][
-                            'updated_number_scheduled'] != ds['status']['desired_number_scheduled']:
+                    if (
+                        "updated_number_scheduled" in ds["status"]
+                        and ds["status"]["updated_number_scheduled"]
+                        != ds["status"]["desired_number_scheduled"]
+                    ):
                         ready = False
-                        logger.info("Daemonset %s is not ready yet" % ds['metadata']['name'])
+                        logger.info(
+                            "Daemonset %s is not ready yet",
+                            ds["metadata"]["name"],
+                        )
                         break
 
                 if ready:
@@ -432,69 +576,82 @@ class Runner(object):
         timer_hard_timeout.cancel()
         watch_process.terminate()
 
-        time_elapsed = time.strftime("%H:%M:%S", time.gmtime(time.time() - start_timestamp))
+        time_elapsed = time.strftime(
+            "%H:%M:%S", time.gmtime(time.time() - start_timestamp)
+        )
         if converge:
-            logger.info('System took %s to converge' % time_elapsed)
+            logger.info("System took %s to converge", time_elapsed)
             return False
         else:
-            logger.error('System failed to converge within %d seconds' % hard_timeout)
+            logger.error(
+                "System failed to converge within %d seconds", hard_timeout
+            )
             return True
 
-    def watch_system_events(self, event_stream, queue: Queue):
-        '''A process that watches namespaced events
-        '''
+    def watch_system_events(self, event_stream, q: multiprocessing.Queue):
+        """A process that watches namespaced events"""
         for _ in event_stream:
             try:
-                queue.put("event")
+                q.put("event")
             except (ValueError, AssertionError):
                 pass
 
 
 def decode_secret_data(secrets: dict) -> dict:
-    '''Decodes secret's b64-encrypted data in the secret object
-    '''
+    """Decodes secret's b64-encrypted data in the secret object"""
     logger = get_thread_logger(with_prefix=True)
     for secret in secrets:
         try:
-            if 'data' in secrets[secret] and secrets[secret]['data'] != None:
-                for key in secrets[secret]['data']:
-                    secrets[secret]['data'][key] = base64.b64decode(
-                        secrets[secret]['data'][key]).decode('utf-8')
-        except Exception as e:
+            if (
+                "data" in secrets[secret]
+                and secrets[secret]["data"] is not None
+            ):
+                for key in secrets[secret]["data"]:
+                    secrets[secret]["data"][key] = base64.b64decode(
+                        secrets[secret]["data"][key]
+                    ).decode("utf-8")
+        except UnicodeDecodeError as e:
             # skip secret if decoding fails
             logger.error(e)
     return secrets
 
 
-def group_pods(all_pods: dict) -> Tuple[dict, dict, dict]:
-    '''Groups pods into deployment pods, daemonset pods, and other pods
+def group_pods(all_pods: dict) -> tuple[dict, dict, dict]:
+    """Groups pods into deployment pods, daemonset pods, and other pods
 
     For deployment pods, they are further grouped by their owner reference
 
     Return:
         Tuple of (deployment_pods, daemonset_pods, other_pods)
-    '''
+    """
     deployment_pods = {}
     daemonset_pods = {}
     other_pods = {}
     for name, pod in all_pods.items():
-        if 'acto/tag' in pod['metadata']['labels'] and pod['metadata']['labels'][
-                'acto/tag'] == 'custom-oracle':
+        if (
+            "acto/tag" in pod["metadata"]["labels"]
+            and pod["metadata"]["labels"]["acto/tag"] == "custom-oracle"
+        ):
             # skip pods spawned by users' custom oracle
             continue
-        elif pod['metadata']['owner_references'] != None:
-            owner_reference = pod['metadata']['owner_references'][0]
-            if owner_reference['kind'] == 'ReplicaSet' or owner_reference['kind'] == 'Deployment':
-                owner_name = owner_reference['name']
-                if owner_reference['kind'] == 'ReplicaSet':
-                    # chop off the suffix of the ReplicaSet name to get the deployment name
-                    owner_name = '-'.join(owner_name.split('-')[:-1])
+
+        if pod["metadata"]["owner_references"] is not None:
+            owner_reference = pod["metadata"]["owner_references"][0]
+            if (
+                owner_reference["kind"] == "ReplicaSet"
+                or owner_reference["kind"] == "Deployment"
+            ):
+                owner_name = owner_reference["name"]
+                if owner_reference["kind"] == "ReplicaSet":
+                    # chop off the suffix of the ReplicaSet name
+                    # to get the deployment name
+                    owner_name = "-".join(owner_name.split("-")[:-1])
                 if owner_name not in deployment_pods:
                     deployment_pods[owner_name] = [pod]
                 else:
                     deployment_pods[owner_name].append(pod)
-            elif owner_reference['kind'] == 'DaemonSet':
-                owner_name = owner_reference['name']
+            elif owner_reference["kind"] == "DaemonSet":
+                owner_name = owner_reference["name"]
                 if owner_name not in daemonset_pods:
                     daemonset_pods[owner_name] = [pod]
                 else:
@@ -505,41 +662,3 @@ def group_pods(all_pods: dict) -> Tuple[dict, dict, dict]:
             other_pods[name] = pod
 
     return deployment_pods, daemonset_pods, other_pods
-
-
-# standalone runner for acto
-if __name__ == "__main__":
-    import argparse
-    import logging
-    import sys
-
-    parser = argparse.ArgumentParser(description="Standalone runner for acto")
-    parser.add_argument('-m',
-                        '--manifest',
-                        type=str,
-                        help='path to the manifest file to be applied',
-                        required=True)
-    parser.add_argument('-c', '--context', type=str, help='path to the context file', required=True)
-    parser.add_argument('-t',
-                        '--trial-dir',
-                        type=str,
-                        help='path to the trial directory',
-                        required=True)
-    parser.add_argument('-g', '--generation', type=int, help='generation number', required=True)
-    parser.add_argument('-k',
-                        '--cluster-context-name',
-                        type=str,
-                        help='name of the cluster context',
-                        required=True)
-    args = parser.parse_args()
-
-    # setting logging output to stdout
-    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
-
-    manifest = yaml.load(open(args.manifest, 'r'), Loader=yaml.FullLoader)
-    context = json.load(open(args.context, 'r'))
-
-    runner = Runner(context, args.trial_dir, args.cluster_context_name)
-
-    runner.run(manifest, args.generation)
-    print("Done")

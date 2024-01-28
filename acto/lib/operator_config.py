@@ -9,12 +9,16 @@ class ApplyStep(BaseModel, extra="forbid"):
     """Configuration for each step of kubectl apply"""
     file: str = Field(
         description="Path to the file for kubectl apply")
-    operator: Optional[bool] = Field(
+    operator: bool = Field(
         description="If the file contains the operator deployment",
         default=False)
+    operator_container_name: Optional[str] = Field(
+        description="The container name of the operator in the operator pod",
+        default=None)
     namespace: Optional[str] = Field(
-        description="Namespace for applying the file, if not specified," +
-        "use the namespace in the file or Acto namespace",
+        description="Namespace for applying the file. If not specified, " +
+        "use the namespace in the file or Acto namespace. " +
+        "If set to null, use the namespace in the file",
         default=DELEGATED_NAMESPACE)
 
 
@@ -44,7 +48,7 @@ class DeployConfig(BaseModel, extra="forbid"):
     """Configuration for deploying the operator"""
     steps: List[DeployStep] = Field(
         description="Steps to deploy the operator",
-        min_items=1,)
+        min_length=1)
 
 
 class AnalysisConfig(BaseModel, extra="forbid"):
@@ -57,7 +61,8 @@ class AnalysisConfig(BaseModel, extra="forbid"):
     package: str = Field(
         description="Package name in which the type of the CR is defined")
     entrypoint: Optional[str] = Field(
-        description="The relative path of the main package for the operator")
+        description="The relative path of the main package for the operator, " +
+                    "required if the main is not in the root directory")
 
 
 class KubernetesEngineConfig(BaseModel, extra="forbid"):
@@ -81,7 +86,7 @@ class OperatorConfig(BaseModel, extra="forbid"):
     collect_coverage: bool = False
     custom_oracle: Optional[str] = Field(
         default=None, description="Path to the custom oracle file")
-    diff_ignore_fields: List[str] = Field(default_factory=list)
+    diff_ignore_fields: Optional[List[str]] = Field(default_factory=list)
     kubernetes_version: str = Field(
         default="v1.22.9", description="Kubernetes version")
     kubernetes_engine: KubernetesEngineConfig = Field(
@@ -104,3 +109,14 @@ class OperatorConfig(BaseModel, extra="forbid"):
         default=None, description="Path to the context file")
     focus_fields: Optional[List[List[str]]] = Field(
         default=None, description="List of focus fields")
+
+
+if __name__ == "__main__":
+    import json
+
+    import jsonref
+    print(
+        json.dumps(
+            jsonref.replace_refs(
+                OperatorConfig.model_json_schema()),
+            indent=4))

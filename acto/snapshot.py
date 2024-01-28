@@ -1,89 +1,176 @@
 import json
 import os
-from dataclasses import dataclass, field
-from typing import Tuple, Dict, List, TypedDict, Optional, Literal, Any
+from typing import Optional, Tuple
 
+import deepdiff
+import pydantic
 import yaml
-from deepdiff import DeepDiff
+from typing_extensions import Self
 
-from acto.common import postprocess_diff, EXCLUDE_PATH_REGEX, Diff
-
-
-class PodLog(TypedDict):
-    log: Optional[List[str]]
-    previous_log: Optional[List[str]]
+from acto.common import EXCLUDE_PATH_REGEX, Diff, postprocess_diff
+from acto.serialization import ActoEncoder
 
 
-@dataclass
-class Snapshot:
-    input: dict = field(default_factory=dict)
-    cli_result: dict = field(default_factory=dict)
-    system_state: dict = field(default_factory=dict)
-    operator_log: List[str] = field(default_factory=list)
-    events: dict = field(default_factory=dict)
-    not_ready_pods_logs: dict = field(default_factory=dict)
-    coverage_files: Dict[str, bytes] = field(default_factory=dict)
-    generation: int = 0
-    trial_state: Literal['normal', 'recovering', 'terminated', 'runtime_exception'] = 'normal'
-    parent: Optional['Snapshot'] = None
-    __context: Dict[str, Any] = field(default_factory=dict)
+def input_cr_path(trial_dir: str, generation: int) -> str:
+    """Return the path of the input CR"""
+    return f"{trial_dir}/mutated-{generation:03d}.yaml"
 
-    def to_dict(self):
-        return {
-            'input': self.input,
-            'cli_result': self.cli_result,
-            'system_state': self.system_state,
-            'operator_log': self.operator_log
-        }
 
-    def delta(self, prev: 'Snapshot') -> Tuple[Dict[str, Dict[str, Dict[str, Diff]]], Dict[str, Dict[str, Dict[str, Diff]]]]:
-        curr_input, curr_system_state = self.input, self.system_state
-        prev_input, prev_system_state = prev.input, prev.system_state
+def system_state_path(trial_dir: str, generation: int) -> str:
+    """Return the path of the system state"""
+    return f"{trial_dir}/system-state-{generation:03d}.json"
 
-        input_delta = postprocess_diff(DeepDiff(prev_input, curr_input, view='tree'))
+
+def cli_output_path(trial_dir: str, generation: int) -> str:
+    """Return the path of the cli output"""
+    return f"{trial_dir}/cli-output-{generation:03d}.log"
+
+
+def events_log_path(trial_dir: str, generation: int) -> str:
+    """Return the path of the events log"""
+    return f"{trial_dir}/events-{generation:03d}.json"
+
+
+def not_ready_pods_log_path(trial_dir: str, generation: int) -> str:
+    """Return the path of the events log"""
+    return f"{trial_dir}/not-ready-pods-{generation:03d}.json"
+
+
+def operator_log_path(trial_dir: str, generation: int) -> str:
+    """Return the path of the operator log"""
+    return f"{trial_dir}/operator-{generation:03d}.log"
+
+
+class Snapshot(pydantic.BaseModel):
+    """A Snapshot is a snapshot of the system state at a point of time.
+    It contains the input_cr, CLI result of the kubectl, operator log, 
+    system state containing all Kubernetes resources"""
+
+    input_cr: dict = pydantic.Field(
+        description="Input CR of the trial in python dict format"
+    )
+    cli_result: dict = pydantic.Field(
+        description="CLI result of the kubectl command"
+    )
+    system_state: dict = pydantic.Field(
+        description="System state of the cluster, including all Kubernetes resources"
+    )
+    operator_log: list[str]
+    events: dict = pydantic.Field(description="Serialized Kubernetes V1EventList object")
+    not_ready_pods_logs: Optional[dict] = pydantic.Field(
+        description="Logs from unready pods", default=None
+    )
+    generation: int
+
+    def delta(
+        self, prev: Self
+    ) -> Tuple[
+        dict[str, dict[str, Diff]], dict[str, dict[str, dict[str, Diff]]]
+    ]:
+        """Return the delta between this snapshot and the previous snapshot"""
+        input_delta = postprocess_diff(
+            deepdiff.DeepDiff(prev.input_cr, self.input_cr, view="tree")
+        )
 
         system_state_delta = {}
-        for resource in curr_system_state:
-            if resource not in prev_system_state:
-                prev_system_state[resource] = {}
-            system_state_delta[resource] = postprocess_diff(
-                DeepDiff(prev_system_state[resource],
-                         curr_system_state[resource],
-                         exclude_regex_paths=EXCLUDE_PATH_REGEX,
-                         view='tree'))
+        for (
+            resource_name,
+            resource,
+        ) in self.system_state.items():  # pylint: disable=no-member
+            if resource_name not in prev.system_state:
+                prev.system_state[resource_name] = {}
+            system_state_delta[resource_name] = postprocess_diff(
+                deepdiff.DeepDiff(
+                    prev.system_state[resource_name],
+                    resource,
+                    exclude_regex_paths=EXCLUDE_PATH_REGEX,
+                    view="tree",
+                )
+            )
 
         return input_delta, system_state_delta
 
-    def save(self, base_dir: str):
-        yaml.safe_dump(self.input, open(os.path.join(base_dir, f'mutated-{self.generation}.yaml'), 'w'))
-        json.dump(self.cli_result, open(os.path.join(base_dir, f'cli-output-{self.generation}.log'), 'w'))
-        json.dump(self.system_state, open(os.path.join(base_dir, f'system-state-{self.generation}.json'), 'w'), default=str)
-        open(os.path.join(base_dir, f'operator-{self.generation}.json'), 'w').write('\n'.join(self.operator_log))
-        json.dump(self.events, open(os.path.join(base_dir, f'events-{self.generation}.json'), 'w'))
-        json.dump(self.not_ready_pods_logs, open(os.path.join(base_dir, f'not-ready-pods-logs-{self.generation}.json'), 'w'))
-        open(os.path.join(base_dir, f'trial-state-{self.generation}.txt'), 'w').write(self.trial_state)
-        # dump coverage info
-        # converge_index is a dict to map from filename to its generation
-        coverage_index_path = os.path.join(base_dir, f'coverage-index.json')
-        if not os.path.exists(coverage_index_path):
-            open(coverage_index_path, 'w').write('{}')
-            coverage_index = {}
+    def dump(self, trial_dir: str):
+        """Dump the snapshot to files"""
+        # Dump CLI output
+        with open(
+            cli_output_path(trial_dir, self.generation), "w", encoding="utf-8"
+        ) as fout:
+            json.dump(self.cli_result, fout, cls=ActoEncoder, indent=4)
+
+        # Dump Kubernetes events
+        with open(
+            events_log_path(trial_dir, self.generation), "w", encoding="utf-8"
+        ) as fout:
+            json.dump(self.events, fout, cls=ActoEncoder, indent=4)
+
+        if self.not_ready_pods_logs is not None:
+            with open(
+                not_ready_pods_log_path(trial_dir, self.generation),
+                "w",
+                encoding="utf-8",
+            ) as fout:
+                json.dump(
+                    self.not_ready_pods_logs, fout, cls=ActoEncoder, indent=4
+                )
+
+        with open(
+            operator_log_path(trial_dir, self.generation), "w", encoding="utf-8"
+        ) as fout:
+            fout.write("\n".join(self.operator_log))
+
+        # Dump system state
+        with open(
+            system_state_path(trial_dir, self.generation), "w", encoding="utf-8"
+        ) as fout:
+            json.dump(self.system_state, fout, cls=ActoEncoder, indent=4)
+
+    @classmethod
+    def load(cls, trial_dir: str, generation: int) -> Self:
+        """Load a snapshot from files"""
+        with open(
+            cli_output_path(trial_dir, generation), "r", encoding="utf-8"
+        ) as fin:
+            cli_result = json.load(fin)
+
+        with open(
+            events_log_path(trial_dir, generation), "r", encoding="utf-8"
+        ) as fin:
+            events = json.load(fin)
+
+        if os.path.exists(not_ready_pods_log_path(trial_dir, generation)):
+            with open(
+                not_ready_pods_log_path(trial_dir, generation),
+                "r",
+                encoding="utf-8",
+            ) as fin:
+                not_ready_pods_logs = json.load(fin)
         else:
-            coverage_index = json.load(open(coverage_index_path))
+            not_ready_pods_logs = None
 
-        for filename, content in self.coverage_files.items():
-            if filename not in coverage_index:
-                with open(os.path.join(base_dir, filename), 'wb') as f:
-                    f.write(content)
-                coverage_index[filename] = self.generation
-        json.dump(coverage_index, open(coverage_index_path, 'w'))
+        with open(
+            operator_log_path(trial_dir, generation), "r", encoding="utf-8"
+        ) as fin:
+            operator_log = fin.read().splitlines()
 
-    def get_context_value(self, key: str):
-        if key in self.__context:
-            return self.__context[key]
-        if self.parent:
-            return self.parent.get_context_value(key)
-        return None
+        with open(
+            system_state_path(trial_dir, generation), "r", encoding="utf-8"
+        ) as fin:
+            system_state = json.load(fin)
 
-    def set_context_value(self, key: str, value: Any):
-        self.__context[key] = value
+        with open(
+            input_cr_path(trial_dir, generation),
+            "r",
+            encoding="utf-8",
+        ) as fin:
+            input_cr = yaml.safe_load(fin)
+
+        return cls(
+            input_cr=input_cr,
+            cli_result=cli_result,
+            system_state=system_state,
+            operator_log=operator_log,
+            events=events,
+            not_ready_pods_logs=not_ready_pods_logs,
+            generation=generation,
+        )
