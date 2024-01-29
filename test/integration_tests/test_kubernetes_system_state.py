@@ -57,8 +57,9 @@ class TestKubernetesSystemState(unittest.TestCase):
         assert "cluster-admin" in state.cluster_role_binding
 
         # check serialization works
-        with tempfile.TemporaryFile("w") as file:
-            state.dump(file)
+        with tempfile.TemporaryDirectory() as tempdir:
+            filepath = os.path.join(tempdir, "system_state.json")
+            state.dump(filepath)
 
 
 if __name__ == "__main__":
