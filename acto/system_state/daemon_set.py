@@ -50,15 +50,16 @@ class DaemonSetState(KubernetesNamespacedDictObject):
                     + f"!= ready[{daemon_set.status.number_ready}]",
                 )
 
-            for condition in daemon_set.status.conditions:
-                if (
-                    condition.type == "Progressing"
-                    and condition.status != "True"
-                ):
-                    return (
-                        False,
-                        f"DaemonSet[{name}] is not progressing: {condition.message}",
-                    )
+            if daemon_set.status.conditions is not None:
+                for condition in daemon_set.status.conditions:
+                    if (
+                        condition.type == "Progressing"
+                        and condition.status != "True"
+                    ):
+                        return (
+                            False,
+                            f"DaemonSet[{name}] is not progressing: {condition.message}",
+                        )
 
         return True, ""
 

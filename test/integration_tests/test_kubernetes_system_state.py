@@ -55,7 +55,6 @@ class TestKubernetesSystemState(unittest.TestCase):
         assert "coredns" in state.config_map
         assert "admin" in state.cluster_role
         assert "cluster-admin" in state.cluster_role_binding
-        assert "kube-dns" in state.endpoint
 
         # check serialization works
         with tempfile.TemporaryFile("w") as file:

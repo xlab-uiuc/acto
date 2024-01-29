@@ -41,9 +41,13 @@ class ReplicaSetState(KubernetesNamespacedDictObject):
             if replica_set.spec.replicas != replica_set.status.ready_replicas:
                 return False, f"ReplicaSet[{name}] replicas mismatch"
 
-            for condition in replica_set.status.conditions:
-                if condition.type == "Available" and condition.status != "True":
-                    return False, f"ReplicaSet[{name}] is not available"
+            if replica_set.status.conditions is not None:
+                for condition in replica_set.status.conditions:
+                    if (
+                        condition.type == "Available"
+                        and condition.status != "True"
+                    ):
+                        return False, f"ReplicaSet[{name}] is not available"
 
         return True, ""
 

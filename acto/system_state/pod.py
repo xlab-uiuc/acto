@@ -33,19 +33,21 @@ class PodState(KubernetesNamespacedDictObject):
         """
 
         for name, pod in self.root.items():
-            for condition in pod.status.conditions:
-                if condition.type == "Ready" and condition.status != "True":
-                    return (
-                        False,
-                        f"Pod[{name}] is not ready: {condition.message}",
-                    )
+            if pod.status.conditions is not None:
+                for condition in pod.status.conditions:
+                    if condition.type == "Ready" and condition.status != "True":
+                        return (
+                            False,
+                            f"Pod[{name}] is not ready: {condition.message}",
+                        )
 
-            for container_status in pod.status.container_statuses:
-                if container_status.ready is not True:
-                    return (
-                        False,
-                        f"Container {container_status.name} is not ready",
-                    )
+            if pod.status.container_statuses is not None:
+                for container_status in pod.status.container_statuses:
+                    if container_status.ready is not True:
+                        return (
+                            False,
+                            f"Container {container_status.name} is not ready",
+                        )
 
             if pod.status.init_container_statuses is not None:
                 for container_status in pod.status.init_container_statuses:

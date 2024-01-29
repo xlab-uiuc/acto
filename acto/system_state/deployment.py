@@ -42,23 +42,30 @@ class DeploymentState(KubernetesNamespacedDictObject):
             if deployment.spec.replicas != deployment.status.ready_replicas:
                 return False, f"Deployment[{name}] replicas mismatch"
 
-            for condition in deployment.status.conditions:
-                if condition.type == "Available" and condition.status != "True":
-                    return False, f"Deployment[{name}] is not available"
-                if (
-                    condition.type == "Progressing"
-                    and condition.status != "True"
-                ):
-                    return False, f"Deployment[{name}] is not progressing"
+            if deployment.status.conditions is not None:
+                for condition in deployment.status.conditions:
+                    if (
+                        condition.type == "Available"
+                        and condition.status != "True"
+                    ):
+                        return False, f"Deployment[{name}] is not available"
+                    if (
+                        condition.type == "Progressing"
+                        and condition.status != "True"
+                    ):
+                        return False, f"Deployment[{name}] is not progressing"
 
             if deployment.status.replicas != deployment.status.ready_replicas:
                 return False, f"Deployment[{name}] replicas mismatch"
 
             if (
                 deployment.status.unavailable_replicas != 0
-                and deployment.status.updated_replicas is not None
+                and deployment.status.unavailable_replicas is not None
             ):
-                return False, "Some pods are unavailable"
+                return (
+                    False,
+                    f"[{name}] [{deployment.status.unavailable_replicas}] pods are unavailable",
+                )
 
         return True, ""
 
