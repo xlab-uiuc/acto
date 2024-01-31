@@ -63,6 +63,8 @@
 | pravega/zookeeper-operator          | [https://github.com/pravega/zookeeper-operator/issues/540](https://github.com/pravega/zookeeper-operator/issues/540)                 |           |
 | pravega/zookeeper-operator          | [https://github.com/pravega/zookeeper-operator/issues/541](https://github.com/pravega/zookeeper-operator/issues/541)                 |           |
 | pravega/zookeeper-operator          | [https://github.com/pravega/zookeeper-operator/issues/547](https://github.com/pravega/zookeeper-operator/issues/547)                 |           |
+| cloudnative-pg/cloudnative-pg       | [https://github.com/cloudnative-pg/cloudnative-pg/issues/3623](https://github.com/cloudnative-pg/cloudnative-pg/issues/3623)         | fixed     |
+| cloudnative-pg/cloudnative-pg       | [https://github.com/cloudnative-pg/cloudnative-pg/issues/3541](https://github.com/cloudnative-pg/cloudnative-pg/issues/3541)         |           |
 
 
 # Byproduct bugs
