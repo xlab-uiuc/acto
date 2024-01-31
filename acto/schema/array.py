@@ -1,29 +1,45 @@
+import random
 from typing import List, Tuple
 
 from .base import BaseSchema, TreeNode
-from .schema import extract_schema
 
 
 class ArraySchema(BaseSchema):
-    '''Representation of an array node
-    
+    """Representation of an array node
+
     It handles
         - minItems
         - maxItems
         - items
         - uniqueItems
-    '''
+    """
+
     default_min_items = 0
     default_max_items = 5
 
     def __init__(self, path: list, schema: dict) -> None:
-        super().__init__(path, schema)
-        self.item_schema = extract_schema(self.path + ['ITEM'], schema['items'])
-        self.min_items = self.default_min_items if 'minItems' not in schema else schema['minItems']
-        self.max_items = self.default_max_items if 'maxItems' not in schema else schema['maxItems']
-        self.unique_items = None if 'uniqueItems' not in schema else schema['exclusiveMinimum']
+        # This is to fix the circular import
+        # pylint: disable=import-outside-toplevel, cyclic-import
+        from .schema import extract_schema
 
-    def get_item_schema(self):
+        super().__init__(path, schema)
+        self.item_schema = extract_schema(self.path + ["ITEM"], schema["items"])
+        self.min_items = (
+            self.default_min_items
+            if "minItems" not in schema
+            else schema["minItems"]
+        )
+        self.max_items = (
+            self.default_max_items
+            if "maxItems" not in schema
+            else schema["maxItems"]
+        )
+        self.unique_items = (
+            None if "uniqueItems" not in schema else schema["exclusiveMinimum"]
+        )
+
+    def get_item_schema(self) -> BaseSchema:
+        """Get the schema of the items in the array"""
         return self.item_schema
 
     def get_all_schemas(self) -> Tuple[list, list, list]:
@@ -66,10 +82,12 @@ class ArraySchema(BaseSchema):
             normal_schemas.append(self)
 
         return normal_schemas, pruned_by_overspecified, pruned_by_copiedover
-    
-    def get_normal_semantic_schemas(self) -> Tuple[List['BaseSchema'], List['BaseSchema']]:
-        normal_schemas = [self]
-        semantic_schemas = []
+
+    def get_normal_semantic_schemas(
+        self,
+    ) -> Tuple[List["BaseSchema"], List["BaseSchema"]]:
+        normal_schemas: list[BaseSchema] = [self]
+        semantic_schemas: list[BaseSchema] = []
 
         child_schema_tuple = self.item_schema.get_normal_semantic_schemas()
         normal_schemas.extend(child_schema_tuple[0])
@@ -79,7 +97,7 @@ class ArraySchema(BaseSchema):
 
     def to_tree(self) -> TreeNode:
         node = TreeNode(self.path)
-        node.add_child('ITEM', self.item_schema.to_tree())
+        node.add_child("ITEM", self.item_schema.to_tree())
         return node
 
     def load_examples(self, example: list):
@@ -93,8 +111,29 @@ class ArraySchema(BaseSchema):
     def empty_value(self):
         return []
 
+    def gen(self, exclude_value=None, minimum: bool = False, **kwargs) -> list:
+        if self.enum is not None:
+            if exclude_value is not None:
+                return random.choice(
+                    [x for x in self.enum if x != exclude_value]
+                )
+            else:
+                return random.choice(self.enum)
+        else:
+            # XXX: need to handle exclude_value, but not important for now for array types
+            result = []
+            if "size" in kwargs and kwargs["size"] is not None:
+                num = kwargs["size"]
+            elif minimum:
+                num = self.min_items
+            else:
+                num = random.randint(self.min_items, self.max_items)
+            for _ in range(num):
+                result.append(self.item_schema.gen(minimum=minimum))
+            return result
+
     def __str__(self) -> str:
-        return 'Array'
+        return "Array"
 
     def __getitem__(self, key):
         return self.item_schema
