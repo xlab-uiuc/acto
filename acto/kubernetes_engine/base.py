@@ -37,9 +37,9 @@ class KubernetesEngine(ABC):
 
     @abstractmethod
     def create_cluster(self, name: str, kubeconfig: str):
-        """Use subprocess to create minikube cluster
+        """Use subprocess to create cluster
         Args:
-            name: name of the minikube cluster
+            name: name of the cluster
             config: path of the config file for cluster
             version: k8s version
         """
@@ -60,7 +60,7 @@ class KubernetesEngine(ABC):
     ):
         """Delete a cluster
         Args:
-            name: name of the minikube cluster
+            name: name of the cluster
             kubeconfig: path of the config file for cluster
         """
 
