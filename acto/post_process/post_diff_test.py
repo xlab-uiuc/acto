@@ -65,9 +65,7 @@ class DiffTestResult(pydantic.BaseModel):
     def to_file(self, file_path: str):
         """Dump the DiffTestResult to a file"""
         with open(file_path, "w", encoding="utf-8") as f:
-            json.dump(
-                self.model_dump(), f, cls=ActoEncoder, indent=4
-            )
+            json.dump(self.model_dump(), f, cls=ActoEncoder, indent=4)
 
 
 def dict_hash(d: dict) -> int:
@@ -571,9 +569,8 @@ class PostDiffTest(PostProcessor):
         cluster = kind.Kind(
             acto_namespace=self.acto_namespace,
             feature_gates=self.config.kubernetes_engine.feature_gates,
-        )
-        cluster.configure_cluster(
-            self.config.num_nodes, self.config.kubernetes_version
+            num_nodes=self.config.num_nodes,
+            version=self.config.kubernetes_version,
         )
         deploy = Deploy(self.config.deploy)
         # Build an archive to be preloaded
@@ -648,9 +645,8 @@ class PostDiffTest(PostProcessor):
         cluster = kind.Kind(
             acto_namespace=self.acto_namespace,
             feature_gates=self.config.kubernetes_engine.feature_gates,
-        )
-        cluster.configure_cluster(
-            self.config.num_nodes, self.config.kubernetes_version
+            num_nodes=self.config.num_nodes,
+            version=self.config.kubernetes_version,
         )
 
         deploy = Deploy(self.config.deploy)
