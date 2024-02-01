@@ -1,32 +1,32 @@
 """Test KubernetesEngine interface"""
+
 import os
 
 import pytest
 
-from acto.kubernetes_engine.base import KubernetesEngine
+# from acto.kubernetes_engine.base import KubernetesEngine
 from acto.kubernetes_engine.kind import Kind
+from acto.kubernetes_engine.minikube import Minikube
 
-# class TestKubernetesEngines():
-#     kind_cluster = kind.Kind(acto_namespace=0)
-
-kind_cluster = Kind(acto_namespace=0)
-# minikube_cluster = minikube.Minikube(acto_namespace=0)
-
-testcases = [(kind_cluster, 3, "v1.27.3")]
+testcases = [("kind", 3, "v1.27.3")]
 
 
 @pytest.mark.kubernetes_engine
-@pytest.mark.parametrize("cluster_instance,num_nodes,version", testcases)
-def test_kubernetes_engines(
-    cluster_instance: KubernetesEngine, num_nodes, version
-):
+@pytest.mark.parametrize("cluster_type,num_nodes,version", testcases)
+def test_kubernetes_engines(cluster_type: str, num_nodes, version):
     """Test KubernetesEngine interface"""
     config_path = os.path.join(os.path.expanduser("~"), ".kube/test-config")
     name = "test-cluster"
-    # num_nodes = 3
-    # version = "v1.27.4"
 
-    cluster_instance.configure_cluster(num_nodes, version)
+    if cluster_type == "kind":
+        cluster_instance = Kind(
+            acto_namespace=0, num_nodes=num_nodes, version=version
+        )
+    elif cluster_type == "minikube":
+        cluster_instance = Minikube(
+            acto_namespace=0, num_nodes=num_nodes, version=version
+        )
+
     print(
         f"Creating cluster {name} with {num_nodes} nodes, version {version}, "
         + "configPath {config_path}"
@@ -41,4 +41,3 @@ def test_kubernetes_engines(
         # expect to raise RuntimeError
         # get_node_list should raise RuntimeError when cluster is not found
         cluster_instance.get_node_list(name)
-

@@ -32,20 +32,18 @@ class Minikube(base.KubernetesEngine):
             self.posthooks = posthooks
 
     def configure_cluster(self, num_nodes: int, version: str):
-        """Create config file for kind"""
+        """Create config file for minikube"""
         self.num_nodes = num_nodes
         self._k8s_version = version
 
     def get_context_name(self, cluster_name: str) -> str:
-        """Returns the kubecontext based onthe cluster name
-        KIND always adds `kind` before the cluster name
-        """
+        """Returns the kubecontext based onthe cluster name"""
         return cluster_name
 
     def create_cluster(self, name: str, kubeconfig: str):
-        """Use subprocess to create kind cluster
+        """Use subprocess to create minikube cluster
         Args:
-            name: name of the kind cluster
+            name: name of the minikube cluster
             config: path of the config file for cluster
             version: k8s version
         """
@@ -61,7 +59,7 @@ class Minikube(base.KubernetesEngine):
             logging.info("Kubeconfig: %s", kubeconfig)
             os.environ["KUBECONFIG"] = kubeconfig
         else:
-            raise RuntimeError("Missing kubeconfig for kind create")
+            raise RuntimeError("Missing kubeconfig for minikube create")
 
         cmd.extend(["--nodes", str(self.num_nodes)])
 
@@ -212,8 +210,10 @@ class Minikube(base.KubernetesEngine):
         print(cmd)
 
         # mount process to remain open until the cluster is deleted
-        _ = subprocess.Popen(cmd)
-
+        with subprocess.Popen(cmd) as _:
+            logging.debug(
+                "keep minikube mount process open until the cluster is deleted"
+            )
         try:
             kubernetes.config.load_kube_config(
                 config_file=kubeconfig, context=name
@@ -237,7 +237,7 @@ class Minikube(base.KubernetesEngine):
         if name is not None:
             cmd.extend(["--profile", name])
         else:
-            logging.error("Missing cluster name for kind load")
+            logging.error("Missing cluster name for minikube load")
 
         p = subprocess.run(cmd + [images_archive_path], check=True)
         if p.returncode != 0:
@@ -249,13 +249,13 @@ class Minikube(base.KubernetesEngine):
         if name:
             cmd.extend(["--profile", name])
         else:
-            logging.error("Missing cluster name for kind delete")
+            logging.error("Missing cluster name for minikube delete")
 
         if kubeconfig:
             logging.info("Kubeconfig: %s", kubeconfig)
             os.environ["KUBECONFIG"] = kubeconfig
         else:
-            raise RuntimeError("Missing kubeconfig for kind create")
+            raise RuntimeError("Missing kubeconfig for minikube create")
 
         while subprocess.run(cmd, check=True).returncode != 0:
             continue

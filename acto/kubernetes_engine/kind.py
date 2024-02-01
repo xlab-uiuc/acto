@@ -14,11 +14,15 @@ from . import base
 
 
 class Kind(base.KubernetesEngine):
+    """Kind engine for provisioning Kubernetes"""
+
     def __init__(
         self,
         acto_namespace: int,
         posthooks: List[base.KubernetesEnginePostHookType] = None,
         feature_gates: Dict[str, bool] = None,
+        num_nodes=1,
+        version="",
     ):
         self._config_path = os.path.join(
             CONST.CLUSTER_CONFIG_FOLDER, f"KIND-{acto_namespace}.yaml"
@@ -26,7 +30,6 @@ class Kind(base.KubernetesEngine):
         self._posthooks = posthooks
         self._feature_gates = feature_gates
 
-    def configure_cluster(self, num_nodes: int, version: str):
         """Create config file for kind"""
         config_dict: dict[str, Any] = {}
         config_dict["kind"] = "Cluster"
@@ -71,7 +74,7 @@ class Kind(base.KubernetesEngine):
         except FileExistsError:
             pass
 
-        with open(self._config_path, "w") as config_file:
+        with open(self._config_path, "w", encoding="utf-8") as config_file:
             yaml.dump(config_dict, config_file)
 
         self._k8s_version = version
@@ -98,22 +101,28 @@ class Kind(base.KubernetesEngine):
             cmd.extend(["--name", CONST.CLUSTER_NAME])
 
         if kubeconfig:
-            logging.info(f"Kubeconfig: {kubeconfig}")
+            logging.info("Kubeconfig: %s", kubeconfig)
             cmd.extend(["--kubeconfig", kubeconfig])
         else:
-            raise Exception("Missing kubeconfig for kind create")
+            raise RuntimeError("Missing kubeconfig for kind create")
 
         cmd.extend(["--config", self._config_path])
 
         cmd.extend(["--image", f"kindest/node:{self._k8s_version}"])
 
-        p = subprocess.run(cmd)
+        p = subprocess.run(cmd, check=True)
+        i = 0
         while p.returncode != 0:
-            # TODO: retry for three times
+            if i == 3:
+                # tried 3 times, still failed
+                logging.error("Failed to create kind cluster, aborting")
+                raise RuntimeError("Failed to create kind cluster")
+
             logging.error("Failed to create kind cluster, retrying")
+            i += 1
             self.delete_cluster(name, kubeconfig)
             time.sleep(5)
-            p = subprocess.run(cmd)
+            p = subprocess.run(cmd, check=True)
 
         try:
             kubernetes.config.load_kube_config(
@@ -124,7 +133,7 @@ class Kind(base.KubernetesEngine):
             )
         except Exception as e:
             logging.debug("Incorrect kube config file:")
-            with open(kubeconfig) as f:
+            with open(kubeconfig, encoding="utf-8") as f:
                 logging.debug(f.read())
             raise e
 
@@ -135,17 +144,17 @@ class Kind(base.KubernetesEngine):
     def load_images(self, images_archive_path: str, name: str):
         logging.info("Loading preload images")
         cmd = ["kind", "load", "image-archive"]
-        if images_archive_path == None:
+        if images_archive_path is None:
             logging.warning(
                 "No image to preload, we at least should have operator image"
             )
 
-        if name != None:
+        if name is not None:
             cmd.extend(["--name", name])
         else:
             logging.error("Missing cluster name for kind load")
 
-        p = subprocess.run(cmd + [images_archive_path])
+        p = subprocess.run(cmd + [images_archive_path], check=True)
         if p.returncode != 0:
             logging.error("Failed to preload images archive")
 
@@ -160,9 +169,9 @@ class Kind(base.KubernetesEngine):
         if kubeconfig:
             cmd.extend(["--kubeconfig", kubeconfig])
         else:
-            raise Exception("Missing kubeconfig for kind create")
+            raise RuntimeError("Missing kubeconfig for kind create")
 
-        while subprocess.run(cmd).returncode != 0:
+        while subprocess.run(cmd, check=True).returncode != 0:
             continue
 
     def get_node_list(self, name: str):
@@ -173,7 +182,7 @@ class Kind(base.KubernetesEngine):
         worker_name_template = "%s-worker"
         control_plane_name_template = "%s-control-plane"
 
-        if name == None:
+        if name is None:
             name = CONST.CLUSTER_NAME
 
         res = super().get_node_list(
@@ -182,7 +191,7 @@ class Kind(base.KubernetesEngine):
 
         if len(res) == 0:
             # no worker node can be found
-            logging.critical(f"No node for cluster {name} can be found")
+            logging.critical("No node for cluster %s can be found", name)
             raise RuntimeError
 
         return res
