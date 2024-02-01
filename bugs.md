@@ -65,7 +65,7 @@
 | pravega/zookeeper-operator          | [https://github.com/pravega/zookeeper-operator/issues/547](https://github.com/pravega/zookeeper-operator/issues/547)                 |           |
 | cloudnative-pg/cloudnative-pg       | [https://github.com/cloudnative-pg/cloudnative-pg/issues/3623](https://github.com/cloudnative-pg/cloudnative-pg/issues/3623)         | fixed     |
 | cloudnative-pg/cloudnative-pg       | [https://github.com/cloudnative-pg/cloudnative-pg/issues/3541](https://github.com/cloudnative-pg/cloudnative-pg/issues/3541)         |           |
-
+| Altinity/clickhouse-operator        | [https://github.com/Altinity/clickhouse-operator/issues/1319](https://github.com/Altinity/clickhouse-operator/issues/1319)           | confirmed |
 
 # Byproduct bugs
 
