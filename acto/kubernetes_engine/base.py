@@ -1,7 +1,7 @@
 import subprocess
 import time
 from abc import ABC, abstractmethod
-from typing import Callable, Dict, List
+from typing import Callable, Optional
 
 import kubernetes
 
@@ -12,54 +12,79 @@ KubernetesEnginePostHookType = Callable[[kubernetes.client.ApiClient], None]
 
 
 class KubernetesEngine(ABC):
+    """Interface for KubernetesEngine"""
 
     @abstractmethod
-    def __init__(self, acto_namespace: int,
-                 posthooks: List[KubernetesEnginePostHookType] = None,
-                 feature_gates: Dict[str, bool] = None) -> None: ...
-    '''Constructor for KubernetesEngine
-    
-    Args:
-        acto_namespace: the namespace of the acto
-        posthooks: a list of posthooks to be executed after the cluster is created
-        feature_gates: a list of feature gates to be enabled
-    '''
+    def __init__(
+        self,
+        acto_namespace: int,
+        posthooks: Optional[list[KubernetesEnginePostHookType]] = None,
+        feature_gates: Optional[dict[str, bool]] = None,
+        num_nodes=1,
+        version="",
+    ) -> None:
+        """Constructor for KubernetesEngine
 
-    @abstractmethod
-    def configure_cluster(self, num_nodes: int, version: str):
-        pass
+        Args:
+            acto_namespace: the namespace of the acto
+            posthooks: a list of posthooks to be executed after the cluster is created
+            feature_gates: a list of feature gates to be enabled
+        """
 
     @abstractmethod
     def get_context_name(self, cluster_name: str) -> str:
-        pass
+        """Returns the kubecontext based onthe cluster name"""
 
     @abstractmethod
     def create_cluster(self, name: str, kubeconfig: str):
-        pass
+        """Use subprocess to create cluster
+        Args:
+            name: name of the cluster
+            config: path of the config file for cluster
+            version: k8s version
+        """
 
     @abstractmethod
     def load_images(self, images_archive_path: str, name: str):
-        pass
+        """Load image into the cluster
+        Args:
+            1. Path of the archive image
+            2.Name of the cluster
+        """
 
     @abstractmethod
-    def delete_cluster(self, name: str, kubeconfig: str, ):
-        pass
+    def delete_cluster(
+        self,
+        name: str,
+        kubeconfig: str,
+    ):
+        """Delete a cluster
+        Args:
+            name: name of the cluster
+            kubeconfig: path of the config file for cluster
+        """
 
     def restart_cluster(self, name: str, kubeconfig: str):
+        """Restart the cluster
+        Args:
+            name: name of the kind cluster
+            kubeconfig: path of the config file for cluster
+        """
         logger = get_thread_logger(with_prefix=False)
 
         retry_count = 3
 
-        while (retry_count > 0):
+        while retry_count > 0:
             try:
                 self.delete_cluster(name, kubeconfig)
                 time.sleep(1)
                 self.create_cluster(name, kubeconfig)
                 time.sleep(1)
-                logger.info('Created cluster')
-            except Exception as e:
+                logger.info("Created cluster")
+            except RuntimeError as e:
                 logger.warning(
-                    "%s happened when restarting cluster, retrying...", e)
+                    "%s happened when restarting cluster, retrying...", e
+                )
                 retry_count -= 1
                 if retry_count == 0:
                     raise e
@@ -67,22 +92,22 @@ class KubernetesEngine(ABC):
             break
 
     def get_node_list(self, name: str):
-        '''Fetch the name of worker nodes inside a cluster
+        """Fetch the name of worker nodes inside a cluster
         Args:
             1. name: name of the cluster name
-        '''
-        logger = get_thread_logger(with_prefix=False)
+        """
+        _ = get_thread_logger(with_prefix=False)
 
-        cmd = ['docker', 'ps', '--format', '{{.Names}}', '-f']
+        cmd = ["docker", "ps", "--format", "{{.Names}}", "-f"]
 
-        if name == None:
+        if name is None:
             cmd.append(f"name={CONST.CLUSTER_NAME}")
         else:
             cmd.append(f"name={name}")
 
-        p = subprocess.run(cmd, capture_output=True, text=True)
+        p = subprocess.run(cmd, capture_output=True, text=True, check=True)
 
-        if p.stdout == None or p.stdout == '':
+        if p.stdout is None or p.stdout == "":
             # no nodes can be found, returning an empty array
             return []
-        return p.stdout.strip().split('\n')
+        return p.stdout.strip().split("\n")

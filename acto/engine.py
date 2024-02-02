@@ -1,5 +1,6 @@
 """The main engine of Acto. It is responsible for running the test cases and
 collecting the results."""
+
 import importlib
 import json
 import os
@@ -784,6 +785,8 @@ class Acto:
             cluster = kind.Kind(
                 acto_namespace=acto_namespace,
                 feature_gates=operator_config.kubernetes_engine.feature_gates,
+                num_nodes=operator_config.num_nodes,
+                version=operator_config.kubernetes_version,
             )
         else:
             logger.warning(
@@ -793,6 +796,8 @@ class Acto:
             cluster = kind.Kind(
                 acto_namespace=acto_namespace,
                 feature_gates=operator_config.kubernetes_engine.feature_gates,
+                num_nodes=operator_config.num_nodes,
+                version=operator_config.kubernetes_version,
             )
 
         self.cluster = cluster
@@ -809,11 +814,6 @@ class Acto:
 
         self.runner_type = Runner
         self.checker_type = CheckerSet
-
-        # generate configuration files for the cluster runtime
-        self.cluster.configure_cluster(
-            operator_config.num_nodes, self.operator_config.kubernetes_version
-        )
 
         self.__learn(
             context_file=context_file,

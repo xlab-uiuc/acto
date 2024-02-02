@@ -1,4 +1,5 @@
 """Temporary code, do not use"""
+
 import glob
 import json
 import logging
@@ -265,9 +266,8 @@ class SimpleCrashTest(PostDiffTest):
             acto_namespace=self.acto_namespace,
             posthooks=[posthook],
             feature_gates=self.config.kubernetes_engine.feature_gates,
-        )
-        cluster.configure_cluster(
-            self.config.num_nodes, self.config.kubernetes_version
+            num_nodes=self.config.num_nodes,
+            version=self.config.kubernetes_version,
         )
         deploy = Deploy(self.config.deploy)
 

@@ -1,4 +1,5 @@
 """Integration tests for Kubernetes system state collection."""
+
 import os
 import pathlib
 import tempfile
@@ -21,9 +22,10 @@ class TestKubernetesSystemState(unittest.TestCase):
         num_nodes = 1
         version = "v1.26.0"
 
-        cluster_instance = kind.Kind(acto_namespace=0)
+        cluster_instance = kind.Kind(
+            acto_namespace=0, num_nodes=num_nodes, version=version
+        )
 
-        cluster_instance.configure_cluster(num_nodes, version)
         print(
             f"Creating cluster {name} with {num_nodes} nodes, version {version}, "
             + f"configPath {config_path}"
