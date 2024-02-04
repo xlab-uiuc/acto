@@ -12,12 +12,12 @@ def main():
     """Main function"""
 
     parser = argparse.ArgumentParser(
-        description="Analyze the CRD file and output an annotated yaml file"
+        description="Given a CRD file, annotated it with the matched Kubernetes schema information."
     )
     parser.add_argument(
         "--crd",
         required=True,
-        help="Path to the yaml CRD file",
+        help="Path to the YAML CRD file",
     )
     parser.add_argument(
         "--k8s-version",
@@ -28,7 +28,7 @@ def main():
     parser.add_argument(
         "--output",
         required=False,
-        help="Path to dump the system state to",
+        help="Path to dump the annotated YAML file to",
     )
     args = parser.parse_args()
 
