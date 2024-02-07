@@ -14,10 +14,10 @@
         state: mounted
         opts: "size={{ TMPFS_SIZE }}"
 
-    - name: Format the spare partition
-      community.general.filesystem:
-        fstype: ext4
-        dev: /dev/sda4
+    # - name: Format the spare partition
+    #   community.general.filesystem:
+    #     fstype: ext4
+    #     dev: /dev/sda4
 
     - name: Get the home directory
       become: false
@@ -30,12 +30,12 @@
         path: "{{ home.stdout }}/workdir"
         state: directory
 
-    - name: Mount the spare partition on acto dir
-      ansible.posix.mount:
-        path: "{{ home.stdout }}/workdir"
-        fstype: ext4
-        src: /dev/sda4
-        state: mounted
+    # - name: Mount the spare partition on acto dir
+    #   ansible.posix.mount:
+    #     path: "{{ home.stdout }}/workdir"
+    #     fstype: ext4
+    #     src: /dev/sda4
+    #     state: mounted
 
     - name: Change ownership of acto dir
       ansible.builtin.file:
