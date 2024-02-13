@@ -561,7 +561,8 @@ class K8sSchemaMatcher:
 
         # First check the custom mapping
         if (schema_key := json.dumps(schema.path)) in self._custom_mapping_dict:
-            return [(schema, self._k8s_models[schema_key])]
+            kubernetes_schema_name = self._custom_mapping_dict[schema_key]
+            return [(schema, self._k8s_models[kubernetes_schema_name])]
 
         # Look through the Kubernetes schemas
         for kubernetes_schema in self._k8s_models.values():

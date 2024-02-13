@@ -11,6 +11,7 @@ from typing import List, Optional
 import jsonpatch
 import yaml
 
+from acto import DEFAULT_KUBERNETES_VERSION
 from acto.engine import Acto
 from acto.input import TestCase
 from acto.input.input import DeterministicInputModel
@@ -76,6 +77,7 @@ class ReproInputModel(DeterministicInputModel):
         num_cases: int,
         reproduce_dir: str,
         mount: Optional[list] = None,
+        kubernetes_version: str = DEFAULT_KUBERNETES_VERSION,
         custom_module_path: Optional[str] = None,
     ) -> None:
         logger = get_thread_logger(with_prefix=True)
