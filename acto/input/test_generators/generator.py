@@ -162,7 +162,7 @@ def test_generator(
     ] = None,
     paths: Optional[list[str]] = None,
     priority: Priority = Priority.CUSTOM,
-):
+) -> Callable[..., Callable[[BaseSchema], list[TestCase]]]:
     """Annotates a function as a test generator
 
     Args:

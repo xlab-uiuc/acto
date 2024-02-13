@@ -132,7 +132,7 @@ def array_tests(schema: ArraySchema):
                     )
                     return example
         if prev is None:
-            return schema.gen()
+            return schema.gen(size=schema.min_items + 1)
         return schema.gen(size=schema.max_items)
 
     def empty_precondition(prev):
