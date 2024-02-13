@@ -609,14 +609,10 @@ class K8sSchemaMatcher:
             if isinstance(crd_schema, ObjectSchema):
                 if isinstance(k8s_schema, KubernetesObjectSchema):
                     for key, sub_schema in crd_schema.properties.items():
-                        if key not in k8s_schema.properties:
-                            raise RuntimeError(
-                                f"Property {key} not found"
-                                f"in k8s schema {k8s_schema.k8s_schema_name}"
+                        if key in k8s_schema.properties:
+                            to_explore.append(
+                                (sub_schema, k8s_schema.properties[key])
                             )
-                        to_explore.append(
-                            (sub_schema, k8s_schema.properties[key])
-                        )
                 elif (
                     isinstance(k8s_schema, KubernetesMapSchema)
                     and crd_schema.additional_properties is not None

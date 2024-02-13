@@ -374,7 +374,8 @@ class ConsistencyChecker(CheckerInterface):
                 )
                 if (
                     diff_type == "iterable_item_removed"
-                    or corresponding_schema.patch
+                    or corresponding_schema.attributes & PropertyAttribute.Patch
+                    == PropertyAttribute.Patch
                     or input_diff.path[-1] == "ACTOKEY"
                 ):
                     pass
