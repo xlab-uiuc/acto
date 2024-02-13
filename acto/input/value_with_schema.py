@@ -145,11 +145,11 @@ class ValueWithObjectSchema(ValueWithSchema):
                     self.store[child_key].mutate()
 
     def update(self, value):
-        if value is None:
-            self.store = None
         if isinstance(value, enum.Enum):
             value = value.value
-        if isinstance(value, dict):
+        if value is None:
+            self.store = None
+        elif isinstance(value, dict):
             self.store = {}
             for k, v in value.items():
                 self.store[k] = attach_schema_to_value(
@@ -270,10 +270,10 @@ class ValueWithArraySchema(ValueWithSchema):
                 self.store[index].mutate()
 
     def update(self, value):
-        if value is None:
-            self.store = None
         if isinstance(value, enum.Enum):
             value = value.value
+        if value is None:
+            self.store = None
         elif isinstance(value, list):
             self.store = []
             for i in value:
@@ -428,6 +428,8 @@ class ValueWithAnyOfSchema(ValueWithSchema):
 
     def create_path(self, path: list):
         """Ensures the path exists"""
+        if len(path) == 0:
+            return
 
         # XXX: Complicated, no use case yet, let's implement later
         raise NotImplementedError
@@ -437,6 +439,9 @@ class ValueWithAnyOfSchema(ValueWithSchema):
             self.update(value)
         else:
             self.store.set_value_by_path(value, path)
+
+    def value(self):
+        return self.store
 
 
 class ValueWithBasicSchema(ValueWithSchema):
@@ -475,11 +480,11 @@ class ValueWithBasicSchema(ValueWithSchema):
                 self.update(self.schema.gen())
 
     def update(self, value):
+        if isinstance(value, enum.Enum):
+            value = value.value
         if value is None:
             self.store = None
         else:
-            if isinstance(value, enum.Enum):
-                value = value.value
             self.store = value
 
     def get_value_by_path(self, path: list):
