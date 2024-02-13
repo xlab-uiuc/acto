@@ -28,7 +28,7 @@ class ObjectSchema(BaseSchema):
         from .schema import extract_schema
 
         super().__init__(path, schema)
-        self.properties = {}
+        self.properties: dict[str, BaseSchema] = {}
         self.additional_properties = None
         self.required = []
         logger = get_thread_logger(with_prefix=True)

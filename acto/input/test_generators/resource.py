@@ -6,15 +6,15 @@ from acto.k8s_util.k8sutil import (
     double_quantity,
     half_quantity,
 )
+from acto.schema.base import BaseSchema
 from acto.schema.object import ObjectSchema
-from acto.schema.string import StringSchema
 
 
 @test_generator(
     k8s_schema_name="apimachinery.pkg.api.resource.Quantity",
     priority=Priority.SEMANTIC,
 )
-def quantity_tests(schema: StringSchema) -> list[TestCase]:
+def quantity_tests(schema: BaseSchema) -> list[TestCase]:
     """Generate test cases for quantity field"""
     increase_test = TestCase(
         "k8s-quantity_increase",

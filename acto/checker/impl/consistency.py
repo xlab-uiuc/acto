@@ -1,4 +1,5 @@
 """State checker"""
+
 import copy
 import json
 import re
@@ -20,6 +21,7 @@ from acto.common import (
 )
 from acto.input import InputModel
 from acto.input.get_matched_schemas import find_matched_schema
+from acto.input.property_attribute import PropertyAttribute
 from acto.k8s_util.k8sutil import canonicalize_quantity
 from acto.result import ConsistencyOracleResult, InvalidInputResult
 from acto.schema import ArraySchema, BaseSchema, ObjectSchema, extract_schema
@@ -395,7 +397,12 @@ class ConsistencyChecker(CheckerInterface):
                 )
 
                 should_compare = (
-                    should_compare or corresponding_schema.mapped
+                    should_compare
+                    or (
+                        corresponding_schema.attributes
+                        & PropertyAttribute.Mapped
+                        == PropertyAttribute.Mapped
+                    )
                 ) and must_produce_delta
 
                 # Policy: pass if any of the matched deltas is equivalent

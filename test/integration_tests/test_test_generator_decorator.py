@@ -35,11 +35,11 @@ class TestTestGeneratorDecorator(unittest.TestCase):
             encoding="utf-8",
         ) as operator_yaml:
             rabbitmq_crd = yaml.load(operator_yaml, Loader=yaml.FullLoader)
-        schema_matcher = K8sSchemaMatcher.from_version("1.29")
+        schema_matcher = K8sSchemaMatcher.from_version("v1.29.0")
         cls.spec_schema = extract_schema(
             [], rabbitmq_crd["spec"]["versions"][0]["schema"]["openAPIV3Schema"]
         )
-        cls.matches = schema_matcher.find_matched_schemas(cls.spec_schema)
+        cls.matches = schema_matcher.find_named_matched_schemas(cls.spec_schema)
 
     def test_path_suffix(self):
         TEST_GENERATORS.clear()
@@ -83,7 +83,7 @@ class TestTestGeneratorDecorator(unittest.TestCase):
         TEST_GENERATORS.clear()
         test_generator(property_type="AnyOf")(gen)
         testcases = get_testcases(self.spec_schema, self.matches)
-        self.assertEqual(len(testcases), 38)
+        self.assertEqual(len(testcases), 51)
 
         TEST_GENERATORS.clear()
         test_generator(property_type="Array")(gen)
@@ -123,7 +123,7 @@ class TestTestGeneratorDecorator(unittest.TestCase):
         TEST_GENERATORS.clear()
         test_generator(property_type="String")(gen)
         testcases = get_testcases(self.spec_schema, self.matches)
-        self.assertEqual(len(testcases), 550)
+        self.assertEqual(len(testcases), 585)
 
     def test_priority(self):
         TEST_GENERATORS.clear()

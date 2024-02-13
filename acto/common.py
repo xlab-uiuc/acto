@@ -5,7 +5,7 @@ import operator
 import random
 import re
 import string
-from typing import Any, Tuple, TypeAlias, Union
+from typing import Any, Sequence, Tuple, TypeAlias, Union
 
 import deepdiff.model as deepdiff_model
 import kubernetes
@@ -22,7 +22,7 @@ class PropertyPath(pydantic.BaseModel):
 
     path: list[PathSegment]
 
-    def __init__(self, path: list[PathSegment]) -> None:
+    def __init__(self, path: Sequence[PathSegment]) -> None:
         """Override constructor to allow positional argument"""
         super().__init__(path=path)
 

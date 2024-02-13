@@ -5,6 +5,7 @@ import pandas as pd
 from ruamel.yaml import YAML
 
 from acto.input.k8s_schemas import K8sSchemaMatcher
+from acto.schema.object import ObjectSchema
 from acto.schema.schema import extract_schema
 
 
@@ -22,7 +23,7 @@ def main():
     parser.add_argument(
         "--k8s-version",
         required=False,
-        default="1.29",
+        default="1.29.0",
         help="Kubernetes version to match the schema with",
     )
     parser.add_argument(
@@ -43,7 +44,7 @@ def main():
 
     # match the schema with Kubernetes resource schemas
     schema_matcher = K8sSchemaMatcher.from_version(args.k8s_version)
-    matches = schema_matcher.find_matched_schemas(root)
+    matches = schema_matcher.find_all_matched_schemas(root)
 
     # output the breakdown of the matched schema information
     df = pd.DataFrame(
@@ -53,6 +54,7 @@ def main():
                 "schema_path": "/".join(schema.path),
             }
             for schema, k8s_schema in matches
+            if k8s_schema.k8s_schema_name is not None
         ]
     )
 
@@ -61,6 +63,8 @@ def main():
 
     # annotate the yaml file with the matched schema information
     for schema, k8s_schema in matches:
+        if k8s_schema.k8s_schema_name is None:
+            continue
         comment = k8s_schema.k8s_schema_name
         curr = schema_yaml
         for segment in schema.path[:-1]:
@@ -68,7 +72,7 @@ def main():
                 curr = curr["items"]
             else:
                 curr = curr["properties"][segment]
-        if schema.path[-1] != "ITEM":
+        if schema.path[-1] != "ITEM" and isinstance(schema, ObjectSchema):
             curr["properties"].yaml_add_eol_comment(comment, schema.path[-1])
         else:
             curr.yaml_add_eol_comment(comment, "items")

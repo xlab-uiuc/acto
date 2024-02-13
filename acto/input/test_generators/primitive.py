@@ -1,4 +1,5 @@
 """Testcase generators for primitive types"""
+
 # pylint: disable=unused-argument, invalid-name, unused-variable
 
 import random
@@ -49,7 +50,7 @@ def any_of_tests(schema: AnyOfSchema):
     ret: list[TestCase] = []
     if schema.enum is not None:
         for case in schema.enum:
-            ret.append(EnumTestCase(case))
+            ret.append(EnumTestCase(case, primitive=True))
     else:
         for sub_schema in schema.possibilities:
             testcases = resolve_testcases(sub_schema)
@@ -146,7 +147,7 @@ def array_tests(schema: ArraySchema):
     def delete(prev):
         return schema.empty_value()
 
-    def delete_precondition(schema, prev):
+    def delete_precondition(prev):
         return (
             prev is not None
             and prev != schema.default
@@ -171,17 +172,45 @@ def array_tests(schema: ArraySchema):
         else:
             return schema.gen(exclude_value=schema.default)
 
-    ret = [TestCase(DELETION_TEST, delete_precondition, delete, delete_setup)]
+    ret = [
+        TestCase(
+            DELETION_TEST,
+            delete_precondition,
+            delete,
+            delete_setup,
+            primitive=True,
+        )
+    ]
     if schema.enum is not None:
         for case in schema.enum:
-            ret.append(EnumTestCase(case))
+            ret.append(EnumTestCase(case, primitive=True))
     else:
         ret.append(
-            TestCase(PUSH_TEST, push_precondition, push_mutator, push_setup)
+            TestCase(
+                PUSH_TEST,
+                push_precondition,
+                push_mutator,
+                push_setup,
+                primitive=True,
+            )
         )
-        ret.append(TestCase(POP_TEST, pop_precondition, pop_mutator, pop_setup))
         ret.append(
-            TestCase(EMPTY_TEST, empty_precondition, empty_mutator, empty_setup)
+            TestCase(
+                POP_TEST,
+                pop_precondition,
+                pop_mutator,
+                pop_setup,
+                primitive=True,
+            )
+        )
+        ret.append(
+            TestCase(
+                EMPTY_TEST,
+                empty_precondition,
+                empty_mutator,
+                empty_setup,
+                primitive=True,
+            )
         )
     return ret
 
@@ -249,10 +278,18 @@ def boolean_tests(schema: BooleanSchema):
         else:
             return schema.gen(exclude_value=schema.default)
 
-    ret = [TestCase(DELETION_TEST, delete_precondition, delete, delete_setup)]
+    ret = [
+        TestCase(
+            DELETION_TEST,
+            delete_precondition,
+            delete,
+            delete_setup,
+            primitive=True,
+        )
+    ]
     if schema.enum is not None:
         for case in schema.enum:
-            ret.append(EnumTestCase(case))
+            ret.append(EnumTestCase(case, primitive=True))
     else:
         ret.append(
             TestCase(
@@ -260,6 +297,7 @@ def boolean_tests(schema: BooleanSchema):
                 toggle_off_precondition,
                 toggle_off,
                 toggle_off_setup,
+                primitive=True,
             )
         )
         ret.append(
@@ -268,6 +306,7 @@ def boolean_tests(schema: BooleanSchema):
                 toggle_on_precondition,
                 toggle_on,
                 toggle_on_setup,
+                primitive=True,
             )
         )
     return ret
@@ -498,14 +537,26 @@ def integer_tests(schema: IntegerSchema):
             return schema.gen(exclude_value=schema.default)
 
     testcases = [
-        TestCase(DELETION_TEST, delete_precondition, delete, delete_setup)
+        TestCase(
+            DELETION_TEST,
+            delete_precondition,
+            delete,
+            delete_setup,
+            primitive=True,
+        )
     ]
     if schema.enum is not None:
         for case in schema.enum:
             testcases.append(EnumTestCase(case))
     else:
         testcases.append(
-            TestCase(CHANGE_TEST, change_precondition, change, change_setup)
+            TestCase(
+                CHANGE_TEST,
+                change_precondition,
+                change,
+                change_setup,
+                primitive=True,
+            )
         )
     return testcases
 
@@ -566,13 +617,27 @@ def object_tests(schema: ObjectSchema):
         else:
             return schema.gen(exclude_value=schema.default)
 
-    ret = [TestCase(DELETION_TEST, delete_precondition, delete, delete_setup)]
+    ret = [
+        TestCase(
+            DELETION_TEST,
+            delete_precondition,
+            delete,
+            delete_setup,
+            primitive=True,
+        )
+    ]
     if schema.enum is not None:
         for case in schema.enum:
             ret.append(EnumTestCase(case))
     else:
         ret.append(
-            TestCase(EMPTY_TEST, empty_precondition, empty_mutator, empty_setup)
+            TestCase(
+                EMPTY_TEST,
+                empty_precondition,
+                empty_mutator,
+                empty_setup,
+                primitive=True,
+            )
         )
     return ret
 
@@ -672,17 +737,19 @@ def string_tests(schema: StringSchema):
             delete_precondition,
             delete,
             delete_setup,
+            primitive=True,
         )
     ]
     if schema.enum is not None:
         for case in schema.enum:
-            ret.append(EnumTestCase(case))
+            ret.append(EnumTestCase(case, primitive=True))
     else:
         change_testcase = TestCase(
             CHANGE_TEST,
             change_precondition,
             change,
             change_setup,
+            primitive=True,
         )
         ret.append(change_testcase)
         ret.append(
@@ -691,6 +758,10 @@ def string_tests(schema: StringSchema):
                 empty_precondition,
                 empty_mutator,
                 empty_setup,
+                primitive=True,
             )
         )
     return ret
+
+
+# TODO: Default test generator for Kubernetes schemas

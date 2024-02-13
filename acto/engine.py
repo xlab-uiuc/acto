@@ -16,19 +16,15 @@ import deepdiff
 import jsonpatch
 import yaml
 
-from acto.acto_config import ACTO_CONFIG
 from acto.checker.checker_set import CheckerSet
 from acto.common import kubernetes_client, print_event
 from acto.constant import CONST
 from acto.deploy import Deploy
 from acto.input import InputModel
-from acto.input.input import DeterministicInputModel, OverSpecifiedField
-from acto.input.known_schemas.base import K8sField
-from acto.input.known_schemas.known_schema import find_all_matched_schemas_type
+from acto.input.input import DeterministicInputModel
 from acto.input.testcase import TestCase
 from acto.input.testplan import TestGroup
 from acto.input.value_with_schema import ValueWithSchema, attach_schema_to_value
-from acto.input.valuegenerator import ArrayGenerator
 from acto.kubectl_client import KubectlClient
 from acto.kubernetes_engine import base, kind
 from acto.lib.operator_config import OperatorConfig
@@ -825,71 +821,16 @@ class Acto:
         if preload_images_ is not None:
             self.context["preload_images"].update(preload_images_)
 
-        # Apply custom fields
-        if operator_config.analysis is not None:
-            used_fields = self.context["analysis_result"]["used_fields"]
-        else:
-            used_fields = None
         self.input_model: DeterministicInputModel = input_model(
             crd=self.context["crd"]["body"],
             seed_input=self.seed,
-            used_fields=used_fields,
             example_dir=operator_config.example_dir,
             num_workers=num_workers,
             num_cases=num_cases,
             mount=mount,
+            kubernetes_version=operator_config.kubernetes_version,
+            custom_module_path=operator_config.custom_module,
         )
-
-        applied_custom_k8s_fields = False
-
-        if operator_config.k8s_fields is not None:
-            module = importlib.import_module(operator_config.k8s_fields)
-            if hasattr(module, "BLACKBOX") and ACTO_CONFIG.mode == "blackbox":
-                applied_custom_k8s_fields = True
-                for k8s_field in module.BLACKBOX:
-                    self.input_model.apply_k8s_schema(k8s_field)
-            elif hasattr(module, "WHITEBOX") and ACTO_CONFIG.mode == "whitebox":
-                applied_custom_k8s_fields = True
-                for k8s_field in module.WHITEBOX:
-                    self.input_model.apply_k8s_schema(k8s_field)
-        if not applied_custom_k8s_fields:
-            # default to use the known_schema module to automatically find the mapping
-            # from CRD to K8s schema
-            logger.info(
-                "Using known_schema to find the mapping from CRD to K8s schema"
-            )
-            tuples = find_all_matched_schemas_type(self.input_model.root_schema)
-            for match_tuple in tuples:
-                logger.debug(
-                    "Found matched schema: %s -> %s",
-                    match_tuple[0].path,
-                    match_tuple[1],
-                )
-                k8s_schema = K8sField(match_tuple[0].path, match_tuple[1])
-                self.input_model.apply_k8s_schema(k8s_schema)
-
-        if operator_config.custom_fields is not None:
-            if ACTO_CONFIG.mode == "blackbox":
-                pruned_list = []
-                module = importlib.import_module(operator_config.custom_fields)
-                for custom_field in module.custom_fields:
-                    pruned_list.append(custom_field.path)
-                    self.input_model.apply_custom_field(custom_field)
-            else:
-                pruned_list = []
-                module = importlib.import_module(operator_config.custom_fields)
-                for custom_field in module.custom_fields:
-                    pruned_list.append(custom_field.path)
-                    self.input_model.apply_custom_field(custom_field)
-        else:
-            pruned_list = []
-            tuples = find_all_matched_schemas_type(self.input_model.root_schema)
-            for match_tuple in tuples:
-                custom_field = OverSpecifiedField(
-                    match_tuple[0].path,
-                    array=isinstance(match_tuple[1], ArrayGenerator),
-                )
-                self.input_model.apply_custom_field(custom_field)
 
         self.sequence_base = 20 if delta_from else 0
 

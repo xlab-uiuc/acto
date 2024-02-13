@@ -1,7 +1,6 @@
 # pylint: disable=unused-argument
 from acto.input.test_generators.generator import Priority, test_generator
 from acto.input.testcase import TestCase
-from acto.schema.object import ObjectSchema
 from acto.schema.string import StringSchema
 
 
@@ -27,7 +26,7 @@ def concurrent_policy_tests(schema: StringSchema) -> list[TestCase]:
 
 
 @test_generator(property_name="schedule", priority=Priority.SEMANTIC)
-def schedule_tests(schema: ObjectSchema) -> list[TestCase]:
+def schedule_tests(schema: StringSchema) -> list[TestCase]:
     """Generate test cases for schedule field"""
     invalid_test = TestCase(
         "k8s-invalid_cronjob_schedule_change",

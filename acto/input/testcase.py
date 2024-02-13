@@ -9,7 +9,7 @@ class Store:
     """A store to store data for test cases"""
 
     def __init__(self) -> None:
-        self.data = None
+        self.data: Any = None
 
 
 class TestCase:
@@ -27,8 +27,10 @@ class TestCase:
         mutator: Callable[[Any], Any],
         setup: Callable[[Any], Any],
         store: Optional[Store] = None,
+        primitive: bool = False,
         semantic: bool = False,
         invalid: bool = False,
+        kubernetes_schema: bool = False,
     ) -> None:
         """Class represent a test case
 
@@ -48,8 +50,10 @@ class TestCase:
         self.store = store
 
         # test attributes
+        self.primitive = primitive
         self.semantic = semantic
         self.invalid = invalid
+        self.kubernetes_schema = kubernetes_schema
 
     def test_precondition(self, prev) -> bool:
         """Test whether the previous value satisfies the precondition"""
@@ -117,7 +121,11 @@ class K8sInvalidTestCase(K8sTestCase):
 class EnumTestCase(TestCase):
     """Class represent a test case for enum fields"""
 
-    def __init__(self, case) -> None:
+    def __init__(
+        self,
+        case,
+        primitive: bool = False,
+    ) -> None:
         self.case = case
         super().__init__(
             case, self.enum_precondition, self.enum_mutator, self.enum_setup

@@ -9,7 +9,8 @@ from typing import Callable, Literal, Optional
 
 import pytest
 
-from acto.input.k8s_schemas import KubernetesObjectSchema
+from acto.input.k8s_schemas import KubernetesSchema
+from acto.input.property_attribute import PropertyAttribute
 from acto.input.testcase import TestCase
 from acto.schema import (
     AnyOfSchema,
@@ -59,7 +60,7 @@ class TestGenerator:
     def match(
         self,
         schema: BaseSchema,
-        matched_schema: Optional[KubernetesObjectSchema],
+        matched_schema: Optional[KubernetesSchema],
     ) -> bool:
         """Check if the test generator matches the schema"""
         return all(
@@ -106,11 +107,12 @@ class TestGenerator:
         return False
 
     def _match_k8s_schema_name(
-        self, matched_schema: Optional[KubernetesObjectSchema]
+        self, matched_schema: Optional[KubernetesSchema]
     ) -> bool:
         return (
             self.k8s_schema_name is None
             or matched_schema is not None
+            and matched_schema.k8s_schema_name is not None
             and matched_schema.k8s_schema_name.endswith(self.k8s_schema_name)
         )
 
@@ -192,13 +194,34 @@ def test_generator(
     return wrapped_func
 
 
+# TODO: .spec.replicas for StatefulSchema
+
+
 def get_testcases(
     schema: BaseSchema,
-    matched_schemas: list[tuple[BaseSchema, KubernetesObjectSchema]],
+    full_matched_schemas: list[tuple[BaseSchema, KubernetesSchema]],
 ) -> list[tuple[list[str], list[TestCase]]]:
-    """Get all test cases for a schema from registered test generators"""
-    matched_schemas_dict: dict[str, KubernetesObjectSchema] = {
-        "/".join(s.path): m for s, m in matched_schemas
+    """Get all test cases for a schema from registered test generators
+
+    Args:
+        schema (BaseSchema): The schema to generate test cases for
+        matched_schemas (list[tuple[BaseSchema, KubernetesSchema]]): A list of
+            matched schemas, including the sub-schemas, but does not include
+            anonymous schemas
+        full_matched_schemas (list[tuple[BaseSchema, KubernetesSchema]]): The
+            complete list of matched schemas, including anonymous schemas
+
+    Returns:
+        list[tuple[list[str], list[TestCase]]]: A list of tuples, each containing
+            the path and the test cases for the schema
+    """
+    full_matched_schemas_set: set[str] = {
+        "/".join(s.path) for s, _ in full_matched_schemas
+    }
+    matched_named_schema_dict: dict[str, KubernetesSchema] = {
+        "/".join(s.path): m
+        for s, m in full_matched_schemas
+        if m.k8s_schema_name is not None
     }
 
     def get_testcases_helper(
@@ -209,7 +232,7 @@ def get_testcases(
 
         # check paths
         path_str = "/".join(schema.path)
-        matched_schema = matched_schemas_dict.get(path_str)
+        matched_schema = matched_named_schema_dict.get(path_str)
 
         for test_generator_ in TEST_GENERATORS:
             if test_generator_.match(schema, matched_schema):
@@ -228,6 +251,31 @@ def get_testcases(
         elif isinstance(schema, ObjectSchema):
             for sub_schema in schema.properties.values():
                 test_cases.extend(get_testcases_helper(sub_schema))
+            if schema.additional_properties:
+                test_cases.extend(
+                    get_testcases_helper(schema.additional_properties)
+                )
+
+        if path_str in full_matched_schemas_set:
+            # This schema is a semantic match
+            # Set kubernetes_schema to True for all test cases
+            # This is used by the input model to filter out test cases
+            for _, test_case_list in test_cases:
+                for test_case in test_case_list:
+                    test_case.kubernetes_schema = True
+
+        if schema.copied_over or schema.over_specified or schema.problematic:
+            # Prune the test cases
+            for _, test_case_list in test_cases:
+                for test_case in test_case_list:
+                    test_case.kubernetes_schema = True
+
+        if schema.attributes & PropertyAttribute.Prune:
+            # Prune the test cases
+            for _, test_case_list in test_cases:
+                for test_case in test_case_list:
+                    test_case.kubernetes_schema = True
+
         return test_cases
 
     return get_testcases_helper(schema)

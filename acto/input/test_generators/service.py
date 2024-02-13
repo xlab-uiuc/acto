@@ -3,23 +3,22 @@ from acto.input.test_generators.generator import Priority, test_generator
 from acto.input.testcase import TestCase
 from acto.schema.object import ObjectSchema
 
-# XXX: Need to solve
-# @generator(field_name="type", paths=[""])
-# def service_type_tests(schema: ObjectSchema) -> list[TestCase]:
-#     """Generate test cases for serviceType field"""
-#     invalid_test = TestCase(
-#         "invalid-serviceType",
-#         lambda x: True,
-#         lambda x: "InvalidServiceType",
-#         lambda x: "ClusterIP",
-#     )
-#     change_test = TestCase(
-#         "serviceType-change",
-#         lambda x: x != "NodePort",
-#         lambda x: "NodePort",
-#         lambda x: "ClusterIP",
-#     )
-#     return [invalid_test, change_test]
+
+def service_type_tests(schema: ObjectSchema) -> list[TestCase]:
+    """Generate test cases for serviceType field"""
+    invalid_test = TestCase(
+        "invalid-serviceType",
+        lambda x: True,
+        lambda x: "InvalidServiceType",
+        lambda x: "ClusterIP",
+    )
+    change_test = TestCase(
+        "serviceType-change",
+        lambda x: x != "NodePort",
+        lambda x: "NodePort",
+        lambda x: "ClusterIP",
+    )
+    return [invalid_test, change_test]
 
 
 @test_generator(
