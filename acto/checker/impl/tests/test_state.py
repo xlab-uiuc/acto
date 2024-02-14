@@ -44,7 +44,6 @@ def input_model_and_context_mapping() -> (
         input_model = DeterministicInputModel(
             crd=context["crd"]["body"],
             seed_input=defaultdict(lambda: defaultdict(dict)),
-            used_fields=[],
             example_dir=None,
             num_workers=1,
             num_cases=1,
@@ -57,6 +56,7 @@ mapping = input_model_and_context_mapping()
 
 
 def checker_func(s: Snapshot, prev_s: Snapshot) -> Optional[OracleResult]:
+    """Run the consistency checker and return the result."""
     api_version = s.input_cr["apiVersion"]
     checker = ConsistencyChecker(
         trial_dir="",
@@ -107,6 +107,7 @@ def checker_func(s: Snapshot, prev_s: Snapshot) -> Optional[OracleResult]:
     ),
 )
 def test_consistency_checker(test_case_id, result_dict):
+    """Test the consistency checker."""
     snapshot = load_snapshot("state", test_case_id)
     snapshot_prev = load_snapshot("state", test_case_id, load_prev=True)
     oracle_result = checker_func(snapshot, snapshot_prev)

@@ -4,13 +4,15 @@ This module contains the Kubernetes schema matcher that matches acto schemas
 to Kubernetes schemas. It is used for generating Kubernetes CRD schemas from
 acto schemas.
 """
+
 # pylint: disable=redefined-outer-name
 
+import json
 import sys
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from difflib import SequenceMatcher
-from typing import Callable
+from typing import Callable, Optional
 
 import requests
 
@@ -30,6 +32,14 @@ from acto.schema import (
 class KubernetesSchema(ABC):
     """Base class for Kubernetes schema matching"""
 
+    def __init__(
+        self,
+        schema_spec: dict,
+        schema_name: Optional[str] = None,
+    ) -> None:
+        self.k8s_schema_name = schema_name
+        self.schema_spec = schema_spec
+
     @abstractmethod
     def match(self, schema: BaseSchema) -> bool:
         """Determines if the schema matches the Kubernetes schema"""
@@ -38,13 +48,34 @@ class KubernetesSchema(ABC):
     def dump_schema(self) -> dict:
         """Dumps the Kubernetes schema into a dictionary (for debugging)"""
 
+    @abstractmethod
+    def update(self, resolve: Callable[[dict], "KubernetesSchema"]) -> None:
+        """Resolves k8s schema properties into k8s schema objects"""
+
+
+class KubernetesUninitializedSchema(KubernetesSchema):
+    """Class for uninitialized Kubernetes schema matching"""
+
+    def __init__(self) -> None:
+        super().__init__({})
+
+    def match(self, schema) -> bool:
+        raise RuntimeError("Uninitialized schema")
+
+    def dump_schema(self) -> dict:
+        raise RuntimeError("Uninitialized schema")
+
+    def update(self, resolve: Callable[[dict], "KubernetesSchema"]) -> None:
+        raise RuntimeError("Uninitialized schema")
+
 
 class KubernetesObjectSchema(KubernetesSchema):
     """Class for Kubernetes object schema matching"""
 
-    def __init__(self, schema_name, schema_spec) -> None:
-        self.k8s_schema_name: str = schema_name
-        self.schema_spec = schema_spec
+    def __init__(
+        self, schema_spec: dict, schema_name: Optional[str] = None
+    ) -> None:
+        super().__init__(schema_spec, schema_name)
         self.properties: dict[str, KubernetesSchema] = {}
 
     def update(self, resolve: Callable[[dict], "KubernetesSchema"]) -> None:
@@ -55,22 +86,26 @@ class KubernetesObjectSchema(KubernetesSchema):
             "properties"
         ].items():
             self.properties[property_name] = resolve(property_spec)
+            self.properties[property_name].update(resolve)
 
     def match(self, schema) -> bool:
         if (
             not isinstance(schema, ObjectSchema)
-            or len(self.properties) != len(schema.properties)
             or len(self.properties) == 0
+            or len(self.properties) != len(schema.properties)
         ):
             return False
+        num_mismatch = 0
         for property_name, property_schema in self.properties.items():
             if property_name not in schema.properties:
                 # not a match if property is not in schema
-                return False
+                num_mismatch += 1
             elif not property_schema.match(schema.properties[property_name]):
                 # not a match if schema does not match property schema
-                return False
-        return True
+                num_mismatch += 1
+
+        # TODO: How to do approximate matching?
+        return bool(num_mismatch == 0)
 
     def dump_schema(self) -> dict:
         properties = {}
@@ -102,6 +137,9 @@ class KubernetesStringSchema(KubernetesSchema):
     def dump_schema(self) -> dict:
         return {"type": "string"}
 
+    def update(self, resolve: Callable[[dict], "KubernetesSchema"]) -> None:
+        pass
+
 
 class KubernetesBooleanSchema(KubernetesSchema):
     """Class for Kubernetes boolean schema matching"""
@@ -111,6 +149,9 @@ class KubernetesBooleanSchema(KubernetesSchema):
 
     def dump_schema(self) -> dict:
         return {"type": "boolean"}
+
+    def update(self, resolve: Callable[[dict], "KubernetesSchema"]) -> None:
+        pass
 
 
 class KubernetesIntegerSchema(KubernetesSchema):
@@ -122,6 +163,9 @@ class KubernetesIntegerSchema(KubernetesSchema):
     def dump_schema(self) -> dict:
         return {"type": "integer"}
 
+    def update(self, resolve: Callable[[dict], "KubernetesSchema"]) -> None:
+        pass
+
 
 class KubernetesFloatSchema(KubernetesSchema):
     """Class for Kubernetes float schema matching"""
@@ -132,13 +176,18 @@ class KubernetesFloatSchema(KubernetesSchema):
     def dump_schema(self) -> dict:
         return {"type": "number"}
 
+    def update(self, resolve: Callable[[dict], "KubernetesSchema"]) -> None:
+        pass
+
 
 class KubernetesMapSchema(KubernetesSchema):
     """Class for Kubernetes map schema matching"""
 
-    def __init__(self, value_cls: KubernetesSchema) -> None:
-        super().__init__()
-        self.value: KubernetesSchema = value_cls
+    def __init__(
+        self, schema_spec: dict, schema_name: Optional[str] = None
+    ) -> None:
+        super().__init__(schema_spec, schema_name)
+        self.value: KubernetesSchema = KubernetesUninitializedSchema()
 
     def match(self, schema) -> bool:
         # Dict schema requires additional_properties to be set
@@ -160,13 +209,19 @@ class KubernetesMapSchema(KubernetesSchema):
             "additionalProperties": self.value.dump_schema(),
         }
 
+    def update(self, resolve: Callable[[dict], "KubernetesSchema"]) -> None:
+        self.value = resolve(self.schema_spec["additionalProperties"])
+        self.value.update(resolve)
+
 
 class KubernetesArraySchema(KubernetesSchema):
     """Class for Kubernetes array schema matching"""
 
-    def __init__(self, item_cls: KubernetesSchema) -> None:
-        super().__init__()
-        self.item: KubernetesSchema = item_cls
+    def __init__(
+        self, schema_spec: dict, schema_name: Optional[str] = None
+    ) -> None:
+        super().__init__(schema_spec, schema_name)
+        self.item: KubernetesSchema = KubernetesUninitializedSchema()
 
     def match(self, schema) -> bool:
         # List schema requires items to be set
@@ -185,6 +240,10 @@ class KubernetesArraySchema(KubernetesSchema):
     def dump_schema(self) -> dict:
         return {"type": "array", "items": self.item.dump_schema()}
 
+    def update(self, resolve: Callable[[dict], KubernetesSchema]) -> None:
+        self.item = resolve(self.schema_spec["items"])
+        self.item.update(resolve)
+
 
 class KubernetesDatetimeSchema(KubernetesSchema):
     """Class for Kubernetes datetime schema matching"""
@@ -194,6 +253,9 @@ class KubernetesDatetimeSchema(KubernetesSchema):
 
     def dump_schema(self) -> dict:
         return {"type": "string", "format": "date-time"}
+
+    def update(self, resolve: Callable[[dict], "KubernetesSchema"]) -> None:
+        pass
 
 
 class KubernetesOpaqueSchema(KubernetesSchema):
@@ -205,6 +267,9 @@ class KubernetesOpaqueSchema(KubernetesSchema):
     def dump_schema(self) -> dict:
         return {"type": "object"}
 
+    def update(self, resolve: Callable[[dict], "KubernetesSchema"]) -> None:
+        pass
+
 
 class ObjectMetaSchema(KubernetesObjectSchema):
     """Class for Kubernetes ObjectMeta schema matching"""
@@ -213,7 +278,15 @@ class ObjectMetaSchema(KubernetesObjectSchema):
         if isinstance(schema, OpaqueSchema):
             return True
         if isinstance(schema, ObjectSchema):
-            return super().match(schema)
+            # ObjectMeta is a special case
+            # Its schema is generated specially by controller-gen
+            if "name" in schema.properties and "namespace" in schema.properties:
+                for key, sub_schema in schema.properties.items():
+                    if key not in self.properties:
+                        return False
+                    if not self.properties[key].match(sub_schema):
+                        return False
+                return True
         return False
 
 
@@ -221,14 +294,14 @@ def fetch_k8s_schema_spec(version: str) -> dict:
     """Fetches the Kubernetes schema spec from the Kubernetes repo
 
     Args:
-        version (str): the Kubernetes version e.g. "1.29"
+        version (str): the Kubernetes version e.g. "v1.29.0"
 
     Returns:
         dict: the Kubernetes schema spec
     """
     # pylint: disable=line-too-long
     resp = requests.get(
-        f"https://raw.githubusercontent.com/kubernetes/kubernetes/release-{version}/api/openapi-spec/swagger.json",
+        f"https://raw.githubusercontent.com/kubernetes/kubernetes/{version}/api/openapi-spec/swagger.json",
         timeout=5,
     )
     return resp.json()
@@ -237,7 +310,11 @@ def fetch_k8s_schema_spec(version: str) -> dict:
 class K8sSchemaMatcher:
     """Find Kubernetes schemas that match the given schema"""
 
-    def __init__(self, schema_definitions: dict) -> None:
+    def __init__(
+        self,
+        schema_definitions: dict,
+        custom_mappings: Optional[list[tuple[BaseSchema, str]]] = None,
+    ) -> None:
         """Initializes the Kubernetes schema matcher with the kubernetes schema
         definitions
 
@@ -250,20 +327,37 @@ class K8sSchemaMatcher:
                 schema_definitions
             )
         )
+        self._custom_mapping_dict = (
+            {
+                json.dumps(base_schema.path): kubernetes_schema
+                for base_schema, kubernetes_schema in custom_mappings
+            }
+            if custom_mappings is not None
+            else {}
+        )  # mapping from the encoded schema path to the Kubernetes schema name
+
+    @property
+    def k8s_models(self) -> dict[str, KubernetesSchema]:
+        """Returns the Kubernetes models"""
+        return self._k8s_models
 
     @classmethod
-    def from_version(cls, version: str):
+    def from_version(
+        cls,
+        version: str,
+        custom_mappings: Optional[list[tuple[BaseSchema, str]]] = None,
+    ):
         """Factory method that creates a Kubernetes schema matcher from a
         Kubernetes version
 
         Args:
-            version (str): the Kubernetes version e.g. "1.29"
+            version (str): the Kubernetes version e.g. "v1.29.0"
 
         Returns:
             K8sSchemaMatcher: the Kubernetes schema matcher
         """
         schema_definitions = fetch_k8s_schema_spec(version)["definitions"]
-        return cls(schema_definitions)
+        return cls(schema_definitions, custom_mappings)
 
     def _generate_schema_name_to_property_name_mapping(
         self, schema_definitions: dict
@@ -286,10 +380,41 @@ class K8sSchemaMatcher:
         return dict(schema_name_to_property_name)
 
     def _generate_k8s_models(
-        self, schema_definitions: dict
-    ) -> dict[str, KubernetesObjectSchema]:
+        self, schema_definitions: dict[str, dict]
+    ) -> dict[str, KubernetesSchema]:
         """Generates a dictionary of Kubernetes models for schema matching"""
-        k8s_models: dict[str, KubernetesObjectSchema] = {}
+        k8s_models: dict[str, KubernetesSchema] = {}
+
+        def resolve_named_kubernetes_schema(
+            schema_name, schema_spec: dict
+        ) -> KubernetesSchema:
+            if schema_name.endswith("ObjectMeta"):
+                return ObjectMetaSchema(schema_spec, schema_name)
+            if schema_spec["type"] == "string":
+                return KubernetesStringSchema(schema_spec, schema_name)
+            if schema_spec["type"] == "boolean":
+                return KubernetesBooleanSchema(schema_spec, schema_name)
+            if schema_spec["type"] == "integer":
+                return KubernetesIntegerSchema(schema_spec, schema_name)
+            if schema_spec["type"] == "number":
+                return KubernetesFloatSchema(schema_spec, schema_name)
+            if schema_spec["type"] == "object":
+                if (
+                    "additionalProperties" in schema_spec
+                    and "properties" in schema_spec
+                ):
+                    raise NotImplementedError(
+                        "Object with both additional properties and properties"
+                    )
+                if "additionalProperties" in schema_spec:
+                    return KubernetesMapSchema(schema_spec, schema_name)
+                if "properties" in schema_spec:
+                    return KubernetesObjectSchema(schema_spec, schema_name)
+                return KubernetesOpaqueSchema(schema_spec, schema_name)
+            if schema_spec["type"] == "array":
+                return KubernetesArraySchema(schema_spec, schema_name)
+            else:
+                raise KeyError(f"Cannot resolve type {schema_spec}")
 
         def resolve(schema_spec: dict) -> KubernetesSchema:
             """Resolves schema type from k8s schema spec"""
@@ -301,54 +426,62 @@ class K8sSchemaMatcher:
                 except KeyError as exc:
                     raise KeyError(f"Cannot resolve type {type_str}") from exc
             elif schema_spec["type"] == "string":
-                return KubernetesStringSchema()
+                return KubernetesStringSchema(schema_spec)
             elif schema_spec["type"] == "boolean":
-                return KubernetesBooleanSchema()
+                return KubernetesBooleanSchema(schema_spec)
             elif schema_spec["type"] == "integer":
-                return KubernetesIntegerSchema()
+                return KubernetesIntegerSchema(schema_spec)
             elif schema_spec["type"] == "number":
-                return KubernetesFloatSchema()
+                return KubernetesFloatSchema(schema_spec)
             elif schema_spec["type"] == "object":
                 if "additionalProperties" in schema_spec:
-                    return KubernetesMapSchema(
-                        resolve(schema_spec["additionalProperties"])
-                    )
-                return KubernetesOpaqueSchema()
+                    return KubernetesMapSchema(schema_spec)
+                if "properties" in schema_spec:
+                    return KubernetesObjectSchema(schema_spec)
+                return KubernetesOpaqueSchema(schema_spec)
             elif schema_spec["type"] == "array":
-                return KubernetesArraySchema(resolve(schema_spec["items"]))
+                return KubernetesArraySchema(schema_spec)
             else:
                 raise KeyError(f"Cannot resolve type {schema_spec}")
 
+        # First initialize all k8s models
         for schema_name, schema_spec in schema_definitions.items():
             if schema_name.startswith("io.k8s.apiextensions-apiserver"):
                 continue
 
-            schema: KubernetesObjectSchema
-            if schema_name.endswith("ObjectMeta"):
-                schema = ObjectMetaSchema(schema_name, schema_spec)
-            else:
-                schema = KubernetesObjectSchema(schema_name, schema_spec)
+            resolved_schema = resolve_named_kubernetes_schema(
+                schema_name, schema_spec
+            )
+            k8s_models[schema_name] = resolved_schema
 
-            k8s_models[schema_name] = schema
-
-        for schema in k8s_models.values():
-            schema.update(resolve)
+        # Second pass to resolve the references
+        for k8s_schema in k8s_models.values():
+            k8s_schema.update(resolve)
 
         return k8s_models
 
     def _rank_matched_k8s_schemas(
         self,
         schema: BaseSchema,
-        matched_schemas: [tuple[BaseSchema, KubernetesSchema]],
+        matched_schemas: list[tuple[BaseSchema, KubernetesSchema]],
     ) -> int:
         """returns the index of the best matched schemas using heuristic"""
         # 1. Give priority to the schemas that have been used with the same
         #    property name in k8s schema specs
+        if len(schema.path) < 2:
+            raise RuntimeError(
+                f"Schema path too short {schema.path} for "
+                f"{[schema.k8s_schema_name for _, schema in matched_schemas]}"
+            )
         schema_name = (
             schema.path[-2] if schema.path[-1] == "ITEM" else schema.path[-1]
         )
         name_matched = []
         for i, (_, k8s_schema) in enumerate(matched_schemas):
+            if k8s_schema.k8s_schema_name is None:
+                raise RuntimeError(
+                    f"Kubernetes schema name not found for {k8s_schema}"
+                )
             observed_schema_names = self._schema_name_to_property_name.get(
                 k8s_schema.k8s_schema_name, set()
             )
@@ -372,6 +505,10 @@ class K8sSchemaMatcher:
         for i, (_, matched_schema) in enumerate(matched_schemas):
             if name_matched and i not in name_matched:
                 continue
+            if matched_schema.k8s_schema_name is None:
+                raise RuntimeError(
+                    f"Kubernetes schema name not found for {matched_schema}"
+                )
             seq_matcher.set_seq2(matched_schema.k8s_schema_name.split(".")[-1])
             ratio = seq_matcher.ratio()
             if ratio > max_ratio:
@@ -379,12 +516,24 @@ class K8sSchemaMatcher:
                 max_ratio_schema_idx = i
         return max_ratio_schema_idx
 
-    def find_matched_schemas(
+    def find_all_matched_schemas(
         self, schema: BaseSchema
     ) -> list[tuple[BaseSchema, KubernetesSchema]]:
-        """Finds all Kubernetes schemas that match the given schema"""
+        """Finds all Kubernetes schemas that match the given schema
+        including matches of anonymous Kubernetes schemas"""
+        top_level_matches = self.find_top_level_matched_schemas(schema)
+        return self.expand_top_level_matched_schemas(top_level_matches)
+
+    def find_named_matched_schemas(
+        self, schema: BaseSchema
+    ) -> list[tuple[BaseSchema, KubernetesSchema]]:
+        """Finds all named Kubernetes schemas that match the given schema,
+        without anonymous Kubernetes schemas"""
         matched_schemas: list[tuple[BaseSchema, KubernetesSchema]] = []
         for kubernetes_schema in self._k8s_models.values():
+            if not isinstance(kubernetes_schema, KubernetesObjectSchema):
+                # Avoid Opaque schemas for Kubernetes named schemas
+                continue
             if kubernetes_schema.match(schema):
                 matched_schemas.append((schema, kubernetes_schema))
         if matched_schemas:
@@ -392,13 +541,133 @@ class K8sSchemaMatcher:
             matched_schemas = [matched_schemas[idx]]
         if isinstance(schema, ObjectSchema):
             for sub_schema in schema.properties.values():
-                matched_schemas.extend(self.find_matched_schemas(sub_schema))
+                matched_schemas.extend(
+                    self.find_named_matched_schemas(sub_schema)
+                )
         elif isinstance(schema, ArraySchema):
             matched_schemas.extend(
-                self.find_matched_schemas(schema.get_item_schema())
+                self.find_named_matched_schemas(schema.get_item_schema())
             )
 
         return matched_schemas
+
+    def find_top_level_matched_schemas(
+        self, schema: BaseSchema
+    ) -> list[tuple[BaseSchema, KubernetesSchema]]:
+        """Finds all Kubernetes schemas that match the given schema
+        at the top level, without returning the matched sub-schemas.
+        The returned matches are guaranteed to be named Kubernetes schemas"""
+        matched_schemas: list[tuple[BaseSchema, KubernetesSchema]] = []
+
+        # First check the custom mapping
+        if (schema_key := json.dumps(schema.path)) in self._custom_mapping_dict:
+            kubernetes_schema_name = self._custom_mapping_dict[schema_key]
+            return [(schema, self._k8s_models[kubernetes_schema_name])]
+
+        # Look through the Kubernetes schemas
+        for kubernetes_schema in self._k8s_models.values():
+            if not isinstance(kubernetes_schema, KubernetesObjectSchema):
+                # Avoid Opaque schemas for Kubernetes named schemas
+                continue
+            if kubernetes_schema.match(schema):
+                matched_schemas.append((schema, kubernetes_schema))
+        if matched_schemas:
+            idx = self._rank_matched_k8s_schemas(schema, matched_schemas)
+            matched_schemas = [matched_schemas[idx]]
+        elif isinstance(schema, ObjectSchema):
+            for sub_schema in schema.properties.values():
+                matched_schemas.extend(
+                    self.find_top_level_matched_schemas(sub_schema)
+                )
+        elif isinstance(schema, ArraySchema):
+            matched_schemas.extend(
+                self.find_top_level_matched_schemas(schema.get_item_schema())
+            )
+
+        return matched_schemas
+
+    def expand_top_level_matched_schemas(
+        self, top_level_matches: list[tuple[BaseSchema, KubernetesSchema]]
+    ) -> list[tuple[BaseSchema, KubernetesSchema]]:
+        """Expands the top level matches to include all sub-schemas"""
+        matched_schemas: list[tuple[BaseSchema, KubernetesSchema]] = []
+        # BFS to find all matches
+        to_explore: list[tuple[BaseSchema, KubernetesSchema]] = list(
+            top_level_matches
+        )
+        while to_explore:
+            crd_schema, k8s_schema = to_explore.pop()
+
+            # Handle custom mapping here, override the matched k8s_schema
+            if (
+                schema_key := json.dumps(crd_schema.path)
+            ) in self._custom_mapping_dict:
+                kubernetes_schema_name = self._custom_mapping_dict[schema_key]
+                k8s_schema = self._k8s_models[kubernetes_schema_name]
+            matched_schemas.append((crd_schema, k8s_schema))
+
+            if isinstance(crd_schema, ObjectSchema):
+                if isinstance(k8s_schema, KubernetesObjectSchema):
+                    for key, sub_schema in crd_schema.properties.items():
+                        if key in k8s_schema.properties:
+                            to_explore.append(
+                                (sub_schema, k8s_schema.properties[key])
+                            )
+                elif (
+                    isinstance(k8s_schema, KubernetesMapSchema)
+                    and crd_schema.additional_properties is not None
+                ):
+                    to_explore.append(
+                        (crd_schema.additional_properties, k8s_schema.value)
+                    )
+                else:
+                    raise RuntimeError(
+                        "CRD schema type does not match k8s schema type"
+                        f"({crd_schema}, {k8s_schema})"
+                    )
+            elif isinstance(crd_schema, ArraySchema):
+                if isinstance(k8s_schema, KubernetesArraySchema):
+                    to_explore.append(
+                        (crd_schema.get_item_schema(), k8s_schema.item)
+                    )
+                else:
+                    raise RuntimeError(
+                        "CRD schema type does not match k8s schema type"
+                        f"({crd_schema}, {k8s_schema})"
+                    )
+
+        return matched_schemas
+
+    def override_schema_matches(
+        self,
+        existing_matches: list[tuple[BaseSchema, KubernetesSchema]],
+        override: list[tuple[BaseSchema, KubernetesSchema]],
+    ) -> list[tuple[BaseSchema, KubernetesSchema]]:
+        """Override the existing matches with a list of custom matches
+
+        Args:
+            existing_matches: a full list of matches, containing subproperties
+            override: custom top-level schema matches
+
+        Return:
+            overriden full list of matches
+        """
+        matched_schema_map: dict[str, tuple[BaseSchema, KubernetesSchema]] = {}
+
+        for schema, kubernetes_schema in existing_matches:
+            matched_schema_map[json.dumps(schema.path)] = (
+                schema,
+                kubernetes_schema,
+            )
+
+        expanded_overrides = self.expand_top_level_matched_schemas(override)
+        for schema, kubernetes_schema in expanded_overrides:
+            matched_schema_map[json.dumps(schema.path)] = (
+                schema,
+                kubernetes_schema,
+            )
+
+        return list(matched_schema_map.values())
 
     def dump_k8s_schemas(self) -> dict:
         """Dumps all Kubernetes schemas into a dictionary (for debugging)"""
@@ -427,8 +696,8 @@ if __name__ == "__main__":
         ["root"], crd["spec"]["versions"][0]["schema"]["openAPIV3Schema"]
     )
 
-    schema_matcher = K8sSchemaMatcher.from_version("1.29")
-    matched = schema_matcher.find_matched_schemas(spec_schema)
+    schema_matcher = K8sSchemaMatcher.from_version("1.29.0")
+    matched = schema_matcher.find_all_matched_schemas(spec_schema)
 
     for schema, k8s_schema in matched:
         # pylint: disable-next=invalid-name

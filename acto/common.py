@@ -5,7 +5,7 @@ import operator
 import random
 import re
 import string
-from typing import Any, Tuple, TypeAlias, Union
+from typing import Any, Sequence, Tuple, TypeAlias, Union
 
 import deepdiff.model as deepdiff_model
 import kubernetes
@@ -14,15 +14,15 @@ from deepdiff.helper import NotPresent
 
 from acto.utils.thread_logger import get_thread_logger
 
-PathIndex: TypeAlias = Union[str, int]
+PathSegment: TypeAlias = Union[str, int]
 
 
 class PropertyPath(pydantic.BaseModel):
     """Path of a field in a dict"""
 
-    path: list[PathIndex]
+    path: list[PathSegment]
 
-    def __init__(self, path: list[PathIndex]) -> None:
+    def __init__(self, path: Sequence[PathSegment]) -> None:
         """Override constructor to allow positional argument"""
         super().__init__(path=path)
 
@@ -44,7 +44,7 @@ class PropertyPath(pydantic.BaseModel):
     def __len__(self):
         return len(self.path)
 
-    def __contains__(self, item: PathIndex):
+    def __contains__(self, item: PathSegment):
         return item in self.path
 
 

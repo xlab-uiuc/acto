@@ -50,7 +50,6 @@ class TestCassOpBugs(unittest.TestCase):
         self.input_model: InputModel = DeterministicInputModel(
             crd=self.context["crd"]["body"],
             seed_input=self.seed,
-            used_fields=self.context["analysis_result"]["used_fields"],
             example_dir=self.config.example_dir,
             num_workers=1,
             num_cases=1,

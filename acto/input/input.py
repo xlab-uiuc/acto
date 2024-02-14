@@ -1,6 +1,6 @@
 import abc
 import glob
-import inspect
+import importlib
 import json
 import logging
 import operator
@@ -9,89 +9,50 @@ import threading
 from functools import reduce
 from typing import List, Optional, Tuple
 
+import pydantic
 import yaml
 
-from acto.common import is_subfield, random_string
-from acto.input import known_schemas
+from acto import DEFAULT_KUBERNETES_VERSION
+from acto.common import is_subfield
+from acto.input import k8s_schemas, property_attribute
 from acto.input.get_matched_schemas import find_matched_schema
-from acto.input.valuegenerator import extract_schema_with_value_generator
-from acto.schema import BaseSchema, IntegerSchema
-from acto.utils import get_thread_logger, is_prefix
+from acto.input.test_generators.generator import get_testcases
+from acto.schema import BaseSchema
+from acto.schema.schema import extract_schema
+from acto.utils import get_thread_logger
 
-from .known_schemas import K8sField
 from .testcase import TestCase
 from .testplan import DeterministicTestPlan, TestGroup, TestPlan
 from .value_with_schema import attach_schema_to_value
 
 
-def covered_by_k8s(k8s_fields: list[list[str]], path: list[str]) -> bool:
-    if path[-1] == "additional_properties":
-        return True
+class CustomKubernetesMapping(pydantic.BaseModel):
+    """Class for specifying custom mapping"""
 
-    for k8s_path in k8s_fields:
-        if is_prefix(k8s_path, path):
-            return True
-    return False
+    schema_path: list[str]
+    kubernetes_schema_name: str
 
 
-class CustomField:
-    def __init__(self, path, used_fields: Optional[list]) -> None:
-        self.path = path
-        self.used_fields = used_fields
+class InputMetadata(pydantic.BaseModel):
+    """Metadata for the result of input model"""
+
+    total_number_of_schemas: int = 0
+    number_of_matched_kubernetes_schemas: int = 0
+    total_number_of_test_cases: int = 0
+    number_of_run_test_cases: int = 0
+    number_of_primitive_test_cases: int = 0
+    number_of_semantic_test_cases: int = 0
+    number_of_misoperations: int = 0
+    number_of_pruned_test_cases: int = 0
 
 
-class CopiedOverField(CustomField):
-    """For pruning the fields that are simply copied over to other resources
-
-    All the subfields of this field (excluding this field) will be pruned
-    """
-
-    def __init__(
-        self, path, used_fields: Optional[list] = None, array: bool = False
-    ) -> None:
-        super().__init__(path, used_fields)
-
-
-class OverSpecifiedField(CustomField):
-    """For pruning the fields that are simply copied over to other resources
-
-    All the subfields of this field (excluding this field) will be pruned
-    """
-
-    def __init__(
-        self, path, used_fields: Optional[list] = None, array: bool = False
-    ) -> None:
-        super().__init__(path, used_fields)
-
-
-class ProblematicField(CustomField):
-    """For pruning the field that can not be simply generated using Acto"s current generation mechanism.
-
-    All the subfields of this field (including this field itself) will be pruned
-    """
-
-    def __init__(self, path, array: bool = False, string: bool = False) -> None:
-        super().__init__(path, [])
-
-
-class PatchField(CustomField):
-    """For pruning the field that can not be simply generated using Acto"s current generation mechanism.
-
-    All the subfields of this field (including this field itself) will be pruned
-    """
-
-    def __init__(self, path) -> None:
-        super().__init__(path, None)
-
-
-class MappedField(CustomField):
-    """For annotating the field to be checked against the system state"""
-
-    def __init__(self, path) -> None:
-        super().__init__(path, None)
+# The number of test cases to form a group
+CHUNK_SIZE = 10
 
 
 class InputModel(abc.ABC):
+    """An abstract class for input model"""
+
     NORMAL = "NORMAL"
     OVERSPECIFIED = "OVERSPECIFIED"
     COPIED_OVER = "COPIED_OVER"
@@ -174,17 +135,21 @@ class DeterministicInputModel(InputModel):
         self,
         crd: dict,
         seed_input: Optional[dict],
-        used_fields: list,
         example_dir: Optional[str],
         num_workers: int,
         num_cases: int,
         mount: Optional[list] = None,
+        kubernetes_version: str = DEFAULT_KUBERNETES_VERSION,
+        custom_module_path: Optional[str] = None,
     ) -> None:
+        # Mount allows to only test a subtree of the CRD
         if mount is not None:
             self.mount = mount
         else:
             self.mount = ["spec"]  # We model the cr.spec as the input
-        self.root_schema = extract_schema_with_value_generator(
+
+        # Load the CRD
+        self.root_schema = extract_schema(
             [], crd["spec"]["versions"][-1]["schema"]["openAPIV3Schema"]
         )
 
@@ -199,13 +164,13 @@ class DeterministicInputModel(InputModel):
                     docs = yaml.load_all(example_file, Loader=yaml.FullLoader)
                     for doc in docs:
                         example_docs.append(doc)
-
         for example_doc in example_docs:
             self.root_schema.load_examples(example_doc)
 
-        self.used_fields = used_fields
         self.num_workers = num_workers
         self.num_cases = num_cases  # number of test cases to run at a time
+
+        # Initialize the seed input
         if seed_input is not None:
             initial_value = seed_input
             initial_value["metadata"]["name"] = "test-cluster"
@@ -214,36 +179,80 @@ class DeterministicInputModel(InputModel):
             )
         else:
             self.seed_input = None
+
         self.k8s_paths = find_matched_schema(self.root_schema)
 
         self.thread_vars = threading.local()
 
-        self.metadata = {
-            "normal_schemas": 0,
-            "pruned_by_overspecified": 0,
-            "pruned_by_copied": 0,
-            "num_normal_testcases": 0,
-            "num_overspecified_testcases": 0,
-            "num_copiedover_testcases": 0,
-        }  # to fill in the generate_test_plan function
-
+        # Initialize the metadata, to be filled in the generate_test_plan
+        self.metadata = InputMetadata()
         self.normal_test_plan_partitioned: list[
             list[list[tuple[str, TestCase]]]
         ] = []
-        self.overspecified_test_plan_partitioned: list[
-            list[list[tuple[str, TestCase]]]
-        ] = []
-        self.copiedover_test_plan_partitioned: list[
-            list[list[tuple[str, TestCase]]]
-        ] = []
-        self.semantic_test_plan_partitioned: list[
-            list[tuple[str, list[TestCase]]]
-        ] = []
-        self.additional_semantic_test_plan_partitioned: list[
-            list[list[tuple[str, TestCase]]]
-        ] = []
-
         self.discarded_tests: dict[str, list] = {}
+
+        override_matches: Optional[list[tuple[BaseSchema, str]]] = None
+        if custom_module_path is not None:
+            custom_module = importlib.import_module(custom_module_path)
+
+            # We need to do very careful sanitization here because we are
+            # loading user-provided module
+            if hasattr(custom_module, "KUBERNETES_TYPE_MAPPING"):
+                custum_kubernetes_type_mapping = (
+                    custom_module.KUBERNETES_TYPE_MAPPING
+                )
+                if isinstance(custum_kubernetes_type_mapping, list):
+                    override_matches = []
+                    for custom_mapping in custum_kubernetes_type_mapping:
+                        if isinstance(custom_mapping, CustomKubernetesMapping):
+                            try:
+                                schema = self.get_schema_by_path(
+                                    custom_mapping.schema_path
+                                )
+                            except KeyError as exc:
+                                raise RuntimeError(
+                                    "Schema path of the custom mapping is invalid: "
+                                    f"{custom_mapping.schema_path}"
+                                ) from exc
+
+                            override_matches.append(
+                                (schema, custom_mapping.kubernetes_schema_name)
+                            )
+                        else:
+                            raise TypeError(
+                                "Expected CustomKubernetesMapping in KUBERNETES_TYPE_MAPPING, "
+                                f"but got {type(custom_mapping)}"
+                            )
+
+        # Do the matching from CRD to Kubernetes schemas
+        mounted_schema = self.get_schema_by_path(self.mount)
+        self.metadata.total_number_of_schemas = len(
+            mounted_schema.get_all_schemas()[0]
+        )
+
+        # Match the Kubernetes schemas to subproperties of the root schema
+        kubernetes_schema_matcher = k8s_schemas.K8sSchemaMatcher.from_version(
+            kubernetes_version, override_matches
+        )
+        top_matched_schemas = (
+            kubernetes_schema_matcher.find_top_level_matched_schemas(
+                mounted_schema
+            )
+        )
+        for base_schema, k8s_schema_name in top_matched_schemas:
+            logging.info(
+                "Matched schema %s to k8s schema %s",
+                base_schema.get_path(),
+                k8s_schema_name,
+            )
+        self.full_matched_schemas = (
+            kubernetes_schema_matcher.expand_top_level_matched_schemas(
+                top_matched_schemas
+            )
+        )
+
+        # Apply custom property attributes based on the property_attribute module
+        self.apply_custom_field()
 
     def set_worker_id(self, worker_id: int):
         """Claim this thread"s id, so that we can split the test plan among threads"""
@@ -256,9 +265,6 @@ class DeterministicInputModel(InputModel):
         self.thread_vars.id = worker_id
         # so that we can run the test case itself right after the setup
         self.thread_vars.normal_test_plan = DeterministicTestPlan()
-        self.thread_vars.overspecified_test_plan = DeterministicTestPlan()
-        self.thread_vars.copiedover_test_plan = DeterministicTestPlan()
-        self.thread_vars.additional_semantic_test_plan = DeterministicTestPlan()
         self.thread_vars.semantic_test_plan = TestPlan(
             self.root_schema.to_tree()
         )
@@ -266,27 +272,6 @@ class DeterministicInputModel(InputModel):
         for group in self.normal_test_plan_partitioned[worker_id]:
             self.thread_vars.normal_test_plan.add_testcase_group(
                 TestGroup(group)
-            )
-
-        for group in self.overspecified_test_plan_partitioned[worker_id]:
-            self.thread_vars.overspecified_test_plan.add_testcase_group(
-                TestGroup(group)
-            )
-
-        for group in self.copiedover_test_plan_partitioned[worker_id]:
-            self.thread_vars.copiedover_test_plan.add_testcase_group(
-                TestGroup(group)
-            )
-
-        for group_ in self.additional_semantic_test_plan_partitioned[worker_id]:
-            self.thread_vars.additional_semantic_test_plan.add_testcase_group(
-                TestGroup(group_)
-            )
-
-        for key, value in self.semantic_test_plan_partitioned[worker_id]:
-            path = json.loads(key)
-            self.thread_vars.semantic_test_plan.add_testcases_by_path(
-                value, path
             )
 
     def generate_test_plan(
@@ -297,299 +282,76 @@ class DeterministicInputModel(InputModel):
         """Generate test plan based on CRD"""
         logger = get_thread_logger(with_prefix=False)
 
-        existing_testcases = {}
-        if delta_from is not None:
-            with open(delta_from, "r", encoding="utf-8") as delta_from_file:
-                existing_testcases = json.load(delta_from_file)[
-                    "normal_testcases"
-                ]
-
-        # Calculate the unused fields using used_fields from static analysis
-        # tree: TreeNode = self.root_schema.to_tree()
-        # for field in self.used_fields:
-        #     field = field[1:]
-        #     node = tree.get_node_by_path(field)
-        #     if node is None:
-        #         logger.warning(f"Field {field} not found in CRD")
-        #         continue
-
-        #     node.set_used()
-
-        # def func(overspecified_fields: list, unused_fields: list, node: TreeNode) -> bool:
-        #     if len(node.children) == 0:
-        #         return False
-
-        #     if not node.used:
-        #         return False
-
-        #     used_child = []
-        #     for child in node.children.values():
-        #         if child.used:
-        #             used_child.append(child)
-        #         else:
-        #             unused_fields.append(child.path)
-
-        #     if len(used_child) == 0:
-        #         overspecified_fields.append(node.path)
-        #         return False
-        #     elif len(used_child) == len(node.children):
-        #         return True
-        #     else:
-        #         return True
-
-        # overspecified_fields = []
-        # unused_fields = []
-        # tree.traverse_func(partial(func, overspecified_fields, unused_fields))
-        # for field in overspecified_fields:
-        #     logger.info("Overspecified field: %s", field)
-        # for field in unused_fields:
-        #     logger.info("Unused field: %s", field)
-
-        ########################################
-        # Get all K8s schemas
-        ########################################
-        k8s_int_tests = []
-        k8s_str_tests = []
-        for name, obj in inspect.getmembers(known_schemas):
-            if inspect.isclass(obj):
-                if issubclass(obj, known_schemas.K8sIntegerSchema):
-                    for _, class_member in inspect.getmembers(obj):
-                        if isinstance(class_member, known_schemas.K8sTestCase):
-                            k8s_int_tests.append(class_member)
-                elif issubclass(obj, known_schemas.K8sStringSchema):
-                    for _, class_member in inspect.getmembers(obj):
-                        if isinstance(class_member, known_schemas.K8sTestCase):
-                            k8s_str_tests.append(class_member)
-
-        logger.info("Got %d K8s integer tests", len(k8s_int_tests))
-        logger.info("Got %d K8s string tests", len(k8s_str_tests))
-
         ########################################
         # Generate test plan
         ########################################
 
-        planned_normal_testcases = {}
         normal_testcases = {}
-        semantic_testcases = {}
-        additional_semantic_testcases = {}
-        overspecified_testcases = {}
-        copiedover_testcases = {}
-        num_normal_testcases = 0
-        num_overspecified_testcases = 0
-        num_copiedover_testcases = 0
-        num_semantic_testcases = 0
-        num_additional_semantic_testcases = 0
 
-        num_total_semantic_tests = 0
-        num_total_invalid_tests = 0
+        test_cases = get_testcases(self.root_schema, self.full_matched_schemas)
 
-        mounted_schema = self.get_schema_by_path(self.mount)
-        (
-            normal_schemas,
-            semantic_schemas,
-        ) = mounted_schema.get_normal_semantic_schemas()
-        logger.info("Got %d normal schemas", len(normal_schemas))
-        logger.info("Got %d semantic schemas", len(semantic_schemas))
-
-        (
-            normal_schemas,
-            pruned_by_overspecified,
-            pruned_by_copied,
-        ) = mounted_schema.get_all_schemas()
-        for schema in normal_schemas:
-            # Skip if the schema is not in the focus fields
+        num_test_cases = 0
+        num_run_test_cases = 0
+        num_primitive_test_cases = 0
+        num_semantic_test_cases = 0
+        num_misoperations = 0
+        num_pruned_test_cases = 0
+        for path, test_case_list in test_cases:
+            # First, check if the path is in the focus fields
             if focus_fields is not None:
-                logger.info("focusing on %s", focus_fields)
                 focused = False
                 for focus_field in focus_fields:
-                    logger.info(
-                        "Comparing %s with %s", schema.path, focus_field
-                    )
-                    if is_subfield(schema.path, focus_field):
+                    if is_subfield(path, focus_field):
                         focused = True
                         break
                 if not focused:
                     continue
 
-            path = (
-                json.dumps(schema.path)
+            path_str = (
+                json.dumps(path)
                 .replace('"ITEM"', "0")
                 .replace("additional_properties", "ACTOKEY")
             )
-            testcases, semantic_testcases_ = schema.test_cases()
-            planned_normal_testcases[path] = testcases
-            if len(semantic_testcases_) > 0:
-                semantic_testcases[path] = semantic_testcases_
-                num_semantic_testcases += len(semantic_testcases_)
-            if path in existing_testcases:
-                continue
-            normal_testcases[path] = testcases
-            num_normal_testcases += len(testcases)
 
-            if isinstance(schema, known_schemas.K8sSchema):
-                for testcase in testcases:
-                    if isinstance(testcase, known_schemas.K8sInvalidTestCase):
-                        num_total_invalid_tests += 1
-                    num_total_semantic_tests += 1
-
-                for semantic_testcase in semantic_testcases_:
-                    if isinstance(
-                        semantic_testcase, known_schemas.K8sInvalidTestCase
-                    ):
-                        num_total_invalid_tests += 1
-                    num_total_semantic_tests += 1
-
-            if not isinstance(
-                schema, known_schemas.K8sSchema
-            ) and not covered_by_k8s(self.k8s_paths, list(schema.path)):
-                if isinstance(schema, IntegerSchema):
-                    additional_semantic_testcases[path] = list(k8s_int_tests)
-                    num_additional_semantic_testcases += len(k8s_int_tests)
-                # elif isinstance(schema, StringSchema):
-                #     additional_semantic_testcases[path] = list(k8s_str_tests)
-                #     num_additional_semantic_testcases += len(k8s_str_tests)
-
-        for schema in pruned_by_overspecified:
-            # Skip if the schema is not in the focus fields
-            if focus_fields is not None:
-                logger.info(f"focusing on {focus_fields}")
-                focused = False
-                for focus_field in focus_fields:
-                    logger.info(f"Comparing {schema.path} with {focus_field}")
-                    if is_subfield(schema.path, focus_field):
-                        focused = True
-                        break
-                if not focused:
+            # Filter by test case attributes
+            filtered_test_case_list = []
+            for test_case in test_case_list:
+                num_test_cases += 1
+                if test_case.primitive:
+                    num_primitive_test_cases += 1
+                if test_case.kubernetes_schema and test_case.primitive:
+                    # This is a primitive test case for a k8s schema
+                    # Primitive test cases are pruned for k8s schemas
+                    num_pruned_test_cases += 1
                     continue
+                if test_case.semantic:
+                    num_semantic_test_cases += 1
+                if test_case.invalid:
+                    num_misoperations += 1
+                filtered_test_case_list.append(test_case)
+                num_run_test_cases += 1
 
-            testcases, semantic_testcases_ = schema.test_cases()
-            path = (
-                json.dumps(schema.path)
-                .replace('"ITEM"', "0")
-                .replace("additional_properties", random_string(5))
-            )
-            if len(semantic_testcases_) > 0:
-                semantic_testcases[path] = semantic_testcases_
-                num_semantic_testcases += len(semantic_testcases_)
-            overspecified_testcases[path] = testcases
-            num_overspecified_testcases += len(testcases)
+            normal_testcases[path_str] = filtered_test_case_list
 
-            if isinstance(schema, known_schemas.K8sSchema):
-                for testcase in testcases:
-                    if isinstance(testcase, known_schemas.K8sInvalidTestCase):
-                        num_total_invalid_tests += 1
-                        num_total_semantic_tests += 1
+        self.metadata.total_number_of_test_cases = num_test_cases
+        self.metadata.number_of_run_test_cases = num_run_test_cases
+        self.metadata.number_of_primitive_test_cases = num_pruned_test_cases
+        self.metadata.number_of_semantic_test_cases = num_semantic_test_cases
+        self.metadata.number_of_misoperations = num_misoperations
+        self.metadata.number_of_pruned_test_cases = num_pruned_test_cases
 
-                for semantic_testcase in semantic_testcases_:
-                    if isinstance(
-                        semantic_testcase, known_schemas.K8sInvalidTestCase
-                    ):
-                        num_total_invalid_tests += 1
-                    num_total_semantic_tests += 1
-
-        for schema in pruned_by_copied:
-            # Skip if the schema is not in the focus fields
-            if focus_fields is not None:
-                logger.info(f"focusing on {focus_fields}")
-                focused = False
-                for focus_field in focus_fields:
-                    logger.info(f"Comparing {schema.path} with {focus_field}")
-                    if is_subfield(schema.path, focus_field):
-                        focused = True
-                        break
-                if not focused:
-                    continue
-
-            testcases, semantic_testcases_ = schema.test_cases()
-            path = (
-                json.dumps(schema.path)
-                .replace('"ITEM"', "0")
-                .replace("additional_properties", random_string(5))
-            )
-            if len(semantic_testcases_) > 0:
-                semantic_testcases[path] = semantic_testcases_
-                num_semantic_testcases += len(semantic_testcases_)
-            copiedover_testcases[path] = testcases
-            num_copiedover_testcases += len(testcases)
-
-            if isinstance(schema, known_schemas.K8sSchema):
-                for testcase in testcases:
-                    if isinstance(testcase, known_schemas.K8sInvalidTestCase):
-                        num_total_invalid_tests += 1
-                        num_total_semantic_tests += 1
-
-                for semantic_testcase in semantic_testcases_:
-                    if isinstance(
-                        semantic_testcase, known_schemas.K8sInvalidTestCase
-                    ):
-                        num_total_invalid_tests += 1
-                    num_total_semantic_tests += 1
-
+        logger.info("Generated %d test cases in total", num_test_cases)
+        logger.info("Generated %d test cases to run", num_run_test_cases)
         logger.info(
-            "Parsed [%d] fields from normal schema", len(normal_schemas)
+            "Generated %d primitive test cases", num_primitive_test_cases
         )
-        logger.info(
-            "Parsed [%d] fields from over-specified schema",
-            len(pruned_by_overspecified),
-        )
-        logger.info(
-            "Parsed [%d] fields from copied-over schema", len(pruned_by_copied)
-        )
-
-        logger.info(
-            "Generated [%d] test cases for normal schemas", num_normal_testcases
-        )
-        logger.info(
-            "Generated [%d] test cases for overspecified schemas",
-            num_overspecified_testcases,
-        )
-        logger.info(
-            "Generated [%d] test cases for copiedover schemas",
-            num_copiedover_testcases,
-        )
-        logger.info(
-            "Generated [%d] test cases for semantic schemas",
-            num_semantic_testcases,
-        )
-        logger.info(
-            "Generated [%d] test cases for additional semantic schemas",
-            num_additional_semantic_testcases,
-        )
-
-        logger.info("Generated [%d] semantic tests", num_total_semantic_tests)
-        logger.info("Generated [%d] invalid tests", num_total_invalid_tests)
-
-        self.metadata["pruned_by_overspecified"] = len(pruned_by_overspecified)
-        self.metadata["pruned_by_copied"] = len(pruned_by_copied)
-        self.metadata["semantic_schemas"] = len(semantic_testcases)
-        self.metadata["num_normal_testcases"] = num_normal_testcases
-        self.metadata[
-            "num_overspecified_testcases"
-        ] = num_overspecified_testcases
-        self.metadata["num_copiedover_testcases"] = num_copiedover_testcases
-        self.metadata["num_semantic_testcases"] = num_semantic_testcases
-        self.metadata[
-            "num_additional_semantic_testcases"
-        ] = num_additional_semantic_testcases
-
-        logger.info(
-            f"Generated {num_normal_testcases + num_semantic_testcases} normal testcases"
-        )
+        logger.info("Generated %d semantic test cases", num_semantic_test_cases)
+        logger.info("Generated %d misoperations", num_misoperations)
+        logger.info("Generated %d pruned test cases", num_pruned_test_cases)
 
         normal_test_plan_items = list(normal_testcases.items())
-        overspecified_test_plan_items = list(overspecified_testcases.items())
-        copiedover_test_plan_items = list(copiedover_testcases.items())
-        semantic_test_plan_items = list(semantic_testcases.items())
         # randomize to reduce skewness among workers
         random.shuffle(normal_test_plan_items)
-        random.shuffle(overspecified_test_plan_items)
-        random.shuffle(copiedover_test_plan_items)
-        random.shuffle(semantic_test_plan_items)
-
-        # run semantic testcases anyway
-        normal_test_plan_items.extend(semantic_test_plan_items)
-
-        CHUNK_SIZE = 10
 
         def split_into_subgroups(
             test_plan_items,
@@ -605,57 +367,23 @@ class DeterministicInputModel(InputModel):
             return subgroups
 
         normal_subgroups = split_into_subgroups(normal_test_plan_items)
-        overspecified_subgroups = split_into_subgroups(
-            overspecified_test_plan_items
-        )
-        copiedover_subgroups = split_into_subgroups(copiedover_test_plan_items)
 
         # Initialize the three test plans, and assign test cases to them
         # according to the number of workers
         for i in range(self.num_workers):
             self.normal_test_plan_partitioned.append([])
-            self.overspecified_test_plan_partitioned.append([])
-            self.copiedover_test_plan_partitioned.append([])
-            self.semantic_test_plan_partitioned.append([])
-            self.additional_semantic_test_plan_partitioned.append([])
 
         for i in range(0, len(normal_subgroups)):
             self.normal_test_plan_partitioned[i % self.num_workers].append(
                 normal_subgroups[i]
             )
 
-        for i in range(0, len(overspecified_subgroups)):
-            self.overspecified_test_plan_partitioned[
-                i % self.num_workers
-            ].append(overspecified_subgroups[i])
-
-        for i in range(0, len(copiedover_subgroups)):
-            self.copiedover_test_plan_partitioned[i % self.num_workers].append(
-                copiedover_subgroups[i]
-            )
-
-        for i in range(0, len(semantic_test_plan_items)):
-            self.semantic_test_plan_partitioned[i % self.num_workers].append(
-                semantic_test_plan_items[i]
-            )
-
         # appending empty lists to avoid no test cases distributed to certain
         # work nodes
         assert self.num_workers == len(self.normal_test_plan_partitioned)
-        assert self.num_workers == len(self.overspecified_test_plan_partitioned)
-        assert self.num_workers == len(self.copiedover_test_plan_partitioned)
 
         return {
-            "delta_from": delta_from,
-            "existing_testcases": existing_testcases,
             "normal_testcases": normal_testcases,
-            "overspecified_testcases": overspecified_testcases,
-            "copiedover_testcases": copiedover_testcases,
-            "semantic_testcases": semantic_testcases,
-            "planned_normal_testcases": planned_normal_testcases,
-            "normal_subgroups": normal_subgroups,
-            "overspecified_subgroups": overspecified_subgroups,
-            "copiedover_subgroups": copiedover_subgroups,
         }
 
     def next_test(
@@ -746,82 +474,27 @@ class DeterministicInputModel(InputModel):
             del self.thread_vars.test_plan[self.thread_vars.curr_field]
         self.thread_vars.curr_field = None
 
-    def apply_custom_field(self, custom_field: CustomField):
+    def apply_custom_field(self):
         """Applies custom field to the input model
 
         Relies on the __setitem__ and __getitem__ methods of schema class
         """
-        path = custom_field.path
-        if len(path) == 0:
-            self.root_schema = custom_field.custom_schema(
-                self.root_schema, custom_field.used_fields
+
+        for (
+            property_path,
+            attribute,
+        ) in property_attribute.PROPERTY_ATTRIBUTES.items():
+            schema = reduce(
+                operator.getitem, property_path.path, self.root_schema
             )
 
-        # fetch the parent schema
-        curr = self.root_schema
-        for idx in path:
-            curr = curr[idx]
-
-        if isinstance(custom_field, PatchField):
-            curr.patch = True
-            s1, s2, s3 = curr.get_all_schemas()
+            s1, s2, s3 = schema.get_all_schemas()
             for s in s1:
-                s.patch = True
+                s.attributes |= attribute
             for s in s2:
-                s.patch = True
+                s.attributes |= attribute
             for s in s3:
-                s.patch = True
-
-        if isinstance(custom_field, MappedField):
-            curr.mapped = True
-            s1, s2, s3 = curr.get_all_schemas()
-            for s in s1:
-                s.mapped = True
-            for s in s2:
-                s.mapped = True
-            for s in s3:
-                s.mapped = True
-
-        if isinstance(custom_field, CopiedOverField):
-            curr.copied_over = True
-        elif isinstance(custom_field, OverSpecifiedField):
-            curr.over_specified = True
-            s1, s2, s3 = curr.get_all_schemas()
-            for s in s1:
-                s.over_specified = True
-            for s in s2:
-                s.over_specified = True
-            for s in s3:
-                s.over_specified = True
-        elif isinstance(custom_field, ProblematicField):
-            curr.problematic = True
-        elif isinstance(custom_field, PatchField) or isinstance(
-            custom_field, MappedField
-        ):
-            pass  # do nothing, already handled above
-        else:
-            raise Exception("Unknown custom field type")
-
-    def apply_k8s_schema(self, k8s_field: K8sField):
-        path = k8s_field.path
-        if len(path) == 0:
-            self.root_schema = k8s_field.custom_schema(self.root_schema)
-
-        # fetch the parent schema
-        curr = self.root_schema
-        for idx in path[:-1]:
-            curr = curr[idx]
-
-        # construct new schema
-        custom_schema = k8s_field.custom_schema(curr[path[-1]])
-
-        # replace old schema with the new one
-        curr[path[-1]] = custom_schema
-
-    def apply_candidates(self, candidates: dict, path: list):
-        """Apply candidates file onto schema"""
-        # TODO
-        candidates_list = self.candidates_dict_to_list(candidates, path)
+                s.attributes |= attribute
 
     def apply_default_value(self, default_value_result: dict):
         """Takes default value result from static analysis and apply to schema
@@ -836,23 +509,15 @@ class DeterministicInputModel(InputModel):
                 for k, v in decoded_value.items():
                     decoded_value[k] = json.loads(v)
                     logging.info(
-                        "Setting default value for %s to %s"
-                        % (path + [k], decoded_value[k])
+                        "Setting default value for %s to %s",
+                        path + [k],
+                        decoded_value[k],
                     )
                     self.get_schema_by_path(path + [k]).set_default(
                         decoded_value[k]
                     )
             else:
                 logging.info(
-                    "Setting default value for %s to %s" % (path, decoded_value)
+                    "Setting default value for %s to %s", path, decoded_value
                 )
                 self.get_schema_by_path(path).set_default(value)
-
-    def candidates_dict_to_list(self, candidates: dict, path: list) -> list:
-        if "candidates" in candidates:
-            return [(path, candidates["candidates"])]
-        else:
-            ret = []
-            for key, value in candidates.items():
-                ret.extend(self.candidates_dict_to_list(value, path + [key]))
-            return ret

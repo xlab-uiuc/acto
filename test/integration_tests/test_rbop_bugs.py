@@ -1,5 +1,5 @@
 """Integration tests for the rabbitmq-operator bugs."""
-import importlib
+
 import json
 import os
 import pathlib
@@ -49,19 +49,11 @@ class TestRabbitMQOpBugs(unittest.TestCase):
         self.input_model: InputModel = DeterministicInputModel(
             crd=self.context["crd"]["body"],
             seed_input=self.seed,
-            used_fields=self.context["analysis_result"]["used_fields"],
             example_dir=self.config.example_dir,
             num_workers=1,
             num_cases=1,
+            custom_module_path=self.config.custom_module,
         )
-
-        # The oracle depends on the custom fields
-        if self.config.custom_fields:
-            module = importlib.import_module(self.config.custom_fields)
-            for custom_field in module.custom_fields:
-                self.input_model.apply_custom_field(custom_field)
-        else:
-            raise AttributeError("No custom fields specified in config")
 
     def test_rbop_928(self):
         """Test rabbitmq-operator rabbitmq-operator-928."""

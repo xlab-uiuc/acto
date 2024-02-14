@@ -11,6 +11,7 @@ from typing import List, Optional
 import jsonpatch
 import yaml
 
+from acto import DEFAULT_KUBERNETES_VERSION
 from acto.engine import Acto
 from acto.input import TestCase
 from acto.input.input import DeterministicInputModel
@@ -66,16 +67,18 @@ class CustomField:
 class ReproInputModel(DeterministicInputModel):
     """Input model for reproducing"""
 
+    # pylint: disable=super-init-not-called, unused-argument
     def __init__(
         self,
         crd: dict,
         seed_input: dict,
-        used_fields: list,
         example_dir: str,
         num_workers: int,
         num_cases: int,
         reproduce_dir: str,
         mount: Optional[list] = None,
+        kubernetes_version: str = DEFAULT_KUBERNETES_VERSION,
+        custom_module_path: Optional[str] = None,
     ) -> None:
         logger = get_thread_logger(with_prefix=True)
         # WARNING: Not sure the initialization is correct
@@ -105,10 +108,10 @@ class ReproInputModel(DeterministicInputModel):
         self.metadata = {}
 
     def initialize(self, initial_value: dict):
-        pass
+        """Override"""
 
-    def set_worker_id(self, id: int):
-        pass
+    def set_worker_id(self, worker_id: int):
+        """Override"""
 
     def set_mode(self, mode: str):
         pass
@@ -141,18 +144,21 @@ class ReproInputModel(DeterministicInputModel):
         ]  # return the first test case
 
     def apply_k8s_schema(self, k8s_field):
-        pass
+        """Override"""
 
 
-def repro_precondition(v):
+def repro_precondition(_):
+    """Precondition for reproducing"""
     return True
 
 
-def repro_mutator(cr, v):
+def repro_mutator(cr, _):
+    """Mutator for reproducing"""
     return cr
 
 
-def repro_setup(v):
+def repro_setup(_):
+    """Setup for reproducing"""
     return None
 
 
@@ -163,6 +169,7 @@ def reproduce(
     acto_namespace: int,
     **kwargs,
 ) -> List[OracleResults]:
+    """Reproduce the trial folder"""
     os.makedirs(workdir_path, exist_ok=True)
     # Setting up log infra
     logging.basicConfig(
@@ -211,12 +218,15 @@ def reproduce_postdiff(
     acto_namespace: int,
     **kwargs,
 ) -> bool:
+    """Reproduce the trial folder with post-diff test"""
+    _ = kwargs
     with open(operator_config, "r", encoding="utf-8") as config_file:
         config = OperatorConfig(**json.load(config_file))
     post_diff_test_dir = os.path.join(workdir_path, "post_diff_test")
     logs = glob(workdir_path + "/*/operator-*.log")
     for log in logs:
-        open(log, "w", encoding="utf-8").close()
+        with open(log, "w", encoding="utf-8") as _:
+            pass
     p = PostDiffTest(
         testrun_dir=workdir_path,
         config=config,
@@ -262,12 +272,11 @@ if __name__ == "__main__":
     parser.add_argument("--context", dest="context", help="Cached context data")
     args = parser.parse_args()
 
-    workdir_path = "testrun-%s" % datetime.now().strftime("%Y-%m-%d-%H-%M")
+    workdir_path_ = f"testrun-{datetime.now().strftime('%Y-%m-%d-%H-%M')}"
 
-    is_reproduce = True
     start_time = datetime.now()
     reproduce(
-        workdir_path=workdir_path,
+        workdir_path=workdir_path_,
         reproduce_dir=args.reproduce_dir,
         operator_config=args.config,
         acto_namespace=args.acto_namespace,

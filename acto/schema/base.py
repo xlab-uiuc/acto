@@ -4,6 +4,7 @@ from typing import Any, Callable, List, Optional, Tuple
 import jsonschema
 import jsonschema.exceptions
 
+from acto.input.property_attribute import PropertyAttribute
 from acto.utils.thread_logger import get_thread_logger
 
 
@@ -150,6 +151,7 @@ class BaseSchema(SchemaInterface):
         self.enum = None if "enum" not in schema else schema["enum"]
         self.examples: list[Any] = []
 
+        self.attributes = PropertyAttribute(value=0)
         self.copied_over = False
         self.over_specified = False
         self.problematic = False
