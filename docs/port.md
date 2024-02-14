@@ -1,7 +1,7 @@
 # Testing a new operator
 
 ## Porting an operator to Acto
-To port a new operator to Acto and test it, users would need to create a configuration file in JSON 
+To port a new operator to Acto and test it, users would need to create a configuration file in JSON
   format following the steps below.
 
 ### Providing the steps to deploy the operator
@@ -9,7 +9,7 @@ The minimum requirement for Acto to test an operator is to provide a way to depl
 
 Acto supports three different ways for specifying the deployment method: YAML, Helm, and Kustomize.
   (Helm and Kustomize is lacking support right now, please first use YAML)
-To specify operators' deployment method in a YAML way, users need to bundle all the required 
+To specify operators' deployment method in a YAML way, users need to bundle all the required
   resources into a YAML file, e.g. Namespace, ClusterRole, ServiceAccount, and Deployment.
 
 Deploying operator can be expressed as a sequence of steps to be applied through
@@ -52,7 +52,7 @@ In case there are more than one container in the operator Pod (e.g. metrics expo
 
 <details>
   <summary>Full JsonSchema for the deploy property</summary>
-  
+
   ```json
 "deploy": {
     "additionalProperties": false,
@@ -62,6 +62,7 @@ In case there are more than one container in the operator Pod (e.g. metrics expo
             "description": "Steps to deploy the operator",
             "items": {
                 "additionalProperties": false,
+                "description": "A step of deploying a resource",
                 "properties": {
                     "apply": {
                         "allOf": [
@@ -90,7 +91,7 @@ In case there are more than one container in the operator Pod (e.g. metrics expo
                                             }
                                         ],
                                         "default": null,
-                                        "description": "The container name of the operator in the operator pod",
+                                        "description": "The container name of the operator in the operator pod, required if there are multiple containers in the operator pod",
                                         "title": "Operator Container Name"
                                     },
                                     "namespace": {
@@ -151,8 +152,9 @@ In case there are more than one container in the operator Pod (e.g. metrics expo
     ],
     "title": "DeployConfig",
     "type": "object"
-},
+}
   ```
+
 </details>
 
 ### Providing the name of the CRD to be tested
@@ -161,7 +163,7 @@ Some operator developers define separate CRDs for other purposes, e.g., backup t
 In case there are more than one CRD in the deploy steps, you need to specify the full name of
     the CRD to be tested.
 
-Specify the name of the CRD to be tested in the configuration through the `crd_name` property. 
+Specify the name of the CRD to be tested in the configuration through the `crd_name` property.
 E.g.:
 ```json
 {
@@ -170,7 +172,7 @@ E.g.:
 ```
 
 ### Providing a seed CR for Acto to start with
-Provide a sample CR which will be used by Acto as the seed. 
+Provide a sample CR which will be used by Acto as the seed.
 This can be any valid CR, usually operator repos contain multiple sample CRs.
 Specify this through the `seed_custom_resource` property in the configuration.
 
@@ -200,6 +202,654 @@ Example:
   }
 }
 ```
+
+<details>
+  <summary>Full JsonSchema for the Operator Config</summary>
+
+  ```json
+{
+    "$defs": {
+        "AnalysisConfig": {
+            "additionalProperties": false,
+            "description": "Configuration for static analysis",
+            "properties": {
+                "github_link": {
+                    "description": "HTTPS URL for cloning the operator repo",
+                    "title": "Github Link",
+                    "type": "string"
+                },
+                "commit": {
+                    "description": "Commit hash to specify the version to conduct static analysis",
+                    "title": "Commit",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "Type name of the CR",
+                    "title": "Type",
+                    "type": "string"
+                },
+                "package": {
+                    "description": "Package name in which the type of the CR is defined",
+                    "title": "Package",
+                    "type": "string"
+                },
+                "entrypoint": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "The relative path of the main package for the operator, required if the main is not in the root directory",
+                    "title": "Entrypoint"
+                }
+            },
+            "required": [
+                "github_link",
+                "commit",
+                "type",
+                "package",
+                "entrypoint"
+            ],
+            "title": "AnalysisConfig",
+            "type": "object"
+        },
+        "ApplyStep": {
+            "additionalProperties": false,
+            "description": "Configuration for each step of kubectl apply",
+            "properties": {
+                "file": {
+                    "description": "Path to the file for kubectl apply",
+                    "title": "File",
+                    "type": "string"
+                },
+                "operator": {
+                    "default": false,
+                    "description": "If the file contains the operator deployment",
+                    "title": "Operator",
+                    "type": "boolean"
+                },
+                "operator_container_name": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "description": "The container name of the operator in the operator pod, required if there are multiple containers in the operator pod",
+                    "title": "Operator Container Name"
+                },
+                "namespace": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": "__DELEGATED__",
+                    "description": "Namespace for applying the file. If not specified, use the namespace in the file or Acto namespace. If set to null, use the namespace in the file",
+                    "title": "Namespace"
+                }
+            },
+            "required": [
+                "file"
+            ],
+            "title": "ApplyStep",
+            "type": "object"
+        },
+        "DeployConfig": {
+            "additionalProperties": false,
+            "description": "Configuration for deploying the operator",
+            "properties": {
+                "steps": {
+                    "description": "Steps to deploy the operator",
+                    "items": {
+                        "additionalProperties": false,
+                        "description": "A step of deploying a resource",
+                        "properties": {
+                            "apply": {
+                                "allOf": [
+                                    {
+                                        "additionalProperties": false,
+                                        "description": "Configuration for each step of kubectl apply",
+                                        "properties": {
+                                            "file": {
+                                                "description": "Path to the file for kubectl apply",
+                                                "title": "File",
+                                                "type": "string"
+                                            },
+                                            "operator": {
+                                                "default": false,
+                                                "description": "If the file contains the operator deployment",
+                                                "title": "Operator",
+                                                "type": "boolean"
+                                            },
+                                            "operator_container_name": {
+                                                "anyOf": [
+                                                    {
+                                                        "type": "string"
+                                                    },
+                                                    {
+                                                        "type": "null"
+                                                    }
+                                                ],
+                                                "default": null,
+                                                "description": "The container name of the operator in the operator pod, required if there are multiple containers in the operator pod",
+                                                "title": "Operator Container Name"
+                                            },
+                                            "namespace": {
+                                                "anyOf": [
+                                                    {
+                                                        "type": "string"
+                                                    },
+                                                    {
+                                                        "type": "null"
+                                                    }
+                                                ],
+                                                "default": "__DELEGATED__",
+                                                "description": "Namespace for applying the file. If not specified, use the namespace in the file or Acto namespace. If set to null, use the namespace in the file",
+                                                "title": "Namespace"
+                                            }
+                                        },
+                                        "required": [
+                                            "file"
+                                        ],
+                                        "title": "ApplyStep",
+                                        "type": "object"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "Configuration for each step of kubectl apply"
+                            },
+                            "wait": {
+                                "allOf": [
+                                    {
+                                        "additionalProperties": false,
+                                        "description": "Configuration for each step of waiting for the operator",
+                                        "properties": {
+                                            "duration": {
+                                                "default": 10,
+                                                "description": "Wait for the specified seconds",
+                                                "title": "Duration",
+                                                "type": "integer"
+                                            }
+                                        },
+                                        "title": "WaitStep",
+                                        "type": "object"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "Configuration for each step of waiting for the operator"
+                            }
+                        },
+                        "title": "DeployStep",
+                        "type": "object"
+                    },
+                    "minItems": 1,
+                    "title": "Steps",
+                    "type": "array"
+                }
+            },
+            "required": [
+                "steps"
+            ],
+            "title": "DeployConfig",
+            "type": "object"
+        },
+        "DeployStep": {
+            "additionalProperties": false,
+            "description": "A step of deploying a resource",
+            "properties": {
+                "apply": {
+                    "allOf": [
+                        {
+                            "additionalProperties": false,
+                            "description": "Configuration for each step of kubectl apply",
+                            "properties": {
+                                "file": {
+                                    "description": "Path to the file for kubectl apply",
+                                    "title": "File",
+                                    "type": "string"
+                                },
+                                "operator": {
+                                    "default": false,
+                                    "description": "If the file contains the operator deployment",
+                                    "title": "Operator",
+                                    "type": "boolean"
+                                },
+                                "operator_container_name": {
+                                    "anyOf": [
+                                        {
+                                            "type": "string"
+                                        },
+                                        {
+                                            "type": "null"
+                                        }
+                                    ],
+                                    "default": null,
+                                    "description": "The container name of the operator in the operator pod, required if there are multiple containers in the operator pod",
+                                    "title": "Operator Container Name"
+                                },
+                                "namespace": {
+                                    "anyOf": [
+                                        {
+                                            "type": "string"
+                                        },
+                                        {
+                                            "type": "null"
+                                        }
+                                    ],
+                                    "default": "__DELEGATED__",
+                                    "description": "Namespace for applying the file. If not specified, use the namespace in the file or Acto namespace. If set to null, use the namespace in the file",
+                                    "title": "Namespace"
+                                }
+                            },
+                            "required": [
+                                "file"
+                            ],
+                            "title": "ApplyStep",
+                            "type": "object"
+                        }
+                    ],
+                    "default": null,
+                    "description": "Configuration for each step of kubectl apply"
+                },
+                "wait": {
+                    "allOf": [
+                        {
+                            "additionalProperties": false,
+                            "description": "Configuration for each step of waiting for the operator",
+                            "properties": {
+                                "duration": {
+                                    "default": 10,
+                                    "description": "Wait for the specified seconds",
+                                    "title": "Duration",
+                                    "type": "integer"
+                                }
+                            },
+                            "title": "WaitStep",
+                            "type": "object"
+                        }
+                    ],
+                    "default": null,
+                    "description": "Configuration for each step of waiting for the operator"
+                }
+            },
+            "title": "DeployStep",
+            "type": "object"
+        },
+        "KubernetesEngineConfig": {
+            "additionalProperties": false,
+            "description": "Configuration for Kubernetes",
+            "properties": {
+                "feature_gates": {
+                    "additionalProperties": {
+                        "type": "boolean"
+                    },
+                    "default": null,
+                    "description": "Path to the feature gates file",
+                    "title": "Feature Gates",
+                    "type": "object"
+                }
+            },
+            "title": "KubernetesEngineConfig",
+            "type": "object"
+        },
+        "WaitStep": {
+            "additionalProperties": false,
+            "description": "Configuration for each step of waiting for the operator",
+            "properties": {
+                "duration": {
+                    "default": 10,
+                    "description": "Wait for the specified seconds",
+                    "title": "Duration",
+                    "type": "integer"
+                }
+            },
+            "title": "WaitStep",
+            "type": "object"
+        }
+    },
+    "additionalProperties": false,
+    "description": "Configuration for porting operators to Acto",
+    "properties": {
+        "deploy": {
+            "additionalProperties": false,
+            "description": "Configuration for deploying the operator",
+            "properties": {
+                "steps": {
+                    "description": "Steps to deploy the operator",
+                    "items": {
+                        "additionalProperties": false,
+                        "description": "A step of deploying a resource",
+                        "properties": {
+                            "apply": {
+                                "allOf": [
+                                    {
+                                        "additionalProperties": false,
+                                        "description": "Configuration for each step of kubectl apply",
+                                        "properties": {
+                                            "file": {
+                                                "description": "Path to the file for kubectl apply",
+                                                "title": "File",
+                                                "type": "string"
+                                            },
+                                            "operator": {
+                                                "default": false,
+                                                "description": "If the file contains the operator deployment",
+                                                "title": "Operator",
+                                                "type": "boolean"
+                                            },
+                                            "operator_container_name": {
+                                                "anyOf": [
+                                                    {
+                                                        "type": "string"
+                                                    },
+                                                    {
+                                                        "type": "null"
+                                                    }
+                                                ],
+                                                "default": null,
+                                                "description": "The container name of the operator in the operator pod, required if there are multiple containers in the operator pod",
+                                                "title": "Operator Container Name"
+                                            },
+                                            "namespace": {
+                                                "anyOf": [
+                                                    {
+                                                        "type": "string"
+                                                    },
+                                                    {
+                                                        "type": "null"
+                                                    }
+                                                ],
+                                                "default": "__DELEGATED__",
+                                                "description": "Namespace for applying the file. If not specified, use the namespace in the file or Acto namespace. If set to null, use the namespace in the file",
+                                                "title": "Namespace"
+                                            }
+                                        },
+                                        "required": [
+                                            "file"
+                                        ],
+                                        "title": "ApplyStep",
+                                        "type": "object"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "Configuration for each step of kubectl apply"
+                            },
+                            "wait": {
+                                "allOf": [
+                                    {
+                                        "additionalProperties": false,
+                                        "description": "Configuration for each step of waiting for the operator",
+                                        "properties": {
+                                            "duration": {
+                                                "default": 10,
+                                                "description": "Wait for the specified seconds",
+                                                "title": "Duration",
+                                                "type": "integer"
+                                            }
+                                        },
+                                        "title": "WaitStep",
+                                        "type": "object"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "Configuration for each step of waiting for the operator"
+                            }
+                        },
+                        "title": "DeployStep",
+                        "type": "object"
+                    },
+                    "minItems": 1,
+                    "title": "Steps",
+                    "type": "array"
+                }
+            },
+            "required": [
+                "steps"
+            ],
+            "title": "DeployConfig",
+            "type": "object"
+        },
+        "analysis": {
+            "anyOf": [
+                {
+                    "additionalProperties": false,
+                    "description": "Configuration for static analysis",
+                    "properties": {
+                        "github_link": {
+                            "description": "HTTPS URL for cloning the operator repo",
+                            "title": "Github Link",
+                            "type": "string"
+                        },
+                        "commit": {
+                            "description": "Commit hash to specify the version to conduct static analysis",
+                            "title": "Commit",
+                            "type": "string"
+                        },
+                        "type": {
+                            "description": "Type name of the CR",
+                            "title": "Type",
+                            "type": "string"
+                        },
+                        "package": {
+                            "description": "Package name in which the type of the CR is defined",
+                            "title": "Package",
+                            "type": "string"
+                        },
+                        "entrypoint": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "The relative path of the main package for the operator, required if the main is not in the root directory",
+                            "title": "Entrypoint"
+                        }
+                    },
+                    "required": [
+                        "github_link",
+                        "commit",
+                        "type",
+                        "package",
+                        "entrypoint"
+                    ],
+                    "title": "AnalysisConfig",
+                    "type": "object"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "description": "Configuration for static analysis"
+        },
+        "seed_custom_resource": {
+            "description": "Path to the seed CR file",
+            "title": "Seed Custom Resource",
+            "type": "string"
+        },
+        "num_nodes": {
+            "default": 4,
+            "description": "Number of workers in the Kubernetes cluster",
+            "title": "Num Nodes",
+            "type": "integer"
+        },
+        "wait_time": {
+            "default": 60,
+            "description": "Timeout duration (seconds) for the resettable timer for system convergence",
+            "title": "Wait Time",
+            "type": "integer"
+        },
+        "collect_coverage": {
+            "default": false,
+            "title": "Collect Coverage",
+            "type": "boolean"
+        },
+        "custom_oracle": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "description": "Path to the custom oracle file",
+            "title": "Custom Oracle"
+        },
+        "diff_ignore_fields": {
+            "anyOf": [
+                {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "title": "Diff Ignore Fields"
+        },
+        "kubernetes_version": {
+            "default": "v1.28.0",
+            "description": "Kubernetes version",
+            "title": "Kubernetes Version",
+            "type": "string"
+        },
+        "kubernetes_engine": {
+            "allOf": [
+                {
+                    "additionalProperties": false,
+                    "description": "Configuration for Kubernetes",
+                    "properties": {
+                        "feature_gates": {
+                            "additionalProperties": {
+                                "type": "boolean"
+                            },
+                            "default": null,
+                            "description": "Path to the feature gates file",
+                            "title": "Feature Gates",
+                            "type": "object"
+                        }
+                    },
+                    "title": "KubernetesEngineConfig",
+                    "type": "object"
+                }
+            ],
+            "default": {
+                "feature_gates": null
+            },
+            "description": "Configuration for the Kubernetes engine"
+        },
+        "monkey_patch": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "description": "Path to the monkey patch file",
+            "title": "Monkey Patch"
+        },
+        "custom_module": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "description": "Path to the custom module, in the Python module path format",
+            "title": "Custom Module"
+        },
+        "crd_name": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "description": "Name of the CRD, required if there are multiple CRDs",
+            "title": "Crd Name"
+        },
+        "example_dir": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "description": "Path to the example dir",
+            "title": "Example Dir"
+        },
+        "context": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "description": "Path to the context file",
+            "title": "Context"
+        },
+        "focus_fields": {
+            "anyOf": [
+                {
+                    "items": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "type": "array"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "description": "List of focus fields",
+            "title": "Focus Fields"
+        }
+    },
+    "required": [
+        "deploy",
+        "seed_custom_resource"
+    ],
+    "title": "OperatorConfig",
+    "type": "object"
+}
+  ```
+
+</details>
 
 ## Run Acto's test campaign
 After creating the configuration file for the operator,
