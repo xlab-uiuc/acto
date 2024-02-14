@@ -56,12 +56,12 @@ class IntegerSchema(NumberSchema):
                 return random.choice(
                     [
                         x
-                        for x in range(self.minimum, self.maximum + 1)
+                        for x in range(self.minimum + 1, self.maximum + 1)
                         if x != exclude_value
                     ]
                 )
             else:
-                return random.randrange(self.minimum, self.maximum + 1)
+                return random.randrange(self.minimum + 1, self.maximum + 1)
 
     def __str__(self) -> str:
         return "Integer"
