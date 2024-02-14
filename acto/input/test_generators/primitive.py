@@ -103,7 +103,7 @@ def array_tests(schema: ArraySchema):
                     )
                     return example
         if prev is None:
-            return schema.gen()
+            return schema.gen(minimum=True)
         return schema.gen(size=schema.min_items)
 
     def pop_precondition(prev):
@@ -170,7 +170,7 @@ def array_tests(schema: ArraySchema):
             else:
                 return schema.gen(exclude_value=schema.default)
         else:
-            return schema.gen(exclude_value=schema.default)
+            return schema.gen(exclude_value=schema.default, size=1)
 
     ret = [
         TestCase(
