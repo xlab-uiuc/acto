@@ -1,23 +1,24 @@
-from typing import Dict, List, Optional
+from typing import Optional
 
-from pydantic import BaseModel, Field
+import pydantic
 
 DELEGATED_NAMESPACE = "__DELEGATED__"
 
 
-class ApplyStep(BaseModel, extra="forbid"):
+class ApplyStep(pydantic.BaseModel, extra="forbid"):
     """Configuration for each step of kubectl apply"""
 
-    file: str = Field(description="Path to the file for kubectl apply")
-    operator: bool = Field(
+    file: str = pydantic.Field(description="Path to the file for kubectl apply")
+    operator: bool = pydantic.Field(
         description="If the file contains the operator deployment",
         default=False,
     )
-    operator_container_name: Optional[str] = Field(
-        description="The container name of the operator in the operator pod",
+    operator_container_name: Optional[str] = pydantic.Field(
+        description="The container name of the operator in the operator pod, "
+        "required if there are multiple containers in the operator pod",
         default=None,
     )
-    namespace: Optional[str] = Field(
+    namespace: Optional[str] = pydantic.Field(
         description="Namespace for applying the file. If not specified, "
         + "use the namespace in the file or Acto namespace. "
         + "If set to null, use the namespace in the file",
@@ -25,113 +26,116 @@ class ApplyStep(BaseModel, extra="forbid"):
     )
 
 
-class WaitStep(BaseModel, extra="forbid"):
+class WaitStep(pydantic.BaseModel, extra="forbid"):
     """Configuration for each step of waiting for the operator"""
 
-    duration: int = Field(
+    duration: int = pydantic.Field(
         description="Wait for the specified seconds", default=10
     )
 
 
-class DeployStep(BaseModel, extra="forbid"):
+class DeployStep(pydantic.BaseModel, extra="forbid"):
     """A step of deploying a resource"""
 
-    apply: ApplyStep = Field(
+    apply: ApplyStep = pydantic.Field(
         description="Configuration for each step of kubectl apply", default=None
     )
-    wait: WaitStep = Field(
+    wait: WaitStep = pydantic.Field(
         description="Configuration for each step of waiting for the operator",
         default=None,
     )
 
     # TODO: Add support for helm and kustomize
-    # helm: str = Field(
+    # helm: str = pydantic.Field(
     #     description="Path to the file for helm install")
-    # kustomize: str = Field(
+    # kustomize: str = pydantic.Field(
     #     description="Path to the file for kustomize build")
 
 
-class DeployConfig(BaseModel, extra="forbid"):
+class DeployConfig(pydantic.BaseModel, extra="forbid"):
     """Configuration for deploying the operator"""
 
-    steps: List[DeployStep] = Field(
+    steps: list[DeployStep] = pydantic.Field(
         description="Steps to deploy the operator", min_length=1
     )
 
 
-class AnalysisConfig(BaseModel, extra="forbid"):
+class AnalysisConfig(pydantic.BaseModel, extra="forbid"):
     "Configuration for static analysis"
-    github_link: str = Field(
+    github_link: str = pydantic.Field(
         description="HTTPS URL for cloning the operator repo"
     )
-    commit: str = Field(
+    commit: str = pydantic.Field(
         description="Commit hash to specify the version to conduct static analysis"
     )
-    type: str = Field(description="Type name of the CR")
-    package: str = Field(
+    type: str = pydantic.Field(description="Type name of the CR")
+    package: str = pydantic.Field(
         description="Package name in which the type of the CR is defined"
     )
-    entrypoint: Optional[str] = Field(
+    entrypoint: Optional[str] = pydantic.Field(
         description="The relative path of the main package for the operator, "
         + "required if the main is not in the root directory"
     )
 
 
-class KubernetesEngineConfig(BaseModel, extra="forbid"):
+class KubernetesEngineConfig(pydantic.BaseModel, extra="forbid"):
     """Configuration for Kubernetes"""
 
-    feature_gates: Dict[str, bool] = Field(
+    feature_gates: dict[str, bool] = pydantic.Field(
         description="Path to the feature gates file", default=None
     )
 
 
-class OperatorConfig(BaseModel, extra="forbid"):
+class OperatorConfig(pydantic.BaseModel, extra="forbid"):
     """Configuration for porting operators to Acto"""
 
     deploy: DeployConfig
-    analysis: Optional[AnalysisConfig] = Field(
+    analysis: Optional[AnalysisConfig] = pydantic.Field(
         default=None, description="Configuration for static analysis"
     )
 
-    seed_custom_resource: str = Field(description="Path to the seed CR file")
-    num_nodes: int = Field(
+    seed_custom_resource: str = pydantic.Field(
+        description="Path to the seed CR file"
+    )
+    num_nodes: int = pydantic.Field(
         description="Number of workers in the Kubernetes cluster", default=4
     )
-    wait_time: int = Field(
+    wait_time: int = pydantic.Field(
         description="Timeout duration (seconds) for the resettable timer for system convergence",
         default=60,
     )
     collect_coverage: bool = False
-    custom_oracle: Optional[str] = Field(
+    custom_oracle: Optional[str] = pydantic.Field(
         default=None, description="Path to the custom oracle file"
     )
-    diff_ignore_fields: Optional[List[str]] = Field(default_factory=list)
-    kubernetes_version: str = Field(
-        default="v1.22.9", description="Kubernetes version"
+    diff_ignore_fields: Optional[list[str]] = pydantic.Field(
+        default_factory=list
     )
-    kubernetes_engine: KubernetesEngineConfig = Field(
+    kubernetes_version: str = pydantic.Field(
+        default="v1.28.0", description="Kubernetes version"
+    )
+    kubernetes_engine: KubernetesEngineConfig = pydantic.Field(
         default=KubernetesEngineConfig(),
         description="Configuration for the Kubernetes engine",
     )
-
-    monkey_patch: Optional[str] = Field(
+    monkey_patch: Optional[str] = pydantic.Field(
         default=None, description="Path to the monkey patch file"
     )
-    custom_module: Optional[str] = Field(
+    custom_module: Optional[str] = pydantic.Field(
         default=None,
         description="Path to the custom module, in the Python module path format",
     )
-    crd_name: Optional[str] = Field(default=None, description="Name of the CRD")
-    k8s_fields: Optional[str] = Field(
-        default=None, description="Path to the k8s fields file"
+    crd_name: Optional[str] = pydantic.Field(
+        default=None,
+        description="Name of the CRD, required if there are multiple CRDs",
     )
-    example_dir: Optional[str] = Field(
+    example_dir: Optional[str] = pydantic.Field(
         default=None, description="Path to the example dir"
     )
-    context: Optional[str] = Field(
+    context: Optional[str] = pydantic.Field(
         default=None, description="Path to the context file"
     )
-    focus_fields: Optional[List[List[str]]] = Field(
+    focus_fields: Optional[list[list[str]]] = pydantic.Field(
         default=None, description="List of focus fields"
     )
 
