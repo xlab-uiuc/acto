@@ -17,6 +17,7 @@ import jsonpatch
 import yaml
 
 from acto.checker.checker_set import CheckerSet
+from acto.checker.impl.health import HealthChecker
 from acto.common import kubernetes_client, print_event
 from acto.constant import CONST
 from acto.deploy import Deploy
@@ -268,11 +269,11 @@ class TrialRunner:
         self.is_reproduce = is_reproduce
 
         self.snapshots: list[Snapshot] = []
-        self.discarded_testcases: dict[
-            str, list[TestCase]
-        ] = {}  # List of test cases failed to run
-        self.apply_testcase_f = apply_testcase_f
 
+        # List of test cases failed to run
+        self.discarded_testcases: dict[str, list[TestCase]] = {}
+
+        self.apply_testcase_f = apply_testcase_f
         self.curr_trial = 0
 
     def run(
@@ -653,6 +654,7 @@ class TrialRunner:
         retry = 0
         while True:
             snapshot, _ = runner.run(input_cr, generation)
+            snapshot.dump(runner.trial_dir)
             cli_result = check_kubectl_cli(snapshot)
             if cli_result == CliStatus.CONNECTION_REFUSED:
                 # Connection refused due to webhook not ready, let's wait for a bit
@@ -696,6 +698,7 @@ class TrialRunner:
         logger.debug("Running recovery")
         recovery_input = self.snapshots[RECOVERY_SNAPSHOT].input_cr
         snapshot, _ = runner.run(recovery_input, generation=-1)
+        snapshot.dump(runner.trial_dir)
         result = check_state_equality(
             snapshot,
             self.snapshots[RECOVERY_SNAPSHOT],
@@ -950,25 +953,37 @@ class Acto:
                 if deployed:
                     break
             apiclient = kubernetes_client(learn_kubeconfig, learn_context_name)
-            runner = Runner(
-                self.context,
-                "learn",
-                learn_kubeconfig,
-                learn_context_name,
-                self.deploy.operator_container_name,
-            )
-            runner.run_without_collect(
-                self.operator_config.seed_custom_resource
-            )
 
-            update_preload_images(
-                self.context, self.cluster.get_node_list("learn")
-            )
             self.context["crd"] = process_crd(
                 apiclient,
                 KubectlClient(learn_kubeconfig, learn_context_name),
                 self.crd_name,
                 helper_crd,
+            )
+
+            learn_dir = os.path.join(
+                self.workdir_path,
+                "trial-learn",
+            )
+            os.makedirs(learn_dir, exist_ok=True)
+            runner = Runner(
+                self.context,
+                learn_dir,
+                learn_kubeconfig,
+                learn_context_name,
+                self.deploy.operator_container_name,
+            )
+            snapshot, _ = runner.run(input_cr=self.seed, generation=0)
+            snapshot.dump(runner.trial_dir)
+            health_result = HealthChecker().check(0, snapshot, None)
+            if health_result is not None:
+                raise RuntimeError(
+                    f"Health check failed during learning phase: {health_result['message']}"
+                    "Please make sure the operator config is correct"
+                )
+
+            update_preload_images(
+                self.context, self.cluster.get_node_list("learn")
             )
             self.cluster.delete_cluster("learn", learn_kubeconfig)
 

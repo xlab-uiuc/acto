@@ -1,4 +1,5 @@
 """Runner module for Acto"""
+
 import base64
 import multiprocessing
 import queue
@@ -180,7 +181,6 @@ class Runner:
             not_ready_pods_logs=unready_pod_logs,
             generation=generation,
         )
-        snapshot.dump(self.trial_dir)
         return snapshot, err
 
     def run_without_collect(self, seed_file: str):

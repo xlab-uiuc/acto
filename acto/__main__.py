@@ -117,10 +117,6 @@ with open(args.config, "r", encoding="utf-8") as config_file:
 logger.info("Acto started with [%s]", sys.argv)
 logger.info("Operator config: %s", config)
 
-# Preload frequently used images to amid ImagePullBackOff
-if args.preload_images:
-    logger.info("%s will be preloaded into Kind cluster", args.preload_images)
-
 if args.context is None:
     context_cache = os.path.join(
         os.path.dirname(config.seed_custom_resource), "context.json"
@@ -134,10 +130,10 @@ start_time = datetime.now()
 acto = Acto(
     workdir_path=args.workdir_path,
     operator_config=config,
-    cluster_runtime=args.cluster_runtime,
-    preload_images_=args.preload_images,
+    cluster_runtime="KIND",
+    preload_images_=None,
     context_file=context_cache,
-    helper_crd=args.helper_crd,
+    helper_crd=None,
     num_workers=args.num_workers,
     num_cases=args.num_cases,
     dryrun=args.dryrun,
@@ -145,7 +141,7 @@ acto = Acto(
     is_reproduce=False,
     input_model=DeterministicInputModel,
     apply_testcase_f=apply_testcase_f,
-    delta_from=args.delta_from,
+    delta_from=None,
     focus_fields=config.focus_fields,
 )
 generation_time = datetime.now()

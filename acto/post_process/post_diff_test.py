@@ -78,6 +78,7 @@ def compare_system_equality(
     prev_system_state: dict,
     additional_exclude_paths: Optional[list[str]] = None,
 ) -> Optional[dict]:
+    """Compare two system states and return the diff if they are not equal, otherwise return None"""
     logger = get_thread_logger(with_prefix=False)
     curr_system_state = deepcopy(curr_system_state)
     prev_system_state = deepcopy(prev_system_state)
@@ -116,20 +117,20 @@ def compare_system_equality(
             new_pods[k] = v
     prev_system_state["pod"] = new_pods
 
-    for name, obj in prev_system_state["secret"].items():
+    for _, obj in prev_system_state["secret"].items():
         if "data" in obj and obj["data"] is not None:
             for key, data in obj["data"].items():
                 try:
                     obj["data"][key] = json.loads(data)
-                except:
+                except json.JSONDecodeError:
                     pass
 
-    for name, obj in curr_system_state["secret"].items():
+    for _, obj in curr_system_state["secret"].items():
         if "data" in obj and obj["data"] is not None:
             for key, data in obj["data"].items():
                 try:
                     obj["data"][key] = json.loads(data)
-                except:
+                except json.JSONDecodeError:
                     pass
 
     if len(curr_system_state["secret"]) != len(prev_system_state["secret"]):
@@ -217,6 +218,7 @@ def compare_system_equality(
 
 
 def postprocess_deepdiff(diff: TreeResult):
+    """Postprocess the deepdiff result to ignore non-deterministic fields"""
     # ignore PVC add/removal, because PVC can be intentially left behind
     logger = get_thread_logger(with_prefix=False)
     if "dictionary_item_removed" in diff:
@@ -245,6 +247,7 @@ def postprocess_deepdiff(diff: TreeResult):
 
 
 def compare_func(x, y, _: DiffLevel = None):
+    """Compare function for deepdiff taking key and operator into account"""
     try:
         if "name" not in x or "name" not in y:
             return x["key"] == y["key"] and x["operator"] == y["operator"]
@@ -259,6 +262,8 @@ def compare_func(x, y, _: DiffLevel = None):
 
 
 class NameOperator(BaseOperator):
+    """Operator to compare the object taking into consideration of the name field"""
+
     def give_up_diffing(self, level, diff_instance):
         _ = diff_instance
         x_name = level.t1
@@ -273,6 +278,8 @@ class NameOperator(BaseOperator):
 
 
 class TypeChangeOperator(BaseOperator):
+    """Operator to compare the object taking into consideration of the type change"""
+
     def give_up_diffing(self, level, diff_instance):
         if level.t1 is None:
             if isinstance(level.t2, dict):
@@ -289,6 +296,7 @@ class TypeChangeOperator(BaseOperator):
 
 
 def get_nondeterministic_fields(s1, s2, additional_exclude_paths):
+    """Get the nondeterministic fields between two system states"""
     nondeterministic_fields = []
     result = compare_system_equality(
         s1, s2, additional_exclude_paths=additional_exclude_paths
@@ -320,6 +328,8 @@ def get_nondeterministic_fields(s1, s2, additional_exclude_paths):
 
 
 class AdditionalRunner:
+    """Additional Runner"""
+
     def __init__(
         self,
         context: Dict,
@@ -345,6 +355,7 @@ class AdditionalRunner:
         self._images_archive = os.path.join(workdir, "images.tar")
 
     def run_cr(self, cr, trial, gen):
+        """Run a CR and return the snapshot"""
         self._cluster.restart_cluster(self._cluster_name, self._kubeconfig)
         self._cluster.load_images(self._images_archive, self._cluster_name)
         apiclient = kubernetes_client(self._kubeconfig, self._context_name)
@@ -366,6 +377,7 @@ class AdditionalRunner:
             operator_container_name=self._deploy.operator_container_name,
         )
         snapshot, _ = runner.run(cr, generation=self._generation)
+        snapshot.dump(runner.trial_dir)
         difftest_result = {
             "input_digest": hashlib.md5(
                 json.dumps(cr, sort_keys=True).encode("utf-8")
@@ -386,6 +398,8 @@ class AdditionalRunner:
 
 
 class DeployRunner:
+    """Deploy runner for Acto"""
+
     def __init__(
         self,
         workqueue: multiprocessing.Queue,
@@ -412,6 +426,7 @@ class DeployRunner:
         self._images_archive = os.path.join(workdir, "images.tar")
 
     def run(self):
+        """Run the deploy runner"""
         logger = get_thread_logger(with_prefix=True)
         generation = 0
         trial_dir = os.path.join(self._workdir, f"trial-{self._worker_id:02d}")
@@ -450,6 +465,7 @@ class DeployRunner:
             cr = group.iloc[0]["input"]
 
             snapshot, err = runner.run(cr, generation=generation)
+            snapshot.dump(runner.trial_dir)
             after_run_time = time.time()
             err = True
             difftest_result = DiffTestResult(
@@ -479,14 +495,11 @@ class DeployRunner:
                 self._cluster.load_images(
                     self._images_archive, self._cluster_name
                 )
-                apiclient = kubernetes_client(
-                    self._kubeconfig, self._context_name
-                )
                 kubectl_client = KubectlClient(
                     self._kubeconfig, self._context_name
                 )
                 after_k8s_bootstrap_time = time.time()
-                deployed = self._deploy.deploy_with_retry(
+                _ = self._deploy.deploy_with_retry(
                     self._kubeconfig,
                     self._context_name,
                     kubectl_client=kubectl_client,
@@ -505,6 +518,8 @@ class DeployRunner:
 
 
 class PostDiffTest(PostProcessor):
+    """Post diff test class for Acto"""
+
     def __init__(
         self,
         testrun_dir: str,
@@ -564,6 +579,7 @@ class PostDiffTest(PostProcessor):
         print(series.head())
 
     def post_process(self, workdir: str, num_workers: int = 1):
+        """Start the post process"""
         if not os.path.exists(workdir):
             os.mkdir(workdir)
         cluster = kind.Kind(
@@ -612,6 +628,7 @@ class PostDiffTest(PostProcessor):
             p.join()
 
     def check(self, workdir: str, num_workers: int = 1):
+        """Check the post process result"""
         logger = get_thread_logger(with_prefix=True)
         logger.info(
             "Additional exclude paths: %s", self.config.diff_ignore_fields
@@ -639,6 +656,7 @@ class PostDiffTest(PostProcessor):
     def check_diff_test_result(
         self, workqueue: multiprocessing.Queue, workdir: str, worker_id: int
     ):
+        """Check the diff test result"""
         additional_runner_dir = os.path.join(
             workdir, f"additional-runner-{worker_id}"
         )
@@ -690,8 +708,7 @@ class PostDiffTest(PostProcessor):
                 )
                 if step_result is None:
                     continue
-                else:
-                    group_errs.append(step_result)
+                group_errs.append(step_result)
             if len(group_errs) > 0:
                 with open(
                     os.path.join(
@@ -703,8 +720,6 @@ class PostDiffTest(PostProcessor):
                 ) as result_f:
                     json.dump(group_errs, result_f, cls=ActoEncoder, indent=4)
 
-        return None
-
     @staticmethod
     def check_diff_test_step(
         diff_test_result: DiffTestResult,
@@ -713,6 +728,8 @@ class PostDiffTest(PostProcessor):
         run_check_indeterministic: bool = False,
         additional_runner: Optional[AdditionalRunner] = None,
     ) -> Optional[DifferentialOracleResult]:
+        """Check the diff test step result and return the differential oracle "
+        "result if it fails, otherwise return None"""
         logger = get_thread_logger(with_prefix=True)
         trial_dir = original_result.run_result.step_id.trial
         gen = original_result.run_result.step_id.generation
@@ -764,7 +781,8 @@ class PostDiffTest(PostProcessor):
                                 gen,
                             )
                             return DifferentialOracleResult(
-                                message="failed attempt recovering to seed state - system state diff",
+                                message="failed attempt recovering to seed state "
+                                "- system state diff",
                                 diff=result,
                                 from_step=StepID(
                                     trial=trial_dir, generation=gen
