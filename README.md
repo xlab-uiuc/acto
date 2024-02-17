@@ -84,14 +84,14 @@
 | acto/parse\_log/\_\_init\_\_.py                               |        1 |        0 |    100% |           |
 | acto/parse\_log/parse\_log.py                                 |       78 |       19 |     76% |71-74, 84-86, 89-91, 96-98, 116-124 |
 | acto/post\_process/\_\_init\_\_.py                            |        0 |        0 |    100% |           |
-| acto/post\_process/collect\_test\_result.py                   |       27 |       27 |      0% |      1-59 |
+| acto/post\_process/collect\_test\_result.py                   |       45 |       45 |      0% |     1-117 |
 | acto/post\_process/post\_chain\_inputs.py                     |       41 |       41 |      0% |      1-65 |
 | acto/post\_process/post\_diff\_test.py                        |      404 |      228 |     44% |67-68, 73, 91-92, 137-140, 217, 228, 232, 237-246, 286, 288, 290-294, 300-327, 342-355, 359-397, 413-426, 430-517, 536-540, 574, 583-628, 632-654, 660-721, 738, 742, 751-752, 754-802, 828-861, 865 |
 | acto/post\_process/post\_process.py                           |       33 |        7 |     79% |177-180, 187, 191, 201 |
 | acto/post\_process/simple\_crash\_test.py                     |      162 |      126 |     22% |40-52, 61-74, 88-111, 129-143, 151-204, 233-246, 251-346, 350-387 |
 | acto/post\_process/test\_post\_process.py                     |       28 |        1 |     96% |        67 |
 | acto/reproduce.py                                             |      123 |      123 |      0% |     1-285 |
-| acto/result.py                                                |       99 |       14 |     86% |58, 79, 82, 143-145, 175-176, 201, 216, 220-225, 251-252 |
+| acto/result.py                                                |       99 |       14 |     86% |57, 78, 81, 142-144, 174-175, 200, 215, 219-224, 250-251 |
 | acto/result\_test.py                                          |        8 |        0 |    100% |           |
 | acto/runner/\_\_init\_\_.py                                   |        1 |        0 |    100% |           |
 | acto/runner/runner.py                                         |      294 |      263 |     11% |41-87, 106-184, 188-195, 201-237, 244-280, 287-324, 328-331, 335-376, 380-383, 394-399, 415-421, 434-589, 593-597, 602-616, 627-664 |
@@ -143,7 +143,7 @@
 | acto/utils/preprocess.py                                      |       69 |       58 |     16% |17-73, 93-141, 147-192 |
 | acto/utils/process\_with\_except.py                           |        9 |        9 |      0% |      1-13 |
 | acto/utils/thread\_logger.py                                  |       15 |        3 |     80% | 9, 18, 28 |
-|                                                     **TOTAL** | **9555** | **4341** | **55%** |           |
+|                                                     **TOTAL** | **9573** | **4359** | **54%** |           |
 
 
 ## Setup coverage badge
