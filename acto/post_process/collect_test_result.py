@@ -90,9 +90,18 @@ class CollectTestResult(PostProcessor):
 
 def main():
     """Main entry point."""
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--config", type=str, required=True)
-    parser.add_argument("--testrun-dir", type=str, required=True)
+    parser = argparse.ArgumentParser(
+        description="Collect all test results into a CSV file for analysis."
+    )
+    parser.add_argument(
+        "--config",
+        type=str,
+        required=True,
+        help="Path to the operator config file",
+    )
+    parser.add_argument(
+        "--testrun-dir", type=str, required=True, help="Path to the testrun dir"
+    )
     args = parser.parse_args()
 
     with open(args.config, "r", encoding="utf-8") as config_file:
@@ -101,7 +110,7 @@ def main():
         args.testrun_dir,
         config,
     )
-    post_processor.post_process("./result.csv")
+    post_processor.post_process(os.path.join(args.testrun_dir, "results.csv"))
 
 
 if __name__ == "__main__":
