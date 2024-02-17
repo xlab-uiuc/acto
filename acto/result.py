@@ -1,6 +1,5 @@
 """Model for the result of a run of an Acto"""
 
-
 import enum
 import json
 from typing import Optional, Union
@@ -63,7 +62,7 @@ class DifferentialOracleResult(OracleResult):
 
     model_config = pydantic.ConfigDict(arbitrary_types_allowed=True)
 
-    diff: deepdiff.DeepDiff
+    diff: pydantic.SkipValidation[deepdiff.DeepDiff]
     from_step: StepID
     from_state: dict = pydantic.Field(
         description="The state that the diff was generated from"
