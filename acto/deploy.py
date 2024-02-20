@@ -95,7 +95,7 @@ class Deploy():
                     args += ["-n", step.apply.namespace]
 
                 # Apply the yaml file and then wait for the pod to be ready
-                p = kubectl_client.kubectl(args)
+                p = kubectl_client.kubectl(args, capture_output=True)
                 if p.returncode != 0:
                     logger.error(
                         "Failed to deploy operator due to error from kubectl" +
