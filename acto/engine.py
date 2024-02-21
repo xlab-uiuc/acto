@@ -971,7 +971,7 @@ class Acto:
                 learn_dir,
                 learn_kubeconfig,
                 learn_context_name,
-                self.deploy.operator_container_name,
+                operator_container_name=self.deploy.operator_container_name,
             )
             snapshot, _ = runner.run(input_cr=self.seed, generation=0)
             snapshot.dump(runner.trial_dir)
