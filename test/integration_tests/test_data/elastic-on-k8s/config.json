@@ -1,0 +1,19 @@
+{
+    "deploy": {
+        "steps": [
+            {
+                "apply": {
+                    "file": "test/integration_tests/test_data/elastic-on-k8s/crds.yaml"
+                }
+            },
+            {
+                "apply": {
+                    "file": "test/integration_tests/test_data/elastic-on-k8s/operator.yaml",
+                    "operator": true
+                }
+            }
+        ]
+    },
+    "crd_name": "elasticsearches.elasticsearch.k8s.elastic.co",
+    "seed_custom_resource": "test/integration_tests/test_data/elastic-on-k8s/cr.yaml"
+}

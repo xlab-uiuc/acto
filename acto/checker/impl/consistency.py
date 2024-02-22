@@ -19,8 +19,8 @@ from acto.common import (
     invalid_input_message,
     is_subfield,
 )
-from acto.input import InputModel
 from acto.input.get_matched_schemas import find_matched_schema
+from acto.input.input import InputModel
 from acto.input.property_attribute import PropertyAttribute
 from acto.k8s_util.k8sutil import canonicalize_quantity
 from acto.result import ConsistencyOracleResult, InvalidInputResult

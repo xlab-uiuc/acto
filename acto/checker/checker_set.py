@@ -7,7 +7,7 @@ from acto.checker.impl.crash import CrashChecker
 from acto.checker.impl.health import HealthChecker
 from acto.checker.impl.operator_log import OperatorLogChecker
 from acto.common import flatten_dict
-from acto.input import InputModel
+from acto.input.input import InputModel
 from acto.oracle_handle import OracleHandle
 from acto.result import OracleResults
 from acto.snapshot import Snapshot

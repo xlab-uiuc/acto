@@ -21,8 +21,7 @@ from acto.checker.impl.health import HealthChecker
 from acto.common import kubernetes_client, print_event
 from acto.constant import CONST
 from acto.deploy import Deploy
-from acto.input import InputModel
-from acto.input.input import DeterministicInputModel
+from acto.input.input import DeterministicInputModel, InputModel
 from acto.input.testcase import TestCase
 from acto.input.testplan import TestGroup
 from acto.input.value_with_schema import ValueWithSchema, attach_schema_to_value
