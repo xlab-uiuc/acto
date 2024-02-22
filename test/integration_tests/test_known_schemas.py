@@ -622,6 +622,22 @@ class TestSchema(unittest.TestCase):
                 ].match(spec_schema)
             )
 
+    def test_opaque_semantic_schema(self):
+        with open(
+            os.path.join(
+                test_data_dir, "hdfsclusters.hdfs.stackable.tech.yaml"
+            ),
+            "r",
+            encoding="utf-8",
+        ) as crd_yaml:
+            crd = yaml.load(crd_yaml, Loader=yaml.FullLoader)
+            spec_schema = ObjectSchema(
+                ["root"],
+                crd["spec"]["versions"][0]["schema"]["openAPIV3Schema"],
+            )
+
+            self.schema_matcher.find_all_matched_schemas(spec_schema)
+
 
 if __name__ == "__main__":
     unittest.main()
