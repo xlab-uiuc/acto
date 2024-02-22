@@ -104,7 +104,7 @@
 | acto/schema/get\_total\_number\_schemas\_test.py              |        7 |        0 |    100% |           |
 | acto/schema/integer.py                                        |       38 |       12 |     68% |18, 24-26, 32-33, 36, 44-49, 51, 67 |
 | acto/schema/number.py                                         |       37 |       14 |     62% |49, 55-57, 60, 63, 66, 69, 73-80, 83 |
-| acto/schema/object.py                                         |      142 |       44 |     69% |53, 55, 60, 75-84, 86-95, 105-120, 136-139, 142, 166, 173-178, 185-189, 206, 230 |
+| acto/schema/object.py                                         |      142 |       42 |     70% |53, 55, 60, 75-84, 86-95, 105-120, 136-139, 142, 166, 173-178, 206, 230 |
 | acto/schema/oneof.py                                          |       48 |       33 |     31% |14-22, 28, 31-33, 38-46, 49, 52, 55-57, 60, 63-64, 67-72 |
 | acto/schema/opaque.py                                         |       19 |        7 |     63% |15, 18, 21, 24, 27, 30, 33 |
 | acto/schema/schema.py                                         |       41 |        7 |     83% |23, 27, 33-36, 51 |
@@ -140,10 +140,10 @@
 | acto/utils/acto\_timer.py                                     |       31 |       22 |     29% |10-15, 19, 22-33, 38-40, 44-47 |
 | acto/utils/error\_handler.py                                  |       43 |       33 |     23% |15-35, 43-58, 63-82 |
 | acto/utils/k8s\_helper.py                                     |       64 |       51 |     20% |21-27, 39-45, 57-61, 73-79, 83-91, 95-102, 106-127 |
-| acto/utils/preprocess.py                                      |       69 |       58 |     16% |17-73, 93-141, 147-192 |
+| acto/utils/preprocess.py                                      |       72 |       60 |     17% |17-83, 105-161, 166-200 |
 | acto/utils/process\_with\_except.py                           |        9 |        9 |      0% |      1-13 |
 | acto/utils/thread\_logger.py                                  |       15 |        3 |     80% | 9, 18, 28 |
-|                                                     **TOTAL** | **9573** | **4361** | **54%** |           |
+|                                                     **TOTAL** | **9576** | **4361** | **54%** |           |
 
 
 ## Setup coverage badge
