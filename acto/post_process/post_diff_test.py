@@ -641,9 +641,8 @@ class PostDiffTest(PostProcessor):
             ],
         )
 
-        self.unique_inputs: dict[
-            str, pd.DataFrame
-        ] = {}  # input digest -> group of steps
+        # input digest -> group of steps
+        self.unique_inputs: dict[str, pd.DataFrame] = {}
         groups = self.df.groupby("input_digest")
         for digest, group in groups:
             self.unique_inputs[digest] = group
@@ -790,8 +789,8 @@ class PostDiffTest(PostProcessor):
                 trial = original["trial"]
                 gen = original["gen"]
 
-                if gen == 0:
-                    continue
+                # if gen == 0:
+                #     continue
 
                 trial_basename = os.path.basename(trial)
                 original_result = self.trial_to_steps[trial_basename].steps[
