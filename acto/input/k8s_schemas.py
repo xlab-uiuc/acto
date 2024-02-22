@@ -620,6 +620,8 @@ class K8sSchemaMatcher:
                     to_explore.append(
                         (crd_schema.additional_properties, k8s_schema.value)
                     )
+                elif isinstance(k8s_schema, KubernetesOpaqueSchema):
+                    pass
                 else:
                     raise RuntimeError(
                         "CRD schema type does not match k8s schema type"
@@ -630,6 +632,8 @@ class K8sSchemaMatcher:
                     to_explore.append(
                         (crd_schema.get_item_schema(), k8s_schema.item)
                     )
+                elif isinstance(k8s_schema, KubernetesOpaqueSchema):
+                    pass
                 else:
                     raise RuntimeError(
                         "CRD schema type does not match k8s schema type"
