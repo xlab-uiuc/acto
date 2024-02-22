@@ -11,7 +11,7 @@ from deepdiff.helper import NotPresent
 from acto.checker.impl.consistency import ConsistencyChecker
 from acto.checker.impl.tests import load_snapshot
 from acto.common import Diff, PropertyPath
-from acto.input import DeterministicInputModel
+from acto.input.input import DeterministicInputModel
 from acto.result import (
     ConsistencyOracleResult,
     InvalidInputResult,

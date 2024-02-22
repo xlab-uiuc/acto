@@ -13,8 +13,8 @@ import yaml
 
 from acto import DEFAULT_KUBERNETES_VERSION
 from acto.engine import Acto
-from acto.input import TestCase
 from acto.input.input import DeterministicInputModel
+from acto.input.testcase import TestCase
 from acto.input.testplan import TestGroup
 from acto.input.value_with_schema import ValueWithSchema
 from acto.input.valuegenerator import extract_schema_with_value_generator

@@ -9,7 +9,7 @@ from deepdiff import DeepDiff
 from deepdiff.helper import NotPresent
 
 from acto.common import Diff, PropertyPath
-from acto.input import TestCase
+from acto.input.testcase import TestCase
 
 
 def _serialize_decimal(value: decimal.Decimal):

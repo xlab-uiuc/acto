@@ -31,12 +31,8 @@ class ObjectSchema(BaseSchema):
         self.properties: dict[str, BaseSchema] = {}
         self.additional_properties = None
         self.required = []
-        logger = get_thread_logger(with_prefix=True)
         if "properties" not in schema and "additionalProperties" not in schema:
-            logger.warning(
-                "Object schema %s does not have properties nor additionalProperties",
-                self.path,
-            )
+            return
         if "properties" in schema:
             for property_key, property_schema in schema["properties"].items():
                 self.properties[property_key] = extract_schema(
