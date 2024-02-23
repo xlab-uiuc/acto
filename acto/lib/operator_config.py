@@ -33,6 +33,27 @@ class WaitStep(pydantic.BaseModel, extra="forbid"):
         description="Wait for the specified seconds", default=10
     )
 
+class CreateStep(pydantic.BaseModel, extra="forbid"):
+    """Configuration for each step of kubectl create"""
+
+    file: str = pydantic.Field(description="Path to the file for kubectl create")
+    operator: bool = pydantic.Field(
+        description="If the file contains the operator deployment",
+        default=False,
+    )
+    operator_container_name: Optional[str] = pydantic.Field(
+        description="The container name of the operator in the operator pod, "
+        "required if there are multiple containers in the operator pod",
+        default=None,
+    )
+    namespace: Optional[str] = pydantic.Field(
+        description="Namespace for applying the file. If not specified, "
+        + "use the namespace in the file or Acto namespace. "
+        + "If set to null, use the namespace in the file",
+        default=DELEGATED_NAMESPACE,
+    )
+
+
 
 class DeployStep(pydantic.BaseModel, extra="forbid"):
     """A step of deploying a resource"""
@@ -43,6 +64,9 @@ class DeployStep(pydantic.BaseModel, extra="forbid"):
     wait: WaitStep = pydantic.Field(
         description="Configuration for each step of waiting for the operator",
         default=None,
+    )
+    create: CreateStep = pydantic.Field(
+        description="Configuration for each step of kubectl create", default=None
     )
 
     # TODO: Add support for helm and kustomize

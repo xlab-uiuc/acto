@@ -1,0 +1,26 @@
+{
+    "deploy": {
+        "steps": [
+            {
+                "create": {
+                    "file": "data/kubeblocks-postgresql-operator/kubeblocks_crds.yaml",
+                    "namespace": null
+                }
+            },
+            {
+                "wait": {
+                    "duration": 10
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/kubeblocks-postgresql-operator/kubeblocks_manifest.yaml",
+                    "operator": true,
+                    "namespace": "acto-namespace"
+                }
+            }
+        ]
+    },
+    "crd_name": "clusters.apps.kubeblocks.io",
+    "seed_custom_resource": "data/kubeblocks-postgresql-operator/kubeblocks_psql.yaml"
+}
