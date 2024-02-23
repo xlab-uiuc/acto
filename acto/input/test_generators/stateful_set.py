@@ -2,7 +2,7 @@
 from acto.input.test_generators.generator import Priority, test_generator
 from acto.input.testcase import Store, TestCase
 from acto.schema.integer import IntegerSchema
-from acto.schema.object import ObjectSchema
+from acto.schema.string import StringSchema
 
 
 def scale_down_up_precondition(prev, store: Store) -> bool:
@@ -64,7 +64,7 @@ def replicas_tests(schema: IntegerSchema) -> list[TestCase]:
 @test_generator(
     property_name="statefulSetUpdateStrategy", priority=Priority.SEMANTIC
 )
-def stateful_set_update_strategy_tests(schema: ObjectSchema) -> list[TestCase]:
+def stateful_set_update_strategy_tests(schema: StringSchema) -> list[TestCase]:
     """Generate test cases for StatefulSetUpdateStrategy field"""
     invalid_test = TestCase(
         "k8s-invalid_update_strategy",
