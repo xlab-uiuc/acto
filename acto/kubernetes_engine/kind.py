@@ -110,7 +110,7 @@ class Kind(base.KubernetesEngine):
 
         cmd.extend(["--image", f"kindest/node:{self._k8s_version}"])
 
-        p = subprocess.run(cmd, check=True)
+        p = subprocess.run(cmd, check=False)
         i = 0
         while p.returncode != 0:
             if i == 3:
@@ -122,7 +122,7 @@ class Kind(base.KubernetesEngine):
             i += 1
             self.delete_cluster(name, kubeconfig)
             time.sleep(5)
-            p = subprocess.run(cmd, check=True)
+            p = subprocess.run(cmd, check=False)
 
         try:
             kubernetes.config.load_kube_config(
@@ -154,7 +154,7 @@ class Kind(base.KubernetesEngine):
         else:
             logging.error("Missing cluster name for kind load")
 
-        p = subprocess.run(cmd + [images_archive_path], check=True)
+        p = subprocess.run(cmd + [images_archive_path], check=False)
         if p.returncode != 0:
             logging.error("Failed to preload images archive")
 
@@ -171,7 +171,7 @@ class Kind(base.KubernetesEngine):
         else:
             raise RuntimeError("Missing kubeconfig for kind create")
 
-        while subprocess.run(cmd, check=True).returncode != 0:
+        while subprocess.run(cmd, check=False).returncode != 0:
             continue
 
     def get_node_list(self, name: str):
