@@ -964,33 +964,33 @@ class PostDiffTest(PostProcessor):
             if diff_result is not None:
                 for diff_category, diff in diff_result.diff.items():
                     if diff_category == "dictionary_item_removed":
-                        removed_items: list[str] = diff
+                        removed_items: list[DiffLevel] = diff
                         for removed_item in removed_items:
-                            removed_item = re.escape(removed_item)
+                            removed_item = re.escape(removed_item.path())
                             if first_step:
                                 initial_regex.add(removed_item)
                             else:
                                 indeterministic_regex.add(removed_item)
                     elif diff_category == "dictionary_item_added":
-                        added_items: list[str] = diff
+                        added_items: list[DiffLevel] = diff
                         for added_item in added_items:
-                            added_item = re.escape(added_item)
+                            added_item = re.escape(added_item.path())
                             if first_step:
                                 initial_regex.add(added_item)
                             else:
                                 indeterministic_regex.add(added_item)
                     elif diff_category == "values_changed":
-                        changed_items: dict[str, dict] = diff
-                        for changed_item in changed_items.keys():
-                            changed_item = re.escape(changed_item)
+                        changed_items: list[DiffLevel] = diff
+                        for changed_item in changed_items:
+                            changed_item = re.escape(changed_item.path())
                             if first_step:
                                 initial_regex.add(changed_item)
                             else:
                                 indeterministic_regex.add(changed_item)
                     elif diff_category == "type_changes":
-                        type_changes: dict[str, dict] = diff
-                        for type_change in type_changes.keys():
-                            type_change = re.escape(type_change)
+                        type_changes: list[DiffLevel] = diff
+                        for type_change in type_changes:
+                            type_change = re.escape(type_change.path())
                             if first_step:
                                 initial_regex.add(type_change)
                             else:
