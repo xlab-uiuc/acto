@@ -705,9 +705,6 @@ class PostDiffTest(PostProcessor):
     def check(self, workdir: str, num_workers: int = 1):
         """Check the post process result"""
         logger = get_thread_logger(with_prefix=True)
-        logger.info(
-            "Additional exclude paths: %s", self.config.diff_ignore_fields
-        )
         trial_dirs = glob.glob(os.path.join(workdir, "trial-*"))
 
         with open(self.config.seed_custom_resource, "r", encoding="utf-8") as f:
@@ -739,6 +736,10 @@ class PostDiffTest(PostProcessor):
                         self.config.diff_ignore_fields = diff_skip_regex
                     else:
                         self.config.diff_ignore_fields.extend(diff_skip_regex)
+
+        logger.info(
+            "Additional exclude paths: %s", self.config.diff_ignore_fields
+        )
 
         processes = []
         for i in range(num_workers):
