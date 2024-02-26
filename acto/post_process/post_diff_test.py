@@ -18,6 +18,7 @@ from typing import Optional
 
 import pandas as pd
 import pydantic
+import yaml
 from deepdiff import DeepDiff
 from deepdiff.helper import CannotCompare
 from deepdiff.model import DiffLevel, TreeResult
@@ -710,7 +711,7 @@ class PostDiffTest(PostProcessor):
         trial_dirs = glob.glob(os.path.join(workdir, "trial-*"))
 
         with open(self.config.seed_custom_resource, "r", encoding="utf-8") as f:
-            seed_cr = json.load(f)
+            seed_cr = yaml.load(f, Loader=yaml.FullLoader)
             seed_input_digest = hashlib.md5(
                 json.dumps(seed_cr, sort_keys=True).encode("utf-8")
             ).hexdigest()
