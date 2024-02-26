@@ -961,39 +961,16 @@ class PostDiffTest(PostProcessor):
             )
 
             if diff_result is not None:
-                for diff_category, diff in diff_result.diff.items():
-                    if diff_category == "dictionary_item_removed":
-                        removed_items: list[DiffLevel] = diff
-                        for removed_item in removed_items:
-                            if first_step:
-                                initial_regex.add(
-                                    re.escape(removed_item.path())
-                                )
-                            else:
-                                indeterministic_regex.add(removed_item.path())
-                    elif diff_category == "dictionary_item_added":
-                        added_items: list[DiffLevel] = diff
-                        for added_item in added_items:
-                            if first_step:
-                                initial_regex.add(re.escape(added_item.path()))
-                            else:
-                                indeterministic_regex.add(added_item.path())
-                    elif diff_category == "values_changed":
-                        changed_items: list[DiffLevel] = diff
-                        for changed_item in changed_items:
-                            if first_step:
-                                initial_regex.add(
-                                    re.escape(changed_item.path())
-                                )
-                            else:
-                                indeterministic_regex.add(changed_item.path())
-                    elif diff_category == "type_changes":
-                        type_changes: list[DiffLevel] = diff
-                        for type_change in type_changes:
-                            if first_step:
-                                initial_regex.add(re.escape(type_change.path()))
-                            else:
-                                indeterministic_regex.add(type_change.path())
+                for diff in diff_result.diff.values():
+                    if not isinstance(diff, list):
+                        continue
+                    for diff_item in diff:
+                        if not isinstance(diff_item, DiffLevel):
+                            continue
+                        if first_step:
+                            initial_regex.add(re.escape(diff_item.path()))
+                        else:
+                            indeterministic_regex.add(diff_item.path())
                 first_step = False
 
         # Handle the case where the name is not deterministic
