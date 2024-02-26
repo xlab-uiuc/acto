@@ -564,7 +564,6 @@ def compute_common_regex(paths: list[str]) -> list[str]:
             ).get_matching_blocks()
             regex_candidate = r""
             for block in matched_blocks:
-                print(block)
                 if block.a == 0 and block.b == 0:
                     regex_candidate += r"^"
                 elif block.size != 0:
@@ -966,35 +965,35 @@ class PostDiffTest(PostProcessor):
                     if diff_category == "dictionary_item_removed":
                         removed_items: list[DiffLevel] = diff
                         for removed_item in removed_items:
-                            removed_item = re.escape(removed_item.path())
                             if first_step:
-                                initial_regex.add(removed_item)
+                                initial_regex.add(
+                                    re.escape(removed_item.path())
+                                )
                             else:
-                                indeterministic_regex.add(removed_item)
+                                indeterministic_regex.add(removed_item.path())
                     elif diff_category == "dictionary_item_added":
                         added_items: list[DiffLevel] = diff
                         for added_item in added_items:
-                            added_item = re.escape(added_item.path())
                             if first_step:
-                                initial_regex.add(added_item)
+                                initial_regex.add(re.escape(added_item.path()))
                             else:
-                                indeterministic_regex.add(added_item)
+                                indeterministic_regex.add(added_item.path())
                     elif diff_category == "values_changed":
                         changed_items: list[DiffLevel] = diff
                         for changed_item in changed_items:
-                            changed_item = re.escape(changed_item.path())
                             if first_step:
-                                initial_regex.add(changed_item)
+                                initial_regex.add(
+                                    re.escape(changed_item.path())
+                                )
                             else:
-                                indeterministic_regex.add(changed_item)
+                                indeterministic_regex.add(changed_item.path())
                     elif diff_category == "type_changes":
                         type_changes: list[DiffLevel] = diff
                         for type_change in type_changes:
-                            type_change = re.escape(type_change.path())
                             if first_step:
-                                initial_regex.add(type_change)
+                                initial_regex.add(re.escape(type_change.path()))
                             else:
-                                indeterministic_regex.add(type_change)
+                                indeterministic_regex.add(type_change.path())
                 first_step = False
 
         # Handle the case where the name is not deterministic
