@@ -178,7 +178,13 @@ Specify this through the `seed_custom_resource` property in the configuration.
 
 For example, cass-operator provides a list of sample CRs in their [repo](https://github.com/k8ssandra/cass-operator/tree/master/config/samples)
 
-Copy one CR into the port directory, and specify the path of the copied CR in the `seed_custom_resource` property
+Copy one CR into the port directory, and specify the path of the copied CR in the `seed_custom_resource` property.
+
+**Important** Please specify the `metadata.name` as `test-cluster` in the CR YAML.
+
+### Extending and customizing Acto
+Please refer to [https://github.com/xlab-uiuc/acto/blob/main/docs/test_generator.md](https://github.com/xlab-uiuc/acto/blob/main/docs/test_generator.md)
+
 
 ### Providing source code information for whitebox mode (advanced)
 Acto supports a whitebox mode to enable more accurate testing by utilizing source code information.
@@ -859,7 +865,34 @@ First run `make` to build the required shared object:
 make
 ```
 
-Then invoke `acto`
+Hold your horses, before launching a full test campaign, you may want to validate that your operator config. You wouldn’t want to run Acto for overnight and realize the operator was crashing all the time.
+
+### Run the “learn” phase of Acto
+
+Acto has a pre-flight “learn” phase, which does some first-time information collection and checking.
+
+To only run the “learn” phase:
+
+```bash
+python3 -m acto --config CONFIG --learn
+```
+
+It does the following tasks:
+
+1. Create a “learn” Kubernetes cluster
+2. Parse the Operator deployment steps to figure out which namespace the operator is deployed to.
+3. Deploy the Operator according to the Deploy section of the operator config.
+4. Get the CRD from the Kubernetes cluster, which should be created at step 3.
+5. Deploy the CR.
+6. Inspect the Kubernetes nodes to get the list of images being used. These images will be preloaded to the Kubernetes nodes during the test campaign to avoid the Docker’s pull rate limit.
+7. Conduct pre-flight checking to make sure the system state is at least healthy. It also checks whether the pods have “IfNotPresent” as the ImagePullPolicy.
+
+At the end, it produces a `context.json` file in the same directory with the seed CR. The context.json file will be used for the actual test campaign, so that the above “learn” phase is only one-time effort.
+
+### Kick-off Acto’s Test Campaign
+
+Now you are all set to test your operator!
+Invoke `acto`
 ```sh
 python3 -m acto
   --config CONFIG, -c CONFIG
@@ -875,16 +908,13 @@ Example:
 python3 -m acto --config data/cass-operator/config.json --num-workers 4 --workdir testrun-cass
 ```
 
-Acto records the runtime information and test result in the workdir.
-To focus on the alarms which indicate potential bugs, run
-```sh
-python3 -m acto.checker.checker --config data/cass-operator/config.json --num-workers 8 --testrun-dir testrun-cass
-python3 scripts/feature_results_to_csv.py --testrun-dir testrun-cass
-```
-It generates the `result.xlsx` file under the `testrun-cass` which contains
-  all the oracle results.
-You can easily inspect the alarms by importing it into Google Sheet or Excel
-  and filter by `alarm==True`.
+### Babysitting Acto
+
+Acto is still a research prototype, and it is very likely to have problems when being applied to different operators.
+
+Since the testing usually takes hours, it is recommended to monitor Acto’s log at the beginning to make sure it does not crash (to avoid the bad experience where you waited for one day to check the result, and realize that Acto crashed after 10 mins after starting). When Acto crashes, it dumps the stacktrace with all the local variable values. Acto prints log at `CRTICIAL` level when it crashes. To check whether Acto has crashed, simply do a keyword search of `CRITICAL` in Acto’s log.
+
+Acto writes the test log to `{WORKDIR}/test.log` . If you did not specify the `--workdir` command line argument, `{WORKDIR}` would be `testrun-{TIMESTAMP` in the current directory.
 
 ## Interpreting Acto's test result
 
