@@ -948,12 +948,12 @@ The schema of the runtime result is defined at [acto/result.py](https://github.
 After Acto finishes all the tests, you can use the following script to collect all the test results into a .csv file and inspect them in Google Sheet.
 
 Run the following command in the Acto repo, it will produce a csv file under the testrun directory(workdir).
-```
+```sh
 python3 -m acto.post_process.collect_test_result --config OPERATOR_CONFIG --testrun-dir TESTRUN_DIR
 ```
 
 Usage documentation:
-```
+```sh
 usage: collect_test_result.py [-h] --config CONFIG --testrun-dir TESTRUN_DIR
 
 Collect all test results into a CSV file for analysis.
@@ -963,3 +963,7 @@ options:
   --config CONFIG       Path to the operator config file
   --testrun-dir TESTRUN_DIR
                         Path to the testrun dir which contains the testing result
+```
+
+## FAQ
+Please refer to [FAQ](./FAQ.md) for frequently asked questions.
