@@ -725,7 +725,9 @@ class PostDiffTest(PostProcessor):
                     diff_test_result_path
                 )
                 if diff_test_result.input_digest == seed_input_digest:
-                    diff_skip_regex = self.__get_diff_paths(diff_test_result)
+                    diff_skip_regex = self.__get_diff_paths(
+                        diff_test_result, num_workers
+                    )
                     logger.info(
                         "Seed input digest: %s, diff_skip_regex: %s",
                         seed_input_digest,
@@ -920,7 +922,9 @@ class PostDiffTest(PostProcessor):
                 to_state=diff_test_result.snapshot.system_state,
             )
 
-    def __get_diff_paths(self, diff_test_result: DiffTestResult) -> list[str]:
+    def __get_diff_paths(
+        self, diff_test_result: DiffTestResult, num_workers: int
+    ) -> list[str]:
         """Get the diff paths from a diff test result
         Algorithm:
             Iterate on the original trials, in principle they should be the same
@@ -946,9 +950,9 @@ class PostDiffTest(PostProcessor):
             list[str]: The list of diff paths
         """
 
-        initial_regex: set[str] = set()
         indeterministic_regex: set[str] = set()
-        first_step = True
+
+        args = []
         for original in diff_test_result.originals:
             trial = original["trial"]
             gen = original["gen"]
@@ -956,27 +960,29 @@ class PostDiffTest(PostProcessor):
             original_result = self.trial_to_steps[trial_basename].steps[
                 str(gen)
             ]
+            args.append((diff_test_result, original_result, self.config))
+
+        with multiprocessing.Pool(num_workers) as pool:
+            diff_results = pool.map(self.check_diff_test_step, args)
+
             diff_result = self.check_diff_test_step(
                 diff_test_result, original_result, self.config
             )
 
-            if diff_result is not None:
-                for diff in diff_result.diff.values():
-                    if not isinstance(diff, list):
-                        continue
-                    for diff_item in diff:
-                        if not isinstance(diff_item, DiffLevel):
+            for diff_result in diff_results:
+                if diff_result is not None:
+                    for diff in diff_result.diff.values():
+                        if not isinstance(diff, list):
                             continue
-                        if first_step:
-                            initial_regex.add(re.escape(diff_item.path()))
-                        else:
+                        for diff_item in diff:
+                            if not isinstance(diff_item, DiffLevel):
+                                continue
                             indeterministic_regex.add(diff_item.path())
-                first_step = False
 
         # Handle the case where the name is not deterministic
         common_regex = compute_common_regex(list(indeterministic_regex))
 
-        return list(initial_regex) + common_regex
+        return common_regex
 
 
 def main():

@@ -251,6 +251,11 @@ class DeterministicInputModel(InputModel):
             )
         )
 
+        for base_schema, k8s_schema_name in self.full_matched_schemas:
+            base_schema.attributes |= (
+                property_attribute.PropertyAttribute.Mapped
+            )
+
         # Apply custom property attributes based on the property_attribute module
         self.apply_custom_field()
 
