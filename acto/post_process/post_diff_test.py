@@ -2,6 +2,7 @@ import argparse
 import difflib
 import glob
 import hashlib
+import itertools
 import json
 import logging
 import multiprocessing
@@ -792,8 +793,8 @@ class PostDiffTest(PostProcessor):
                 trial = original["trial"]
                 gen = original["gen"]
 
-                # if gen == 0:
-                #     continue
+                if gen == 0:
+                    continue
 
                 trial_basename = os.path.basename(trial)
                 original_result = self.trial_to_steps[trial_basename].steps[
@@ -960,29 +961,39 @@ class PostDiffTest(PostProcessor):
             original_result = self.trial_to_steps[trial_basename].steps[
                 str(gen)
             ]
-            args.append((diff_test_result, original_result, self.config))
+            args.append([diff_test_result, original_result, self.config])
 
         with multiprocessing.Pool(num_workers) as pool:
-            diff_results = pool.map(self.check_diff_test_step, args)
+            diff_results = pool.starmap(get_diff_paths_helper, args)
 
-            diff_result = self.check_diff_test_step(
-                diff_test_result, original_result, self.config
-            )
-
-            for diff_result in diff_results:
-                if diff_result is not None:
-                    for diff in diff_result.diff.values():
-                        if not isinstance(diff, list):
-                            continue
-                        for diff_item in diff:
-                            if not isinstance(diff_item, DiffLevel):
-                                continue
-                            indeterministic_regex.add(diff_item.path())
+            for diff_item in itertools.chain.from_iterable(diff_results):
+                indeterministic_regex.add(diff_item)
 
         # Handle the case where the name is not deterministic
         common_regex = compute_common_regex(list(indeterministic_regex))
 
         return common_regex
+
+
+def get_diff_paths_helper(
+    diff_test_result: DiffTestResult,
+    original_result: Step,
+    config: OperatorConfig,
+) -> list[str]:
+    """Get the diff paths helper"""
+    diff_result = PostDiffTest.check_diff_test_step(
+        diff_test_result, original_result, config
+    )
+    indeterministic_regex = set()
+    if diff_result is not None:
+        for diff in diff_result.diff.values():
+            if not isinstance(diff, list):
+                continue
+            for diff_item in diff:
+                if not isinstance(diff_item, DiffLevel):
+                    continue
+                indeterministic_regex.add(diff_item.path())
+    return list(indeterministic_regex)
 
 
 def main():
