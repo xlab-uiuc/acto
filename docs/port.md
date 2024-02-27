@@ -967,3 +967,106 @@ options:
 
 ## FAQ
 Please refer to [FAQ](./FAQ.md) for frequently asked questions.
+### Example of A True Alarm
+
+Let’s take a look at one example how we analyzed one alarm produced by Acto and found the https://github.com/k8ssandra/cass-operator/issues/330
+
+You can find the trial which produced the result [here](alarm_examples/true_alarm/), and the alarm is raise inside [this file](alarm_examples/true_alarm/generation-002-runtime.json)
+
+Inside the [generation-002-runtime.json](alarm_examples/true_alarm/generation-002-runtime.json), you can find the following the alarm:
+
+```json
+"consistency": {
+    "message": "Found no matching fields for input",
+    "input_diff": {
+        "prev": "ACTOKEY",
+        "curr": "NotPresent",
+        "path": {
+            "path": [
+                "spec",
+                "additionalServiceConfig",
+                "seedService",
+                "additionalLabels",
+                "ACTOKEY"
+            ]
+        }
+    },
+    "system_state_diff": null
+},
+```
+
+This shows that the alarm is raised by Acto’s consistency oracle. In the alarm description, you can see three fields: `message`, `input_diff`, and `system_state_diff`. In the `input_diff`, it shows the following information:
+
+- In this step, Acto changed the property of path `spec.additionalServiceConfig.seedService.additionalLabels.ACTOKEY` from `ACTOKEY` to `NotPresent`. This basically means that Acto deleted the `spec.additionalServiceConfig.seedService.additionalLabels.ACTOKEY` from the CR.
+- Acto checked through the system state change, and could not find a matching change.
+
+To look deeper into this alarm, we can check the [delta-002.log](alarm_examples/true_alarm/delta-002.log) file. The `delta-002.log` file contains two sections: `INPUT DELTA` and `SYSTEM DELTA`. In the `INPUT DELTA`, you can see the diff from the `mutated-001.yaml` to `mutated-002.yaml`. In the `SYSTEM DELTA`, you can see the diff from `system-state-001.json` to `system-state-002.json`. You can also view the `mutated-*.yaml` and `system-state-*.json` files directly to see the full CR or full states.
+
+These files tell us the behavior of the operator when reacting to the CR transition. Next, we need to understand why the operator behaves in this way. We need to look into the operator source code to understand the behavior.
+
+The operator codebase may be large, so we need to pinpoint the subset of the operator source code which is related to the `spec.additionalServiceConfig.seedService.additionalLabels.ACTOKEY` property.
+
+We first need to find the places in the source code which reference the property.
+
+- We can find the type definition for the property at [https://github.com/k8ssandra/cass-operator/blob/9d320dd1960706adb092541a2dc30f186a76338e/apis/cassandra/v1beta1/cassandradatacenter_types.go#L342.](https://github.com/k8ssandra/cass-operator/blob/53c637c22f0d5f1e2f4c09156591a47f7919e0b5/apis/cassandra/v1beta1/cassandradatacenter_types.go#L299)
+- Then we trace through the code to find the uses of this field, and eventually we arrive at this line: [https://github.com/k8ssandra/cass-operator/blob/9d320dd1960706adb092541a2dc30f186a76338e/pkg/reconciliation/construct_service.go#L91.](https://github.com/k8ssandra/cass-operator/blob/53c637c22f0d5f1e2f4c09156591a47f7919e0b5/pkg/reconciliation/construct_service.go#L90)
+- Tracing backward to see how the returned values are used, we arrive at this line: https://github.com/k8ssandra/cass-operator/blob/53c637c22f0d5f1e2f4c09156591a47f7919e0b5/pkg/reconciliation/reconcile_services.go#L59.
+- We can see that the operator always merge the existing annotations with the annotations specified in the CR. This “merge” behavior causes the old annotations to be never deleted: https://github.com/k8ssandra/cass-operator/blob/53c637c22f0d5f1e2f4c09156591a47f7919e0b5/pkg/reconciliation/reconcile_services.go#L104.
+
+### Example of Misoperation
+
+Let’s take a look at one example of an alarm caused by a misoperation vulnerability in the tidb-operator. A misoperation vulnerability means that the operator failed to reject an erroneous desired state, and caused the system to be in an error state.
+
+You can look at the example alarm [here](alarm_examples/misoperation/)
+
+Inside the [alarm file](alarm_examples/misoperation/generation-001-runtime.json), you can find the following alarm message:
+
+```json
+"health": {
+    "message": "statefulset: test-cluster-tidb replicas [3] ready_replicas [2]"
+},
+```
+
+This shows the alarm is raised by the health oracle, which checks if the Kubernetes resources have desired number of replicas. In this alarm, Acto found that the StatefulSet object named `test-cluster-tidb` only has two ready replicas, whereas the desired number of replicas is three.
+
+To find out what happened, we can take a look at the [delta-001.log](alarm_examples/misoperation/delta-001.log) . It tells us that from the previous step, Acto added an Affinity rule to the tidb’s CR. And in the system state, the tidb-2 pod is recreated with the Affinity rule.
+
+Next, we need to figure out why the tidb-2 pod is recreated, but cannot be scheduled. After taking a look at the [events-001.json](alarm_examples/misoperation/events-001.json) file, we can find an error event issued by the `Pod` with the message: `"0/4 nodes are available: 1 node(s) had untolerated taint {node-role.kubernetes.io/control-plane: }, 3 node(s) didn't match Pod's node affinity/selector. preemption: 0/4 nodes are available: 4 Preemption is not helpful for scheduling.."` indicating that the new Pod cannot be properly scheduled to nodes.
+
+The root cause is because the desired Affinity specified in the TiDB CR cannot be satisfied in the current cluster state. The tidb-operator fails to reject the erroneous desired state, updates the TiDB cluster with the unsatisfiable Affinity rule, causing the cluster to lose one replica.
+
+### Example of False Alarm
+
+Acto’s oracles are not sound, meaning that Acto may report an alarm, but the operator’s behavior is correct. [Here](alarm_examples/false_alarm/) is an example of false alarms produced by Acto.
+
+Looking at the [generation-002-runtime.json](alarm_examples/false_alarm/generation-002-runtime.json), you can find the following error message from the consistency oracle:
+
+```json
+"oracle_result": {
+    "crash": null,
+    "health": null,
+    "operator_log": null,
+    "consistency": {
+        "message": "Found no matching fields for input",
+        "input_diff": {
+            "prev": "1Gi",
+            "curr": "2Gi",
+            "path": {
+                "path": [
+                    "spec",
+                    "ephemeral",
+                    "emptydirvolumesource",
+                    "sizeLimit"
+                ]
+            }
+        },
+        "system_state_diff": null
+    },
+    "differential": null,
+    "custom": null
+},
+```
+
+This indicates that Acto expects a corresponding system state change for the input delta of path `spec.ephemeral.emptydirvolumesource.sizeLimit`. To understand the operator’s behavior, we trace through the operator source. We can see that the property has a control-flow dependency on another property: https://github.com/pravega/zookeeper-operator/blob/9fc6151757018cd99acd7b73c24870dce24ba3d5/pkg/zk/generators.go#L48C1-L52C54. And in the CR generated by Acto, the property `spec.storageType` is set to `persistent` instead of `ephemeral`.
+
+This alarm is thus a false alarm. The operator’s behavior is correct. It did not update the system state because the storageType is not set to `ephemeral`. Acto raised this alarm because it fails to recognize the control-flow dependency among the properties `spec.ephemeral.emptydirvolumesource.sizeLimit` and `spec.storageType`.
