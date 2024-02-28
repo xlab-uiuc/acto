@@ -952,7 +952,7 @@ class Acto:
                 if deployed:
                     break
             apiclient = kubernetes_client(learn_kubeconfig, learn_context_name)
-
+            logger.debug("helper crd path is %s", helper_crd)
             self.context["crd"] = process_crd(
                 apiclient,
                 KubectlClient(learn_kubeconfig, learn_context_name),
