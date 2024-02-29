@@ -52,6 +52,13 @@ parser.add_argument(
     help="Number of concurrent workers to run Acto with",
 )
 parser.add_argument(
+    "--helper_crd",
+    dest="helper_crd",
+    type=str,
+    default="",
+    help="helper crd file to test on",
+)
+parser.add_argument(
     "--num-cases",
     dest="num_cases",
     type=int,
@@ -133,7 +140,7 @@ acto = Acto(
     cluster_runtime="KIND",
     preload_images_=None,
     context_file=context_cache,
-    helper_crd=None,
+    helper_crd=args.helper_crd,
     num_workers=args.num_workers,
     num_cases=args.num_cases,
     dryrun=args.dryrun,
