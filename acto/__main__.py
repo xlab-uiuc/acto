@@ -55,7 +55,6 @@ parser.add_argument(
     "--helper_crd",
     dest="helper_crd",
     type=str,
-    default="",
     help="helper crd file to test on",
 )
 parser.add_argument(
