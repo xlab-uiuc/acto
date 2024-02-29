@@ -965,9 +965,7 @@ options:
                         Path to the testrun dir which contains the testing result
 ```
 
-## FAQ
-Please refer to [FAQ](./FAQ.md) for frequently asked questions.
-### Example of A True Alarm
+### An Example of True Alarms
 
 Let’s take a look at one example how we analyzed one alarm produced by Acto and found the https://github.com/k8ssandra/cass-operator/issues/330
 
@@ -1013,7 +1011,7 @@ We first need to find the places in the source code which reference the property
 - Tracing backward to see how the returned values are used, we arrive at this line: https://github.com/k8ssandra/cass-operator/blob/53c637c22f0d5f1e2f4c09156591a47f7919e0b5/pkg/reconciliation/reconcile_services.go#L59.
 - We can see that the operator always merge the existing annotations with the annotations specified in the CR. This “merge” behavior causes the old annotations to be never deleted: https://github.com/k8ssandra/cass-operator/blob/53c637c22f0d5f1e2f4c09156591a47f7919e0b5/pkg/reconciliation/reconcile_services.go#L104.
 
-### Example of Misoperation
+### An Example of Misoperations
 
 Let’s take a look at one example of an alarm caused by a misoperation vulnerability in the tidb-operator. A misoperation vulnerability means that the operator failed to reject an erroneous desired state, and caused the system to be in an error state.
 
@@ -1035,7 +1033,7 @@ Next, we need to figure out why the tidb-2 pod is recreated, but cannot be sched
 
 The root cause is because the desired Affinity specified in the TiDB CR cannot be satisfied in the current cluster state. The tidb-operator fails to reject the erroneous desired state, updates the TiDB cluster with the unsatisfiable Affinity rule, causing the cluster to lose one replica.
 
-### Example of False Alarm
+### An Example of False Alarms
 
 Acto’s oracles are not sound, meaning that Acto may report an alarm, but the operator’s behavior is correct. [Here](alarm_examples/false_alarm/) is an example of false alarms produced by Acto.
 
