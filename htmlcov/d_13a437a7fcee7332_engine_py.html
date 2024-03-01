@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Coverage for acto/engine.py: 21%</title>
+    <title>Coverage for acto/engine.py: 22%</title>
     <link rel="icon" sizes="32x32" href="favicon_32.png">
     <link rel="stylesheet" href="style.css" type="text/css">
     <script type="text/javascript" src="coverage_html.js" defer></script>
@@ -12,7 +12,7 @@
     <div class="content">
         <h1>
             <span class="text">Coverage for </span><b>acto/engine.py</b>:
-            <span class="pc_cov">21%</span>
+            <span class="pc_cov">22%</span>
         </h1>
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
@@ -54,9 +54,9 @@
             </div>
         </aside>
         <h2>
-            <span class="text">461 statements &nbsp;</span>
+            <span class="text">460 statements &nbsp;</span>
             <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">99<span class="text"> run</span></button>
-            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">362<span class="text"> missing</span></button>
+            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">361<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
         </h2>
         <p class="text">
@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="d_13a437a7fcee7332_exception_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.4.3">coverage.py v7.4.3</a>,
-            created at 2024-03-01 03:50 +0000
+            created at 2024-03-01 18:31 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"/>
@@ -1015,24 +1015,24 @@
     <p class="pln"><span class="n"><a id="t933" href="#t933">933</a></span><span class="t">                <span class="nam">os</span><span class="op">.</span><span class="nam">path</span><span class="op">.</span><span class="nam">expanduser</span><span class="op">(</span><span class="str">"~"</span><span class="op">)</span><span class="op">,</span> <span class="str">".kube"</span><span class="op">,</span> <span class="nam">learn_context_name</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t934" href="#t934">934</a></span><span class="t">            <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t935" href="#t935">935</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t936" href="#t936">936</a></span><span class="t">            <span class="key">while</span> <span class="key">True</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t937" href="#t937">937</a></span><span class="t">                <span class="nam">self</span><span class="op">.</span><span class="nam">cluster</span><span class="op">.</span><span class="nam">restart_cluster</span><span class="op">(</span><span class="str">"learn"</span><span class="op">,</span> <span class="nam">learn_kubeconfig</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t938" href="#t938">938</a></span><span class="t">                <span class="nam">namespace</span> <span class="op">=</span> <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t939" href="#t939">939</a></span><span class="t">                    <span class="nam">get_yaml_existing_namespace</span><span class="op">(</span><span class="nam">self</span><span class="op">.</span><span class="nam">deploy</span><span class="op">.</span><span class="nam">operator_yaml</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t940" href="#t940">940</a></span><span class="t">                    <span class="key">or</span> <span class="nam">CONST</span><span class="op">.</span><span class="nam">ACTO_NAMESPACE</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t941" href="#t941">941</a></span><span class="t">                <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t942" href="#t942">942</a></span><span class="t">                <span class="nam">self</span><span class="op">.</span><span class="nam">context</span><span class="op">[</span><span class="str">"namespace"</span><span class="op">]</span> <span class="op">=</span> <span class="nam">namespace</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t943" href="#t943">943</a></span><span class="t">                <span class="nam">kubectl_client</span> <span class="op">=</span> <span class="nam">KubectlClient</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t944" href="#t944">944</a></span><span class="t">                    <span class="nam">learn_kubeconfig</span><span class="op">,</span> <span class="nam">learn_context_name</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t945" href="#t945">945</a></span><span class="t">                <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t946" href="#t946">946</a></span><span class="t">                <span class="nam">deployed</span> <span class="op">=</span> <span class="nam">self</span><span class="op">.</span><span class="nam">deploy</span><span class="op">.</span><span class="nam">deploy_with_retry</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t947" href="#t947">947</a></span><span class="t">                    <span class="nam">learn_kubeconfig</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t948" href="#t948">948</a></span><span class="t">                    <span class="nam">learn_context_name</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t949" href="#t949">949</a></span><span class="t">                    <span class="nam">kubectl_client</span><span class="op">=</span><span class="nam">kubectl_client</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t950" href="#t950">950</a></span><span class="t">                    <span class="nam">namespace</span><span class="op">=</span><span class="nam">namespace</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t951" href="#t951">951</a></span><span class="t">                <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t952" href="#t952">952</a></span><span class="t">                <span class="key">if</span> <span class="nam">deployed</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t953" href="#t953">953</a></span><span class="t">                    <span class="key">break</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t936" href="#t936">936</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">cluster</span><span class="op">.</span><span class="nam">restart_cluster</span><span class="op">(</span><span class="str">"learn"</span><span class="op">,</span> <span class="nam">learn_kubeconfig</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t937" href="#t937">937</a></span><span class="t">            <span class="nam">namespace</span> <span class="op">=</span> <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t938" href="#t938">938</a></span><span class="t">                <span class="nam">get_yaml_existing_namespace</span><span class="op">(</span><span class="nam">self</span><span class="op">.</span><span class="nam">deploy</span><span class="op">.</span><span class="nam">operator_yaml</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t939" href="#t939">939</a></span><span class="t">                <span class="key">or</span> <span class="nam">CONST</span><span class="op">.</span><span class="nam">ACTO_NAMESPACE</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t940" href="#t940">940</a></span><span class="t">            <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t941" href="#t941">941</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">context</span><span class="op">[</span><span class="str">"namespace"</span><span class="op">]</span> <span class="op">=</span> <span class="nam">namespace</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t942" href="#t942">942</a></span><span class="t">            <span class="nam">kubectl_client</span> <span class="op">=</span> <span class="nam">KubectlClient</span><span class="op">(</span><span class="nam">learn_kubeconfig</span><span class="op">,</span> <span class="nam">learn_context_name</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t943" href="#t943">943</a></span><span class="t">            <span class="nam">deployed</span> <span class="op">=</span> <span class="nam">self</span><span class="op">.</span><span class="nam">deploy</span><span class="op">.</span><span class="nam">deploy_with_retry</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t944" href="#t944">944</a></span><span class="t">                <span class="nam">learn_kubeconfig</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t945" href="#t945">945</a></span><span class="t">                <span class="nam">learn_context_name</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t946" href="#t946">946</a></span><span class="t">                <span class="nam">kubectl_client</span><span class="op">=</span><span class="nam">kubectl_client</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t947" href="#t947">947</a></span><span class="t">                <span class="nam">namespace</span><span class="op">=</span><span class="nam">namespace</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t948" href="#t948">948</a></span><span class="t">            <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t949" href="#t949">949</a></span><span class="t">            <span class="key">if</span> <span class="key">not</span> <span class="nam">deployed</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t950" href="#t950">950</a></span><span class="t">                <span class="key">raise</span> <span class="nam">RuntimeError</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t951" href="#t951">951</a></span><span class="t">                    <span class="fst">f"</span><span class="fst">Failed to deploy operator due to max retry exceed</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t952" href="#t952">952</a></span><span class="t">                <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t953" href="#t953">953</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t954" href="#t954">954</a></span><span class="t">            <span class="nam">apiclient</span> <span class="op">=</span> <span class="nam">kubernetes_client</span><span class="op">(</span><span class="nam">learn_kubeconfig</span><span class="op">,</span> <span class="nam">learn_context_name</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t955" href="#t955">955</a></span><span class="t">            <span class="nam">logger</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span><span class="str">"helper crd path is %s"</span><span class="op">,</span> <span class="nam">helper_crd</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t956" href="#t956">956</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">context</span><span class="op">[</span><span class="str">"crd"</span><span class="op">]</span> <span class="op">=</span> <span class="nam">process_crd</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
@@ -1258,7 +1258,7 @@
             <a id="nextFileLink" class="nav" href="d_13a437a7fcee7332_exception_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.4.3">coverage.py v7.4.3</a>,
-            created at 2024-03-01 03:50 +0000
+            created at 2024-03-01 18:31 +0000
         </p>
     </div>
 </footer>
