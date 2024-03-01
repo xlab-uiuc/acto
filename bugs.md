@@ -90,7 +90,7 @@
 | kubernetes/kubernetes            | [https://github.com/kubernetes/kubernetes/issues/112609](https://github.com/kubernetes/kubernetes/issues/112609)                 | confirmed |
 | runtime/cgo                      | [https://github.com/golang/go/issues/53958](https://github.com/golang/go/issues/53958)                                           | fixed     |
 
-# Unrelated
+# Others
 | Operator                | Link                                                                                                                           | Status |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------ |
 | k8ssandra/cass-operator | [https://github.com/k8ssandra/cass-operator/issues/324](https://github.com/k8ssandra/cass-operator/issues/324)                 |        |

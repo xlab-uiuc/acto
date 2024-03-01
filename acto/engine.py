@@ -933,26 +933,26 @@ class Acto:
                 os.path.expanduser("~"), ".kube", learn_context_name
             )
 
-            while True:
-                self.cluster.restart_cluster("learn", learn_kubeconfig)
-                namespace = (
-                    get_yaml_existing_namespace(self.deploy.operator_yaml)
-                    or CONST.ACTO_NAMESPACE
+            self.cluster.restart_cluster("learn", learn_kubeconfig)
+            namespace = (
+                get_yaml_existing_namespace(self.deploy.operator_yaml)
+                or CONST.ACTO_NAMESPACE
+            )
+            self.context["namespace"] = namespace
+            kubectl_client = KubectlClient(learn_kubeconfig, learn_context_name)
+            deployed = self.deploy.deploy_with_retry(
+                learn_kubeconfig,
+                learn_context_name,
+                kubectl_client=kubectl_client,
+                namespace=namespace,
+            )
+            if not deployed:
+                raise RuntimeError(
+                    f"Failed to deploy operator due to max retry exceed"
                 )
-                self.context["namespace"] = namespace
-                kubectl_client = KubectlClient(
-                    learn_kubeconfig, learn_context_name
-                )
-                deployed = self.deploy.deploy_with_retry(
-                    learn_kubeconfig,
-                    learn_context_name,
-                    kubectl_client=kubectl_client,
-                    namespace=namespace,
-                )
-                if deployed:
-                    break
-            apiclient = kubernetes_client(learn_kubeconfig, learn_context_name)
 
+            apiclient = kubernetes_client(learn_kubeconfig, learn_context_name)
+            logger.debug("helper crd path is %s", helper_crd)
             self.context["crd"] = process_crd(
                 apiclient,
                 KubectlClient(learn_kubeconfig, learn_context_name),

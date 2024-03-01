@@ -1,5 +1,6 @@
 import argparse
 import functools
+import importlib
 import json
 import logging
 import os
@@ -13,14 +14,16 @@ import yaml
 
 from acto import DEFAULT_KUBERNETES_VERSION
 from acto.engine import Acto
-from acto.input.input import DeterministicInputModel
+from acto.input import k8s_schemas, property_attribute
+from acto.input.input import CustomKubernetesMapping, DeterministicInputModel
 from acto.input.testcase import TestCase
 from acto.input.testplan import TestGroup
 from acto.input.value_with_schema import ValueWithSchema
-from acto.input.valuegenerator import extract_schema_with_value_generator
 from acto.lib.operator_config import OperatorConfig
 from acto.post_process.post_diff_test import PostDiffTest
 from acto.result import OracleResults
+from acto.schema.base import BaseSchema
+from acto.schema.schema import extract_schema
 from acto.utils import get_thread_logger
 
 
@@ -81,9 +84,7 @@ class ReproInputModel(DeterministicInputModel):
         custom_module_path: Optional[str] = None,
     ) -> None:
         logger = get_thread_logger(with_prefix=True)
-        # WARNING: Not sure the initialization is correct
-        # TODO: The line below need to be reviewed.
-        self.root_schema = extract_schema_with_value_generator(
+        self.root_schema = extract_schema(
             [], crd["spec"]["versions"][-1]["schema"]["openAPIV3Schema"]
         )
         self.testcases = []
@@ -106,6 +107,69 @@ class ReproInputModel(DeterministicInputModel):
         self.num_total_cases = len(cr_list) - 1
         self.num_workers = 1
         self.metadata = {}
+
+        override_matches: Optional[list[tuple[BaseSchema, str]]] = None
+        if custom_module_path is not None:
+            custom_module = importlib.import_module(custom_module_path)
+
+            # We need to do very careful sanitization here because we are
+            # loading user-provided module
+            if hasattr(custom_module, "KUBERNETES_TYPE_MAPPING"):
+                custum_kubernetes_type_mapping = (
+                    custom_module.KUBERNETES_TYPE_MAPPING
+                )
+                if isinstance(custum_kubernetes_type_mapping, list):
+                    override_matches = []
+                    for custom_mapping in custum_kubernetes_type_mapping:
+                        if isinstance(custom_mapping, CustomKubernetesMapping):
+                            try:
+                                schema = self.get_schema_by_path(
+                                    custom_mapping.schema_path
+                                )
+                            except KeyError as exc:
+                                raise RuntimeError(
+                                    "Schema path of the custom mapping is invalid: "
+                                    f"{custom_mapping.schema_path}"
+                                ) from exc
+
+                            override_matches.append(
+                                (schema, custom_mapping.kubernetes_schema_name)
+                            )
+                        else:
+                            raise TypeError(
+                                "Expected CustomKubernetesMapping in KUBERNETES_TYPE_MAPPING, "
+                                f"but got {type(custom_mapping)}"
+                            )
+
+        # Do the matching from CRD to Kubernetes schemas
+        # Match the Kubernetes schemas to subproperties of the root schema
+        kubernetes_schema_matcher = k8s_schemas.K8sSchemaMatcher.from_version(
+            kubernetes_version, None
+        )
+        top_matched_schemas = (
+            kubernetes_schema_matcher.find_top_level_matched_schemas(
+                self.root_schema
+            )
+        )
+        for base_schema, k8s_schema_name in top_matched_schemas:
+            logging.info(
+                "Matched schema %s to k8s schema %s",
+                base_schema.get_path(),
+                k8s_schema_name,
+            )
+        self.full_matched_schemas = (
+            kubernetes_schema_matcher.expand_top_level_matched_schemas(
+                top_matched_schemas
+            )
+        )
+
+        for base_schema, k8s_schema_name in self.full_matched_schemas:
+            base_schema.attributes |= (
+                property_attribute.PropertyAttribute.Mapped
+            )
+
+        # Apply custom property attributes based on the property_attribute module
+        self.apply_custom_field()
 
     def initialize(self, initial_value: dict):
         """Override"""

@@ -69,7 +69,7 @@ class Minikube(base.KubernetesEngine):
             cmd,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
-            check=True,
+            check=False,
         )
 
         i = 0
@@ -83,7 +83,7 @@ class Minikube(base.KubernetesEngine):
             i += 1
             self.delete_cluster(name, kubeconfig)
             time.sleep(5)
-            p = subprocess.run(cmd, check=True)
+            p = subprocess.run(cmd, check=False)
 
         # csi driver
         cmd = ["minikube", "addons", "disable", "storage-provisioner"]
@@ -93,7 +93,7 @@ class Minikube(base.KubernetesEngine):
             cmd,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
-            check=True,
+            check=False,
         )
         i = 0
         print(cmd)
@@ -107,7 +107,7 @@ class Minikube(base.KubernetesEngine):
             i += 1
             self.delete_cluster(name, kubeconfig)
             time.sleep(5)
-            p = subprocess.run(cmd, check=True)
+            p = subprocess.run(cmd, check=False)
 
         cmd = ["minikube", "addons", "disable", "default-storageclass"]
         cmd.extend(["--profile", name])
@@ -116,7 +116,7 @@ class Minikube(base.KubernetesEngine):
             cmd,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
-            check=True,
+            check=False,
         )
         i = 0
         print(cmd)
@@ -130,7 +130,7 @@ class Minikube(base.KubernetesEngine):
             i += 1
             self.delete_cluster(name, kubeconfig)
             time.sleep(5)
-            p = subprocess.run(cmd, check=True)
+            p = subprocess.run(cmd, check=False)
 
         cmd = ["minikube", "addons", "enable", "volumesnapshots"]
         cmd.extend(["--profile", name])
@@ -138,7 +138,7 @@ class Minikube(base.KubernetesEngine):
             cmd,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
-            check=True,
+            check=False,
         )
         i = 0
         print(cmd)
@@ -152,7 +152,7 @@ class Minikube(base.KubernetesEngine):
             i += 1
             self.delete_cluster(name, kubeconfig)
             time.sleep(5)
-            p = subprocess.run(cmd, check=True)
+            p = subprocess.run(cmd, check=False)
 
         cmd = ["minikube", "addons", "enable", "csi-hostpath-driver"]
         cmd.extend(["--profile", name])
@@ -160,7 +160,7 @@ class Minikube(base.KubernetesEngine):
             cmd,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
-            check=True,
+            check=False,
         )
         i = 0
         print(cmd)
@@ -174,7 +174,7 @@ class Minikube(base.KubernetesEngine):
             i += 1
             self.delete_cluster(name, kubeconfig)
             time.sleep(5)
-            p = subprocess.run(cmd, check=True)
+            p = subprocess.run(cmd, check=False)
 
         cmd = [
             "kubectl",
@@ -188,7 +188,7 @@ class Minikube(base.KubernetesEngine):
             cmd,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
-            check=True,
+            check=False,
         )
         i = 0
         print(cmd)
@@ -202,7 +202,7 @@ class Minikube(base.KubernetesEngine):
             i += 1
             self.delete_cluster(name, kubeconfig)
             time.sleep(5)
-            p = subprocess.run(cmd, check=True)
+            p = subprocess.run(cmd, check=False)
 
         # minikube mount
         cmd = ["minikube", "mount", "profile/data:/tmp/profile"]
@@ -239,7 +239,7 @@ class Minikube(base.KubernetesEngine):
         else:
             logging.error("Missing cluster name for minikube load")
 
-        p = subprocess.run(cmd + [images_archive_path], check=True)
+        p = subprocess.run(cmd + [images_archive_path], check=False)
         if p.returncode != 0:
             logging.error("Failed to preload images archive")
 
@@ -257,7 +257,7 @@ class Minikube(base.KubernetesEngine):
         else:
             raise RuntimeError("Missing kubeconfig for minikube create")
 
-        while subprocess.run(cmd, check=True).returncode != 0:
+        while subprocess.run(cmd, check=False).returncode != 0:
             continue
 
         os.environ.pop("KUBECONFIG", None)
