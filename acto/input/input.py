@@ -293,7 +293,9 @@ class DeterministicInputModel(InputModel):
 
         normal_testcases = {}
 
-        test_cases = get_testcases(self.root_schema, self.full_matched_schemas)
+        test_cases = get_testcases(
+            self.get_schema_by_path(self.mount), self.full_matched_schemas
+        )
 
         num_test_cases = 0
         num_run_test_cases = 0
