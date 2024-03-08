@@ -45,6 +45,7 @@ class Deploy():
 
     def __init__(self, deploy_config: DeployConfig) -> None:
         self._deploy_config = deploy_config
+        print(deploy_config)
 
         self._operator_yaml: str = None
         for step in self._deploy_config.steps:
@@ -81,7 +82,9 @@ class Deploy():
         # Run the steps in the deploy config one by one
         for step in self._deploy_config.steps:
             if step.apply:
-                args = ["apply", "--server-side", "-f", step.apply.file,
+                # args = ["apply", "--server-side", "-f", step.apply.file,
+                #         "--context", context_name]
+                args = ["apply", "-f", step.apply.file,
                         "--context", context_name]
 
                 # Use the namespace from the argument if the namespace is delegated
@@ -110,6 +113,29 @@ class Deploy():
             elif step.wait:
                 # Simply wait for the specified duration
                 time.sleep(step.wait.duration)
+            elif step.create:
+                args = ["create", "-f", step.create.file,
+                        "--context", context_name]
+
+                # Use the namespace from the argument if the namespace is delegated
+                # If the namespace from the config is explicitly specified,
+                # use the specified namespace
+                # If the namespace from the config is set to None, do not apply
+                # with namespace
+                if step.create.namespace == DELEGATED_NAMESPACE:
+                    args += ["-n", namespace]
+                elif step.create.namespace is not None:
+                    args += ["-n", step.create.namespace]
+
+                # Apply the yaml file and then wait for the pod to be ready
+                p = kubectl_client.kubectl(args)
+                if p.returncode != 0:
+                    logger.error(
+                        "Failed to deploy operator due to error from kubectl" +
+                        f" (returncode={p.returncode})" +
+                        f" (stdout={p.stdout})" +
+                        f" (stderr={p.stderr})")
+                    return False
 
         # Add acto label to the operator pod
         add_acto_label(api_client, namespace)
