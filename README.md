@@ -105,7 +105,7 @@
 | acto/schema/get\_total\_number\_schemas\_test.py              |        7 |        0 |    100% |           |
 | acto/schema/integer.py                                        |       38 |       12 |     68% |18, 24-26, 32-33, 36, 44-49, 51, 67 |
 | acto/schema/number.py                                         |       37 |       14 |     62% |49, 55-57, 60, 63, 66, 69, 73-80, 83 |
-| acto/schema/object.py                                         |      141 |       42 |     70% |49, 51, 56, 71-80, 82-91, 101-116, 132-135, 138, 162, 169-174, 202, 226 |
+| acto/schema/object.py                                         |      141 |       44 |     69% |49, 51, 56, 71-80, 82-91, 101-116, 132-135, 138, 162, 169-174, 181-185, 202, 226 |
 | acto/schema/oneof.py                                          |       48 |       33 |     31% |14-22, 28, 31-33, 38-46, 49, 52, 55-57, 60, 63-64, 67-72 |
 | acto/schema/opaque.py                                         |       19 |        7 |     63% |15, 18, 21, 24, 27, 30, 33 |
 | acto/schema/schema.py                                         |       41 |        7 |     83% |23, 27, 33-36, 51 |
@@ -144,7 +144,7 @@
 | acto/utils/preprocess.py                                      |       72 |       60 |     17% |17-83, 105-161, 166-200 |
 | acto/utils/process\_with\_except.py                           |        9 |        9 |      0% |      1-13 |
 | acto/utils/thread\_logger.py                                  |       15 |        3 |     80% | 9, 18, 28 |
-|                                                     **TOTAL** | **9699** | **4370** | **55%** |           |
+|                                                     **TOTAL** | **9699** | **4372** | **55%** |           |
 
 
 ## Setup coverage badge
