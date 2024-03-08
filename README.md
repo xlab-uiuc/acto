@@ -1,4 +1,4 @@
-# Acto: Push-Button End-to-End Testing of Kubernetes Operators/Controllers
+# Acto: Push-Button End-to-End Testing of Kubernetes Operators and Controllers
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Regression Test](https://github.com/xlab-uiuc/acto/actions/workflows/unittest.yaml/badge.svg)](https://github.com/xlab-uiuc/acto/actions/workflows/unittest.yaml)
 [![End-to-End Test](https://github.com/xlab-uiuc/acto/actions/workflows/e2e-test.yml/badge.svg)](https://github.com/xlab-uiuc/acto/actions/workflows/e2e-test.yml)
