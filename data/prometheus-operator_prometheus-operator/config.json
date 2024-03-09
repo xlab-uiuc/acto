@@ -1,0 +1,25 @@
+{
+    "deploy": {
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/prometheus-operator/crd.yaml"
+                }
+            },
+            {
+                "wait": {
+                    "duration": 10
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/prometheus-operator/operator.yaml",
+                    "operator_container_name": "prometheus-operator",
+		            "operator": true
+                }
+            }
+        ]
+    },
+    "crd_name": "prometheuses.monitoring.coreos.com",
+    "seed_custom_resource": "data/prometheus-operator/cr.yaml"
+}
