@@ -1,0 +1,27 @@
+{
+    "deploy": {
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/arc/actions-runner-controller-cert-manager.yaml",
+                    "namespace": null
+                }
+            },
+            {
+                "wait": {
+                    "duration": 10
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/arc/actions-runner-controller.yaml",
+                    "operator": true,
+		    "namespace": "actions-runner-system",
+		    "operator_container_name": "manager"
+                }
+            }
+        ]
+    },
+    "crd_name": "runnerdeployments.actions.summerwind.dev",
+    "seed_custom_resource": "data/arc/actions-runner-controller-cr.yaml"
+}
