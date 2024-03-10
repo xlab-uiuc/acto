@@ -81,8 +81,7 @@ class Deploy():
         # Run the steps in the deploy config one by one
         for step in self._deploy_config.steps:
             if step.apply:
-                args = ["apply", "--server-side", "-f", step.apply.file,
-                        "--context", context_name]
+                args = ["apply", "--server-side", "-f", step.apply.file]
 
                 # Use the namespace from the argument if the namespace is delegated
                 # If the namespace from the config is explicitly specified,
