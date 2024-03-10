@@ -1,0 +1,28 @@
+{
+    "deploy":{
+        "steps":[
+            {
+                "apply": {
+                    "file": "/users/Manvik/workdir/acto/data/druid-operator/examples/tiny-cluster-zk.yaml",
+                    "namespace": "druid-operator-system"
+                }
+            },
+            {
+                "wait": {
+                    "duration": 25
+                }
+            },
+            {
+                "apply": {
+                    "file": "/users/Manvik/workdir/acto/data/druid-operator/manifest.yaml",
+                    "namespace": "druid-operator-system",
+                    "operator": true,
+		            "operator_container_name": "manager"
+                }
+            }
+        ]
+    },
+    "crd_name": "druids.druid.apache.org",
+    "seed_custom_resource": "/users/Manvik/workdir/acto/data/druid-operator/examples/tiny-cluster.yaml",
+    "example_dir": "/users/Manvik/workdir/acto/data/druid-operator/examples"
+}
