@@ -1,0 +1,19 @@
+{
+    "deploy": {
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/mariadb-operator/mariadb-secret.yaml"
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/mariadb-operator/manifests.min.yaml",
+                    "operator": true
+                }
+            }
+        ]
+    },
+    "crd_name": "mariadbs.k8s.mariadb.com",
+    "seed_custom_resource": "data/mariadb-operator/mariadb.yaml"
+}
