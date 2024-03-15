@@ -3,5 +3,5 @@ k8sutil:
 	gcc test.c -o test ./k8sutil.so
 
 clean:
-	rm ./k8sutil.so
-	rm ./test
+	rm -f ./k8sutil.so
+	rm -f ./test
