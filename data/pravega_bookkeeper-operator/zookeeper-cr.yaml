@@ -1,0 +1,42 @@
+---
+# Source: zookeeper/templates/zookeeper.yaml
+apiVersion: "zookeeper.pravega.io/v1beta1"
+kind: "ZookeeperCluster"
+metadata:
+  name: zookeeper
+  namespace: default
+  labels:
+    app.kubernetes.io/name: zookeeper
+    app.kubernetes.io/version: "0.2.15"
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: "zookeeper-0.2.15"
+spec:
+  replicas: 1
+  image:
+    repository: pravega/zookeeper
+    tag: 0.2.15
+    pullPolicy: IfNotPresent
+  kubernetesClusterDomain: cluster.local
+  probes:
+    readinessProbe:
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      failureThreshold: 3
+      successThreshold: 1
+      timeoutSeconds: 10
+    livenessProbe:
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      failureThreshold: 3
+      timeoutSeconds: 10
+  pod:
+    serviceAccountName: zookeeper
+  config:
+    preAllocSize: 16384
+  storageType: persistence
+  persistence:
+    reclaimPolicy: Delete
+    spec:
+      resources:
+        requests:
+          storage: 20Gi

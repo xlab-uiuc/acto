@@ -1,0 +1,47 @@
+{
+    "deploy": {
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/bookkeeper-operator/zookeeper-bundle.yaml",
+                    "namespace": null
+                }
+            },
+            {
+                "wait": {
+                    "duration": 20
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/bookkeeper-operator/zookeeper-cr.yaml",
+                    "namespace": null
+                }
+            },
+            {
+                "wait": {
+                    "duration": 45
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/bookkeeper-operator/cert-manager.yaml",
+                    "namespace": null
+                }
+            },
+            {
+                "wait": {
+                    "duration": 10
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/bookkeeper-operator/bundle.yaml",
+                    "operator": true
+                }
+            }
+        ]
+    },
+    "crd_name": "bookkeeperclusters.bookkeeper.pravega.io",
+    "seed_custom_resource": "data/bookkeeper-operator/bookkeeper-cr.yaml"
+}
