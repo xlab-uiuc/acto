@@ -1,0 +1,21 @@
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: test-cluster
+spec:
+  clusterSize: 3
+  clusterVersion: v7
+  podSecurityContext:
+    runAsUser: 1000
+    fsGroup: 1000
+  persistenceEnabled: true
+  kubernetesConfig:
+    image: quay.io/opstree/redis:latest
+    imagePullPolicy: "IfNotPresent"
+  storage:
+    volumeClaimTemplate:
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi

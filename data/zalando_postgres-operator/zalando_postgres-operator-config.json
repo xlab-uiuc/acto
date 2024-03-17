@@ -1,0 +1,39 @@
+{
+    "deploy": {
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/zalando_postgres-operator/acid.zalan.do_postgresqls.yaml",
+                    "namespace": "acto-namespace"
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/zalando_postgres-operator/configmap.yaml",
+                    "namespace": "acto-namespace"
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/zalando_postgres-operator/operator-service-account-rbac.yaml",
+                    "namespace": "acto-namespace"
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/zalando_postgres-operator/postgres-operator.yaml",
+                    "operator": true,
+                    "namespace": "acto-namespace"
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/zalando_postgres-operator/api-service.yaml",
+                    "namespace": "acto-namespace"
+                }
+            }
+        ]
+    },
+    "crd_name": "postgresqls.acid.zalan.do",
+    "seed_custom_resource": "data/zalando_postgres-operator/zalando_postgres-operator-cr.yaml"
+}

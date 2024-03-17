@@ -1,0 +1,19 @@
+{
+  "deploy": {
+    "steps": [
+      {
+        "apply": {
+          "file": "data/OT-CONTAINER-KIT/redis-operator.yaml",
+          "operator": true
+        }
+      },
+      {
+        "apply": {
+          "file": "https://raw.githubusercontent.com/OT-CONTAINER-KIT/redis-operator/master/config/crd/bases/redis.redis.opstreelabs.in_redisclusters.yaml"
+        }
+      }
+    ]
+  },
+  "crd_name": "redisclusters.redis.redis.opstreelabs.in",
+  "seed_custom_resource": "data/OT-CONTAINER-KIT/rredis-cr.yaml"
+}

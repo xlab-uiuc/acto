@@ -1,0 +1,29 @@
+{
+    "deploy": {
+    	"steps": [
+            {
+            	"apply": {
+                    "file": "data/minio-operator/operator.yaml",
+                    "operator": true
+            	}
+            },
+            {
+                "wait": {
+                    "duration": 10
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/minio-operator/tenant-config.yaml"
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/minio-operator/storage-user.yaml"
+                }
+            }
+    	]
+    },
+    "crd_name": "tenants.minio.min.io",
+    "seed_custom_resource": "data/minio-operator/cr.yaml"
+}    

@@ -62,7 +62,7 @@ def replicas_tests(schema: IntegerSchema) -> list[TestCase]:
 
 
 @test_generator(
-    property_name="statefulSetUpdateStrategy", priority=Priority.SEMANTIC
+    property_name="updateStrategy", priority=Priority.SEMANTIC
 )
 def stateful_set_update_strategy_tests(schema: ObjectSchema) -> list[TestCase]:
     """Generate test cases for StatefulSetUpdateStrategy field"""
