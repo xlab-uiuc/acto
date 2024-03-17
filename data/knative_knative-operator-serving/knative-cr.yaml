@@ -1,0 +1,16 @@
+apiVersion: operator.knative.dev/v1beta1
+kind: KnativeServing
+metadata:
+  name: test-cluster
+  namespace: default
+spec:
+  workloads:
+  - name: controller
+    resources:
+    - container: controller
+      requests:
+        cpu: 300m
+        memory: 100Mi
+      limits:
+        cpu: 1000m
+        memory: 250Mi
