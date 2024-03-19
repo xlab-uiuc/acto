@@ -1,0 +1,1095 @@
+{
+    "crd": {
+        "body": {
+            "apiVersion": "apiextensions.k8s.io/v1",
+            "kind": "CustomResourceDefinition",
+            "metadata": {
+                "creationTimestamp": "2024-03-19T17:31:20Z",
+                "generation": 3,
+                "name": "sgconfigs.stackgres.io",
+                "resourceVersion": "800",
+                "uid": "fb0c89a7-b944-45a9-a54f-a8be267088a7"
+            },
+            "spec": {
+                "conversion": {
+                    "strategy": "Webhook",
+                    "webhook": {
+                        "clientConfig": {
+                            "caBundle": "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUZyRENDQTVTZ0F3SUJBZ0lCQVRBTkJna3Foa2lHOXcwQkFRc0ZBREJCTVJVd0V3WURWUVFLRXd4emVYTjBaVzA2Ym05a1pYTXhLREFtQmdOVkJBTVRIM041YzNSbGJUcHViMlJsT25OMFlXTnJaM0psY3k1emRHRmphMmR5WlhNd0hoY05NalF3TXpFNU1UY3pNVFU0V2hjTk1qWXdNekU1TVRjek1UVTFXakJCTVJVd0V3WURWUVFLRXd4emVYTjBaVzA2Ym05a1pYTXhLREFtQmdOVkJBTVRIM041YzNSbGJUcHViMlJsT25OMFlXTnJaM0psY3k1emRHRmphMmR5WlhNd2dnSWlNQTBHQ1NxR1NJYjNEUUVCQVFVQUE0SUNEd0F3Z2dJS0FvSUNBUUM3VDVMMmwvditvcWJWYndpa08rc1Vad3gzc1BEL24rL1V2ODZMNGxrVy9Cclp4ampoQk9RMmtFMTFoU2lkcWFSR1RIL3dnSHR1R3N5ZFNKdEd6N3A1WktwY3Q1azdBWExDSnVLR0Z2TlIrc2xsUWU1c1FLeWFYQ2d6cWlBam1jcTZRVHl2SGI4MTJ1bXh1VThocUdCMWl5OTJHZmtFWXJwa0FkTDV4R1AyRjNDNWhvSERNYjd1SUNTSkpSeFZ6VzZiVTVDZ253MGtkU1JGRUxrZDRoMjBRc1dKUHJrVVdlVXNzWXYzWG1pV1p2VFpHMzJWQUhRR3BGQUEzMHFtTFRBRHVZSG14djZnblpoUXJEQ2IyZmFGUEd6eDk1OVdBU0pLNzFoNXVJL1JCZmJKVkhqSHg4a1AzVlE1TU9Ya2Y5eGVKT2UxM01UZ3RQK3kySlJacUZnZnhSamtOUVF6S0lTSFNtbExpM2haUzZYZlBRQXpGSU5uam1IeDRKMXkzMzRlWHBUWkMwRURqR3NqbllQeHEzR0VoYlJPU0NGWEtUcnVLRkpaS2VwVURhTkdVcmxxZDY4VDF3dEsrM2Y2WG1iTEMvVzgwaytWM1AwOVVJRDZxRDV5L1JHdmZEQkhOYW12c2N3ODVDRjZ1UmJaVGh0bWw0aW9RMzdManBTM2xhVm4rV1pVYktZUUtXTlhEQk54S1p3dk5PU2VMakVRZGpmejlmbm04NHhnaU5FdHlLcHJCWWpLMGZKTVpmeE1uMitPRmtMcEhROXVJZ1dKeWEzcFZEQkd0MTJadmZ2SWpCOWFpWTBZZjRFSCtsc3JlYTdnNUJ6NXR3d0ljZ2V1RzlPSmNWTVYrdHpwQ21xUytGV2s2OHU5ZHBDMVoyb20vaTlFS0YxdFJ6eGFWd0lEQVFBQm80R3VNSUdyTUE4R0ExVWRFd0VCL3dRRk1BTUJBZjh3RGdZRFZSMFBBUUgvQkFRREFnWGdNQjBHQTFVZEpRUVdNQlFHQ0NzR0FRVUZCd01CQmdnckJnRUZCUWNEQWpCcEJnTlZIUkVFWWpCZ2dnbHpkR0ZqYTJkeVpYT0NFM04wWVdOclozSmxjeTV6ZEdGamEyZHlaWE9DRjNOMFlXTnJaM0psY3k1emRHRmphMmR5WlhNdWMzWmpnaVZ6ZEdGamEyZHlaWE11YzNSaFkydG5jbVZ6TG5OMll5NWpiSFZ6ZEdWeUxteHZZMkZzTUEwR0NTcUdTSWIzRFFFQkN3VUFBNElDQVFDck1Ra1RkRUhpUS9QTy8rK1pEMzhrVzFHZlVGK2ZMVDhrOFNON0MwTm5BaW5WeWlFQ3U2RUxBTzV2Tzk2TTR5TXN0U29wejlOZkdQTlMvWFh2WWwrMWlyS1ZiR1lHUG1LRjNPelhnOW1qZzVmemhyNjlBUlY5elZIWkRmcmNsM3IxWURmU1VWM0ZmVzZvbTFpQThoTUFUTEl5UWE0dmlNY0hwVUJjZmZlZzFRY2xyc2JXSTdiU0R1OE1uRmg5Z1o5Y2hwSGNJWm55WXIxcjExc2pnMVRzcFVQM05sbFh0OXdPeHZvS1hYNlZsWU9XdjhKY0F0cXdPK0IwNUczd21pNU84UjBNU2pVb29PZmVyaVFGVGhuSndHdkl0UVlWZ0lyQmN3bXpqbG9zWi9BUUNvVzF2aEZ1R0lEbGpFZEVRVm5QWmNXd2hnQnVBTTdHNTNCTGZRV3VOOVNRSEZEOFZ0c0I1b2JXYkllM2pPdzljeE8vZDhvc0VTUlNnM2J1ME45OERNSm9PZXJYdXBYbHBsWTdrL25jdURHQkF4VHVmNXJraWZrK2tWQW96ZzIwSFdaellJaysxQkxrenAvNktQYzZtbm9lVjNCRVR3bTBoejlyUyt0NUI3c2lPOWN5ZzZidXR5OS9kVHZBdVQxdTdTVUFLbklFbzVTbkxzcUFQYmQxMDF3cTdnalJlUGFTWm1UejBtcFQxV2ZoczZ3ajJwSlRiRlpZTVRVL2VQOEFtTEx0UklLYXdwbUV3VjNRemsrTEE5YU5nK2tBcG5CYTFWN0lZb1hweXFqWjM4b1pMQVJiTi9VbW9ETHNNd1hncVZiNElaenVHNysxWE1mWjZJUjJ3MzZpaVZCODdwZ2R6dDdOMzdDc1lWWit3Y3hJbXovRmx4L0ZsdUxtTEE9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==",
+                            "service": {
+                                "name": "stackgres",
+                                "namespace": "stackgres",
+                                "path": "/stackgres/conversion/sgconfig",
+                                "port": 443
+                            }
+                        },
+                        "conversionReviewVersions": [
+                            "v1"
+                        ]
+                    }
+                },
+                "group": "stackgres.io",
+                "names": {
+                    "kind": "SGConfig",
+                    "listKind": "SGConfigList",
+                    "plural": "sgconfigs",
+                    "singular": "sgconfig"
+                },
+                "scope": "Namespaced",
+                "versions": [
+                    {
+                        "additionalPrinterColumns": [
+                            {
+                                "jsonPath": ".metadata.annotations.stackgres\\.io/lockPod",
+                                "name": "operator-pod",
+                                "type": "string"
+                            },
+                            {
+                                "jsonPath": ".status.version",
+                                "name": "operator-version",
+                                "type": "string"
+                            }
+                        ],
+                        "name": "v1",
+                        "schema": {
+                            "openAPIV3Schema": {
+                                "description": "SGConfig stores the configuration of the StackGres Operator\n\n> **WARNING**: Creating more than one SGConfig is forbidden in order to avoid misbehaviours. The single SGConfig should be created automatically during installation.\n",
+                                "properties": {
+                                    "apiVersion": {
+                                        "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+                                        "type": "string"
+                                    },
+                                    "kind": {
+                                        "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+                                        "type": "string"
+                                    },
+                                    "metadata": {
+                                        "type": "object"
+                                    },
+                                    "spec": {
+                                        "description": "Spec defines the desired state of SGConfig",
+                                        "properties": {
+                                            "adminui": {
+                                                "description": "Section to configure Web Console container",
+                                                "properties": {
+                                                    "image": {
+                                                        "description": "Section to configure Web Console image",
+                                                        "properties": {
+                                                            "name": {
+                                                                "default": "stackgres/admin-ui",
+                                                                "description": "Web Console image name",
+                                                                "type": "string"
+                                                            },
+                                                            "pullPolicy": {
+                                                                "default": "IfNotPresent",
+                                                                "description": "Web Console image pull policy",
+                                                                "type": "string"
+                                                            },
+                                                            "tag": {
+                                                                "description": "Web Console image tag",
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "resources": {
+                                                        "description": "Web Console resources. See https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#resourcerequirements-v1-core",
+                                                        "type": "object",
+                                                        "x-kubernetes-preserve-unknown-fields": true
+                                                    },
+                                                    "service": {
+                                                        "description": "Section to configure Web Console service.",
+                                                        "properties": {
+                                                            "exposeHTTP": {
+                                                                "default": false,
+                                                                "description": "When set to `true` the HTTP port will be exposed in the Web Console Service",
+                                                                "type": "boolean"
+                                                            },
+                                                            "loadBalancerIP": {
+                                                                "description": "LoadBalancer will get created with the IP specified in\nthis field. This feature depends on whether the underlying cloud-provider supports specifying\nthe loadBalancerIP when a load balancer is created. This field will be ignored if the\ncloud-provider does not support the feature.\n",
+                                                                "type": "string"
+                                                            },
+                                                            "loadBalancerSourceRanges": {
+                                                                "description": "If specified and supported by the platform,\nthis will restrict traffic through the cloud-provider load-balancer will be restricted to the\nspecified client IPs. This field will be ignored if the cloud-provider does not support the\nfeature.\nMore info: https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/\n",
+                                                                "items": {
+                                                                    "type": "string"
+                                                                },
+                                                                "type": "array"
+                                                            },
+                                                            "nodePort": {
+                                                                "description": "The HTTPS port used to expose the Service on Kubernetes nodes",
+                                                                "type": "integer"
+                                                            },
+                                                            "nodePortHTTP": {
+                                                                "description": "The HTTP port used to expose the Service on Kubernetes nodes",
+                                                                "type": "integer"
+                                                            },
+                                                            "type": {
+                                                                "default": "ClusterIP",
+                                                                "description": "The type used for the service of the UI:\n* Set to LoadBalancer to create a load balancer (if supported by the kubernetes cluster)\n  to allow connect from Internet to the UI. Note that enabling this feature will probably incurr in\n  some fee that depend on the host of the kubernetes cluster (for example this is true for EKS, GKE\n  and AKS).\n* Set to NodePort to expose admin UI from kubernetes nodes.\n",
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "authentication": {
+                                                "description": "Section to configure Web Console authentication",
+                                                "properties": {
+                                                    "createAdminSecret": {
+                                                        "default": true,
+                                                        "description": "When `true` will create the secret used to store the admin user credentials to access the UI.\n",
+                                                        "type": "boolean"
+                                                    },
+                                                    "oidc": {
+                                                        "description": "Section to configure Web Console OIDC authentication",
+                                                        "properties": {
+                                                            "authServerUrl": {
+                                                                "type": "string"
+                                                            },
+                                                            "clientId": {
+                                                                "type": "string"
+                                                            },
+                                                            "clientIdSecretRef": {
+                                                                "properties": {
+                                                                    "key": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "name": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "credentialsSecret": {
+                                                                "type": "string"
+                                                            },
+                                                            "credentialsSecretSecretRef": {
+                                                                "properties": {
+                                                                    "key": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "name": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "tlsVerification": {
+                                                                "description": "Can be one of `required`, `certificate-validation` or `none`",
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "password": {
+                                                        "description": "The admin password that will be created for the Web Console.\n\nIf not specified a random password will be generated.\n",
+                                                        "type": "string"
+                                                    },
+                                                    "secretRef": {
+                                                        "description": "Allow to specify a reference to a Secret with the admin user credentials for the Web Console.\n\nIn order to assign properly permissions. Make sure the `user` field match the value of the `k8sUsername` key in the referenced Secret.\n",
+                                                        "properties": {
+                                                            "name": {
+                                                                "description": "The name of the Secret.",
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "type": {
+                                                        "default": "jwt",
+                                                        "description": "Specify the authentication mechanism to use. By default is `jwt`, see https://stackgres.io/doc/latest/api/rbac#local-secret-mechanism.\n If set to `oidc` then see https://stackgres.io/doc/latest/api/rbac/#openid-connect-provider-mechanism.\n",
+                                                        "type": "string"
+                                                    },
+                                                    "user": {
+                                                        "default": "admin",
+                                                        "description": "The admin username that will be created for the Web Console\n\nOperator bundle installation can not change the default value of this field.\n",
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "cert": {
+                                                "description": "Section to configure the Operator, REST API and Web Console certificates and JWT RSA key-pair.",
+                                                "properties": {
+                                                    "autoapprove": {
+                                                        "default": true,
+                                                        "description": "If set to `true` the CertificateSigningRequest used to generate the certificate used by\n Webhooks will be approved by the Operator Installation Job.\n",
+                                                        "type": "boolean"
+                                                    },
+                                                    "certDuration": {
+                                                        "description": "The duration in days of the generated certificate for the Operator after which it will expire and be regenerated.\nIf not specified it will be set to 730 (2 years) by default.\n",
+                                                        "type": "integer"
+                                                    },
+                                                    "certManager": {
+                                                        "description": "Section to configure cert-manager integration to generate Operator certificates",
+                                                        "properties": {
+                                                            "autoConfigure": {
+                                                                "default": false,
+                                                                "description": "When set to `true` then Issuer and Certificate for Operator and Web Console / REST API\n Pods will be generated\n",
+                                                                "type": "boolean"
+                                                            },
+                                                            "duration": {
+                                                                "default": "2160h",
+                                                                "description": "The requested duration (i.e. lifetime) of the Certificates. See https://cert-manager.io/docs/reference/api-docs/#cert-manager.io%2fv1",
+                                                                "type": "string"
+                                                            },
+                                                            "encoding": {
+                                                                "default": "PKCS1",
+                                                                "description": "The private key cryptography standards (PKCS) encoding for this certificate\u2019s private key to be encoded in. See https://cert-manager.io/docs/reference/api-docs/#cert-manager.io/v1.CertificatePrivateKey",
+                                                                "type": "string"
+                                                            },
+                                                            "renewBefore": {
+                                                                "default": "360h",
+                                                                "description": "How long before the currently issued certificate\u2019s expiry cert-manager should renew the certificate. See https://cert-manager.io/docs/reference/api-docs/#cert-manager.io%2fv1",
+                                                                "type": "string"
+                                                            },
+                                                            "size": {
+                                                                "default": 2048,
+                                                                "description": "Size is the key bit size of the corresponding private key for this certificate. See https://cert-manager.io/docs/reference/api-docs/#cert-manager.io/v1.CertificatePrivateKey",
+                                                                "type": "integer"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "createForOperator": {
+                                                        "default": true,
+                                                        "description": "When set to `true` the Operator certificate will be created.",
+                                                        "type": "boolean"
+                                                    },
+                                                    "createForWebApi": {
+                                                        "default": true,
+                                                        "description": "When set to `true` the Web Console / REST API certificate will be created.",
+                                                        "type": "boolean"
+                                                    },
+                                                    "regenerateCert": {
+                                                        "default": true,
+                                                        "description": "When set to `true` the Operator certificates will be regenerated if `createForOperator` is set to `true`, and the certificate is expired or invalid.\n",
+                                                        "type": "boolean"
+                                                    },
+                                                    "regenerateWebCert": {
+                                                        "default": true,
+                                                        "description": "When set to `true` the Web Console / REST API certificates will be regenerated if `createForWebApi` is set to `true`, and the certificate is expired or invalid.\n",
+                                                        "type": "boolean"
+                                                    },
+                                                    "regenerateWebRsa": {
+                                                        "default": true,
+                                                        "description": "When set to `true` the Web Console / REST API RSA key pair will be regenerated if `createForWebApi` is set to `true`, and the certificate is expired or invalid.\n",
+                                                        "type": "boolean"
+                                                    },
+                                                    "secretName": {
+                                                        "description": "The Secret name with the Operator Webhooks certificate issued by the Kubernetes cluster CA\n of type kubernetes.io/tls. See https://kubernetes.io/docs/concepts/configuration/secret/#tls-secrets\n",
+                                                        "type": "string"
+                                                    },
+                                                    "webCertDuration": {
+                                                        "description": "The duration in days of the generated certificate for the Web Console / REST API after which it will expire and be regenerated.\nIf not specified it will be set to 730 (2 years) by default.\n",
+                                                        "type": "integer"
+                                                    },
+                                                    "webRsaDuration": {
+                                                        "description": "The duration in days of the generated RSA key pair for the Web Console / REST API after which it will expire and be regenerated.\nIf not specified it will be set to 730 (2 years) by default.\n",
+                                                        "type": "integer"
+                                                    },
+                                                    "webSecretName": {
+                                                        "description": "The Secret name with the Web Console / REST API certificate\n of type kubernetes.io/tls. See https://kubernetes.io/docs/concepts/configuration/secret/#tls-secrets\n",
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "containerRegistry": {
+                                                "default": "quay.io",
+                                                "description": "The container registry host (and port) where the images will be pulled from.",
+                                                "type": "string"
+                                            },
+                                            "deploy": {
+                                                "description": "Section to configure deployment aspects.",
+                                                "properties": {
+                                                    "operator": {
+                                                        "default": true,
+                                                        "description": "When set to `true` the Operator will be deployed.",
+                                                        "type": "boolean"
+                                                    },
+                                                    "restapi": {
+                                                        "default": true,
+                                                        "description": "When set to `true` the Web Console / REST API will be deployed.",
+                                                        "type": "boolean"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "developer": {
+                                                "description": "Section to configure developer options.\n\nFollowing options are for developers only, but can also be useful in some cases ;)\n",
+                                                "properties": {
+                                                    "allowPullExtensionsFromImageRepository": {
+                                                        "default": false,
+                                                        "description": "If set to `true` and `extensions.cache.enabled` is also `true`\n it will try to download extensions from images (experimental)\n",
+                                                        "type": "boolean"
+                                                    },
+                                                    "disableArbitraryUser": {
+                                                        "default": false,
+                                                        "description": "It set to `true` disable arbitrary user that is set for OpenShift clusters\n",
+                                                        "type": "boolean"
+                                                    },
+                                                    "enableJvmDebug": {
+                                                        "default": false,
+                                                        "description": "Only work with JVM version and allow connect\n on port 8000 of operator Pod with jdb or similar\n",
+                                                        "type": "boolean"
+                                                    },
+                                                    "enableJvmDebugSuspend": {
+                                                        "default": false,
+                                                        "description": "Only work with JVM version and if `enableJvmDebug` is `true`\n suspend the JVM until a debugger session is started\n",
+                                                        "type": "boolean"
+                                                    },
+                                                    "externalOperatorIp": {
+                                                        "description": "Set the external Operator IP",
+                                                        "type": "string"
+                                                    },
+                                                    "externalOperatorPort": {
+                                                        "description": "Set the external Operator port",
+                                                        "type": "integer"
+                                                    },
+                                                    "externalRestApiIp": {
+                                                        "description": "Set the external REST API IP",
+                                                        "type": "string"
+                                                    },
+                                                    "externalRestApiPort": {
+                                                        "description": "Set the external REST API port",
+                                                        "type": "integer"
+                                                    },
+                                                    "logLevel": {
+                                                        "description": "Set `quarkus.log.level`. See https://quarkus.io/guides/logging#root-logger-configuration",
+                                                        "type": "string"
+                                                    },
+                                                    "patches": {
+                                                        "description": "Section to define patches for some StackGres Pods\n",
+                                                        "properties": {
+                                                            "adminui": {
+                                                                "description": "Section to define volumes to be used by the adminui container\n",
+                                                                "properties": {
+                                                                    "volumeMounts": {
+                                                                        "description": "Pod's container volume mounts. See https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#volumemount-v1-core",
+                                                                        "items": {
+                                                                            "type": "object",
+                                                                            "x-kubernetes-preserve-unknown-fields": true
+                                                                        },
+                                                                        "type": "array"
+                                                                    },
+                                                                    "volumes": {
+                                                                        "description": "Pod volumes. See https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#volume-v1-core",
+                                                                        "items": {
+                                                                            "type": "object",
+                                                                            "x-kubernetes-preserve-unknown-fields": true
+                                                                        },
+                                                                        "type": "array"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "clusterController": {
+                                                                "description": "Section to define volumes to be used by the cluster controller container\n",
+                                                                "properties": {
+                                                                    "volumeMounts": {
+                                                                        "description": "Pod's container volume mounts. See https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#volumemount-v1-core",
+                                                                        "items": {
+                                                                            "type": "object",
+                                                                            "x-kubernetes-preserve-unknown-fields": true
+                                                                        },
+                                                                        "type": "array"
+                                                                    },
+                                                                    "volumes": {
+                                                                        "description": "Pod volumes. See https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#volume-v1-core",
+                                                                        "items": {
+                                                                            "type": "object",
+                                                                            "x-kubernetes-preserve-unknown-fields": true
+                                                                        },
+                                                                        "type": "array"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "distributedlogsController": {
+                                                                "description": "Section to define volumes to be used by the distributedlogs controller container\n",
+                                                                "properties": {
+                                                                    "volumeMounts": {
+                                                                        "description": "Pod's container volume mounts. See https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#volumemount-v1-core",
+                                                                        "items": {
+                                                                            "type": "object",
+                                                                            "x-kubernetes-preserve-unknown-fields": true
+                                                                        },
+                                                                        "type": "array"
+                                                                    },
+                                                                    "volumes": {
+                                                                        "description": "Pod volumes. See https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#volume-v1-core",
+                                                                        "items": {
+                                                                            "type": "object",
+                                                                            "x-kubernetes-preserve-unknown-fields": true
+                                                                        },
+                                                                        "type": "array"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "jobs": {
+                                                                "description": "Section to define volumes to be used by the jobs container\n",
+                                                                "properties": {
+                                                                    "volumeMounts": {
+                                                                        "description": "Pod's container volume mounts. See https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#volumemount-v1-core",
+                                                                        "items": {
+                                                                            "type": "object",
+                                                                            "x-kubernetes-preserve-unknown-fields": true
+                                                                        },
+                                                                        "type": "array"
+                                                                    },
+                                                                    "volumes": {
+                                                                        "description": "Pod volumes. See https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#volume-v1-core",
+                                                                        "items": {
+                                                                            "type": "object",
+                                                                            "x-kubernetes-preserve-unknown-fields": true
+                                                                        },
+                                                                        "type": "array"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "operator": {
+                                                                "description": "Section to define volumes to be used by the operator container\n",
+                                                                "properties": {
+                                                                    "volumeMounts": {
+                                                                        "description": "Pod's container volume mounts. See https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#volumemount-v1-core",
+                                                                        "items": {
+                                                                            "type": "object",
+                                                                            "x-kubernetes-preserve-unknown-fields": true
+                                                                        },
+                                                                        "type": "array"
+                                                                    },
+                                                                    "volumes": {
+                                                                        "description": "Pod volumes. See https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#volume-v1-core",
+                                                                        "items": {
+                                                                            "type": "object",
+                                                                            "x-kubernetes-preserve-unknown-fields": true
+                                                                        },
+                                                                        "type": "array"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "restapi": {
+                                                                "description": "Section to define volumes to be used by the restapi container\n",
+                                                                "properties": {
+                                                                    "volumeMounts": {
+                                                                        "description": "Pod's container volume mounts. See https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#volumemount-v1-core",
+                                                                        "items": {
+                                                                            "type": "object",
+                                                                            "x-kubernetes-preserve-unknown-fields": true
+                                                                        },
+                                                                        "type": "array"
+                                                                    },
+                                                                    "volumes": {
+                                                                        "description": "Pod volumes. See https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#volume-v1-core",
+                                                                        "items": {
+                                                                            "type": "object",
+                                                                            "x-kubernetes-preserve-unknown-fields": true
+                                                                        },
+                                                                        "type": "array"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "showDebug": {
+                                                        "default": false,
+                                                        "description": "If set to `true` add extra debug to any script controlled by the reconciliation cycle of the operator configuration",
+                                                        "type": "boolean"
+                                                    },
+                                                    "showStackTraces": {
+                                                        "default": false,
+                                                        "description": "Set `quarkus.log.console.format` to `%d{yyyy-MM-dd HH:mm:ss,SSS} %-5p [%c{4.}] (%t) %s%e%n`. See https://quarkus.io/guides/logging#logging-format",
+                                                        "type": "boolean"
+                                                    },
+                                                    "useJvmImages": {
+                                                        "default": false,
+                                                        "description": "The operator will use JVM version of the images\n",
+                                                        "type": "boolean"
+                                                    },
+                                                    "version": {
+                                                        "description": "Set the operator version (used for testing)",
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object",
+                                                "x-kubernetes-preserve-unknown-fields": true
+                                            },
+                                            "extensions": {
+                                                "description": "Section to configure extensions",
+                                                "properties": {
+                                                    "cache": {
+                                                        "description": "Section to configure extensions cache (experimental).\n\nThis feature is in beta and may cause failures, please use with caution and report any\n error to https://gitlab.com/ongresinc/stackgres/-/issues/new\n",
+                                                        "properties": {
+                                                            "enabled": {
+                                                                "default": false,
+                                                                "description": "When set to `true` enable the extensions cache.\n\nThis feature is in beta and may cause failures, please use with caution and report any\n error to https://gitlab.com/ongresinc/stackgres/-/issues/new\n",
+                                                                "type": "boolean"
+                                                            },
+                                                            "hostPath": {
+                                                                "description": "If set, will use a host path volume with the specified path for the extensions cache\n instead of a PersistentVolume\n",
+                                                                "type": "string"
+                                                            },
+                                                            "persistentVolume": {
+                                                                "description": "Section to configure the extensions cache PersistentVolume",
+                                                                "properties": {
+                                                                    "size": {
+                                                                        "default": "1Gi",
+                                                                        "description": "The PersistentVolume size for the extensions cache\n\nOnly use whole numbers (e.g. not 1e6) and K/Ki/M/Mi/G/Gi as units\n",
+                                                                        "type": "string"
+                                                                    },
+                                                                    "storageClass": {
+                                                                        "description": "If defined set storage class\nIf set to \"-\" (equivalent to storageClass: \"\" in a PV spec) disables\n dynamic provisioning\nIf undefined (the default) or set to null, no storageClass spec is\n set, choosing the default provisioner.  (gp2 on AWS, standard on\n GKE, AWS & OpenStack)\n",
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "preloadedExtensions": {
+                                                                "default": [
+                                                                    "x86_64/linux/timescaledb-1\\.7\\.4-pg12"
+                                                                ],
+                                                                "description": "An array of extensions pattern used to pre-loaded estensions into the extensions cache",
+                                                                "items": {
+                                                                    "description": "An extension pattern used to pre-loaded estensions into the extensions cache",
+                                                                    "type": "string"
+                                                                },
+                                                                "type": "array"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "repositoryUrls": {
+                                                        "default": [
+                                                            "https://extensions.stackgres.io/postgres/repository"
+                                                        ],
+                                                        "description": "A list of extensions repository URLs used to retrieve extensions\n\nTo set a proxy for extensions repository add parameter proxyUrl to the URL:\n    `https://extensions.stackgres.io/postgres/repository?proxyUrl=<proxy scheme>%3A%2F%2F<proxy host>[%3A<proxy port>]` (URL encoded)\n\nOther URL parameters are:\n\n* `skipHostnameVerification`: set it to `true` in order to use a server or a proxy with a self signed certificate\n* `retry`: set it to `<max retriex>[:<sleep before next retry>]` in order to retry a request on failure\n* `setHttpScheme`: set it to `true` in order to force using HTTP scheme\n",
+                                                        "items": {
+                                                            "type": "string"
+                                                        },
+                                                        "type": "array"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "grafana": {
+                                                "description": "Section to configure Grafana integration",
+                                                "properties": {
+                                                    "autoEmbed": {
+                                                        "default": false,
+                                                        "description": "When set to `true` embed automatically Grafana into the Web Console by creating the\n StackGres dashboard and the read-only role used to read it from the Web Console \n",
+                                                        "type": "boolean"
+                                                    },
+                                                    "dashboardConfigMap": {
+                                                        "description": "The ConfigMap name with the dashboard JSON in the key `grafana-dashboard.json`\n that will be created in Grafana. If not set the default\n",
+                                                        "type": "string"
+                                                    },
+                                                    "dashboardId": {
+                                                        "description": "The dashboard id that will be create in Grafana\n (see https://grafana.com/grafana/dashboards). By default 9628. (used to embed automatically\n Grafana)\n\nManual Steps:\n \nCreate grafana dashboard for postgres exporter and copy/paste share URL:\n- Grafana > Create > Import > Grafana.com Dashboard 9628\nCopy/paste grafana dashboard URL for postgres exporter:\n- Grafana > Dashboard > Manage > Select postgres exporter dashboard > Copy URL\n",
+                                                        "type": "string"
+                                                    },
+                                                    "datasourceName": {
+                                                        "default": "Prometheus",
+                                                        "description": "The datasource name used to create the StackGres Dashboard into Grafana",
+                                                        "type": "string"
+                                                    },
+                                                    "password": {
+                                                        "default": "prom-operator",
+                                                        "description": "The password to access Grafana. By default prom-operator (the default in for\n kube-prometheus-stack helm chart). (used to embed automatically Grafana)\n",
+                                                        "type": "string"
+                                                    },
+                                                    "schema": {
+                                                        "default": "http",
+                                                        "description": "The schema to access Grafana. By default http. (used to embed manually and\n automatically grafana)\n",
+                                                        "type": "string"
+                                                    },
+                                                    "secretName": {
+                                                        "description": "The name of secret with credentials to access Grafana. (used to embed\n automatically Grafana, alternative to use `user` and `password`)\n",
+                                                        "type": "string"
+                                                    },
+                                                    "secretNamespace": {
+                                                        "description": "The namespace of secret with credentials to access Grafana. (used to\n embed automatically Grafana, alternative to use `user` and `password`)\n",
+                                                        "type": "string"
+                                                    },
+                                                    "secretPasswordKey": {
+                                                        "description": "The key of secret with password used to access Grafana. (used to\n embed automatically Grafana, alternative to use `user` and `password`)\n",
+                                                        "type": "string"
+                                                    },
+                                                    "secretUserKey": {
+                                                        "description": "The key of secret with username used to access Grafana. (used to embed\n automatically Grafana, alternative to use `user` and `password`)\n",
+                                                        "type": "string"
+                                                    },
+                                                    "token": {
+                                                        "description": "The Grafana API token to access the PostgreSQL dashboard created\n in Grafana (used to embed manually Grafana)\n\nManual Steps:\n \nCreate and copy/paste grafana API token:\n- Grafana > Configuration > API Keys > Add API key (for viewer) > Copy key value\n",
+                                                        "type": "string"
+                                                    },
+                                                    "url": {
+                                                        "description": "The URL of the PostgreSQL dashboard created in Grafana (used to embed manually\n Grafana)\n",
+                                                        "type": "string"
+                                                    },
+                                                    "user": {
+                                                        "default": "admin",
+                                                        "description": "The username to access Grafana. By default admin. (used to embed automatically\n Grafana)\n",
+                                                        "type": "string"
+                                                    },
+                                                    "webHost": {
+                                                        "description": "The service host name to access grafana (used to embed manually and\n automatically Grafana). \nThe parameter value should point to the grafana service following the \n [DNS reference](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/) `svc_name.namespace`\n",
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "imagePullPolicy": {
+                                                "default": "IfNotPresent",
+                                                "description": "Image pull policy used for images loaded by the Operator",
+                                                "type": "string"
+                                            },
+                                            "jobs": {
+                                                "description": "Section to configure Operator Installation Jobs",
+                                                "properties": {
+                                                    "affinity": {
+                                                        "description": "Operator Installation Jobs affinity. See https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#affinity-v1-core",
+                                                        "type": "object",
+                                                        "x-kubernetes-preserve-unknown-fields": true
+                                                    },
+                                                    "annotations": {
+                                                        "description": "Operator Installation Jobs annotations",
+                                                        "type": "object",
+                                                        "x-kubernetes-preserve-unknown-fields": true
+                                                    },
+                                                    "image": {
+                                                        "description": "Section to configure Operator Installation Jobs image",
+                                                        "properties": {
+                                                            "name": {
+                                                                "default": "stackgres/jobs",
+                                                                "description": "Operator Installation Jobs image name",
+                                                                "type": "string"
+                                                            },
+                                                            "pullPolicy": {
+                                                                "default": "IfNotPresent",
+                                                                "description": "Operator Installation Jobs image pull policy",
+                                                                "type": "string"
+                                                            },
+                                                            "tag": {
+                                                                "description": "Operator Installation Jobs image tag",
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "nodeSelector": {
+                                                        "description": "Operator Installation Jobs node selector",
+                                                        "type": "object",
+                                                        "x-kubernetes-preserve-unknown-fields": true
+                                                    },
+                                                    "resources": {
+                                                        "description": "Operator Installation Jobs resources. See https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#resourcerequirements-v1-core",
+                                                        "type": "object",
+                                                        "x-kubernetes-preserve-unknown-fields": true
+                                                    },
+                                                    "serviceAccount": {
+                                                        "description": "Section to configure Jobs ServiceAccount",
+                                                        "properties": {
+                                                            "annotations": {
+                                                                "description": "Jobs ServiceAccount annotations",
+                                                                "type": "object",
+                                                                "x-kubernetes-preserve-unknown-fields": true
+                                                            },
+                                                            "repoCredentials": {
+                                                                "description": "Repositories credentials Secret names",
+                                                                "items": {
+                                                                    "description": "Repository credentials Secret name",
+                                                                    "type": "string"
+                                                                },
+                                                                "type": "array"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "tolerations": {
+                                                        "description": "Operator Installation Jobs tolerations. See https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#toleration-v1-core",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "x-kubernetes-preserve-unknown-fields": true
+                                                        },
+                                                        "type": "array"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "operator": {
+                                                "description": "Section to configure Operator Pod",
+                                                "properties": {
+                                                    "affinity": {
+                                                        "description": "Operator Pod affinity. See https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#affinity-v1-core",
+                                                        "type": "object",
+                                                        "x-kubernetes-preserve-unknown-fields": true
+                                                    },
+                                                    "annotations": {
+                                                        "description": "Operator Pod annotations",
+                                                        "type": "object",
+                                                        "x-kubernetes-preserve-unknown-fields": true
+                                                    },
+                                                    "image": {
+                                                        "description": "Section to configure Operator image",
+                                                        "properties": {
+                                                            "name": {
+                                                                "default": "stackgres/operator",
+                                                                "description": "Operator image name",
+                                                                "type": "string"
+                                                            },
+                                                            "pullPolicy": {
+                                                                "default": "IfNotPresent",
+                                                                "description": "Operator image pull policy",
+                                                                "type": "string"
+                                                            },
+                                                            "tag": {
+                                                                "description": "Operator image tag",
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "nodeSelector": {
+                                                        "description": "Operator Pod node selector",
+                                                        "type": "object",
+                                                        "x-kubernetes-preserve-unknown-fields": true
+                                                    },
+                                                    "resources": {
+                                                        "description": "Operator Pod resources. See https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#resourcerequirements-v1-core",
+                                                        "type": "object",
+                                                        "x-kubernetes-preserve-unknown-fields": true
+                                                    },
+                                                    "service": {
+                                                        "description": "Section to configure Operator Service",
+                                                        "properties": {
+                                                            "annotations": {
+                                                                "description": "Section to configure Operator Service annotations",
+                                                                "type": "object",
+                                                                "x-kubernetes-preserve-unknown-fields": true
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "serviceAccount": {
+                                                        "description": "Section to configure Operator ServiceAccount",
+                                                        "properties": {
+                                                            "annotations": {
+                                                                "description": "Section to configure Operator ServiceAccount annotations",
+                                                                "type": "object",
+                                                                "x-kubernetes-preserve-unknown-fields": true
+                                                            },
+                                                            "repoCredentials": {
+                                                                "description": "Repositories credentials Secret names",
+                                                                "items": {
+                                                                    "description": "Repository credentials Secret name",
+                                                                    "type": "string"
+                                                                },
+                                                                "type": "array"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "tolerations": {
+                                                        "description": "Operator Pod tolerations. See https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#toleration-v1-core",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "x-kubernetes-preserve-unknown-fields": true
+                                                        },
+                                                        "type": "array"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "prometheus": {
+                                                "description": "Section to configure Prometheus integration.",
+                                                "properties": {
+                                                    "allowAutobind": {
+                                                        "default": true,
+                                                        "description": "If set to false disable automatic bind to Prometheus\n  created using the [Prometheus Operator](https://github.com/prometheus-operator/prometheus-operator).\nIf disabled the cluster will not be binded to Prometheus automatically and will require manual\n  intervention by the Kubernetes cluster administrator.\n",
+                                                        "type": "boolean"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "rbac": {
+                                                "description": "Section to configure RBAC for Web Console admin user",
+                                                "properties": {
+                                                    "create": {
+                                                        "default": true,
+                                                        "description": "When set to `true` the admin user is assigned the `cluster-admin` ClusterRole by creating\n ClusterRoleBinding.\n",
+                                                        "type": "boolean"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "restapi": {
+                                                "description": "Section to configure REST API Pod",
+                                                "properties": {
+                                                    "affinity": {
+                                                        "description": "REST API Pod affinity. See https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#affinity-v1-core",
+                                                        "type": "object",
+                                                        "x-kubernetes-preserve-unknown-fields": true
+                                                    },
+                                                    "annotations": {
+                                                        "description": "REST API Pod annotations",
+                                                        "type": "object",
+                                                        "x-kubernetes-preserve-unknown-fields": true
+                                                    },
+                                                    "image": {
+                                                        "description": "Section to configure REST API image",
+                                                        "properties": {
+                                                            "name": {
+                                                                "default": "stackgres/restapi",
+                                                                "description": "REST API image name",
+                                                                "type": "string"
+                                                            },
+                                                            "pullPolicy": {
+                                                                "default": "IfNotPresent",
+                                                                "description": "REST API image pull policy",
+                                                                "type": "string"
+                                                            },
+                                                            "tag": {
+                                                                "description": "REST API image tag",
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "name": {
+                                                        "default": "stackgres-restapi",
+                                                        "description": "REST API container name",
+                                                        "type": "string"
+                                                    },
+                                                    "nodeSelector": {
+                                                        "description": "REST API Pod node selector",
+                                                        "type": "object",
+                                                        "x-kubernetes-preserve-unknown-fields": true
+                                                    },
+                                                    "resources": {
+                                                        "description": "REST API Pod resources. See https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#resourcerequirements-v1-core",
+                                                        "type": "object",
+                                                        "x-kubernetes-preserve-unknown-fields": true
+                                                    },
+                                                    "service": {
+                                                        "description": "Section to configure REST API Service",
+                                                        "properties": {
+                                                            "annotations": {
+                                                                "description": "REST API Service annotations",
+                                                                "type": "object",
+                                                                "x-kubernetes-preserve-unknown-fields": true
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "serviceAccount": {
+                                                        "description": "Section to configure REST API ServiceAccount",
+                                                        "properties": {
+                                                            "annotations": {
+                                                                "description": "REST API ServiceAccount annotations",
+                                                                "type": "object",
+                                                                "x-kubernetes-preserve-unknown-fields": true
+                                                            },
+                                                            "repoCredentials": {
+                                                                "description": "Repositories credentials Secret names",
+                                                                "items": {
+                                                                    "description": "Repository credentials Secret name",
+                                                                    "type": "string"
+                                                                },
+                                                                "type": "array"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "tolerations": {
+                                                        "description": "REST API Pod tolerations. See https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#toleration-v1-core",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "x-kubernetes-preserve-unknown-fields": true
+                                                        },
+                                                        "type": "array"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "serviceAccount": {
+                                                "description": "Section to configure Operator Installation ServiceAccount",
+                                                "properties": {
+                                                    "annotations": {
+                                                        "description": "Section to configure Installation ServiceAccount annotations",
+                                                        "type": "object",
+                                                        "x-kubernetes-preserve-unknown-fields": true
+                                                    },
+                                                    "create": {
+                                                        "default": true,
+                                                        "description": "If `true` the Operator Installation ServiceAccount will be created",
+                                                        "type": "boolean"
+                                                    },
+                                                    "repoCredentials": {
+                                                        "description": "Repositories credentials Secret names",
+                                                        "items": {
+                                                            "description": "Repository credentials Secret name",
+                                                            "type": "string"
+                                                        },
+                                                        "type": "array"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "shardingSphere": {
+                                                "description": "Section to configure integration with ShardingSphere operator",
+                                                "properties": {
+                                                    "serviceAccount": {
+                                                        "description": "Section to configure ServiceAccount used by ShardingSphere operator",
+                                                        "properties": {
+                                                            "name": {
+                                                                "description": "The name of the ServiceAccount used by ShardingSphere operator",
+                                                                "type": "string"
+                                                            },
+                                                            "namespace": {
+                                                                "description": "The namespace of the ServiceAccount used by ShardingSphere operator",
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "namespace",
+                                                            "name"
+                                                        ],
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "serviceAccount"
+                                                ],
+                                                "type": "object"
+                                            }
+                                        },
+                                        "type": "object",
+                                        "x-kubernetes-preserve-unknown-fields": true
+                                    },
+                                    "status": {
+                                        "description": "Status defines the observed state of SGConfig",
+                                        "properties": {
+                                            "conditions": {
+                                                "items": {
+                                                    "properties": {
+                                                        "lastTransitionTime": {
+                                                            "description": "Last time the condition transitioned from one status to another.",
+                                                            "type": "string"
+                                                        },
+                                                        "message": {
+                                                            "description": "A human readable message indicating details about the transition.",
+                                                            "type": "string"
+                                                        },
+                                                        "reason": {
+                                                            "description": "The reason for the condition's last transition.",
+                                                            "type": "string"
+                                                        },
+                                                        "status": {
+                                                            "description": "Status of the condition, one of True, False, Unknown.",
+                                                            "type": "string"
+                                                        },
+                                                        "type": {
+                                                            "description": "Type of deployment condition.",
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "grafana": {
+                                                "properties": {
+                                                    "configHash": {
+                                                        "description": "Grafana configuration hash",
+                                                        "type": "string"
+                                                    },
+                                                    "token": {
+                                                        "description": "Grafana Token that allow to access dashboards",
+                                                        "type": "string"
+                                                    },
+                                                    "urls": {
+                                                        "description": "Grafana URLs to StackGres dashboards",
+                                                        "items": {
+                                                            "description": "Grafana URL to StackGres dashboards preceded by the dashboard name and a semicolon `:`",
+                                                            "type": "string"
+                                                        },
+                                                        "type": "array"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "removeOldOperatorBundleResources": {
+                                                "description": "Indicate when the old operator bundle resources has been removed",
+                                                "type": "boolean"
+                                            },
+                                            "version": {
+                                                "description": "Latest version of the operator used to check for updates",
+                                                "type": "string"
+                                            }
+                                        },
+                                        "type": "object",
+                                        "x-kubernetes-preserve-unknown-fields": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "served": true,
+                        "storage": true,
+                        "subresources": {
+                            "status": {}
+                        }
+                    }
+                ]
+            },
+            "status": {
+                "acceptedNames": {
+                    "kind": "SGConfig",
+                    "listKind": "SGConfigList",
+                    "plural": "sgconfigs",
+                    "singular": "sgconfig"
+                },
+                "conditions": [
+                    {
+                        "lastTransitionTime": "2024-03-19T17:31:20Z",
+                        "message": "no conflicts found",
+                        "reason": "NoConflicts",
+                        "status": "True",
+                        "type": "NamesAccepted"
+                    },
+                    {
+                        "lastTransitionTime": "2024-03-19T17:31:20Z",
+                        "message": "the initial names have been accepted",
+                        "reason": "InitialNamesAccepted",
+                        "status": "True",
+                        "type": "Established"
+                    }
+                ],
+                "storedVersions": [
+                    "v1"
+                ]
+            }
+        },
+        "group": "stackgres.io",
+        "plural": "sgconfigs",
+        "version": "v1"
+    },
+    "learnrun_time": 247.877277135849,
+    "namespace": "stackgres",
+    "preload_images": [
+        "quay.io/stackgres/admin-ui:1.8.1",
+        "quay.io/stackgres/operator:1.8.1",
+        "quay.io/ongres/kubectl:v1.28.2-build-6.29",
+        "quay.io/stackgres/restapi:1.8.1"
+    ],
+    "static_analysis_time": 1.430511474609375e-05
+}
