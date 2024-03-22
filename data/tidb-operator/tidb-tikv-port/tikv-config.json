@@ -1,0 +1,23 @@
+{
+    "deploy": {
+        "steps": [
+            {
+                "apply": {
+                    "file": "tidb/crd.yaml",
+                    "namespace": null
+                }
+            },
+            {
+                "apply": {
+                    "file": "tidb/bundle.yaml",
+                    "operator": true
+                }
+            }
+        ]
+    },
+    "crd_name": "tidbclusters.pingcap.com",
+    "seed_custom_resource": "tidb/cr.yaml",
+    "focus_fields": [
+        ["spec", "tikv"]
+    ]
+}
