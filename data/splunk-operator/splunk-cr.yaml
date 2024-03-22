@@ -1,0 +1,32 @@
+apiVersion: enterprise.splunk.com/v4
+kind: IndexerCluster
+metadata:
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+  name: test-cluster
+spec:
+  imagePullPolicy: Always
+  livenessInitialDelaySeconds: 400
+  readinessInitialDelaySeconds: 390
+  serviceTemplate:
+    spec:
+      type: LoadBalancer
+  topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: zone
+    whenUnsatisfiable: DoNotSchedule
+    labelSelector:
+      matchLabels:
+        foo: bar
+  extraEnv:
+  - name: ADDITIONAL_ENV_VAR_1
+    value: "test_value_1"
+  - name: ADDITIONAL_ENV_VAR_2
+    value: "test_value_2"
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "0.1"
+    limits:
+      memory: "8Gi"
+      cpu: "4"
