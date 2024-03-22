@@ -1,0 +1,92 @@
+---
+# Source: bookkeeper/templates/bookkeeper.yaml
+apiVersion: "bookkeeper.pravega.io/v1alpha1"
+kind: "BookkeeperCluster"
+metadata:
+  name: test-cluster
+  namespace: default
+  labels:
+    app.kubernetes.io/name: bookkeeper-cluster
+    app.kubernetes.io/version: "0.13.0"
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: "bookkeeper-0.10.6"
+spec:
+  replicas: 3
+  image:
+    imageSpec:
+      repository: pravega/bookkeeper
+      pullPolicy: IfNotPresent
+  version: 0.13.0
+  zookeeperUri: zookeeper-client:2181
+  envVars: bookkeeper-configmap
+  autoRecovery: true
+  blockOwnerDeletion: true
+  runAsPrivilegedUser: true
+  probes:
+    readinessProbe:
+      initialDelaySeconds: 20
+      periodSeconds: 20
+      failureThreshold: 9
+      successThreshold: 1
+      timeoutSeconds: 10
+    livenessProbe:
+      initialDelaySeconds: 60
+      periodSeconds: 15
+      failureThreshold: 4
+      successThreshold: 1
+      timeoutSeconds: 5
+  resources:
+      limits:
+        cpu: 2000m
+        memory: 4Gi
+      requests:
+        cpu: 1000m
+        memory: 4Gi
+  storage:
+    ledgerVolumeClaimTemplate:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 10Gi
+    journalVolumeClaimTemplate:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 10Gi
+    indexVolumeClaimTemplate:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 10Gi
+  jvmOptions:
+    memoryOpts:
+      - -Xms1g
+      - -XX:MaxDirectMemorySize=2g
+      - -XX:+ExitOnOutOfMemoryError
+      - -XX:+CrashOnOutOfMemoryError
+      - -XX:+HeapDumpOnOutOfMemoryError
+      - -XX:HeapDumpPath=/tmp/dumpfile/heap
+      - -XX:+UnlockExperimentalVMOptions
+      - -XX:+UseContainerSupport
+      - -XX:MaxRAMPercentage=50.0
+    gcOpts:
+      - -XX:+UseG1GC
+      - -XX:MaxGCPauseMillis=10
+      - -XX:+ParallelRefProcEnabled
+      - -XX:+DoEscapeAnalysis
+      - -XX:ParallelGCThreads=32
+      - -XX:ConcGCThreads=32
+      - -XX:G1NewSizePercent=50
+      - -XX:+DisableExplicitGC
+      - -XX:-ResizePLAB
+  options:
+    emptyDirVolumeMounts: heap-dump=/tmp/dumpfile/heap,logs=/opt/bookkeeper/logs
+    isForceGCAllowWhenNoSpace: "true"
+    journalDirectories: /bk/journal/j0,/bk/journal/j1,/bk/journal/j2,/bk/journal/j3
+    ledgerDirectories: /bk/ledgers/l0,/bk/ledgers/l1,/bk/ledgers/l2,/bk/ledgers/l3
+    ledgerStorageClass: org.apache.bookkeeper.bookie.InterleavedLedgerStorage
+    majorCompactionInterval: "43200"
+    majorCompactionThreshold: "0.8"
+    minorCompactionInterval: "1800"
+    minorCompactionThreshold: "0.4"
+    useHostNameAsBookieID: "true"
