@@ -1,0 +1,25 @@
+{
+    "deploy": {
+        "steps": [
+            {
+                "apply": {
+                    "file": "/users/rra2/workdir/operator.yaml",
+                    "operator": true,
+                    "operator_container_name": "manager"
+                }
+            },
+            {
+                "wait": {
+                    "duration": 30
+                }
+            }
+        ]
+    },
+    "crd_name": "indexerclusters.enterprise.splunk.com",
+    "seed_custom_resource": "/users/rra2/workdir/cr.yaml",
+    "num_nodes": 4,
+    "wait_time": 60,
+    "kubernetes_version": "v1.28.0",
+    "custom_oracle": null,
+    "diff_ignore_fields": []
+}

@@ -1,0 +1,21 @@
+{
+    "deploy": {
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/clickhouse-operator/zookeeper.yaml",
+                    "namespace": "zoo3ns"
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/clickhouse-operator/operator.yaml",
+                    "operator_container_name": "clickhouse-operator",
+                    "operator": true
+                }
+            }
+        ]
+    },
+    "crd_name": "clickhouseinstallations.clickhouse.altinity.com",
+    "seed_custom_resource": "data/clickhouse-operator/cr.yaml"
+}

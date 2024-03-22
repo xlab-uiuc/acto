@@ -1,0 +1,36 @@
+{
+    "deploy": {
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/mysql_mysql-operator/deploy-crds.yaml",
+                    "namespace": "default"
+                }
+            },
+            {
+                "wait": {
+                    "duration": 10
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/mysql_mysql-operator/deploy-operator.yaml",
+                    "operator": true
+                }
+            },
+            {
+                "wait": {
+                    "duration": 10
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/mysql_mysql-operator/secret.yaml",
+                    "operator": true
+                }
+            }
+        ]
+    },
+    "crd_name": "innodbclusters.mysql.oracle.com",
+    "seed_custom_resource": "data/mysql_mysql-operator/cr.yaml"
+}

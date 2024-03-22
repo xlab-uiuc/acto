@@ -1,0 +1,25 @@
+{
+    "deploy": {
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/apache_rocketmq-operator/operator.yaml",
+                    "operator": true,
+                    "namespace": null
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/apache_rocketmq-operator/configmap.yaml"
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/apache_rocketmq-operator/nameservice.yaml"
+                }
+            }
+        ]
+    },
+    "crd_name": "brokers.rocketmq.apache.org",
+    "seed_custom_resource": "data/apache_rocketmq-operator/rocketmq-cr.yaml"
+}
