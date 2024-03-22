@@ -1,0 +1,44 @@
+apiVersion: apps.kubeblocks.io/v1alpha1
+kind: Cluster
+metadata:
+  name: test-cluster
+  namespace: acto-namespace
+  labels: 
+    helm.sh/chart: postgresql-cluster-0.6.0-alpha.36
+    app.kubernetes.io/version: "14.8.0"
+    app.kubernetes.io/instance: pg
+spec:
+  clusterVersionRef: postgresql-14.8.0
+  terminationPolicy: Delete  
+  affinity:
+    podAntiAffinity: Preferred
+    topologyKeys:
+      - kubernetes.io/hostname
+    tenancy: SharedNode
+  clusterDefinitionRef: postgresql
+  componentSpecs:
+    - name: postgresql
+      componentDefRef: postgresql      
+      monitor: false      
+      replicas: 1
+      enabledLogs:
+        - running
+      serviceAccountName: kb-pg
+      switchPolicy:
+        type: Noop      
+      resources:
+        limits:
+          cpu: "0.5"
+          memory: "0.5Gi"
+        requests:
+          cpu: "0.5"
+          memory: "0.5Gi"      
+      volumeClaimTemplates:
+        - name: data # ref clusterDefinition components.containers.volumeMounts.name
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 20Gi      
+      services:
