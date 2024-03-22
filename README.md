@@ -100,7 +100,7 @@
 | acto/schema/anyof.py                                          |       48 |       19 |     60% |32, 38-46, 49, 55-57, 60, 67-72 |
 | acto/schema/array.py                                          |       85 |       32 |     62% |47, 59-68, 70-79, 89-96, 104-106, 109, 116-121, 136, 142 |
 | acto/schema/base.py                                           |      106 |       44 |     58% |31-42, 46, 50, 54-56, 59-71, 74-86, 89, 93-97, 111, 118, 123, 128, 133, 138, 177 |
-| acto/schema/boolean.py                                        |       31 |        9 |     71% |17, 23, 29, 32-35, 45, 48 |
+| acto/schema/boolean.py                                        |       31 |        8 |     74% |17, 23, 29, 32-35, 48 |
 | acto/schema/get\_total\_number\_schemas.py                    |       47 |       36 |     23% | 19-86, 93 |
 | acto/schema/get\_total\_number\_schemas\_test.py              |        7 |        0 |    100% |           |
 | acto/schema/integer.py                                        |       38 |       12 |     68% |18, 24-26, 32-33, 36, 44-49, 51, 67 |
@@ -109,7 +109,7 @@
 | acto/schema/oneof.py                                          |       48 |       33 |     31% |14-22, 28, 31-33, 38-46, 49, 52, 55-57, 60, 63-64, 67-72 |
 | acto/schema/opaque.py                                         |       19 |        7 |     63% |15, 18, 21, 24, 27, 30, 33 |
 | acto/schema/schema.py                                         |       41 |        7 |     83% |23, 27, 33-36, 51 |
-| acto/schema/string.py                                         |       40 |        7 |     82% |36, 42-44, 50, 53, 75 |
+| acto/schema/string.py                                         |       40 |        8 |     80% |36, 42-44, 50, 53, 66, 75 |
 | acto/serialization.py                                         |       52 |       23 |     56% |16-19, 34, 36, 38, 40, 42, 45, 52-58, 65-71 |
 | acto/snapshot.py                                              |       66 |       14 |     79% |81, 96-126, 142-147 |
 | acto/system\_state/\_\_init\_\_.py                            |        0 |        0 |    100% |           |
