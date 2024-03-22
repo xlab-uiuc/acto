@@ -11,7 +11,7 @@
 | acto/checker/checker.py                                       |       10 |        1 |     90% |        20 |
 | acto/checker/checker\_set.py                                  |       48 |       13 |     73% |29, 54-55, 94-105 |
 | acto/checker/impl/\_\_init\_\_.py                             |        0 |        0 |    100% |           |
-| acto/checker/impl/consistency.py                              |      225 |       50 |     78% |74, 86-87, 95-133, 145-146, 180, 195-200, 234, 358, 391, 441, 444-462, 471-488 |
+| acto/checker/impl/consistency.py                              |      225 |       49 |     78% |74, 86-87, 95-133, 145-146, 180, 195-200, 358, 391, 441, 444-462, 471-488 |
 | acto/checker/impl/crash.py                                    |       31 |        3 |     90% |16, 21, 47 |
 | acto/checker/impl/health.py                                   |       52 |        5 |     90% |46, 87-93, 111, 141 |
 | acto/checker/impl/operator\_log.py                            |       23 |        0 |    100% |           |
@@ -109,7 +109,7 @@
 | acto/schema/oneof.py                                          |       48 |       33 |     31% |14-22, 28, 31-33, 38-46, 49, 52, 55-57, 60, 63-64, 67-72 |
 | acto/schema/opaque.py                                         |       19 |        7 |     63% |15, 18, 21, 24, 27, 30, 33 |
 | acto/schema/schema.py                                         |       41 |        7 |     83% |23, 27, 33-36, 51 |
-| acto/schema/string.py                                         |       40 |        8 |     80% |36, 42-44, 50, 53, 66, 75 |
+| acto/schema/string.py                                         |       40 |        7 |     82% |36, 42-44, 50, 53, 75 |
 | acto/serialization.py                                         |       52 |       23 |     56% |16-19, 34, 36, 38, 40, 42, 45, 52-58, 65-71 |
 | acto/snapshot.py                                              |       66 |       14 |     79% |81, 96-126, 142-147 |
 | acto/system\_state/\_\_init\_\_.py                            |        0 |        0 |    100% |           |
@@ -144,7 +144,7 @@
 | acto/utils/preprocess.py                                      |       72 |       60 |     17% |17-83, 105-161, 166-200 |
 | acto/utils/process\_with\_except.py                           |        9 |        9 |      0% |      1-13 |
 | acto/utils/thread\_logger.py                                  |       15 |        3 |     80% | 9, 18, 28 |
-|                                                     **TOTAL** | **9709** | **4368** | **55%** |           |
+|                                                     **TOTAL** | **9709** | **4366** | **55%** |           |
 
 
 ## Setup coverage badge
