@@ -1,0 +1,31 @@
+{
+    "deploy": {
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/tidb-operator/crd.yaml",
+                    "namespace": null
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/tidb-operator/bundle.yaml",
+                    "operator": true
+                }
+            }
+        ]
+    },
+    "crd_name": "tidbclusters.pingcap.com",
+    "seed_custom_resource": "data/tidb-operator/cr.yaml",
+    "example_dir": "data/tidb-operator/examples",
+    "analysis": {
+        "github_link": "https://github.com/pingcap/tidb-operator.git",
+        "commit": "acf57346c962a0bdb9d5c1de8870c332c5adc185",
+        "entrypoint": "cmd/controller-manager",
+        "type": "TidbCluster",
+        "package": "github.com/pingcap/tidb-operator/pkg/apis/pingcap/v1alpha1"
+    },
+    "focus_fields": [
+        ["spec", "pd"]
+    ]
+}
