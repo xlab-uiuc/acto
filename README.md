@@ -109,7 +109,7 @@
 | acto/schema/oneof.py                                          |       48 |       33 |     31% |14-22, 28, 31-33, 38-46, 49, 52, 55-57, 60, 63-64, 67-72 |
 | acto/schema/opaque.py                                         |       19 |        7 |     63% |15, 18, 21, 24, 27, 30, 33 |
 | acto/schema/schema.py                                         |       41 |        7 |     83% |23, 27, 33-36, 51 |
-| acto/schema/string.py                                         |       40 |        7 |     82% |36, 42-44, 50, 53, 75 |
+| acto/schema/string.py                                         |       40 |        8 |     80% |36, 42-44, 50, 53, 66, 75 |
 | acto/serialization.py                                         |       52 |       23 |     56% |16-19, 34, 36, 38, 40, 42, 45, 52-58, 65-71 |
 | acto/snapshot.py                                              |       66 |       14 |     79% |81, 96-126, 142-147 |
 | acto/system\_state/\_\_init\_\_.py                            |        0 |        0 |    100% |           |
@@ -144,7 +144,7 @@
 | acto/utils/preprocess.py                                      |       72 |       60 |     17% |17-83, 105-161, 166-200 |
 | acto/utils/process\_with\_except.py                           |        9 |        9 |      0% |      1-13 |
 | acto/utils/thread\_logger.py                                  |       15 |        3 |     80% | 9, 18, 28 |
-|                                                     **TOTAL** | **9709** | **4366** | **55%** |           |
+|                                                     **TOTAL** | **9709** | **4367** | **55%** |           |
 
 
 ## Setup coverage badge
