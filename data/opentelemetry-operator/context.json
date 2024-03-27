@@ -8,14 +8,14 @@
                     "cert-manager.io/inject-ca-from": "opentelemetry-operator-system/opentelemetry-operator-serving-cert",
                     "controller-gen.kubebuilder.io/version": "v0.12.0"
                 },
-                "creationTimestamp": "2024-03-13T09:07:44Z",
+                "creationTimestamp": "2024-03-19T08:21:24Z",
                 "generation": 1,
                 "labels": {
                     "app.kubernetes.io/name": "opentelemetry-operator"
                 },
                 "name": "opentelemetrycollectors.opentelemetry.io",
-                "resourceVersion": "871",
-                "uid": "47124946-e632-4231-8c0e-8560fc11dbf3"
+                "resourceVersion": "881",
+                "uid": "d27f338c-c3c6-4885-856d-6be22fc9b5bd"
             },
             "spec": {
                 "conversion": {
@@ -1289,7 +1289,8 @@
                                                         }
                                                     },
                                                     "required": [
-                                                        "name"
+                                                        "name",
+                                                        "image"
                                                     ],
                                                     "type": "object"
                                                 },
@@ -3787,7 +3788,8 @@
                                                         }
                                                     },
                                                     "required": [
-                                                        "name"
+                                                        "name",
+                                                        "image"
                                                     ],
                                                     "type": "object"
                                                 },
@@ -7930,14 +7932,14 @@
                 },
                 "conditions": [
                     {
-                        "lastTransitionTime": "2024-03-13T09:07:44Z",
+                        "lastTransitionTime": "2024-03-19T08:21:24Z",
                         "message": "no conflicts found",
                         "reason": "NoConflicts",
                         "status": "True",
                         "type": "NamesAccepted"
                     },
                     {
-                        "lastTransitionTime": "2024-03-13T09:07:44Z",
+                        "lastTransitionTime": "2024-03-19T08:21:24Z",
                         "message": "the initial names have been accepted",
                         "reason": "InitialNamesAccepted",
                         "status": "True",
@@ -7953,14 +7955,15 @@
         "plural": "opentelemetrycollectors",
         "version": "v1alpha1"
     },
-    "learnrun_time": 209.7000298500061,
+    "learnrun_time": 216.30698132514954,
     "namespace": "opentelemetry-operator-system",
     "preload_images": [
+        "ghcr.io/open-telemetry/opentelemetry-operator/opentelemetry-operator:0.95.0",
         "quay.io/jetstack/cert-manager-webhook:v1.14.4",
-        "quay.io/jetstack/cert-manager-controller:v1.14.4",
-        "gcr.io/kubebuilder/kube-rbac-proxy:v0.13.1",
         "quay.io/jetstack/cert-manager-cainjector:v1.14.4",
-        "ghcr.io/open-telemetry/opentelemetry-operator/opentelemetry-operator:0.95.0"
+        "gcr.io/kubebuilder/kube-rbac-proxy:v0.13.1",
+        "quay.io/jetstack/cert-manager-controller:v1.14.4",
+        "ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector:0.95.0"
     ],
-    "static_analysis_time": 1.9073486328125e-05
+    "static_analysis_time": 1.3589859008789062e-05
 }
