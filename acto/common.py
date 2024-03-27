@@ -583,11 +583,13 @@ def invalid_input_message(
             - when log indicates invalid input: the responsible field path for the invalid input
     """
     logger = get_thread_logger(with_prefix=True)
+    is_invalid = False
 
     for regex in INVALID_INPUT_LOG_REGEX:
         if re.search(regex, log_msg):
             logger.info("Recognized invalid input through regex: %s", log_msg)
-            return True, PropertyPath([])
+            is_invalid = True
+            break
 
     # Check if the log line contains the field or value
     # If so, also return True
@@ -621,7 +623,7 @@ def invalid_input_message(
                 )
                 return True, delta.path
 
-    return False, PropertyPath([])
+    return is_invalid, PropertyPath([])
 
 
 def canonicalize(s: str):
