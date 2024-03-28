@@ -112,7 +112,7 @@ class OperatorConfig(pydantic.BaseModel, extra="forbid"):
         default_factory=list
     )
     kubernetes_version: str = pydantic.Field(
-        default="v1.28.0", description="Kubernetes version"
+        default="v1.29.2", description="Kubernetes version"
     )
     kubernetes_engine: KubernetesEngineConfig = pydantic.Field(
         default=KubernetesEngineConfig(),
