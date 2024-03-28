@@ -34,6 +34,7 @@ class OperatorLogChecker(CheckerInterface):
                 )
                 if is_invalid:
                     return InvalidInputResult(
+                        message=value,
                         responsible_property=invalid_field_path
                     )
             # We reported error if we found error in the operator log
