@@ -351,6 +351,12 @@ all_bugs: Dict[str, Dict[str, BugConfig]] = {
         ),
     },
     "rabbitmq-operator": {
+        "rbop-affinity": BugConfig(
+            category=BugCateogry.UNDESIRED_STATE,
+            dir="rbop-affinity",
+            declaration=True,
+            consequences=[BugConsequence.RELIABILITY_ISSUE],
+        ),
         "rbop-928": BugConfig(
             category=BugCateogry.UNDESIRED_STATE,
             dir="rbop-928",

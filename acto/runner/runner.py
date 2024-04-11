@@ -590,7 +590,8 @@ class Runner:
 
     def watch_system_events(self, event_stream, q: multiprocessing.Queue):
         """A process that watches namespaced events"""
-        for _ in event_stream:
+        for event in event_stream:
+            print("Received K8s event", event)
             try:
                 q.put("event")
             except (ValueError, AssertionError):
