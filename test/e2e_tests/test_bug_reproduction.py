@@ -1,4 +1,4 @@
-"""This module contains tests for bug reproduction"""
+
 import multiprocessing
 import os
 import pathlib
@@ -210,46 +210,6 @@ class TestSingleBugReproduction(unittest.TestCase):
                 errors.append(bug_id)
 
         self.assertFalse(errors, f"Test failed with {errors}")
-
-
-
-
-class TestRabbitMQ(unittest.TestCase):
-
-
-    def __init__(self, methodName: str = "runTest") -> None:
-        super().__init__(methodName)
-
-        self._num_workers = 1  # Number of workers to run the test
-
-    def test_one_bug(self):
-        """This function tries to reproduce one bug in all_bugs"""
-        manager = multiprocessing.Manager()
-        workqueue = multiprocessing.Queue()
-
-
-        operator, bug_id, bug_config = (
-            "rabbitmq-operator",
-            "rbop-affinity",
-            all_bugs["rabbitmq-operator"]["rbop-affinity"],
-        )
-        workqueue.put((operator, bug_id, bug_config))
-
-        # workers write reproduction results
-        reproduction_results: Dict[str, bool] = manager.dict()
-        # to this dict. Bug ID -> if success
-        processes: List[multiprocessing.Process] = []
-        for i in range(self._num_workers):
-            p = multiprocessing.Process(
-                target=run_worker, args=(workqueue, i, reproduction_results)
-            )
-            p.start()
-            processes.append(p)
-
-        for p in processes:
-            p.join()
-
-
 
 
 if __name__ == "__main__":
