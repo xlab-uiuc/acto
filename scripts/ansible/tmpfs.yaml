@@ -6,18 +6,25 @@
     - data.yaml
 
   tasks:
-    - name: Mount tmpfs on docker path /var/lib/docker
-      ansible.posix.mount:
-        fstype: tmpfs
-        path: /var/lib/docker
-        src: tmpfs
-        state: mounted
-        opts: "size={{ TMPFS_SIZE }}"
+
+    - name: Create a new ext4 primary partition
+      community.general.parted:
+        device: /dev/sdb
+        number: 1
+        state: present
+        fs_type: ext4
 
     - name: Format the spare partition
       community.general.filesystem:
         fstype: ext4
-        dev: /dev/sda4
+        dev: /dev/sdb1
+
+    - name: Mount the spare partition on acto dir
+      ansible.posix.mount:
+        path: "/var/lib/docker"
+        fstype: ext4
+        src: /dev/sdb1
+        state: mounted
 
     - name: Get the home directory
       become: false
@@ -29,13 +36,6 @@
       ansible.builtin.file:
         path: "{{ home.stdout }}/workdir"
         state: directory
-
-    - name: Mount the spare partition on acto dir
-      ansible.posix.mount:
-        path: "{{ home.stdout }}/workdir"
-        fstype: ext4
-        src: /dev/sda4
-        state: mounted
 
     - name: Change ownership of acto dir
       ansible.builtin.file:

@@ -16,6 +16,16 @@ from scipy import stats
 
 ineffective_files = set()
 
+anvil_table = [
+    [
+        "Controller",
+        "Verified (Anvil) Mean",
+        "Verified (Anvil) Min",
+        "Reference (unverified) Mean",
+        "Reference (unverified) Min",
+    ],
+]
+
 
 def process_ts(files: List[str]) -> pd.DataFrame:
     condition_durations = []
@@ -1227,6 +1237,20 @@ def process_latency(
         output_dir,
     )
 
+    ##############################
+    # Print the Anvil paper table
+    ##############################
+
+    anvil_table.append(
+        [
+            output_dir,
+            f"{anvil_condition_2_merged.mean():05.3f}",
+            f"{anvil_condition_2_merged.max():05.3f}",
+            f"{reference_condition_2_merged.mean():05.3f}",
+            f"{reference_condition_2_merged.max():05.3f}",
+        ]
+    )
+
 
 def plot_latency(
     anvil_condition_1_merged,
@@ -1396,6 +1420,10 @@ def main():
     process_testrun("testrun-anvil-fluent-performance")
     print()
     print()
+
+    print(tabulate.tabulate(anvil_table, headers="firstrow"))
+    with open("anvil-table-3.txt", "w", encoding="utf-8") as f:
+        f.write(tabulate.tabulate(anvil_table, headers="firstrow"))
 
 
 main()

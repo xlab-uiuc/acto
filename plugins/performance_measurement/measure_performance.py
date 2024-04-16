@@ -13,8 +13,6 @@ from typing import Callable
 
 import kubernetes
 import yaml
-from performance_measurement.cadvisor_watcher import CAdvisorWatcher
-from performance_measurement.metrics_api_watcher import MetricsApiWatcher
 
 from acto import utils
 from acto.common import kubernetes_client
@@ -25,6 +23,10 @@ from acto.kubernetes_engine import kind
 from acto.lib.operator_config import OperatorConfig
 from acto.post_process.post_chain_inputs import ChainInputs
 from acto.utils.preprocess import process_crd
+from plugins.performance_measurement.cadvisor_watcher import CAdvisorWatcher
+from plugins.performance_measurement.metrics_api_watcher import (
+    MetricsApiWatcher,
+)
 
 from .fluent_inputs import FluentInputGenerator
 from .measure_runner import MeasurementRunner
@@ -32,7 +34,7 @@ from .rabbitmq_inputs import RabbitMQInputGenerator
 from .zk_inputs import ZooKeeperInputGenerator
 
 
-def load_inputs_from_dir(dir_: str) -> list[object]:
+def load_inputs_from_dir(dir_: str, if_sample: bool) -> list[object]:
     """Load inputs from a directory"""
     inputs = []
     files = sorted(glob.glob(f"{dir_}/input-*.yaml"))
@@ -40,11 +42,12 @@ def load_inputs_from_dir(dir_: str) -> list[object]:
     for file in files:
         with open(file, "r", encoding="utf-8") as f:
             inputs.append(yaml.load(f, Loader=yaml.FullLoader))
-    return inputs
+
+    return inputs if not if_sample else inputs[: len(inputs) // 10]
 
 
 def deploy_metrics_server(
-    _: kubernetes.client.ApiClient, kubectl_client: KubectlClient
+    apiclient: kubernetes.client.ApiClient, kubectl_client: KubectlClient
 ) -> bool:
     """Deploy metrics server"""
     logging.info("Deploying metrics server")
@@ -62,11 +65,13 @@ def test_normal(
     sts_name_f: Callable[[dict], str],
     ds_name_f: Callable[[dict], str],
     modes: list,
+    if_sample: bool,
 ):
     """Run the normal test"""
 
     # prepare workloads
-    workloads = load_inputs_from_dir(input_dir)
+    workloads = load_inputs_from_dir(input_dir, if_sample)
+    logging.info("Loaded %d workloads", len(workloads))
 
     configuration = kubernetes.client.Configuration()
     configuration.verify_ssl = False
@@ -159,7 +164,7 @@ def test_normal(
     if "single-operation" in modes:
         # single operation
         # prepare workloads
-        workloads = load_inputs_from_dir(input_dir)
+        workloads = load_inputs_from_dir(input_dir, if_sample)
 
         single_operation_trial_dir = f"{workdir}/trial-single-operation"
         os.makedirs(single_operation_trial_dir, exist_ok=True)
@@ -266,6 +271,7 @@ def main(args):
             sts_name_f,
             daemonset_name_f,
             modes=args.modes,
+            if_sample=args.sample,
         )
 
     # Run the reference performance test
@@ -285,6 +291,7 @@ def main(args):
             sts_name_f,
             daemonset_name_f,
             modes=args.modes,
+            if_sample=args.sample,
         )
 
 
@@ -343,6 +350,13 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--gen", "-g", dest="gen", action="store_true", help="Generate inputs"
+    )
+    parser.add_argument(
+        "--sample",
+        "-s",
+        dest="sample",
+        action="store_true",
+        help="Sample inputs",
     )
     args = parser.parse_args()
 

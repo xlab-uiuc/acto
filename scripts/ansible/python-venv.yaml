@@ -41,7 +41,8 @@
     - name: Install python packages using pip
       pip:
         # Implication: this script should happen after acto.yml
-        requirements: "{{ home.stdout }}/workdir/acto/requirements.txt"
+        requirements: "{{ home.stdout }}/workdir/acto/requirements-dev.txt"
         state: present
         virtualenv: "{{ home.stdout }}/workdir/acto/venv"
         virtualenv_command: python3.10 -m venv
+      become: false

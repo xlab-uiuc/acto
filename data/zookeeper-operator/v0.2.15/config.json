@@ -1,8 +1,13 @@
 {
     "deploy": {
-        "method": "YAML",
-        "file": "data/zookeeper-operator/v0.2.15/operator.yaml",
-        "init": null
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/zookeeper-operator/v0.2.15/operator.yaml",
+                    "operator": true
+                }
+            }
+        ]
     },
     "crd_name": "zookeeperclusters.zookeeper.pravega.io",
     "custom_fields": "data.zookeeper-operator.prune",
