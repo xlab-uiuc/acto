@@ -1411,19 +1411,34 @@ def process_testrun(testrun_dir: str):
 
 
 def main():
-    process_testrun("testrun-anvil-zk-performance")
-    print()
-    print()
-    process_testrun("testrun-anvil-rabbitmq-performance")
-    print()
-    print()
-    process_testrun("testrun-anvil-fluent-performance")
-    print()
-    print()
+    if os.path.exists("testrun-anvil-zk-performance"):
+        process_testrun("testrun-anvil-zk-performance")
+        print()
+        print()
+    else:
+        print("testrun-anvil-zk-performance does not exist")
 
-    print(tabulate.tabulate(anvil_table, headers="firstrow"))
+    if os.path.exists("testrun-anvil-rabbitmq-performance"):
+        process_testrun("testrun-anvil-rabbitmq-performance")
+        print()
+        print()
+    else:
+        print("testrun-anvil-rabbitmq-performance does not exist")
+
+    if os.path.exists("testrun-anvil-fluent-performance"):
+        process_testrun("testrun-anvil-fluent-performance")
+        print()
+        print()
+    else:
+        print("testrun-anvil-fluent-performance does not exist")
+
+    print(tabulate.tabulate(anvil_table, headers="firstrow", tablefmt="github"))
     with open("anvil-table-3.txt", "w", encoding="utf-8") as f:
-        f.write(tabulate.tabulate(anvil_table, headers="firstrow"))
+        f.write(
+            tabulate.tabulate(
+                anvil_table, headers="firstrow", tablefmt="github"
+            )
+        )
 
 
 main()
