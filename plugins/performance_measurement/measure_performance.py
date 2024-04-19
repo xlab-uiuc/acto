@@ -5,6 +5,7 @@ import dataclasses
 import glob
 import json
 import logging
+import math
 import os
 import threading
 from datetime import datetime
@@ -34,7 +35,7 @@ from .rabbitmq_inputs import RabbitMQInputGenerator
 from .zk_inputs import ZooKeeperInputGenerator
 
 
-def load_inputs_from_dir(dir_: str, if_sample: bool) -> list[object]:
+def load_inputs_from_dir(dir_: str, sample_rate: float) -> list[object]:
     """Load inputs from a directory"""
     inputs = []
     files = sorted(glob.glob(f"{dir_}/input-*.yaml"))
@@ -43,7 +44,7 @@ def load_inputs_from_dir(dir_: str, if_sample: bool) -> list[object]:
         with open(file, "r", encoding="utf-8") as f:
             inputs.append(yaml.load(f, Loader=yaml.FullLoader))
 
-    return inputs if not if_sample else inputs[: len(inputs) // 10]
+    return inputs[: math.ceil(len(inputs) * sample_rate)]
 
 
 def deploy_metrics_server(
@@ -65,12 +66,12 @@ def test_normal(
     sts_name_f: Callable[[dict], str],
     ds_name_f: Callable[[dict], str],
     modes: list,
-    if_sample: bool,
+    sample_rate: float,
 ):
     """Run the normal test"""
 
     # prepare workloads
-    workloads = load_inputs_from_dir(input_dir, if_sample)
+    workloads = load_inputs_from_dir(input_dir, sample_rate)
     logging.info("Loaded %d workloads", len(workloads))
 
     configuration = kubernetes.client.Configuration()
@@ -164,7 +165,7 @@ def test_normal(
     if "single-operation" in modes:
         # single operation
         # prepare workloads
-        workloads = load_inputs_from_dir(input_dir, if_sample)
+        workloads = load_inputs_from_dir(input_dir, sample_rate)
 
         single_operation_trial_dir = f"{workdir}/trial-single-operation"
         os.makedirs(single_operation_trial_dir, exist_ok=True)
@@ -271,7 +272,7 @@ def main(args):
             sts_name_f,
             daemonset_name_f,
             modes=args.modes,
-            if_sample=args.sample,
+            sample_rate=args.sample,
         )
 
     # Run the reference performance test
@@ -291,7 +292,7 @@ def main(args):
             sts_name_f,
             daemonset_name_f,
             modes=args.modes,
-            if_sample=args.sample,
+            sample_rate=args.sample,
         )
 
 
@@ -354,8 +355,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "--sample",
         "-s",
+        type=float,
+        default=1.0,
         dest="sample",
-        action="store_true",
         help="Sample inputs",
     )
     args = parser.parse_args()
