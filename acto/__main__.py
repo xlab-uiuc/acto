@@ -87,6 +87,25 @@ parser.add_argument(
     help="Only generate test cases without executing them",
 )
 parser.add_argument("--checkonly", action="store_true")
+parser.add_argument(
+    "--num-alarms",
+    dest="num_alarms",
+    type=int,
+    help="Number of alarms to early stop running",
+)
+parser.add_argument(
+    "--time-duration",
+    dest="time_duration",
+    type=int,
+    help="Approximate running time (minutes) to early stop",
+)
+parser.add_argument(
+    "--time-hard-bound-gap",
+    dest="time_hard_bound_gap",
+    default=60,
+    type=int,
+    help="Hard bound time gap (minutes) to early stop",
+)
 
 args = parser.parse_args()
 
@@ -149,6 +168,9 @@ acto = Acto(
     apply_testcase_f=apply_testcase_f,
     delta_from=None,
     focus_fields=config.focus_fields,
+    num_alarms=args.num_alarms,
+    time_duration=args.time_duration,
+    time_hard_bound_gap = args.time_hard_bound_gap,
 )
 generation_time = datetime.now()
 logger.info("Acto initialization finished in %s", generation_time - start_time)
