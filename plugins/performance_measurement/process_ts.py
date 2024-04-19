@@ -20,9 +20,9 @@ anvil_table = [
     [
         "Controller",
         "Verified (Anvil) Mean",
-        "Verified (Anvil) Min",
+        "Verified (Anvil) Max",
         "Reference (unverified) Mean",
-        "Reference (unverified) Min",
+        "Reference (unverified) Max",
     ],
 ]
 
