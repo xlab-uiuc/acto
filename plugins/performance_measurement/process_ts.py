@@ -1241,9 +1241,17 @@ def process_latency(
     # Print the Anvil paper table
     ##############################
 
+    controller_name = ""
+    if output_dir == "testrun-anvil-zk-performance":
+        controller_name = "Zookeeper"
+    elif output_dir == "testrun-anvil-rabbitmq-performance":
+        controller_name = "RabbitMQ"
+    elif output_dir == "testrun-anvil-fluent-performance":
+        controller_name = "FluentBit"
+
     anvil_table.append(
         [
-            output_dir,
+            controller_name,
             f"{anvil_condition_2_merged.mean():05.3f}",
             f"{anvil_condition_2_merged.max():05.3f}",
             f"{reference_condition_2_merged.mean():05.3f}",
