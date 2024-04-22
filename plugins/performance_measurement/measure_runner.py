@@ -15,6 +15,7 @@ import jsonpatch
 import kubernetes
 import kubernetes.client.models as k8s_models
 import yaml
+from urllib3.exceptions import SSLError
 
 from acto.common import kubernetes_client
 from acto.kubectl_client.kubectl import KubectlClient
@@ -1269,13 +1270,16 @@ class MeasurementRunner(Runner):
     @staticmethod
     def watch_system_events(event_stream, queue: Queue):
         """A process that watches namespaced events"""
-        for object in event_stream:
-            try:
-                logging.info(f"event type: {object['type']}")
-                ts = time.time()
-                queue.put((object, ts))
-            except (ValueError, AssertionError):
-                pass
+        try:
+            for object in event_stream:
+                try:
+                    logging.info(f"event type: {object['type']}")
+                    ts = time.time()
+                    queue.put((object, ts))
+                except (ValueError, AssertionError):
+                    pass
+        except SSLError:
+            pass
 
     @staticmethod
     def zk_sts_name(input: dict):
