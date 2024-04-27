@@ -1,4 +1,5 @@
-# Number of bugs
+# Bugs found by Acto
+
 (Byproduct bugs included) Total bugs: **81**, confirmed: **62**, Fixed: **41**.<br/>
 
 (Byproduct bugs excluded) Total bugs: **61**, confirmed: **46**, Fixed: **31**.<br/>
