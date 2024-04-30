@@ -3,6 +3,7 @@ on:
   # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
     branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   conditional_job_check_files:
@@ -50,7 +51,7 @@ jobs:
         git diff --quiet bugs.md || echo "::set-output name=are_bugs_changed::true"
 
     - name: Commit files
-      if: steps.verify_diff.outputs.are_bugs_changed == 'true'
+      if: needs.conditional_job_check_files.outputs.docs_changed == 'True' || github.event_name == 'workflow_dispatch'
       run: |
         git config --local user.name github-actions[bot]
         git config --local user.email github-actions[bot]@users.noreply.github.com
