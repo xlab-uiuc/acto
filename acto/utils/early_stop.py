@@ -9,7 +9,7 @@ class AlarmCounter:
         self.bound = bound
         self.lock = threading.Lock()
 
-    def increment(self, value):
+    def increment(self, value=1):
         with self.lock:
             self.count += value
     
@@ -32,8 +32,8 @@ def terminate_threads(threads: list[threading.Thread]):
                 print("Exception raise failure in kill timeout threads")
 
 
-def get_early_stop_time(start_time: time.time, time_duration: int):
-    if time_duration is None:
+def get_early_stop_time(start_time: time.time, time_duration: int, hard_time_bound: bool):
+    if time_duration is None or hard_time_bound is True:
         return None
     early_stop_time = start_time + time_duration * 60
     return early_stop_time

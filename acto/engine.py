@@ -578,6 +578,10 @@ class TrialRunner:
                     duration=time.time() - trial_start_time,
                     error=run_result.oracle_result,
                 )
+            
+            if not run_result.is_invalid_input() and run_result.oracle_result.is_error():
+                logger.info("Alarm count plus one")
+                self.alarm_counter.increment()
 
             if self.input_model.is_empty():
                 logger.info("Input model is empty, break")
@@ -783,7 +787,7 @@ class Acto:
         acto_namespace: int = 0,
         num_alarms: int = None,
         time_duration: int = None,
-        time_hard_bound_gap: int = 0,
+        hard_time_bound: bool = False,
     ) -> None:
         logger = get_thread_logger(with_prefix=False)
 
@@ -834,7 +838,7 @@ class Acto:
 
         self.num_alarms = num_alarms
         self.time_duration = time_duration
-        self.time_hard_bound_gap = time_hard_bound_gap
+        self.hard_time_bound = hard_time_bound
 
         self.__learn(
             context_file=context_file,
@@ -1085,7 +1089,7 @@ class Acto:
 
         alarm_counter = None if self.num_alarms is None else AlarmCounter(self.num_alarms)
         start_time = time.time()
-        early_stop_time = get_early_stop_time(start_time, self.time_duration)
+        early_stop_time = get_early_stop_time(start_time, self.time_duration, self.hard_time_bound)
 
         errors: list[OracleResults] = []
         runners: list[TrialRunner] = []
@@ -1122,8 +1126,8 @@ class Acto:
                 t.start()
                 threads.append(t)
             
-            if self.time_duration is not None:
-                timer = threading.Timer((self.time_duration + self.time_hard_bound_gap) * 60, terminate_threads, args=[threads])
+            if self.time_duration is not None and self.hard_time_bound is True:
+                timer = threading.Timer((self.time_duration) * 60, terminate_threads, args=[threads])
                 timer.start()
 
             for t in threads:

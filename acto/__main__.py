@@ -100,11 +100,10 @@ parser.add_argument(
     help="Approximate running time (minutes) to early stop",
 )
 parser.add_argument(
-    "--time-hard-bound-gap",
-    dest="time_hard_bound_gap",
-    default=60,
-    type=int,
-    help="Hard bound time gap (minutes) to early stop",
+    "--hard-time-bound",
+    dest="hard_time_bound",
+    action="store_true",
+    help="Use hard time bound to early stop",
 )
 
 args = parser.parse_args()
@@ -170,7 +169,7 @@ acto = Acto(
     focus_fields=config.focus_fields,
     num_alarms=args.num_alarms,
     time_duration=args.time_duration,
-    time_hard_bound_gap = args.time_hard_bound_gap,
+    hard_time_bound = args.hard_time_bound,
 )
 generation_time = datetime.now()
 logger.info("Acto initialization finished in %s", generation_time - start_time)
