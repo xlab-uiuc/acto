@@ -13,6 +13,9 @@ class AlarmCounter:
         with self.lock:
             self.count += value
     
+    def get_count(self):
+        return self.count
+    
     def judge(self, work_id):
         if self.count >= self.bound:
             # print(f"Counter of thread {work_id} reached the number of alarms {self.bound}.")

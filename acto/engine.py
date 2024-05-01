@@ -565,6 +565,13 @@ class TrialRunner:
                 generation,
             )
             if run_result.oracle_result.is_error():
+
+                # is alarm, alarm count plus one
+                if self.alarm_counter is not None and not run_result.is_invalid_input():
+                    self.alarm_counter.increment()
+                    logger.info(f"Alarm count plus one, current count is {self.alarm_counter.get_count()}")
+
+
                 # before return, run the recovery test case
                 logger.info("Error result, running recovery")
                 run_result.oracle_result.differential = self.run_recovery(
@@ -578,10 +585,6 @@ class TrialRunner:
                     duration=time.time() - trial_start_time,
                     error=run_result.oracle_result,
                 )
-            
-            if not run_result.is_invalid_input() and run_result.oracle_result.is_error():
-                logger.info("Alarm count plus one")
-                self.alarm_counter.increment()
 
             if self.input_model.is_empty():
                 logger.info("Input model is empty, break")
