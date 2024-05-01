@@ -67,8 +67,8 @@
 | cloudnative-pg/cloudnative-pg       | [https://github.com/cloudnative-pg/cloudnative-pg/issues/3623](https://github.com/cloudnative-pg/cloudnative-pg/issues/3623)         | fixed     |
 | cloudnative-pg/cloudnative-pg       | [https://github.com/cloudnative-pg/cloudnative-pg/issues/3541](https://github.com/cloudnative-pg/cloudnative-pg/issues/3541)         |           |
 | Altinity/clickhouse-operator        | [https://github.com/Altinity/clickhouse-operator/issues/1319](https://github.com/Altinity/clickhouse-operator/issues/1319)           | confirmed |
-| minio/operator                      | [https://github.com/minio/operator/issues/2038](https://github.com/minio/operator/issues/2038)                                       | confirmed |
-| minio/operator                      | [https://github.com/minio/operator/issues/2047](https://github.com/minio/operator/issues/2047)                                       | confirmed |
+| minio/operator                      | [https://github.com/minio/operator/issues/2038](https://github.com/minio/operator/issues/2038)                                       | fixed     |
+| minio/operator                      | [https://github.com/minio/operator/issues/2047](https://github.com/minio/operator/issues/2047)                                       | fixed     |
 
 # Byproduct bugs
 
