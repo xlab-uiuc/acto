@@ -277,9 +277,7 @@ class DeterministicInputModel(InputModel):
         self.thread_vars.semantic_test_plan = TestPlan(
             self.root_schema.to_tree()
         )
-        logger = get_thread_logger(with_prefix=False)
 
-        logger.info("assigned %d test cases", len(self.normal_test_plan))
 
 
     def generate_test_plan(
