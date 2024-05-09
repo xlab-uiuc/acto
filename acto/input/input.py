@@ -379,9 +379,7 @@ class DeterministicInputModel(InputModel):
         self.semantic_test_plan = TestPlan(
             self.root_schema.to_tree()
         )
-        logger = get_thread_logger(with_prefix=False)
         for group in normal_subgroups:
-            logger.info(len(group))
             self.normal_test_plan.add_testcase_group(
                 TestGroup(group)
             )
