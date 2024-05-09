@@ -22,7 +22,7 @@ from acto.schema.schema import extract_schema
 from acto.utils import get_thread_logger
 
 from .testcase import TestCase
-from .testplan import DeterministicTestPlan, TestGroup, TestPlan
+from .testplan import DeterministicTestPlan, SharedTestPlan, TestGroup, TestPlan
 from .value_with_schema import attach_schema_to_value
 
 
@@ -49,6 +49,8 @@ class InputMetadata(pydantic.BaseModel):
 # The number of test cases to form a group
 CHUNK_SIZE = 10
 
+# The number of groups to fetch when empty to form a group
+FETCH_SIZE = 1
 
 class InputModel(abc.ABC):
     """An abstract class for input model"""
@@ -269,15 +271,16 @@ class DeterministicInputModel(InputModel):
         # Thread local variables
         self.thread_vars.id = worker_id
         # so that we can run the test case itself right after the setup
-        self.thread_vars.normal_test_plan = DeterministicTestPlan()
+
+        # thread_vars.test_plan is the local queue, fetch from global queue when empty
+        self.thread_vars.test_plan = DeterministicTestPlan()
         self.thread_vars.semantic_test_plan = TestPlan(
             self.root_schema.to_tree()
         )
+        logger = get_thread_logger(with_prefix=False)
 
-        for group in self.normal_test_plan_partitioned[worker_id]:
-            self.thread_vars.normal_test_plan.add_testcase_group(
-                TestGroup(group)
-            )
+        logger.info("assigned %d test cases", len(self.normal_test_plan))
+
 
     def generate_test_plan(
         self,
@@ -293,9 +296,7 @@ class DeterministicInputModel(InputModel):
 
         normal_testcases = {}
 
-        test_cases = get_testcases(
-            self.get_schema_by_path(self.mount), self.full_matched_schemas
-        )
+        test_cases = get_testcases(self.root_schema, self.full_matched_schemas)
 
         num_test_cases = 0
         num_run_test_cases = 0
@@ -374,25 +375,23 @@ class DeterministicInputModel(InputModel):
             return subgroups
 
         normal_subgroups = split_into_subgroups(normal_test_plan_items)
-
-        # Initialize the three test plans, and assign test cases to them
-        # according to the number of workers
-        for i in range(self.num_workers):
-            self.normal_test_plan_partitioned.append([])
-
-        for i in range(0, len(normal_subgroups)):
-            self.normal_test_plan_partitioned[i % self.num_workers].append(
-                normal_subgroups[i]
+        
+        # global job queue
+        self.normal_test_plan = SharedTestPlan()
+        self.semantic_test_plan = TestPlan(
+            self.root_schema.to_tree()
+        )
+        logger = get_thread_logger(with_prefix=False)
+        for group in normal_subgroups:
+            logger.info(len(group))
+            self.normal_test_plan.add_testcase_group(
+                TestGroup(group)
             )
-
-        # appending empty lists to avoid no test cases distributed to certain
-        # work nodes
-        assert self.num_workers == len(self.normal_test_plan_partitioned)
 
         return {
             "normal_testcases": normal_testcases,
         }
-
+    
     def next_test(
         self,
     ) -> Optional[List[Tuple[TestGroup, tuple[str, TestCase]]]]:
@@ -406,39 +405,51 @@ class DeterministicInputModel(InputModel):
         """
         logger = get_thread_logger(with_prefix=True)
 
-        logger.info("Progress [%d] cases left", len(self.thread_vars.test_plan))
+        logger.info("Global queue [%d] cases left", len(self.test_plan))
+        logger.info("Local queue [%d] cases left", len(self.thread_vars.test_plan))
 
         selected_group: TestGroup = self.thread_vars.test_plan.next_group()
 
-        if selected_group is None:
+        if selected_group is None or len(selected_group) == 0:
+
+            for i in range(FETCH_SIZE):
+                new_group = self.test_plan.next_group()
+                if new_group is None:
+                    break
+                self.thread_vars.test_plan.add_testcase_group(new_group)
+            
             return None
-        elif len(selected_group) == 0:
-            return None
-        else:
+        
+        else:   
             testcase = selected_group.get_next_testcase()
             return [(selected_group, testcase)]
 
+    
+
     def set_mode(self, mode: str):
         if mode == InputModel.NORMAL:
-            self.thread_vars.test_plan = self.thread_vars.normal_test_plan
+            self.test_plan = self.normal_test_plan
         elif mode == "OVERSPECIFIED":
-            self.thread_vars.test_plan = (
-                self.thread_vars.overspecified_test_plan
+            self.test_plan = (
+                self.overspecified_test_plan.next_group()
             )
         elif mode == "COPIED_OVER":
-            self.thread_vars.test_plan = self.thread_vars.copiedover_test_plan
+            self.test_plan = self.copiedover_test_plan
         elif mode == InputModel.SEMANTIC:
-            self.thread_vars.test_plan = self.thread_vars.semantic_test_plan
+            self.test_plan = self.semantic_test_plan
         elif mode == InputModel.ADDITIONAL_SEMANTIC:
-            self.thread_vars.test_plan = (
-                self.thread_vars.additional_semantic_test_plan
+            self.test_plan = (
+                self.additional_semantic_test_plan
             )
         else:
             raise ValueError(mode)
 
+
+
     def is_empty(self):
-        """if test plan is empty"""
-        return len(self.thread_vars.test_plan) == 0
+        """if test plan is empty, both global queue and local queue"""
+        return len(self.test_plan) == 0 and len(self.thread_vars.test_plan) == 0
+
 
     def get_seed_input(self) -> dict:
         """Get the raw value of the seed input"""
@@ -528,3 +539,4 @@ class DeterministicInputModel(InputModel):
                     "Setting default value for %s to %s", path, decoded_value
                 )
                 self.get_schema_by_path(path).set_default(value)
+
