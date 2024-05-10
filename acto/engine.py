@@ -693,7 +693,7 @@ class TrialRunner:
                 not run_result.is_invalid_input()
                 and run_result.oracle_result.is_error()
             )
-        if not is_alarm:
+        if is_alarm:
             with TrialRunner.alarm_decrement_lock:
                 TrialRunner.alarms_before_termination -= 1
         if TrialRunner.alarms_before_termination <= 0:
