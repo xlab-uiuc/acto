@@ -1,0 +1,6217 @@
+---
+# Source: kubeblocks/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kubeblocks
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+---
+# Source: kubeblocks/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kubeblocks-addon-installer
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+---
+# Source: kubeblocks/templates/cloud-provider-secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: kubeblocks-cloud-provider
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+stringData:
+  csi-s3: |
+    secret:
+      accessKey: 
+      secretKey: 
+      region: 
+      cloudProvider: 
+    storageClass:
+      bucket:
+---
+# Source: kubeblocks/templates/secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: kubeblocks-secret
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+type: Opaque
+stringData:
+  dataProtectionEncryptionKey: kubeblocks-dp-aes256
+---
+# Source: kubeblocks/templates/applications/alertmanager-webhook-adaptor-values.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-webhook-adaptor-chart-kubeblocks-values
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+data:
+  values-kubeblocks-override.yaml: |-
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - preference:
+            matchExpressions:
+            - key: kb-controller
+              operator: In
+              values:
+              - "true"
+          weight: 100
+    configFiles:
+      config.yaml: {}
+    configMapOverrideName: config
+    image:
+      registry: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com
+---
+# Source: kubeblocks/templates/applications/apecloud-otel-collector-values.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: apecloud-otel-collector-chart-kubeblocks-values
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+data:
+  values-kubeblocks-override.yaml: |-
+    enabled: false
+    image:
+      registry: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com
+---
+# Source: kubeblocks/templates/applications/aws-loadbalancer-controller-values.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aws-load-balancer-controller-chart-kubeblocks-values
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+data:
+  values-kubeblocks-override.yaml: |-
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - preference:
+            matchExpressions:
+            - key: kb-controller
+              operator: In
+              values:
+              - "true"
+          weight: 100
+    clusterName: ""
+    enabled: false
+    replicaCount: 1
+    serviceAccount:
+      create: true
+      name: kubeblocks-service-account-aws-load-balancer-controller
+    tolerations:
+    - effect: NoSchedule
+      key: kb-controller
+      operator: Equal
+      value: "true"
+---
+# Source: kubeblocks/templates/applications/csi-hostpath-driver-values.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: csi-hostpath-driver-chart-kubeblocks-values
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+data:
+  values-kubeblocks-override.yaml: |-
+    enabled: false
+    storageClass:
+      create: true
+      default: true
+---
+# Source: kubeblocks/templates/applications/external-dns-values.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: external-dns-chart-kubeblocks-values
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+data:
+  values-kubeblocks-override.yaml: |-
+    domain: kubeblocks.io
+    enabled: false
+    tolerations:
+    - effect: NoSchedule
+      key: kb-controller
+      operator: Equal
+      value: "true"
+---
+# Source: kubeblocks/templates/applications/grafana-values.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-chart-kubeblocks-values
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+data:
+  values-kubeblocks-override.yaml: |-
+    adminPassword: kubeblocks
+    adminUser: admin
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - preference:
+            matchExpressions:
+            - key: kb-controller
+              operator: In
+              values:
+              - "true"
+          weight: 100
+    defaultDashboardsTimezone: null
+    enabled: false
+    grafana.ini:
+      auth.anonymous:
+        enabled: true
+        hide_version: true
+      auth.basic:
+        enabled: false
+    image:
+      repository: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/grafana
+      tag: 9.2.4
+    ingress:
+      annotations: {}
+      enabled: false
+      extraPaths: []
+      hosts:
+      - chart-example.local
+      labels: {}
+      path: /
+      pathType: Prefix
+      tls: []
+    rbac:
+      pspEnabled: false
+    replicas: 1
+    resources: {}
+    service:
+      annotations: {}
+      appProtocol: ""
+      enabled: true
+      labels: {}
+      port: 80
+      portName: service
+      targetPort: 3000
+      type: ClusterIP
+    sidecar:
+      dashboards:
+        enabled: true
+        label: grafana_dashboard
+        labelValue: "1"
+        resource: configmap
+        searchNamespace: ALL
+      datasources:
+        defaultDatasourceEnabled: true
+        enabled: true
+        initDatasources: true
+        label: grafana_datasource
+        labelValue: "1"
+        resource: configmap
+        searchNamespace: ALL
+        skipReload: false
+        uid: prometheus
+      image:
+        repository: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/k8s-sidecar
+        tag: 1.19.2
+    testFramework:
+      enabled: false
+    tolerations:
+    - effect: NoSchedule
+      key: kb-controller
+      operator: Equal
+      value: "true"
+---
+# Source: kubeblocks/templates/applications/loki-values.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: loki-chart-kubeblocks-values
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+data:
+  values-kubeblocks-override.yaml: |-
+    enabled: false
+    loki:
+      auth_enabled: false
+      commonConfig:
+        replication_factor: 1
+      compactor:
+        compaction_interval: 10m
+        delete_request_cancel_period: 2h
+        retention_delete_delay: 2h
+        retention_delete_worker_count: 150
+        retention_enabled: true
+        shared_store: filesystem
+        working_directory: /var/loki/retention
+      limits_config:
+        max_query_lookback: 72h
+        retention_period: 72h
+      podSecurityContext:
+        runAsNonRoot: false
+        runAsUser: 0
+      storage:
+        type: filesystem
+    monitoring:
+      dashboards:
+        enabled: false
+      lokiCanary:
+        enabled: false
+      rules:
+        enabled: false
+      selfMonitoring:
+        enabled: false
+        grafanaAgent:
+          installOperator: false
+      serviceMonitor:
+        enabled: false
+    singleBinary:
+      replicas: 1
+    test:
+      enabled: false
+---
+# Source: kubeblocks/templates/applications/prometheus-values.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-chart-kubeblocks-values
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+data:
+  values-kubeblocks-override.yaml: |-
+    # set prometheus.alertmanager.image.repository
+    # set prometheus.nodeExporter.image.repository
+    # set prometheus configmapReload prometheus and alertmanager image.repository
+    # set prometheus.server.image.repository
+    alertmanager:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - preference:
+              matchExpressions:
+              - key: kb-controller
+                operator: In
+                values:
+                - "true"
+            weight: 100
+      configMapOverrideName: alertmanager-config
+      containerSecurityContext:
+        allowPrivilegeEscalation: false
+      enabled: true
+      image:
+        repository: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/alertmanager
+        tag: v0.24.0
+      ingress:
+        annotations: {}
+        enabled: false
+        extraLabels: {}
+        extraPaths: []
+        hosts: []
+        path: /
+        pathType: Prefix
+        tls: []
+      persistentVolume:
+        enabled: false
+        size: 1Gi
+      replicaCount: 1
+      resources: {}
+      securityContext:
+        fsGroup: 65534
+        runAsGroup: 65534
+        runAsNonRoot: false
+        runAsUser: 0
+      service:
+        annotations: {}
+        clusterIP: ""
+        externalIPs: []
+        labels: {}
+        loadBalancerIP: ""
+        loadBalancerSourceRanges: []
+        servicePort: 80
+        sessionAffinity: None
+        type: ClusterIP
+      statefulSet:
+        enabled: true
+        headless:
+          enableMeshPeer: true
+      tolerations:
+      - effect: NoSchedule
+        key: kb-controller
+        operator: Equal
+        value: "true"
+    alertmanagerFiles:
+      alertmanager.yml:
+        global: {}
+        receivers:
+        - name: default-receiver
+        route:
+          group_interval: 30s
+          group_wait: 5s
+          receiver: default-receiver
+          repeat_interval: 10m
+    configmapReload:
+      alertmanager:
+        image:
+          repository: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/configmap-reload
+          tag: v0.5.0
+      prometheus:
+        image:
+          repository: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/configmap-reload
+          tag: v0.5.0
+    enabled: false
+    kubeStateMetrics:
+      enabled: false
+    nodeExporter:
+      enabled: false
+      image:
+        repository: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/node-exporter
+        tag: v1.3.1
+    pushgateway:
+      enabled: false
+    ruleFiles:
+      kafka_alert_rules.yaml: |-
+        group:
+          - name: KafkaExporter
+            rules:
+              - alert: KafkaTopicsReplicas
+                  expr: 'sum(kafka_topic_partition_in_sync_replica) by (topic) < 3'
+                  for: 0m
+                  labels:
+                    severity: critical
+                  annotations:
+                    summary: 'Kafka topics replicas (instance {{ $labels.app_kubernetes_io_instance }})'
+                    description: 'Kafka topic in-sync partition\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}'
+              - alert: KafkaConsumersGroup
+                  expr: 'sum(kafka_consumergroup_lag) by (consumergroup) > 50'
+                  for: 1m
+                  labels:
+                    severity: critical
+                  annotations:
+                    summary: 'Kafka consumers group (instance {{ $labels.app_kubernetes_io_instance }})'
+                    description: 'Kafka consumers group\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}'
+              - alert: KafkaBrokerDown
+                  expr: 'kafka_brokers < 3'
+                  for: 0m
+                  labels:
+                    severity: critical
+                  annotations:
+                    Summary: 'Kafka broker *{{ $labels.app_kubernetes_io_instance }}* alert status'
+                    description: 'One of the Kafka broker *{{ $labels.app_kubernetes_io_instance }}* is down.'
+      kubelet_alert_rules.yml: |
+        groups:
+          - name: KubeletSummary
+            rules:
+              - alert: ContainerCpuUsageWarning
+                expr: 'rate(container_cpu_time_seconds_total[2m]) / container_cpu_limit * 100 > 70'
+                for: 2m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: 'Container CPU usage is high (> 70%)'
+                  description: 'Container CPU usage is {{ $value | printf "%.2f" }} percent. (pod: {{ $labels.k8s_pod_name }}, container: {{ $labels.k8s_container_name }})'
+    
+              - alert: ContainerCpuUsageCritical
+                expr: 'rate(container_cpu_time_seconds_total[2m]) / container_cpu_limit * 100 > 90'
+                for: 1m
+                labels:
+                  severity: critical
+                annotations:
+                  summary: 'Container CPU usage is very high (> 90%)'
+                  description: 'Container CPU usage is {{ $value | printf "%.2f" }} percent. (pod: {{ $labels.k8s_pod_name }}, container: {{ $labels.k8s_container_name }})'
+    
+              - alert: ContainerMemoryUsage
+                expr: 'container_memory_working_set_bytes / container_memory_limit_bytes * 100 > 90'
+                for: 2m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: 'Container Memory usage is high (> 90%)'
+                  description: 'Container Memory usage is {{ $value | printf "%.2f" }} percent. (pod: {{ $labels.k8s_pod_name }}, container: {{ $labels.k8s_container_name }})'
+    
+              - alert: ContainerMemoryUsagePredict
+                expr: 'predict_linear(container_memory_working_set_bytes[15m], 30*60) - container_memory_limit_bytes > 0'
+                for: 5m
+                labels:
+                  severity: critical
+                annotations:
+                  summary: 'Container Memory predict usage may exceed the limit 30 minutes later'
+                  description: 'Container Memory predict usage may exceed the limit 30 minutes later, the predict value is {{ $value | humanize1024 }}. (pod: {{ $labels.k8s_pod_name }}, container: {{ $labels.k8s_container_name }})'
+    
+              - alert: ContainerVolumeUsage
+                expr: '(k8s_volume_capacity_bytes - k8s_volume_available_bytes) / k8s_volume_capacity_bytes * 100 > 90'
+                for: 2m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: 'Volume usage is high (> 90%)'
+                  description: 'Volume usage is {{ $value | printf "%.2f" }} percent. (pod: {{ $labels.k8s_pod_name }}, volume: {{ $labels.k8s_volume_name }})'
+      mongodb_alert_rules.yml: "groups:\n  - name: MongodbExporter\n    rules:\n      -
+        alert: MongodbDown\n        expr: 'max_over_time(mongodb_up[1m]) == 0'\n        for:
+        0m\n        labels:\n          severity: critical\n        annotations:\n          summary:
+        'MongoDB is Down'\n          description: 'MongoDB instance is down\\n  VALUE
+        = {{ $value }}\\n  LABELS = {{ $labels }}'\n\n      - alert: MongodbRestarted\n
+        \       expr: 'mongodb_instance_uptime_seconds < 60'\n        for: 0m\n        labels:\n
+        \         severity: info\n        annotations:\n          summary: 'Mongodb has
+        just been restarted (< 60s)'\n          description: 'Mongodb has just been restarted
+        {{ $value | printf \"%.1f\" }} seconds ago\\n LABELS = {{ $labels }}'\n\n      -
+        alert: MongodbReplicaMemberUnhealthy\n        expr: 'max_over_time(mongodb_rs_members_health[1m])
+        == 0'\n        for: 0m\n        labels:\n          severity: critical\n        annotations:\n
+        \         summary: 'Mongodb replica member is unhealthy'\n          description:
+        'MongoDB replica member is not healthy\\n  VALUE = {{ $value }}\\n  LABELS = {{
+        $labels }}'\n\n      - alert: MongodbReplicationLag\n        expr: '(mongodb_rs_members_optimeDate{member_state=\"PRIMARY\"}
+        - on (pod) group_right mongodb_rs_members_optimeDate{member_state=\"SECONDARY\"})
+        / 1000 > 10'\n        for: 0m\n        labels:\n          severity: critical\n
+        \       annotations:\n          summary: 'MongoDB replication lag (> 10s)'\n          description:
+        'Mongodb replication lag is more than 10s\\n  VALUE = {{ $value }}\\n  LABELS
+        = {{ $labels }}'\n\n      - alert: MongodbReplicationHeadroom\n        expr: 'sum(avg(mongodb_mongod_replset_oplog_head_timestamp
+        - mongodb_mongod_replset_oplog_tail_timestamp)) - sum(avg(mongodb_rs_members_optimeDate{member_state=\"PRIMARY\"}
+        - on (pod) group_right mongodb_rs_members_optimeDate{member_state=\"SECONDARY\"}))
+        <= 0'\n        for: 0m\n        labels:\n          severity: critical\n        annotations:\n
+        \         summary: 'MongoDB replication headroom (< 0)'\n          description:
+        'MongoDB replication headroom is <= 0\\n  VALUE = {{ $value }}\\n  LABELS = {{
+        $labels }}'\n\n      - alert: MongodbNumberCursorsOpen\n        expr: 'mongodb_ss_metrics_cursor_open{csr_type=\"total\"}
+        > 10 * 1000'\n        for: 2m\n        labels:\n          severity: warning\n
+        \       annotations:\n          summary: 'MongoDB opened cursors num (> 10k)'\n
+        \         description: 'Too many cursors opened by MongoDB for clients (> 10k)\\n
+        \ VALUE = {{ $value }}\\n  LABELS = {{ $labels }}'\n\n      - alert: MongodbCursorsTimeouts\n
+        \       expr: 'increase(mongodb_ss_metrics_cursor_timedOut[1m]) > 100'\n        for:
+        2m\n        labels:\n          severity: warning\n        annotations:\n          summary:
+        'MongoDB cursors timeouts (>100/minute)' \n          description: 'Too many cursors
+        are timing out (> 100/minute)\\n  VALUE = {{ $value }}\\n  LABELS = {{ $labels
+        }}'\n\n      - alert: MongodbTooManyConnections\n        expr: 'avg by(pod) (rate(mongodb_ss_connections{conn_type=\"current\"}[1m]))
+        / avg by(pod) (sum (mongodb_ss_connections) by(pod)) * 100 > 80'\n        for:
+        2m\n        labels:\n          severity: warning\n        annotations:\n          summary:
+        'MongoDB too many connections (> 80%)'\n          description: 'Too many connections
+        (> 80%)\\n  VALUE = {{ $value }}\\n  LABELS = {{ $labels }}'\n\n      - alert:
+        MongodbVirtualMemoryUsage\n        expr: '(sum(mongodb_ss_mem_virtual) BY (pod)
+        / sum(mongodb_ss_mem_resident) BY (pod)) > 100'\n        for: 2m\n        labels:\n
+        \         severity: warning\n        annotations:\n          summary: MongoDB
+        virtual memory usage high\n          description: \"High memory usage: the quotient
+        of (mem_virtual / mem_resident) is more than 100\\n  VALUE = {{ $value }}\\n  LABELS
+        = {{ $labels }}\""
+      mysql_alert_rules.yml: |
+        groups:
+          - name: MysqldExporter
+            rules:
+              - alert: MysqlDown
+                expr: 'max_over_time(mysql_up[1m]) == 0'
+                for: 0m
+                labels:
+                  severity: critical
+                annotations:
+                  summary: 'MySQL is down'
+                  description: 'MySQL is down. (instance: {{ $labels.pod }})'
+    
+              - alert: MysqlRestarted
+                expr: 'mysql_global_status_uptime < 60'
+                for: 0m
+                labels:
+                  severity: info
+                annotations:
+                  summary: 'MySQL has just been restarted (< 60s)'
+                  description: 'MySQL has just been restarted {{ $value | printf "%.1f" }} seconds ago. (instance: {{ $labels.pod }})'
+    
+              - alert: MysqlTooManyConnections
+                expr: 'sum(max_over_time(mysql_global_status_threads_connected[1m]) / mysql_global_variables_max_connections) BY (namespace,app_kubernetes_io_instance,pod) * 100 > 80'
+                for: 2m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: 'MySQL has too many connections (> 80%)'
+                  description: '{{ $value | printf "%.2f" }} percent of MySQL connections are in use. (instance: {{ $labels.pod }})'
+    
+              - alert: MysqlConnectionErrors
+                expr: 'sum(increase(mysql_global_status_connection_errors_total[1m])) BY (namespace,app_kubernetes_io_instance,pod) > 0'
+                for: 2m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: 'MySQL connection errors'
+                  description: 'MySQL has connection errors and the value is {{ $value | printf "%.2f" }}. (instance: {{ $labels.pod }})'
+    
+              - alert: MysqlHighThreadsRunning
+                expr: 'sum(max_over_time(mysql_global_status_threads_running[1m]) / mysql_global_variables_max_connections) BY (namespace,app_kubernetes_io_instance,pod) * 100 > 60'
+                for: 2m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: 'MySQL high threads running (> 60%)'
+                  description: '{{ $value | printf "%.2f" }} percent of MySQL connections are in running state. (instance: {{ $labels.pod }})'
+    
+              - alert: MysqlSlowQueries
+                expr: 'sum(increase(mysql_global_status_slow_queries[1m])) BY (namespace,app_kubernetes_io_instance,pod) > 0'
+                for: 2m
+                labels:
+                  severity: info
+                annotations:
+                  summary: 'MySQL slow queries'
+                  description: 'MySQL server has {{ $value | printf "%.2f" }} slow query. (instance: {{ $labels.pod }})'
+    
+              - alert: MysqlInnodbLogWaits
+                expr: 'sum(rate(mysql_global_status_innodb_log_waits[5m])) BY (namespace,app_kubernetes_io_instance,pod) > 10'
+                for: 2m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: 'MySQL InnoDB log waits (> 10)'
+                  description: 'MySQL innodb log writes stalling and the value is {{ $value | printf "%.2f" }}. (instance: {{ $labels.pod }})'
+    
+              - alert: MysqlInnodbBufferPoolHits
+                expr: 'sum(rate(mysql_global_status_innodb_buffer_pool_reads[5m]) / rate(mysql_global_status_innodb_buffer_pool_read_requests[5m])) BY (namespace,app_kubernetes_io_instance,pod) * 100 > 5'
+                for: 2m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: 'MySQL InnoDB high read requests rate hitting disk (> 5%)'
+                  description: 'High number of logical reads that InnoDB could not satisfy from the buffer pool, and had to read directly from disk. The value is {{ $value | printf "%.2f" }} percent. (instance: {{ $labels.pod }})'
+      postgresql_alert_rules.yml: |
+        groups:
+          - name: PostgreSQLExporter
+            rules:
+              - alert: PostgreSQLDown
+                expr: 'max_over_time(pg_up[1m]) == 0'
+                for: 0m
+                labels:
+                  severity: critical
+                annotations:
+                  summary: 'PostgreSQL is down'
+                  description: 'PostgreSQL is down. (instance: {{ $labels.pod }})'
+    
+              - alert: PostgreSQLRestarted
+                expr: 'time() - pg_postmaster_start_time_seconds < 60'
+                for: 0m
+                labels:
+                  severity: info
+                annotations:
+                  summary: 'PostgreSQL has just been restarted (< 60s)'
+                  description: 'PostgreSQL has just been restarted {{ $value | printf "%.1f" }} seconds ago. (instance: {{ $labels.pod }})'
+    
+              - alert: PostgreSQLExporterError
+                expr: 'pg_exporter_last_scrape_error > 0'
+                for: 0m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: 'PostgreSQL exporter scrape error'
+                  description: 'PostgreSQL exporter has {{ $value | printf "%.2f" }} scrape errors. A query may be buggy in query.yaml. (instance: {{ $labels.pod }})'
+    
+              - alert: PostgreSQLTooManySlowQueries
+                expr: |
+                  max by(namespace,app_kubernetes_io_instance,pod,datname) (
+                    max_over_time(pg_stat_activity_max_tx_duration{datname!~"template.*"}[2m])
+                  ) > 60
+                for: 2m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: 'PostgreSQL database has high number of slow queries'
+                  description: 'PostgreSQL database has slow queries and the value is {{ $value | printf "%.2f" }}. (instance: {{ $labels.pod }}, database: {{ $labels.datname }})'
+    
+              - alert: PostgreSQLTooManyConnections
+                expr: |
+                  sum by (namespace,app_kubernetes_io_instance,pod) (pg_stat_activity_count{datname!~"template.*"})
+                  > on(namespace,app_kubernetes_io_instance,pod)
+                  (pg_settings_max_connections - pg_settings_superuser_reserved_connections) * 0.8
+                for: 2m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: 'PostgreSQL too many connections (> 80%)'
+                  description: 'PostgreSQL has too many connections and the value is {{ $value | printf "%.2f" }} percent. (instance: {{ $labels.pod }})'
+    
+              - alert: PostgreSQLDeadLocks
+                expr: 'increase(pg_stat_database_deadlocks_total{datname!~"template.*", datname!=""}[2m]) > 5'
+                for: 2m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: 'PostgreSQL database has dead locks (> 5)'
+                  description: 'PostgreSQL database has {{ $value | printf "%.2f"}} dead locks. (instance: {{ $labels.pod }}, database: {{ $labels.datname }})'
+    
+              - alert: PostgreSQLHighRollbackRate
+                expr: |
+                  rate(pg_stat_database_xact_rollback_total{datname!~"template.*", datname!=""}[2m])
+                  /
+                  rate(pg_stat_database_xact_commit_total{datname!~"template.*", datname!=""}[2m])
+                  > 0.1
+                for: 2m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: 'PostgreSQL database has high rollback rate (> 10%)'
+                  description: 'Ratio of transactions being aborted compared to committed is {{ $value | printf "%.2f"}} percent. (instance: {{ $labels.pod }}, database: {{ $labels.datname }})'
+    
+              - alert: PostgreSQLTooManyLocksAcquired
+                expr: |
+                  sum by (namespace,app_kubernetes_io_instance,pod) (pg_locks_count)
+                  / on(namespace,app_kubernetes_io_instance,pod)
+                  (pg_settings_max_locks_per_transaction * pg_settings_max_connections)
+                  > 0.2
+                for: 2m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: 'PostgreSQL has too many locks acquired (> 20%)'
+                  description: 'Too many locks acquired on the database and the value is {{ $value | printf "%.2f" }} percent. (instance: {{ $labels.pod }})'
+    
+              - alert: PostgreSQLCacheHitRatio
+                expr: |
+                  avg by (namespace,app_kubernetes_io_instance,pod,datname) (
+                    rate(pg_stat_database_blks_hit_total{datname!~"template.*", datname!=""}[2m])
+                    /
+                    (
+                      rate(
+                        pg_stat_database_blks_hit_total{datname!~"template.*", datname!=""}[2m]
+                      )
+                      +
+                      rate(
+                        pg_stat_database_blks_read_total{datname!~"template.*", datname!=""}[2m]
+                      )
+                    )
+                  ) < 0.9
+                for: 2m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: 'PostgreSQL database has low cache hit rate (< 90%)'
+                  description: 'Low cache hit rate and the value is {{ $value | printf "%.2f" }} percent. (instance: {{ $labels.pod }}, database: {{ $labels.datname }})'
+    
+              - alert: PostgreSQLMaxWriteBufferReached
+                expr: 'rate(pg_stat_bgwriter_maxwritten_clean_total[2m]) > 0'
+                for: 2m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: 'PostgreSQL write buffers reached max'
+                  description: 'PostgreSQL background writer stops for max and the value is {{ $value | printf "%.2f" }}. (instance: {{ $labels.pod }})'
+    
+              - alert: PostgreSQLHighWALFilesArchiveErrorRate
+                expr: |
+                  rate(pg_stat_archiver_failed_count_total[2m])
+                  / (
+                    rate(pg_stat_archiver_archived_count_total[2m]) + rate(pg_stat_archiver_failed_count_total[2m])
+                  ) > 0.1
+                for: 2m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: 'PostgreSQL has high error rate in WAL files archiver(> 10%)'
+                  description: 'PostgreSQL high error rate in WAL files archiver and the value is {{ $value | printf "%.2f" }} percent. (instance: {{ $labels.pod }})'
+    
+              - alert: PostgreSQLTableNotAutoVacuumed
+                expr: |
+                  (pg_stat_user_tables_last_autovacuum > 0)
+                  and
+                  (time() - pg_stat_user_tables_last_autovacuum)
+                  > 24 * 60 * 60 * 10
+                for: 0m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: 'PostgreSQL table in database has not been auto vacuumed for 10 days'
+                  description: 'Table {{ $labels.relname }} in database has not been auto vacuumed for 10 days. (instance: {{ $labels.pod }}, database: {{ $labels.datname }})'
+    
+              - alert: PostgreSQLTableNotAutoAnalyzed
+                expr: |
+                  (pg_stat_user_tables_last_autoanalyze > 0)
+                  and
+                  (time() - pg_stat_user_tables_last_autoanalyze)
+                  > 24 * 60 * 60 * 10
+                for: 0m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: 'PostgreSQL table in database has not been auto analyzed for 10 days'
+                  description: 'Table {{ $labels.relname }} in database has not been auto analyzed for 10 days. (instance: {{ $labels.pod }}, database: {{ $labels.datname }})'
+    
+              - alert: PostgreSQLTableTooManyDeadTuples
+                expr: |
+                  (pg_stat_user_tables_n_dead_tup > 10000)
+                  /
+                  (pg_stat_user_tables_n_live_tup + pg_stat_user_tables_n_dead_tup)
+                  >= 0.1
+                for: 2m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: 'PostgreSQL table in database has too many dead tuples (> 10%)'
+                  description: 'Table {{ $labels.relname }} in database dead tuples is too large and the value is {{ $value | printf "%.2f" }} percent. (instance: {{ $labels.pod }}, database: {{ $labels.datname }})'
+      redis_alert_rules.yml: |
+        groups:
+          - name: RedisExporter
+            rules:
+              - alert: RedisDown
+                expr: 'redis_up == 0'
+                for: 5m
+                labels:
+                  severity: critical
+                annotations:
+                  summary: 'Redis is down'
+                  description: 'Redis is down. (instance: {{ $labels.pod }})'
+    
+              - alert: RedisCPUHigh
+                expr: '(rate(redis_cpu_sys_seconds_total[1m]) + rate(redis_cpu_user_seconds_total[1m])) * 100 > 80'
+                for: 2m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: 'Out of CPU (> 80%)'
+                  description: 'Redis is running out of CPU and the value is {{ $value | printf "%.2f" }} percent. (instance: {{ $labels.pod }})'
+    
+              - alert: RedisMemoryHigh
+                expr: '(redis_memory_max_bytes == 0 or redis_memory_used_bytes * 100 / redis_memory_max_bytes) > 90'
+                for: 5m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: 'Out of memory (> 90%)'
+                  description: 'Redis is running out of memory and the value is {{ $value | printf "%.2f" }} percent. (instance: {{ $labels.pod }})'
+    
+              - alert: RedisTooManyConnections
+                expr: 'redis_connected_clients * 100 / redis_config_maxclients > 80'
+                for: 1m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: 'Redis has too many connections (> 80%)'
+                  description: 'Redis has too many connections and the value is {{ $value | printf "%.2f" }} percent. (instance: {{ $labels.pod }})'
+    
+              - alert: RedisRejectedConnections
+                expr: 'increase(redis_rejected_connections_total[1m]) > 0'
+                for: 5m
+                labels:
+                  severity: error
+                annotations:
+                  summary: 'Redis has rejected connections'
+                  description: '{{ $value | printf "%.2f" }} connections to Redis has been rejected. (instance: {{ $labels.pod }})'
+    
+              - alert: RedisKeyEviction
+                expr: 'increase(redis_evicted_keys_total[5m]) > 0'
+                for: 1s
+                labels:
+                  severity: error
+                annotations:
+                  summary: 'Redis has evicted keys'
+                  description: 'Redis has evicted keys in the last 5 minutes and the value is {{ $value | printf "%.2f" }}. (instance: {{ $labels.pod }})'
+    
+              - alert: RedisMissingMaster
+                expr: 'count by (app_kubernetes_io_instance) (redis_instance_info{role="master"}) < 1'
+                for: 30s
+                labels:
+                  severity: critical
+                annotations:
+                  summary: 'Redis missing master'
+                  description: 'Redis cluster has no node marked as master.'
+    
+              - alert: RedisDisconnectedSlaves
+                expr: 'count without (instance, job) (redis_connected_slaves) - sum without (instance, job) (redis_connected_slaves) - 1 > 1'
+                for: 0m
+                labels:
+                  severity: critical
+                annotations:
+                  summary: 'Redis disconnected slaves'
+                  description: 'Redis not replicating for all slaves. Consider reviewing the redis replication status. (instance: {{ $labels.pod }})'
+    
+              - alert: RedisReplicationBroken
+                expr: 'delta(redis_connected_slaves[1m]) < 0'
+                for: 0m
+                labels:
+                  severity: critical
+                annotations:
+                  summary: 'Redis replication broken'
+                  description: 'Redis instance lost a slave. (instance: {{ $labels.pod }})'
+    server:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - preference:
+              matchExpressions:
+              - key: kb-controller
+                operator: In
+                values:
+                - "true"
+            weight: 100
+      containerSecurityContext:
+        allowPrivilegeEscalation: false
+      enabled: true
+      extraArgs:
+        enable-feature: memory-snapshot-on-shutdown
+        log.level: info
+        storage.tsdb.min-block-duration: 30m
+        storage.tsdb.retention.size: 10GB
+      extraFlags:
+      - web.enable-lifecycle
+      - web.enable-remote-write-receiver
+      global:
+        evaluation_interval: 15s
+        scrape_interval: 15s
+        scrape_timeout: 10s
+      image:
+        repository: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/prometheus
+        tag: v2.44.0
+      ingress:
+        annotations: {}
+        enabled: false
+        extraLabels: {}
+        extraPaths: []
+        hosts: []
+        path: /
+        pathType: Prefix
+        tls: []
+      persistentVolume:
+        enabled: false
+        size: 20Gi
+      remoteWrite: []
+      replicaCount: 1
+      resources: {}
+      retention: 2d
+      routePrefix: /
+      securityContext:
+        fsGroup: 65534
+        runAsGroup: 65534
+        runAsNonRoot: false
+        runAsUser: 0
+      service:
+        annotations: {}
+        clusterIP: ""
+        enabled: true
+        externalIPs: []
+        gRPC:
+          enabled: false
+          servicePort: 10901
+        labels: {}
+        loadBalancerIP: ""
+        loadBalancerSourceRanges: []
+        servicePort: 80
+        sessionAffinity: None
+        statefulsetReplica:
+          enabled: false
+          replica: 0
+        type: ClusterIP
+      statefulSet:
+        enabled: true
+      tolerations:
+      - effect: NoSchedule
+        key: kb-controller
+        operator: Equal
+        value: "true"
+    serverFiles:
+      prometheus.yml:
+        rule_files:
+        - /etc/config/recording_rules.yml
+        - /etc/config/alerting_rules.yml
+        - /etc/config/kubelet_alert_rules.yml
+        - /etc/config/mysql_alert_rules.yml
+        - /etc/config/postgresql_alert_rules.yml
+        - /etc/config/redis_alert_rules.yml
+        - /etc/config/kafka_alert_rules.yml
+        - /etc/config/mongodb_alert_rules.yml
+        scrape_configs:
+        - job_name: prometheus
+          static_configs:
+          - targets:
+            - localhost:9090
+        - honor_labels: true
+          job_name: kubeblocks-service
+          kubernetes_sd_configs:
+          - role: endpoints
+          relabel_configs:
+          - action: keep
+            regex: kubeblocks
+            source_labels:
+            - __meta_kubernetes_service_label_app_kubernetes_io_managed_by
+          - action: drop
+            regex: agamotto
+            source_labels:
+            - __meta_kubernetes_service_label_monitor_kubeblocks_io_managed_by
+          - action: keep
+            regex: true
+            source_labels:
+            - __meta_kubernetes_service_annotation_monitor_kubeblocks_io_scrape
+          - action: replace
+            regex: (https?)
+            source_labels:
+            - __meta_kubernetes_service_annotation_monitor_kubeblocks_io_scheme
+            target_label: __scheme__
+          - action: replace
+            regex: (.+)
+            source_labels:
+            - __meta_kubernetes_service_annotation_monitor_kubeblocks_io_path
+            target_label: __metrics_path__
+          - action: replace
+            regex: (.+?)(?::\d+)?;(\d+)
+            replacement: $1:$2
+            source_labels:
+            - __address__
+            - __meta_kubernetes_service_annotation_monitor_kubeblocks_io_port
+            target_label: __address__
+          - action: labelmap
+            regex: __meta_kubernetes_service_annotation_monitor_kubeblocks_io_param_(.+)
+            replacement: __param_$1
+          - action: labelmap
+            regex: __meta_kubernetes_service_label_(.+)
+          - action: replace
+            source_labels:
+            - __meta_kubernetes_namespace
+            target_label: namespace
+          - action: replace
+            source_labels:
+            - __meta_kubernetes_service_name
+            target_label: service
+          - action: replace
+            source_labels:
+            - __meta_kubernetes_pod_node_name
+            target_label: node
+          - action: replace
+            source_labels:
+            - __meta_kubernetes_pod_name
+            target_label: pod
+          - action: drop
+            regex: Pending|Succeeded|Failed|Completed
+            source_labels:
+            - __meta_kubernetes_pod_phase
+        - honor_labels: true
+          job_name: kubeblocks-agamotto
+          kubernetes_sd_configs:
+          - role: endpoints
+          relabel_configs:
+          - action: keep
+            regex: agamotto
+            source_labels:
+            - __meta_kubernetes_service_label_monitor_kubeblocks_io_managed_by
+          - action: keep
+            regex: true
+            source_labels:
+            - __meta_kubernetes_service_annotation_monitor_kubeblocks_io_scrape
+          - action: replace
+            regex: (https?)
+            source_labels:
+            - __meta_kubernetes_service_annotation_monitor_kubeblocks_io_scheme
+            target_label: __scheme__
+          - action: replace
+            regex: (.+)
+            source_labels:
+            - __meta_kubernetes_service_annotation_monitor_kubeblocks_io_path
+            target_label: __metrics_path__
+          - action: replace
+            regex: (.+?)(?::\d+)?;(\d+)
+            replacement: $1:$2
+            source_labels:
+            - __address__
+            - __meta_kubernetes_service_annotation_monitor_kubeblocks_io_port
+            target_label: __address__
+          - action: labelmap
+            regex: __meta_kubernetes_service_annotation_monitor_kubeblocks_io_param_(.+)
+            replacement: __param_$1
+          - action: drop
+            regex: Pending|Succeeded|Failed|Completed
+            source_labels:
+            - __meta_kubernetes_pod_phase
+---
+# Source: kubeblocks/templates/applications/snapshot-controller-values.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: snapshot-controller-chart-kubeblocks-values
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+data:
+  values-kubeblocks-override.yaml: |-
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - preference:
+            matchExpressions:
+            - key: kb-controller
+              operator: In
+              values:
+              - "true"
+          weight: 100
+    enabled: true
+    image:
+      repository: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/snapshot-controller
+      tag: v6.2.1
+    replicaCount: 1
+    tolerations:
+    - effect: NoSchedule
+      key: kb-controller
+      operator: Equal
+      value: "true"
+    volumeSnapshotClasses:
+    - deletionPolicy: Delete
+      driver: hostpath.csi.k8s.io
+      name: default-vsc
+---
+# Source: kubeblocks/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kubeblocks-manager-config
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+data:
+  config.yaml: |
+    # data plane tolerations
+    DATA_PLANE_TOLERATIONS: '[{"effect":"NoSchedule","key":"kb-data","operator":"Equal","value":"true"}]'
+
+    # data plane affinity
+    DATA_PLANE_AFFINITY: '{"nodeAffinity":{"preferredDuringSchedulingIgnoredDuringExecution":[{"preference":{"matchExpressions":[{"key":"kb-data","operator":"In","values":["true"]}]},"weight":100}]}}'
+
+    # the default storage class name.
+    DEFAULT_STORAGE_CLASS: ""
+---
+# Source: kubeblocks/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kubeblocks-host-ports
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+data: {}
+---
+# Source: kubeblocks/templates/grafana/configmaps-datasources.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kubeblocks-grafana-datasource
+  namespace: acto-namespace
+  annotations:
+    null
+  labels:
+    grafana_datasource: "1"
+    app: kubeblocks-grafana-datasource
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+data:
+  datasource.yaml: |-
+    apiVersion: 1
+    datasources:
+    - name: Prometheus
+      type: prometheus
+      uid: prometheus
+      url: http://kb-addon-prometheus-server.acto-namespace:80/
+      access: proxy
+      isDefault: true
+      jsonData:
+        timeInterval: 15s
+    - name: Prometheus-15s
+      type: prometheus
+      uid: prometheus-15
+      url: http://kb-addon-prometheus-server.acto-namespace:80/
+      access: proxy
+      isDefault: false
+      jsonData:
+        timeInterval: 15s
+    - name: Loki
+      type: loki
+      uid: loki-kubeblocks
+      access: proxy
+      url: http://loki-gateway:80
+      jsonData:
+        maxLines: 1000
+---
+# Source: kubeblocks/templates/prometheus/alertmanager.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+  name: kb-addon-prometheus-alertmanager-config
+data:
+  alertmanager.yml: |
+    global: { }
+    receivers:
+      - name: default-receiver
+    route:
+      group_by: [ 'alertname', 'namespace', 'app_kubernetes_io_instance' ]
+      group_interval: 30s
+      group_wait: 5s
+      receiver: default-receiver
+      repeat_interval: 10m
+      routes:
+        - receiver: default-receiver
+          group_by: ['alertname', 'instance', 'pod']
+          matchers:
+            - alertname=~"Container.*"
+---
+# Source: kubeblocks/templates/prometheus/webhook-adaptor.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+  name: kb-addon-alertmanager-webhook-adaptor-config
+data:
+  config.yml: |
+    receivers: [ ]
+---
+# Source: kubeblocks/templates/rbac/apps_backuppolicytemplate_editor_role.yaml
+# permissions for end users to edit backuppolicytemplates.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubeblocks-backuppolicytemplate-editor-role
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+rules:
+- apiGroups:
+  - apps.kubeblocks.io
+  resources:
+  - backuppolicytemplates
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps.kubeblocks.io
+  resources:
+  - backuppolicytemplates/status
+  verbs:
+  - get
+---
+# Source: kubeblocks/templates/rbac/apps_backuppolicytemplate_viewer_role.yaml
+# permissions for end users to view backuppolicytemplates.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubeblocks-backuppolicytemplate-viewer-role
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+rules:
+- apiGroups:
+  - apps.kubeblocks.io
+  resources:
+  - backuppolicytemplates
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apps.kubeblocks.io
+  resources:
+  - backuppolicytemplates/status
+  verbs:
+  - get
+---
+# Source: kubeblocks/templates/rbac/apps_cluster_editor_role.yaml
+# permissions for end users to edit clusters.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubeblocks-cluster-editor-role
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+rules:
+- apiGroups:
+  - apps.kubeblocks.io
+  resources:
+  - clusters
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps.kubeblocks.io
+  resources:
+  - clusters/status
+  verbs:
+  - get
+---
+# Source: kubeblocks/templates/rbac/apps_cluster_viewer_role.yaml
+# permissions for end users to view clusters.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubeblocks-cluster-viewer-role
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+rules:
+- apiGroups:
+  - apps.kubeblocks.io
+  resources:
+  - clusters
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apps.kubeblocks.io
+  resources:
+  - clusters/status
+  verbs:
+  - get
+---
+# Source: kubeblocks/templates/rbac/apps_clusterdefinition_editor_role.yaml
+# permissions for end users to edit clusterdefinitions.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubeblocks-clusterdefinition-editor-role
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+rules:
+- apiGroups:
+  - apps.kubeblocks.io
+  resources:
+  - clusterdefinitions
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps.kubeblocks.io
+  resources:
+  - clusterdefinitions/status
+  verbs:
+  - get
+---
+# Source: kubeblocks/templates/rbac/apps_clusterdefinition_viewer_role.yaml
+# permissions for end users to view clusterdefinitions.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubeblocks-clusterdefinition-viewer-role
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+rules:
+- apiGroups:
+  - apps.kubeblocks.io
+  resources:
+  - clusterdefinitions
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apps.kubeblocks.io
+  resources:
+  - clusterdefinitions/status
+  verbs:
+  - get
+---
+# Source: kubeblocks/templates/rbac/apps_clusterversion_editor_role.yaml
+# permissions for end users to edit clusterversions.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubeblocks-clusterversion-editor-role
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+rules:
+- apiGroups:
+  - apps.kubeblocks.io
+  resources:
+  - clusterversions
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps.kubeblocks.io
+  resources:
+  - clusterversions/status
+  verbs:
+  - get
+---
+# Source: kubeblocks/templates/rbac/apps_clusterversion_viewer_role.yaml
+# permissions for end users to view clusterversions.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubeblocks-clusterversion-viewer-role
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+rules:
+- apiGroups:
+  - apps.kubeblocks.io
+  resources:
+  - clusterversions
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apps.kubeblocks.io
+  resources:
+  - clusterversions/status
+  verbs:
+  - get
+---
+# Source: kubeblocks/templates/rbac/apps_configconstraint_editor_role.yaml
+# permissions for end users to edit configconstraints.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubeblocks-configconstraint-editor-role
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+rules:
+- apiGroups:
+  - apps.kubeblocks.io
+  resources:
+  - configconstraints
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps.kubeblocks.io
+  resources:
+  - configconstraints/status
+  verbs:
+  - get
+---
+# Source: kubeblocks/templates/rbac/apps_configconstraint_viewer_role.yaml
+# permissions for end users to view configconstraints.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubeblocks-configconstraint-viewer-role
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+rules:
+- apiGroups:
+  - apps.kubeblocks.io
+  resources:
+  - configconstraints
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apps.kubeblocks.io
+  resources:
+  - configconstraints/status
+  verbs:
+  - get
+---
+# Source: kubeblocks/templates/rbac/auth_proxy_client_clusterrole.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubeblocks-metrics-reader
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+rules:
+- nonResourceURLs:
+  - "/metrics"
+  verbs:
+  - get
+---
+# Source: kubeblocks/templates/rbac/auth_proxy_role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubeblocks-proxy-role
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+rules:
+- apiGroups:
+  - authentication.k8s.io
+  resources:
+  - tokenreviews
+  verbs:
+  - create
+- apiGroups:
+  - authorization.k8s.io
+  resources:
+  - subjectaccessreviews
+  verbs:
+  - create
+---
+# Source: kubeblocks/templates/rbac/cluster_pod_required_role.yaml
+# permissions for end users to edit clusters.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubeblocks-cluster-pod-role
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+aggregationRule:
+  clusterRoleSelectors:
+  - matchLabels:
+      app.kubernetes.io/name: kubeblocks
+      app.kubernetes.io/instance: kubeblocks
+      app.kubernetes.io/required-by: pod
+---
+# Source: kubeblocks/templates/rbac/cluster_pod_required_role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubeblocks-lorry-pod-role
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/required-by: pod
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - create
+  - get
+  - list
+  - patch
+  - update
+  - delete
+- apiGroups:
+  - apps.kubeblocks.io
+  resources:
+  - clusters
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - apps.kubeblocks.io
+  resources:
+  - clusters/status
+  verbs:
+  - get
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+  - list
+---
+# Source: kubeblocks/templates/rbac/cluster_pod_required_role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubeblocks-patroni-pod-role
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/required-by: pod
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - create
+  - get
+  - list
+  - patch
+  - update
+  - watch
+  # delete is required only for 'patronictl remove'
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - endpoints
+  verbs:
+  - get
+  - patch
+  - update
+  - create
+  - list
+  - watch
+  # delete is required only for 'patronictl remove'
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+---
+# Source: kubeblocks/templates/rbac/cluster_pod_required_role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubeblocks-backup-pod-role
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/required-by: pod
+rules:
+- apiGroups:
+  - "dataprotection.kubeblocks.io"
+  resources:
+  - backups/status
+  verbs:
+  - get
+  - update
+  - patch
+- apiGroups:
+  - "dataprotection.kubeblocks.io"
+  resources:
+  - backups
+  verbs:
+  - create
+---
+# Source: kubeblocks/templates/rbac/cluster_pod_required_role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubeblocks-volume-protection-pod-role
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/required-by: pod
+rules:
+- apiGroups:
+    - ""
+  resources:
+    - nodes
+    - nodes/stats
+  verbs:
+    - get
+    - list
+---
+# Source: kubeblocks/templates/rbac/clusterrole.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubeblocks
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+aggregationRule:
+  clusterRoleSelectors:
+  - matchLabels:
+      app.kubernetes.io/name: kubeblocks
+      app.kubernetes.io/instance: kubeblocks
+---
+# Source: kubeblocks/templates/rbac/clusterrole.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubeblocks-manager-role
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+rules:
+  - apiGroups:
+    - apps
+    resources:
+    - deployments
+    verbs:
+    - create
+    - delete
+    - deletecollection
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - apps
+    resources:
+    - deployments/finalizers
+    verbs:
+    - update
+  - apiGroups:
+    - apps
+    resources:
+    - deployments/status
+    verbs:
+    - get
+  - apiGroups:
+    - apps
+    resources:
+    - statefulsets
+    verbs:
+    - create
+    - delete
+    - deletecollection
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - apps
+    resources:
+    - statefulsets/finalizers
+    verbs:
+    - update
+  - apiGroups:
+    - apps
+    resources:
+    - statefulsets/status
+    verbs:
+    - get
+  - apiGroups:
+    - apps.kubeblocks.io
+    resources:
+    - backuppolicytemplates
+    verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - apps.kubeblocks.io
+    resources:
+    - backuppolicytemplates/finalizers
+    verbs:
+    - update
+  - apiGroups:
+    - apps.kubeblocks.io
+    resources:
+    - backuppolicytemplates/status
+    verbs:
+    - get
+    - patch
+    - update
+  - apiGroups:
+    - apps.kubeblocks.io
+    resources:
+    - clusterdefinitions
+    verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - apps.kubeblocks.io
+    resources:
+    - clusterdefinitions/finalizers
+    verbs:
+    - update
+  - apiGroups:
+    - apps.kubeblocks.io
+    resources:
+    - clusterdefinitions/status
+    verbs:
+    - get
+    - patch
+    - update
+  - apiGroups:
+    - apps.kubeblocks.io
+    resources:
+    - clusters
+    verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - apps.kubeblocks.io
+    resources:
+    - clusters/finalizers
+    verbs:
+    - update
+  - apiGroups:
+    - apps.kubeblocks.io
+    resources:
+    - clusters/status
+    verbs:
+    - get
+    - patch
+    - update
+  - apiGroups:
+    - apps.kubeblocks.io
+    resources:
+    - clusterversions
+    verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - apps.kubeblocks.io
+    resources:
+    - clusterversions/finalizers
+    verbs:
+    - update
+  - apiGroups:
+    - apps.kubeblocks.io
+    resources:
+    - clusterversions/status
+    verbs:
+    - get
+    - patch
+    - update
+  - apiGroups:
+    - apps.kubeblocks.io
+    resources:
+    - componentclassdefinitions
+    verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - apps.kubeblocks.io
+    resources:
+    - componentclassdefinitions/finalizers
+    verbs:
+    - update
+  - apiGroups:
+    - apps.kubeblocks.io
+    resources:
+    - componentclassdefinitions/status
+    verbs:
+    - get
+    - patch
+    - update
+  - apiGroups:
+    - apps.kubeblocks.io
+    resources:
+    - componentdefinitions
+    verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - apps.kubeblocks.io
+    resources:
+    - componentdefinitions/finalizers
+    verbs:
+    - update
+  - apiGroups:
+    - apps.kubeblocks.io
+    resources:
+    - componentdefinitions/status
+    verbs:
+    - get
+    - patch
+    - update
+  - apiGroups:
+    - apps.kubeblocks.io
+    resources:
+    - componentresourceconstraints
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - apps.kubeblocks.io
+    resources:
+    - components
+    verbs:
+    - create
+    - delete
+    - deletecollection
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - apps.kubeblocks.io
+    resources:
+    - components/finalizers
+    verbs:
+    - update
+  - apiGroups:
+    - apps.kubeblocks.io
+    resources:
+    - components/status
+    verbs:
+    - get
+    - patch
+    - update
+  - apiGroups:
+    - apps.kubeblocks.io
+    resources:
+    - configconstraints
+    verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - apps.kubeblocks.io
+    resources:
+    - configconstraints/finalizers
+    verbs:
+    - update
+  - apiGroups:
+    - apps.kubeblocks.io
+    resources:
+    - configconstraints/status
+    verbs:
+    - get
+    - patch
+    - update
+  - apiGroups:
+    - apps.kubeblocks.io
+    resources:
+    - configurations
+    verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - apps.kubeblocks.io
+    resources:
+    - configurations/finalizers
+    verbs:
+    - update
+  - apiGroups:
+    - apps.kubeblocks.io
+    resources:
+    - configurations/status
+    verbs:
+    - get
+    - patch
+    - update
+  - apiGroups:
+    - apps.kubeblocks.io
+    resources:
+    - opsdefinitions
+    verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - apps.kubeblocks.io
+    resources:
+    - opsdefinitions/finalizers
+    verbs:
+    - update
+  - apiGroups:
+    - apps.kubeblocks.io
+    resources:
+    - opsdefinitions/status
+    verbs:
+    - get
+    - patch
+    - update
+  - apiGroups:
+    - apps.kubeblocks.io
+    resources:
+    - opsrequests
+    verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - apps.kubeblocks.io
+    resources:
+    - opsrequests/finalizers
+    verbs:
+    - update
+  - apiGroups:
+    - apps.kubeblocks.io
+    resources:
+    - opsrequests/status
+    verbs:
+    - get
+    - patch
+    - update
+  - apiGroups:
+    - apps.kubeblocks.io
+    resources:
+    - servicedescriptors
+    verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - apps.kubeblocks.io
+    resources:
+    - servicedescriptors/finalizers
+    verbs:
+    - update
+  - apiGroups:
+    - apps.kubeblocks.io
+    resources:
+    - servicedescriptors/status
+    verbs:
+    - get
+    - patch
+    - update
+  - apiGroups:
+    - batch
+    resources:
+    - cronjobs
+    verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - batch
+    resources:
+    - cronjobs/finalizers
+    verbs:
+    - patch
+    - update
+  - apiGroups:
+    - batch
+    resources:
+    - cronjobs/status
+    verbs:
+    - get
+  - apiGroups:
+    - batch
+    resources:
+    - jobs
+    verbs:
+    - create
+    - delete
+    - deletecollection
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - batch
+    resources:
+    - jobs/finalizers
+    verbs:
+    - update
+  - apiGroups:
+    - batch
+    resources:
+    - jobs/status
+    verbs:
+    - get
+  - apiGroups:
+    - coordination.k8s.io
+    resources:
+    - leases
+    verbs:
+    - create
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - ""
+    resources:
+    - configmap
+    verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - ""
+    resources:
+    - configmap/finalizers
+    verbs:
+    - update
+  - apiGroups:
+    - ""
+    resources:
+    - configmaps
+    verbs:
+    - create
+    - delete
+    - deletecollection
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - ""
+    resources:
+    - configmaps/finalizers
+    verbs:
+    - update
+  - apiGroups:
+    - ""
+    resources:
+    - events
+    verbs:
+    - create
+    - get
+    - list
+    - patch
+    - watch
+  - apiGroups:
+    - ""
+    resources:
+    - persistentvolumeclaims
+    verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - ""
+    resources:
+    - persistentvolumeclaims/finalizers
+    verbs:
+    - update
+  - apiGroups:
+    - ""
+    resources:
+    - persistentvolumeclaims/status
+    verbs:
+    - get
+    - patch
+    - update
+  - apiGroups:
+    - ""
+    resources:
+    - persistentvolumes
+    verbs:
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - ""
+    resources:
+    - pods
+    verbs:
+    - delete
+    - deletecollection
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - ""
+    resources:
+    - pods/exec
+    verbs:
+    - create
+  - apiGroups:
+    - ""
+    resources:
+    - pods/finalizers
+    verbs:
+    - update
+  - apiGroups:
+    - ""
+    resources:
+    - pods/log
+    verbs:
+    - get
+    - list
+  - apiGroups:
+    - ""
+    resources:
+    - secrets
+    verbs:
+    - create
+    - delete
+    - deletecollection
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - ""
+    resources:
+    - secrets/finalizers
+    verbs:
+    - update
+  - apiGroups:
+    - ""
+    resources:
+    - serviceaccounts
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - ""
+    resources:
+    - serviceaccounts/status
+    verbs:
+    - get
+  - apiGroups:
+    - ""
+    resources:
+    - services
+    verbs:
+    - create
+    - delete
+    - deletecollection
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - ""
+    resources:
+    - services/finalizers
+    verbs:
+    - update
+  - apiGroups:
+    - ""
+    resources:
+    - services/status
+    verbs:
+    - get
+  - apiGroups:
+    - dataprotection.kubeblocks.io
+    resources:
+    - actionsets
+    verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - dataprotection.kubeblocks.io
+    resources:
+    - actionsets/finalizers
+    verbs:
+    - update
+  - apiGroups:
+    - dataprotection.kubeblocks.io
+    resources:
+    - actionsets/status
+    verbs:
+    - get
+    - patch
+    - update
+  - apiGroups:
+    - dataprotection.kubeblocks.io
+    resources:
+    - backuppolicies
+    verbs:
+    - create
+    - delete
+    - deletecollection
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - dataprotection.kubeblocks.io
+    resources:
+    - backuppolicies/finalizers
+    verbs:
+    - update
+  - apiGroups:
+    - dataprotection.kubeblocks.io
+    resources:
+    - backuppolicies/status
+    verbs:
+    - get
+    - patch
+    - update
+  - apiGroups:
+    - dataprotection.kubeblocks.io
+    resources:
+    - backuprepos
+    verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - dataprotection.kubeblocks.io
+    resources:
+    - backuprepos/finalizers
+    verbs:
+    - update
+  - apiGroups:
+    - dataprotection.kubeblocks.io
+    resources:
+    - backuprepos/status
+    verbs:
+    - get
+    - patch
+    - update
+  - apiGroups:
+    - dataprotection.kubeblocks.io
+    resources:
+    - backups
+    verbs:
+    - create
+    - delete
+    - deletecollection
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - dataprotection.kubeblocks.io
+    resources:
+    - backups/finalizers
+    verbs:
+    - update
+  - apiGroups:
+    - dataprotection.kubeblocks.io
+    resources:
+    - backups/status
+    verbs:
+    - get
+    - patch
+    - update
+  - apiGroups:
+    - dataprotection.kubeblocks.io
+    resources:
+    - backupschedules
+    verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - dataprotection.kubeblocks.io
+    resources:
+    - backupschedules/finalizers
+    verbs:
+    - update
+  - apiGroups:
+    - dataprotection.kubeblocks.io
+    resources:
+    - backupschedules/status
+    verbs:
+    - get
+    - patch
+    - update
+  - apiGroups:
+    - dataprotection.kubeblocks.io
+    resources:
+    - restores
+    verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - dataprotection.kubeblocks.io
+    resources:
+    - restores/finalizers
+    verbs:
+    - update
+  - apiGroups:
+    - dataprotection.kubeblocks.io
+    resources:
+    - restores/status
+    verbs:
+    - get
+    - patch
+    - update
+  - apiGroups:
+    - extensions.kubeblocks.io
+    resources:
+    - addons
+    verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - extensions.kubeblocks.io
+    resources:
+    - addons/finalizers
+    verbs:
+    - update
+  - apiGroups:
+    - extensions.kubeblocks.io
+    resources:
+    - addons/status
+    verbs:
+    - get
+    - patch
+    - update
+  - apiGroups:
+    - policy
+    resources:
+    - poddisruptionbudgets
+    verbs:
+    - create
+    - delete
+    - deletecollection
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - policy
+    resources:
+    - poddisruptionbudgets/finalizers
+    verbs:
+    - update
+  - apiGroups:
+    - rbac.authorization.k8s.io
+    resources:
+    - clusterrolebindings
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - rbac.authorization.k8s.io
+    resources:
+    - clusterrolebindings/status
+    verbs:
+    - get
+  - apiGroups:
+    - rbac.authorization.k8s.io
+    resources:
+    - rolebindings
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - rbac.authorization.k8s.io
+    resources:
+    - rolebindings/status
+    verbs:
+    - get
+  - apiGroups:
+    - snapshot.storage.k8s.io
+    resources:
+    - volumesnapshotclasses
+    verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - snapshot.storage.k8s.io
+    resources:
+    - volumesnapshotclasses/finalizers
+    verbs:
+    - patch
+    - update
+  - apiGroups:
+    - snapshot.storage.k8s.io
+    resources:
+    - volumesnapshots
+    verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - snapshot.storage.k8s.io
+    resources:
+    - volumesnapshots/finalizers
+    verbs:
+    - patch
+    - update
+  - apiGroups:
+    - storage.k8s.io
+    resources:
+    - csidrivers
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - storage.k8s.io
+    resources:
+    - storageclasses
+    verbs:
+    - create
+    - delete
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - storage.kubeblocks.io
+    resources:
+    - storageproviders
+    verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - storage.kubeblocks.io
+    resources:
+    - storageproviders/finalizers
+    verbs:
+    - update
+  - apiGroups:
+    - storage.kubeblocks.io
+    resources:
+    - storageproviders/status
+    verbs:
+    - get
+    - patch
+    - update
+  - apiGroups:
+    - workloads.kubeblocks.io
+    resources:
+    - replicatedstatemachines
+    verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - workloads.kubeblocks.io
+    resources:
+    - replicatedstatemachines/finalizers
+    verbs:
+    - update
+  - apiGroups:
+    - workloads.kubeblocks.io
+    resources:
+    - replicatedstatemachines/status
+    verbs:
+    - get
+    - patch
+    - update
+---
+# Source: kubeblocks/templates/rbac/dataprotection_backup_editor_role.yaml
+# permissions for end users to edit backups.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubeblocks-backup-editor-role
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+rules:
+- apiGroups:
+  - dataprotection.kubeblocks.io
+  resources:
+  - backups
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - dataprotection.kubeblocks.io
+  resources:
+  - backups/status
+  verbs:
+  - get
+---
+# Source: kubeblocks/templates/rbac/dataprotection_backup_viewer_role.yaml
+# permissions for end users to view backups.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubeblocks-backup-viewer-role
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+rules:
+- apiGroups:
+  - dataprotection.kubeblocks.io
+  resources:
+  - backups
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - dataprotection.kubeblocks.io
+  resources:
+  - backups/status
+  verbs:
+  - get
+---
+# Source: kubeblocks/templates/rbac/dataprotection_backuppolicy_editor_role.yaml
+# permissions for end users to edit backuppolicies.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubeblocks-backuppolicy-editor-role
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+rules:
+- apiGroups:
+  - dataprotection.kubeblocks.io
+  resources:
+  - backuppolicies
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - dataprotection.kubeblocks.io
+  resources:
+  - backuppolicies/status
+  verbs:
+  - get
+---
+# Source: kubeblocks/templates/rbac/dataprotection_backuppolicy_viewer_role.yaml
+# permissions for end users to view backuppolicies.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubeblocks-backuppolicy-viewer-role
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+rules:
+- apiGroups:
+  - dataprotection.kubeblocks.io
+  resources:
+  - backuppolicies
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - dataprotection.kubeblocks.io
+  resources:
+  - backuppolicies/status
+  verbs:
+  - get
+---
+# Source: kubeblocks/templates/rbac/dataprotection_backuptool_editor_role.yaml
+# permissions for end users to edit backuptools.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubeblocks-backuptool-editor-role
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+rules:
+- apiGroups:
+  - dataprotection.kubeblocks.io
+  resources:
+  - backuptools
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - dataprotection.kubeblocks.io
+  resources:
+  - backuptools/status
+  verbs:
+  - get
+---
+# Source: kubeblocks/templates/rbac/dataprotection_backuptool_viewer_role.yaml
+# permissions for end users to view backuptools.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubeblocks-backuptool-viewer-role
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+rules:
+- apiGroups:
+  - dataprotection.kubeblocks.io
+  resources:
+  - backuptools
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - dataprotection.kubeblocks.io
+  resources:
+  - backuptools/status
+  verbs:
+  - get
+---
+# Source: kubeblocks/templates/rbac/dataprotection_restore_editor_role.yaml
+# permissions for end users to edit restores.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubeblocks-restore-editor-role
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+rules:
+- apiGroups:
+  - dataprotection.kubeblocks.io
+  resources:
+  - restores
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - dataprotection.kubeblocks.io
+  resources:
+  - restores/status
+  verbs:
+  - get
+---
+# Source: kubeblocks/templates/rbac/dataprotection_restore_viewer_role.yaml
+# permissions for end users to view restores.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubeblocks-restore-viewer-role
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+rules:
+- apiGroups:
+  - dataprotection.kubeblocks.io
+  resources:
+  - restores
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - dataprotection.kubeblocks.io
+  resources:
+  - restores/status
+  verbs:
+  - get
+---
+# Source: kubeblocks/templates/rbac/extensions_addon_editor_role.yaml
+# permissions for end users to edit addons.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubeblocks-editor-role
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+rules:
+- apiGroups:
+  - extensions.kubeblocks.io
+  resources:
+  - addons
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - extensions.kubeblocks.io
+  resources:
+  - addons/status
+  verbs:
+  - get
+---
+# Source: kubeblocks/templates/rbac/extensions_addon_viewer_role.yaml
+# permissions for end users to view addons.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubeblocks-viewer-role
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+rules:
+- apiGroups:
+  - extensions.kubeblocks.io
+  resources:
+  - addons
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - extensions.kubeblocks.io
+  resources:
+  - addons/status
+  verbs:
+  - get
+---
+# Source: kubeblocks/templates/rbac/opsrequest_editor_role.yaml
+# permissions for end users to edit opsrequests.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubeblocks-opsrequest-editor-role
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+rules:
+- apiGroups:
+  - apps.kubeblocks.io
+  resources:
+  - opsrequests
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps.kubeblocks.io
+  resources:
+  - opsrequests/status
+  verbs:
+  - get
+---
+# Source: kubeblocks/templates/rbac/opsrequest_viewer_role.yaml
+# permissions for end users to view opsrequests.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubeblocks-opsrequest-viewer-role
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+rules:
+- apiGroups:
+  - apps.kubeblocks.io
+  resources:
+  - opsrequests
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apps.kubeblocks.io
+  resources:
+  - opsrequests/status
+  verbs:
+  - get
+---
+# Source: kubeblocks/templates/rbac/rbac_manager_role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubeblocks-rbac-manager-role
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - serviceaccounts
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - serviceaccounts/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - serviceaccounts/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - rolebindings
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - rolebindings/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - rolebindings/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+    - rbac.authorization.k8s.io
+  resources:
+    - clusterrolebindings
+  verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+- apiGroups:
+    - rbac.authorization.k8s.io
+  resources:
+    - clusterrolebindings/finalizers
+  verbs:
+    - update
+- apiGroups:
+    - rbac.authorization.k8s.io
+  resources:
+    - clusterrolebindings/status
+  verbs:
+    - get
+    - patch
+    - update
+---
+# Source: kubeblocks/templates/rbac/workloads_replicatedstatemachine_editor_role.yaml
+# permissions for end users to edit replicatedstatemachines.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: replicatedstatemachine-editor-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: kubeblocks
+    app.kubernetes.io/part-of: kubeblocks
+    app.kubernetes.io/managed-by: kustomize
+  name: replicatedstatemachine-editor-role
+rules:
+- apiGroups:
+  - workloads.kubeblocks.io
+  resources:
+  - replicatedstatemachines
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - workloads.kubeblocks.io
+  resources:
+  - replicatedstatemachines/status
+  verbs:
+  - get
+---
+# Source: kubeblocks/templates/rbac/workloads_replicatedstatemachine_viewer_role.yaml
+# permissions for end users to view replicatedstatemachines.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: replicatedstatemachine-viewer-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: kubeblocks
+    app.kubernetes.io/part-of: kubeblocks
+    app.kubernetes.io/managed-by: kustomize
+  name: replicatedstatemachines-viewer-role
+rules:
+- apiGroups:
+  - workloads.kubeblocks.io
+  resources:
+  - replicatedstatemachines
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - workloads.kubeblocks.io
+  resources:
+  - replicatedstatemachines/status
+  verbs:
+  - get
+---
+# Source: kubeblocks/templates/rbac/auth_proxy_role_binding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kubeblocks-proxy-rolebinding
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kubeblocks-proxy-role
+subjects:
+- kind: ServiceAccount
+  name: kubeblocks
+  namespace: acto-namespace
+---
+# Source: kubeblocks/templates/rbac/clusterrole_binding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kubeblocks
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kubeblocks
+subjects:
+- kind: ServiceAccount
+  name: kubeblocks
+  namespace: acto-namespace
+---
+# Source: kubeblocks/templates/rbac/clusterrole_binding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kubeblocks-cluster-admin
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: kubeblocks-addon-installer
+    namespace: acto-namespace
+---
+# Source: kubeblocks/templates/rbac/leader_election_role.yaml
+# permissions to do leader election.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: kubeblocks-leader-election-role
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+---
+# Source: kubeblocks/templates/rbac/leader_election_role_binding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: kubeblocks-leader-election-rolebinding
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: kubeblocks-leader-election-role
+subjects:
+- kind: ServiceAccount
+  name: kubeblocks-controller-manager
+  namespace: acto-namespace
+---
+# Source: kubeblocks/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubeblocks
+  labels:
+    control-plane: controller-manager
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9443
+      targetPort: webhook-server
+      protocol: TCP
+      name: webhook-server
+  selector:
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+---
+# Source: kubeblocks/templates/dataprotection.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubeblocks-dataprotection
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: "dataprotection"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kubeblocks
+      app.kubernetes.io/instance: kubeblocks
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 40%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kubeblocks
+        app.kubernetes.io/instance: kubeblocks
+    spec:
+      priorityClassName: 
+      serviceAccountName: kubeblocks
+      securityContext:
+        runAsNonRoot: true
+      initContainers: # only download tools image to local
+        - name: tools
+          image: "infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-tools:0.8.1"
+          imagePullPolicy: IfNotPresent
+          resources:
+            {}
+          command:
+            - /bin/true
+      containers:
+        - name: dataprotection
+          args:
+            - "--health-probe-bind-address=:8081"
+            - "--metrics-bind-address=:8080"
+            - "--leader-elect"
+            - "--leader-elect-id=abd03fda"
+            - "--zap-devel=false"
+            - "--zap-time-encoding=iso8601"
+            - "--zap-encoder=console"
+          env:
+            - name: CM_NAMESPACE
+              value: acto-namespace
+            - name: CM_AFFINITY
+              value: "{\"nodeAffinity\":{\"preferredDuringSchedulingIgnoredDuringExecution\":[{\"preference\":{\"matchExpressions\":[{\"key\":\"kb-controller\",\"operator\":\"In\",\"values\":[\"true\"]}]},\"weight\":100}]}}"
+            - name: CM_TOLERATIONS
+              value: "[{\"effect\":\"NoSchedule\",\"key\":\"kb-controller\",\"operator\":\"Equal\",\"value\":\"true\"}]"
+            - name: KUBEBLOCKS_IMAGE_PULL_POLICY
+              value: IfNotPresent
+            - name: KUBEBLOCKS_TOOLS_IMAGE
+              value: "infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-tools:0.8.1"
+            - name: KUBEBLOCKS_SERVICEACCOUNT_NAME
+              value: kubeblocks
+            - name: DP_ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: kubeblocks-secret
+                  key: dataProtectionEncryptionKey
+            - name: DATASAFED_IMAGE
+              value: "infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/datasafed:0.1.0"
+            - name: GC_FREQUENCY_SECONDS
+              value: "3600"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+          image: "infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-dataprotection:0.8.1"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: webhook-server
+              containerPort: 9443
+              protocol: TCP
+            - name: health
+              containerPort: 8081
+              protocol: TCP
+            - name: metrics
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: health
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: health
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            {}
+          volumeMounts:
+            - mountPath: /etc/kubeblocks
+              name: manager-config
+      dnsPolicy: ClusterFirst
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - preference:
+              matchExpressions:
+              - key: kb-controller
+                operator: In
+                values:
+                - "true"
+            weight: 100
+      tolerations:
+        - effect: NoSchedule
+          key: kb-controller
+          operator: Equal
+          value: "true"
+      terminationGracePeriodSeconds: 10
+      volumes:
+        - name: manager-config
+          configMap:
+            name: kubeblocks-manager-config
+---
+# Source: kubeblocks/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubeblocks
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: "apps"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kubeblocks
+      app.kubernetes.io/instance: kubeblocks
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 40%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kubeblocks
+        app.kubernetes.io/instance: kubeblocks
+    spec:
+      priorityClassName: 
+      serviceAccountName: kubeblocks
+      securityContext:
+        runAsNonRoot: true
+      initContainers: # only download tools image to local
+        - name: tools
+          image: "infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-tools:0.8.1"
+          imagePullPolicy: IfNotPresent
+          resources:
+            {}
+          command:
+            - /bin/true
+        - name: datascript
+          image: "infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-datascript:0.8.1"
+          imagePullPolicy: IfNotPresent
+          resources:
+            {}
+          command:
+            - /bin/true
+      containers:
+        - name: manager
+          args:
+            - "--health-probe-bind-address=:8081"
+            - "--metrics-bind-address=:8080"
+            - "--leader-elect"
+            - "--zap-devel=false"
+            - "--zap-time-encoding=iso8601"
+            - "--zap-encoder=console"
+            - "--extensions=true"
+            - "--apps=true"
+            - "--workloads=true"
+          env:
+            - name: CM_NAMESPACE
+              value: acto-namespace
+            - name: CM_AFFINITY
+              value: "{\"nodeAffinity\":{\"preferredDuringSchedulingIgnoredDuringExecution\":[{\"preference\":{\"matchExpressions\":[{\"key\":\"kb-controller\",\"operator\":\"In\",\"values\":[\"true\"]}]},\"weight\":100}]}}"
+            - name: CM_TOLERATIONS
+              value: "[{\"effect\":\"NoSchedule\",\"key\":\"kb-controller\",\"operator\":\"Equal\",\"value\":\"true\"}]"
+            - name: KUBEBLOCKS_IMAGE_PULL_POLICY
+              value: IfNotPresent
+            - name: KUBEBLOCKS_TOOLS_IMAGE
+              value: "infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-tools:0.8.1"
+            - name: KUBEBLOCKS_DATASCRIPT_CLIENTS_IMAGE
+              value: "infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-datascript:0.8.1"
+            - name: KUBEBLOCKS_SERVICEACCOUNT_NAME
+              value: kubeblocks
+            - name: ENABLE_RBAC_MANAGER
+              value: "true"
+            - name: ADDON_JOB_TTL
+              value: 
+            - name: ADDON_JOB_IMAGE_PULL_POLICY
+              value: IfNotPresent
+            - name: KUBEBLOCKS_ADDON_SA_NAME
+              value: kubeblocks-addon-installer
+            - name: KUBEBLOCKS_ADDON_HELM_INSTALL_OPTIONS
+              value: --atomic --cleanup-on-fail --wait --insecure-skip-tls-verify
+            - name: DP_ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: kubeblocks-secret
+                  key: dataProtectionEncryptionKey
+            - name: KUBE_PROVIDER
+              value: ""
+            - name: HOST_PORT_INCLUDE_RANGES
+              value: '1025-65536'
+            - name: HOST_PORT_EXCLUDE_RANGES
+              value: '6443,10250,10257,10259,2379-2380,30000-32767'
+            - name: HOST_PORT_CM_NAME
+              value: kubeblocks-host-ports
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+          image: "infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks:0.8.1"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: webhook-server
+              containerPort: 9443
+              protocol: TCP
+            - name: health
+              containerPort: 8081
+              protocol: TCP
+            - name: metrics
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: health
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: health
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            {}
+          volumeMounts:
+          - mountPath: /etc/kubeblocks
+            name: manager-config
+      dnsPolicy: ClusterFirst
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - preference:
+              matchExpressions:
+              - key: kb-controller
+                operator: In
+                values:
+                - "true"
+            weight: 100
+      tolerations:
+        - effect: NoSchedule
+          key: kb-controller
+          operator: Equal
+          value: "true"
+      terminationGracePeriodSeconds: 10
+      volumes:
+        - name: manager-config
+          configMap:
+            name: kubeblocks-manager-config
+---
+# Source: kubeblocks/templates/addons/apecloud-mysql-addon.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: apecloud-mysql
+  labels:
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    addon.kubeblocks.io/version: 0.8.0-beta.5
+    addon.kubeblocks.io/name: apecloud-mysql
+    addon.kubeblocks.io/provider: apecloud
+    addon.kubeblocks.io/model: RDBMS
+  annotations:
+    addon.kubeblocks.io/kubeblocks-version: '>=0.7.0'
+spec:
+  description: 'ApeCloud MySQL is a database that is compatible with MySQL syntax and achieves high availability through the utilization of the RAFT consensus protocol.'
+  type: Helm
+  helm:    
+    chartLocationURL: file:///apecloud-mysql-0.8.0-beta.5.tgz
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+    installOptions:
+  defaultInstallValues:
+  - enabled: true
+  installable:
+    autoInstall: true
+---
+# Source: kubeblocks/templates/addons/clickhouse-addon.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: clickhouse
+  labels:
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    addon.kubeblocks.io/version: 0.7.1
+    addon.kubeblocks.io/name: clickhouse
+    addon.kubeblocks.io/provider: community
+    addon.kubeblocks.io/model: RDBMS
+  annotations:
+    addon.kubeblocks.io/kubeblocks-version: '>=0.7.0'
+spec:
+  description: 'ClickHouse is an open-source column-oriented OLAP database management system. Use it to boost your database performance while providing linear scalability and hardware efficiency.'
+  type: Helm
+  helm:    
+    chartLocationURL: file:///clickhouse-0.7.1.tgz
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+    installOptions:
+  defaultInstallValues:
+  - enabled: true
+  installable:
+    autoInstall: true
+---
+# Source: kubeblocks/templates/addons/elasticsearch-addon.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: elasticsearch
+  labels:
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    addon.kubeblocks.io/version: 0.7.0
+    addon.kubeblocks.io/name: elasticsearch
+    addon.kubeblocks.io/provider: community
+    addon.kubeblocks.io/model: search-engine
+  annotations:
+    addon.kubeblocks.io/kubeblocks-version: '>=0.7.0'
+spec:
+  description: 'Elasticsearch is a distributed search and analytics engine. It is used for web search, log monitoring, and real-time analytics. Ideal for Big Data applications.'
+  type: Helm
+  helm:    
+    chartLocationURL: file:///elasticsearch-0.7.0.tgz
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+    installOptions:
+  defaultInstallValues:
+  - enabled: true
+  installable:
+    autoInstall: false
+---
+# Source: kubeblocks/templates/addons/foxlake-addon.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: foxlake
+  labels:
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    addon.kubeblocks.io/version: 0.7.0
+    addon.kubeblocks.io/name: foxlake
+    addon.kubeblocks.io/provider: apecloud
+    addon.kubeblocks.io/model: RDBMS
+  annotations:
+    addon.kubeblocks.io/kubeblocks-version: '>=0.7.0'
+spec:
+  description: 'ApeCloud FoxLake is an open-source cloud-native data warehouse.'
+  type: Helm
+  helm:    
+    chartLocationURL: file:///foxlake-0.7.0.tgz
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+    installOptions:
+  defaultInstallValues:
+  - enabled: true
+  installable:
+    autoInstall: false
+---
+# Source: kubeblocks/templates/addons/kafka-addon.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: kafka
+  labels:
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    addon.kubeblocks.io/version: 0.8.0-alpha.5
+    addon.kubeblocks.io/name: kafka
+    addon.kubeblocks.io/provider: community
+    addon.kubeblocks.io/model: streaming
+  annotations:
+    addon.kubeblocks.io/kubeblocks-version: '>=0.7.0'
+spec:
+  description: 'Apache Kafka is a distributed streaming platform designed to build real-time pipelines and can be used as a message broker or as a replacement for a log aggregation solution for big data applications.'
+  type: Helm
+  helm:    
+    chartLocationURL: file:///kafka-0.8.0-alpha.5.tgz
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+    installOptions:
+  defaultInstallValues:
+  - enabled: true
+  installable:
+    autoInstall: true
+---
+# Source: kubeblocks/templates/addons/llm-addon.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: llm
+  labels:
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    addon.kubeblocks.io/version: 0.7.0
+    addon.kubeblocks.io/name: llm
+    addon.kubeblocks.io/provider: community
+    addon.kubeblocks.io/model: LLM
+  annotations:
+    addon.kubeblocks.io/kubeblocks-version: '>=0.7.0'
+spec:
+  description: 'Large Language Models.'
+  type: Helm
+  helm:    
+    chartLocationURL: file:///llm-0.7.0.tgz
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+    installOptions:
+  defaultInstallValues:
+  - enabled: true
+  installable:
+    autoInstall: false
+---
+# Source: kubeblocks/templates/addons/milvus-addon.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: milvus
+  labels:
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    addon.kubeblocks.io/version: 2.3.2
+    addon.kubeblocks.io/name: milvus
+    addon.kubeblocks.io/provider: community
+    addon.kubeblocks.io/model: vector
+  annotations:
+    addon.kubeblocks.io/kubeblocks-version: '>=0.7.0'
+spec:
+  description: 'Milvus is an open source (Apache-2.0 licensed) vector database built to power embedding similarity search and AI applications.'
+  type: Helm
+  helm:    
+    chartLocationURL: file:///milvus-2.3.2.tgz
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+    installOptions:
+  defaultInstallValues:
+  - enabled: true
+  installable:
+    autoInstall: false
+---
+# Source: kubeblocks/templates/addons/mongodb-addon.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: mongodb
+  labels:
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    addon.kubeblocks.io/version: 0.7.0
+    addon.kubeblocks.io/name: mongodb
+    addon.kubeblocks.io/provider: apecloud
+    addon.kubeblocks.io/model: document
+  annotations:
+    addon.kubeblocks.io/kubeblocks-version: '>=0.7.0'
+spec:
+  description: 'MongoDB is a document database designed for ease of application development and scaling.'
+  type: Helm
+  helm:    
+    chartLocationURL: file:///mongodb-0.7.0.tgz
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+    installOptions:
+  defaultInstallValues:
+  - enabled: true
+  installable:
+    autoInstall: true
+---
+# Source: kubeblocks/templates/addons/mysql-addon.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: mysql
+  labels:
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    addon.kubeblocks.io/version: 0.7.0
+    addon.kubeblocks.io/name: mysql
+    addon.kubeblocks.io/provider: community
+    addon.kubeblocks.io/model: RDBMS
+  annotations:
+    addon.kubeblocks.io/kubeblocks-version: '>=0.7.0'
+spec:
+  description: 'MySQL is a widely used, open-source relational database management system (RDBMS).'
+  type: Helm
+  helm:    
+    chartLocationURL: file:///mysql-0.7.0.tgz
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+    installOptions:
+  defaultInstallValues:
+  - enabled: true
+  installable:
+    autoInstall: false
+---
+# Source: kubeblocks/templates/addons/oceanbase-addon.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: oceanbase
+  labels:
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    addon.kubeblocks.io/version: 0.8.1
+    addon.kubeblocks.io/name: oceanbase
+    addon.kubeblocks.io/provider: community
+    addon.kubeblocks.io/model: RDBMS
+  annotations:
+    addon.kubeblocks.io/kubeblocks-version: '>=0.8.0'
+spec:
+  description: 'OceanBase Database is an enterprise-level native distributed database independently developed by Ant Group.'
+  type: Helm
+  helm:    
+    chartLocationURL: file:///oceanbase-0.8.1.tgz
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+    installOptions:
+  defaultInstallValues:
+  - enabled: true
+  installable:
+    autoInstall: false
+---
+# Source: kubeblocks/templates/addons/opensearch-addon.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: opensearch
+  labels:
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    addon.kubeblocks.io/version: 0.7.0
+    addon.kubeblocks.io/name: opensearch
+    addon.kubeblocks.io/provider: community
+    addon.kubeblocks.io/model: search-engine
+  annotations:
+    addon.kubeblocks.io/kubeblocks-version: '>=0.7.0'
+spec:
+  description: 'OpenSearch is a scalable, flexible, and extensible open-source software suite for search, analytics, and observability applications licensed under Apache 2.0.'
+  type: Helm
+  helm:    
+    chartLocationURL: file:///opensearch-0.7.0.tgz
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+    installOptions:
+  defaultInstallValues:
+  - enabled: true
+  installable:
+    autoInstall: false
+---
+# Source: kubeblocks/templates/addons/polardbx-addon.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: polardbx
+  labels:
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    addon.kubeblocks.io/version: 0.7.0
+    addon.kubeblocks.io/name: polardbx
+    addon.kubeblocks.io/provider: community
+    addon.kubeblocks.io/model: RDBMS
+  annotations:
+    addon.kubeblocks.io/kubeblocks-version: '>=0.7.0'
+spec:
+  description: 'PolarDB-X is a cloud native distributed SQL Database designed for high concurrency, massive storage, complex querying scenarios.'
+  type: Helm
+  helm:    
+    chartLocationURL: file:///polardbx-0.7.0.tgz
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+    installOptions:
+  defaultInstallValues:
+  - enabled: true
+  installable:
+    autoInstall: false
+---
+# Source: kubeblocks/templates/addons/postgresql-addon.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: postgresql
+  labels:
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    addon.kubeblocks.io/version: 0.8.0
+    addon.kubeblocks.io/name: postgresql
+    addon.kubeblocks.io/provider: community
+    addon.kubeblocks.io/model: RDBMS
+  annotations:
+    addon.kubeblocks.io/kubeblocks-version: '>=0.7.0'
+spec:
+  description: 'PostgreSQL (Postgres) is an open source object-relational database known for reliability and data integrity. ACID-compliant, it supports foreign keys, joins, views, triggers and stored procedures.'
+  type: Helm
+  helm:    
+    chartLocationURL: file:///postgresql-0.8.0.tgz
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+    installOptions:
+  defaultInstallValues:
+  - enabled: true
+  installable:
+    autoInstall: true
+---
+# Source: kubeblocks/templates/addons/pulsar-addon.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: pulsar
+  labels:
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    addon.kubeblocks.io/version: 0.7.0
+    addon.kubeblocks.io/name: pulsar
+    addon.kubeblocks.io/provider: community
+    addon.kubeblocks.io/model: streaming
+  annotations:
+    addon.kubeblocks.io/kubeblocks-version: '>=0.7.0'
+spec:
+  description: 'Apache® Pulsar™ is an open-source, distributed messaging and streaming platform built for the cloud.'
+  type: Helm
+  helm:    
+    chartLocationURL: file:///pulsar-0.7.0.tgz
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+    installOptions:
+  defaultInstallValues:
+  - enabled: true
+  installable:
+    autoInstall: true
+---
+# Source: kubeblocks/templates/addons/qdrant-addon.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: qdrant
+  labels:
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    addon.kubeblocks.io/version: 0.7.0
+    addon.kubeblocks.io/name: qdrant
+    addon.kubeblocks.io/provider: community
+    addon.kubeblocks.io/model: vector
+  annotations:
+    addon.kubeblocks.io/kubeblocks-version: '>=0.7.0'
+spec:
+  description: 'Qdrant is an open source (Apache-2.0 licensed), vector similarity search engine and vector database.'
+  type: Helm
+  helm:    
+    chartLocationURL: file:///qdrant-0.7.0.tgz
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+    installOptions:
+  defaultInstallValues:
+  - enabled: true
+  installable:
+    autoInstall: false
+---
+# Source: kubeblocks/templates/addons/redis-addon.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: redis
+  labels:
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    addon.kubeblocks.io/version: 0.8.1
+    addon.kubeblocks.io/name: redis
+    addon.kubeblocks.io/provider: community
+    addon.kubeblocks.io/model: key-value
+  annotations:
+    addon.kubeblocks.io/kubeblocks-version: '>=0.8.0'
+spec:
+  description: 'Redis is an open source (BSD licensed), in-memory data structure store, used as a database, cache and message broker.'
+  type: Helm
+  helm:    
+    chartLocationURL: file:///redis-0.8.1.tgz
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+    installOptions:
+  defaultInstallValues:
+  - enabled: true
+  installable:
+    autoInstall: true
+---
+# Source: kubeblocks/templates/addons/weaviate-addon.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: weaviate
+  labels:
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    addon.kubeblocks.io/version: 0.8.0
+    addon.kubeblocks.io/name: weaviate
+    addon.kubeblocks.io/provider: community
+    addon.kubeblocks.io/model: vector
+  annotations:
+    addon.kubeblocks.io/kubeblocks-version: '>=0.7.0'
+spec:
+  description: 'Weaviate is an open-source (BSD-3.0 licensed)  vector database. It allows you to store data objects and vector embeddings from your favorite ML-models, and scale seamlessly into billions of data objects.'
+  type: Helm
+  helm:    
+    chartLocationURL: file:///weaviate-0.8.0.tgz
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+    installOptions:
+  defaultInstallValues:
+  - enabled: true
+  installable:
+    autoInstall: false
+---
+# Source: kubeblocks/templates/addons/xinference-addon.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: xinference
+  labels:
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    addon.kubeblocks.io/version: 0.1.0
+    addon.kubeblocks.io/name: xinference
+    addon.kubeblocks.io/provider: community
+    addon.kubeblocks.io/model: LLM
+  annotations:
+    addon.kubeblocks.io/kubeblocks-version: '>=0.7.0'
+spec:
+  description: 'Xorbits Inference(Xinference) is a powerful and versatile library designed to serve language, speech recognition, and multimodal models.'
+  type: Helm
+  helm:    
+    chartLocationURL: file:///xinference-0.1.0.tgz
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+    installOptions:
+  defaultInstallValues:
+  - enabled: true
+  installable:
+    autoInstall: false
+---
+# Source: kubeblocks/templates/applications/alertmanager-webhook-adaptor-addon.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: alertmanager-webhook-adaptor
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+    "addon.kubeblocks.io/provider": apecloud
+    "addon.kubeblocks.io/version": "0.1.4"
+spec:
+  description: 'alertmanager webhook adaptor for extending alertmanager notification channels'
+  type: Helm
+
+  helm:    
+    chartLocationURL: file:///alertmanager-webhook-adaptor-0.1.4.tgz    
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+
+    installOptions:
+
+    installValues:
+      configMapRefs:
+        - name: alertmanager-webhook-adaptor-chart-kubeblocks-values
+          key: values-kubeblocks-override.yaml
+
+    valuesMapping:
+      valueMap:
+        replicaCount: replicaCount
+
+      jsonMap:
+        tolerations: tolerations
+
+      resources:
+        cpu:
+          requests: resources.requests.cpu
+          limits: resources.limits.cpu
+        memory:
+          requests: resources.requests.memory
+          limits: resources.limits.memory
+
+  defaultInstallValues:
+    - replicas: 1
+      tolerations: "[{\"effect\":\"NoSchedule\",\"key\":\"kb-controller\",\"operator\":\"Equal\",\"value\":\"true\"}]"
+
+  installable:
+    autoInstall: false
+---
+# Source: kubeblocks/templates/applications/apecloud-otel-collector-addon.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: apecloud-otel-collector
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+    "addon.kubeblocks.io/provider": apecloud
+    "addon.kubeblocks.io/version": "0.1.2-beta.3"
+spec:
+  description: apecloud-otel-collector is a high-performance data collection agent with luxuriant function, which inspired by OpenTelemetry.
+  type: Helm
+
+  helm:    
+    chartLocationURL: file:///apecloud-otel-collector-0.1.2-beta.3.tgz    
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+
+    installOptions:
+
+    installValues:
+      configMapRefs:
+        - name: apecloud-otel-collector-chart-kubeblocks-values
+          key: values-kubeblocks-override.yaml
+
+    valuesMapping:
+      valueMap:
+
+      jsonMap:
+        tolerations: tolerations
+
+      resources:
+        cpu:
+          requests: resources.requests.cpu
+          limits: resources.limits.cpu
+        memory:
+          requests: resources.requests.memory
+          limits: resources.limits.memory
+
+  defaultInstallValues:
+    - enabled: true
+      tolerations: "[{\"effect\":\"NoSchedule\",\"key\":\"kb-controller\",\"operator\":\"Equal\",\"value\":\"true\"},{\"effect\":\"NoSchedule\",\"key\":\"kb-data\",\"operator\":\"Equal\",\"value\":\"true\"}]"
+
+  installable:
+    autoInstall: false
+---
+# Source: kubeblocks/templates/applications/aws-loadbalancer-controller-addon.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: aws-load-balancer-controller
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+    "addon.kubeblocks.io/provider": community
+    "addon.kubeblocks.io/version": "1.4.8"
+spec:
+  description: The AWS Load Balancer Controller manages AWS Elastic Load Balancers for a Kubernetes cluster.
+  type: Helm
+
+  helm:    
+    chartLocationURL: file:///aws-load-balancer-controller-1.4.8.tgz    
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+
+    installOptions:
+
+    installValues:
+      configMapRefs:
+      - name: aws-load-balancer-controller-chart-kubeblocks-values
+        key: values-kubeblocks-override.yaml
+
+      setValues:
+      - clusterName=
+
+    valuesMapping:
+      valueMap:
+        replicaCount: replicaCount
+
+      jsonMap:
+        tolerations: tolerations
+
+      resources:
+        cpu:
+          requests: resources.requests.cpu
+          limits: resources.limits.cpu
+        memory:
+          requests: resources.requests.memory
+          limits: resources.limits.memory
+
+  defaultInstallValues:
+  - replicas: 1
+    tolerations: "[{\"effect\":\"NoSchedule\",\"key\":\"kb-controller\",\"operator\":\"Equal\",\"value\":\"true\"}]"
+
+  installable:
+    autoInstall: false
+    selectors:
+    - key: KubeGitVersion
+      operator: Contains
+      values:
+      - eks
+---
+# Source: kubeblocks/templates/applications/bytebase-addon.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: bytebase
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+    "addon.kubeblocks.io/provider": community
+    "addon.kubeblocks.io/version": "0.7.0"
+spec:
+  description: 'Bytebase is Database DevOps and CI/CD for Developer, DBA and Platform Engineering team.'
+  type: Helm
+
+  helm:    
+    chartLocationURL: file:///bytebase-0.7.0.tgz    
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+    installOptions:
+
+  installable:
+    autoInstall: false
+
+  defaultInstallValues:
+  - enabled: true
+---
+# Source: kubeblocks/templates/applications/chaos-mesh-addon.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: fault-chaos-mesh
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+    "addon.kubeblocks.io/provider": apecloud
+    "addon.kubeblocks.io/version": "2.5.2"
+spec:
+  description: 'Chaos Mesh is an open-source chaos engineering tool that facilitates testing the resiliency and reliability of distributed systems by introducing various failure scenarios in a controlled manner.'
+
+  type: Helm
+
+  helm:    
+    chartLocationURL: file:///chaos-mesh-2.5.2.tgz    
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+
+    installOptions:
+
+    installValues:
+      setValues:
+        - "version=2.5.2"
+        - "chaosDaemon.privileged=true"
+        - "dnsServer.create=true"
+        - "chaosDaemon.runtime=containerd"
+        - "chaosDaemon.socketPath=/run/containerd/containerd.sock"
+        - "images.registry=infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com"
+        - "controllerManager.image.repository=apecloud/chaos-mesh"
+        - "chaosDaemon.image.repository=apecloud/chaos-daemon"
+        - "dashboard.image.repository=apecloud/chaos-dashboard"
+
+    valuesMapping:
+      valueMap:
+        replicaCount: controllerManager.replicaCount
+      jsonMap:
+        tolerations: controllerManager.tolerations
+      resources:
+        cpu:
+          requests: controllerManager.resources.requests.cpu
+        memory:
+          requests: controllerManager.resources.requests.memory
+
+      extras:
+        - name: chaosDaemon
+          jsonMap:
+            tolerations: chaosDaemon.tolerations
+
+        - name: dashboard
+          valueMap:
+            replicaCount: dashboard.replicaCount
+          jsonMap:
+            tolerations: dashboard.tolerations
+          resources:
+            cpu:
+              requests: dashboard.resources.requests.cpu
+            memory:
+              requests: dashboard.resources.requests.memory
+
+        - name: dnsServer
+          jsonMap:
+            tolerations: dnsServer.tolerations
+          resources:
+            cpu:
+              requests: dnsServer.resources.requests.cpu
+            memory:
+              requests: dnsServer.resources.requests.memory
+
+  installable:
+    autoInstall: false
+
+  defaultInstallValues:
+    - enabled: false
+      tolerations: "[{\"effect\":\"NoSchedule\",\"key\":\"kb-controller\",\"operator\":\"Equal\",\"value\":\"true\"}]"
+      extras:
+        - name: chaosDaemon
+          tolerations: "[{\"effect\":\"NoSchedule\",\"key\":\"kb-controller\",\"operator\":\"Equal\",\"value\":\"true\"}]"
+        - name: dashboard
+          tolerations: "[{\"effect\":\"NoSchedule\",\"key\":\"kb-controller\",\"operator\":\"Equal\",\"value\":\"true\"}]"
+        - name: dnsServer
+          tolerations: "[{\"effect\":\"NoSchedule\",\"key\":\"kb-controller\",\"operator\":\"Equal\",\"value\":\"true\"}]"
+---
+# Source: kubeblocks/templates/applications/csi-driver-addon.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: kubeblocks-csi-driver
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+    "addon.kubeblocks.io/provider": community
+    "addon.kubeblocks.io/version": "0.1.4"
+spec:
+  description: 'KubeBlocks CSI driver provides a container storage interface used by Container Orchestrators
+    to manage the lifecycle of block storage for cloud vendors.'
+  type: Helm
+
+  helm:    
+    chartLocationURL: file:///kubeblocks-csi-driver-0.1.4.tgz    
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+
+    installOptions:
+
+    valuesMapping:
+      valueMap:
+        replicaCount: controller.replicaCount
+      jsonMap:
+        tolerations: controller.tolerations
+
+      resources:
+        cpu:
+          requests: controller.resources.requests.cpu
+          limits: controller.resources.limits.cpu
+        memory:
+          requests: controller.resources.requests.memory
+          limits: controller.resources.limits.memory
+      extras:
+        - name: node
+          jsonMap:
+            tolerations: node.tolerations
+
+          resources:
+            cpu:
+              requests: node.resources.requests.cpu
+              limits: node.resources.limits.cpu
+            memory:
+              requests: node.resources.requests.memory
+              limits: node.resources.limits.memory
+
+  defaultInstallValues:
+    - enabled: false
+      tolerations: "[{\"effect\":\"NoSchedule\",\"key\":\"kb-controller\",\"operator\":\"Equal\",\"value\":\"true\"}]"
+      extras:
+        - name: node
+          tolerations: "[{\"effect\":\"NoSchedule\",\"key\":\"kb-controller\",\"operator\":\"Equal\",\"value\":\"true\"}]"
+
+
+  installable:
+    autoInstall: false
+    selectors:
+      - key: KubeGitVersion
+        operator: Contains
+        values:
+          - eks
+---
+# Source: kubeblocks/templates/applications/csi-driver-nfs-addon.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: csi-driver-nfs
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+    "addon.kubeblocks.io/provider": community
+    "addon.kubeblocks.io/version": "4.5.0"
+spec:
+  description: Container Storage Interface (CSI) driver for NFS based volumes
+  type: Helm
+
+  helm:    
+    chartLocationURL: file:///csi-driver-nfs-4.5.0.tgz    
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+
+    installOptions:
+
+    installValues:
+
+    valuesMapping:
+      valueMap:
+        replicaCount: controller.replicas
+      jsonMap:
+        tolerations: controller.tolerations
+
+  defaultInstallValues:
+    - enabled: true
+      tolerations: "[{\"effect\":\"NoSchedule\",\"key\":\"kb-controller\",\"operator\":\"Equal\",\"value\":\"true\"}]"
+
+  installable:
+    autoInstall: false
+---
+# Source: kubeblocks/templates/applications/csi-hostpath-driver-addon.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: csi-hostpath-driver
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+    "addon.kubeblocks.io/provider": community
+    "addon.kubeblocks.io/version": "0.7.0"
+spec:
+  description: Container Storage Interface (CSI) driver for HostPath volumes
+  type: Helm
+
+  helm:    
+    chartLocationURL: file:///csi-hostpath-driver-0.7.0.tgz    
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+
+    installOptions:
+
+    installValues:
+      configMapRefs:
+        - name: csi-hostpath-driver-chart-kubeblocks-values
+          key: values-kubeblocks-override.yaml
+
+    valuesMapping:
+      jsonMap:
+        tolerations: tolerations
+
+  defaultInstallValues:
+    - enabled: true
+      tolerations: "[{\"effect\":\"NoSchedule\",\"key\":\"kb-controller\",\"operator\":\"Equal\",\"value\":\"true\"}]"
+
+  installable:
+    autoInstall: false
+    selectors:
+      - key: KubeGitVersion
+        operator: DoesNotContain
+        values:
+          - eks
+          - aliyun.
+          - gke
+          - tke
+          - aks
+---
+# Source: kubeblocks/templates/applications/csi-s3-addon.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: csi-s3
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+    "addon.kubeblocks.io/provider": community
+    "addon.kubeblocks.io/version": "0.7.0"
+spec:
+  description: Container Storage Interface (CSI) driver for S3 volumes
+  type: Helm
+
+  helm:    
+    chartLocationURL: file:///csi-s3-0.7.0.tgz    
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+
+    installOptions:
+
+    installValues:
+      secretRefs:
+        - name: kubeblocks-cloud-provider
+          key: csi-s3
+
+    valuesMapping:
+      jsonMap:
+        tolerations: tolerations
+      extras:
+      - name: daemonset
+        jsonMap:
+          tolerations: daemonsetTolerations
+
+  defaultInstallValues:
+    - enabled: true
+      tolerations: "[{\"effect\":\"NoSchedule\",\"key\":\"kb-controller\",\"operator\":\"Equal\",\"value\":\"true\"}]"
+
+  installable:
+    autoInstall: false
+---
+# Source: kubeblocks/templates/applications/external-dns-addon.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: external-dns
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+    "addon.kubeblocks.io/provider": community
+    "addon.kubeblocks.io/version": "6.20.4"
+spec:
+  description: >-
+    ExternalDNS synchronizes exposed Kubernetes Services and Ingresses with DNS providers.
+
+  type: Helm
+
+  helm:    
+    chartLocationURL: file:///external-dns-6.20.4.tgz    
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+
+    installOptions:
+
+    installValues:
+      configMapRefs:
+      - name: external-dns-chart-kubeblocks-values
+        key: values-kubeblocks-override.yaml
+
+    valuesMapping:
+      valueMap:
+        replicaCount: replicaCount
+
+      jsonMap:
+        tolerations: tolerations
+
+      resources:
+        cpu:
+          requests: resources.requests.cpu
+          limits: resources.limits.cpu
+        memory:
+          requests: resources.requests.memory
+          limits: resources.limits.memory
+
+  defaultInstallValues:
+  - replicas: 1
+    tolerations: "[{\"effect\":\"NoSchedule\",\"key\":\"kb-controller\",\"operator\":\"Equal\",\"value\":\"true\"}]"
+
+  installable:
+    autoInstall: false
+---
+# Source: kubeblocks/templates/applications/grafana-addon.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: grafana
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+    "addon.kubeblocks.io/provider": community
+    "addon.kubeblocks.io/version": "6.43.5"
+spec:
+  description: The leading tool for querying and visualizing time series and metrics.
+  type: Helm
+
+  helm:    
+    chartLocationURL: file:///grafana-6.43.5.tgz    
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+
+    installOptions:
+
+    installValues:
+      configMapRefs:
+        - name: grafana-chart-kubeblocks-values
+          key: values-kubeblocks-override.yaml
+
+    valuesMapping:
+      valueMap:
+        replicaCount: replicas
+        storageClass: persistence.storageClassName
+        persistentVolumeEnabled: persistence.enabled
+
+      jsonMap:
+        tolerations: tolerations
+
+      resources:
+        storage: persistence.size
+        cpu:
+          requests: resources.requests.cpu
+          limits: resources.limits.cpu
+        memory:
+          requests: resources.requests.memory
+          limits: resources.limits.memory
+
+  defaultInstallValues:
+    - replicas: 1
+      storageClass:
+      resources:
+        requests:
+          storage: 1Gi
+      tolerations: "[{\"effect\":\"NoSchedule\",\"key\":\"kb-controller\",\"operator\":\"Equal\",\"value\":\"true\"}]"
+
+    - selectors:
+        - key: KubeGitVersion
+          operator: Contains
+          values:
+            - aliyun
+      replicas: 1
+      resources:
+        requests:
+          storage: 20Gi
+      tolerations: "[{\"effect\":\"NoSchedule\",\"key\":\"kb-controller\",\"operator\":\"Equal\",\"value\":\"true\"}]"
+
+  installable:
+    autoInstall: false
+---
+# Source: kubeblocks/templates/applications/jupyter-notebook-addon.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: jupyter-notebook
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+    "addon.kubeblocks.io/provider": community
+    "addon.kubeblocks.io/version": "0.7.0"
+spec:
+  description: 'Jupyter Notebook: Interactive coding, documentation, and visualization tool with multi-language support for data analysis and education.'
+  type: Helm
+
+  helm:    
+    chartLocationURL: file:///jupyter-notebook-0.7.0.tgz    
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+
+    installOptions:
+
+  installable:
+    autoInstall: false
+
+  defaultInstallValues:
+    - enabled: true
+---
+# Source: kubeblocks/templates/applications/jupyterhub-addon.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: jupyter-hub
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+    "addon.kubeblocks.io/provider": community
+    "addon.kubeblocks.io/version": "0.1.0"
+spec:
+  description: 'JupyterHub is a multi-user platform for hosting Jupyter Notebooks.'
+  type: Helm
+
+  helm:    
+    chartLocationURL: file:///jupyterhub-0.1.0.tgz    
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+
+    installOptions:
+
+  installable:
+    autoInstall: false
+
+  defaultInstallValues:
+    - enabled: true
+---
+# Source: kubeblocks/templates/applications/kubebench-addon.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: kubebench
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+    "addon.kubeblocks.io/provider": apecloud
+    "addon.kubeblocks.io/version": "0.0.1"
+spec:
+  description: 'A Kubernetes operator for running benchmark tests on databases to evaluate their performance.'
+
+  type: Helm
+
+  helm:    
+    chartLocationURL: file:///kubebench-0.0.1.tgz    
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+
+    installOptions:
+
+    valuesMapping:
+      valueMap:
+        replicaCount: replicaCount
+
+      jsonMap:
+        tolerations: tolerations
+
+      resources:
+        cpu:
+          requests: resources.requests.cpu
+          limits: resources.limits.cpu
+        memory:
+          requests: resources.requests.memory
+          limits: resources.limits.memory
+
+  installable:
+    autoInstall: false
+
+  defaultInstallValues:
+    - enabled: true
+      tolerations: "[{\"effect\":\"NoSchedule\",\"key\":\"kb-controller\",\"operator\":\"Equal\",\"value\":\"true\"}]"
+---
+# Source: kubeblocks/templates/applications/loki-addon.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: loki
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+    "addon.kubeblocks.io/provider": community
+    "addon.kubeblocks.io/version": "5.8.9"
+spec:
+  description: Grafana Loki is a horizontally scalable, highly available, and multi-tenant log aggregation system, which inspired by Prometheus.
+  type: Helm
+
+  helm:    
+    chartLocationURL: file:///loki-5.8.9.tgz    
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+
+    installOptions:
+
+    installValues:
+      configMapRefs:
+        - name: loki-chart-kubeblocks-values
+          key: values-kubeblocks-override.yaml
+
+    valuesMapping:
+      valueMap:
+        replicaCount: singleBinary.replicas
+        storageClass: singleBinary.persistence.storageClass
+        persistentVolumeEnabled: singleBinary.persistence.enabled
+
+      jsonMap:
+        tolerations: global.tolerations
+
+      resources:
+        storage: singleBinary.persistence.size
+
+  defaultInstallValues:
+    - replicas: 1
+      storageClass:
+      resources:
+        requests:
+          storage: 8Gi
+      tolerations: "[{\"effect\":\"NoSchedule\",\"key\":\"kb-controller\",\"operator\":\"Equal\",\"value\":\"true\"}]"
+    # for ACK, the smallest storage size is 20Gi, the format of GitVersion is v1.24.6-aliyun.1
+    - selectors:
+        - key: KubeGitVersion
+          operator: Contains
+          values:
+            - aliyun
+      replicas: 1
+      resources:
+        requests:
+          storage: 20Gi
+      tolerations: "[{\"effect\":\"NoSchedule\",\"key\":\"kb-controller\",\"operator\":\"Equal\",\"value\":\"true\"}]"
+    # for TKE, the smallest storage size is 10Gi, the format of GitVersion is v1.24.4-tke.5
+    - selectors:
+        - key: KubeGitVersion
+          operator: Contains
+          values:
+            - tke
+      replicas: 1
+      resources:
+        requests:
+          storage: 10Gi
+      tolerations: "[{\"effect\":\"NoSchedule\",\"key\":\"kb-controller\",\"operator\":\"Equal\",\"value\":\"true\"}]"
+
+  installable:
+    autoInstall: false
+---
+# Source: kubeblocks/templates/applications/migration-addon.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: migration
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+    "addon.kubeblocks.io/provider": apecloud
+    "addon.kubeblocks.io/version": "0.1.1"
+spec:
+  description: 'Migration is a tool for migrating data between two databases.'
+
+  type: Helm
+
+  helm:    
+    chartLocationURL: file:///dt-platform-0.1.1.tgz    
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+
+    installOptions:
+
+    valuesMapping:
+      valueMap:
+        replicaCount: replicaCount
+
+      jsonMap:
+        tolerations: tolerations
+
+      resources:
+        cpu:
+          requests: resources.requests.cpu
+          limits: resources.limits.cpu
+        memory:
+          requests: resources.requests.memory
+          limits: resources.limits.memory
+
+  installable:
+    autoInstall: false
+
+  defaultInstallValues:
+    - enabled: true
+      tolerations: "[{\"effect\":\"NoSchedule\",\"key\":\"kb-controller\",\"operator\":\"Equal\",\"value\":\"true\"}]"
+---
+# Source: kubeblocks/templates/applications/minio.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: minio
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+    "addon.kubeblocks.io/provider": community
+    "addon.kubeblocks.io/version": "12.8.12"
+spec:
+  description: 'MinIO(R) is an object storage server, compatible with Amazon S3 cloud storage service, mainly used for storing unstructured data (such as photos, videos, log files, etc.).'
+  type: Helm
+
+  helm:    
+    chartLocationURL: file:///minio-12.8.12.tgz    
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+
+    installOptions:
+
+    installValues:
+      setValues:
+        - auth.rootUser=kubeblocks
+        - auth.rootPassword=kubeblocks
+        - extraEnvVars[0].name=MINIO_BROWSER_LOGIN_ANIMATION
+        - extraEnvVars[0].value=off
+  installable:
+    autoInstall: false
+
+  defaultInstallValues:
+    - enabled: true
+---
+# Source: kubeblocks/templates/applications/nvidia-gpu-exporter-addon.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: nvidia-gpu-exporter
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+    "addon.kubeblocks.io/provider": community
+    "addon.kubeblocks.io/version": "0.3.1"
+spec:
+  description: 'Nvidia GPU exporter for prometheus using nvidia-smi binary'
+  type: Helm
+
+  helm:    
+    chartLocationURL: file:///nvidia-gpu-exporter-0.3.1.tgz    
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+
+    installOptions:
+
+  installable:
+    autoInstall: false
+    selectors:
+    - key: KubeGitVersion
+      operator: Contains
+      values:
+      - eks
+
+  defaultInstallValues:
+  - enabled: true
+---
+# Source: kubeblocks/templates/applications/nyancat-addon.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: nyancat
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+    "addon.kubeblocks.io/provider": apecloud
+    "addon.kubeblocks.io/version": "0.7.0"
+spec:
+  description: 'Deploys a nyancat application in a cluster.
+  Nyancat is a demo application for showing database cluster availability.'
+  type: Helm
+
+  helm:    
+    chartLocationURL: file:///nyancat-0.7.0.tgz    
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+
+    installOptions:
+
+    valuesMapping:
+      valueMap:
+        replicaCount: replicaCount
+
+      jsonMap:
+        tolerations: tolerations
+
+      resources:
+        cpu:
+          requests: resources.requests.cpu
+          limits: resources.limits.cpu
+        memory:
+          requests: resources.requests.memory
+          limits: resources.limits.memory
+
+  defaultInstallValues:
+    - replicas: 1
+      tolerations: "[{\"effect\":\"NoSchedule\",\"key\":\"kb-controller\",\"operator\":\"Equal\",\"value\":\"true\"}]"
+
+  installable:
+    autoInstall: false
+---
+# Source: kubeblocks/templates/applications/prometheus-addon.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: prometheus
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+    "addon.kubeblocks.io/provider": community
+    "addon.kubeblocks.io/version": "15.16.1"
+spec:
+  description: Prometheus is a monitoring system and time series database.
+  type: Helm
+
+  helm:    
+    chartLocationURL: file:///prometheus-15.16.1.tgz    
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+
+    installOptions:
+
+    installValues:
+      configMapRefs:
+        - name: prometheus-chart-kubeblocks-values
+          key: values-kubeblocks-override.yaml
+
+    valuesMapping:
+      valueMap:
+        replicaCount: server.replicaCount
+        storageClass: server.persistentVolume.storageClass
+        persistentVolumeEnabled: server.persistentVolume.enabled
+
+      jsonMap:
+        tolerations: server.tolerations
+
+      resources:
+        storage: server.persistentVolume.size
+        cpu:
+          requests: server.resources.requests.cpu
+          limits: server.resources.limits.cpu
+        memory:
+          requests: server.resources.requests.memory
+          limits: server.resources.limits.memory
+      extras:
+        - name: alertmanager
+          valueMap:
+            replicaCount: alertmanager.replicaCount
+            storageClass: alertmanager.persistentVolume.storageClass
+            persistentVolumeEnabled: alertmanager.persistentVolume.enabled
+
+          jsonMap:
+            tolerations: alertmanager.tolerations
+
+          resources:
+            storage: alertmanager.persistentVolume.size
+            cpu:
+              requests: alertmanager.resources.requests.cpu
+              limits: alertmanager.resources.limits.cpu
+            memory:
+              requests: alertmanager.resources.requests.memory
+              limits: alertmanager.resources.limits.memory
+
+  defaultInstallValues:
+    - replicas: 1
+      resources:
+        requests:
+          storage: 20Gi
+          memory: 512Mi
+        limits:
+          memory: 4Gi
+      tolerations: "[{\"effect\":\"NoSchedule\",\"key\":\"kb-controller\",\"operator\":\"Equal\",\"value\":\"true\"}]"
+
+      extras:
+        - name: alertmanager
+          replicas: 1
+          resources:
+            requests:
+              storage: 4Gi
+          tolerations: "[{\"effect\":\"NoSchedule\",\"key\":\"kb-controller\",\"operator\":\"Equal\",\"value\":\"true\"}]"
+
+    # for ACK, the smallest storage size is 20Gi, the format of GitVersion is v1.24.6-aliyun.1
+    - selectors:
+        - key: KubeGitVersion
+          operator: Contains
+          values:
+            - aliyun
+      replicas: 1
+      resources:
+        requests:
+          storage: 20Gi
+          memory: 512Mi
+        limits:
+          memory: 4Gi
+      tolerations: "[{\"effect\":\"NoSchedule\",\"key\":\"kb-controller\",\"operator\":\"Equal\",\"value\":\"true\"}]"
+
+      extras:
+        - name: alertmanager
+          replicas: 1
+          resources:
+            requests:
+              storage: 20Gi
+          tolerations: "[{\"effect\":\"NoSchedule\",\"key\":\"kb-controller\",\"operator\":\"Equal\",\"value\":\"true\"}]"
+
+    # for TKE, the smallest storage size is 10Gi, the format of GitVersion is v1.24.4-tke.5
+    - selectors:
+        - key: KubeGitVersion
+          operator: Contains
+          values:
+            - tke
+      replicas: 1
+      resources:
+        requests:
+          storage: 20Gi
+          memory: 512Mi
+        limits:
+          memory: 4Gi
+      tolerations: "[{\"effect\":\"NoSchedule\",\"key\":\"kb-controller\",\"operator\":\"Equal\",\"value\":\"true\"}]"
+
+      extras:
+        - name: alertmanager
+          replicas: 1
+          resources:
+            requests:
+              storage: 10Gi
+          tolerations: "[{\"effect\":\"NoSchedule\",\"key\":\"kb-controller\",\"operator\":\"Equal\",\"value\":\"true\"}]"
+
+  installable:
+    autoInstall: false
+---
+# Source: kubeblocks/templates/applications/pyroscope-addon.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: pyroscope-server
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+    "addon.kubeblocks.io/provider": community
+    "addon.kubeblocks.io/version": "0.2.92"
+spec:
+  description: Open Source Continuous Profiling Server.
+  type: Helm
+
+  helm:    
+    chartLocationURL: file:///pyroscope-0.2.92.tgz    
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+
+    installOptions:
+
+    valuesMapping:
+      valueMap:
+
+      jsonMap:
+        tolerations: tolerations
+
+      resources:
+        cpu:
+          requests: resources.requests.cpu
+          limits: resources.limits.cpu
+        memory:
+          requests: resources.requests.memory
+          limits: resources.limits.memory
+
+  defaultInstallValues:
+    - enabled: true
+      tolerations: "[{\"effect\":\"NoSchedule\",\"key\":\"kb-controller\",\"operator\":\"Equal\",\"value\":\"true\"}]"
+
+  installable:
+    autoInstall: false
+---
+# Source: kubeblocks/templates/applications/snapshot-controller-addon.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: snapshot-controller
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+    "addon.kubeblocks.io/provider": community
+    "addon.kubeblocks.io/version": "1.7.2"
+spec:
+  description: 'Deploys a Snapshot Controller in a cluster. Snapshot Controllers are
+    often bundled with the Kubernetes distribution, this chart is meant for cases where
+    it is not. '
+  type: Helm
+
+  helm:    
+    chartLocationURL: file:///snapshot-controller-1.7.2.tgz    
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+
+    installOptions:
+
+    installValues:
+      configMapRefs:
+        - name: snapshot-controller-chart-kubeblocks-values
+          key: values-kubeblocks-override.yaml
+
+    valuesMapping:
+      valueMap:
+        replicaCount: replicaCount
+        storageClass: volumeSnapshotClasses[0].driver
+
+      jsonMap:
+        tolerations: tolerations
+
+      resources:
+        cpu:
+          requests: resources.requests.cpu
+          limits: resources.limits.cpu
+        memory:
+          requests: resources.requests.memory
+          limits: resources.limits.memory
+
+  defaultInstallValues:
+    - enabled: true
+      tolerations: "[{\"effect\":\"NoSchedule\",\"key\":\"kb-controller\",\"operator\":\"Equal\",\"value\":\"true\"}]"
+
+    - selectors:
+        - key: KubeGitVersion
+          operator: Contains
+          values:
+            - eks
+      storageClass: ebs.csi.aws.com
+      tolerations: "[{\"effect\":\"NoSchedule\",\"key\":\"kb-controller\",\"operator\":\"Equal\",\"value\":\"true\"}]"
+
+    - selectors:
+        - key: KubeGitVersion
+          operator: Contains
+          values:
+            - gke
+      storageClass: pd.csi.storage.gke.io
+      tolerations: "[{\"effect\":\"NoSchedule\",\"key\":\"kb-controller\",\"operator\":\"Equal\",\"value\":\"true\"}]"
+
+    - selectors:
+        - key: KubeGitVersion
+          operator: Contains
+          values:
+            - aks
+      storageClass: disk.csi.azure.com
+      tolerations: "[{\"effect\":\"NoSchedule\",\"key\":\"kb-controller\",\"operator\":\"Equal\",\"value\":\"true\"}]"
+
+  installable:
+    autoInstall:  true
+    selectors:
+      - key: KubeGitVersion
+        operator: DoesNotContain
+        values:
+          - tke
+          - aliyun.
+      - key: KubeProvider
+        operator: DoesNotContain
+        values:
+          - huaweiCloud
+          - azure
+---
+# Source: kubeblocks/templates/applications/vmagent-addon.yaml
+apiVersion: extensions.kubeblocks.io/v1alpha1
+kind: Addon
+metadata:
+  name: victoria-metrics-agent
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+    "addon.kubeblocks.io/provider": community
+    "addon.kubeblocks.io/version": "0.8.41"
+spec:
+  description: 'vmagent is a tiny agent which helps you collect metrics from various sources, relabel and filter the collected metrics and store them in VictoriaMetrics or any other storage systems via Prometheus remote_write protocol.'
+  type: Helm
+
+  helm:    
+    chartLocationURL: file:///victoria-metrics-agent-0.8.41.tgz    
+    chartsImage: infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-charts:0.8.1
+    chartsPathInImage: /charts
+
+    installOptions:
+
+    valuesMapping:
+      valueMap:
+        replicaCount: replicaCount
+
+      jsonMap:
+        tolerations: tolerations
+
+      resources:
+        cpu:
+          requests: resources.requests.cpu
+          limits: resources.limits.cpu
+        memory:
+          requests: resources.requests.memory
+          limits: resources.limits.memory
+  
+  defaultInstallValues:
+  - replicas: 1
+    tolerations: "[{\"effect\":\"NoSchedule\",\"key\":\"kb-controller\",\"operator\":\"Equal\",\"value\":\"true\"}]"
+
+  installable:
+    autoInstall: false
+---
+# Source: kubeblocks/templates/class/componentclassconstraint.yaml
+apiVersion: apps.kubeblocks.io/v1alpha1
+kind: ComponentResourceConstraint
+metadata:
+  name: kb-resource-constraint-general
+  labels:
+    resourceconstraint.kubeblocks.io/provider: kubeblocks
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  rules:
+  - name: general
+    cpu:
+      min: "0.5"
+      max: 64
+      step: "0.5"
+    memory:
+      minPerCPU: 1Gi
+      maxPerCPU: 32Gi
+    storage:
+      min: 20Gi
+      max: 10Ti
+---
+# Source: kubeblocks/templates/opsdefinition.yaml
+apiVersion: apps.kubeblocks.io/v1alpha1
+kind: OpsDefinition
+metadata:
+  name: switchover
+spec:
+  varsRef:
+    podSelectionStrategy: Available
+    vars:
+    - name: TARGET_POD_IP
+      valueFrom:
+        envVarRef:
+          envName: KB_POD_IP
+    - name: LORRY_HTTP_PORT
+      valueFrom:
+        envVarRef:
+          envName: LORRY_HTTP_PORT
+  parametersSchema:
+    openAPIV3Schema:
+      properties:
+        primary:
+          description: "old primary instance name(pod Name)."
+          type: string
+        candidate:
+          description: |
+            candidate instance name(pod Name). if candidate is not empty, will promote it to primary. 
+            otherwise promote a randomly selected pod to primary.
+          type: string
+      type: object
+  jobSpec:
+    backoffLimit: 0
+    template:
+      spec:
+        containers:
+          - name: switchover
+            image: docker.io/apecloud/kubeblocks-tools:latest
+            imagePullPolicy: IfNotPresent
+            command:
+              - sh
+              - -c
+              - |
+                set -e
+                # do switchover
+                url="http://${TARGET_POD_IP}:${LORRY_HTTP_PORT}/v1.0/switchover" 
+                params="{\"parameters\": {\"primary\":\"${primary}\",\"candidate\":\"${candidate}\"}}"
+                echo "curl ${url}, parameters: ${params}"
+                res=`curl -s -X POST -H 'Content-Type: application/json' "${url}" -d "${params}"`
+                echo "curl result: ${res}"
+                
+                # check if switchover successfully.
+                echo "INFO: start to check if switchover successfully, timeout is 60s"
+                executedUnix=$(date +%s)
+                while true; do
+                  sleep 5
+                  if [ ! -z ${candidate} ]; then
+                     # if candidate specified, only check it
+                     role=$(kubectl get pod ${candidate} -ojson | jq -r '.metadata.labels["kubeblocks.io/role"]')
+                     if [ "$role" == "primary" ] || [ "$role" == "leader" ] || [ "$role" == "master" ]; then
+                        echo "INFO: switchover successfully, ${candidate} is ${role}"
+                        exit 0
+                     fi
+                  else
+                    # check if the candidate instance has been promote to primary
+                    pods=$(kubectl get pod -l apps.kubeblocks.io/component-name=${KB_COMP_NAME},app.kubernetes.io/instance=${KB_CLUSTER_NAME} | awk 'NR > 1 {print $1}')
+                    for podName in ${pods}; do
+                       if [ "${podName}" != "${primary}" ];then
+                         role=$(kubectl get pod ${podName} -ojson | jq -r '.metadata.labels["kubeblocks.io/role"]')
+                         if [ "$role" == "primary" ] || [ "$role" == "leader" ] || [ "$role" == "master" ]; then
+                            echo "INFO: switchover successfully, ${podName} is ${role}"
+                            exit 0
+                         fi
+                       fi
+                    done
+                  fi
+                  currentUnix=$(date +%s)
+                  diff_time=$((${currentUnix}-${executedUnix}))
+                  if [ ${diff_time} -ge 60 ]; then
+                    echo "ERROR: switchover failed."
+                    exit 1
+                  fi
+                done
+  preConditions:
+    - rule:
+        expression: '{{ eq .component.status.phase "Running" }}'
+        message: "Component is not in Running status."
+---
+# Source: kubeblocks/templates/storageprovider/cos.yaml
+# cos is a storage provider for [Tencent Cloud Object Storage](https://cloud.tencent.com/product/cos)
+apiVersion: storage.kubeblocks.io/v1alpha1
+kind: StorageProvider
+metadata:
+  name: cos
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  csiDriverName: ru.yandex.s3.csi
+  csiDriverSecretTemplate: |
+    accessKeyID: {{ index .Parameters "accessKeyId" }}
+    secretAccessKey: {{ index .Parameters "secretAccessKey" }}
+    {{- $region := index .Parameters "region" }}
+    {{- $endpoint := index .Parameters "endpoint" }}
+    {{- if not $endpoint }}
+      {{- $endpoint = (printf "https://cos.%s.myqcloud.com" $region) }}
+    {{- end }}
+    endpoint: {{ $endpoint }}
+
+  storageClassTemplate: |
+    provisioner: ru.yandex.s3.csi
+    parameters:
+      mounter: geesefs
+      # you can set mount options here, for example limit memory cache size (recommended)
+      options: {{ printf "--memory-limit 64 --dir-mode 0777 --file-mode 0666 %s --subdomain" (index .Parameters "mountOptions") }}
+      bucket: {{ index .Parameters "bucket" }}
+      csi.storage.k8s.io/provisioner-secret-name: {{ .CSIDriverSecretRef.Name }}
+      csi.storage.k8s.io/provisioner-secret-namespace: {{ .CSIDriverSecretRef.Namespace }}
+      csi.storage.k8s.io/controller-publish-secret-name: {{ .CSIDriverSecretRef.Name }}
+      csi.storage.k8s.io/controller-publish-secret-namespace: {{ .CSIDriverSecretRef.Namespace }}
+      csi.storage.k8s.io/node-stage-secret-name: {{ .CSIDriverSecretRef.Name }}
+      csi.storage.k8s.io/node-stage-secret-namespace: {{ .CSIDriverSecretRef.Namespace }}
+      csi.storage.k8s.io/node-publish-secret-name: {{ .CSIDriverSecretRef.Name }}
+      csi.storage.k8s.io/node-publish-secret-namespace: {{ .CSIDriverSecretRef.Namespace }}
+
+  datasafedConfigTemplate: |
+    [storage]
+    type = s3
+    provider = TencentCOS
+    env_auth = false
+    access_key_id = {{ index .Parameters "accessKeyId" }}
+    secret_access_key = {{ index .Parameters "secretAccessKey" }}
+    endpoint = {{ printf "cos.%s.myqcloud.com" .Parameters.region }}
+    root = {{ index .Parameters "bucket" }}
+    chunk_size = 50Mi
+
+  parametersSchema:
+    openAPIV3Schema:
+      type: "object"
+      properties:
+        region:
+          type: string
+          description: "COS region, e.g. cn-guangzhou"
+        bucket:
+          type: string
+          description: "COS bucket"
+        endpoint:
+          type: string
+          description: "COS endpoint (optional)"
+        mountOptions:
+          type: string
+          description: "mount options for geesefs"
+        accessKeyId:
+          type: string
+          description: "COS access key"
+        secretAccessKey:
+          type: string
+          description: "COS secret key"
+
+      required:
+        - bucket
+        - region
+        - accessKeyId
+        - secretAccessKey
+
+    credentialFields:
+      - accessKeyId
+      - secretAccessKey
+---
+# Source: kubeblocks/templates/storageprovider/ftp.yaml
+apiVersion: storage.kubeblocks.io/v1alpha1
+kind: StorageProvider
+metadata:
+  name: ftp
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  datasafedConfigTemplate: |
+    [storage]
+    type = ftp
+    host = {{ .Parameters.ftpHost }}
+    port = {{ if ne .Parameters.ftpPort "0" }}{{ .Parameters.ftpPort }}{{ else }}21{{ end }}
+    user = {{ .Parameters.ftpUser }}
+    pass.need_obscure = {{ .Parameters.ftpPassword }}
+    tls = {{ .Parameters.ftpTls | default false }}
+
+  parametersSchema:
+    openAPIV3Schema:
+      type: "object"
+      properties:
+        ftpHost:
+          type: string
+          description: "Host of the FTP server"
+        ftpPort:
+          type: integer
+          description: "Port of the FTP server (optional)"
+          default: 21
+        ftpUser:
+          type: string
+          description: "the FTP user"
+        ftpPassword:
+          type: string
+          description: "the password of the user"
+        ftpTls:
+          type: boolean
+          description: "enable FTP over TLS (optional)"
+          default: false
+
+      required:
+        - ftpHost
+        - ftpUser
+        - ftpPassword
+
+    credentialFields:
+      - ftpUser
+      - ftpPassword
+---
+# Source: kubeblocks/templates/storageprovider/gcs-s3comp.yaml
+# gcs-s3comp is a storage provider for [Google Cloud Storage](https://cloud.google.com/storage/), by using its S3-compatible API.
+apiVersion: storage.kubeblocks.io/v1alpha1
+kind: StorageProvider
+metadata:
+  name: gcs-s3comp
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  csiDriverName: ru.yandex.s3.csi
+  csiDriverSecretTemplate: |
+    {{- $endpoint := index .Parameters "endpoint" }}
+    {{- if not $endpoint }}
+      {{- $endpoint = (printf "https://storage.googleapis.com") }}
+    {{- end }}
+    accessKeyID: {{ index .Parameters "accessKeyId" }}
+    secretAccessKey: {{ index .Parameters "secretAccessKey" }}
+    endpoint: {{ $endpoint }}
+
+  storageClassTemplate: |
+    provisioner: ru.yandex.s3.csi
+    parameters:
+      mounter: geesefs
+      # you can set mount options here, for example limit memory cache size (recommended)
+      options: {{ printf "--memory-limit 64 --dir-mode 0777 --file-mode 0666 %s --subdomain" (index .Parameters "mountOptions") }}
+      bucket: {{ index .Parameters "bucket" }}
+      csi.storage.k8s.io/provisioner-secret-name: {{ .CSIDriverSecretRef.Name }}
+      csi.storage.k8s.io/provisioner-secret-namespace: {{ .CSIDriverSecretRef.Namespace }}
+      csi.storage.k8s.io/controller-publish-secret-name: {{ .CSIDriverSecretRef.Name }}
+      csi.storage.k8s.io/controller-publish-secret-namespace: {{ .CSIDriverSecretRef.Namespace }}
+      csi.storage.k8s.io/node-stage-secret-name: {{ .CSIDriverSecretRef.Name }}
+      csi.storage.k8s.io/node-stage-secret-namespace: {{ .CSIDriverSecretRef.Namespace }}
+      csi.storage.k8s.io/node-publish-secret-name: {{ .CSIDriverSecretRef.Name }}
+      csi.storage.k8s.io/node-publish-secret-namespace: {{ .CSIDriverSecretRef.Namespace }}
+
+  datasafedConfigTemplate: |
+    [storage]
+    type = s3
+    provider = GCS
+    env_auth = false
+    access_key_id = {{ index .Parameters "accessKeyId" }}
+    secret_access_key = {{ index .Parameters "secretAccessKey" }}
+    {{- $endpoint := index .Parameters "endpoint" }}
+    {{- if not $endpoint }}
+      {{- $endpoint = (printf "https://storage.googleapis.com") }}
+    {{- end }}
+    endpoint = {{ $endpoint }}
+    root = {{ index .Parameters "bucket" }}
+    chunk_size = 50Mi
+
+  parametersSchema:
+    openAPIV3Schema:
+      type: "object"
+      properties:
+        region:
+          type: string
+          description: "GCS region, e.g. auto"
+        bucket:
+          type: string
+          description: "GCS bucket"
+        endpoint:
+          type: string
+          description: "GCS endpoint (optional)"
+        mountOptions:
+          type: string
+          description: "mount options for geesefs"
+        accessKeyId:
+          type: string
+          description: "GCS access key"
+        secretAccessKey:
+          type: string
+          description: "GCS secret key"
+
+      required:
+        - bucket
+        - region
+        - accessKeyId
+        - secretAccessKey
+
+    credentialFields:
+      - accessKeyId
+      - secretAccessKey
+---
+# Source: kubeblocks/templates/storageprovider/minio.yaml
+apiVersion: storage.kubeblocks.io/v1alpha1
+kind: StorageProvider
+metadata:
+  name: minio
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  csiDriverName: ru.yandex.s3.csi
+  csiDriverSecretTemplate: |
+    accessKeyID: {{ index .Parameters "accessKeyId" }}
+    secretAccessKey: {{ index .Parameters "secretAccessKey" }}
+    endpoint: {{ index .Parameters "endpoint" }}
+
+  storageClassTemplate: |
+    provisioner: ru.yandex.s3.csi
+    parameters:
+      mounter: geesefs
+      # you can set mount options here, for example limit memory cache size (recommended)
+      options: {{ printf "--memory-limit 64 --dir-mode 0777 --file-mode 0666 %s" (index .Parameters "mountOptions") }}
+      bucket: {{ index .Parameters "bucket" }}
+      csi.storage.k8s.io/provisioner-secret-name: {{ .CSIDriverSecretRef.Name }}
+      csi.storage.k8s.io/provisioner-secret-namespace: {{ .CSIDriverSecretRef.Namespace }}
+      csi.storage.k8s.io/controller-publish-secret-name: {{ .CSIDriverSecretRef.Name }}
+      csi.storage.k8s.io/controller-publish-secret-namespace: {{ .CSIDriverSecretRef.Namespace }}
+      csi.storage.k8s.io/node-stage-secret-name: {{ .CSIDriverSecretRef.Name }}
+      csi.storage.k8s.io/node-stage-secret-namespace: {{ .CSIDriverSecretRef.Namespace }}
+      csi.storage.k8s.io/node-publish-secret-name: {{ .CSIDriverSecretRef.Name }}
+      csi.storage.k8s.io/node-publish-secret-namespace: {{ .CSIDriverSecretRef.Namespace }}
+
+  datasafedConfigTemplate: |
+    [storage]
+    type = s3
+    provider = Minio
+    env_auth = false
+    access_key_id = {{ index .Parameters "accessKeyId" }}
+    secret_access_key = {{ index .Parameters "secretAccessKey" }}
+    endpoint = {{ index .Parameters "endpoint" }}
+    root = {{ index .Parameters "bucket" }}
+    chunk_size = 50Mi
+
+  parametersSchema:
+    openAPIV3Schema:
+      type: "object"
+      properties:
+        bucket:
+          type: string
+          description: "MinIO bucket"
+        endpoint:
+          type: string
+          description: "MinIO endpoint"
+        mountOptions:
+          type: string
+          description: "mount options for geesefs"
+        accessKeyId:
+          type: string
+          description: "MinIO access key"
+        secretAccessKey:
+          type: string
+          description: "MinIO secret key"
+
+      required:
+        - bucket
+        - endpoint
+        - accessKeyId
+        - secretAccessKey
+
+    credentialFields:
+      - accessKeyId
+      - secretAccessKey
+---
+# Source: kubeblocks/templates/storageprovider/nfs.yaml
+apiVersion: storage.kubeblocks.io/v1alpha1
+kind: StorageProvider
+metadata:
+  name: nfs
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  csiDriverName: nfs.csi.k8s.io
+
+  storageClassTemplate: |
+    provisioner: nfs.csi.k8s.io
+    parameters:
+      server: {{ .Parameters.nfsServer }}
+      share: {{ .Parameters.nfsShare }}
+      subDir: {{ .Parameters.nfsSubDir }}
+      mountPermissions: "0777"
+    {{- if .Parameters.nfsMountOptions }}
+    {{- $options := splitList " " .Parameters.nfsMountOptions }}
+    mountOptions: {{ $options | toJson }}
+    {{- end }}
+
+  parametersSchema:
+    openAPIV3Schema:
+      type: "object"
+      properties:
+        nfsServer:
+          type: string
+          description: "NFS Server address"
+        nfsShare:
+          type: string
+          description: "NFS share path"
+          default: "/"
+        nfsSubDir:
+          type: string
+          description: "sub directory under nfs share"
+        nfsMountOptions:
+          type: string
+          description: "extra mount options"
+
+      required:
+        - nfsServer
+---
+# Source: kubeblocks/templates/storageprovider/obs.yaml
+# obs is a storage provider for [Huawei OBS](https://www.huaweicloud.com/product/obs.html) object storage.
+apiVersion: storage.kubeblocks.io/v1alpha1
+kind: StorageProvider
+metadata:
+  name: obs
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  csiDriverName: ru.yandex.s3.csi
+  csiDriverSecretTemplate: |
+    accessKeyID: {{ index .Parameters "accessKeyId" }}
+    secretAccessKey: {{ index .Parameters "secretAccessKey" }}
+    {{- $region := index .Parameters "region" }}
+    {{- $endpoint := index .Parameters "endpoint" }}
+    {{- if not $endpoint }}
+      {{- $endpoint = (printf "https://obs.%s.myhuaweicloud.com" $region) }}
+    {{- end }}
+    endpoint: {{ $endpoint }}
+
+  storageClassTemplate: |
+    provisioner: ru.yandex.s3.csi
+    parameters:
+      mounter: geesefs
+      # you can set mount options here, for example limit memory cache size (recommended)
+      options: {{ printf "--memory-limit 64 --dir-mode 0777 --file-mode 0666 %s --subdomain" (index .Parameters "mountOptions") }}
+      bucket: {{ index .Parameters "bucket" }}
+      csi.storage.k8s.io/provisioner-secret-name: {{ .CSIDriverSecretRef.Name }}
+      csi.storage.k8s.io/provisioner-secret-namespace: {{ .CSIDriverSecretRef.Namespace }}
+      csi.storage.k8s.io/controller-publish-secret-name: {{ .CSIDriverSecretRef.Name }}
+      csi.storage.k8s.io/controller-publish-secret-namespace: {{ .CSIDriverSecretRef.Namespace }}
+      csi.storage.k8s.io/node-stage-secret-name: {{ .CSIDriverSecretRef.Name }}
+      csi.storage.k8s.io/node-stage-secret-namespace: {{ .CSIDriverSecretRef.Namespace }}
+      csi.storage.k8s.io/node-publish-secret-name: {{ .CSIDriverSecretRef.Name }}
+      csi.storage.k8s.io/node-publish-secret-namespace: {{ .CSIDriverSecretRef.Namespace }}
+
+  datasafedConfigTemplate: |
+    [storage]
+    type = s3
+    provider = HuaweiOBS
+    env_auth = false
+    access_key_id = {{ index .Parameters "accessKeyId" }}
+    secret_access_key = {{ index .Parameters "secretAccessKey" }}
+    region = {{ index .Parameters "region" }}
+    endpoint = {{ printf "obs.%s.myhuaweicloud.com" .Parameters.region }}
+    root = {{ index .Parameters "bucket" }}
+    chunk_size = 50Mi
+
+  parametersSchema:
+    openAPIV3Schema:
+      type: "object"
+      properties:
+        region:
+          type: string
+          description: "OBS region, e.g. cn-north-4"
+        bucket:
+          type: string
+          description: "OBS bucket"
+        endpoint:
+          type: string
+          description: "OBS endpoint (optional)"
+        mountOptions:
+          type: string
+          description: "mount options for geesefs"
+        accessKeyId:
+          type: string
+          description: "OBS access key"
+        secretAccessKey:
+          type: string
+          description: "OBS secret key"
+
+      required:
+        - bucket
+        - region
+        - accessKeyId
+        - secretAccessKey
+
+    credentialFields:
+      - accessKeyId
+      - secretAccessKey
+---
+# Source: kubeblocks/templates/storageprovider/oss.yaml
+apiVersion: storage.kubeblocks.io/v1alpha1
+kind: StorageProvider
+metadata:
+  name: oss
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  csiDriverName: ru.yandex.s3.csi
+  csiDriverSecretTemplate: |
+    accessKeyID: {{ index .Parameters "accessKeyId" }}
+    secretAccessKey: {{ index .Parameters "secretAccessKey" }}
+    {{- $region := index .Parameters "region" }}
+    {{- $endpoint := index .Parameters "endpoint" }}
+    {{- if not $endpoint }}
+      {{- $endpoint = (printf "https://oss-%s.aliyuncs.com" $region) }}
+    {{- end }}
+    endpoint: {{ $endpoint }}
+
+  storageClassTemplate: |
+    provisioner: ru.yandex.s3.csi
+    parameters:
+      mounter: geesefs
+      # you can set mount options here, for example limit memory cache size (recommended)
+      options: {{ printf "--memory-limit 64 --dir-mode 0777 --file-mode 0666 %s --subdomain" (index .Parameters "mountOptions") }}
+      bucket: {{ index .Parameters "bucket" }}
+      csi.storage.k8s.io/provisioner-secret-name: {{ .CSIDriverSecretRef.Name }}
+      csi.storage.k8s.io/provisioner-secret-namespace: {{ .CSIDriverSecretRef.Namespace }}
+      csi.storage.k8s.io/controller-publish-secret-name: {{ .CSIDriverSecretRef.Name }}
+      csi.storage.k8s.io/controller-publish-secret-namespace: {{ .CSIDriverSecretRef.Namespace }}
+      csi.storage.k8s.io/node-stage-secret-name: {{ .CSIDriverSecretRef.Name }}
+      csi.storage.k8s.io/node-stage-secret-namespace: {{ .CSIDriverSecretRef.Namespace }}
+      csi.storage.k8s.io/node-publish-secret-name: {{ .CSIDriverSecretRef.Name }}
+      csi.storage.k8s.io/node-publish-secret-namespace: {{ .CSIDriverSecretRef.Namespace }}
+
+  datasafedConfigTemplate: |
+    [storage]
+    type = s3
+    provider = Alibaba
+    env_auth = false
+    access_key_id = {{ index .Parameters "accessKeyId" }}
+    secret_access_key = {{ index .Parameters "secretAccessKey" }}
+    endpoint = {{- printf "oss-%s.aliyuncs.com" .Parameters.region }}
+    root = {{ index .Parameters "bucket" }}
+    chunk_size = 50Mi
+
+  parametersSchema:
+    openAPIV3Schema:
+      type: "object"
+      properties:
+        region:
+          type: string
+          description: "OSS region, e.g. cn-hangzhou"
+        bucket:
+          type: string
+          description: "OSS bucket"
+        endpoint:
+          type: string
+          description: "OSS endpoint (optional)"
+        mountOptions:
+          type: string
+          description: "mount options for geesefs"
+        accessKeyId:
+          type: string
+          description: "OSS access key"
+        secretAccessKey:
+          type: string
+          description: "OSS secret key"
+
+      required:
+        - bucket
+        - region
+        - accessKeyId
+        - secretAccessKey
+
+    credentialFields:
+      - accessKeyId
+      - secretAccessKey
+---
+# Source: kubeblocks/templates/storageprovider/pvc.yaml
+apiVersion: storage.kubeblocks.io/v1alpha1
+kind: StorageProvider
+metadata:
+  name: pvc
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  persistentVolumeClaimTemplate: |
+    spec:
+      storageClassName: {{ .Parameters.storageClassName | default "" }}
+      accessModes:
+        - {{ .Parameters.accessMode | default "ReadWriteOnce" }}
+      volumeMode: {{ .Parameters.volumeMode | default "Filesystem" }}
+
+  parametersSchema:
+    openAPIV3Schema:
+      type: "object"
+      properties:
+        storageClassName:
+          type: string
+          description: "the name of the StorageClass used to create the PVC"
+        accessMode:
+          type: string
+          description: "the access mode used to create the PVC"
+          default: "ReadWriteOnce"
+          enum: ["ReadWriteOnce", "ReadWriteMany", "ReadWriteOncePod"]
+        volumeMode:
+          type: string
+          description: "the volume mode used to create the PVC"
+          default: "Filesystem"
+          enum: ["Filesystem", "Block"]
+---
+# Source: kubeblocks/templates/storageprovider/s3.yaml
+apiVersion: storage.kubeblocks.io/v1alpha1
+kind: StorageProvider
+metadata:
+  name: s3
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  csiDriverName: ru.yandex.s3.csi
+  csiDriverSecretTemplate: |
+    accessKeyID: {{ index .Parameters "accessKeyId" }}
+    secretAccessKey: {{ index .Parameters "secretAccessKey" }}
+    {{- $region := index .Parameters "region" }}
+    {{- $endpoint := index .Parameters "endpoint" }}
+    {{- if not $endpoint }}
+      {{- if hasPrefix "cn-" $region }}
+        {{- $endpoint = (printf "https://s3.%s.amazonaws.com.cn" $region) }}
+      {{- else }}
+        {{- $endpoint = (printf "https://s3.%s.amazonaws.com" $region) }}
+      {{- end }}
+    {{- end }}
+    endpoint: {{ $endpoint }}
+
+  storageClassTemplate: |
+    provisioner: ru.yandex.s3.csi
+    parameters:
+      mounter: geesefs
+      # you can set mount options here, for example limit memory cache size (recommended)
+      options: {{ printf "--memory-limit 64 --dir-mode 0777 --file-mode 0666 %s --region %s" (index .Parameters "mountOptions") (index .Parameters "region") }}
+      bucket: {{ index .Parameters "bucket" }}
+      csi.storage.k8s.io/provisioner-secret-name: {{ .CSIDriverSecretRef.Name }}
+      csi.storage.k8s.io/provisioner-secret-namespace: {{ .CSIDriverSecretRef.Namespace }}
+      csi.storage.k8s.io/controller-publish-secret-name: {{ .CSIDriverSecretRef.Name }}
+      csi.storage.k8s.io/controller-publish-secret-namespace: {{ .CSIDriverSecretRef.Namespace }}
+      csi.storage.k8s.io/node-stage-secret-name: {{ .CSIDriverSecretRef.Name }}
+      csi.storage.k8s.io/node-stage-secret-namespace: {{ .CSIDriverSecretRef.Namespace }}
+      csi.storage.k8s.io/node-publish-secret-name: {{ .CSIDriverSecretRef.Name }}
+      csi.storage.k8s.io/node-publish-secret-namespace: {{ .CSIDriverSecretRef.Namespace }}
+
+  datasafedConfigTemplate: |
+    [storage]
+    type = s3
+    provider = AWS
+    env_auth = false
+    access_key_id = {{ index .Parameters "accessKeyId" }}
+    secret_access_key = {{ index .Parameters "secretAccessKey" }}
+    region = {{ index .Parameters "region" }}
+    endpoint = {{ index .Parameters "endpoint" }}
+    root = {{ index .Parameters "bucket" }}
+    chunk_size = 50Mi
+
+  parametersSchema:
+    openAPIV3Schema:
+      type: "object"
+      properties:
+        region:
+          type: string
+          description: "AWS region, e.g. us-west-1"
+        bucket:
+          type: string
+          description: "S3 bucket"
+        endpoint:
+          type: string
+          description: "S3 endpoint (optional)"
+        mountOptions:
+          type: string
+          description: "mount options for geesefs"
+        accessKeyId:
+          type: string
+          description: "AWS access key"
+        secretAccessKey:
+          type: string
+          description: "AWS secret key"
+
+      required:
+        - bucket
+        - region
+        - accessKeyId
+        - secretAccessKey
+
+    credentialFields:
+      - accessKeyId
+      - secretAccessKey
+---
+# Source: kubeblocks/templates/tests/test-connection.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "kubeblocks-test-connection"
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['kubeblocks:9443']
+  restartPolicy: Never
+---
+# Source: kubeblocks/templates/pre-delete-addon-job.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kubeblocks-addon-removal
+  labels:
+    helm.sh/chart: kubeblocks-0.8.1
+    app.kubernetes.io/name: kubeblocks
+    app.kubernetes.io/instance: kubeblocks
+    app.kubernetes.io/version: "0.8.1"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    "helm.sh/hook": pre-delete
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  ttlSecondsAfterFinished: 0
+  template:
+    metadata:
+      name: kubeblocks-addon-removal
+      labels:
+        helm.sh/chart: kubeblocks-0.8.1
+        app.kubernetes.io/name: kubeblocks
+        app.kubernetes.io/instance: kubeblocks
+        app.kubernetes.io/version: "0.8.1"
+        app.kubernetes.io/managed-by: Helm
+    spec:
+      serviceAccountName: kubeblocks
+      securityContext:
+        runAsNonRoot: true
+      restartPolicy: OnFailure
+      containers:
+        - name: post-install-job
+          image: "infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-tools:0.8.1"
+          imagePullPolicy: IfNotPresent
+          command:
+            - kubectl
+          args:
+            - delete
+            - addons.extensions.kubeblocks.io
+            - --selector=app.kubernetes.io/managed-by=Helm,app.kubernetes.io/instance=kubeblocks
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - preference:
+              matchExpressions:
+              - key: kb-controller
+                operator: In
+                values:
+                - "true"
+            weight: 100
+      tolerations:
+        - effect: NoSchedule
+          key: kb-controller
+          operator: Equal
+          value: "true"

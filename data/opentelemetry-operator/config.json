@@ -1,0 +1,23 @@
+{
+    "deploy": {
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/opentelemetry-operator/cert-manager.yaml",
+                    "namespace": null
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/opentelemetry-operator/opentelemetry-operator.yaml",
+                    "operator": true,
+                    "namespace": "opentelemetry-operator-system",
+                    "operator_container_name": "manager"
+                }
+            }
+        ]
+    },
+    "crd_name": "opentelemetrycollectors.opentelemetry.io",
+    "seed_custom_resource": "data/opentelemetry-operator/cr.yaml",
+    "example_dir": "data/opentelemetry-operator/examples"
+}

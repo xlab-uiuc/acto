@@ -1,0 +1,25 @@
+apiVersion: opentelemetry.io/v1alpha1
+kind: OpenTelemetryCollector
+metadata:
+  name: collector-with-ta-prometheus-cr
+spec:
+  mode: statefulset
+  targetAllocator:
+    enabled: true
+    serviceAccount: everything-prometheus-operator-needs
+    prometheusCR:
+      enabled: true
+  config: |
+    receivers:
+      prometheus:
+        config:
+
+    exporters:
+      debug:
+
+    service:
+      pipelines:
+        metrics:
+          receivers: [prometheus]
+          processors: []
+          exporters: [debug]

@@ -1,0 +1,1402 @@
+---
+# Source: stackgres-operator/templates/operator-service-account.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: stackgres
+  namespace: stackgres
+---
+# Source: stackgres-operator/templates/operator-cluster-role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: stackgres
+rules:
+- apiGroups: ["", "apps", "extensions", "rbac.authorization.k8s.io", "batch"]
+  resources:
+  - pods
+  - pods/exec
+  - pods/log
+  - services
+  - endpoints
+  - endpoints/restricted
+  - persistentvolumeclaims
+  - configmaps
+  - secrets
+  - deployments
+  - statefulsets
+  - serviceaccounts
+  - namespaces
+  - roles
+  - rolebindings
+  - events
+  - cronjobs
+  - jobs
+  verbs:
+  - get
+  - list
+  - watch
+  - update
+  - create
+  - delete
+  - patch
+- apiGroups: ["storage.k8s.io"]
+  resources: ["storageclasses"]
+  verbs: ["get", "list"]
+- apiGroups: ["stackgres.io"]
+  resources:
+  - sgclusters
+  - sgpgconfigs
+  - sginstanceprofiles
+  - sgpoolconfigs
+  - sgbackupconfigs
+  - sgbackups
+  - sgdistributedlogs
+  - sgdbops
+  - sgobjectstorages
+  - sgscripts
+  - sgshardedclusters
+  - sgshardedbackups
+  - sgshardeddbops
+  - sgconfigs
+  verbs:
+  - create
+  - watch
+  - list
+  - get
+  - update
+  - patch
+  - delete
+- apiGroups: ["stackgres.io"]
+  resources:
+  - sgconfigs/status
+  - sgclusters/status
+  - sgdistributedlogs/status
+  - sgclusters/finalizers
+  - sgpgconfigs/finalizers
+  - sginstanceprofiles/finalizers
+  - sgpoolconfigs/finalizers
+  - sgbackupconfigs/finalizers
+  - sgbackups/finalizers
+  - sgdistributedlogs/finalizers
+  - sgdbops/finalizers
+  - sgobjectstorages/finalizers
+  - sgscripts/finalizers
+  - sgshardedclusters/finalizers
+  - sgshardedbackups/finalizers
+  - sgshardeddbops/finalizers
+  - sgconfigs/finalizers
+  verbs:
+  - update
+- apiGroups: ["", "apps", "batch"]
+  resources:
+  - statefulsets/finalizers
+  - persistentvolumeclaims/finalizers
+  - deployments/finalizers
+  - services/finalizers
+  - endpoints/finalizers
+  - cronjobs/finalizers
+  - jobs/finalizers
+  - pods/finalizers
+  verbs:
+  - update
+- apiGroups: ["apiextensions.k8s.io"]
+  resources:
+  - customresourcedefinitions
+  resourceNames:
+  - sgconfigs.stackgres.io
+  - sgclusters.stackgres.io
+  - sginstanceprofiles.stackgres.io
+  - sgpgconfigs.stackgres.io
+  - sgpoolconfigs.stackgres.io
+  - sgbackups.stackgres.io
+  - sgbackupconfigs.stackgres.io
+  - sgobjectstorages.stackgres.io
+  - sgdbops.stackgres.io
+  - sgdistributedlogs.stackgres.io
+  - sgshardedclusters.stackgres.io
+  - sgshardedbackups.stackgres.io
+  - sgshardeddbops.stackgres.io
+  - sgscripts.stackgres.io
+  verbs:
+  - get
+- apiGroups: ["apiextensions.k8s.io"]
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - list
+- apiGroups: ["snapshot.storage.k8s.io"]
+  resources:
+  - volumesnapshots
+  verbs:
+  - list
+  - get
+  - watch
+  - create
+- apiGroups: ["apiextensions.k8s.io"]
+  resources:
+  - customresourcedefinitions
+  resourceNames:
+  - prometheuses.monitoring.coreos.com
+  verbs:
+  - get
+- apiGroups: ["apiextensions.k8s.io"]
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - list
+- apiGroups: ["monitoring.coreos.com"]
+  resources:
+  - servicemonitors
+  - podmonitors
+  verbs:
+  - list
+  - get
+  - create
+  - delete
+  - update
+  - patch
+- apiGroups: ["monitoring.coreos.com"]
+  resources:
+  - prometheus
+  - prometheuses
+  - podmonitors
+  verbs:
+  - list
+  - get
+- apiGroups:
+  - admissionregistration.k8s.io
+  resources:
+  - mutatingwebhookconfigurations
+  - validatingwebhookconfigurations
+  resourceNames:
+  - stackgres
+  verbs:
+  - get
+  - patch
+- apiGroups: ["apiextensions.k8s.io"]
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - create
+- apiGroups: ["apiextensions.k8s.io"]
+  resources:
+  - customresourcedefinitions
+  resourceNames:
+  - sgconfigs.stackgres.io
+  - sgclusters.stackgres.io
+  - sginstanceprofiles.stackgres.io
+  - sgpgconfigs.stackgres.io
+  - sgpoolconfigs.stackgres.io
+  - sgbackups.stackgres.io
+  - sgbackupconfigs.stackgres.io
+  - sgobjectstorages.stackgres.io
+  - sgdbops.stackgres.io
+  - sgdistributedlogs.stackgres.io
+  - sgshardedclusters.stackgres.io
+  - sgshardedbackups.stackgres.io
+  - sgshardeddbops.stackgres.io
+  - sgscripts.stackgres.io
+  verbs:
+  - patch
+  - update
+- apiGroups: ["shardingsphere.apache.org"]
+  resources:
+  - computenodes
+  verbs:
+  - get
+  - list
+  - watch
+  - update
+  - create
+  - delete
+  - patch
+---
+# Source: stackgres-operator/templates/webapi-admin-cluster-role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    api.stackgres.io/auth: user
+  name: stackgres-restapi-admin
+rules:
+- apiGroups: ["", "batch"]
+  resources:
+  - pods/exec
+  - configmaps
+  - secrets
+  - jobs
+  verbs:
+  - create
+- apiGroups: [""]
+  resources:
+  - pods/exec
+  verbs:
+  - get
+- apiGroups: ["", "batch"]
+  resources:
+  - configmaps
+  - secrets
+  - jobs
+  verbs:
+  - delete
+- apiGroups: [""]
+  resources:
+  - configmaps
+  - secrets
+  verbs:
+  - patch
+  - update
+- apiGroups: ["", "batch", "storage.k8s.io"]
+  resources:
+  - namespaces
+  - storageclasses
+  - pods
+  - services
+  - configmaps
+  - secrets
+  - persistentvolumes
+  - persistentvolumeclaims
+  - events
+  - jobs
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups: ["stackgres.io"]
+  resources:
+  - sgclusters
+  - sgpgconfigs
+  - sginstanceprofiles
+  - sgpoolconfigs
+  - sgbackupconfigs
+  - sgbackups
+  - sgdistributedlogs
+  - sgdbops
+  - sgobjectstorages
+  - sgscripts
+  - sgshardedclusters
+  verbs:
+  - create
+  - watch
+  - list
+  - get
+  - update
+  - patch
+  - delete
+- apiGroups: ["stackgres.io"]
+  resources:
+  - sgconfigs
+  verbs:
+  - watch
+  - list
+  - get
+  - update
+  - patch
+- apiGroups: ["apiextensions.k8s.io"]
+  resources:
+  - customresourcedefinitions
+  resourceNames:
+  - sgconfigs.stackgres.io
+  - sgclusters.stackgres.io
+  - sginstanceprofiles.stackgres.io
+  - sgpgconfigs.stackgres.io
+  - sgpoolconfigs.stackgres.io
+  - sgbackups.stackgres.io
+  - sgbackupconfigs.stackgres.io
+  - sgobjectstorages.stackgres.io
+  - sgdbops.stackgres.io
+  - sgdistributedlogs.stackgres.io
+  - sgshardedclusters.stackgres.io
+  - sgscripts.stackgres.io
+  verbs:
+  - get
+- apiGroups: ["apiextensions.k8s.io"]
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - list
+- apiGroups: ["rbac.authorization.k8s.io"]
+  resources:
+  - roles
+  - rolebindings
+  - clusterroles
+  - clusterrolebindings
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+---
+# Source: stackgres-operator/templates/webapi-cluster-role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: stackgres-restapi
+  annotations:
+    meta.helm.sh/release-name: stackgres
+    meta.helm.sh/release-namespace: stackgres
+  labels:
+    app.kubernetes.io/managed-by: Helm
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - users
+  - groups
+  - serviceaccount
+  verbs:
+  - impersonate
+- apiGroups:
+  - authorization.k8s.io
+  resources:
+  - subjectaccessreviews
+  verbs:
+  - create
+- apiGroups:
+  - ""
+  resources:
+  - secrets # Secret Verification authentication
+  verbs:
+  - get
+  - list
+---
+# Source: stackgres-operator/templates/webapi-reader-cluster-role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    api.stackgres.io/auth: user
+  name: stackgres-restapi-reader
+rules:
+- apiGroups: ["", "batch"]
+  resources:
+  - pods/exec
+  verbs:
+  - create
+- apiGroups: [""]
+  resources:
+  - pods/exec
+  verbs:
+  - get
+- apiGroups: ["", "batch", "storage.k8s.io"]
+  resources:
+  - namespaces
+  - storageclasses
+  - pods
+  - services
+  - configmaps
+  - secrets
+  - persistentvolumes
+  - persistentvolumeclaims
+  - events
+  - jobs
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups: ["stackgres.io"]
+  resources:
+  - sgclusters
+  - sgpgconfigs
+  - sginstanceprofiles
+  - sgpoolconfigs
+  - sgbackupconfigs
+  - sgbackups
+  - sgdistributedlogs
+  - sgdbops
+  - sgobjectstorages
+  - sgscripts
+  - sgshardedclusters
+  verbs:
+  - watch
+  - list
+  - get
+- apiGroups: ["stackgres.io"]
+  resources:
+  - sgconfigs
+  verbs:
+  - watch
+  - list
+  - get
+- apiGroups: ["apiextensions.k8s.io"]
+  resources:
+  - customresourcedefinitions
+  resourceNames:
+  - sgconfigs.stackgres.io
+  - sgclusters.stackgres.io
+  - sginstanceprofiles.stackgres.io
+  - sgpgconfigs.stackgres.io
+  - sgpoolconfigs.stackgres.io
+  - sgbackups.stackgres.io
+  - sgbackupconfigs.stackgres.io
+  - sgobjectstorages.stackgres.io
+  - sgdbops.stackgres.io
+  - sgdistributedlogs.stackgres.io
+  - sgshardedclusters.stackgres.io
+  - sgscripts.stackgres.io
+  verbs:
+  - get
+- apiGroups: ["apiextensions.k8s.io"]
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - list
+---
+# Source: stackgres-operator/templates/webapi-writer-cluster-role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    api.stackgres.io/auth: user
+  name: stackgres-restapi-writer
+rules:
+- apiGroups: ["", "batch"]
+  resources:
+  - pods/exec
+  - configmaps
+  - secrets
+  - jobs
+  verbs:
+  - create
+- apiGroups: [""]
+  resources:
+  - pods/exec
+  verbs:
+  - get
+- apiGroups: ["", "batch"]
+  resources:
+  - configmaps
+  - secrets
+  - jobs
+  verbs:
+  - delete
+- apiGroups: [""]
+  resources:
+  - configmaps
+  - secrets
+  verbs:
+  - patch
+  - update
+- apiGroups: ["", "batch", "storage.k8s.io"]
+  resources:
+  - namespaces
+  - storageclasses
+  - pods
+  - services
+  - configmaps
+  - secrets
+  - persistentvolumes
+  - persistentvolumeclaims
+  - events
+  - jobs
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups: ["stackgres.io"]
+  resources:
+  - sgclusters
+  - sgpgconfigs
+  - sginstanceprofiles
+  - sgpoolconfigs
+  - sgbackupconfigs
+  - sgbackups
+  - sgdistributedlogs
+  - sgdbops
+  - sgobjectstorages
+  - sgscripts
+  - sgshardedclusters
+  verbs:
+  - create
+  - watch
+  - list
+  - get
+  - update
+  - patch
+  - delete
+- apiGroups: ["stackgres.io"]
+  resources:
+  - sgconfigs
+  verbs:
+  - watch
+  - list
+  - get
+  - update
+  - patch
+- apiGroups: ["apiextensions.k8s.io"]
+  resources:
+  - customresourcedefinitions
+  resourceNames:
+  - sgconfigs.stackgres.io
+  - sgclusters.stackgres.io
+  - sginstanceprofiles.stackgres.io
+  - sgpgconfigs.stackgres.io
+  - sgpoolconfigs.stackgres.io
+  - sgbackups.stackgres.io
+  - sgbackupconfigs.stackgres.io
+  - sgobjectstorages.stackgres.io
+  - sgdbops.stackgres.io
+  - sgdistributedlogs.stackgres.io
+  - sgshardedclusters.stackgres.io
+  - sgscripts.stackgres.io
+  verbs:
+  - get
+- apiGroups: ["apiextensions.k8s.io"]
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - list
+---
+# Source: stackgres-operator/templates/operator-cluster-role-binding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: stackgres
+subjects:
+- kind: ServiceAccount
+  name: stackgres
+  namespace: stackgres
+roleRef:
+  kind: ClusterRole
+  name: stackgres
+  apiGroup: rbac.authorization.k8s.io
+---
+# Source: stackgres-operator/templates/webapi-admin-cluster-role-binding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: stackgres-restapi-admin
+subjects:
+- kind: User
+  name: "admin"
+roleRef:
+  kind: ClusterRole
+  name: stackgres-restapi-admin
+  apiGroup: rbac.authorization.k8s.io
+---
+# Source: stackgres-operator/templates/webapi-cluster-role -binding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: stackgres-restapi
+  annotations:
+    meta.helm.sh/release-name: stackgres
+    meta.helm.sh/release-namespace: stackgres
+  labels:
+    app.kubernetes.io/managed-by: Helm
+subjects:
+- kind: ServiceAccount
+  name: stackgres-restapi
+  namespace: stackgres
+roleRef:
+  kind: ClusterRole
+  name: stackgres-restapi
+  apiGroup: rbac.authorization.k8s.io
+---
+# Source: stackgres-operator/templates/operator-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: stackgres
+  name: stackgres
+spec:
+  type: ClusterIP
+  selector:
+    app: stackgres
+  ports:
+    - name: https
+      protocol: TCP
+      port: 443
+      targetPort: https
+---
+# Source: stackgres-operator/templates/operator-deployment.yaml
+apiVersion: "apps/v1"
+kind: "Deployment"
+metadata:
+  labels:
+    app: stackgres
+    version: "1.8.1"
+    group:  stackgres.io
+  name: stackgres
+  namespace: stackgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stackgres
+      group:  stackgres.io
+  template:
+    metadata:
+      labels:
+        app: stackgres
+        group:  stackgres.io
+    spec:
+      serviceAccountName: stackgres
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+      - name: stackgres
+        image: "quay.io/stackgres/operator:1.8.1"
+        imagePullPolicy: IfNotPresent
+        env:
+          - name: OPERATOR_NAME
+            value: "stackgres"
+          - name: OPERATOR_NAMESPACE
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+          - name: OPERATOR_IMAGE_VERSION
+            value: "1.8.1"
+          - name: DISABLE_RECONCILIATION
+            value: "false"
+          - name: INSTALL_CRDS
+            value: "true"
+          - name: INSTALL_WEBHOOKS
+            value: "true"
+          - name: INSTALL_CERTS
+            value: "true"
+          - name: PROMETHEUS_AUTOBIND
+            value: "true"
+          - name: OPERATOR_SERVICE_ACCOUNT
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: spec.serviceAccountName
+          - name: OPERATOR_POD_NAME
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.name
+          - name: OPERATOR_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+          - name: SG_CONTAINER_REGISTRY
+            value: "quay.io"
+          - name: SG_IMAGE_PULL_POLICY
+            value: "IfNotPresent"
+          - name: EXTENSIONS_REPOSITORY_URLS
+            value: "https://extensions.stackgres.io/postgres/repository"
+        ports:
+        - containerPort: 8080
+          name: "http"
+          protocol: "TCP"
+        - containerPort: 8443
+          name: "https"
+          protocol: "TCP"
+        livenessProbe:
+          httpGet:
+            path: "/q/health/live"
+            port: 8080
+            scheme: "HTTP"
+          initialDelaySeconds: 10
+          periodSeconds: 60
+          timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: "/q/health/ready"
+            port: 8080
+            scheme: "HTTP"
+          initialDelaySeconds: 0
+          periodSeconds: 2
+          timeoutSeconds: 1
+        volumeMounts:
+          - name: operator-certs
+            mountPath: /etc/operator/certs
+            readOnly: true
+      volumes:
+        - name: operator-certs
+          secret:
+            secretName: stackgres-certs
+            optional: true
+---
+# Source: stackgres-operator/templates/mutating-webhook-configuration.yaml
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: stackgres
+  namespace: stackgres
+  annotations:
+    meta.helm.sh/release-name: stackgres
+    meta.helm.sh/release-namespace: stackgres
+  labels:
+    app.kubernetes.io/managed-by: Helm
+webhooks:
+  - name: sgcluster.mutating-webhook.stackgres.io
+    sideEffects: None
+    rules:
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: ["stackgres.io"]
+        apiVersions: ["*"]
+        resources: ["sgclusters"]
+    failurePolicy: Fail
+    clientConfig:
+      service:
+        namespace: stackgres
+        name: stackgres
+        path: '/stackgres/mutation/sgcluster'
+      caBundle: Cg==
+    admissionReviewVersions: ["v1"]
+  - name: sgpgconfig.mutating-webhook.stackgres.io
+    sideEffects: None
+    rules:
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: ["stackgres.io"]
+        apiVersions: ["*"]
+        resources: ["sgpgconfigs"]
+    failurePolicy: Fail
+    clientConfig:
+      service:
+        namespace: stackgres
+        name: stackgres
+        path: '/stackgres/mutation/sgpgconfig'
+      caBundle: Cg==
+    admissionReviewVersions: ["v1"]
+  - name: sgpoolconfig.mutating-webhook.stackgres.io
+    sideEffects: None
+    rules:
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: ["stackgres.io"]
+        apiVersions: ["*"]
+        resources: ["sgpoolconfigs"]
+    failurePolicy: Fail
+    clientConfig:
+      service:
+        namespace: stackgres
+        name: stackgres
+        path: '/stackgres/mutation/sgpoolconfig'
+      caBundle: Cg==
+    admissionReviewVersions: ["v1"]
+  - name: sginstanceprofile.mutating-webhook.stackgres.io
+    sideEffects: None
+    rules:
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: ["stackgres.io"]
+        apiVersions: ["*"]
+        resources: ["sginstanceprofiles"]
+    failurePolicy: Fail
+    clientConfig:
+      service:
+        namespace: stackgres
+        name: stackgres
+        path: '/stackgres/mutation/sginstanceprofile'
+      caBundle: Cg==
+    admissionReviewVersions: ["v1"]
+  - name: sgbackupconfig.mutating-webhook.stackgres.io
+    sideEffects: None
+    rules:
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: ["stackgres.io"]
+        apiVersions: ["*"]
+        resources: ["sgbackupconfigs"]
+    failurePolicy: Fail
+    clientConfig:
+      service:
+        namespace: stackgres
+        name: stackgres
+        path: '/stackgres/mutation/sgbackupconfig'
+      caBundle: Cg==
+    admissionReviewVersions: ["v1"]
+  - name: sgbackup.mutating-webhook.stackgres.io
+    sideEffects: None
+    rules:
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: ["stackgres.io"]
+        apiVersions: ["*"]
+        resources: ["sgbackups"]
+    failurePolicy: Fail
+    clientConfig:
+      service:
+        namespace: stackgres
+        name: stackgres
+        path: '/stackgres/mutation/sgbackup'
+      caBundle: Cg==
+    admissionReviewVersions: ["v1"]
+  - name: sgdistributedlogs.mutating-webhook.stackgres.io
+    sideEffects: None
+    rules:
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: ["stackgres.io"]
+        apiVersions: ["*"]
+        resources: ["sgdistributedlogs"]
+    failurePolicy: Fail
+    clientConfig:
+      service:
+        namespace: stackgres
+        name: stackgres
+        path: '/stackgres/mutation/sgdistributedlogs'
+      caBundle: Cg==
+    admissionReviewVersions: ["v1"]
+  - name: sgdbops.mutating-webhook.stackgres.io
+    sideEffects: None
+    rules:
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: ["stackgres.io"]
+        apiVersions: ["*"]
+        resources: ["sgdbops"]
+    failurePolicy: Fail
+    clientConfig:
+      service:
+        namespace: stackgres
+        name: stackgres
+        path: '/stackgres/mutation/sgdbops'
+      caBundle: Cg==
+    admissionReviewVersions: ["v1"]
+  - name: sgobjectstorage.mutating-webhook.stackgres.io
+    sideEffects: None
+    rules:
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: ["stackgres.io"]
+        apiVersions: ["*"]
+        resources: ["sgobjectstorages"]
+    failurePolicy: Fail
+    clientConfig:
+      service:
+        namespace: stackgres
+        name: stackgres
+        path: '/stackgres/mutation/sgobjectstorage'
+      caBundle: Cg==
+    admissionReviewVersions: ["v1"]
+  - name: sgscripts.mutating-webhook.stackgres.io
+    sideEffects: None
+    rules:
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: ["stackgres.io"]
+        apiVersions: ["*"]
+        resources: ["sgscripts"]
+    failurePolicy: Fail
+    clientConfig:
+      service:
+        namespace: stackgres
+        name: stackgres
+        path: '/stackgres/mutation/sgscript'
+      caBundle: Cg==
+    admissionReviewVersions: ["v1"]
+  - name: sgshardedclusters.mutating-webhook.stackgres.io
+    sideEffects: None
+    rules:
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: ["stackgres.io"]
+        apiVersions: ["*"]
+        resources: ["sgshardedclusters"]
+    failurePolicy: Fail
+    clientConfig:
+      service:
+        namespace: stackgres
+        name: stackgres
+        path: '/stackgres/mutation/sgshardedcluster'
+      caBundle: Cg==
+    admissionReviewVersions: ["v1"]
+  - name: sgshardedbackups.mutating-webhook.stackgres.io
+    sideEffects: None
+    rules:
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: ["stackgres.io"]
+        apiVersions: ["*"]
+        resources: ["sgshardedbackups"]
+    failurePolicy: Fail
+    clientConfig:
+      service:
+        namespace: stackgres
+        name: stackgres
+        path: '/stackgres/mutation/sgshardedbackup'
+      caBundle: Cg==
+    admissionReviewVersions: ["v1"]
+  - name: sgshardeddbops.mutating-webhook.stackgres.io
+    sideEffects: None
+    rules:
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: ["stackgres.io"]
+        apiVersions: ["*"]
+        resources: ["sgshardeddbops"]
+    failurePolicy: Fail
+    clientConfig:
+      service:
+        namespace: stackgres
+        name: stackgres
+        path: '/stackgres/mutation/sgshardeddbops'
+      caBundle: Cg==
+    admissionReviewVersions: ["v1"]
+---
+# Source: stackgres-operator/templates/sgconfig.yaml
+apiVersion: stackgres.io/v1
+kind: SGConfig
+metadata:
+  name: stackgres
+  namespace: stackgres
+spec:
+  adminui:
+    image:
+      name: stackgres/admin-ui
+      pullPolicy: IfNotPresent
+      tag: 1.8.1
+    resources: {}
+    service:
+      exposeHTTP: false
+      type: ClusterIP
+  authentication:
+    createAdminSecret: true
+    type: jwt
+    user: admin
+  cert:
+    autoapprove: true
+    certDuration: 730
+    certManager:
+      autoConfigure: false
+      duration: 2160h
+      encoding: PKCS1
+      renewBefore: 360h
+      size: 2048
+    createForOperator: true
+    createForWebApi: true
+    regenerateCert: true
+    regenerateWebCert: true
+    regenerateWebRsa: true
+  containerRegistry: quay.io
+  deploy:
+    operator: true
+    restapi: true
+  developer:
+    allowPullExtensionsFromImageRepository: false
+    disableArbitraryUser: false
+    enableJvmDebug: false
+    enableJvmDebugSuspend: false
+    patches:
+      adminui:
+        volumeMounts: []
+        volumes: []
+      clusterController:
+        volumeMounts: []
+        volumes: []
+      distributedlogsController:
+        volumeMounts: []
+        volumes: []
+      jobs:
+        volumeMounts: []
+        volumes: []
+      operator:
+        volumeMounts: []
+        volumes: []
+      restapi:
+        volumeMounts: []
+        volumes: []
+    showDebug: false
+    showStackTraces: false
+  extensions:
+    cache:
+      enabled: false
+      persistentVolume:
+        size: 1Gi
+      preloadedExtensions:
+      - x86_64/linux/timescaledb-1\.7\.4-pg12
+    repositoryUrls:
+    - https://extensions.stackgres.io/postgres/repository
+  grafana:
+    autoEmbed: false
+    datasourceName: Prometheus
+    password: prom-operator
+    schema: http
+    user: admin
+  imagePullPolicy: IfNotPresent
+  jobs:
+    affinity: {}
+    annotations: {}
+    image:
+      name: stackgres/jobs
+      pullPolicy: IfNotPresent
+      tag: 1.8.1
+    nodeSelector: {}
+    resources: {}
+    tolerations: []
+  operator:
+    affinity: {}
+    annotations: {}
+    image:
+      name: stackgres/operator
+      pullPolicy: IfNotPresent
+      tag: 1.8.1
+    nodeSelector: {}
+    resources: {}
+    service:
+      annotations: {}
+    serviceAccount:
+      annotations: {}
+      repoCredentials: []
+    tolerations: []
+  prometheus:
+    allowAutobind: true
+  rbac:
+    create: true
+  restapi:
+    affinity: {}
+    annotations: {}
+    image:
+      name: stackgres/restapi
+      pullPolicy: IfNotPresent
+      tag: 1.8.1
+    name: stackgres-restapi
+    nodeSelector: {}
+    resources: {}
+    service:
+      annotations: {}
+    serviceAccount:
+      annotations: {}
+      repoCredentials: []
+    tolerations: []
+  serviceAccount:
+    annotations: {}
+    create: true
+    repoCredentials: []
+---
+# Source: stackgres-operator/templates/validating-webhook-configuration.yaml
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: stackgres
+  namespace: stackgres
+  annotations:
+    meta.helm.sh/release-name: stackgres
+    meta.helm.sh/release-namespace: stackgres
+  labels:
+    app.kubernetes.io/managed-by: Helm
+webhooks:
+  - name: sgcluster.validating-webhook.stackgres.io
+    sideEffects: None
+    rules:
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: ["stackgres.io"]
+        apiVersions: ["*"]
+        resources: ["sgclusters"]
+    failurePolicy: Fail
+    clientConfig:
+      service:
+        namespace: stackgres
+        name: stackgres
+        path: '/stackgres/validation/sgcluster'
+      caBundle: Cg==
+    admissionReviewVersions: ["v1"]
+  - name: sgpgconfig.validating-webhook.stackgres.io
+    sideEffects: None
+    rules:
+      - operations: ["CREATE", "UPDATE", "DELETE"]
+        apiGroups: ["stackgres.io"]
+        apiVersions: ["*"]
+        resources: ["sgpgconfigs"]
+    failurePolicy: Fail
+    clientConfig:
+      service:
+        namespace: stackgres
+        name: stackgres
+        path: '/stackgres/validation/sgpgconfig'
+      caBundle: Cg==
+    admissionReviewVersions: ["v1"]
+  - name: sgpoolconfig.validating-webhook.stackgres.io
+    sideEffects: None
+    rules:
+      - operations: ["CREATE", "UPDATE", "DELETE"]
+        apiGroups: ["stackgres.io"]
+        apiVersions: ["*"]
+        resources: ["sgpoolconfigs"]
+    failurePolicy: Fail
+    clientConfig:
+      service:
+        namespace: stackgres
+        name: stackgres
+        path: '/stackgres/validation/sgpoolconfig'
+      caBundle: Cg==
+    admissionReviewVersions: ["v1"]
+  - name: sginstanceprofile.validating-webhook.stackgres.io
+    sideEffects: None
+    rules:
+      - operations: ["CREATE", "UPDATE", "DELETE"]
+        apiGroups: ["stackgres.io"]
+        apiVersions: ["*"]
+        resources: ["sginstanceprofiles"]
+    failurePolicy: Fail
+    clientConfig:
+      service:
+        namespace: stackgres
+        name: stackgres
+        path: '/stackgres/validation/sginstanceprofile'
+      caBundle: Cg==
+    admissionReviewVersions: ["v1"]
+  - name: sgbackupconfig.validating-webhook.stackgres.io
+    sideEffects: None
+    rules:
+      - operations: ["CREATE", "UPDATE", "DELETE"]
+        apiGroups: ["stackgres.io"]
+        apiVersions: ["*"]
+        resources: ["sgbackupconfigs"]
+    failurePolicy: Fail
+    clientConfig:
+      service:
+        namespace: stackgres
+        name: stackgres
+        path: '/stackgres/validation/sgbackupconfig'
+      caBundle: Cg==
+    admissionReviewVersions: ["v1"]
+  - name: sgbackup.validating-webhook.stackgres.io
+    sideEffects: None
+    rules:
+      - operations: ["CREATE", "UPDATE", "DELETE"]
+        apiGroups: ["stackgres.io"]
+        apiVersions: ["*"]
+        resources: ["sgbackups"]
+    failurePolicy: Fail
+    clientConfig:
+      service:
+        namespace: stackgres
+        name: stackgres
+        path: '/stackgres/validation/sgbackup'
+      caBundle: Cg==
+    admissionReviewVersions: ["v1"]
+  - name: sgdistributedlogs.validating-webhook.stackgres.io
+    sideEffects: None
+    rules:
+      - operations: ["CREATE", "UPDATE", "DELETE"]
+        apiGroups: ["stackgres.io"]
+        apiVersions: ["*"]
+        resources: ["sgdistributedlogs"]
+    failurePolicy: Fail
+    clientConfig:
+      service:
+        namespace: stackgres
+        name: stackgres
+        path: '/stackgres/validation/sgdistributedlogs'
+      caBundle: Cg==
+    admissionReviewVersions: ["v1"]
+  - name: sgdbops.validating-webhook.stackgres.io
+    sideEffects: None
+    rules:
+      - operations: ["CREATE", "UPDATE", "DELETE"]
+        apiGroups: ["stackgres.io"]
+        apiVersions: ["*"]
+        resources: ["sgdbops"]
+    failurePolicy: Fail
+    clientConfig:
+      service:
+        namespace: stackgres
+        name: stackgres
+        path: '/stackgres/validation/sgdbops'
+      caBundle: Cg==
+    admissionReviewVersions: ["v1"]
+  - name: sgobjectstorage.validating-webhook.stackgres.io
+    sideEffects: None
+    rules:
+      - operations: ["CREATE", "UPDATE", "DELETE"]
+        apiGroups: ["stackgres.io"]
+        apiVersions: ["*"]
+        resources: ["sgobjectstorages"]
+    failurePolicy: Fail
+    clientConfig:
+      service:
+        namespace: stackgres
+        name: stackgres
+        path: '/stackgres/validation/sgobjectstorage'
+      caBundle: Cg==
+    admissionReviewVersions: ["v1"]
+  - name: sgscripts.validating-webhook.stackgres.io
+    sideEffects: None
+    rules:
+      - operations: ["CREATE", "UPDATE", "DELETE"]
+        apiGroups: ["stackgres.io"]
+        apiVersions: ["*"]
+        resources: ["sgscripts"]
+    failurePolicy: Fail
+    clientConfig:
+      service:
+        namespace: stackgres
+        name: stackgres
+        path: '/stackgres/validation/sgscript'
+      caBundle: Cg==
+    admissionReviewVersions: ["v1"]
+  - name: sgshardedclusters.validating-webhook.stackgres.io
+    sideEffects: None
+    rules:
+      - operations: ["CREATE", "UPDATE", "DELETE"]
+        apiGroups: ["stackgres.io"]
+        apiVersions: ["*"]
+        resources: ["sgshardedclusters"]
+    failurePolicy: Fail
+    clientConfig:
+      service:
+        namespace: stackgres
+        name: stackgres
+        path: '/stackgres/validation/sgshardedcluster'
+      caBundle: Cg==
+    admissionReviewVersions: ["v1"]
+  - name: sgshardedbackups.validating-webhook.stackgres.io
+    sideEffects: None
+    rules:
+      - operations: ["CREATE", "UPDATE", "DELETE"]
+        apiGroups: ["stackgres.io"]
+        apiVersions: ["*"]
+        resources: ["sgshardedbackups"]
+    failurePolicy: Fail
+    clientConfig:
+      service:
+        namespace: stackgres
+        name: stackgres
+        path: '/stackgres/validation/sgshardedbackup'
+      caBundle: Cg==
+    admissionReviewVersions: ["v1"]
+  - name: sgshardeddbops.validating-webhook.stackgres.io
+    sideEffects: None
+    rules:
+      - operations: ["CREATE", "UPDATE", "DELETE"]
+        apiGroups: ["stackgres.io"]
+        apiVersions: ["*"]
+        resources: ["sgshardeddbops"]
+    failurePolicy: Fail
+    clientConfig:
+      service:
+        namespace: stackgres
+        name: stackgres
+        path: '/stackgres/validation/sgshardeddbops'
+      caBundle: Cg==
+    admissionReviewVersions: ["v1"]
+---
+# Source: stackgres-operator/templates/init-service-account.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: stackgres-init
+  namespace: stackgres
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "-100"
+---
+# Source: stackgres-operator/templates/init-service-account.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "-100"
+  name: stackgres-init
+rules:
+- apiGroups: ["apiextensions.k8s.io"]
+  resources:
+  - customresourcedefinitions
+  - clusterrolebinding
+  verbs:
+  - create
+- apiGroups: ["apiextensions.k8s.io"]
+  resources:
+  - customresourcedefinitions
+  resourceNames:
+  - sgconfigs.stackgres.io
+  verbs:
+  - get
+- apiGroups: ["apiextensions.k8s.io"]
+  resources:
+  - customresourcedefinitions
+  resourceNames:
+  - sgconfigs.stackgres.io
+  verbs:
+  - get
+- apiGroups: ["rbac.authorization.k8s.io"]
+  resources:
+  - clusterrolebindings
+  resourceNames:
+  - stackgres-restapi-admin
+  verbs:
+  - get
+  - delete
+---
+# Source: stackgres-operator/templates/init-service-account.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: stackgres-init
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "-100"
+subjects:
+- kind: ServiceAccount
+  name: stackgres-init
+  namespace: stackgres
+roleRef:
+  kind: ClusterRole
+  name: stackgres-init
+  apiGroup: rbac.authorization.k8s.io
+---
+# Source: stackgres-operator/templates/init-service-account.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "-100"
+  name: stackgres-init
+  namespace: stackgres
+rules:
+- apiGroups: ["stackgres.io"]
+  resources:
+  - sgconfigs
+  verbs:
+  - create
+- apiGroups: ["stackgres.io"]
+  resources:
+  - sgconfigs
+  resourceNames:
+  - stackgres
+  verbs:
+  - get
+  - update
+  - patch
+---
+# Source: stackgres-operator/templates/init-service-account.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: stackgres-init
+  namespace: stackgres
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "-100"
+subjects:
+- kind: ServiceAccount
+  name: stackgres-init
+  namespace: stackgres
+roleRef:
+  kind: Role
+  name: stackgres-init
+  apiGroup: rbac.authorization.k8s.io
+---
+# Source: stackgres-operator/templates/tests/test-operator.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "stackgres-test-connection"
+  labels:
+    app: "stackgres"
+    group: helm-tests
+  annotations:
+    "helm.sh/hook": test
+spec:
+  serviceAccountName: stackgres
+  restartPolicy: Never
+  terminationGracePeriodSeconds: 0
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+  containers:
+    - name: conn-check
+      image: 'quay.io/ongres/kubectl:v1.28.2-build-6.29'
+      imagePullPolicy: "IfNotPresent"

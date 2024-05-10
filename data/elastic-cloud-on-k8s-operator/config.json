@@ -1,0 +1,26 @@
+{
+    "deploy": {
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/elastic-cloud-on-k8s-operator/crds.yaml",
+                    "namespace": null
+                }
+            },
+            {
+                "wait": {
+                    "duration": 10
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/elastic-cloud-on-k8s-operator/operator.yaml",
+                    "operator": true
+                }
+            }
+        ]
+    },
+    "crd_name": "elasticsearches.elasticsearch.k8s.elastic.co",
+    "kubernetes_version": "v1.29.1",
+    "seed_custom_resource": "data/elastic-cloud-on-k8s-operator/es.yaml"
+}

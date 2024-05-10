@@ -1,7 +1,8 @@
-# Number of bugs
-(Byproduct bugs included) Total bugs: **76**, confirmed: **58**, Fixed: **40**.<br/>
+# Bugs found by Acto
 
-(Byproduct bugs excluded) Total bugs: **56**, confirmed: **42**, Fixed: **30**.<br/>
+(Byproduct bugs included) Total bugs: **81**, confirmed: **62**, Fixed: **43**.<br/>
+
+(Byproduct bugs excluded) Total bugs: **61**, confirmed: **46**, Fixed: **33**.<br/>
 
 # Bugs found
 
@@ -66,6 +67,8 @@
 | cloudnative-pg/cloudnative-pg       | [https://github.com/cloudnative-pg/cloudnative-pg/issues/3623](https://github.com/cloudnative-pg/cloudnative-pg/issues/3623)         | fixed     |
 | cloudnative-pg/cloudnative-pg       | [https://github.com/cloudnative-pg/cloudnative-pg/issues/3541](https://github.com/cloudnative-pg/cloudnative-pg/issues/3541)         |           |
 | Altinity/clickhouse-operator        | [https://github.com/Altinity/clickhouse-operator/issues/1319](https://github.com/Altinity/clickhouse-operator/issues/1319)           | confirmed |
+| minio/operator                      | [https://github.com/minio/operator/issues/2038](https://github.com/minio/operator/issues/2038)                                       | fixed     |
+| minio/operator                      | [https://github.com/minio/operator/issues/2047](https://github.com/minio/operator/issues/2047)                                       | fixed     |
 
 # Byproduct bugs
 

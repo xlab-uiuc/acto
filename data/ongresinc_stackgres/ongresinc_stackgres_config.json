@@ -1,0 +1,25 @@
+{
+    "deploy": {
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/ongresinc_stackgres/ongresinc_stackgres_crd.yaml",
+                    "namespace": null
+                }
+            },
+        {
+            "wait": {
+                "duration": 10
+            }
+        },
+            {
+                "apply": {
+                    "file": "data/ongresinc_stackgres/ongresinc_stackgres_configure.yaml",
+                    "operator": true
+                }
+            }
+       ]
+    },
+        "crd_name": "sgconfigs.stackgres.io",
+        "seed_custom_resource" : "data/ongresinc_stackgres/ongresinc_stackgres_cr.yaml"
+}
