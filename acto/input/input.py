@@ -6,7 +6,6 @@ import logging
 import operator
 import random
 import threading
-import sys
 from functools import reduce
 from typing import List, Optional, Tuple
 from tqdm import tqdm

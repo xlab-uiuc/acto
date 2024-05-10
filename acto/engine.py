@@ -880,7 +880,7 @@ class Acto:
                 os._exit(1)
             signal.signal(signal.SIGALRM, signal_handler)
             signal.alarm(time_limit) # Trigger after time_limit seconds
-        if alarm_limit is not None:
+        if alarm_limit:
             TrialRunner.alarms_before_termination = alarm_limit
 
     def __learn(self, context_file, helper_crd, analysis_only=False):
