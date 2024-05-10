@@ -6,8 +6,10 @@ import logging
 import operator
 import random
 import threading
+import sys
 from functools import reduce
 from typing import List, Optional, Tuple
+from tqdm import tqdm
 
 import pydantic
 import yaml
@@ -167,6 +169,8 @@ class DeterministicInputModel(InputModel):
         for example_doc in example_docs:
             self.root_schema.load_examples(example_doc)
 
+        self.p_bar_intialized = False
+        self.p_bar = None
         self.num_workers = num_workers
         self.num_cases = num_cases  # number of test cases to run at a time
 
@@ -405,7 +409,13 @@ class DeterministicInputModel(InputModel):
             Tuple of (new value, if this is a setup)
         """
         logger = get_thread_logger(with_prefix=True)
-
+        if self.p_bar_intialized:
+            self.p_bar.update(1)
+            self.p_bar.refresh()
+        else:
+            self.p_bar = tqdm(total=self.metadata.number_of_run_test_cases, initial=1, position=0, leave=True)
+            self.p_bar_intialized = True
+        
         logger.info("Progress [%d] cases left", len(self.thread_vars.test_plan))
 
         selected_group: TestGroup = self.thread_vars.test_plan.next_group()
