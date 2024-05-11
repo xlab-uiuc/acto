@@ -3,6 +3,7 @@ import os
 import subprocess
 import time
 from typing import Any, Dict, List
+from filelock import FileLock
 
 import kubernetes
 import yaml
@@ -15,6 +16,8 @@ from . import base
 
 class Kind(base.KubernetesEngine):
     """Kind engine for provisioning Kubernetes"""
+
+    lock = FileLock("file_lock.txt.lock")
 
     def __init__(
         self,
@@ -92,6 +95,7 @@ class Kind(base.KubernetesEngine):
             config: path of the config file for cluster
             version: k8s version
         """
+        self.lock.acquire()
         print_event("Creating a Kind cluster...")
         cmd = ["kind", "create", "cluster"]
 
@@ -140,6 +144,8 @@ class Kind(base.KubernetesEngine):
         if self._posthooks:
             for posthook in self._posthooks:
                 posthook(apiclient=apiclient)
+        
+        self.lock.release()
 
     def load_images(self, images_archive_path: str, name: str):
         logging.info("Loading preload images")
