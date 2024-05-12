@@ -1,5 +1,7 @@
 import json
+import queue
 import random
+import threading
 from typing import List, Tuple
 
 from acto.schema.base import TreeNode
@@ -251,8 +253,8 @@ class TestGroup:
 
     def __len__(self):
         return len(self.tests)
-
-
+    
+        
 class DeterministicTestPlan(TestPlan):
 
     def __init__(self):
@@ -276,3 +278,37 @@ class DeterministicTestPlan(TestPlan):
 
     def __len__(self):
         return sum([len(i) for i in self.groups])
+    
+    
+class SharedTestPlan(TestPlan):
+
+    def __init__(self):
+        self.groups = queue.Queue()
+        self.length = 0
+        pass
+
+    def next_group(self):
+        if self.groups.empty():
+            return None
+
+        head = self.groups.get()
+        self.groups.task_done() 
+
+        if len(head) == 0:
+            return None
+        else:
+            self.length -= len(head)
+            return head
+
+    def add_testcase_groups(self, groups: List[TestGroup]):
+        for group in groups:
+            self.groups.put(group)
+            self.length += len(group)
+        
+
+    def add_testcase_group(self, groups: TestGroup):
+        self.groups.put(groups)
+        self.length += len(groups)
+
+    def __len__(self):
+        return self.length
