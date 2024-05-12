@@ -42,9 +42,12 @@ from acto.runner import Runner
 from acto.serialization import ActoEncoder, ContextEncoder
 from acto.snapshot import Snapshot
 from acto.utils import (
+    AlarmCounter,
     delete_operator_pod,
+    get_early_stop_time,
     get_yaml_existing_namespace,
     process_crd,
+    terminate_threads,
     update_preload_images,
 )
 from acto.utils.thread_logger import get_thread_logger, set_thread_logger_prefix
@@ -236,6 +239,8 @@ class TrialRunner:
         apply_testcase_f: Callable,
         acto_namespace: int,
         additional_exclude_paths: Optional[list[str]] = None,
+        alarm_counter: AlarmCounter = None,
+        early_stop_time: time.time = None,
     ) -> None:
         self.context = context
         self.workdir = workdir
@@ -275,6 +280,9 @@ class TrialRunner:
         self.apply_testcase_f = apply_testcase_f
         self.curr_trial = 0
 
+        self.alarm_counter = alarm_counter
+        self.early_stop_time = early_stop_time
+
     def run(
         self,
         errors: list[Optional[OracleResults]],
@@ -296,7 +304,15 @@ class TrialRunner:
                 logger.info("Test finished")
                 break
 
+            if self.alarm_counter is not None and self.alarm_counter.judge(self.worker_id):
+                logger.info("Test finshed for reaching the number of alarms")
+                break
+
             trial_start_time = time.time()
+            if self.early_stop_time is not None and self.early_stop_time < trial_start_time:
+                logger.info("Test finshed for reaching early stop time")
+                break
+
             self.cluster.restart_cluster(self.cluster_name, self.kubeconfig)
             apiclient = kubernetes_client(self.kubeconfig, self.context_name)
             self.cluster.load_images(self.images_archive, self.cluster_name)
@@ -549,6 +565,13 @@ class TrialRunner:
                 generation,
             )
             if run_result.oracle_result.is_error():
+
+                # is alarm, alarm count plus one
+                if self.alarm_counter is not None and not run_result.is_invalid_input():
+                    self.alarm_counter.increment()
+                    logger.info(f"Alarm count plus one, current count is {self.alarm_counter.get_count()}")
+
+
                 # before return, run the recovery test case
                 logger.info("Error result, running recovery")
                 run_result.oracle_result.differential = self.run_recovery(
@@ -765,6 +788,9 @@ class Acto:
         mount: Optional[list] = None,
         focus_fields: Optional[list] = None,
         acto_namespace: int = 0,
+        num_alarms: int = None,
+        time_duration: int = None,
+        hard_time_bound: bool = False,
     ) -> None:
         logger = get_thread_logger(with_prefix=False)
 
@@ -812,6 +838,10 @@ class Acto:
 
         self.runner_type = Runner
         self.checker_type = CheckerSet
+
+        self.num_alarms = num_alarms
+        self.time_duration = time_duration
+        self.hard_time_bound = hard_time_bound
 
         self.__learn(
             context_file=context_file,
@@ -1060,7 +1090,9 @@ class Acto:
                 check=True,
             )
 
+        alarm_counter = None if self.num_alarms is None else AlarmCounter(self.num_alarms)
         start_time = time.time()
+        early_stop_time = get_early_stop_time(start_time, self.time_duration, self.hard_time_bound)
 
         errors: list[OracleResults] = []
         runners: list[TrialRunner] = []
@@ -1083,6 +1115,8 @@ class Acto:
                 self.apply_testcase_f,
                 self.acto_namespace,
                 self.operator_config.diff_ignore_fields,
+                alarm_counter,
+                early_stop_time,
             )
             runners.append(runner)
 
@@ -1094,6 +1128,10 @@ class Acto:
                 )
                 t.start()
                 threads.append(t)
+            
+            if self.time_duration is not None and self.hard_time_bound is True:
+                timer = threading.Timer((self.time_duration) * 60, terminate_threads, args=[threads])
+                timer.start()
 
             for t in threads:
                 t.join()
