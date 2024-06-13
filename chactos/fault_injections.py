@@ -150,7 +150,7 @@ def wait_for_converge(api_client, namespace, wait_time=60, hard_timeout=600):
         hard_timeout: the maximal wait time for system convergence
 
     Returns:
-        True if the system fails to converge within the hard timeout
+        True if the system converge within the hard timeout
     """
 
     start_timestamp = time.time()
@@ -302,12 +302,12 @@ def wait_for_converge(api_client, namespace, wait_time=60, hard_timeout=600):
     )
     if converge:
         logging.info("System took %s to converge", time_elapsed)
-        return False
+        return True
     else:
         logging.error(
             "System failed to converge within %d seconds", hard_timeout
         )
-        return True
+        return False
 
 
 def watch_system_events(event_stream, q: multiprocessing.Queue):
