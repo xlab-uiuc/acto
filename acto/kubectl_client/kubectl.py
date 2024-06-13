@@ -64,7 +64,7 @@ class KubectlClient:
             "--for",
             for_condition,
             "--timeout",
-            str(timeout),
+            f"{timeout}s",
         ]
         return self.kubectl(cmd, capture_output=True, text=True)
 
@@ -76,7 +76,7 @@ class KubectlClient:
             "wait",
             "--for=condition=Ready",
             "--timeout",
-            str(timeout),
+            f"{timeout}s",
             "pods",
             "--all",
         ]
