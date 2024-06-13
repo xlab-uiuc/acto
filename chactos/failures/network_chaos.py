@@ -53,7 +53,7 @@ class OperatorApplicationPartitionFailure:
     def to_dict(self) -> dict:
         """Dump the spec to a dict"""
         return {
-            "apiVersion": "mesh.org/v1alpha1",
+            "apiVersion": "chaos-mesh.org/v1alpha1",
             "kind": "NetworkChaos",
             "metadata": {
                 "name": "operator-application-partition",
