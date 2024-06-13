@@ -19,7 +19,7 @@ from acto.lib.operator_config import OperatorConfig
 from acto.system_state.kubernetes_system_state import KubernetesSystemState
 from acto.utils import acto_timer
 from acto.utils.preprocess import process_crd
-from chactos.failures.network_chaos import OperatorApplicationPartitionFailure
+from chactos.failures.file_chaos import ApplicationFileFailure
 
 
 def load_inputs_from_dir(dir_: str) -> list[object]:
@@ -97,11 +97,17 @@ class ExperimentDriver:
             return
 
         while crs:
-            failure = OperatorApplicationPartitionFailure(
-                operator_selector={
-                    "namespaces": [constant.CONST.ACTO_NAMESPACE],
-                    "labelSelectors": {"name": "zookeeper-operator"},
-                },
+            # failure = OperatorApplicationPartitionFailure(
+            #     operator_selector={
+            #         "namespaces": [constant.CONST.ACTO_NAMESPACE],
+            #         "labelSelectors": {"name": "zookeeper-operator"},
+            #     },
+            #     app_selector={
+            #         "namespaces": [constant.CONST.ACTO_NAMESPACE],
+            #         "labelSelectors": {"app": "test-cluster"},
+            #     },
+            # )
+            failure = ApplicationFileFailure(
                 app_selector={
                     "namespaces": [constant.CONST.ACTO_NAMESPACE],
                     "labelSelectors": {"app": "test-cluster"},
