@@ -81,7 +81,7 @@ class ExperimentDriver:
         crs = load_inputs_from_dir("data/zookeeper-operator/inputs")
 
         cr = crs.pop(0)
-        self.apply_cr(cr, crd, apiclient)
+        self.apply_cr(cr, kubectl_client)
         converged = wait_for_converge(apiclient, constant.CONST.ACTO_NAMESPACE)
 
         if not converged:
@@ -102,7 +102,7 @@ class ExperimentDriver:
             failure.apply(kubectl_client)
 
             cr = crs.pop(0)
-            self.apply_cr(cr, crd, apiclient)
+            self.apply_cr(cr, kubectl_client)
             converged = wait_for_converge(
                 apiclient, constant.CONST.ACTO_NAMESPACE
             )
@@ -123,18 +123,24 @@ class ExperimentDriver:
     def apply_cr(
         self,
         cr: dict,
-        crd_metadata: dict,
-        api_client: kubernetes.client.ApiClient,
+        kubectl_client: KubectlClient,
     ):
         """Apply a CR."""
-        custom_object_api = kubernetes.client.CustomObjectsApi(api_client)
-        custom_object_api.create_namespaced_custom_object(
-            group=crd_metadata["group"],
-            version=crd_metadata["version"],
-            namespace=constant.CONST.ACTO_NAMESPACE,
-            plural=crd_metadata["plural"],
-            body=cr,
+        cr_file = "cr.yaml"
+        with open(cr_file, "w", encoding="utf-8") as f:
+            yaml.dump(cr, f)
+        p = kubectl_client.kubectl(
+            ["apply", "-f", cr_file, "-n", constant.CONST.ACTO_NAMESPACE]
         )
+        if p.returncode != 0:
+            logging.error(
+                "Failed to apply CR due to error from kubectl"
+                + f" (returncode={p.returncode})"
+                + f" (stdout={p.stdout})"
+                + f" (stderr={p.stderr})"
+            )
+            return False
+        return True
 
 
 def wait_for_converge(api_client, namespace, wait_time=60, hard_timeout=600):
