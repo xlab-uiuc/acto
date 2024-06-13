@@ -92,15 +92,11 @@ class ExperimentDriver:
             failure = OperatorApplicationPartitionFailure(
                 operator_selector={
                     "namespaces": [constant.CONST.ACTO_NAMESPACE],
-                    "labelSelectors": {
-                        "name": "percona-server-mongodb-operator"
-                    },
+                    "labelSelectors": {"name": "zookeeper-operator"},
                 },
                 app_selector={
                     "namespaces": [constant.CONST.ACTO_NAMESPACE],
-                    "labelSelectors": {
-                        "app.kubernetes.io/name": "percona-server-mongodb"
-                    },
+                    "labelSelectors": {"app": "test-cluster"},
                 },
             )
             failure.apply(kubectl_client)

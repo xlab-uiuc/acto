@@ -4,6 +4,8 @@ import yaml
 
 from acto.kubectl_client.kubectl import KubectlClient
 
+FAILURE_DIR = ".failures"
+
 
 class OperatorApplicationPartitionFailure:
     """Simulate a network partition between the operator and the application"""
@@ -12,9 +14,11 @@ class OperatorApplicationPartitionFailure:
         self.operator_selector = operator_selector
         self.app_selector = app_selector
 
+        os.makedirs(FAILURE_DIR, exist_ok=True)
+
     def apply(self, kubectl_client: KubectlClient):
         """Apply the failure to the cluster"""
-        failure_file = os.path.join("failures", self.name() + ".yaml")
+        failure_file = os.path.join(FAILURE_DIR, self.name() + ".yaml")
         self.to_file(failure_file)
         kubectl_client.kubectl(
             ["apply", "-f", failure_file, "-n", "chaos-mesh"],
@@ -28,7 +32,7 @@ class OperatorApplicationPartitionFailure:
 
     def cleanup(self, kubectl_client: KubectlClient):
         """Cleanup the failure from the cluster"""
-        failure_file = os.path.join("failures", self.name() + ".yaml")
+        failure_file = os.path.join(FAILURE_DIR, self.name() + ".yaml")
         kubectl_client.kubectl(
             ["delete", "-f", failure_file, "-n", "chaos-mesh", "--timeout=30s"],
             capture_output=True,
