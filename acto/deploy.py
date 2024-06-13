@@ -18,8 +18,11 @@ def wait_for_pod_ready(apiclient: kubernetes.client.ApiClient):
     pod_ready = False
     for tick in range(600):
         # check if all pods are ready
-        pods = kubernetes.client.CoreV1Api(
-            apiclient).list_pod_for_all_namespaces().items
+        pods = (
+            kubernetes.client.CoreV1Api(apiclient)
+            .list_pod_for_all_namespaces()
+            .items
+        )
 
         all_pods_ready = True
         for pod in pods:
@@ -41,7 +44,7 @@ def wait_for_pod_ready(apiclient: kubernetes.client.ApiClient):
         return True
 
 
-class Deploy():
+class Deploy:
 
     def __init__(self, deploy_config: DeployConfig) -> None:
         self._deploy_config = deploy_config
@@ -53,23 +56,27 @@ class Deploy():
                 break
         else:
             raise Exception("No operator yaml found in deploy config")
-        
+
         # Extract the operator_container_name from config
         self._operator_container_name = None
         for step in self._deploy_config.steps:
             if step.apply and step.apply.operator:
-                self._operator_container_name = step.apply.operator_container_name
+                self._operator_container_name = (
+                    step.apply.operator_container_name
+                )
                 break
 
     @property
     def operator_yaml(self) -> str:
         return self._operator_yaml
 
-    def deploy(self,
-               kubeconfig: str,
-               context_name: str,
-               kubectl_client: KubectlClient,
-               namespace: str):
+    def deploy(
+        self,
+        kubeconfig: str,
+        context_name: str,
+        kubectl_client: KubectlClient,
+        namespace: str,
+    ):
         logger = get_thread_logger(with_prefix=True)
         print_event("Deploying operator...")
         api_client = kubernetes_client(kubeconfig, context_name)
@@ -97,14 +104,16 @@ class Deploy():
                 p = kubectl_client.kubectl(args, capture_output=True)
                 if p.returncode != 0:
                     logger.error(
-                        "Failed to deploy operator due to error from kubectl" +
-                        f" (returncode={p.returncode})" +
-                        f" (stdout={p.stdout})" +
-                        f" (stderr={p.stderr})")
+                        "Failed to deploy operator due to error from kubectl"
+                        + f" (returncode={p.returncode})"
+                        + f" (stdout={p.stdout})"
+                        + f" (stderr={p.stderr})"
+                    )
                     return False
                 elif not wait_for_pod_ready(api_client):
                     logger.error(
-                        "Failed to deploy operator due to timeout waiting for pod to be ready")
+                        "Failed to deploy operator due to timeout waiting for pod to be ready"
+                    )
                     return False
             elif step.wait:
                 # Simply wait for the specified duration
@@ -121,12 +130,14 @@ class Deploy():
         print_event("Operator deployed")
         return True
 
-    def deploy_with_retry(self,
-                          kubeconfig: str,
-                          context_name: str,
-                          kubectl_client: KubectlClient,
-                          namespace: str,
-                          retry_count: int = 3):
+    def deploy_with_retry(
+        self,
+        kubeconfig: str,
+        context_name: str,
+        kubectl_client: KubectlClient,
+        namespace: str,
+        retry_count: int = 3,
+    ):
         logger = get_thread_logger(with_prefix=True)
         for i in range(retry_count):
             if self.deploy(kubeconfig, context_name, kubectl_client, namespace):
