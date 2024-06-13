@@ -78,7 +78,7 @@ class ExperimentDriver:
             crd_name=self._operator_config.crd_name,
         )
 
-        crs = load_inputs_from_dir("inputs")
+        crs = load_inputs_from_dir("data/zookeeper-operator/inputs")
 
         cr = crs.pop(0)
         self.apply_cr(cr, crd, apiclient)
