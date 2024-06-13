@@ -1,3 +1,4 @@
+import logging
 import os
 
 import yaml
@@ -18,6 +19,7 @@ class OperatorApplicationPartitionFailure:
 
     def apply(self, kubectl_client: KubectlClient):
         """Apply the failure to the cluster"""
+        logging.info("Applying %s...", self.name())
         failure_file = os.path.join(FAILURE_DIR, self.name() + ".yaml")
         self.to_file(failure_file)
         p = kubectl_client.kubectl(
@@ -38,6 +40,7 @@ class OperatorApplicationPartitionFailure:
             raise RuntimeError(
                 f"Failed to wait for operator application partition failure to be injected: {p.stderr}"
             )
+        logging.info("%s failure applied", self.name())
 
     def cleanup(self, kubectl_client: KubectlClient):
         """Cleanup the failure from the cluster"""
@@ -46,6 +49,7 @@ class OperatorApplicationPartitionFailure:
             ["delete", "-f", failure_file, "-n", "chaos-mesh", "--timeout=30s"],
             capture_output=True,
         )
+        logging.info("%s failure cleaned up", self.name())
 
     def name(self) -> str:
         """Get the name of the failure"""
