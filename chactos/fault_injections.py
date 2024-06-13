@@ -107,14 +107,18 @@ class ExperimentDriver:
 
             cr = crs.pop(0)
             self.apply_cr(cr, crd, apiclient)
-            converged = wait_for_converge(apiclient, cr["namespace"])
+            converged = wait_for_converge(
+                apiclient, constant.CONST.ACTO_NAMESPACE
+            )
 
             failure.cleanup(kubectl_client)
-            converged = wait_for_converge(apiclient, cr["namespace"])
+            converged = wait_for_converge(
+                apiclient, constant.CONST.ACTO_NAMESPACE
+            )
 
             # oracle
             system_state = KubernetesSystemState.from_api_client(
-                api_client=apiclient, namespace="default"
+                api_client=apiclient, namespace=constant.CONST.ACTO_NAMESPACE
             )
             if not system_state.check_health().is_healthy():
                 logging.error("System is not healthy")
@@ -131,7 +135,7 @@ class ExperimentDriver:
         custom_object_api.create_namespaced_custom_object(
             group=crd_metadata["group"],
             version=crd_metadata["version"],
-            namespace=cr["namespace"],
+            namespace=constant.CONST.ACTO_NAMESPACE,
             plural=crd_metadata["plural"],
             body=cr,
         )
