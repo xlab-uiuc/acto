@@ -59,9 +59,12 @@ class ExperimentDriver:
             namespace="chaos-mesh",
             repo="https://charts.chaos-mesh.org",
             args=[
-                "--set chaosDaemon.runtime=containerd",
-                "--set chaosDaemon.socketPath=/run/containerd/containerd.sock",
-                "--version 2.6.3",
+                "--set",
+                "chaosDaemon.runtime=containerd",
+                "--set",
+                "chaosDaemon.socketPath=/run/containerd/containerd.sock",
+                "--version",
+                "2.6.3",
             ],
         )
         if p.returncode != 0:
