@@ -23,7 +23,8 @@ class ApplicationFileFailure(Failure):
                 "action": "fault",
                 "mode": "all",
                 "selector": self.app_selector,
-                "direction": "both",
                 "volumePath": "/data",
+                "errno": 5,
+                "duration": "600s",
             },
         }
