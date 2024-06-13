@@ -116,8 +116,9 @@ class ExperimentDriver:
             system_state = KubernetesSystemState.from_api_client(
                 api_client=apiclient, namespace=constant.CONST.ACTO_NAMESPACE
             )
-            if not system_state.check_health().is_healthy():
-                logging.error("System is not healthy")
+            health = system_state.check_health()
+            if not health.is_healthy():
+                logging.error("System is not healthy %s", health)
                 return
 
     def apply_cr(
