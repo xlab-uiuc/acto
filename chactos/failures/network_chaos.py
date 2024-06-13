@@ -20,15 +20,23 @@ class OperatorApplicationPartitionFailure:
         """Apply the failure to the cluster"""
         failure_file = os.path.join(FAILURE_DIR, self.name() + ".yaml")
         self.to_file(failure_file)
-        kubectl_client.kubectl(
+        p = kubectl_client.kubectl(
             ["apply", "-f", failure_file, "-n", "chaos-mesh"],
             capture_output=True,
         )
-        kubectl_client.wait(
+        if p.returncode != 0:
+            raise RuntimeError(
+                f"Failed to apply operator application partition failure: {p.stderr}"
+            )
+        p = kubectl_client.wait(
             failure_file,
             'jsonpath={.status.conditions[?(@.type=="AllInjected")].status}=True',
             timeout=600,
         )
+        if p.returncode != 0:
+            raise RuntimeError(
+                f"Failed to wait for operator application partition failure to be injected: {p.stderr}"
+            )
 
     def cleanup(self, kubectl_client: KubectlClient):
         """Cleanup the failure from the cluster"""
