@@ -28,6 +28,7 @@ class Helm:
         chart: str,
         namespace: str,
         repo: Optional[str] = None,
+        args: Optional[list] = None,
     ) -> subprocess.CompletedProcess:
         """Installs a helm chart"""
         cmd = [
@@ -40,4 +41,6 @@ class Helm:
         ]
         if repo:
             cmd.extend(["--repo", repo])
+        if args:
+            cmd.extend(args)
         return self.helm(cmd)
