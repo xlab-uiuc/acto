@@ -82,7 +82,7 @@ class ExperimentDriver:
 
         cr = crs.pop(0)
         self.apply_cr(cr, crd, apiclient)
-        converged = wait_for_converge(apiclient, cr["namespace"])
+        converged = wait_for_converge(apiclient, constant.CONST.ACTO_NAMESPACE)
 
         if not converged:
             logging.error("Failed to converge")
