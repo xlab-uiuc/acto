@@ -47,7 +47,7 @@ class ExperimentDriver:
         cluster_name = f"acto-cluster-{self._worker_id}"
         kubecontext = k8s_cluster_engine.get_context_name(cluster_name)
         kubeconfig = os.path.join(os.path.expanduser("~"), ".kube", kubecontext)
-        k8s_cluster_engine.restart_cluster("kind", kubeconfig)
+        k8s_cluster_engine.restart_cluster(cluster_name, kubeconfig)
         apiclient = kubernetes_client(kubeconfig, kubecontext)
         kubectl_client = KubectlClient(kubeconfig, kubecontext)
 
