@@ -1,5 +1,6 @@
 import json
 
+from acto.lib.operator_config import OperatorConfig
 from chactos.fault_injections import ExperimentDriver
 
 with open(
@@ -7,5 +8,7 @@ with open(
 ) as config_file:
     config = json.load(config_file)
 
-driver = ExperimentDriver(config, 0)
+driver = ExperimentDriver(
+    operator_config=OperatorConfig.model_validate(config), worker_id=0
+)
 driver.run()
