@@ -54,7 +54,11 @@ class KubectlClient:
         return p
 
     def wait(
-        self, file: str, for_condition: str, timeout: int = 600
+        self,
+        file: str,
+        for_condition: str,
+        timeout: int = 600,
+        namespace: Optional[str] = None,
     ) -> subprocess.CompletedProcess:
         """Waits for a condition to be true"""
         cmd = [
@@ -66,6 +70,10 @@ class KubectlClient:
             "--timeout",
             f"{timeout}s",
         ]
+        if namespace:
+            cmd.extend(["-n", namespace])
+        else:
+            cmd.extend(["--all-namespaces"])
         return self.kubectl(cmd, capture_output=True, text=True)
 
     def wait_for_all_pods(
