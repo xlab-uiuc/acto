@@ -55,12 +55,12 @@ class ExperimentDriver:
         helm_client = Helm(kubeconfig, kubecontext)
         p = helm_client.install(
             release_name="chaos-mesh",
-            chart="chaos-mesh/chaos-mesh",
+            chart="chaos-mesh",
             namespace="chaos-mesh",
             repo="https://charts.chaos-mesh.org",
         )
         if p.returncode != 0:
-            raise RuntimeError("Failed to install chaos-mesh")
+            raise RuntimeError("Failed to install chaos-mesh", p.stderr)
 
         deployer = Deploy(self._operator_config.deploy)
         deployer.deploy(

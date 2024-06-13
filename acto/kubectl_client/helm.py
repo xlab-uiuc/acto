@@ -13,6 +13,8 @@ class Helm:
         """Executes a helm command"""
         cmd = ["helm"]
         cmd.extend(args)
+        cmd.extend(["--kubeconfig", self.kubeconfig])
+        cmd.extend(["--kube-context", self.context_name])
         return subprocess.run(cmd, capture_output=True, text=True, check=False)
 
     def repo_add(self, name: str, url: str) -> subprocess.CompletedProcess:
