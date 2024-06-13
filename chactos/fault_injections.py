@@ -75,6 +75,7 @@ class ExperimentDriver:
         crd = process_crd(
             apiclient,
             kubectl_client,
+            crd_name=self._operator_config.crd_name,
         )
 
         crs = load_inputs_from_dir("inputs")
