@@ -2,7 +2,7 @@ import logging
 import os
 import subprocess
 import time
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import kubernetes
 import yaml
@@ -22,7 +22,7 @@ class Kind(base.KubernetesEngine):
         posthooks: List[base.KubernetesEnginePostHookType] = None,
         feature_gates: Dict[str, bool] = None,
         num_nodes=1,
-        version="",
+        version: Optional[str] = None,
     ):
         self._config_path = os.path.join(
             CONST.CLUSTER_CONFIG_FOLDER, f"KIND-{acto_namespace}.yaml"
@@ -108,7 +108,8 @@ class Kind(base.KubernetesEngine):
 
         cmd.extend(["--config", self._config_path])
 
-        cmd.extend(["--image", f"kindest/node:{self._k8s_version}"])
+        if self._k8s_version:
+            cmd.extend(["--image", f"kindest/node:{self._k8s_version}"])
 
         p = subprocess.run(cmd, check=False)
         i = 0

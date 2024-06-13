@@ -7,7 +7,6 @@ import time
 
 import kubernetes
 import yaml
-from failures.network_chaos import OperatorApplicationPartitionFailure
 
 from acto import constant
 from acto.common import kubernetes_client
@@ -20,6 +19,7 @@ from acto.lib.operator_config import OperatorConfig
 from acto.system_state.kubernetes_system_state import KubernetesSystemState
 from acto.utils import acto_timer
 from acto.utils.preprocess import process_crd
+from chactos.failures.network_chaos import OperatorApplicationPartitionFailure
 
 
 def load_inputs_from_dir(dir_: str) -> list[object]:
