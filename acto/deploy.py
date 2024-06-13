@@ -1,50 +1,36 @@
+import logging
 import time
 
-import kubernetes
 import yaml
 
 import acto.utils as utils
-from acto.common import *
+from acto.common import kubernetes_client, print_event
 from acto.kubectl_client.kubectl import KubectlClient
 from acto.lib.operator_config import DELEGATED_NAMESPACE, DeployConfig
 from acto.utils import get_thread_logger
 from acto.utils.preprocess import add_acto_label
 
 
-def wait_for_pod_ready(apiclient: kubernetes.client.ApiClient):
-    logger = get_thread_logger(with_prefix=True)
-    logger.debug("Waiting for all pods to be ready")
-    time.sleep(5)
-    pod_ready = False
-    for tick in range(600):
-        # check if all pods are ready
-        pods = (
-            kubernetes.client.CoreV1Api(apiclient)
-            .list_pod_for_all_namespaces()
-            .items
+def wait_for_pod_ready(kubectl_client: KubectlClient) -> bool:
+    """Wait for all pods to be ready"""
+    now = time.time()
+    p = kubectl_client.wait_for_all_pods(timeout=600)
+    if p.returncode != 0:
+        logging.error(
+            "Failed to wait for all pods to be ready due to error from kubectl"
+            + f" (returncode={p.returncode})"
+            + f" (stdout={p.stdout})"
+            + f" (stderr={p.stderr})"
         )
-
-        all_pods_ready = True
-        for pod in pods:
-            if pod.status.phase == "Succeeded":
-                continue
-            if not utils.is_pod_ready(pod):
-                all_pods_ready = False
-
-        if all_pods_ready:
-            logger.info("Operator ready")
-            pod_ready = True
-            break
-        time.sleep(5)
-    logger.info("All pods took %d seconds to get ready" % (tick * 5))
-    if not pod_ready:
-        logger.error("Some pods failed to be ready within timeout")
         return False
-    else:
-        return True
+    logging.info(
+        "Waited for all pods to be ready for %d seconds", time.time() - now
+    )
+    return True
 
 
 class Deploy:
+    """Deploy the operator using the deploy config"""
 
     def __init__(self, deploy_config: DeployConfig) -> None:
         self._deploy_config = deploy_config
@@ -55,7 +41,7 @@ class Deploy:
                 self._operator_yaml = step.apply.file
                 break
         else:
-            raise Exception("No operator yaml found in deploy config")
+            raise RuntimeError("No operator yaml found in deploy config")
 
         # Extract the operator_container_name from config
         self._operator_container_name = None
@@ -68,6 +54,7 @@ class Deploy:
 
     @property
     def operator_yaml(self) -> str:
+        """Get the operator yaml file path"""
         return self._operator_yaml
 
     def deploy(
@@ -77,6 +64,7 @@ class Deploy:
         kubectl_client: KubectlClient,
         namespace: str,
     ):
+        """Deploy the operator using the deploy config"""
         logger = get_thread_logger(with_prefix=True)
         print_event("Deploying operator...")
         api_client = kubernetes_client(kubeconfig, context_name)
@@ -138,8 +126,9 @@ class Deploy:
         namespace: str,
         retry_count: int = 3,
     ):
+        """Deploy the operator with retry"""
         logger = get_thread_logger(with_prefix=True)
-        for i in range(retry_count):
+        for _ in range(retry_count):
             if self.deploy(kubeconfig, context_name, kubectl_client, namespace):
                 return True
             else:
@@ -147,7 +136,8 @@ class Deploy:
         return False
 
     def operator_name(self) -> str:
-        with open(self._operator_yaml) as f:
+        """Get the name of the operator deployment"""
+        with open(self._operator_yaml, "r", encoding="utf-8") as f:
             operator_yamls = yaml.load_all(f, Loader=yaml.FullLoader)
             for yaml_ in operator_yamls:
                 if yaml_["kind"] == "Deployment":
@@ -156,4 +146,5 @@ class Deploy:
 
     @property
     def operator_container_name(self) -> str:
+        """Get the name of the operator container"""
         return self._operator_container_name

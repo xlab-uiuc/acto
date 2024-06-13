@@ -1,5 +1,6 @@
 import logging
 import subprocess
+from typing import Optional
 
 
 class KubectlClient:
@@ -65,4 +66,22 @@ class KubectlClient:
             "--timeout",
             str(timeout),
         ]
+        return self.kubectl(cmd, capture_output=True, text=True)
+
+    def wait_for_all_pods(
+        self, timeout: int = 600, namespace: Optional[str] = None
+    ) -> subprocess.CompletedProcess:
+        """Waits for all pods to be ready"""
+        cmd = [
+            "wait",
+            "--for=condition=Ready",
+            "--timeout",
+            str(timeout),
+            "pods",
+            "--all",
+        ]
+        if namespace:
+            cmd.extend(["-n", namespace])
+        else:
+            cmd.extend(["--all-namespaces"])
         return self.kubectl(cmd, capture_output=True, text=True)
