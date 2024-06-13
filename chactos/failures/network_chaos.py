@@ -32,6 +32,7 @@ class OperatorApplicationPartitionFailure:
             failure_file,
             'jsonpath={.status.conditions[?(@.type=="AllInjected")].status}=True',
             timeout=600,
+            namespace="chaos-mesh",
         )
         if p.returncode != 0:
             raise RuntimeError(
