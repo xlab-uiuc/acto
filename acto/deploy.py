@@ -109,7 +109,7 @@ class Deploy:
 
         # Add acto label to the operator pod
         add_acto_label(api_client, namespace)
-        if not wait_for_pod_ready(api_client):
+        if not wait_for_pod_ready(kubectl_client):
             logger.error("Failed to deploy operator")
             return False
 
