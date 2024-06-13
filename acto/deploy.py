@@ -98,7 +98,7 @@ class Deploy:
                         + f" (stderr={p.stderr})"
                     )
                     return False
-                elif not wait_for_pod_ready(api_client):
+                elif not wait_for_pod_ready(kubectl_client):
                     logger.error(
                         "Failed to deploy operator due to timeout waiting for pod to be ready"
                     )
