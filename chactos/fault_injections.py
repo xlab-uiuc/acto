@@ -118,7 +118,7 @@ class ExperimentDriver:
             cr = crs.pop(0)
             self.apply_cr(cr, kubectl_client)
             converged = wait_for_converge(
-                apiclient, constant.CONST.ACTO_NAMESPACE
+                apiclient, constant.CONST.ACTO_NAMESPACE, hard_timeout=120
             )
 
             failure.cleanup(kubectl_client)
