@@ -4,8 +4,9 @@ from chactos.failures.failure import Failure
 class ApplicationFileFailure(Failure):
     """Simulate a file failure in the application"""
 
-    def __init__(self, app_selector: dict):
+    def __init__(self, app_selector: dict, data_dir: str):
         self.app_selector = app_selector
+        self.data_dir = data_dir
 
         super().__init__()
 
@@ -23,7 +24,7 @@ class ApplicationFileFailure(Failure):
                 "action": "fault",
                 "mode": "all",
                 "selector": self.app_selector,
-                "volumePath": "/data/db",
+                "volumePath": self.data_dir,
                 "errno": 5,
                 "duration": "600s",
             },
@@ -33,8 +34,9 @@ class ApplicationFileFailure(Failure):
 class ApplicationFileDelay(Failure):
     """Simulate a file delay in the application"""
 
-    def __init__(self, app_selector: dict):
+    def __init__(self, app_selector: dict, data_dir: str):
         self.app_selector = app_selector
+        self.data_dir = data_dir
 
         super().__init__()
 
@@ -52,7 +54,7 @@ class ApplicationFileDelay(Failure):
                 "action": "latency",
                 "mode": "all",
                 "selector": self.app_selector,
-                "volumePath": "/data/db",
+                "volumePath": self.data_dir,
                 "delay": "2s",
                 "duration": "600s",
             },

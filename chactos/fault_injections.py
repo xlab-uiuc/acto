@@ -54,6 +54,7 @@ class ExperimentDriver:
         failures.append(
             ApplicationFileFailure(
                 app_selector=app_selector,
+                data_dir=self._operator_config.application_data_dir,
             )
         )
         failures.append(
@@ -65,6 +66,7 @@ class ExperimentDriver:
         failures.append(
             ApplicationFileDelay(
                 app_selector=app_selector,
+                data_dir=self._operator_config.application_data_dir,
             )
         )
         for failure in failures:
