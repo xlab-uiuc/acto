@@ -9,5 +9,5 @@ class FaultInjectionConfig(pydantic.BaseModel, extra="forbid"):
     deploy: DeployConfig
     application_selector: dict
     operator_selector: dict
-    pod_prefix: str
+    application_pod_prefix: str
     input_dir: str
