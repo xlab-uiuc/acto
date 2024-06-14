@@ -39,7 +39,7 @@ class Kind(base.KubernetesEngine):
         extra_mounts.append(
             {"hostPath": "profile/data", "containerPath": "/tmp/profile"}
         )
-        for _ in range(num_nodes - 1):
+        for _ in range(num_nodes):
             config_dict["nodes"].append(
                 {
                     "role": "worker",
