@@ -1,0 +1,20 @@
+{
+    "deploy": {
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/percona-server-mongodb-operator/v1.16.0/bundle.yaml",
+                    "operator": true
+                }
+            }
+        ]
+    },
+    "application_selector": {
+        "labelSelectors": {"app.kubernetes.io/name": "percona-server-mongodb"}
+    },
+    "operator_selector": {
+        "labelSelectors": {"name": "percona-server-mongodb-operator"}
+    },
+    "application_pod_prefix": "test-cluster-rs0-",
+    "input_dir": "data/percona-server-mongodb-operator/v1.16.0/inputs"
+}

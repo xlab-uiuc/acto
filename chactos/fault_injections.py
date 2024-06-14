@@ -15,11 +15,11 @@ from acto.kubectl_client.helm import Helm
 from acto.kubectl_client.kubectl import KubectlClient
 from acto.kubernetes_engine.base import KubernetesEngine
 from acto.kubernetes_engine.kind import Kind
-from acto.lib.operator_config import OperatorConfig
 from acto.system_state.kubernetes_system_state import KubernetesSystemState
 from acto.utils import acto_timer
-from acto.utils.preprocess import process_crd
 from chactos.failures.file_chaos import ApplicationFileFailure
+from chactos.failures.network_chaos import OperatorApplicationPartitionFailure
+from chactos.fault_injection_config import FaultInjectionConfig
 
 
 def load_inputs_from_dir(dir_: str) -> list[object]:
@@ -37,7 +37,7 @@ def load_inputs_from_dir(dir_: str) -> list[object]:
 class ExperimentDriver:
     """Driver class for running fault injection experiments."""
 
-    def __init__(self, operator_config: OperatorConfig, worker_id: int):
+    def __init__(self, operator_config: FaultInjectionConfig, worker_id: int):
         self._worker_id = worker_id
         self._operator_config = operator_config
 
@@ -80,13 +80,7 @@ class ExperimentDriver:
             namespace=constant.CONST.ACTO_NAMESPACE,
         )
 
-        crd = process_crd(
-            apiclient,
-            kubectl_client,
-            crd_name=self._operator_config.crd_name,
-        )
-
-        crs = load_inputs_from_dir("data/zookeeper-operator/inputs")
+        crs = load_inputs_from_dir(self._operator_config.input_dir)
 
         cr = crs.pop(0)
         self.apply_cr(cr, kubectl_client)
@@ -96,44 +90,49 @@ class ExperimentDriver:
             logging.error("Failed to converge")
             return
 
-        while crs:
-            # failure = OperatorApplicationPartitionFailure(
-            #     operator_selector={
-            #         "namespaces": [constant.CONST.ACTO_NAMESPACE],
-            #         "labelSelectors": {"name": "zookeeper-operator"},
-            #     },
-            #     app_selector={
-            #         "namespaces": [constant.CONST.ACTO_NAMESPACE],
-            #         "labelSelectors": {"app": "test-cluster"},
-            #     },
-            # )
-            failure = ApplicationFileFailure(
-                app_selector={
-                    "namespaces": [constant.CONST.ACTO_NAMESPACE],
-                    "labelSelectors": {"app": "test-cluster"},
-                },
-            )
-            failure.apply(kubectl_client)
+        operator_selector = self._operator_config.operator_selector
+        operator_selector["namespaces"] = [constant.CONST.ACTO_NAMESPACE]
+        app_selector = self._operator_config.app_selector
+        app_selector["namespaces"] = [constant.CONST.ACTO_NAMESPACE]
 
-            cr = crs.pop(0)
-            self.apply_cr(cr, kubectl_client)
-            converged = wait_for_converge(
-                apiclient, constant.CONST.ACTO_NAMESPACE, hard_timeout=120
+        failures = []
+        failures.append(
+            ApplicationFileFailure(
+                app_selector=app_selector,
             )
+        )
+        failures.append(
+            OperatorApplicationPartitionFailure(
+                operator_selector=operator_selector,
+                app_selector=app_selector,
+            )
+        )
 
-            failure.cleanup(kubectl_client)
-            converged = wait_for_converge(
-                apiclient, constant.CONST.ACTO_NAMESPACE
-            )
+        for failure in failures:
+            logging.info("Applying failure %s", failure.name())
+            while crs:
+                failure.apply(kubectl_client)
 
-            # oracle
-            system_state = KubernetesSystemState.from_api_client(
-                api_client=apiclient, namespace=constant.CONST.ACTO_NAMESPACE
-            )
-            health = system_state.check_health()
-            if not health.is_healthy():
-                logging.error("System is not healthy %s", health)
-                return
+                cr = crs.pop(0)
+                self.apply_cr(cr, kubectl_client)
+                converged = wait_for_converge(
+                    apiclient, constant.CONST.ACTO_NAMESPACE, hard_timeout=120
+                )
+
+                failure.cleanup(kubectl_client)
+                converged = wait_for_converge(
+                    apiclient, constant.CONST.ACTO_NAMESPACE
+                )
+
+                # oracle
+                system_state = KubernetesSystemState.from_api_client(
+                    api_client=apiclient,
+                    namespace=constant.CONST.ACTO_NAMESPACE,
+                )
+                health = system_state.check_health()
+                if not health.is_healthy():
+                    logging.error("System is not healthy %s", health)
+                    return
 
     def apply_cr(
         self,

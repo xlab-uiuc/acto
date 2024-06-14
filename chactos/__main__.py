@@ -1,8 +1,29 @@
+import argparse
 import json
 import logging
+from datetime import datetime
 
-from acto.lib.operator_config import OperatorConfig
+from chactos.fault_injection_config import FaultInjectionConfig
 from chactos.fault_injections import ExperimentDriver
+
+parser = argparse.ArgumentParser(
+    description="Automatic, Continuous Testing for k8s/openshift Operators"
+)
+parser.add_argument(
+    "--workdir",
+    dest="workdir_path",
+    type=str,
+    default=f"testrun-{datetime.now().strftime('%Y-%m-%d-%H-%M')}",
+    help="Working directory",
+)
+parser.add_argument(
+    "--config",
+    "-c",
+    dest="config",
+    help="Operator fault injection config path",
+    required=True,
+)
+args = parser.parse_args()
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -11,12 +32,10 @@ logging.basicConfig(
 logging.getLogger("kubernetes").setLevel(logging.ERROR)
 logging.getLogger("sh").setLevel(logging.ERROR)
 
-with open(
-    "data/zookeeper-operator/v0.2.15/config.json", "r", encoding="utf-8"
-) as config_file:
+with open(args.config, "r", encoding="utf-8") as config_file:
     config = json.load(config_file)
 
 driver = ExperimentDriver(
-    operator_config=OperatorConfig.model_validate(config), worker_id=0
+    operator_config=FaultInjectionConfig.model_validate(config), worker_id=0
 )
 driver.run()

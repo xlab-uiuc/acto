@@ -1,0 +1,20 @@
+{
+    "deploy": {
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/zookeeper-operator/v0.2.15/operator.yaml",
+                    "operator": true
+                }
+            }
+        ]
+    },
+    "application_selector": {
+        "labelSelectors": {"app": "test-cluster"}
+    },
+    "operator_selector": {
+        "labelSelectors": {"name": "zookeeper-operator"}
+    },
+    "application_pod_prefix": "test-cluster-",
+    "input_dir": "data/zookeeper-operator/inputs"
+}
