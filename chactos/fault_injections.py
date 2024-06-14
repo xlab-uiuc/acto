@@ -94,7 +94,7 @@ class ExperimentDriver:
 
         operator_selector = self._operator_config.operator_selector
         operator_selector["namespaces"] = [constant.CONST.ACTO_NAMESPACE]
-        app_selector = self._operator_config.app_selector
+        app_selector = self._operator_config.application_selector
         app_selector["namespaces"] = [constant.CONST.ACTO_NAMESPACE]
 
         failures = []
@@ -118,7 +118,7 @@ class ExperimentDriver:
                 cr = crs.pop(0)
                 self.apply_cr(cr, kubectl_client)
                 converged = wait_for_converge(
-                    apiclient, constant.CONST.ACTO_NAMESPACE, hard_timeout=120
+                    apiclient, constant.CONST.ACTO_NAMESPACE, hard_timeout=180
                 )
 
                 failure.cleanup(kubectl_client)
