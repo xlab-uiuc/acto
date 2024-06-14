@@ -28,4 +28,6 @@ class FaultInjectionConfig(pydantic.BaseModel, extra="forbid"):
     application_pod_prefix: str
     application_data_dir: str
     input_dir: str
-    kubernetes: KubernetesConfig
+    kubernetes: Optional[KubernetesConfig] = pydantic.Field(
+        description="Kubernetes Config", default=KubernetesConfig()
+    )
