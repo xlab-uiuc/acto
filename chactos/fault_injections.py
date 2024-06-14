@@ -17,7 +17,10 @@ from acto.kubernetes_engine.base import KubernetesEngine
 from acto.kubernetes_engine.kind import Kind
 from acto.system_state.kubernetes_system_state import KubernetesSystemState
 from acto.utils import acto_timer
-from chactos.failures.file_chaos import ApplicationFileFailure
+from chactos.failures.file_chaos import (
+    ApplicationFileDelay,
+    ApplicationFileFailure,
+)
 from chactos.failures.network_chaos import OperatorApplicationPartitionFailure
 from chactos.fault_injection_config import FaultInjectionConfig
 
@@ -43,60 +46,10 @@ class ExperimentDriver:
 
     def run(self):
         """Run the experiment."""
-        k8s_cluster_engine: KubernetesEngine = Kind(
-            0, num_nodes=self._operator_config.kubernetes.num_nodes
-        )
-        cluster_name = f"acto-cluster-{self._worker_id}"
-        kubecontext = k8s_cluster_engine.get_context_name(cluster_name)
-        kubeconfig = os.path.join(os.path.expanduser("~"), ".kube", kubecontext)
-        k8s_cluster_engine.restart_cluster(cluster_name, kubeconfig)
-        apiclient = kubernetes_client(kubeconfig, kubecontext)
-        kubectl_client = KubectlClient(kubeconfig, kubecontext)
-
-        # Deploy dependencies and operator
-        helm_client = Helm(kubeconfig, kubecontext)
-        p = helm_client.install(
-            release_name="chaos-mesh",
-            chart="chaos-mesh",
-            namespace="chaos-mesh",
-            repo="https://charts.chaos-mesh.org",
-            args=[
-                "--set",
-                "chaosDaemon.runtime=containerd",
-                "--set",
-                "chaosDaemon.socketPath=/run/containerd/containerd.sock",
-                "--version",
-                "2.6.3",
-            ],
-        )
-        if p.returncode != 0:
-            raise RuntimeError("Failed to install chaos-mesh", p.stderr)
-
-        deployer = Deploy(self._operator_config.deploy)
-        deployer.deploy(
-            kubeconfig,
-            kubecontext,
-            kubectl_client=KubectlClient(
-                kubeconfig=kubeconfig, context_name=kubecontext
-            ),
-            namespace=constant.CONST.ACTO_NAMESPACE,
-        )
-
-        crs = load_inputs_from_dir(self._operator_config.input_dir)
-
-        cr = crs.pop(0)
-        self.apply_cr(cr, kubectl_client)
-        converged = wait_for_converge(apiclient, constant.CONST.ACTO_NAMESPACE)
-
-        if not converged:
-            logging.error("Failed to converge")
-            return
-
         operator_selector = self._operator_config.operator_selector
         operator_selector["namespaces"] = [constant.CONST.ACTO_NAMESPACE]
         app_selector = self._operator_config.application_selector
         app_selector["namespaces"] = [constant.CONST.ACTO_NAMESPACE]
-
         failures = []
         failures.append(
             ApplicationFileFailure(
@@ -109,9 +62,66 @@ class ExperimentDriver:
                 app_selector=app_selector,
             )
         )
-
+        failures.append(
+            ApplicationFileDelay(
+                app_selector=app_selector,
+            )
+        )
         for failure in failures:
             logging.info("Applying failure %s", failure.name())
+            k8s_cluster_engine: KubernetesEngine = Kind(
+                0, num_nodes=self._operator_config.kubernetes.num_nodes
+            )
+            cluster_name = f"acto-cluster-{self._worker_id}"
+            kubecontext = k8s_cluster_engine.get_context_name(cluster_name)
+            kubeconfig = os.path.join(
+                os.path.expanduser("~"), ".kube", kubecontext
+            )
+            k8s_cluster_engine.restart_cluster(cluster_name, kubeconfig)
+            apiclient = kubernetes_client(kubeconfig, kubecontext)
+            kubectl_client = KubectlClient(kubeconfig, kubecontext)
+
+            # Deploy dependencies and operator
+            helm_client = Helm(kubeconfig, kubecontext)
+            p = helm_client.install(
+                release_name="chaos-mesh",
+                chart="chaos-mesh",
+                namespace="chaos-mesh",
+                repo="https://charts.chaos-mesh.org",
+                args=[
+                    "--set",
+                    "chaosDaemon.runtime=containerd",
+                    "--set",
+                    "chaosDaemon.socketPath=/run/containerd/containerd.sock",
+                    "--version",
+                    "2.6.3",
+                ],
+            )
+            if p.returncode != 0:
+                raise RuntimeError("Failed to install chaos-mesh", p.stderr)
+
+            deployer = Deploy(self._operator_config.deploy)
+            deployer.deploy(
+                kubeconfig,
+                kubecontext,
+                kubectl_client=KubectlClient(
+                    kubeconfig=kubeconfig, context_name=kubecontext
+                ),
+                namespace=constant.CONST.ACTO_NAMESPACE,
+            )
+
+            crs = load_inputs_from_dir(self._operator_config.input_dir)
+
+            cr = crs.pop(0)
+            self.apply_cr(cr, kubectl_client)
+            converged = wait_for_converge(
+                apiclient, constant.CONST.ACTO_NAMESPACE
+            )
+
+            if not converged:
+                logging.error("Failed to converge")
+                return
+
             while crs:
                 failure.apply(kubectl_client)
 

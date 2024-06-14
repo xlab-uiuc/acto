@@ -28,3 +28,32 @@ class ApplicationFileFailure(Failure):
                 "duration": "600s",
             },
         }
+
+
+class ApplicationFileDelay(Failure):
+    """Simulate a file delay in the application"""
+
+    def __init__(self, app_selector: dict):
+        self.app_selector = app_selector
+
+        super().__init__()
+
+    def name(self) -> str:
+        return "application-file-delay"
+
+    def to_dict(self) -> dict:
+        return {
+            "apiVersion": "chaos-mesh.org/v1alpha1",
+            "kind": "IOChaos",
+            "metadata": {
+                "name": "application-file-delay",
+            },
+            "spec": {
+                "action": "latency",
+                "mode": "all",
+                "selector": self.app_selector,
+                "volumePath": "/data/db",
+                "delay": "2s",
+                "duration": "600s",
+            },
+        }
