@@ -44,7 +44,7 @@ class ExperimentDriver:
     def run(self):
         """Run the experiment."""
         k8s_cluster_engine: KubernetesEngine = Kind(
-            0, num_nodes=self._operator_config.num_nodes
+            0, num_nodes=self._operator_config.kubernetes.num_nodes
         )
         cluster_name = f"acto-cluster-{self._worker_id}"
         kubecontext = k8s_cluster_engine.get_context_name(cluster_name)
