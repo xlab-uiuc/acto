@@ -1,0 +1,20 @@
+{
+    "deploy": {
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/rabbitmq-operator/v2.9.0/operator.yaml",
+                    "operator": true
+                }
+            }
+        ]
+    },
+    "application_selector": {
+        "labelSelectors": {"app.kubernetes.io/name": "test-cluster"}
+    },
+    "operator_selector": {
+        "labelSelectors": {"app.kubernetes.io/name": "rabbitmq-cluster-operator"}
+    },
+    "application_pod_prefix": "test-cluster-server-",
+    "input_dir": "data/zookeeper-operator/inputs"
+}
