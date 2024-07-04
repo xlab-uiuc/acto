@@ -139,10 +139,6 @@ func FindSeedValues(prog *ssa.Program, seedType *string, pkgPath *string) []ssa.
 		if strings.Contains(f.Name(), "DeepCopy") {
 			continue
 		}
-		if f.String() == "github.com/rabbitmq/cluster-operator/internal/resource.updateProperty" {
-			// seedVariables = append(seedVariables, getSeedVariablesFromFunction(f, seed.Type())...)
-			f.WriteTo(log.Writer())
-		}
 		seedVariables = append(seedVariables, getSeedVariablesFromFunction(f, seed.Type())...)
 	}
 

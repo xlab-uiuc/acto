@@ -13,8 +13,8 @@ import (
 
 	analysis "github.com/xlab-uiuc/acto/ssa/passes"
 	"github.com/xlab-uiuc/acto/ssa/util"
+	"golang.org/x/tools/go/callgraph/cha"
 	"golang.org/x/tools/go/packages"
-	"golang.org/x/tools/go/pointer"
 	"golang.org/x/tools/go/ssa"
 	"golang.org/x/tools/go/ssa/ssautil"
 )
@@ -48,7 +48,7 @@ func analyze(projectPath string, seedType string, seedPkgPath string) string {
 	}
 
 	// Create SSA packages for well-typed packages and their dependencies.
-	prog, _ := ssautil.AllPackages(initial, 0)
+	prog, _ := ssautil.AllPackages(initial, ssa.PrintFunctions)
 
 	// Build SSA code for the whole program.
 	prog.Build()
@@ -75,17 +75,8 @@ func analyze(projectPath string, seedType string, seedPkgPath string) string {
 	log.Println("Running initial pass...")
 	log.Printf("Root Module is %s\n", context.RootModule.Path)
 
-	log.Println("Constructing call graph using pointer analysis")
-	pointerCfg := pointer.Config{
-		Mains:          context.MainPackages,
-		BuildCallGraph: true,
-	}
-	log.Printf("Main packages %s\n", context.MainPackages)
-	result, err := pointer.Analyze(&pointerCfg)
-	if err != nil {
-		log.Fatalf("Failed to run pointer analysis to construct callgraph %V\n", err)
-	}
-	context.CallGraph = result.CallGraph
+	log.Println("Constructing call graph using CHA")
+	context.CallGraph = cha.CallGraph(context.Program)
 	log.Println("Finished constructing call graph")
 
 	valueFieldSetMap, frontierSet := analysis.GetValueToFieldMappingPass(context, prog, &seedType, &seedPkgPath)
@@ -106,43 +97,43 @@ func analyze(projectPath string, seedType string, seedPkgPath string) string {
 	for _, field := range mergedFieldSet.Fields() {
 		analysisResult.UsedPaths = append(analysisResult.UsedPaths, field.Path)
 	}
-	taintedFieldSet := analysis.TaintAnalysisPass(context, prog, frontierSet, valueFieldSetMap)
-	for _, field := range taintedFieldSet.Fields() {
-		analysisResult.TaintedPaths = append(analysisResult.TaintedPaths, field.Path)
-	}
+	// taintedFieldSet := analysis.TaintAnalysisPass(context, prog, frontierSet, valueFieldSetMap)
+	// for _, field := range taintedFieldSet.Fields() {
+	// 	analysisResult.TaintedPaths = append(analysisResult.TaintedPaths, field.Path)
+	// }
 
-	analysis.GetDefaultValue(context, frontierSet, valueFieldSetMap)
-	for value, constant := range context.DefaultValueMap {
-		for _, field := range context.ValueFieldMap[value].Fields() {
-			analysisResult.DefaultValues[field.String()] = constant.Value.ExactString()
-		}
-	}
+	// analysis.GetDefaultValue(context, frontierSet, valueFieldSetMap)
+	// for value, constant := range context.DefaultValueMap {
+	// 	for _, field := range context.ValueFieldMap[value].Fields() {
+	// 		analysisResult.DefaultValues[field.String()] = constant.Value.ExactString()
+	// 	}
+	// }
 
-	analysis.Dominators(context, frontierSet)
-	log.Printf("%s\n", context.String())
+	// analysis.Dominators(context, frontierSet)
+	// log.Printf("%s\n", context.String())
 
-	for field, conditionSet := range context.DomineeToConditions {
-		var path []string
-		json.Unmarshal([]byte(field), &path)
+	// for field, conditionSet := range context.DomineeToConditions {
+	// 	var path []string
+	// 	json.Unmarshal([]byte(field), &path)
 
-		analysisResult.FieldConditions = append(analysisResult.FieldConditions, conditionSet.ToPlainConditionSet(path))
+	// 	analysisResult.FieldConditions = append(analysisResult.FieldConditions, conditionSet.ToPlainConditionSet(path))
 
-	}
+	// }
 
-	copiedOverFieldSet := analysis.GetCopyOverFields(context)
+	// copiedOverFieldSet := analysis.GetCopyOverFields(context)
 
-	for _, field := range copiedOverFieldSet.Fields() {
-		analysisResult.CopiedOverPaths = append(analysisResult.CopiedOverPaths, field.Path)
-		log.Printf("Copied over path %s", field.Path)
-	}
+	// for _, field := range copiedOverFieldSet.Fields() {
+	// 	analysisResult.CopiedOverPaths = append(analysisResult.CopiedOverPaths, field.Path)
+	// 	log.Printf("Copied over path %s", field.Path)
+	// }
 
 	// analysis.FindUsesInConditions(context, frontierSet)
-	analysis.FindAllUses(context)
+	// analysis.FindAllUses(context)
 
-	analysis.GetFieldToK8sMapping(context, context.Program, &seedType, &seedPkgPath)
-	for field, mapping := range context.FieldToK8sMapping {
-		analysisResult.FieldToK8sMapping[field.EncodedPath()] = mapping
-	}
+	// analysis.GetFieldToK8sMapping(context, context.Program, &seedType, &seedPkgPath)
+	// for field, mapping := range context.FieldToK8sMapping {
+	// 	analysisResult.FieldToK8sMapping[field.EncodedPath()] = mapping
+	// }
 
 	marshalled, _ := json.MarshalIndent(analysisResult, "", "\t")
 	return string(marshalled[:])
@@ -191,7 +182,13 @@ func main() {
 
 	log.Printf("Building ssa program for project %s\n", *projectPath)
 
-	analyze(*projectPath, *seedType, *seedPkgPath)
+	result := analyze(*projectPath, *seedType, *seedPkgPath)
+	resultFile, err := os.Create("result.json")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed to create file for result: %v", err)
+		return
+	}
+	resultFile.WriteString(result)
 }
 
 type AnalysisResult struct {
