@@ -15,4 +15,8 @@ KUBERNETES_TYPE_MAPPING: list[CustomKubernetesMapping] = [
         ],
         kubernetes_schema_name="io.k8s.api.core.v1.Volume",
     ),
+    CustomKubernetesMapping(
+        schema_path=["spec", "zookeeperRef", "provided", "volumes", "ITEM"],
+        kubernetes_schema_name="io.k8s.api.core.v1.Volume",
+    ),
 ]
