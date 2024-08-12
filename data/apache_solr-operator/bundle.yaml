@@ -1,0 +1,608 @@
+---
+# Source: solr-operator/charts/zookeeper-operator/templates/service_account.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: zookeeper-operator
+  namespace: acto-namespace
+  labels:
+    app.kubernetes.io/name: zookeeper-operator
+    app.kubernetes.io/version: "0.2.15"
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: "zookeeper-operator-0.2.15"
+---
+# Source: solr-operator/templates/service_account.yaml
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: solr-operator
+  namespace: acto-namespace
+---
+# Source: solr-operator/charts/zookeeper-operator/templates/clusterrole.yaml
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: solr-operator-zookeeper-operator
+  labels:
+    app.kubernetes.io/name: zookeeper-operator
+    app.kubernetes.io/version: "0.2.15"
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: "zookeeper-operator-0.2.15"
+rules:
+- apiGroups:
+  - zookeeper.pravega.io
+  resources:
+  - "*"
+  verbs:
+  - "*"
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  - pods
+  - services
+  - endpoints
+  - persistentvolumeclaims
+  - events
+  - configmaps
+  - secrets
+  - serviceaccounts
+  verbs:
+  - "*"
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  - daemonsets
+  - replicasets
+  - statefulsets
+  verbs:
+  - "*"
+- apiGroups:
+  - policy
+  resources:
+  - poddisruptionbudgets
+  verbs:
+  - "*"
+---
+# Source: solr-operator/templates/role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: solr-operator-role
+  namespace: 
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - configmaps/status
+  verbs:
+  - get
+- apiGroups:
+  - ""
+  resources:
+  - persistentvolumeclaims
+  verbs:
+  - delete
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - delete
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - pods/exec
+  verbs:
+  - create
+- apiGroups:
+  - ""
+  resources:
+  - pods/status
+  verbs:
+  - get
+  - patch
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - services/status
+  verbs:
+  - get
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - deployments/status
+  verbs:
+  - get
+- apiGroups:
+  - apps
+  resources:
+  - statefulsets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - statefulsets/status
+  verbs:
+  - get
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - ingresses
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - ingresses/status
+  verbs:
+  - get
+- apiGroups:
+  - policy
+  resources:
+  - poddisruptionbudgets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - solr.apache.org
+  resources:
+  - solrbackups
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - solr.apache.org
+  resources:
+  - solrbackups/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - solr.apache.org
+  resources:
+  - solrbackups/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - solr.apache.org
+  resources:
+  - solrclouds
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - solr.apache.org
+  resources:
+  - solrclouds/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - solr.apache.org
+  resources:
+  - solrclouds/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - solr.apache.org
+  resources:
+  - solrprometheusexporters
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - solr.apache.org
+  resources:
+  - solrprometheusexporters/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - solr.apache.org
+  resources:
+  - solrprometheusexporters/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - zookeeper.pravega.io
+  resources:
+  - zookeeperclusters
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - zookeeper.pravega.io
+  resources:
+  - zookeeperclusters/status
+  verbs:
+  - get
+---
+# Source: solr-operator/charts/zookeeper-operator/templates/clusterrolebinding.yaml
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: solr-operator-zookeeper-operator
+  labels:
+    app.kubernetes.io/name: zookeeper-operator
+    app.kubernetes.io/version: "0.2.15"
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: "zookeeper-operator-0.2.15"
+subjects:
+- kind: ServiceAccount
+  name: zookeeper-operator
+  namespace: acto-namespace
+roleRef:
+  kind: ClusterRole
+  name: solr-operator-zookeeper-operator
+  apiGroup: rbac.authorization.k8s.io
+---
+# Source: solr-operator/templates/role_binding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: solr-operator-rolebinding
+  namespace: 
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: solr-operator-role
+subjects:
+  - kind: ServiceAccount
+    name: solr-operator
+    namespace: acto-namespace
+---
+# Source: solr-operator/charts/zookeeper-operator/templates/role.yaml
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: solr-operator-zookeeper-operator
+  namespace: acto-namespace
+  labels:
+    app.kubernetes.io/name: zookeeper-operator
+    app.kubernetes.io/version: "0.2.15"
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: "zookeeper-operator-0.2.15"
+rules:
+- apiGroups:
+  - zookeeper.pravega.io
+  resources:
+  - "*"
+  verbs:
+  - "*"
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - services
+  - endpoints
+  - persistentvolumeclaims
+  - events
+  - configmaps
+  - secrets
+  verbs:
+  - "*"
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  - daemonsets
+  - replicasets
+  - statefulsets
+  verbs:
+  - "*"
+- apiGroups:
+  - policy
+  resources:
+  - poddisruptionbudgets
+  verbs:
+  - "*"
+---
+# Source: solr-operator/templates/leader_election_role.yaml
+# permissions to do leader election.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: solr-operator-leader-election-role
+  namespace: acto-namespace
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+---
+# Source: solr-operator/charts/zookeeper-operator/templates/rolebinding.yaml
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: solr-operator-zookeeper-operator
+  namespace: acto-namespace
+  labels:
+    app.kubernetes.io/name: zookeeper-operator
+    app.kubernetes.io/version: "0.2.15"
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: "zookeeper-operator-0.2.15"
+subjects:
+- kind: ServiceAccount
+  name: zookeeper-operator
+roleRef:
+  kind: Role
+  name: solr-operator-zookeeper-operator
+  apiGroup: rbac.authorization.k8s.io
+---
+# Source: solr-operator/templates/leader_election_role_binding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: solr-operator-leader-election-rolebinding
+  namespace: acto-namespace
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: solr-operator-leader-election-role
+subjects:
+  - kind: ServiceAccount
+    name: solr-operator
+    namespace: acto-namespace
+---
+# Source: solr-operator/charts/zookeeper-operator/templates/operator.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: solr-operator-zookeeper-operator
+  namespace: acto-namespace
+  labels:
+    app.kubernetes.io/name: zookeeper-operator
+    app.kubernetes.io/version: "0.2.15"
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: "zookeeper-operator-0.2.15"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: solr-operator-zookeeper-operator
+  template:
+    metadata:
+      labels:
+        name: solr-operator-zookeeper-operator
+        component: zookeeper-operator
+    spec:
+      serviceAccountName: zookeeper-operator
+      containers:
+      - name: solr-operator-zookeeper-operator
+        image: "pravega/zookeeper-operator:0.2.15"
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 6000
+          name: metrics
+        command:
+        - zookeeper-operator
+        env:
+        - name: WATCH_NAMESPACE
+          value: ""
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: OPERATOR_NAME
+          value: solr-operator-zookeeper-operator
+---
+# Source: solr-operator/templates/deployment.yaml
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+---
+# Source: solr-operator/templates/leader_election_role.yaml
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+---
+# Source: solr-operator/templates/leader_election_role_binding.yaml
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+---
+# Source: solr-operator/templates/role.yaml
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+---
+# Source: solr-operator/templates/role_binding.yaml
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+

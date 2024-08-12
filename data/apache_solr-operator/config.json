@@ -1,0 +1,25 @@
+{
+    "deploy": {
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/apache_solr-operator/crd.yaml"
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/apache_solr-operator/bundle.yaml"
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/apache_solr-operator/operator.yaml",
+                    "operator": true
+                }
+            }
+        ]
+    },
+    "crd_name": "solrclouds.solr.apache.org",
+    "kubernetes_version": "v1.29.0",
+    "seed_custom_resource": "data/apache_solr-operator/cr.yaml"
+}
