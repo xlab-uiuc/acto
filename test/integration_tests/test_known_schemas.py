@@ -25,6 +25,7 @@ class TestSchema(unittest.TestCase):
         cls.schema_matcher_1_20 = K8sSchemaMatcher.from_version("v1.20.0")
         cls.schema_matcher_1_21 = K8sSchemaMatcher.from_version("v1.21.0")
         cls.schema_matcher_1_23 = K8sSchemaMatcher.from_version("v1.23.0")
+        cls.schema_matcher_1_28 = K8sSchemaMatcher.from_version("v1.28.0")
 
     def assert_exists(
         self,
@@ -309,6 +310,20 @@ class TestSchema(unittest.TestCase):
         self.assert_exists("capabilities", "v1.Capabilities", matches)
         self.assert_exists("seLinuxOptions", "v1.SELinuxOptions", matches)
         self.assert_exists("seccompProfile", "v1.SeccompProfile", matches)
+
+    def test_solr_crd(self):
+        with open(
+            os.path.join(test_data_dir, "solr_cloud_crd.yaml"),
+            "r",
+            encoding="utf-8",
+        ) as operator_yaml:
+            crd = yaml.load(operator_yaml, Loader=yaml.FullLoader)
+
+        spec_schema = extract_schema(
+            [], crd["spec"]["versions"][0]["schema"]["openAPIV3Schema"]
+        )
+        matches = self.schema_matcher_1_28.find_all_matched_schemas(spec_schema)
+        self.assert_exists("affinity", "v1.Affinity", matches)
 
     @unittest.skip("Need approaximate matching for the RabbitMQ's StatefulSet")
     def test_statefulset_match(self):
