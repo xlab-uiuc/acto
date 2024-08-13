@@ -7,6 +7,8 @@ from acto.utils import get_thread_logger
 
 
 class HealthChecker(CheckerInterface):
+    """System health oracle"""
+
     def check(
         self, _: int, snapshot: Snapshot, __: Snapshot
     ) -> Optional[OracleResult]:
@@ -32,12 +34,10 @@ class HealthChecker(CheckerInterface):
                 continue
             if sfs["spec"]["replicas"] != sfs["status"]["ready_replicas"]:
                 unhealthy_resources["statefulset"].append(
-                    "%s replicas [%s] ready_replicas [%s]"
-                    % (
-                        sfs["metadata"]["name"],
-                        sfs["status"]["replicas"],
-                        sfs["status"]["ready_replicas"],
-                    )
+                    f'{sfs["metadata"]["name"]} '
+                    f'spec.replicas [{sfs["spec"]["replicas"]}] '
+                    f'replicas [{sfs["status"]["replicas"]}] '
+                    f'ready_replicas [{sfs["status"]["ready_replicas"]}]'
                 )
 
         # check Health of Deployments
@@ -47,12 +47,10 @@ class HealthChecker(CheckerInterface):
 
             if dp["spec"]["replicas"] != dp["status"]["ready_replicas"]:
                 unhealthy_resources["deployment"].append(
-                    "%s replicas [%s] ready_replicas [%s]"
-                    % (
-                        dp["metadata"]["name"],
-                        dp["status"]["replicas"],
-                        dp["status"]["ready_replicas"],
-                    )
+                    f'{dp["metadata"]["name"]} '
+                    f'spec.replicas [{dp["spec"]["replicas"]}] '
+                    f'replicas [{dp["status"]["replicas"]}] '
+                    f'ready_replicas [{dp["status"]["ready_replicas"]}]'
                 )
 
             for condition in dp["status"]["conditions"]:
@@ -61,26 +59,20 @@ class HealthChecker(CheckerInterface):
                     and condition["status"] != "True"
                 ):
                     unhealthy_resources["deployment"].append(
-                        "%s condition [%s] status [%s] message [%s]"
-                        % (
-                            dp["metadata"]["name"],
-                            condition["type"],
-                            condition["status"],
-                            condition["message"],
-                        )
+                        f'{dp["metadata"]["name"]} '
+                        f'condition [{condition["type"]}] '
+                        f'status [{condition["status"]}] '
+                        f'message [{condition["message"]}]'
                     )
                 elif (
                     condition["type"] == "Progressing"
                     and condition["status"] != "True"
                 ):
                     unhealthy_resources["deployment"].append(
-                        "%s condition [%s] status [%s] message [%s]"
-                        % (
-                            dp["metadata"]["name"],
-                            condition["type"],
-                            condition["status"],
-                            condition["message"],
-                        )
+                        f'{dp["metadata"]["name"]} '
+                        f'condition [{condition["type"]}] '
+                        f'status [{condition["status"]}] '
+                        f'message [{condition["message"]}]'
                     )
 
         for daemonset in system_state["daemon_set"].values():
@@ -91,12 +83,9 @@ class HealthChecker(CheckerInterface):
                 != daemonset["status"]["number_available"]
             ):
                 unhealthy_resources["daemon_set"].append(
-                    "%s desired_number_scheduled [%s] number_ready [%s]"
-                    % (
-                        daemonset["metadata"]["name"],
-                        daemonset["status"]["desired_number_scheduled"],
-                        daemonset["status"]["number_ready"],
-                    )
+                    f'{daemonset["metadata"]["name"]} '
+                    f'desired_number_scheduled [{daemonset["status"]["desired_number_scheduled"]}] '
+                    f'number_ready [{daemonset["status"]["number_ready"]}]'
                 )
 
         # check Health of Pods
@@ -117,12 +106,9 @@ class HealthChecker(CheckerInterface):
                     for container in pod["status"]["container_statuses"]:
                         if container["restart_count"] > 0:
                             unhealthy_resources["pod"].append(
-                                "%s container [%s] restart_count [%s]"
-                                % (
-                                    pod["metadata"]["name"],
-                                    container["name"],
-                                    container["restart_count"],
-                                )
+                                f'{pod["metadata"]["name"]} '
+                                f'container [{container["name"]}] '
+                                f'restart_count [{container["restart_count"]}]'
                             )
 
         # check Health of CRs
@@ -139,13 +125,9 @@ class HealthChecker(CheckerInterface):
                     and "is forbidden" in condition["message"].lower()
                 ):
                     unhealthy_resources["cr"].append(
-                        "%s condition [%s] status [%s] message [%s]"
-                        % (
-                            "CR status unhealthy",
-                            condition["type"],
-                            condition["status"],
-                            condition["message"],
-                        )
+                        f'CR status unhealthy condition [{condition["type"]}] '
+                        f'status [{condition["status"]}] '
+                        f'message [{condition["message"]}]'
                     )
 
         error_msgs = []
