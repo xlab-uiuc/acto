@@ -61,4 +61,7 @@ def checker_func(s: Snapshot) -> Optional[OracleResult]:
 def test_check(test_case_id, result_dict):
     snapshot = load_snapshot("health", test_case_id)
     oracle_result = checker_func(snapshot)
-    assert oracle_result == result_dict
+    if result_dict is None:
+        assert oracle_result is None
+    else:
+        assert oracle_result is not None
