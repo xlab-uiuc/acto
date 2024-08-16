@@ -52,7 +52,7 @@ make
 
 To reproduce the bug, run the following command:
 ```sh
-python3 -m acto.reproduce --reproduce-dir test/cassop-330/trial-demo --config data/cass-operator/config.json
+python3 -m acto.reproduce --reproduce-dir test/e2e_tests/test_data/cassop-330/trial-demo --config data/cass-operator/config.json
 ```
 The files in the `test/cassop-330/trial-demo` directory are the sequence of CRs required to trigger
   this bug.
