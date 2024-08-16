@@ -812,6 +812,7 @@ class Acto:
 
         self.runner_type = Runner
         self.checker_type = CheckerSet
+        self.tool = os.getenv("IMAGE_TOOL", "docker")
 
         self.__learn(
             context_file=context_file,
@@ -1049,12 +1050,12 @@ class Acto:
             # first make sure images are present locally
             for image in self.context["preload_images"]:
                 subprocess.run(
-                    ["docker", "pull", image],
+                    [self.tool, "pull", image],
                     stdout=subprocess.DEVNULL,
                     check=True,
                 )
             subprocess.run(
-                ["docker", "image", "save", "-o", self.images_archive]
+                [self.tool, "image", "save", "-o", self.images_archive]
                 + list(self.context["preload_images"]),
                 stdout=subprocess.DEVNULL,
                 check=True,
