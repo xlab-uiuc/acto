@@ -1,0 +1,52 @@
+{
+    "deploy": {
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/cass-operator/v1.22/cert-manager.yaml",
+                    "namespace": null
+                }
+            },
+            {
+                "wait": {
+                    "duration": 10
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/cass-operator/v1.22/bundle.yaml",
+                    "operator": true
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/cass-operator/v1.22/secret.yaml"
+                }
+            }
+        ]
+    },
+    "crd_name": "cassandradatacenters.cassandra.datastax.com",
+    "kubernetes_version": "v1.28.0",
+    "seed_custom_resource": "data/cass-operator/v1.22/cr.yaml",
+    "example_dir": "data/cass-operator/v1.22/examples",
+    "diff_ignore_fields": [
+        "\\[\\'secret\\'\\]\\[\\'cluster1\\-superuser\\'\\]\\[\\'data\\'\\]\\[\\'password\\'\\]",
+        "\\[\\'secret\\'\\]\\[\\'test\\-cluster\\-ca\\-keystore\\'\\]\\[\\'data\\'\\]\\[\\'cert\\'\\]",
+        "\\[\\'secret\\'\\]\\[\\'test\\-cluster\\-ca\\-keystore\\'\\]\\[\\'data\\'\\]\\[\\'key\\'\\]",
+        "\\[\\'secret\\'\\]\\[\\'test\\-cluster\\-keystore\\'\\]\\[\\'data\\'\\]\\[\\'node\\-keystore\\.jks\\'\\]",
+        "\\[\\'secret\\'\\]\\[\\'webhook\\-server\\-cert\\'\\]\\[\\'data\\'\\]\\[\\'ca\\.crt\\'\\]",
+        "\\[\\'secret\\'\\]\\[\\'webhook\\-server\\-cert\\'\\]\\[\\'data\\'\\]\\[\\'tls\\.crt\\'\\]",
+        "\\[\\'secret\\'\\]\\[\\'webhook\\-server\\-cert\\'\\]\\[\\'data\\'\\]\\[\\'tls\\.key\\'\\]",
+        "\\['secret'\\]\\['cass\\-operator\\-controller\\-manager\\-token\\-.*'\\]",
+        "\\['secret'\\]\\['default\\-token\\-.*'\\]",
+        "\\['service_account'\\]\\['cass\\-operator\\-controller\\-manager'\\]\\['secrets'\\]\\[.*\\]\\['name'\\]",
+        "\\['service_account'\\]\\['default'\\]\\['secrets'\\]\\[.*\\]\\['name'\\]",
+        "\\['stateful_set'\\]\\['cluster1\\-test\\-cluster\\-default\\-sts'\\]\\['spec'\\]\\['update_strategy'\\]\\['rolling_update'\\]\\['max_unavailable'\\]",
+        "\\['stateful_set'\\]\\['cluster1\\-test\\-cluster\\-default\\-sts'\\]\\['spec'\\]\\['persistent_volume_claim_retention_policy'\\]",
+        "\\['cassandra\\.datastax\\.com/resource\\-hash'\\]"
+    ],
+    "focus_fields": [
+        ["spec", "racks"],
+        ["spec", "users"]
+    ]
+}
