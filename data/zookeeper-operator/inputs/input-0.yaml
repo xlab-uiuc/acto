@@ -1,0 +1,18 @@
+apiVersion: zookeeper.pravega.io/v1beta1
+kind: ZookeeperCluster
+metadata:
+  name: test-cluster
+spec:
+  replicas: 3
+  image:
+    pullPolicy: IfNotPresent
+    repository: pravega/zookeeper
+    tag: 0.2.14
+  storageType: persistence
+  persistence:
+    reclaimPolicy: Delete
+    spec:
+      storageClassName: "standard"
+      resources:
+        requests:
+          storage: 20Gi
