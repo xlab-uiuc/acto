@@ -1,0 +1,22 @@
+{
+    "deploy": {
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/strimzi-kafka-operator/v0.41.0/operator.yaml",
+                    "operator": true
+                }
+            }
+        ]
+    },
+    "application_selector": {
+        "labelSelectors": {"strimzi.io/cluster": "test-cluster",
+                           "strimzi.io/component-type": "zookeeper"}
+    },
+    "operator_selector": {
+        "labelSelectors": {"name": "strimzi-cluster-operator"}
+    },
+    "application_pod_prefix": "test-cluster-zookeeper-",
+    "application_data_dir": "/var/lib/zookeeper",
+    "input_dir": "data/strimzi-kafka-operator/v0.41.0/zk-inputs"
+}
