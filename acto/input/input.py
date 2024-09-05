@@ -67,7 +67,6 @@ class InputModel(abc.ABC):
     @abc.abstractmethod
     def generate_test_plan(
         self,
-        delta_from: Optional[str] = None,
         focus_fields: Optional[list] = None,
     ) -> dict:
         """Generate test plan based on CRD"""
@@ -281,7 +280,6 @@ class DeterministicInputModel(InputModel):
 
     def generate_test_plan(
         self,
-        delta_from: Optional[str] = None,
         focus_fields: Optional[list] = None,
     ) -> dict:
         """Generate test plan based on CRD"""

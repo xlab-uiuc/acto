@@ -751,7 +751,6 @@ class Acto:
         workdir_path: str,
         operator_config: OperatorConfig,
         cluster_runtime: str,
-        preload_images_: Optional[list],
         context_file: str,
         helper_crd: Optional[str],
         num_workers: int,
@@ -761,7 +760,6 @@ class Acto:
         is_reproduce: bool,
         input_model: type[DeterministicInputModel],
         apply_testcase_f: Callable,
-        delta_from: Optional[str] = None,
         mount: Optional[list] = None,
         focus_fields: Optional[list] = None,
         acto_namespace: int = 0,
@@ -820,10 +818,6 @@ class Acto:
             analysis_only=analysis_only,
         )
 
-        # Add additional preload images from arguments
-        if preload_images_ is not None:
-            self.context["preload_images"].update(preload_images_)
-
         self.input_model: DeterministicInputModel = input_model(
             crd=self.context["crd"]["body"],
             seed_input=self.seed,
@@ -835,7 +829,7 @@ class Acto:
             custom_module_path=operator_config.custom_module,
         )
 
-        self.sequence_base = 20 if delta_from else 0
+        self.sequence_base = 0
 
         if operator_config.custom_oracle is not None:
             module = importlib.import_module(operator_config.custom_oracle)
@@ -846,11 +840,8 @@ class Acto:
             self.custom_on_init = None
 
         # Generate test cases
-        testplan_path = None
-        if delta_from is not None:
-            testplan_path = os.path.join(delta_from, "test_plan.json")
         self.test_plan = self.input_model.generate_test_plan(
-            testplan_path, focus_fields=focus_fields
+            focus_fields=focus_fields
         )
         with open(
             os.path.join(self.workdir_path, "test_plan.json"),
@@ -949,7 +940,7 @@ class Acto:
             )
             if not deployed:
                 raise RuntimeError(
-                    f"Failed to deploy operator due to max retry exceed"
+                    "Failed to deploy operator due to max retry exceed"
                 )
 
             apiclient = kubernetes_client(learn_kubeconfig, learn_context_name)
@@ -1037,9 +1028,7 @@ class Acto:
                     sort_keys=True,
                 )
 
-    def run(
-        self, modes: list = ["normal", "overspecified", "copiedover"]
-    ) -> list[OracleResults]:
+    def run(self) -> list[OracleResults]:
         """Run the test cases"""
         logger = get_thread_logger(with_prefix=True)
 
@@ -1087,62 +1076,18 @@ class Acto:
             )
             runners.append(runner)
 
-        if "normal" in modes:
-            threads = []
-            for runner in runners:
-                t = threading.Thread(
-                    target=runner.run, args=[errors, InputModel.NORMAL]
-                )
-                t.start()
-                threads.append(t)
+        threads = []
+        for runner in runners:
+            t = threading.Thread(
+                target=runner.run, args=[errors, InputModel.NORMAL]
+            )
+            t.start()
+            threads.append(t)
 
-            for t in threads:
-                t.join()
+        for t in threads:
+            t.join()
 
         normal_time = time.time()
-
-        if "overspecified" in modes:
-            threads = []
-            for runner in runners:
-                t = threading.Thread(
-                    target=runner.run, args=([errors, InputModel.OVERSPECIFIED])
-                )
-                t.start()
-                threads.append(t)
-
-            for t in threads:
-                t.join()
-
-        overspecified_time = time.time()
-
-        if "copiedover" in modes:
-            threads = []
-            for runner in runners:
-                t = threading.Thread(
-                    target=runner.run, args=([errors, InputModel.COPIED_OVER])
-                )
-                t.start()
-                threads.append(t)
-
-            for t in threads:
-                t.join()
-
-        additional_semantic_time = time.time()
-
-        if InputModel.ADDITIONAL_SEMANTIC in modes:
-            threads = []
-            for runner in runners:
-                t = threading.Thread(
-                    target=runner.run,
-                    args=([errors, InputModel.ADDITIONAL_SEMANTIC]),
-                )
-                t.start()
-                threads.append(t)
-
-            for t in threads:
-                t.join()
-
-        end_time = time.time()
 
         num_total_failed = 0
         for runner in runners:
@@ -1151,10 +1096,6 @@ class Acto:
 
         testrun_info = {
             "normal_duration": normal_time - start_time,
-            "overspecified_duration": overspecified_time - normal_time,
-            "copied_over_duration": additional_semantic_time
-            - overspecified_time,
-            "additional_semantic_duration": end_time - additional_semantic_time,
             "num_workers": self.num_workers,
             "num_total_testcases": self.input_model.metadata,
             "num_total_failed": num_total_failed,
