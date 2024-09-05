@@ -1,4 +1,5 @@
 """ReplicaSet state model."""
+
 import kubernetes
 import kubernetes.client.models as kubernetes_models
 import pydantic
@@ -38,7 +39,12 @@ class ReplicaSetState(KubernetesNamespacedDictObject):
             ):
                 return False, f"ReplicaSet[{name}] generation mismatch"
 
-            if replica_set.spec.replicas != replica_set.status.ready_replicas:
+            if (
+                replica_set.status.ready_replicas is None
+                and replica_set.spec.replicas == 0
+            ):
+                pass
+            elif replica_set.spec.replicas != replica_set.status.ready_replicas:
                 return False, f"ReplicaSet[{name}] replicas mismatch"
 
             if replica_set.status.conditions is not None:
