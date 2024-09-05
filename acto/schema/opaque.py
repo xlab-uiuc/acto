@@ -17,8 +17,8 @@ class OpaqueSchema(BaseSchema):
     def to_tree(self) -> TreeNode:
         return TreeNode(self.path)
 
-    def load_examples(self, example):
-        pass
+    def load_examples(self, example: object):
+        self.examples.append(example)
 
     def set_default(self, instance):
         self.default = instance

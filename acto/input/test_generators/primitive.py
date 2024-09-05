@@ -142,7 +142,7 @@ def array_tests(schema: ArraySchema):
         return []
 
     def empty_setup(prev):
-        return prev
+        return schema.gen(size=1)
 
     def delete(prev):
         return schema.empty_value()
@@ -579,6 +579,7 @@ def object_tests(schema: ObjectSchema):
 
     DELETION_TEST = "object-deletion"
     EMPTY_TEST = "object-empty"
+    CHANGE_TEST = "object-change"
 
     def empty_precondition(prev):
         return prev != {}
@@ -587,7 +588,7 @@ def object_tests(schema: ObjectSchema):
         return {}
 
     def empty_setup(prev):
-        return prev
+        return schema.gen(exclude_value=schema.default)
 
     def delete(prev):
         return schema.empty_value()
@@ -617,6 +618,12 @@ def object_tests(schema: ObjectSchema):
         else:
             return schema.gen(exclude_value=schema.default)
 
+    def change_precondition(prev):
+        return prev is not None
+
+    def change(prev):
+        return prev
+
     ret = [
         TestCase(
             DELETION_TEST,
@@ -643,9 +650,36 @@ def object_tests(schema: ObjectSchema):
 
 
 @test_generator(property_type="Opaque", priority=Priority.PRIMITIVE)
-def opaque_gen(schema: OpaqueSchema):
-    """Opaque schema to handle the fields that do not have a schema"""
-    return []
+def opaque_tests(schema: OpaqueSchema):
+    """Opaque schema to handle the fields that do not have a schema
+
+    It only generates testcases if there are examples provided
+    """
+    DELETION_TEST = "opaque-deletion"
+    CHANGE_TEST = "opaque-change"
+    ret = []
+    if schema.examples is not None and len(schema.examples) > 0:
+        ret.append(
+            TestCase(
+                DELETION_TEST,
+                lambda prev: prev is not None,
+                lambda prev: None,
+                lambda prev: schema.examples[0],
+                primitive=True,
+            )
+        )
+
+        if len(schema.examples) > 1:
+            ret.append(
+                TestCase(
+                    CHANGE_TEST,
+                    lambda prev: prev is not None,
+                    lambda prev: schema.examples[1],
+                    lambda prev: schema.examples[0],
+                    primitive=True,
+                )
+            )
+    return ret
 
 
 @test_generator(property_type="String", priority=Priority.PRIMITIVE)
@@ -669,9 +703,11 @@ def string_tests(schema: StringSchema):
         """Test case to change the value to another one"""
         logger = get_thread_logger(with_prefix=True)
         if schema.enum is not None:
-            logger.fatal(
+            logger.critical(
                 "String field with enum should not call change to mutate"
             )
+        if schema.examples is not None and len(schema.examples) > 0:
+            return schema.gen(exclude_value=prev)
         if schema.pattern is not None:
             new_string = exrex.getone(schema.pattern, schema.max_length)
         else:
@@ -701,7 +737,7 @@ def string_tests(schema: StringSchema):
         return ""
 
     def empty_setup(prev):
-        return prev
+        return schema.gen(exclude_value=schema.default)
 
     def delete(prev):
         return schema.empty_value()

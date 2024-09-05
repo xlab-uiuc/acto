@@ -173,6 +173,16 @@ class ObjectSchema(BaseSchema):
             else:
                 return random.choice(self.enum)
 
+        if self.examples:
+            if exclude_value is not None:
+                example_without_exclude = [
+                    x for x in self.examples if x != exclude_value
+                ]
+                if example_without_exclude:
+                    return random.choice(example_without_exclude)
+            else:
+                return random.choice(self.examples)
+
         # XXX: need to handle exclude_value, but not important for now for object types
         result = {}
         if len(self.properties) == 0:
