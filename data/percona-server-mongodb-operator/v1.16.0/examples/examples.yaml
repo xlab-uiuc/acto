@@ -1,0 +1,4736 @@
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: some-name
+spec:
+  backup:
+    enabled: true
+    image: perconalab/percona-server-mongodb-operator:1.1.0-backup
+    storages:
+      aws-s3:
+        s3:
+          bucket: operator-testing
+          prefix: psmdb-demand-backup-eks-credentials
+          region: us-east-1
+        type: s3
+    tasks:
+    - compressionType: gzip
+      enabled: true
+      name: weekly
+      schedule: 0 0 * * 0
+      storageName: aws-s3
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: node-port
+spec:
+  backup:
+    enabled: true
+    image: perconalab/percona-server-mongodb-operator:main-backup
+  image: null
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "security:\n  enableEncryption: true\n"
+    expose:
+      enabled: true
+      exposeType: NodePort
+    name: rs0
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: cluster-ip
+spec:
+  backup:
+    enabled: true
+    image: perconalab/percona-server-mongodb-operator:main-backup
+  image: null
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "security:\n  enableEncryption: true\n"
+    expose:
+      enabled: true
+      exposeType: ClusterIP
+    name: rs0
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: local-balancer
+spec:
+  backup:
+    enabled: true
+    image: perconalab/percona-server-mongodb-operator:main-backup
+  image: null
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "security:\n  enableEncryption: true\n"
+    expose:
+      enabled: true
+      exposeType: LoadBalancer
+    name: rs0
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: sec-context
+spec:
+  allowUnsafeConfigurations: false
+  image: null
+  imagePullPolicy: Always
+  initContainerSecurityContext:
+    privileged: false
+    runAsUser: 1001
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    annotations:
+      openshift.io/scc: privileged
+    configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    containerSecurityContext:
+      privileged: true
+    name: rs0
+    podSecurityContext:
+      fsGroup: 1001
+      supplementalGroups:
+      - 1001
+      - 1002
+      - 1003
+    resources:
+      limits:
+        cpu: 500m
+        memory: 0.5G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    serviceAccountName: percona-server-mongodb-operator-workload
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: sec-context
+spec:
+  allowUnsafeConfigurations: false
+  backup:
+    containerSecurityContext:
+      privileged: false
+      runAsNonRoot: true
+      runAsUser: 1001
+    enabled: true
+    image: perconalab/percona-server-mongodb-operator:1.2.0-backup
+    podSecurityContext:
+      fsGroup: 1001
+      supplementalGroups:
+      - 1001
+      - 1002
+      - 1003
+    storages:
+      minio:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: minio-secret
+          endpointUrl: http://minio-service:9000/
+          insecureSkipTLSVerify: false
+          region: us-east-1
+        type: s3
+    tasks:
+    - compressionType: gzip
+      enabled: true
+      name: each-hour
+      schedule: 0 */1 * * *
+      storageName: minio
+  image: null
+  imagePullPolicy: Always
+  initContainerSecurityContext:
+    privileged: false
+    runAsUser: 2002
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    annotations:
+      openshift.io/scc: privileged
+    configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    containerSecurityContext:
+      privileged: false
+    name: rs0
+    podSecurityContext:
+      fsGroup: 1001
+      supplementalGroups:
+      - 1001
+      - 1003
+    resources:
+      limits:
+        cpu: 500m
+        memory: 0.5G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    serviceAccountName: percona-server-mongodb-operator-workload
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: some-name
+spec:
+  backup:
+    enabled: false
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    expose:
+      enabled: false
+      exposeType: ClusterIP
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+  sharding:
+    configsvrReplSet:
+      expose:
+        enabled: false
+      size: 3
+      volumeSpec:
+        persistentVolumeClaim:
+          resources:
+            requests:
+              storage: 3Gi
+    enabled: true
+    mongos:
+      size: 3
+  updateStrategy: SmartUpdate
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: some-name
+spec:
+  backup:
+    enabled: false
+    image: perconalab/percona-server-mongodb-operator:1.1.0-backup
+    storages:
+      minio:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: minio-secret
+          endpointUrl: http://minio-service:9000/
+          insecureSkipTLSVerify: false
+          region: us-east-1
+        type: s3
+    tasks:
+    - compressionType: gzip
+      enabled: false
+      name: weekly
+      schedule: 0 0 * * 0
+      storageName: minio
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+  sharding:
+    configsvrReplSet:
+      affinity:
+        antiAffinityTopologyKey: none
+      size: 3
+      volumeSpec:
+        persistentVolumeClaim:
+          resources:
+            requests:
+              storage: 3Gi
+    enabled: true
+    mongos:
+      affinity:
+        antiAffinityTopologyKey: none
+      expose:
+        exposeType: ClusterIP
+      size: 3
+  upgradeOptions:
+    apply: disabled
+    schedule: '* * * * *'
+    setFCV: false
+    versionServiceEndpoint: http://version-service:11000
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: some-name
+spec:
+  backup:
+    enabled: true
+    image: perconalab/percona-server-mongodb-operator:1.1.0-backup
+    resources:
+      requests:
+        cpu: 300m
+        memory: 0.5G
+    storages:
+      aws-s3:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: aws-s3-secret
+          insecureSkipTLSVerify: false
+          prefix: psmdb-scheduled-backup
+          region: us-east-1
+        type: s3
+      azure-blob:
+        azure:
+          container: operator-testing
+          credentialsSecret: azure-secret
+          prefix: psmdb-scheduled-backup
+        type: azure
+      gcp-cs:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: gcp-cs-secret
+          endpointUrl: https://storage.googleapis.com
+          insecureSkipTLSVerify: false
+          prefix: psmdb-scheduled-backup
+          region: us-east-1
+        type: s3
+      minio:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: minio-secret
+          endpointUrl: http://minio-service:9000/
+          insecureSkipTLSVerify: false
+          region: us-east-1
+        type: s3
+    tasks:
+    - compressionType: gzip
+      enabled: true
+      name: every-min-minio
+      schedule: '* * * * *'
+      storageName: minio
+      type: physical
+    - compressionType: gzip
+      enabled: true
+      name: weekly
+      schedule: 0 0 * * 0
+      storageName: aws-s3
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: some-name
+spec:
+  backup:
+    enabled: true
+    image: perconalab/percona-server-mongodb-operator:1.1.0-backup
+    resources:
+      requests:
+        cpu: 300m
+        memory: 0.5G
+    storages:
+      aws-s3:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: aws-s3-secret
+          insecureSkipTLSVerify: false
+          prefix: psmdb-scheduled-backup
+          region: us-east-1
+        type: s3
+      azure-blob:
+        azure:
+          container: operator-testing
+          credentialsSecret: azure-secret
+          prefix: psmdb-scheduled-backup
+        type: azure
+      gcp-cs:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: gcp-cs-secret
+          endpointUrl: https://storage.googleapis.com
+          insecureSkipTLSVerify: false
+          prefix: psmdb-scheduled-backup
+          region: us-east-1
+        type: s3
+      minio:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: minio-secret
+          endpointUrl: http://minio-service:9000/
+          insecureSkipTLSVerify: false
+          region: us-east-1
+        type: s3
+    tasks:
+    - compressionType: gzip
+      enabled: true
+      name: every-min-minio
+      schedule: '* * * * *'
+      storageName: minio
+    - compressionType: gzip
+      enabled: true
+      name: every-min-aws-s3
+      schedule: '* * * * *'
+      storageName: aws-s3
+    - compressionType: gzip
+      enabled: true
+      name: every-min-gcp-cs
+      schedule: '* * * * *'
+      storageName: gcp-cs
+    - compressionType: gzip
+      enabled: true
+      name: every-min-azure-blob
+      schedule: '* * * * *'
+      storageName: azure-blob
+    - compressionType: gzip
+      enabled: true
+      name: weekly
+      schedule: 0 0 * * 0
+      storageName: aws-s3
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: some-name
+spec:
+  backup:
+    enabled: true
+    image: perconalab/percona-server-mongodb-operator:1.1.0-backup
+    resources:
+      requests:
+        cpu: 300m
+        memory: 0.5G
+    storages:
+      aws-s3:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: aws-s3-secret
+          insecureSkipTLSVerify: false
+          prefix: psmdb-scheduled-backup
+          region: us-east-1
+        type: s3
+      azure-blob:
+        azure:
+          container: operator-testing
+          credentialsSecret: azure-secret
+          prefix: psmdb-scheduled-backup
+        type: azure
+      gcp-cs:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: gcp-cs-secret
+          endpointUrl: https://storage.googleapis.com
+          insecureSkipTLSVerify: false
+          prefix: psmdb-scheduled-backup
+          region: us-east-1
+        type: s3
+      minio:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: minio-secret
+          endpointUrl: http://minio-service:9000/
+          insecureSkipTLSVerify: false
+          region: us-east-1
+        type: s3
+    tasks:
+    - compressionType: gzip
+      enabled: true
+      name: weekly
+      schedule: 0 0 * * 0
+      storageName: aws-s3
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: some-name
+spec:
+  backup:
+    enabled: false
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    expose:
+      enabled: false
+      exposeType: ClusterIP
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+  sharding:
+    configsvrReplSet:
+      expose:
+        enabled: false
+      size: 3
+      volumeSpec:
+        persistentVolumeClaim:
+          resources:
+            requests:
+              storage: 3Gi
+    enabled: true
+    mongos:
+      size: 3
+  updateStrategy: SmartUpdate
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: one-pod
+spec:
+  backup:
+    enabled: true
+    image: perconalab/percona-server-mongodb-operator:9.9.9-backup
+    storages:
+      minio:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: minio-secret
+          endpointUrl: http://minio-service:9000/
+          insecureSkipTLSVerify: false
+          region: us-east-1
+        type: s3
+  image: null
+  imagePullPolicy: Always
+  pmm:
+    enabled: false
+    image: -pmm
+    serverHost: monitoring-service
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: kubernetes.io/hostname
+    arbiter:
+      affinity:
+        antiAffinityTopologyKey: kubernetes.io/hostname
+      enabled: false
+      size: 1
+    configuration: "systemLog:\n  verbosity: 1\n  quiet: false\nsecurity:\n  redactClientLogData:\
+      \ false\n  enableEncryption: false\nsetParameter:\n  ttlMonitorSleepSecs: 60\n\
+      \  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    engineConfig:\n  \
+      \    directoryForIndexes: false\n      journalCompressor: snappy\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    indexConfig:\n      prefixCompression: true\n\
+      operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n"
+    expose:
+      enabled: false
+      exposeType: LoadBalancer
+      serviceAnnotations:
+        test: one-pod
+      serviceLabels:
+        test: one-pod
+    name: rs0
+    podDisruptionBudget:
+      maxUnavailable: 1
+    resources:
+      limits:
+        cpu: 300m
+        memory: 0.5G
+      requests:
+        cpu: 300m
+        memory: 0.5G
+    size: 1
+    volumeSpec:
+      persistentVolumeClaim:
+        annotations:
+          test: one-pod
+        labels:
+          test: one-pod
+        resources:
+          requests:
+            storage: 3Gi
+  secrets:
+    users: some-users
+  unsafeFlags:
+    replsetSize: true
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: some-name
+spec:
+  backup:
+    enabled: false
+    image: perconalab/percona-server-mongodb-operator:1.1.0-backup
+    runtimeClassName: container-rc
+    storages:
+      aws-s3:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: aws-s3-secret
+          insecureSkipTLSVerify: false
+          prefix: psmdb-demand-backup-sharded
+          region: us-east-1
+        type: s3
+      azure-blob:
+        azure:
+          container: operator-testing
+          credentialsSecret: azure-secret
+          prefix: psmdb-demand-backup-sharded
+        type: azure
+      gcp-cs:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: gcp-cs-secret
+          endpointUrl: https://storage.googleapis.com
+          insecureSkipTLSVerify: false
+          prefix: psmdb-demand-backup-sharded
+          region: us-east-1
+        type: s3
+      minio:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: minio-secret
+          endpointUrl: http://minio-service:9000/
+          insecureSkipTLSVerify: false
+          region: us-east-1
+        type: s3
+    tasks:
+    - compressionType: gzip
+      enabled: true
+      name: weekly
+      schedule: 0 0 * * 0
+      storageName: aws-s3
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "net:\n  port: 27017\noperationProfiling:\n  mode: slowOp\n  slowOpThresholdMs:\
+      \ 100\nsecurity:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    expose:
+      enabled: false
+      exposeType: ClusterIP
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    runtimeClassName: container-rc
+    sidecars:
+    - args:
+      - -c
+      - while true; do echo echo $(date -u) 'test' >> /dev/null; sleep 5;done
+      command:
+      - /bin/sh
+      image: busybox
+      name: rs-sidecar-1
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+  sharding:
+    configsvrReplSet:
+      expose:
+        enabled: false
+        exposeType: ClusterIP
+      runtimeClassName: container-rc
+      sidecars:
+      - args:
+        - -c
+        - while true; do echo echo $(date -u) 'test' >> /dev/null; sleep 5;done
+        command:
+        - /bin/sh
+        image: busybox
+        name: cfg-sidecar-1
+      size: 3
+      volumeSpec:
+        persistentVolumeClaim:
+          resources:
+            requests:
+              storage: 3Gi
+    enabled: true
+    mongos:
+      configuration: "replication:\n  localPingThresholdMs: 15\n"
+      expose:
+        exposeType: ClusterIP
+      runtimeClassName: container-rc
+      sidecars:
+      - args:
+        - -c
+        - while true; do echo echo $(date -u) 'test' >> /dev/null; sleep 5;done
+        command:
+        - /bin/sh
+        image: busybox
+        name: mongos-sidecar-1
+      size: 3
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: some-name
+spec:
+  backup:
+    enabled: false
+    image: perconalab/percona-server-mongodb-operator:0.4.0-backup
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    expose:
+      enabled: true
+      exposeType: ClusterIP
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 0.5G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: some-name
+spec:
+  backup:
+    enabled: false
+    image: perconalab/percona-server-mongodb-operator:main-backup
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    expose:
+      enabled: false
+      exposeType: ClusterIP
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 0.5G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: some-name
+spec:
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    expose:
+      enabled: false
+      exposeType: ClusterIP
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  - affinity:
+      antiAffinityTopologyKey: none
+    expose:
+      enabled: false
+      exposeType: ClusterIP
+    name: rs1
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+  sharding:
+    configsvrReplSet:
+      expose:
+        enabled: false
+        exposeType: ClusterIP
+      size: 3
+      volumeSpec:
+        persistentVolumeClaim:
+          resources:
+            requests:
+              storage: 3Gi
+    enabled: true
+    mongos:
+      expose:
+        exposeType: ClusterIP
+      size: 3
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: some-name
+spec:
+  backup:
+    enabled: false
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - expose:
+      enabled: false
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: some-name-sharded
+spec:
+  backup:
+    enabled: false
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    expose:
+      enabled: false
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+  sharding:
+    configsvrReplSet:
+      expose:
+        enabled: false
+      size: 3
+      volumeSpec:
+        persistentVolumeClaim:
+          resources:
+            requests:
+              storage: 1Gi
+    enabled: true
+    mongos:
+      configuration: "replication:\n  localPingThresholdMs: 15\n"
+      expose:
+        exposeType: ClusterIP
+      size: 3
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: mydb
+spec:
+  clusterServiceDNSMode: Internal
+  image: percona/percona-server-mongodb:6.0.4-3
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    arbiter:
+      affinity:
+        antiAffinityTopologyKey: none
+      enabled: false
+      size: 1
+    expose:
+      enabled: false
+      exposeType: ClusterIp
+    name: rs0
+    nonvoting:
+      affinity:
+        antiAffinityTopologyKey: none
+      enabled: false
+      podDisruptionBudget:
+        maxUnavailable: 1
+      resources:
+        limits:
+          cpu: 300m
+          memory: 1G
+        requests:
+          cpu: 300m
+          memory: 0.5G
+      size: 3
+      volumeSpec:
+        persistentVolumeClaim:
+          resources:
+            requests:
+              storage: 3Gi
+    podDisruptionBudget:
+      maxUnavailable: 1
+    resources:
+      limits:
+        cpu: 300m
+        memory: 0.5G
+      requests:
+        cpu: 300m
+        memory: 0.5G
+    size: 2
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 3Gi
+  secrets:
+    encryptionKey: mydb-encryption-key
+    ssl: mydb-ssl
+    sslInternal: mydb-ssl-internal
+    users: mydb-users
+  sharding:
+    configsvrReplSet:
+      affinity:
+        antiAffinityTopologyKey: none
+      expose:
+        enabled: false
+        exposeType: ClusterIp
+      podDisruptionBudget:
+        maxUnavailable: 1
+      resources:
+        limits:
+          cpu: 300m
+          memory: 0.5G
+        requests:
+          cpu: 300m
+          memory: 0.5G
+      size: 1
+      volumeSpec:
+        persistentVolumeClaim:
+          resources:
+            requests:
+              storage: 3Gi
+    enabled: false
+    mongos:
+      affinity:
+        antiAffinityTopologyKey: none
+      expose:
+        exposeType: ClusterIp
+      podDisruptionBudget:
+        maxUnavailable: 1
+      resources:
+        limits:
+          cpu: 300m
+          memory: 0.5G
+        requests:
+          cpu: 300m
+          memory: 0.5G
+      size: 1
+  unmanaged: true
+  unsafeFlags:
+    mongosSize: true
+    replsetSize: true
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: mydb
+spec:
+  clusterServiceDNSMode: Internal
+  image: percona/percona-server-mongodb:6.0.4-3
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    arbiter:
+      affinity:
+        antiAffinityTopologyKey: none
+      enabled: false
+      size: 1
+    configuration: "operationProfiling:\n  mode: slowOp\n"
+    expose:
+      enabled: false
+      exposeType: ClusterIp
+    externalNodes:
+    - host: mydb-rs0-0.mydb-rs0.external.svc.cluster.local
+      port: 27017
+      priority: 1
+      votes: 1
+    - host: mydb-rs0-1.mydb-rs0.external.svc.cluster.local
+      port: 27017
+      priority: 1
+      votes: 1
+    name: rs0
+    nonvoting:
+      affinity:
+        antiAffinityTopologyKey: none
+      enabled: false
+      podDisruptionBudget:
+        maxUnavailable: 1
+      resources:
+        limits:
+          cpu: 300m
+          memory: 1G
+        requests:
+          cpu: 300m
+          memory: 0.5G
+      size: 3
+      volumeSpec:
+        persistentVolumeClaim:
+          resources:
+            requests:
+              storage: 3Gi
+    podDisruptionBudget:
+      maxUnavailable: 1
+    resources:
+      limits:
+        cpu: 300m
+        memory: 0.5G
+      requests:
+        cpu: 300m
+        memory: 0.5G
+    size: 1
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 3Gi
+  secrets:
+    encryptionKey: mydb-encryption-key
+    ssl: mydb-ssl
+    sslInternal: mydb-ssl-internal
+    users: mydb-users
+  sharding:
+    configsvrReplSet:
+      affinity:
+        antiAffinityTopologyKey: none
+      configuration: "operationProfiling:\n  mode: slowOp\n"
+      expose:
+        enabled: false
+        exposeType: ClusterIp
+      externalNodes:
+      - host: mydb-cfg-0.mydb-cfg.external.svc.cluster.local
+        port: 27017
+        priority: 0
+        votes: 0
+      podDisruptionBudget:
+        maxUnavailable: 1
+      resources:
+        limits:
+          cpu: 300m
+          memory: 0.5G
+        requests:
+          cpu: 300m
+          memory: 0.5G
+      size: 1
+      volumeSpec:
+        persistentVolumeClaim:
+          resources:
+            requests:
+              storage: 3Gi
+    enabled: false
+    mongos:
+      affinity:
+        antiAffinityTopologyKey: none
+      expose:
+        exposeType: ClusterIp
+      podDisruptionBudget:
+        maxUnavailable: 1
+      resources:
+        limits:
+          cpu: 300m
+          memory: 0.5G
+        requests:
+          cpu: 300m
+          memory: 0.5G
+      size: 1
+  unsafeFlags:
+    mongosSize: true
+    replsetSize: true
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: liveness
+spec:
+  allowUnsafeConfigurations: false
+  backup:
+    enabled: true
+    image: perconalab/percona-server-mongodb-operator:1.2.0-backup
+    storages:
+      minio:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: minio-secret
+          endpointUrl: http://minio-service:9000/
+          insecureSkipTLSVerify: false
+          region: us-east-1
+        type: s3
+    tasks:
+    - compressionType: gzip
+      enabled: true
+      name: each-hour
+      schedule: 0 */1 * * *
+      storageName: minio
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    livenessProbe:
+      failureThreshold: 6
+      initialDelaySeconds: 62
+      periodSeconds: 32
+      startupDelaySeconds: 7202
+      successThreshold: 1
+      timeoutSeconds: 7
+    name: rs0
+    readinessProbe:
+      failureThreshold: 10
+      initialDelaySeconds: 12
+      periodSeconds: 5
+      successThreshold: 3
+      tcpSocket:
+        port: 27017
+      timeoutSeconds: 4
+    resources:
+      limits:
+        cpu: 500m
+        memory: 0.5G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: liveness
+spec:
+  allowUnsafeConfigurations: false
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    livenessProbe:
+      failureThreshold: 5
+      initialDelaySeconds: 61
+      periodSeconds: 31
+      startupDelaySeconds: 7201
+      successThreshold: 1
+      timeoutSeconds: 6
+    name: rs0
+    readinessProbe:
+      failureThreshold: 9
+      initialDelaySeconds: 11
+      periodSeconds: 4
+      successThreshold: 2
+      tcpSocket:
+        port: 27017
+      timeoutSeconds: 3
+    resources:
+      limits:
+        cpu: 500m
+        memory: 0.5G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: some-name
+spec:
+  backup:
+    enabled: true
+    image: perconalab/percona-server-mongodb-operator:1.1.0-backup
+    pitr:
+      enabled: true
+      oplogSpanMin: 2
+    runtimeClassName: container-rc
+    storages:
+      minio:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: minio-secret
+          endpointUrl: http://minio-service:9000/
+          insecureSkipTLSVerify: false
+          region: us-east-1
+        type: s3
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    runtimeClassName: container-rc
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    name: rs1
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    name: rs2
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    sidecars:
+    - args:
+      - -c
+      - while true; do echo echo $(date -u) 'test' >> /dev/null; sleep 5;done
+      command:
+      - /bin/sh
+      image: busybox
+      name: rs-sidecar-1
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+  sharding:
+    configsvrReplSet:
+      runtimeClassName: container-rc
+      sidecars:
+      - args:
+        - -c
+        - while true; do echo echo $(date -u) 'test' >> /dev/null; sleep 5;done
+        command:
+        - /bin/sh
+        image: busybox
+        name: cfg-sidecar-1
+      size: 3
+      volumeSpec:
+        persistentVolumeClaim:
+          resources:
+            requests:
+              storage: 3Gi
+    enabled: true
+    mongos:
+      expose:
+        exposeType: ClusterIP
+      runtimeClassName: container-rc
+      sidecars:
+      - args:
+        - -c
+        - while true; do echo echo $(date -u) 'test' >> /dev/null; sleep 5;done
+        command:
+        - /bin/sh
+        image: busybox
+        name: mongos-sidecar-1
+      size: 3
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: some-name
+spec:
+  backup:
+    enabled: true
+    image: perconalab/percona-server-mongodb-operator:1.1.0-backup
+    pitr:
+      enabled: false
+      oplogSpanMin: 2
+    runtimeClassName: container-rc
+    storages:
+      aws-s3:
+        s3:
+          bucket: operator-testing
+          prefix: psmdb-pitr-demand-backup-eks-credentials
+          region: us-east-1
+        type: s3
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    runtimeClassName: container-rc
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    name: rs1
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    name: rs2
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    sidecars:
+    - args:
+      - -c
+      - while true; do echo echo $(date -u) 'test' >> /dev/null; sleep 5;done
+      command:
+      - /bin/sh
+      image: busybox
+      name: rs-sidecar-1
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+  sharding:
+    configsvrReplSet:
+      runtimeClassName: container-rc
+      sidecars:
+      - args:
+        - -c
+        - while true; do echo echo $(date -u) 'test' >> /dev/null; sleep 5;done
+        command:
+        - /bin/sh
+        image: busybox
+        name: cfg-sidecar-1
+      size: 3
+      volumeSpec:
+        persistentVolumeClaim:
+          resources:
+            requests:
+              storage: 3Gi
+    enabled: true
+    mongos:
+      expose:
+        exposeType: ClusterIP
+      runtimeClassName: container-rc
+      sidecars:
+      - args:
+        - -c
+        - while true; do echo echo $(date -u) 'test' >> /dev/null; sleep 5;done
+        command:
+        - /bin/sh
+        image: busybox
+        name: mongos-sidecar-1
+      size: 3
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  finalizers:
+  - percona.com/delete-psmdb-pvc
+  name: version-service-exact
+spec:
+  allowUnsafeConfigurations: false
+  crVersion: 9.9.9
+  image: null
+  imagePullPolicy: Always
+  initImage: null
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 0.5G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+  updateStrategy: SmartUpdate
+  upgradeOptions:
+    apply: 6.0.3-2
+    schedule: 0 2 * * *
+    versionServiceEndpoint: http://version-service:11000
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  finalizers:
+  - percona.com/delete-psmdb-pvc
+  name: version-service-major
+spec:
+  allowUnsafeConfigurations: false
+  crVersion: 9.9.9
+  image: null
+  imagePullPolicy: Always
+  initImage: null
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 0.5G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+  updateStrategy: SmartUpdate
+  upgradeOptions:
+    apply: 5.0-latest
+    schedule: 0 2 * * *
+    versionServiceEndpoint: http://version-service:11000
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  finalizers:
+  - percona.com/delete-psmdb-pvc
+  name: version-service-recommended
+spec:
+  allowUnsafeConfigurations: false
+  crVersion: 9.9.9
+  image: null
+  imagePullPolicy: Always
+  initImage: null
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 0.5G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+  updateStrategy: SmartUpdate
+  upgradeOptions:
+    apply: recommended
+    schedule: 0 2 * * *
+    versionServiceEndpoint: http://version-service:11000
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  finalizers:
+  - percona.com/delete-psmdb-pvc
+  name: version-service-unreachable
+spec:
+  allowUnsafeConfigurations: false
+  crVersion: 9.9.9
+  image: null
+  imagePullPolicy: Always
+  initImage: null
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    livenessProbe:
+      failureThreshold: 3
+    name: rs0
+    readinessProbe:
+      failureThreshold: 5
+    resources:
+      limits:
+        cpu: 500m
+        memory: 0.5G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+  updateStrategy: SmartUpdate
+  upgradeOptions:
+    apply: 4.2.14-15
+    schedule: 0 2 * * *
+    versionServiceEndpoint: https://wrong-check.percona.com
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  finalizers:
+  - percona.com/delete-psmdb-pvc
+  name: version-service-latest
+spec:
+  allowUnsafeConfigurations: false
+  crVersion: 9.9.9
+  image: null
+  imagePullPolicy: Always
+  initImage: null
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 0.5G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+  updateStrategy: SmartUpdate
+  upgradeOptions:
+    apply: latest
+    schedule: 0 2 * * *
+    versionServiceEndpoint: http://version-service:11000
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  finalizers:
+  - percona.com/delete-psmdb-pods-in-order
+  - percona.com/delete-psmdb-pvc
+  name: some-name
+spec:
+  allowUnsafeConfigurations: false
+  backup:
+    enabled: false
+    image: perconalab/percona-server-mongodb-operator:main-backup
+    pitr:
+      enabled: false
+    serviceAccountName: percona-server-mongodb-operator
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: kubernetes.io/hostname
+    expose:
+      enabled: true
+      exposeType: ClusterIP
+    name: rs0
+    podDisruptionBudget:
+      maxUnavailable: 1
+    resources:
+      limits:
+        cpu: 500m
+        memory: 0.5G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+  sharding:
+    configsvrReplSet:
+      affinity:
+        antiAffinityTopologyKey: kubernetes.io/hostname
+      expose:
+        enabled: true
+        exposeType: ClusterIP
+      podDisruptionBudget:
+        maxUnavailable: 1
+      resources:
+        limits:
+          cpu: 300m
+          memory: 0.5G
+        requests:
+          cpu: 300m
+          memory: 0.5G
+      size: 3
+      volumeSpec:
+        persistentVolumeClaim:
+          resources:
+            requests:
+              storage: 3Gi
+    enabled: true
+    mongos:
+      affinity:
+        antiAffinityTopologyKey: kubernetes.io/hostname
+      expose:
+        exposeType: ClusterIP
+        servicePerPod: true
+      podDisruptionBudget:
+        maxUnavailable: 1
+      resources:
+        limits:
+          cpu: 300m
+          memory: 0.5G
+        requests:
+          cpu: 300m
+          memory: 0.5G
+      size: 3
+  updateStrategy: SmartUpdate
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: some-name
+spec:
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  - affinity:
+      antiAffinityTopologyKey: none
+    arbiter:
+      enabled: true
+      size: 1
+    configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    name: rs1
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 4
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    name: rs2
+    nonvoting:
+      affinity:
+        antiAffinityTopologyKey: kubernetes.io/hostname
+      enabled: true
+      resources:
+        limits:
+          cpu: 500m
+          memory: 1G
+        requests:
+          cpu: 100m
+          memory: 0.1G
+      size: 3
+      volumeSpec:
+        persistentVolumeClaim:
+          resources:
+            requests:
+              storage: 2Gi
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+  sharding:
+    configsvrReplSet:
+      affinity:
+        antiAffinityTopologyKey: none
+      size: 3
+      volumeSpec:
+        persistentVolumeClaim:
+          resources:
+            requests:
+              storage: 3Gi
+    enabled: true
+    mongos:
+      affinity:
+        antiAffinityTopologyKey: none
+      expose:
+        exposeType: ClusterIP
+      size: 3
+  tls:
+    mode: requireTLS
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: some-name
+spec:
+  backup:
+    enabled: true
+    image: perconalab/percona-server-mongodb-operator:1.1.0-backup
+    pitr:
+      enabled: true
+      oplogSpanMin: 2
+    storages:
+      minio:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: minio-secret
+          endpointUrl: http://minio-service:9000/
+          insecureSkipTLSVerify: false
+          region: us-east-1
+        type: s3
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    name: rs0
+    resources:
+      limits:
+        memory: 4G
+      requests:
+        memory: 1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    name: rs1
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    name: rs2
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    sidecars:
+    - args:
+      - -c
+      - while true; do echo echo $(date -u) 'test' >> /dev/null; sleep 5;done
+      command:
+      - /bin/sh
+      image: busybox
+      name: rs-sidecar-1
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+  sharding:
+    configsvrReplSet:
+      sidecars:
+      - args:
+        - -c
+        - while true; do echo echo $(date -u) 'test' >> /dev/null; sleep 5;done
+        command:
+        - /bin/sh
+        image: busybox
+        name: cfg-sidecar-1
+      size: 3
+      volumeSpec:
+        persistentVolumeClaim:
+          resources:
+            requests:
+              storage: 3Gi
+    enabled: true
+    mongos:
+      expose:
+        exposeType: ClusterIP
+      sidecars:
+      - args:
+        - -c
+        - while true; do echo echo $(date -u) 'test' >> /dev/null; sleep 5;done
+        command:
+        - /bin/sh
+        image: busybox
+        name: mongos-sidecar-1
+      size: 3
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: no-requests-no-limits
+spec:
+  backup:
+    enabled: false
+    image: perconalab/percona-server-mongodb-operator:0.4.0-backup
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    name: rs0
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    ssl: some-name-ssl
+    users: some-users
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: no-storage
+spec:
+  backup:
+    enabled: false
+    image: perconalab/percona-server-mongodb-operator:0.4.0-backup
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  redactClientLogData: false\nsetParameter:\n  ttlMonitorSleepSecs:\
+      \ 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    name: rs0
+    resources:
+      limits:
+        cpu: 600m
+        memory: 1G
+      requests:
+        cpu: 600m
+        memory: 1G
+    size: 3
+  secrets:
+    ssl: some-name-ssl
+    users: some-users
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: no-requests
+spec:
+  backup:
+    enabled: false
+    image: perconalab/percona-server-mongodb-operator:main-backup
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    name: rs0
+    resources:
+      limits:
+        cpu: 300m
+        memory: 0.5G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    ssl: some-name-ssl
+    users: some-users
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: no-limits
+spec:
+  backup:
+    enabled: false
+    image: perconalab/percona-server-mongodb-operator:0.4.0-backup
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    name: rs0
+    resources:
+      requests:
+        cpu: 300m
+        memory: 0.5G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    ssl: some-name-ssl
+    users: some-users
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: some-name
+spec:
+  backup:
+    enabled: true
+    image: perconalab/percona-server-mongodb-operator:1.1.0-backup
+    storages:
+      aws-s3:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: aws-s3-secret
+          insecureSkipTLSVerify: false
+          prefix: psmdb-demand-backup-physical-sharded
+          region: us-east-1
+        type: s3
+      azure-blob:
+        azure:
+          container: operator-testing
+          credentialsSecret: azure-secret
+          prefix: psmdb-demand-backup-physical-sharded
+        type: azure
+      gcp-cs:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: gcp-cs-secret
+          endpointUrl: https://storage.googleapis.com
+          insecureSkipTLSVerify: false
+          prefix: psmdb-demand-backup-physical-sharded
+          region: us-east-1
+        type: s3
+      minio:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: minio-secret
+          endpointUrl: http://minio-service:9000/
+          insecureSkipTLSVerify: false
+          region: us-east-1
+        type: s3
+    tasks:
+    - compressionType: gzip
+      enabled: true
+      name: weekly
+      schedule: 0 0 * * 0
+      storageName: aws-s3
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    expose:
+      enabled: false
+      exposeType: ClusterIP
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 3Gi
+  secrets:
+    users: some-users
+  sharding:
+    configsvrReplSet:
+      affinity:
+        antiAffinityTopologyKey: none
+      configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+        security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+        \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n\
+        \  wiredTigerConcurrentWriteTransactions: 128\nstorage:\n  engine: wiredTiger\n\
+        \  wiredTiger:\n    collectionConfig:\n      blockCompressor: snappy\n   \
+        \ engineConfig:\n      directoryForIndexes: false\n      journalCompressor:\
+        \ snappy\n    indexConfig:\n      prefixCompression: true\n"
+      expose:
+        enabled: false
+        exposeType: ClusterIP
+      resources:
+        limits:
+          cpu: 500m
+          memory: 1G
+        requests:
+          cpu: 100m
+          memory: 0.1G
+      size: 3
+      volumeSpec:
+        persistentVolumeClaim:
+          resources:
+            requests:
+              storage: 3Gi
+    enabled: true
+    mongos:
+      affinity:
+        antiAffinityTopologyKey: none
+      expose:
+        exposeType: LoadBalancer
+      resources:
+        limits:
+          cpu: 500m
+          memory: 1G
+        requests:
+          cpu: 100m
+          memory: 0.1G
+      size: 3
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: nonvoting
+spec:
+  image: null
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "security:\n  enableEncryption: true\n"
+    name: rs0
+    nonvoting:
+      affinity:
+        advanced:
+          podAntiAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app.kubernetes.io/component: nonVoting
+                  app.kubernetes.io/instance: nonvoting
+                  app.kubernetes.io/managed-by: percona-server-mongodb-operator
+                  app.kubernetes.io/name: percona-server-mongodb
+                  app.kubernetes.io/part-of: percona-server-mongodb
+                  app.kubernetes.io/replset: rs0
+              topologyKey: kubernetes.io/hostname
+        antiAffinityTopologyKey: kubernetes.io/hostname
+      enabled: true
+      livenessProbe:
+        failureThreshold: 3
+        initialDelaySeconds: 70
+        periodSeconds: 31
+        startupDelaySeconds: 7201
+        successThreshold: 1
+        timeoutSeconds: 10
+      resources:
+        limits:
+          cpu: 300m
+          memory: 0.5G
+        requests:
+          cpu: 200m
+          memory: 0.3G
+      size: 3
+      volumeSpec:
+        persistentVolumeClaim:
+          resources:
+            requests:
+              storage: 2Gi
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  schedulerName: default-scheduler
+  secrets:
+    users: some-users
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: some-name
+spec:
+  backup:
+    enabled: true
+    image: perconalab/percona-server-mongodb-operator:1.1.0-backup
+    storages:
+      aws-s3:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: aws-s3-secret
+          insecureSkipTLSVerify: false
+          prefix: psmdb-demand-backup
+          region: us-east-1
+        type: s3
+      azure-blob:
+        azure:
+          container: operator-testing
+          credentialsSecret: azure-secret
+          endpointUrl: https://engk8soperators.blob.core.windows.net
+          prefix: psmdb-demand-backup
+        type: azure
+      gcp-cs:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: gcp-cs-secret
+          endpointUrl: https://storage.googleapis.com
+          insecureSkipTLSVerify: false
+          prefix: psmdb-demand-backup
+          region: us-east-1
+        type: s3
+      minio:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: minio-secret
+          endpointUrl: http://minio-service:9000/
+          insecureSkipTLSVerify: false
+          region: us-east-1
+        type: s3
+    tasks:
+    - compressionType: gzip
+      enabled: true
+      name: weekly
+      schedule: 0 0 * * 0
+      storageName: aws-s3
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    expose:
+      enabled: true
+      exposeType: ClusterIP
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  finalizers:
+  - percona.com/delete-psmdb-pods-in-order
+  - percona.com/delete-psmdb-pvc
+  name: some-name
+spec:
+  allowUnsafeConfigurations: false
+  backup:
+    enabled: false
+    image: perconalab/percona-server-mongodb-operator:main-backup
+    pitr:
+      enabled: false
+    serviceAccountName: percona-server-mongodb-operator
+  crVersion: 1.15.0
+  image: null
+  imagePullPolicy: Always
+  initImage: -init
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: kubernetes.io/hostname
+    configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  redactClientLogData: false\nsetParameter:\n  ttlMonitorSleepSecs:\
+      \ 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    expose:
+      enabled: true
+      exposeType: ClusterIP
+    name: rs0
+    podDisruptionBudget:
+      maxUnavailable: 1
+    resources:
+      limits:
+        cpu: 500m
+        memory: 0.5G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+  sharding:
+    configsvrReplSet:
+      affinity:
+        antiAffinityTopologyKey: kubernetes.io/hostname
+      expose:
+        enabled: true
+        exposeType: ClusterIP
+      podDisruptionBudget:
+        maxUnavailable: 1
+      resources:
+        limits:
+          cpu: 300m
+          memory: 0.5G
+        requests:
+          cpu: 300m
+          memory: 0.5G
+      size: 3
+      volumeSpec:
+        persistentVolumeClaim:
+          resources:
+            requests:
+              storage: 3Gi
+    enabled: true
+    mongos:
+      affinity:
+        antiAffinityTopologyKey: kubernetes.io/hostname
+      expose:
+        exposeType: ClusterIP
+        servicePerPod: true
+      podDisruptionBudget:
+        maxUnavailable: 1
+      resources:
+        limits:
+          cpu: 300m
+          memory: 0.5G
+        requests:
+          cpu: 300m
+          memory: 0.5G
+      size: 3
+  updateStrategy: SmartUpdate
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: emptydir
+spec:
+  image: null
+  replsets:
+  - configuration: "security:\n  enableEncryption: true\n"
+    name: rs0
+    size: 3
+    volumeSpec:
+      emptyDir: {}
+  secrets:
+    users: some-users
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: hostpath
+spec:
+  image: null
+  replsets:
+  - configuration: "security:\n  enableEncryption: true\n"
+    name: rs0
+    size: 3
+    volumeSpec:
+      hostPath:
+        path: /run/data-dir
+        type: Directory
+  secrets:
+    users: some-users
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: monitoring
+spec:
+  image: null
+  pmm:
+    enabled: true
+    image: -pmm
+    mongodParams: --enable-all-collectors --environment=dev-mongod
+    mongosParams: --environment=dev-mongos
+    serverHost: monitoring-service
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "operationProfiling:\n  mode: all\n  slowOpThresholdMs: 100\n \
+      \ rateLimit: 100\nsecurity:\n  enableEncryption: true\n"
+    name: rs0
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+  sharding:
+    configsvrReplSet:
+      size: 3
+      volumeSpec:
+        persistentVolumeClaim:
+          resources:
+            requests:
+              storage: 3Gi
+    enabled: true
+    mongos:
+      affinity:
+        antiAffinityTopologyKey: kubernetes.io/hostname
+      expose:
+        exposeType: ClusterIP
+        serviceAnnotations:
+          test: monitoring
+        serviceLabels:
+          test: monitoring
+      podDisruptionBudget:
+        maxUnavailable: 1
+      resources:
+        limits:
+          cpu: 300m
+          memory: 0.5G
+        requests:
+          cpu: 300m
+          memory: 0.5G
+      size: 3
+  tls:
+    mode: requireTLS
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: some-name
+spec:
+  backup:
+    enabled: false
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - expose:
+      enabled: false
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    ldapSecret: ldap-ca
+    users: some-users
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: some-name-sharded
+spec:
+  backup:
+    enabled: false
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    expose:
+      enabled: false
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    ldapSecret: ldap-ca
+    users: some-users
+  sharding:
+    configsvrReplSet:
+      expose:
+        enabled: false
+      size: 3
+      volumeSpec:
+        persistentVolumeClaim:
+          resources:
+            requests:
+              storage: 1Gi
+    enabled: true
+    mongos:
+      configuration: "replication:\n  localPingThresholdMs: 15\n"
+      expose:
+        exposeType: ClusterIP
+      size: 3
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: some-name
+spec:
+  backup:
+    enabled: true
+    image: perconalab/percona-server-mongodb-operator:main-backup
+    storages:
+      aws-s3:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: aws-s3-secret
+          insecureSkipTLSVerify: false
+          prefix: psmdb
+          region: us-east-1
+        type: s3
+      azure-blob:
+        azure:
+          container: operator-testing
+          credentialsSecret: azure-secret
+          prefix: psmdb
+        type: azure
+      gcp-cs:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: gcp-cs-secret
+          endpointUrl: https://storage.googleapis.com
+          insecureSkipTLSVerify: false
+          prefix: psmdb
+          region: us-east-1
+        type: s3
+      minio:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: minio-secret
+          endpointUrl: http://minio-service:9000/
+          insecureSkipTLSVerify: false
+          region: us-east-1
+        type: s3
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "operationProfiling:\n  mode: off\nsecurity:\n  enableEncryption:\
+      \ true\n  redactClientLogData: false\n  vault:\n    serverName: vault-service\n\
+      \    port: 8200\n    tokenFile: /etc/mongodb-vault/token\n    secret: secret/data/dc/cluster1/rs0\n\
+      \    disableTLSForTesting: true\nsetParameter:\n  ttlMonitorSleepSecs: 60\n\
+      \  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+    vault: vault-secret
+  sharding:
+    configsvrReplSet:
+      affinity:
+        antiAffinityTopologyKey: none
+      configuration: "operationProfiling:\n  mode: off\nsystemLog:\n   verbosity:\
+        \ 1\nsecurity:\n  enableEncryption: true\n  vault:\n    serverName: vault-service\n\
+        \    port: 8200\n    tokenFile: /etc/mongodb-vault/token\n    secret: secret/data/dc/cluster1/cfg\n\
+        \    disableTLSForTesting: true\n"
+      size: 3
+      volumeSpec:
+        persistentVolumeClaim:
+          resources:
+            requests:
+              storage: 3Gi
+    enabled: true
+    mongos:
+      affinity:
+        antiAffinityTopologyKey: none
+      expose:
+        exposeType: ClusterIP
+      size: 3
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: some-name
+spec:
+  backup:
+    enabled: true
+    image: perconalab/percona-server-mongodb-operator:main-backup
+    storages:
+      aws-s3:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: aws-s3-secret
+          insecureSkipTLSVerify: false
+          prefix: psmdb
+          region: us-east-1
+        type: s3
+      azure-blob:
+        azure:
+          container: operator-testing
+          credentialsSecret: azure-secret
+          prefix: psmdb
+        type: azure
+      gcp-cs:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: gcp-cs-secret
+          endpointUrl: https://storage.googleapis.com
+          insecureSkipTLSVerify: false
+          prefix: psmdb
+          region: us-east-1
+        type: s3
+      minio:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: minio-secret
+          endpointUrl: http://minio-service:9000/
+          insecureSkipTLSVerify: false
+          region: us-east-1
+        type: s3
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+  sharding:
+    configsvrReplSet:
+      affinity:
+        antiAffinityTopologyKey: none
+      size: 3
+      volumeSpec:
+        persistentVolumeClaim:
+          resources:
+            requests:
+              storage: 3Gi
+    enabled: true
+    mongos:
+      affinity:
+        antiAffinityTopologyKey: none
+      expose:
+        exposeType: ClusterIP
+      size: 3
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: some-name
+spec:
+  backup:
+    enabled: true
+    image: percona/percona-backup-mongodb:2.0.4
+    pitr:
+      enabled: false
+    serviceAccountName: percona-server-mongodb-operator
+    storages:
+      aws-s3:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: aws-s3-secret
+          prefix: psmdb
+          region: us-east-1
+        type: s3
+      gcp-cs:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: gcp-cs-secret
+          endpointUrl: https://storage.googleapis.com
+          prefix: psmdb
+          region: us-east-1
+        type: s3
+      minio:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: minio-secret
+          endpointUrl: http://minio-service:9000/
+          region: us-east-1
+        type: s3
+  crVersion: 1.16.0
+  image: percona/percona-server-mongodb:4.4.10-11
+  imagePullPolicy: Always
+  pmm:
+    enabled: false
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    arbiter:
+      affinity:
+        antiAffinityTopologyKey: none
+      enabled: false
+      size: 1
+    configuration: "storage:\n  directoryPerDB: true\n  wiredTiger:\n    engineConfig:\n\
+      \      directoryForIndexes: true\n"
+    expose:
+      enabled: true
+      exposeType: ClusterIP
+      serviceAnnotations:
+        networking.gke.io/load-balancer-type: Internal
+    name: shard1
+    podDisruptionBudget:
+      maxUnavailable: 1
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 2Gi
+        storageClassName: standard-rwo
+  - affinity:
+      antiAffinityTopologyKey: none
+    arbiter:
+      affinity:
+        antiAffinityTopologyKey: none
+      enabled: false
+      size: 1
+    configuration: "storage:\n  directoryPerDB: true\n  wiredTiger:\n    engineConfig:\n\
+      \      directoryForIndexes: true\n"
+    expose:
+      enabled: true
+      exposeType: ClusterIP
+      serviceAnnotations:
+        networking.gke.io/load-balancer-type: Internal
+    name: shard3
+    podDisruptionBudget:
+      maxUnavailable: 1
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 2Gi
+        storageClassName: standard-rwo
+  - affinity:
+      antiAffinityTopologyKey: none
+    arbiter:
+      affinity:
+        antiAffinityTopologyKey: none
+      enabled: false
+      size: 1
+    configuration: "storage:\n  directoryPerDB: true\n  wiredTiger:\n    engineConfig:\n\
+      \      directoryForIndexes: true\n"
+    expose:
+      enabled: true
+      exposeType: ClusterIP
+      serviceAnnotations:
+        networking.gke.io/load-balancer-type: Internal
+    name: shard5
+    podDisruptionBudget:
+      maxUnavailable: 1
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 2Gi
+        storageClassName: standard-rwo
+  - affinity:
+      antiAffinityTopologyKey: none
+    arbiter:
+      affinity:
+        antiAffinityTopologyKey: none
+      enabled: false
+      size: 1
+    configuration: "storage:\n  directoryPerDB: true\n  wiredTiger:\n    engineConfig:\n\
+      \      directoryForIndexes: true\n"
+    expose:
+      enabled: true
+      exposeType: ClusterIP
+      serviceAnnotations:
+        networking.gke.io/load-balancer-type: Internal
+    name: shard7
+    podDisruptionBudget:
+      maxUnavailable: 1
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 2Gi
+        storageClassName: standard-rwo
+  secrets:
+    users: some-users
+  sharding:
+    configsvrReplSet:
+      affinity:
+        antiAffinityTopologyKey: none
+      configuration: "replication:\n  replSetName: csReplSet\nstorage:\n  directoryPerDB:\
+        \ true\n  wiredTiger:\n    engineConfig:\n      directoryForIndexes: true\n"
+      expose:
+        enabled: true
+        exposeType: ClusterIP
+        serviceAnnotations:
+          networking.gke.io/load-balancer-type: Internal
+      podDisruptionBudget:
+        maxUnavailable: 1
+      size: 3
+      volumeSpec:
+        persistentVolumeClaim:
+          resources:
+            requests:
+              storage: 5Gi
+          storageClassName: standard-rwo
+    enabled: true
+    mongos:
+      affinity:
+        antiAffinityTopologyKey: none
+      expose:
+        exposeType: LoadBalancer
+        serviceAnnotations:
+          networking.gke.io/load-balancer-type: Internal
+      podDisruptionBudget:
+        maxUnavailable: 1
+      size: 3
+  unmanaged: false
+  updateStrategy: SmartUpdate
+  upgradeOptions:
+    apply: Disabled
+    schedule: 0 2 * * *
+    setFCV: false
+    versionServiceEndpoint: https://check.percona.com
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  finalizers:
+  - percona.com/delete-psmdb-pvc
+  name: some-name
+spec:
+  backup:
+    enabled: true
+    image: perconalab/percona-server-mongodb-operator:1.1.0-backup
+    storages:
+      aws-s3:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: aws-s3-secret
+          insecureSkipTLSVerify: false
+          prefix: psmdb-demand-backup-physical
+          region: us-east-1
+        type: s3
+      azure-blob:
+        azure:
+          container: operator-testing
+          credentialsSecret: azure-secret
+          prefix: psmdb-demand-backup-physical
+        type: azure
+      gcp-cs:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: gcp-cs-secret
+          endpointUrl: https://storage.googleapis.com
+          insecureSkipTLSVerify: false
+          prefix: psmdb-demand-backup-physical
+          region: us-east-1
+        type: s3
+      minio:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: minio-secret
+          endpointUrl: http://minio-service:9000/
+          insecureSkipTLSVerify: false
+          region: us-east-1
+        type: s3
+    tasks:
+    - compressionType: gzip
+      enabled: true
+      name: weekly
+      schedule: 0 0 * * 0
+      storageName: aws-s3
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    arbiter:
+      affinity:
+        antiAffinityTopologyKey: none
+      enabled: true
+      resources:
+        limits:
+          cpu: 300m
+          memory: 0.5G
+        requests:
+          cpu: 300m
+          memory: 0.5G
+      size: 1
+    configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    expose:
+      enabled: false
+      exposeType: ClusterIP
+    name: rs0
+    nonvoting:
+      affinity:
+        antiAffinityTopologyKey: none
+      enabled: true
+      resources:
+        limits:
+          cpu: 300m
+          memory: 0.5G
+        requests:
+          cpu: 300m
+          memory: 0.5G
+      size: 1
+      volumeSpec:
+        persistentVolumeClaim:
+          resources:
+            requests:
+              storage: 1Gi
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 4
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 3Gi
+  secrets:
+    users: some-users
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  finalizers:
+  - percona.com/delete-psmdb-pvc
+  name: some-name
+spec:
+  backup:
+    enabled: true
+    image: perconalab/percona-server-mongodb-operator:1.1.0-backup
+    storages:
+      aws-s3:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: aws-s3-secret
+          insecureSkipTLSVerify: false
+          prefix: psmdb-demand-backup-physical
+          region: us-east-1
+        type: s3
+      azure-blob:
+        azure:
+          container: operator-testing
+          credentialsSecret: azure-secret
+          prefix: psmdb-demand-backup-physical
+        type: azure
+      gcp-cs:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: gcp-cs-secret
+          endpointUrl: https://storage.googleapis.com
+          insecureSkipTLSVerify: false
+          prefix: psmdb-demand-backup-physical
+          region: us-east-1
+        type: s3
+      minio:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: minio-secret
+          endpointUrl: http://minio-service:9000/
+          insecureSkipTLSVerify: false
+          region: us-east-1
+        type: s3
+    tasks:
+    - compressionType: gzip
+      enabled: true
+      name: weekly
+      schedule: 0 0 * * 0
+      storageName: aws-s3
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    expose:
+      enabled: false
+      exposeType: ClusterIP
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 3Gi
+  secrets:
+    users: some-users
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: some-name
+spec:
+  allowUnsafeConfigurations: false
+  backup:
+    enabled: false
+    image: perconalab/percona-server-mongodb-operator:0.4.0-backup
+  crVersion: 1.15.0
+  image: null
+  imagePullPolicy: Always
+  initImage: -init
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  redactClientLogData: false\nsetParameter:\n  ttlMonitorSleepSecs:\
+      \ 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 0.5G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: some-name
+spec:
+  backup:
+    enabled: false
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    expose:
+      enabled: false
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    runtimeClassName: container-rc
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+  sharding:
+    configsvrReplSet:
+      expose:
+        enabled: false
+      runtimeClassName: container-rc
+      size: 3
+      volumeSpec:
+        persistentVolumeClaim:
+          resources:
+            requests:
+              storage: 3Gi
+    enabled: true
+    mongos:
+      configuration: "replication:\n  localPingThresholdMs: 15\n"
+      expose:
+        exposeType: ClusterIP
+      runtimeClassName: container-rc
+      size: 3
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: arbiter
+spec:
+  image: null
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    arbiter:
+      enabled: true
+      size: 1
+    configuration: "security:\n  enableEncryption: true\n"
+    name: rs0
+    size: 4
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: arbiter-clusterip
+spec:
+  image: null
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    arbiter:
+      enabled: true
+      size: 1
+    configuration: "security:\n  enableEncryption: true\n"
+    expose:
+      enabled: true
+      exposeType: ClusterIP
+    name: rs0
+    size: 4
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: smart-update
+spec:
+  allowUnsafeConfigurations: false
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    arbiter:
+      affinity:
+        antiAffinityTopologyKey: none
+      enabled: true
+      resources:
+        limits:
+          cpu: 300m
+          memory: 0.3G
+        requests:
+          cpu: 100m
+          memory: 0.1G
+      size: 1
+    configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 0.5G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 4
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+  updateStrategy: SmartUpdate
+  upgradeOptions:
+    apply: Disabled
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: some-name
+spec:
+  backup:
+    enabled: true
+    image: perconalab/percona-server-mongodb-operator:1.1.0-backup
+    storages:
+      aws-s3:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: aws-s3-secret
+          insecureSkipTLSVerify: false
+          prefix: psmdb
+          region: us-east-1
+        type: s3
+      gcp-cs:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: gcp-cs-secret
+          endpointUrl: https://storage.googleapis.com
+          insecureSkipTLSVerify: false
+          prefix: psmdb
+          region: us-east-1
+        type: s3
+      minio:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: minio-secret
+          endpointUrl: http://minio-service:9000/
+          insecureSkipTLSVerify: false
+          region: us-east-1
+        type: s3
+    tasks:
+    - compressionType: gzip
+      enabled: true
+      name: weekly
+      schedule: 0 0 * * 0
+      storageName: aws-s3
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+  users:
+  - db: admin
+    name: user-one
+    passwordSecretRef:
+      key: userOnePassKey
+      name: user-one
+    roles:
+    - db: admin
+      name: clusterAdmin
+    - db: admin
+      name: userAdminAnyDatabase
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  finalizers:
+  - percona.com/delete-psmdb-pods-in-order
+  - percona.com/delete-psmdb-pvc
+  name: some-name
+spec:
+  allowUnsafeConfigurations: false
+  backup:
+    enabled: false
+    image: perconalab/percona-server-mongodb-operator:0.4.0-backup
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 0.5G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1G
+  secrets:
+    users: some-users
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  finalizers:
+  - percona.com/delete-psmdb-pods-in-order
+  - percona.com/delete-psmdb-pvc
+  name: some-name
+spec:
+  allowUnsafeConfigurations: false
+  backup:
+    enabled: false
+    image: perconalab/percona-server-mongodb-operator:0.4.0-backup
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 0.5G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1G
+        storageClassName: gp2-resizable
+  secrets:
+    users: some-users
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: cross-site-sharded-main
+spec:
+  clusterServiceDNSMode: External
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    arbiter:
+      affinity:
+        antiAffinityTopologyKey: none
+      enabled: false
+      size: 1
+    expose:
+      enabled: true
+      exposeType: ClusterIp
+    name: rs0
+    nonvoting:
+      affinity:
+        antiAffinityTopologyKey: none
+      enabled: false
+      podDisruptionBudget:
+        maxUnavailable: 1
+      resources:
+        limits:
+          cpu: 300m
+          memory: 0.5G
+        requests:
+          cpu: 300m
+          memory: 0.5G
+      size: 3
+      volumeSpec:
+        persistentVolumeClaim:
+          resources:
+            requests:
+              storage: 1Gi
+    podDisruptionBudget:
+      maxUnavailable: 1
+    resources:
+      limits:
+        cpu: 300m
+        memory: 0.5G
+      requests:
+        cpu: 300m
+        memory: 0.5G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 3Gi
+  - affinity:
+      antiAffinityTopologyKey: none
+    arbiter:
+      affinity:
+        antiAffinityTopologyKey: none
+      enabled: false
+      size: 1
+    expose:
+      enabled: true
+      exposeType: ClusterIp
+    name: rs1
+    nonvoting:
+      affinity:
+        antiAffinityTopologyKey: none
+      enabled: false
+      podDisruptionBudget:
+        maxUnavailable: 1
+      resources:
+        limits:
+          cpu: 300m
+          memory: 0.5G
+        requests:
+          cpu: 300m
+          memory: 0.5G
+      size: 3
+      volumeSpec:
+        persistentVolumeClaim:
+          resources:
+            requests:
+              storage: 1Gi
+    podDisruptionBudget:
+      maxUnavailable: 1
+    resources:
+      limits:
+        cpu: 300m
+        memory: 0.5G
+      requests:
+        cpu: 300m
+        memory: 0.5G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 3Gi
+  secrets:
+    ssl: cross-site-sharded-main-ssl
+    sslInternal: cross-site-sharded-main-ssl-internal
+    users: cross-site-sharded-main-secrets
+  sharding:
+    configsvrReplSet:
+      affinity:
+        antiAffinityTopologyKey: none
+      expose:
+        enabled: true
+        exposeType: ClusterIp
+      podDisruptionBudget:
+        maxUnavailable: 1
+      resources:
+        limits:
+          cpu: 300m
+          memory: 0.5G
+        requests:
+          cpu: 300m
+          memory: 0.5G
+      size: 3
+      volumeSpec:
+        persistentVolumeClaim:
+          resources:
+            requests:
+              storage: 3Gi
+    enabled: true
+    mongos:
+      affinity:
+        antiAffinityTopologyKey: none
+      expose:
+        exposeType: ClusterIp
+      podDisruptionBudget:
+        maxUnavailable: 1
+      resources:
+        limits:
+          cpu: 300m
+          memory: 0.5G
+        requests:
+          cpu: 300m
+          memory: 0.5G
+      size: 3
+  unmanaged: false
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: cross-site-sharded-replica
+spec:
+  clusterServiceDNSMode: External
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    arbiter:
+      affinity:
+        antiAffinityTopologyKey: none
+      enabled: false
+      size: 1
+    expose:
+      enabled: true
+      exposeType: ClusterIp
+    name: rs0
+    nonvoting:
+      affinity:
+        antiAffinityTopologyKey: none
+      enabled: false
+      podDisruptionBudget:
+        maxUnavailable: 1
+      resources:
+        limits:
+          cpu: 300m
+          memory: 0.5G
+        requests:
+          cpu: 300m
+          memory: 0.5G
+      size: 3
+      volumeSpec:
+        persistentVolumeClaim:
+          resources:
+            requests:
+              storage: 1Gi
+    podDisruptionBudget:
+      maxUnavailable: 1
+    resources:
+      limits:
+        cpu: 300m
+        memory: 0.5G
+      requests:
+        cpu: 300m
+        memory: 0.5G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 3Gi
+  - affinity:
+      antiAffinityTopologyKey: none
+    arbiter:
+      affinity:
+        antiAffinityTopologyKey: none
+      enabled: false
+      size: 1
+    expose:
+      enabled: true
+      exposeType: ClusterIp
+    name: rs1
+    nonvoting:
+      affinity:
+        antiAffinityTopologyKey: none
+      enabled: false
+      podDisruptionBudget:
+        maxUnavailable: 1
+      resources:
+        limits:
+          cpu: 300m
+          memory: 0.5G
+        requests:
+          cpu: 300m
+          memory: 0.5G
+      size: 3
+      volumeSpec:
+        persistentVolumeClaim:
+          resources:
+            requests:
+              storage: 1Gi
+    podDisruptionBudget:
+      maxUnavailable: 1
+    resources:
+      limits:
+        cpu: 300m
+        memory: 0.5G
+      requests:
+        cpu: 300m
+        memory: 0.5G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 3Gi
+  secrets:
+    ssl: cross-site-sharded-replica-ssl
+    sslInternal: cross-site-sharded-replica-ssl-internal
+    users: cross-site-sharded-replica-secrets
+  sharding:
+    configsvrReplSet:
+      affinity:
+        antiAffinityTopologyKey: none
+      expose:
+        enabled: true
+        exposeType: ClusterIp
+      podDisruptionBudget:
+        maxUnavailable: 1
+      resources:
+        limits:
+          cpu: 300m
+          memory: 0.5G
+        requests:
+          cpu: 300m
+          memory: 0.5G
+      size: 3
+      volumeSpec:
+        persistentVolumeClaim:
+          resources:
+            requests:
+              storage: 3Gi
+    enabled: true
+    mongos:
+      affinity:
+        antiAffinityTopologyKey: none
+      expose:
+        exposeType: ClusterIp
+      podDisruptionBudget:
+        maxUnavailable: 1
+      resources:
+        limits:
+          cpu: 300m
+          memory: 0.5G
+        requests:
+          cpu: 300m
+          memory: 0.5G
+      size: 3
+  unmanaged: true
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: some-name
+spec:
+  backup:
+    enabled: true
+    image: perconalab/percona-server-mongodb-operator:1.1.0-backup
+    pitr:
+      compressionLevel: 6
+      compressionType: gzip
+      enabled: true
+      oplogOnly: false
+      oplogSpanMin: 10
+    storages:
+      minio:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: minio-secret
+          endpointUrl: http://minio-service:9000/
+          insecureSkipTLSVerify: false
+          region: us-east-1
+        type: s3
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: some-name
+spec:
+  backup:
+    enabled: false
+    image: perconalab/percona-server-mongodb-operator:1.1.0-backup
+    runtimeClassName: container-rc
+    storages: null
+    tasks: null
+  image: null
+  imagePullPolicy: Always
+  multiCluster:
+    enabled: false
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "net:\n  port: 27017\noperationProfiling:\n  mode: slowOp\n  slowOpThresholdMs:\
+      \ 100\nsecurity:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    expose:
+      enabled: true
+      exposeType: ClusterIP
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    runtimeClassName: container-rc
+    sidecars:
+    - args:
+      - -c
+      - while true; do echo echo $(date -u) 'test' >> /dev/null; sleep 5;done
+      command:
+      - /bin/sh
+      image: busybox
+      name: rs-sidecar-1
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+  sharding:
+    configsvrReplSet:
+      expose:
+        enabled: true
+        exposeType: ClusterIP
+      runtimeClassName: container-rc
+      sidecars:
+      - args:
+        - -c
+        - while true; do echo echo $(date -u) 'test' >> /dev/null; sleep 5;done
+        command:
+        - /bin/sh
+        image: busybox
+        name: cfg-sidecar-1
+      size: 3
+      volumeSpec:
+        persistentVolumeClaim:
+          resources:
+            requests:
+              storage: 3Gi
+    enabled: true
+    mongos:
+      configuration: "replication:\n  localPingThresholdMs: 15\n"
+      expose:
+        exposeType: ClusterIP
+      runtimeClassName: container-rc
+      sidecars:
+      - args:
+        - -c
+        - while true; do echo echo $(date -u) 'test' >> /dev/null; sleep 5;done
+        command:
+        - /bin/sh
+        image: busybox
+        name: mongos-sidecar-1
+      size: 3
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: some-name
+spec:
+  backup:
+    enabled: false
+    image: perconalab/percona-server-mongodb-operator:main-backup
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    expose:
+      enabled: true
+      exposeType: ClusterIP
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 0.5G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    splitHorizons:
+      some-name-rs0-0:
+        external: some-name-rs0-0.clouddemo.xyz
+      some-name-rs0-1:
+        external: some-name-rs0-1.clouddemo.xyz
+      some-name-rs0-2:
+        external: some-name-rs0-2.clouddemo.xyz
+      some-name-rs0-3:
+        external: some-name-rs0-3.clouddemo.xyz
+      some-name-rs0-4:
+        external: some-name-rs0-4.clouddemo.xyz
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: some-name
+spec:
+  backup:
+    enabled: false
+    image: perconalab/percona-server-mongodb-operator:main-backup
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    expose:
+      enabled: true
+      exposeType: ClusterIP
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 0.5G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: some-name
+spec:
+  backup:
+    enabled: false
+    image: perconalab/percona-server-mongodb-operator:main-backup
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    expose:
+      enabled: true
+      exposeType: ClusterIP
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 0.5G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    splitHorizons:
+      some-name-rs0-0:
+        external: some-name-rs0-0.clouddemo.xyz
+      some-name-rs0-1:
+        external: some-name-rs0-1.clouddemo.xyz
+      some-name-rs0-2:
+        external: some-name-rs0-2.clouddemo.xyz
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: some-name
+spec:
+  backup:
+    enabled: false
+    image: perconalab/percona-server-mongodb-operator:1.1.0-backup
+    storages:
+      minio:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: minio-secret
+          endpointUrl: http://minio-service:9000/
+          insecureSkipTLSVerify: false
+          region: us-east-1
+        type: s3
+    tasks:
+    - compressionType: gzip
+      enabled: true
+      name: weekly
+      schedule: 0 0 * * 0
+      storageName: minio
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    expose:
+      enabled: true
+      exposeType: ClusterIP
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+  sharding:
+    enabled: false
+  upgradeOptions:
+    apply: disabled
+    schedule: '* * * * *'
+    setFCV: false
+    versionServiceEndpoint: http://version-service:11000
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: some-name
+spec:
+  allowUnsafeConfigurations: false
+  backup:
+    enabled: false
+    image: perconalab/percona-server-mongodb-operator:0.4.0-backup
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 0.5G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: another-name
+spec:
+  backup:
+    enabled: false
+    image: perconalab/percona-server-mongodb-operator:0.4.0-backup
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "operationProfiling:\n  mode: slowOp\n  slowOpThresholdMs: 100\n\
+      security:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 0.5G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    runtimeClassName: container-rc
+    sidecars:
+    - args:
+      - -c
+      - while true; do echo echo $(date -u) 'test' >> /dev/null; sleep 5;done
+      command:
+      - /bin/sh
+      image: busybox
+      name: my-sidecar-1
+    - args:
+      - -c
+      - while true; do echo echo $(date -u) 'test' >> /dev/null; sleep 5;done
+      command:
+      - /bin/sh
+      image: busybox
+      name: my-sidecar-2
+    - image: busybox
+      name: mongod
+    size: 3
+    terminationGracePeriodSeconds: 300
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+  tls:
+    mode: disabled
+  unsafeFlags:
+    tls: true
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: some-name
+spec:
+  allowUnsafeConfigurations: false
+  backup:
+    enabled: false
+    image: perconalab/percona-server-mongodb-operator:main-backup
+    pitr:
+      enabled: false
+    serviceAccountName: percona-server-mongodb-operator
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: kubernetes.io/hostname
+    expose:
+      enabled: true
+      exposeType: ClusterIP
+    name: rs0
+    podDisruptionBudget:
+      maxUnavailable: 1
+    resources:
+      limits:
+        cpu: 500m
+        memory: 0.5G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+  sharding:
+    configsvrReplSet:
+      affinity:
+        antiAffinityTopologyKey: kubernetes.io/hostname
+      expose:
+        enabled: true
+        exposeType: ClusterIP
+      podDisruptionBudget:
+        maxUnavailable: 1
+      resources:
+        limits:
+          cpu: 300m
+          memory: 0.5G
+        requests:
+          cpu: 300m
+          memory: 0.5G
+      size: 3
+      volumeSpec:
+        persistentVolumeClaim:
+          resources:
+            requests:
+              storage: 3Gi
+    enabled: true
+    mongos:
+      affinity:
+        antiAffinityTopologyKey: kubernetes.io/hostname
+      expose:
+        exposeType: ClusterIP
+        servicePerPod: true
+      podDisruptionBudget:
+        maxUnavailable: 1
+      resources:
+        limits:
+          cpu: 300m
+          memory: 0.5G
+        requests:
+          cpu: 300m
+          memory: 0.5G
+      size: 3
+  updateStrategy: SmartUpdate
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: some-name
+spec:
+  backup:
+    enabled: true
+    image: perconalab/percona-server-mongodb-operator:1.1.0-backup
+    runtimeClassName: container-rc
+    storages:
+      aws-s3:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: aws-s3-secret
+          insecureSkipTLSVerify: false
+          prefix: psmdb-demand-backup-sharded
+          region: us-east-1
+        type: s3
+      azure-blob:
+        azure:
+          container: operator-testing
+          credentialsSecret: azure-secret
+          prefix: psmdb-demand-backup-sharded
+        type: azure
+      gcp-cs:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: gcp-cs-secret
+          endpointUrl: https://storage.googleapis.com
+          insecureSkipTLSVerify: false
+          prefix: psmdb-demand-backup-sharded
+          region: us-east-1
+        type: s3
+      minio:
+        s3:
+          bucket: operator-testing
+          credentialsSecret: minio-secret
+          endpointUrl: http://minio-service:9000/
+          insecureSkipTLSVerify: false
+          region: us-east-1
+        type: s3
+    tasks:
+    - compressionType: gzip
+      enabled: true
+      name: weekly
+      schedule: 0 0 * * 0
+      storageName: aws-s3
+  image: null
+  imagePullPolicy: Always
+  replsets:
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "net:\n  port: 27017\noperationProfiling:\n  mode: slowOp\n  slowOpThresholdMs:\
+      \ 100\nsecurity:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    expose:
+      enabled: true
+      exposeType: ClusterIP
+    name: rs0
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    runtimeClassName: container-rc
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "net:\n  port: 27017\noperationProfiling:\n  mode: slowOp\n  slowOpThresholdMs:\
+      \ 100\nsecurity:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    expose:
+      enabled: true
+      exposeType: ClusterIP
+    name: rs1
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  - affinity:
+      antiAffinityTopologyKey: none
+    configuration: "net:\n  port: 27017\noperationProfiling:\n  mode: slowOp\n  slowOpThresholdMs:\
+      \ 100\nsecurity:\n  enableEncryption: true\n  redactClientLogData: false\nsetParameter:\n\
+      \  ttlMonitorSleepSecs: 60\n  wiredTigerConcurrentReadTransactions: 128\n  wiredTigerConcurrentWriteTransactions:\
+      \ 128\nstorage:\n  engine: wiredTiger\n  wiredTiger:\n    collectionConfig:\n\
+      \      blockCompressor: snappy\n    engineConfig:\n      directoryForIndexes:\
+      \ false\n      journalCompressor: snappy\n    indexConfig:\n      prefixCompression:\
+      \ true\n"
+    expose:
+      enabled: true
+      exposeType: ClusterIP
+      loadBalancerSourceRanges:
+      - 10.0.0.0/8
+    name: rs2
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1G
+      requests:
+        cpu: 100m
+        memory: 0.1G
+    sidecars:
+    - args:
+      - -c
+      - while true; do echo echo $(date -u) 'test' >> /dev/null; sleep 5;done
+      command:
+      - /bin/sh
+      image: busybox
+      name: rs-sidecar-1
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 1Gi
+  secrets:
+    users: some-users
+  sharding:
+    configsvrReplSet:
+      expose:
+        enabled: true
+        exposeType: ClusterIP
+        loadBalancerSourceRanges:
+        - 10.0.0.0/8
+      runtimeClassName: container-rc
+      sidecars:
+      - args:
+        - -c
+        - while true; do echo echo $(date -u) 'test' >> /dev/null; sleep 5;done
+        command:
+        - /bin/sh
+        image: busybox
+        name: cfg-sidecar-1
+      size: 3
+      volumeSpec:
+        persistentVolumeClaim:
+          resources:
+            requests:
+              storage: 3Gi
+    enabled: true
+    mongos:
+      configuration: "replication:\n  localPingThresholdMs: 15\n"
+      expose:
+        exposeType: ClusterIP
+        loadBalancerSourceRanges:
+        - 10.0.0.0/8
+      runtimeClassName: container-rc
+      sidecars:
+      - args:
+        - -c
+        - while true; do echo echo $(date -u) 'test' >> /dev/null; sleep 5;done
+        command:
+        - /bin/sh
+        image: busybox
+        name: mongos-sidecar-1
+      size: 3
