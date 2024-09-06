@@ -457,6 +457,14 @@ class TrialRunner:
                         list(field_path)
                     )
 
+                    logger.info(
+                        "Path [%s] has examples: %s",
+                        field_path,
+                        self.input_model.get_schema_by_path(
+                            field_path
+                        ).examples,
+                    )
+
                     if testcase.test_precondition(field_curr_value):
                         # precondition of this testcase satisfies
                         logger.info("Precondition of %s satisfies", field_path)
