@@ -950,6 +950,7 @@ class Acto:
                 apiclient,
                 KubectlClient(learn_kubeconfig, learn_context_name),
                 self.crd_name,
+                self.crd_version,
                 helper_crd,
             )
 

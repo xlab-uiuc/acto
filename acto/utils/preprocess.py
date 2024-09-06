@@ -140,9 +140,10 @@ def process_crd(
             crd_data = {
                 "group": spec.group,
                 "plural": spec.names.plural,
-                # TODO: Handle multiple versions
                 "version": (
-                    spec.versions[0].name if not crd_version else crd_version
+                    spec.versions[-1].name
+                    if crd_version is None
+                    else crd_version
                 ),
                 "body": crd_obj,
             }
@@ -156,9 +157,11 @@ def process_crd(
         crd_data = {
             "group": helper_crd_doc["spec"]["group"],
             "plural": helper_crd_doc["spec"]["names"]["plural"],
-            "version": helper_crd_doc["spec"]["versions"][-1][
-                "name"
-            ],  # TODO: Handle multiple versions
+            "version": (
+                helper_crd_doc["spec"]["versions"][-1]["name"]
+                if crd_version is None
+                else crd_version
+            ),
             "body": helper_crd_doc,
         }
         return crd_data
