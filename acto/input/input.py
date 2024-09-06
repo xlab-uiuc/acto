@@ -164,6 +164,8 @@ class DeterministicInputModel(InputModel):
                     for doc in docs:
                         example_docs.append(doc)
         for example_doc in example_docs:
+            logger = get_thread_logger(with_prefix=True)
+            logger.info("Loading example document %s", example_doc)
             self.root_schema.load_examples(example_doc)
 
         self.num_workers = num_workers
