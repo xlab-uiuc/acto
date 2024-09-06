@@ -1,4 +1,3 @@
-import logging
 import random
 from typing import List, Tuple
 
@@ -130,7 +129,8 @@ class ObjectSchema(BaseSchema):
         return node
 
     def load_examples(self, example: dict):
-        logging.debug(f"Loading example {example} into {self}")
+        logger = get_thread_logger(with_prefix=True)
+        logger.debug(f"Loading example {example} into {self}")
         self.examples.append(example)
         for key, value in example.items():
             if key in self.properties:

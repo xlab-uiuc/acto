@@ -1,6 +1,7 @@
-import logging
 import random
 from typing import List, Tuple
+
+from utils.thread_logger import get_thread_logger
 
 from .base import BaseSchema, TreeNode
 
@@ -102,7 +103,8 @@ class ArraySchema(BaseSchema):
         return node
 
     def load_examples(self, example: list):
-        logging.debug(f"Loading example {example} into {self}")
+        logger = get_thread_logger(with_prefix=True)
+        logger.debug(f"Loading example {example} into {self}")
         self.examples.append(example)
         for item in example:
             self.item_schema.load_examples(item)

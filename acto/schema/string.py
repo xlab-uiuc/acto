@@ -1,8 +1,8 @@
-import logging
 import random
 from typing import List, Optional, Tuple
 
 import exrex
+from utils.thread_logger import get_thread_logger
 
 from acto.common import random_string
 
@@ -48,7 +48,8 @@ class StringSchema(BaseSchema):
         return TreeNode(self.path)
 
     def load_examples(self, example: str):
-        logging.debug(f"Loading example {example} into {self}")
+        logger = get_thread_logger(with_prefix=True)
+        logger.debug(f"Loading example {example} into {self}")
         self.examples.append(example)
 
     def set_default(self, instance):
