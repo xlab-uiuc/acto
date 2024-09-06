@@ -286,7 +286,7 @@ class TrialRunner:
         self.input_model.set_worker_id(self.worker_id)
         apiclient = None
 
-        self.input_model.set_mode(mode)
+        # self.input_model.set_mode(mode)
         if mode != InputModel.NORMAL:
             self.workdir = os.path.join(self.workdir, mode)
             os.makedirs(self.base_workdir, exist_ok=True)
@@ -1089,6 +1089,7 @@ class Acto:
 
         if "normal" in modes:
             threads = []
+            self.input_model.set_mode(InputModel.NORMAL)
             for runner in runners:
                 t = threading.Thread(
                     target=runner.run, args=[errors, InputModel.NORMAL]
@@ -1103,6 +1104,7 @@ class Acto:
 
         if "overspecified" in modes:
             threads = []
+            self.input_model.set_mode(InputModel.OVERSPECIFIED)
             for runner in runners:
                 t = threading.Thread(
                     target=runner.run, args=([errors, InputModel.OVERSPECIFIED])
@@ -1117,6 +1119,7 @@ class Acto:
 
         if "copiedover" in modes:
             threads = []
+            self.input_model.set_mode(InputModel.COPIED_OVER)
             for runner in runners:
                 t = threading.Thread(
                     target=runner.run, args=([errors, InputModel.COPIED_OVER])
@@ -1131,6 +1134,7 @@ class Acto:
 
         if InputModel.ADDITIONAL_SEMANTIC in modes:
             threads = []
+            self.input_model.set_mode(InputModel.ADDITIONAL_SEMANTIC)
             for runner in runners:
                 t = threading.Thread(
                     target=runner.run,
