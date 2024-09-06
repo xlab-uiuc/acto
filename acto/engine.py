@@ -771,6 +771,7 @@ class Acto:
                 operator_config.seed_custom_resource, "r", encoding="utf-8"
             ) as cr_file:
                 self.seed = yaml.load(cr_file, Loader=yaml.FullLoader)
+                self.seed["metadata"]["name"] = "test-cluster"
         except yaml.YAMLError as e:
             logger.error("Failed to read seed yaml, aborting: %s", e)
             sys.exit(1)
