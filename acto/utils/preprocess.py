@@ -87,6 +87,7 @@ def process_crd(
     apiclient: kubernetes.client.ApiClient,
     kubectl_client: KubectlClient,
     crd_name: Optional[str] = None,
+    crd_version: Optional[str] = None,
     helper_crd: Optional[str] = None,
 ) -> dict:
     """Get crd from k8s and set context['crd']
@@ -106,9 +107,9 @@ def process_crd(
 
     if helper_crd is None:
         apiextensions_v1_api = kubernetes.client.ApiextensionsV1Api(apiclient)
-        crds: list[
-            k8s_models.V1CustomResourceDefinition
-        ] = apiextensions_v1_api.list_custom_resource_definition().items
+        crds: list[k8s_models.V1CustomResourceDefinition] = (
+            apiextensions_v1_api.list_custom_resource_definition().items
+        )
         crd: Optional[k8s_models.V1CustomResourceDefinition] = None
         if len(crds) == 0:
             logger.error("No crd is found")
@@ -140,7 +141,9 @@ def process_crd(
                 "group": spec.group,
                 "plural": spec.names.plural,
                 # TODO: Handle multiple versions
-                "version": spec.versions[0].name,
+                "version": (
+                    spec.versions[0].name if not crd_version else crd_version
+                ),
                 "body": crd_obj,
             }
             return crd_data

@@ -800,6 +800,7 @@ class Acto:
         self.deploy = deploy
         self.operator_config = operator_config
         self.crd_name = operator_config.crd_name
+        self.crd_version = operator_config.crd_version
         self.workdir_path = workdir_path
         self.images_archive = os.path.join(workdir_path, "images.tar")
         self.num_workers = num_workers

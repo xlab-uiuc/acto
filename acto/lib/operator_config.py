@@ -8,8 +8,7 @@ DELEGATED_NAMESPACE = "__DELEGATED__"
 class ApplyStep(pydantic.BaseModel, extra="forbid"):
     """Configuration for each step of kubectl apply"""
 
-    file: str = pydantic.Field(
-        description="Path to the file for kubectl apply")
+    file: str = pydantic.Field(description="Path to the file for kubectl apply")
     operator: bool = pydantic.Field(
         description="If the file contains the operator deployment",
         default=False,
@@ -129,6 +128,10 @@ class OperatorConfig(pydantic.BaseModel, extra="forbid"):
     crd_name: Optional[str] = pydantic.Field(
         default=None,
         description="Name of the CRD, required if there are multiple CRDs",
+    )
+    crd_version: Optional[str] = pydantic.Field(
+        default=None,
+        description="Version of the CRD, required if there are multiple CRD versions",
     )
     example_dir: Optional[str] = pydantic.Field(
         default=None, description="Path to the example dir"
