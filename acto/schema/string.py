@@ -1,3 +1,4 @@
+import logging
 import random
 from typing import List, Optional, Tuple
 
@@ -47,6 +48,7 @@ class StringSchema(BaseSchema):
         return TreeNode(self.path)
 
     def load_examples(self, example: str):
+        logging.debug(f"Loading example {example} into {self}")
         self.examples.append(example)
 
     def set_default(self, instance):

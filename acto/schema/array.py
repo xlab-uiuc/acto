@@ -1,3 +1,4 @@
+import logging
 import random
 from typing import List, Tuple
 
@@ -101,6 +102,7 @@ class ArraySchema(BaseSchema):
         return node
 
     def load_examples(self, example: list):
+        logging.debug(f"Loading example {example} into {self}")
         self.examples.append(example)
         for item in example:
             self.item_schema.load_examples(item)
