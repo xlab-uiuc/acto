@@ -1,7 +1,7 @@
 import random
 from typing import List, Tuple
 
-from utils.thread_logger import get_thread_logger
+from acto.utils.thread_logger import get_thread_logger
 
 from .base import BaseSchema, TreeNode
 

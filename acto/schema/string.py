@@ -2,9 +2,9 @@ import random
 from typing import List, Optional, Tuple
 
 import exrex
-from utils.thread_logger import get_thread_logger
 
 from acto.common import random_string
+from acto.utils.thread_logger import get_thread_logger
 
 from .base import BaseSchema, TreeNode
 
