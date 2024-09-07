@@ -51,7 +51,7 @@ class StringSchema(BaseSchema):
         if example is not None:
             logger = get_thread_logger(with_prefix=True)
             logger.debug(f"Loading example {example} into {self}")
-            self.examples.append(example)
+            self.examples.add(example)
 
     def set_default(self, instance):
         self.default = str(instance)

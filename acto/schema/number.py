@@ -61,7 +61,7 @@ class NumberSchema(BaseSchema):
 
     def load_examples(self, example: Optional[float]):
         if isinstance(example, float):
-            self.examples.append(example)
+            self.examples.add(example)
 
     def set_default(self, instance):
         self.default = float(instance)

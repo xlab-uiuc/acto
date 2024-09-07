@@ -30,7 +30,7 @@ class IntegerSchema(NumberSchema):
 
     def load_examples(self, example: Optional[Any]):
         if isinstance(example, int):
-            self.examples.append(example)
+            self.examples.add(example)
 
     def set_default(self, instance):
         self.default = int(instance)
