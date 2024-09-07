@@ -4,6 +4,7 @@ import importlib
 import json
 import logging
 import operator
+import os
 import random
 import threading
 from functools import reduce
@@ -156,7 +157,9 @@ class DeterministicInputModel(InputModel):
         self.example_dir = example_dir
         example_docs = []
         if self.example_dir is not None:
-            for example_filepath in glob.glob(self.example_dir + "*.yaml"):
+            for example_filepath in glob.glob(
+                os.path.join(self.example_dir, "*.yaml")
+            ):
                 with open(
                     example_filepath, "r", encoding="utf-8"
                 ) as example_file:
