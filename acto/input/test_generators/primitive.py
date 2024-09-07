@@ -621,9 +621,6 @@ def object_tests(schema: ObjectSchema):
     def change_precondition(prev):
         return prev is not None
 
-    def change(prev):
-        return prev
-
     ret = [
         TestCase(
             DELETION_TEST,
@@ -646,6 +643,17 @@ def object_tests(schema: ObjectSchema):
                 primitive=True,
             )
         )
+
+        if schema.examples is not None and len(schema.examples) > 1:
+            ret.append(
+                TestCase(
+                    CHANGE_TEST,
+                    change_precondition,
+                    lambda prev: schema.examples[1],
+                    lambda prev: schema.examples[0],
+                    primitive=True,
+                )
+            )
     return ret
 
 
