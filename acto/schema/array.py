@@ -1,5 +1,5 @@
 import random
-from typing import List, Tuple
+from typing import Any, List, Optional, Tuple
 
 from acto.utils.thread_logger import get_thread_logger
 
@@ -102,12 +102,14 @@ class ArraySchema(BaseSchema):
         node.add_child("ITEM", self.item_schema.to_tree())
         return node
 
-    def load_examples(self, example: list):
-        logger = get_thread_logger(with_prefix=True)
-        logger.debug(f"Loading example {example} into {self}")
-        self.examples.append(example)
-        for item in example:
-            self.item_schema.load_examples(item)
+    def load_examples(self, example: Optional[List[Any]]):
+        if example is not None:
+            logger = get_thread_logger(with_prefix=True)
+            logger.debug(f"Loading example {example} into {self}")
+
+            self.examples.append(example)
+            for item in example:
+                self.item_schema.load_examples(item)
 
     def set_default(self, instance):
         self.default = instance

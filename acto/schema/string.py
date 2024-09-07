@@ -47,10 +47,11 @@ class StringSchema(BaseSchema):
     def to_tree(self) -> TreeNode:
         return TreeNode(self.path)
 
-    def load_examples(self, example: str):
-        logger = get_thread_logger(with_prefix=True)
-        logger.debug(f"Loading example {example} into {self}")
-        self.examples.append(example)
+    def load_examples(self, example: Optional[str]):
+        if example is not None:
+            logger = get_thread_logger(with_prefix=True)
+            logger.debug(f"Loading example {example} into {self}")
+            self.examples.append(example)
 
     def set_default(self, instance):
         self.default = str(instance)

@@ -1,5 +1,5 @@
 import random
-from typing import Any, List, Tuple
+from typing import Any, List, Optional, Tuple
 
 from .base import BaseSchema, TreeNode
 from .number import NumberSchema
@@ -28,7 +28,7 @@ class IntegerSchema(NumberSchema):
     def to_tree(self) -> TreeNode:
         return TreeNode(self.path)
 
-    def load_examples(self, example: Any):
+    def load_examples(self, example: Optional[Any]):
         if isinstance(example, int):
             self.examples.append(example)
 

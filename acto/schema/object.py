@@ -1,5 +1,5 @@
 import random
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 from acto.utils.thread_logger import get_thread_logger
 
@@ -128,13 +128,14 @@ class ObjectSchema(BaseSchema):
 
         return node
 
-    def load_examples(self, example: dict):
-        logger = get_thread_logger(with_prefix=True)
-        logger.debug(f"Loading example {example} into {self}")
-        self.examples.append(example)
-        for key, value in example.items():
-            if key in self.properties:
-                self.properties[key].load_examples(value)
+    def load_examples(self, example: Optional[dict]):
+        if example is not None:
+            logger = get_thread_logger(with_prefix=True)
+            logger.debug(f"Loading example {example} into {self}")
+            self.examples.append(example)
+            for key, value in example.items():
+                if key in self.properties:
+                    self.properties[key].load_examples(value)
 
     def set_default(self, instance):
         self.default = instance
