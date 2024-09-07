@@ -52,7 +52,14 @@ class HashableDict(dict):
     """Hashable dict"""
 
     def __hash__(self):
-        return hash(frozenset(self))
+        return hash(json.dumps(self, sort_keys=True))
+
+
+class HashableList(list):
+    """Hashable list"""
+
+    def __hash__(self):
+        return hash(json.dumps(self, sort_keys=True))
 
 
 class Diff(pydantic.BaseModel):

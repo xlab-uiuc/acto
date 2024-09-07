@@ -1,6 +1,7 @@
 import random
 from typing import Any, List, Optional, Tuple
 
+from acto.common import HashableList
 from acto.utils.thread_logger import get_thread_logger
 
 from .base import BaseSchema, TreeNode
@@ -107,7 +108,7 @@ class ArraySchema(BaseSchema):
             logger = get_thread_logger(with_prefix=True)
             logger.debug(f"Loading example {example} into {self}")
 
-            self.examples.add(tuple(example))
+            self.examples.add(HashableList(example))
             for item in example:
                 self.item_schema.load_examples(item)
 
