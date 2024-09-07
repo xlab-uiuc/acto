@@ -81,7 +81,7 @@ class StringSchema(BaseSchema):
                 if len(example_without_exclude) > 0:
                     return random.choice(example_without_exclude)
             else:
-                return random.choice(self.examples)
+                return random.choice(list(self.examples))
         if self.pattern is not None:
             # Since it's random, we don't need to exclude the value
             return exrex.getone(self.pattern, self.max_length)

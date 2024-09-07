@@ -132,7 +132,7 @@ class ObjectSchema(BaseSchema):
         if example is not None:
             logger = get_thread_logger(with_prefix=True)
             logger.debug(f"Loading example {example} into {self}")
-            self.examples.append(example)
+            self.examples.add(example)
             for key, value in example.items():
                 if key in self.properties:
                     self.properties[key].load_examples(value)
@@ -184,7 +184,7 @@ class ObjectSchema(BaseSchema):
                 if example_without_exclude:
                     return random.choice(example_without_exclude)
             else:
-                return random.choice(self.examples)
+                return random.choice(list(self.examples))
 
         # XXX: need to handle exclude_value, but not important for now for object types
         result = {}
