@@ -1,6 +1,8 @@
 import random
 from typing import List, Optional, Tuple
 
+from common import HashableDict
+
 from acto.utils.thread_logger import get_thread_logger
 
 from .base import BaseSchema, TreeNode
@@ -132,7 +134,7 @@ class ObjectSchema(BaseSchema):
         if example is not None:
             logger = get_thread_logger(with_prefix=True)
             logger.debug(f"Loading example {example} into {self}")
-            self.examples.add(example)
+            self.examples.add(HashableDict(example))
             for key, value in example.items():
                 if key in self.properties:
                     self.properties[key].load_examples(value)

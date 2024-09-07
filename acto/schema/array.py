@@ -107,7 +107,7 @@ class ArraySchema(BaseSchema):
             logger = get_thread_logger(with_prefix=True)
             logger.debug(f"Loading example {example} into {self}")
 
-            self.examples.add(example)
+            self.examples.add(tuple(example))
             for item in example:
                 self.item_schema.load_examples(item)
 
