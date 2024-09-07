@@ -150,7 +150,7 @@ def array_tests(schema: ArraySchema):
     def delete_setup(prev):
         if len(schema.examples) > 0:
             example_without_default = [
-                x for x in schema.enum if x != schema.default
+                x for x in schema.examples if x != schema.default
             ]
             if len(example_without_default) > 0:
                 return random.choice(example_without_default)
@@ -250,7 +250,7 @@ def boolean_tests(schema: BooleanSchema):
     def delete_setup(prev):
         if len(schema.examples) > 0:
             example_without_default = [
-                x for x in schema.enum if x != schema.default
+                x for x in schema.examples if x != schema.default
             ]
             if len(example_without_default) > 0:
                 return random.choice(example_without_default)
@@ -569,7 +569,7 @@ def object_tests(schema: ObjectSchema):
     def delete_setup(prev):
         if len(schema.examples) > 0:
             example_without_default = [
-                x for x in schema.enum if x != schema.default
+                x for x in schema.examples if x != schema.default
             ]
             if len(example_without_default) > 0:
                 return random.choice(example_without_default)
@@ -723,7 +723,7 @@ def string_tests(schema: StringSchema):
         logger = get_thread_logger(with_prefix=True)
         if len(schema.examples) > 0:
             example_without_default = [
-                x for x in schema.enum if x != schema.default
+                x for x in schema.examples if x != schema.default
             ]
             if len(example_without_default) > 0:
                 return random.choice(example_without_default)
