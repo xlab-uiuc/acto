@@ -96,11 +96,6 @@ def array_tests(schema: ArraySchema):
         if len(schema.examples) > 0:
             for example in schema.examples:
                 if len(example) > 1:
-                    logger.info(
-                        "Using example for setting up field [%s]: [%s]",
-                        schema.path,
-                        schema.examples[0],
-                    )
                     return example
         if prev is None:
             return schema.gen(minimum=True)
@@ -689,16 +684,7 @@ def string_tests(schema: StringSchema):
         return new_string
 
     def change_setup(prev):
-        logger = get_thread_logger(with_prefix=True)
-        if len(schema.examples) > 0:
-            logger.info(
-                "Using example for setting up field [%s]: [%s]",
-                schema.path,
-                schema.examples[0],
-            )
-            return schema.examples[0]
-        else:
-            return schema.gen()
+        return schema.gen()
 
     def empty_precondition(prev):
         return prev != ""
