@@ -1,8 +1,7 @@
 import random
 from typing import List, Optional, Tuple
 
-from common import HashableDict
-
+from acto.common import HashableDict
 from acto.utils.thread_logger import get_thread_logger
 
 from .base import BaseSchema, TreeNode
