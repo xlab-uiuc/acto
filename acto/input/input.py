@@ -350,6 +350,7 @@ class DeterministicInputModel(InputModel):
         self.metadata.number_of_misoperations = num_misoperations
         self.metadata.number_of_pruned_test_cases = num_pruned_test_cases
 
+        logger.info("Got %d schemas to focus on", len(normal_testcases))
         logger.info("Generated %d test cases in total", num_test_cases)
         logger.info("Generated %d test cases to run", num_run_test_cases)
         logger.info(
