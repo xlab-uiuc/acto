@@ -31,6 +31,7 @@ from acto.lib.operator_config import OperatorConfig
 from acto.oracle_handle import OracleHandle
 from acto.result import (
     CliStatus,
+    DeletionOracleResult,
     DifferentialOracleResult,
     OracleResults,
     RunResult,
@@ -415,6 +416,7 @@ class TrialRunner:
 
         generation = 0
         trial_id = f"trial-{self.worker_id + self.sequence_base:02d}-{self.curr_trial:04d}"
+        trial_err: Optional[OracleResults] = None
         while (
             generation < num_mutation
         ):  # every iteration gets a new list of next tests
@@ -436,12 +438,9 @@ class TrialRunner:
                 # if test_group is None, it means this group is exhausted
                 # break and move to the next trial
                 if test_groups is None:
-                    return TrialResult(
-                        trial_id=trial_id,
-                        duration=time.time() - trial_start_time,
-                        error=None,
-                    )
+                    break
 
+                setup_fail = False  # to break the loop if setup fails
                 # First make sure all the next tests are valid
                 for (
                     group,
@@ -508,11 +507,9 @@ class TrialRunner:
                             == CliStatus.CONNECTION_REFUSED
                         ):
                             logger.error("Connection refused, exiting")
-                            return TrialResult(
-                                trial_id=trial_id,
-                                duration=time.time() - trial_start_time,
-                                error=None,
-                            )
+                            trial_err = None
+                            setup_fail = True
+                            break
                         if (
                             run_result.is_invalid_input()
                             and run_result.oracle_result.health is None
@@ -533,16 +530,17 @@ class TrialRunner:
                                 runner
                             )
                             generation += 1
-                            return TrialResult(
-                                trial_id=trial_id,
-                                duration=time.time() - trial_start_time,
-                                error=run_result.oracle_result,
-                            )
+                            trial_err = run_result.oracle_result
+                            setup_fail = True
+                            break
                         elif run_result.cli_status == CliStatus.UNCHANGED:
                             logger.info("Setup produced unchanged input")
                             group.discard_testcase(self.discarded_testcases)
                         else:
                             ready_testcases.append((group, testcase_with_path))
+
+                if setup_fail:
+                    break
 
                 if len(ready_testcases) == 0:
                     logger.info("All setups failed")
@@ -563,22 +561,24 @@ class TrialRunner:
                     runner
                 )
                 generation += 1
-
-                return TrialResult(
-                    trial_id=f"trial-{self.worker_id + self.sequence_base:02d}"
-                    + f"-{self.curr_trial:04d}",
-                    duration=time.time() - trial_start_time,
-                    error=run_result.oracle_result,
-                )
+                trial_err = run_result.oracle_result
+                break
 
             if self.input_model.is_empty():
                 logger.info("Input model is empty, break")
+                trial_err = None
                 break
 
+        if trial_err is not None:
+            trial_err.deletion = self.run_delete(runner, generation=generation)
+        else:
+            trial_err = OracleResults()
+            trial_err.deletion = self.run_delete(runner, generation=generation)
+
         return TrialResult(
-            trial_id=f"trial-{self.worker_id + self.sequence_base:02d}-{self.curr_trial:04d}",
+            trial_id=trial_id,
             duration=time.time() - trial_start_time,
-            error=None,
+            error=trial_err,
         )
 
     def run_testcases(
@@ -728,6 +728,20 @@ class TrialRunner:
                 ),
                 to_state=snapshot.system_state,
             )
+        else:
+            return None
+
+    def run_delete(
+        self, runner: Runner, generation: int
+    ) -> Optional[DeletionOracleResult]:
+        """Runs the deletion test to check if the operator can properly handle deletion"""
+        logger = get_thread_logger(with_prefix=True)
+
+        logger.debug("Running delete")
+        success = runner.delete(generation=generation)
+
+        if not success:
+            return DeletionOracleResult(message="Deletion test case")
         else:
             return None
 
