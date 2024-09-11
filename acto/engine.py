@@ -42,7 +42,8 @@ from acto.result import (
 from acto.runner import Runner
 from acto.serialization import ActoEncoder, ContextEncoder
 from acto.snapshot import Snapshot
-from acto.utils import delete_operator_pod, process_crd, update_preload_images
+from acto.utils import delete_operator_pod, process_crd
+from acto.utils.preprocess import get_existing_images
 from acto.utils.thread_logger import get_thread_logger, set_thread_logger_prefix
 from ssa.analysis import analyze
 
@@ -945,6 +946,11 @@ class Acto:
             )
 
             self.cluster.restart_cluster("learn", learn_kubeconfig)
+
+            existing_images = get_existing_images(
+                self.cluster.get_node_list("learn")
+            )
+
             namespace = (
                 self.deploy.operator_existing_namespace or CONST.ACTO_NAMESPACE
             )
@@ -992,9 +998,13 @@ class Acto:
                     "Please make sure the operator config is correct"
                 )
 
-            update_preload_images(
-                self.context, self.cluster.get_node_list("learn")
+            current_images = get_existing_images(
+                self.cluster.get_node_list("learn")
             )
+            for current_image in current_images:
+                if current_image not in existing_images:
+                    self.context["preload_images"].add(current_image)
+
             self.cluster.delete_cluster("learn", learn_kubeconfig)
 
             run_end_time = time.time()
