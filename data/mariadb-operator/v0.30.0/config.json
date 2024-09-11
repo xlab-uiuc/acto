@@ -1,0 +1,19 @@
+{
+    "deploy": {
+        "steps": [
+            {
+                "helm_install": {
+                    "chart": "mariadb-operator/mariadb-operator",
+                    "repo": "https://helm.mariadb.com/mariadb-operator",
+                    "version": "0.30.0"
+                }
+            }
+        ]
+    },
+    "crd_name": "mariadbs.k8s.mariadb.com",
+    "seed_custom_resource": "data/percona-server-mongodb-operator/v1.16.0/cr.yaml",
+    "example_dir": "data/percona-server-mongodb-operator/v1.16.0/examples",
+    "num_nodes": 5,
+    "diff_ignore_fields": [],
+    "focus_fields": []
+}
