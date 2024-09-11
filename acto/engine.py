@@ -42,12 +42,7 @@ from acto.result import (
 from acto.runner import Runner
 from acto.serialization import ActoEncoder, ContextEncoder
 from acto.snapshot import Snapshot
-from acto.utils import (
-    delete_operator_pod,
-    get_yaml_existing_namespace,
-    process_crd,
-    update_preload_images,
-)
+from acto.utils import delete_operator_pod, process_crd, update_preload_images
 from acto.utils.thread_logger import get_thread_logger, set_thread_logger_prefix
 from ssa.analysis import analyze
 
@@ -951,8 +946,7 @@ class Acto:
 
             self.cluster.restart_cluster("learn", learn_kubeconfig)
             namespace = (
-                get_yaml_existing_namespace(self.deploy.operator_yaml)
-                or CONST.ACTO_NAMESPACE
+                self.deploy.operator_existing_namespace or CONST.ACTO_NAMESPACE
             )
             self.context["namespace"] = namespace
             kubectl_client = KubectlClient(learn_kubeconfig, learn_context_name)
