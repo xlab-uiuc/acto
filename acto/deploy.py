@@ -39,7 +39,7 @@ class Deploy:
     def __init__(self, deploy_config: DeployConfig) -> None:
         self._deploy_config = deploy_config
 
-        self._operator_existing_namespace: Optional[str]
+        self._operator_existing_namespace: Optional[str] = None
         for step in self._deploy_config.steps:
             if step.apply and step.apply.operator:
                 self._operator_existing_namespace = get_yaml_existing_namespace(
