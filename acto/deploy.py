@@ -2,14 +2,16 @@ import logging
 import time
 from typing import Optional
 
-import yaml
-
 from acto import utils
 from acto.common import kubernetes_client, print_event
 from acto.kubectl_client.helm import Helm
 from acto.kubectl_client.kubectl import KubectlClient
 from acto.lib.operator_config import DELEGATED_NAMESPACE, DeployConfig
 from acto.utils import get_thread_logger
+from acto.utils.k8s_helper import (
+    get_deployment_name_from_yaml,
+    get_yaml_existing_namespace,
+)
 from acto.utils.preprocess import add_acto_label
 
 
@@ -37,13 +39,16 @@ class Deploy:
     def __init__(self, deploy_config: DeployConfig) -> None:
         self._deploy_config = deploy_config
 
-        self._operator_yaml: str
+        self._operator_existing_namespace: Optional[str]
         for step in self._deploy_config.steps:
             if step.apply and step.apply.operator:
-                self._operator_yaml = step.apply.file
+                self._operator_existing_namespace = get_yaml_existing_namespace(
+                    step.apply.file
+                )
                 break
-        else:
-            raise RuntimeError("No operator yaml found in deploy config")
+            if step.helm_install and step.helm_install.operator:
+                self._operator_existing_namespace = None
+                break
 
         # Extract the operator_container_name from config
         self._operator_container_name = None
@@ -53,11 +58,30 @@ class Deploy:
                     step.apply.operator_container_name
                 )
                 break
+            if step.helm_install and step.helm_install.operator:
+                self._operator_container_name = (
+                    step.helm_install.operator_container_name
+                )
+                break
+
+        self._operator_deployment_name = None
+        for step in self._deploy_config.steps:
+            if step.apply and step.apply.operator:
+                if (
+                    ret := get_deployment_name_from_yaml(step.apply.file)
+                ) is not None:
+                    self._operator_deployment_name = ret
+                    break
+            if step.helm_install and step.helm_install.operator:
+                self._operator_deployment_name = (
+                    step.helm_install.operator_deployment_name
+                )
+                break
 
     @property
-    def operator_yaml(self) -> str:
+    def operator_existing_namespace(self) -> Optional[str]:
         """Get the operator yaml file path"""
-        return self._operator_yaml
+        return self._operator_existing_namespace
 
     def deploy(
         self,
@@ -168,12 +192,7 @@ class Deploy:
 
     def operator_name(self) -> Optional[str]:
         """Get the name of the operator deployment"""
-        with open(self._operator_yaml, "r", encoding="utf-8") as f:
-            operator_yamls = yaml.load_all(f, Loader=yaml.FullLoader)
-            for yaml_ in operator_yamls:
-                if yaml_["kind"] == "Deployment":
-                    return yaml_["metadata"]["name"]
-        return None
+        return self._operator_deployment_name
 
     @property
     def operator_container_name(self) -> Optional[str]:

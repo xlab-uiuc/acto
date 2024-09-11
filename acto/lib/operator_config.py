@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Self
 
 import pydantic
 
@@ -56,6 +56,34 @@ class HelmInstallStep(pydantic.BaseModel, extra="forbid"):
     version: Optional[str] = pydantic.Field(
         description="Version of the helm chart", default=None
     )
+    operator: bool = pydantic.Field(
+        description="If the file contains the operator deployment",
+        default=False,
+    )
+    operator_deployment_name: Optional[str] = pydantic.Field(
+        description="The deployment name of the operator in the operator pod, "
+        "required if there are multiple deployments in the operator pod",
+        default=None,
+    )
+    operator_container_name: Optional[str] = pydantic.Field(
+        description="The container name of the operator in the operator pod, "
+        "required if there are multiple containers in the operator pod",
+        default=None,
+    )
+
+    @pydantic.model_validator(mode="after")
+    def check_operator_helm_install(self) -> Self:
+        """Check if the operator helm install is valid"""
+        if self.operator:
+            if (
+                not self.operator_deployment_name
+                or not self.operator_container_name
+            ):
+                raise ValueError(
+                    "operator_deployment_name and operator_container_name "
+                    + "are required for operator helm install for operator"
+                )
+        return self
 
 
 class DeployStep(pydantic.BaseModel, extra="forbid"):
@@ -72,9 +100,7 @@ class DeployStep(pydantic.BaseModel, extra="forbid"):
         description="Configuration for each step of helm install", default=None
     )
 
-    # TODO: Add support for helm and kustomize
-    # helm: str = pydantic.Field(
-    #     description="Path to the file for helm install")
+    # TODO: Add support and kustomize
     # kustomize: str = pydantic.Field(
     #     description="Path to the file for kustomize build")
 
