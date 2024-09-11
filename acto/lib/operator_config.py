@@ -1,6 +1,7 @@
-from typing import Optional, Self
+from typing import Optional
 
 import pydantic
+from typing_extensions import Self
 
 DELEGATED_NAMESPACE = "__DELEGATED__"
 
