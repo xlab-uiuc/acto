@@ -123,10 +123,11 @@ class Deploy:
                 # Install the helm chart
                 helm = Helm(kubeconfig, context_name)
                 p = helm.install(
-                    step.helm_install.release_name,
-                    step.helm_install.chart,
-                    release_namespace,
-                    step.helm_install.repo,
+                    release_name=step.helm_install.release_name,
+                    chart=step.helm_install.chart,
+                    namespace=release_namespace,
+                    repo=step.helm_install.repo,
+                    version=step.helm_install.version,
                 )
                 if p.returncode != 0:
                     logger.error(

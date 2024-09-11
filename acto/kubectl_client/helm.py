@@ -28,6 +28,7 @@ class Helm:
         chart: str,
         namespace: str,
         repo: Optional[str] = None,
+        version: Optional[str] = None,
         args: Optional[list] = None,
     ) -> subprocess.CompletedProcess:
         """Installs a helm chart. It uses the --wait flag to wait for the deployment to be ready"""
@@ -42,6 +43,8 @@ class Helm:
         ]
         if repo:
             cmd.extend(["--repo", repo])
+        if version:
+            cmd.extend(["--version", version])
         if args:
             cmd.extend(args)
         return self.helm(cmd)

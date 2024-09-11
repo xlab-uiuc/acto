@@ -53,6 +53,9 @@ class HelmInstallStep(pydantic.BaseModel, extra="forbid"):
     repo: Optional[str] = pydantic.Field(
         description="Name of the helm repository", default=None
     )
+    version: Optional[str] = pydantic.Field(
+        description="Version of the helm chart", default=None
+    )
 
 
 class DeployStep(pydantic.BaseModel, extra="forbid"):
