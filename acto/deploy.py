@@ -3,10 +3,10 @@ import time
 from typing import Optional
 
 import yaml
-from kubectl_client.helm import Helm
 
 from acto import utils
 from acto.common import kubernetes_client, print_event
+from acto.kubectl_client.helm import Helm
 from acto.kubectl_client.kubectl import KubectlClient
 from acto.lib.operator_config import DELEGATED_NAMESPACE, DeployConfig
 from acto.utils import get_thread_logger
