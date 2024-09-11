@@ -1,9 +1,11 @@
 import logging
 import time
+from typing import Optional
 
 import yaml
+from kubectl_client.helm import Helm
 
-import acto.utils as utils
+from acto import utils
 from acto.common import kubernetes_client, print_event
 from acto.kubectl_client.kubectl import KubectlClient
 from acto.lib.operator_config import DELEGATED_NAMESPACE, DeployConfig
@@ -35,7 +37,7 @@ class Deploy:
     def __init__(self, deploy_config: DeployConfig) -> None:
         self._deploy_config = deploy_config
 
-        self._operator_yaml: str = None
+        self._operator_yaml: str
         for step in self._deploy_config.steps:
             if step.apply and step.apply.operator:
                 self._operator_yaml = step.apply.file
@@ -106,6 +108,34 @@ class Deploy:
             elif step.wait:
                 # Simply wait for the specified duration
                 time.sleep(step.wait.duration)
+            elif step.helm_install:
+                # Use the namespace from the argument if the namespace is delegated
+                # If the namespace from the config is explicitly specified,
+                # use the specified namespace
+                # If the namespace from the config is set to None, do not apply
+                # with namespace
+                release_namespace = "default"
+                if step.helm_install.namespace == DELEGATED_NAMESPACE:
+                    release_namespace = namespace
+                elif step.helm_install.namespace is not None:
+                    release_namespace = step.helm_install.namespace
+
+                # Install the helm chart
+                helm = Helm(kubeconfig, context_name)
+                p = helm.install(
+                    step.helm_install.release_name,
+                    step.helm_install.chart,
+                    release_namespace,
+                    step.helm_install.repo,
+                )
+                if p.returncode != 0:
+                    logger.error(
+                        "Failed to deploy operator due to error from helm"
+                        + f" (returncode={p.returncode})"
+                        + f" (stdout={p.stdout})"
+                        + f" (stderr={p.stderr})"
+                    )
+                    return False
 
         # Add acto label to the operator pod
         add_acto_label(api_client, namespace)
@@ -135,7 +165,7 @@ class Deploy:
                 logger.error("Failed to deploy operator, retrying...")
         return False
 
-    def operator_name(self) -> str:
+    def operator_name(self) -> Optional[str]:
         """Get the name of the operator deployment"""
         with open(self._operator_yaml, "r", encoding="utf-8") as f:
             operator_yamls = yaml.load_all(f, Loader=yaml.FullLoader)
@@ -145,6 +175,6 @@ class Deploy:
         return None
 
     @property
-    def operator_container_name(self) -> str:
+    def operator_container_name(self) -> Optional[str]:
         """Get the name of the operator container"""
         return self._operator_container_name

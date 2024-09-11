@@ -34,15 +34,39 @@ class WaitStep(pydantic.BaseModel, extra="forbid"):
     )
 
 
+class HelmInstallStep(pydantic.BaseModel, extra="forbid"):
+    """Configuration for each step of helm install"""
+
+    release_name: str = pydantic.Field(
+        description="Name of the release for helm install",
+        default="operator-release",
+    )
+    chart: str = pydantic.Field(
+        description="Path to the chart for helm install"
+    )
+    namespace: Optional[str] = pydantic.Field(
+        description="Namespace for installing the chart. If not specified, "
+        + "use the namespace in the chart or Acto namespace. "
+        + "If set to null, use the namespace in the chart",
+        default=DELEGATED_NAMESPACE,
+    )
+    repo: Optional[str] = pydantic.Field(
+        description="Name of the helm repository", default=None
+    )
+
+
 class DeployStep(pydantic.BaseModel, extra="forbid"):
     """A step of deploying a resource"""
 
-    apply: ApplyStep = pydantic.Field(
+    apply: Optional[ApplyStep] = pydantic.Field(
         description="Configuration for each step of kubectl apply", default=None
     )
-    wait: WaitStep = pydantic.Field(
+    wait: Optional[WaitStep] = pydantic.Field(
         description="Configuration for each step of waiting for the operator",
         default=None,
+    )
+    helm_install: Optional[HelmInstallStep] = pydantic.Field(
+        description="Configuration for each step of helm install", default=None
     )
 
     # TODO: Add support for helm and kustomize

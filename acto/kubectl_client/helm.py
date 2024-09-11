@@ -30,7 +30,7 @@ class Helm:
         repo: Optional[str] = None,
         args: Optional[list] = None,
     ) -> subprocess.CompletedProcess:
-        """Installs a helm chart"""
+        """Installs a helm chart. It uses the --wait flag to wait for the deployment to be ready"""
         cmd = [
             "install",
             release_name,
@@ -38,6 +38,7 @@ class Helm:
             "--namespace",
             namespace,
             "--create-namespace",
+            "--wait",
         ]
         if repo:
             cmd.extend(["--repo", repo])
