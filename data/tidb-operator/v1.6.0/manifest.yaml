@@ -4,11 +4,11 @@ kind: ServiceAccount
 apiVersion: v1
 metadata:
   name: tidb-controller-manager
-  namespace: default
+  namespace: acto-namespace
   labels:
     app.kubernetes.io/name: tidb-operator
     app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/instance: tidb-operator
+    app.kubernetes.io/instance: acto-operator
     app.kubernetes.io/component: controller-manager
     helm.sh/chart: tidb-operator-v1.6.0
 ---
@@ -16,11 +16,11 @@ metadata:
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: tidb-operator:tidb-controller-manager
+  name: acto-operator:tidb-controller-manager
   labels:
     app.kubernetes.io/name: tidb-operator
     app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/instance: tidb-operator
+    app.kubernetes.io/instance: acto-operator
     app.kubernetes.io/component: controller-manager
     helm.sh/chart: tidb-operator-v1.6.0
 rules:
@@ -88,20 +88,20 @@ rules:
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: tidb-operator:tidb-controller-manager
+  name: acto-operator:tidb-controller-manager
   labels:
     app.kubernetes.io/name: tidb-operator
     app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/instance: tidb-operator
+    app.kubernetes.io/instance: acto-operator
     app.kubernetes.io/component: controller-manager
     helm.sh/chart: tidb-operator-v1.6.0
 subjects:
 - kind: ServiceAccount
   name: tidb-controller-manager
-  namespace: default
+  namespace: acto-namespace
 roleRef:
   kind: ClusterRole
-  name: tidb-operator:tidb-controller-manager
+  name: acto-operator:tidb-controller-manager
   apiGroup: rbac.authorization.k8s.io
 ---
 # Source: tidb-operator/templates/controller-manager-deployment.yaml
@@ -109,11 +109,11 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: tidb-controller-manager
-  namespace: default
+  namespace: acto-namespace
   labels:
     app.kubernetes.io/name: tidb-operator
     app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/instance: tidb-operator
+    app.kubernetes.io/instance: acto-operator
     app.kubernetes.io/component: controller-manager
     helm.sh/chart: tidb-operator-v1.6.0
 spec:
@@ -121,13 +121,13 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: tidb-operator
-      app.kubernetes.io/instance: tidb-operator
+      app.kubernetes.io/instance: acto-operator
       app.kubernetes.io/component: controller-manager
   template:
     metadata:
       labels:
         app.kubernetes.io/name: tidb-operator
-        app.kubernetes.io/instance: tidb-operator
+        app.kubernetes.io/instance: acto-operator
         app.kubernetes.io/component: controller-manager
     spec:
       serviceAccount: tidb-controller-manager
