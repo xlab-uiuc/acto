@@ -4,38 +4,530 @@ metadata:
   name: advanced-tidb
   namespace: default
 spec:
+  affinity: {}
+  annotations:
+    node.kubernetes.io/instance-type: some-vm-type
+    topology.kubernetes.io/region: some-region
+  cluster:
+    clusterDomain: cluster.local
+    name: tidb-cluster-to-join
+    namespace: default
+  clusterDomain: cluster.local
   configUpdateStrategy: RollingUpdate
+  discovery:
+    affinity: {}
+    annotations:
+      node.kubernetes.io/instance-type: some-vm-type
+    env:
+    - name: MY_ENV_1
+      value: value1
+    hostNetwork: false
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets: secretName
+    labels: {}
+    limits:
+      cpu: 2000m
+      memory: 1Gi
+    nodeSelector:
+      app.kubernetes.io/component: discovery
+    priorityClassName: system-cluster-critical
+    requests:
+      cpu: 1000m
+      memory: 256Mi
+    schedulerName: default-scheduler
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: discovery
   enableDynamicConfiguration: true
   helper:
     image: alpine:3.16.0
+  hostNetwork: false
+  imagePullPolicy: IfNotPresent
+  imagePullSecrets:
+  - name: secretName
+  nodeSelector:
+    node-role.kubernetes.io/tidb: true
+  paused: false
   pd:
+    additionalContainers:
+    - image: ubuntu
+      name: myCustomContainer
+    additionalVolumeMounts:
+    - mountPath: /nfs
+      name: nfs
+    additionalVolumes:
+    - name: nfs
+      nfs:
+        path: /nfs
+        server: 192.168.0.2
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/component
+                operator: In
+                values:
+                - tidb
+                - tikv
+            topologyKey: kubernetes.io/hostname
+          weight: 100
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - pd
+          topologyKey: kubernetes.io/hostname
+    annotations:
+      node.kubernetes.io/instance-type: some-vm-type
     baseImage: pingcap/pd
     config: "[dashboard]\n  internal-proxy = true\n"
+    configUpdateStrategy: RollingUpdate
+    dataSubDir: ''
+    env:
+    - name: MY_ENV_1
+      value: value1
+    - name: MY_ENV_2
+      valueFrom:
+        fieldRef:
+          fieldPath: status.myEnv2
+    hostNetwork: false
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets:
+    - name: secretName
+    limits:
+      cpu: 2000m
+      memory: 2Gi
     maxFailoverCount: 0
     mountClusterClientSecret: true
+    nodeSelector:
+      app.kubernetes.io/component: pd
+    podSecurityContext:
+      sysctls:
+      - name: net.core.somaxconn
+        value: '32768'
+    priorityClassName: system-cluster-critical
     replicas: 3
     requests:
+      cpu: 1000m
+      memory: 1Gi
       storage: 10Gi
-  pvReclaimPolicy: Retain
-  tidb:
-    baseImage: pingcap/tidb
-    config: "[performance]\n  tcp-keep-alive = true\n"
-    maxFailoverCount: 0
-    replicas: 3
+    schedulerName: default-scheduler
     service:
+      annotations:
+        foo: bar
+      portName: client
+      type: ClusterIP
+    serviceAccount: advanced-tidb-pd
+    statefulSetUpdateStrategy: RollingUpdate
+    storageClassName: ''
+    storageVolumes:
+    - mountPath: /some/path
+      name: volumeName
+      storageClassName: local-storage
+      storageSize: 1Gi
+    terminationGracePeriodSeconds: 30
+    tlsClientSecretName: custom-tidb-client-secret-name
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: pd
+    topologySpreadConstraints:
+    - maxSkew: 1
+      minDomains: 3
+      nodeAffinityPolicy: Honor
+      topologyKey: topology.kubernetes.io/zone
+    version: v8.1.0
+  pdAddresses:
+  - http://cluster1-pd-0.cluster1-pd-peer.default.svc:2379
+  - http://cluster1-pd-1.cluster1-pd-peer.default.svc:2379
+  podManagementPolicy: Parallel
+  priorityClassName: system-cluster-critical
+  pump:
+    additionalContainers: []
+    additionalVolumeMounts: []
+    additionalVolumes: []
+    annotations:
+      node.kubernetes.io/instance-type: some-vm-type
+    baseImage: pingcap/tidb-binlog
+    config: 'gc = 7
+
+      '
+    configUpdateStrategy: RollingUpdate
+    env: []
+    hostNetwork: false
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets:
+    - name: secretName
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+    nodeSelector:
+      app.kubernetes.io/component: pump
+    podSecurityContext: {}
+    priorityClassName: system-cluster-critical
+    replicas: 1
+    requests:
+      cpu: 1000m
+      memory: 1Gi
+      storage: 1Gi
+    schedulerName: default-scheduler
+    serviceAccount: advanced-tidb-pump
+    statefulSetUpdateStrategy: RollingUpdate
+    storageClassName: local-storage
+    terminationGracePeriodSeconds: 30
+    tolerations: {}
+    topologySpreadConstraints:
+    - maxSkew: 1
+      minDomains: 3
+      nodeAffinityPolicy: Honor
+      topologyKey: topology.kubernetes.io/zone
+    version: v8.1.0
+  pvReclaimPolicy: Retain
+  schedulerName: default-scheduler
+  serviceAccount: advanced-tidb
+  statefulSetUpdateStrategy: RollingUpdate
+  ticdc:
+    additionalContainers: []
+    additionalVolumeMounts: []
+    additionalVolumes: []
+    annotations:
+      node.kubernetes.io/instance-type: some-vm-type
+    baseImage: pingcap/ticdc
+    config: 'gc-ttl = 86400
+
+      log-level = "info"
+
+      log-file = ""
+
+      '
+    configUpdateStrategy: RollingUpdate
+    env: []
+    hostNetwork: false
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets:
+    - name: secretName
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+    nodeSelector:
+      app.kubernetes.io/component: ticdc
+    podSecurityContext: {}
+    priorityClassName: system-cluster-critical
+    replicas: 3
+    requests:
+      cpu: 1000m
+      memory: 1Gi
+    schedulerName: default-scheduler
+    serviceAccount: advanced-tidb-ticdc
+    statefulSetUpdateStrategy: RollingUpdate
+    storageClassName: local-storage
+    storageVolumes: []
+    terminationGracePeriodSeconds: 30
+    tolerations: {}
+    topologySpreadConstraints:
+    - maxSkew: 1
+      minDomains: 3
+      nodeAffinityPolicy: Honor
+      topologyKey: topology.kubernetes.io/zone
+    version: v8.1.0
+  tidb:
+    additionalContainers:
+    - image: ubuntu
+      name: myCustomContainer
+    additionalVolumeMounts:
+    - mountPath: /nfs
+      name: nfs
+    additionalVolumes:
+    - name: nfs
+      nfs:
+        path: /nfs
+        server: 192.168.0.2
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/component
+                operator: In
+                values:
+                - pd
+                - tikv
+            topologyKey: kubernetes.io/hostname
+          weight: 100
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - tidb
+          topologyKey: kubernetes.io/hostname
+    annotations:
+      node.kubernetes.io/instance-type: some-vm-type
+    baseImage: pingcap/tidb
+    binlogEnabled: false
+    config: "[performance]\n  tcp-keep-alive = true\n"
+    configUpdateStrategy: RollingUpdate
+    env:
+    - name: MY_ENV_1
+      value: value1
+    - name: MY_ENV_2
+      valueFrom:
+        fieldRef:
+          fieldPath: status.myEnv2
+    hostNetwork: false
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets:
+    - name: secretName
+    lifecycle:
+      postStart:
+        exec:
+          command:
+          - echo
+          - postStart
+      preStop:
+        exec:
+          command:
+          - echo
+          - preStop
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+    maxFailoverCount: 0
+    nodeSelector:
+      app.kubernetes.io/component: tidb
+    podSecurityContext:
+      sysctls:
+      - name: net.ipv4.tcp_keepalive_time
+        value: '300'
+      - name: net.ipv4.tcp_keepalive_intvl
+        value: '75'
+      - name: net.core.somaxconn
+        value: '32768'
+    priorityClassName: system-cluster-critical
+    readinessProbe:
+      type: command
+    replicas: 3
+    requests:
+      cpu: 1000m
+      memory: 1Gi
+    schedulerName: default-scheduler
+    separateSlowLog: true
+    service:
+      exposeStatus: true
       externalTrafficPolicy: Local
+      mysqlNodePort: 30020
+      statusNodePort: 30040
       type: NodePort
+    serviceAccount: advanced-tidb-tidb
+    slowLogTailer:
+      image: busybox
+      imagePullPolicy: IfNotPresent
+      limits:
+        cpu: 2000m
+        memory: 2Gi
+      requests:
+        cpu: 1000m
+        memory: 1Gi
+    slowLogVolumeName: ''
+    statefulSetUpdateStrategy: RollingUpdate
+    storageClassName: ''
+    storageVolumes:
+    - mountPath: /some/path
+      name: volumeName
+      storageClassName: local-storage
+      storageSize: 1Gi
+    terminationGracePeriodSeconds: 30
+    tlsClient:
+      disableClientAuthn: false
+      enabled: true
+      skipInternalClientCA: false
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: tidb
+    topologySpreadConstraints:
+    - maxSkew: 1
+      minDomains: 3
+      nodeAffinityPolicy: Honor
+      topologyKey: topology.kubernetes.io/zone
+    version: v8.1.0
+  tiflash:
+    additionalContainers: []
+    additionalVolumeMounts: []
+    additionalVolumes: []
+    annotations:
+      node.kubernetes.io/instance-type: some-vm-type
+    baseImage: pingcap/tiflash
+    config:
+      config: "[logger]\n  log = \"/data0/logs/somelog\"\n"
+      proxy: "[security]\n  cert-allowed-cn = \"CNNAME\"\n"
+    configUpdateStrategy: RollingUpdate
+    env: []
+    hostNetwork: false
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets:
+    - name: secretName
+    initializer:
+      limits:
+        cpu: 2000m
+        memory: 2Gi
+      requests:
+        cpu: 1000m
+        memory: 1Gi
+    maxFailoverCount: 0
+    nodeSelector:
+      app.kubernetes.io/component: tiflash
+    podSecurityContext: {}
+    priorityClassName: system-cluster-critical
+    privileged: false
+    recoverFailover: true
+    replicas: 1
+    schedulerName: default-scheduler
+    serviceAccount: advanced-tidb-tiflash
+    statefulSetUpdateStrategy: RollingUpdate
+    storageClaims:
+    - resources:
+        requests:
+          storage: 1Gi
+      storageClassName: local-storage
+    terminationGracePeriodSeconds: 30
+    tolerations: {}
+    topologySpreadConstraints:
+    - maxSkew: 1
+      minDomains: 3
+      nodeAffinityPolicy: Honor
+      topologyKey: topology.kubernetes.io/zone
+    version: v8.1.0
   tikv:
+    additionalContainers:
+    - image: ubuntu
+      name: myCustomContainer
+    additionalVolumeMounts:
+    - mountPath: /nfs
+      name: nfs
+    additionalVolumes:
+    - name: nfs
+      nfs:
+        path: /nfs
+        server: 192.168.0.2
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/component
+                operator: In
+                values:
+                - tidb
+                - pd
+            topologyKey: kubernetes.io/hostname
+          weight: 100
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - tikv
+          topologyKey: kubernetes.io/hostname
+    annotations:
+      node.kubernetes.io/instance-type: some-vm-type
     baseImage: pingcap/tikv
     config: 'log-level = "info"
 
       '
+    configUpdateStrategy: RollingUpdate
+    dataSubDir: ''
+    env:
+    - name: MY_ENV_1
+      value: value1
+    - name: MY_ENV_2
+      valueFrom:
+        fieldRef:
+          fieldPath: status.myEnv2
+    evictLeaderTimeout: 3m
+    hostNetwork: false
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets:
+    - name: secretName
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+      storage: 10Gi
+    logTailer:
+      limits:
+        cpu: 2000m
+        memory: 2Gi
+      requests:
+        cpu: 1000m
+        memory: 1Gi
     maxFailoverCount: 0
     mountClusterClientSecret: true
+    nodeSelector:
+      app.kubernetes.io/component: tikv
+    podSecurityContext:
+      sysctls:
+      - name: net.ipv4.tcp_keepalive_time
+        value: '300'
+      - name: net.ipv4.tcp_keepalive_intvl
+        value: '75'
+      - name: net.core.somaxconn
+        value: '32768'
+    priorityClassName: system-cluster-critical
+    privileged: false
+    raftLogVolumeName: ''
+    recoverFailover: true
     replicas: 3
     requests:
       storage: 100Gi
+    rocksDBLogVolumeName: ''
+    schedulerName: default-scheduler
+    separateRaftLog: true
+    separateRocksDBLog: true
+    serviceAccount: advanced-tidb-tikv
+    statefulSetUpdateStrategy: RollingUpdate
+    storageClassName: ''
+    storageVolumes:
+    - mountPath: /some/path
+      name: volumeName
+      storageClassName: local-storage
+      storageSize: 1Gi
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: tikv
+    topologySpreadConstraints:
+    - maxSkew: 1
+      minDomains: 3
+      nodeAffinityPolicy: Honor
+      topologyKey: topology.kubernetes.io/zone
+    version: v8.1.0
   timezone: UTC
+  tlsCluster:
+    enabled: true
+  tolerations:
+  - effect: NoSchedule
+    key: dedicated
+    operator: Equal
+    value: tidb
+  topologySpreadConstraints:
+  - maxSkew: 1
+    minDomains: 3
+    nodeAffinityPolicy: Honor
+    topologyKey: topology.kubernetes.io/zone
   version: v8.1.0
 ---
 apiVersion: pingcap.com/v1alpha1
@@ -108,6 +600,18 @@ spec:
       storage: 100Gi
   timezone: UTC
   version: v8.1.0
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: thanos-objectstorage
+stringData:
+  objectstorage.yaml: "type: S3\nconfig:\n  bucket: \"xxxxxx\"\n  endpoint: \"xxxx\"\
+    \n  region: \"\"\n  access_key: \"xxxx\"\n  insecure: true\n  signature_version2:\
+    \ true\n  secret_key: \"xxxx\"\n  put_user_metadata: {}\n  http_config:\n    idle_conn_timeout:\
+    \ 90s\n    response_header_timeout: 2m\n  trace:\n    enable: true\n  part_size:\
+    \ 41943040\n"
+type: Opaque
 ---
 apiVersion: pingcap.com/v1alpha1
 kind: TidbCluster
@@ -1330,6 +1834,15 @@ spec:
       storage: 1Gi
   timezone: UTC
   version: v8.1.0
+---
+apiVersion: v1
+data:
+  password: YWRtaW4=
+  username: YWRtaW4=
+kind: Secret
+metadata:
+  name: basic-grafana
+type: Opaque
 ---
 apiVersion: pingcap.com/v1alpha1
 kind: TidbCluster
