@@ -3,16 +3,71 @@
         "steps": [
             {
                 "apply": {
+                    "file": "https://github.com/cert-manager/cert-manager/releases/download/v1.15.3/cert-manager.yaml",
+                    "namespace": null
+                }
+            },
+            {
+                "apply": {
                     "file": "data/tidb-operator/v1.6.0/crd.yaml",
                     "namespace": null
                 }
             },
             {
                 "apply": {
-                    "file": "data/tidb-operator/manifest.yaml",
+                    "file": "data/tidb-operator/v1.6.0/manifest.yaml",
                     "operator": true
                 }
+            },
+            {
+                "apply": {
+                    "file": "data/tidb-operator/v1.6.0/tidb-cluster-issuer.yaml",
+                    "operator": true
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/tidb-operator/v1.6.0/pd-certs.yaml",
+                    "namespace": null
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/tidb-operator/v1.6.0/pump-certs.yaml",
+                    "namespace": null
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/tidb-operator/v1.6.0/ticdc-certs.yaml",
+                    "namespace": null
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/tidb-operator/v1.6.0/tidb-certs.yaml",
+                    "namespace": null
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/tidb-operator/v1.6.0/tiflash-certs.yaml",
+                    "namespace": null
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/tidb-operator/v1.6.0/tikv-certs.yaml",
+                    "namespace": null
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/tidb-operator/v1.6.0/client-certs.yaml",
+                    "namespace": null
+                }
             }
+
         ]
     },
     "crd_name": "tidbclusters.pingcap.com",

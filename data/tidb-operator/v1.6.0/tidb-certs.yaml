@@ -1,0 +1,65 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: test-cluster-tidb-cluster-secret
+  namespace: acto-namespace
+spec:
+  secretName: test-cluster-tidb-cluster-secret
+  duration: 8760h # 365d
+  renewBefore: 360h # 15d
+  subject:
+    organizations:
+    - PingCAP
+  commonName: "TiDB"
+  usages:
+    - server auth
+    - client auth
+  dnsNames:
+  - "test-cluster-tidb"
+  - "test-cluster-tidb.acto-namespace"
+  - "test-cluster-tidb.acto-namespace.svc"
+  - "test-cluster-tidb-peer"
+  - "test-cluster-tidb-peer.acto-namespace"
+  - "test-cluster-tidb-peer.acto-namespace.svc"
+  - "*.test-cluster-tidb-peer"
+  - "*.test-cluster-tidb-peer.acto-namespace"
+  - "*.test-cluster-tidb-peer.acto-namespace.svc"
+  ipAddresses:
+  - 127.0.0.1
+  - ::1
+  issuerRef:
+    name: test-cluster-tidb-issuer
+    kind: Issuer
+    group: cert-manager.io-tidb-cluster-secret
+  namespace: acto-namespace
+spec:
+  secretName: test-cluster-tidb-cluster-secret
+  duration: 8760h # 365d
+  renewBefore: 360h # 15d
+  subject:
+    organizations:
+    - PingCAP
+  commonName: "TiDB"
+  usages:
+    - server auth
+    - client auth
+  dnsNames:
+  - "test-cluster-tidb"
+  - "test-cluster-tidb.acto-namespace"
+  - "test-cluster-tidb.acto-namespace.svc"
+  - "test-cluster-tidb-peer"
+  - "test-cluster-tidb-peer.acto-namespace"
+  - "test-cluster-tidb-peer.acto-namespace.svc"
+  - "*.test-cluster-tidb-peer"
+  - "*.test-cluster-tidb-peer.acto-namespace"
+  - "*.test-cluster-tidb-peer.acto-namespace.svc"
+  ipAddresses:
+  - 127.0.0.1
+  - ::1
+  issuerRef:
+    name: test-cluster-tidb-issuer
+    kind: Issuer
+    group: cert-manager.io
