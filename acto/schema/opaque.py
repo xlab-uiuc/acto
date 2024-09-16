@@ -1,5 +1,8 @@
 from typing import Any, List, Optional, Tuple
 
+from acto.common import HashableDict, HashableList
+from acto.utils.thread_logger import get_thread_logger
+
 from .base import BaseSchema, TreeNode
 
 
@@ -18,7 +21,16 @@ class OpaqueSchema(BaseSchema):
         return TreeNode(self.path)
 
     def load_examples(self, example: Optional[Any]):
-        if example is not None:
+        if example is None:
+            return
+        logger = get_thread_logger(with_prefix=True)
+        if isinstance(example, dict):
+            logger.debug(f"Loading example {example} into {self}")
+            self.examples.add(HashableDict(example))
+        elif isinstance(example, list):
+            logger.debug(f"Loading example {example} into {self}")
+            self.examples.add(HashableList(example))
+        else:
             self.examples.add(example)
 
     def set_default(self, instance):
