@@ -1,0 +1,31 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: test-cluster-selfsigned-ca-issuer
+  namespace: acto-namespace
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: test-cluster-ca
+  namespace: acto-namespace
+spec:
+  secretName: test-cluster-ca-secret
+  commonName: "TiDB"
+  isCA: true
+  duration: 87600h # 10yrs
+  renewBefore: 720h # 30d
+  issuerRef:
+    name: test-cluster-selfsigned-ca-issuer
+    kind: Issuer
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: test-cluster-tidb-issuer
+  namespace: acto-namespace
+spec:
+  ca:
+    secretName: test-cluster-ca-secret

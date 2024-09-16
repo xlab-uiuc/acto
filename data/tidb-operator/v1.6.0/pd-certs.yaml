@@ -1,0 +1,33 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: test-cluster-pd-cluster-secret
+  namespace: acto-namespace
+spec:
+  secretName: test-cluster-pd-cluster-secret
+  duration: 8760h # 365d
+  renewBefore: 360h # 15d
+  subject:
+    organizations:
+    - PingCAP
+  commonName: "TiDB"
+  usages:
+    - server auth
+    - client auth
+  dnsNames:
+  - "test-cluster-pd"
+  - "test-cluster-pd.acto-namespace"
+  - "test-cluster-pd.acto-namespace.svc"
+  - "test-cluster-pd-peer"
+  - "test-cluster-pd-peer.acto-namespace"
+  - "test-cluster-pd-peer.acto-namespace.svc"
+  - "*.test-cluster-pd-peer"
+  - "*.test-cluster-pd-peer.acto-namespace"
+  - "*.test-cluster-pd-peer.acto-namespace.svc"
+  ipAddresses:
+  - 127.0.0.1
+  - ::1
+  issuerRef:
+    name: test-cluster-tidb-issuer
+    kind: Issuer
+    group: cert-manager.io
