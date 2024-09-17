@@ -132,11 +132,17 @@ class ObjectSchema(BaseSchema):
     def load_examples(self, example: Optional[dict]):
         if example is not None:
             logger = get_thread_logger(with_prefix=True)
-            logger.debug(f"Loading example {example} into {self}")
-            self.examples.add(HashableDict(example))
-            for key, value in example.items():
-                if key in self.properties:
-                    self.properties[key].load_examples(value)
+            logger.debug("Loading example %s into %s", example, self.path)
+
+            if isinstance(example, dict):
+                self.examples.add(HashableDict(example))
+                for key, value in example.items():
+                    if key in self.properties:
+                        self.properties[key].load_examples(value)
+            else:
+                raise TypeError(
+                    f"Example {example} is not a dictionary, cannot load it into {self.path}"
+                )
 
     def set_default(self, instance):
         self.default = instance

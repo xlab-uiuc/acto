@@ -106,11 +106,16 @@ class ArraySchema(BaseSchema):
     def load_examples(self, example: Optional[List[Any]]):
         if example is not None:
             logger = get_thread_logger(with_prefix=True)
-            logger.debug(f"Loading example {example} into {self}")
+            logger.debug("Loading example %s into %s", example, self.path)
 
-            self.examples.add(HashableList(example))
-            for item in example:
-                self.item_schema.load_examples(item)
+            if isinstance(example, list):
+                self.examples.add(HashableList(example))
+                for item in example:
+                    self.item_schema.load_examples(item)
+            else:
+                raise TypeError(
+                    f"Expected example to be of type list, got {type(example)}"
+                )
 
     def set_default(self, instance):
         self.default = instance

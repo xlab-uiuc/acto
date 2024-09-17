@@ -24,11 +24,10 @@ class OpaqueSchema(BaseSchema):
         if example is None:
             return
         logger = get_thread_logger(with_prefix=True)
+        logger.debug("Loading example %s into %s", example, self.path)
         if isinstance(example, dict):
-            logger.debug(f"Loading example {example} into {self}")
             self.examples.add(HashableDict(example))
         elif isinstance(example, list):
-            logger.debug(f"Loading example {example} into {self}")
             self.examples.add(HashableList(example))
         else:
             self.examples.add(example)

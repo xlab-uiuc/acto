@@ -49,9 +49,14 @@ class StringSchema(BaseSchema):
 
     def load_examples(self, example: Optional[str]):
         if example is not None:
-            logger = get_thread_logger(with_prefix=True)
-            logger.debug(f"Loading example {example} into {self}")
-            self.examples.add(example)
+            if isinstance(example, str):
+                logger = get_thread_logger(with_prefix=True)
+                logger.debug("Loading example %s into %s", example, self.path)
+                self.examples.add(example)
+            else:
+                raise TypeError(
+                    f"Expected string, got {type(example)} for {self.path}"
+                )
 
     def set_default(self, instance):
         self.default = str(instance)
