@@ -8,7 +8,7 @@ import os
 import random
 import threading
 from functools import reduce
-from typing import List, Optional, Tuple
+from typing import Optional, Tuple
 
 import pydantic
 import yaml
@@ -116,7 +116,7 @@ class InputModel(abc.ABC):
     @abc.abstractmethod
     def next_test(
         self,
-    ) -> Optional[List[Tuple[TestGroup, tuple[str, TestCase]]]]:
+    ) -> Optional[list[Tuple[TestGroup, tuple[str, TestCase]]]]:
         """Selects next test case to run from the test plan
 
         Instead of random, it selects the next test case from the group.
@@ -319,8 +319,11 @@ class DeterministicInputModel(InputModel):
                     continue
 
             schema = self.get_schema_by_path(path)
-            if not isinstance(schema, BooleanSchema) and not isinstance(schema, IntegerSchema) \
-                and len(schema.examples) == 0:
+            if (
+                not isinstance(schema, BooleanSchema)
+                and not isinstance(schema, IntegerSchema)
+                and len(schema.examples) == 0
+            ):
                 logger.info("No examples for %s", path)
                 missing_examples.append(path)
 
@@ -349,10 +352,18 @@ class DeterministicInputModel(InputModel):
                 num_run_test_cases += 1
 
             normal_testcases[path_str] = filtered_test_case_list
-        
-        logger.info("There are %d properties that do not have examples", len(missing_examples))
-        with open(os.path.join(self.example_dir, "missing_fields.json"), "w") as f:
-            json.dump(missing_examples, f, indent=2)
+
+        logger.info(
+            "There are %d properties that do not have examples",
+            len(missing_examples),
+        )
+        if self.example_dir is not None:
+            with open(
+                os.path.join(self.example_dir, "missing_fields.json"),
+                "w",
+                encoding="utf-8",
+            ) as f:
+                json.dump(missing_examples, f, indent=2)
 
         self.metadata.total_number_of_test_cases = num_test_cases
         self.metadata.number_of_run_test_cases = num_run_test_cases
@@ -410,7 +421,7 @@ class DeterministicInputModel(InputModel):
 
     def next_test(
         self,
-    ) -> Optional[List[Tuple[TestGroup, tuple[str, TestCase]]]]:
+    ) -> Optional[list[Tuple[TestGroup, tuple[str, TestCase]]]]:
         """Selects next test case to run from the test plan
 
         Instead of random, it selects the next test case from the group.
