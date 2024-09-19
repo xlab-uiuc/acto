@@ -3,6 +3,8 @@ from typing import Optional
 import pydantic
 from typing_extensions import Self
 
+from acto.input.constraint import XorCondition
+
 DELEGATED_NAMESPACE = "__DELEGATED__"
 
 
@@ -195,6 +197,9 @@ class OperatorConfig(pydantic.BaseModel, extra="forbid"):
     )
     focus_fields: Optional[list[list[str]]] = pydantic.Field(
         default=None, description="List of focus fields"
+    )
+    constraints: Optional[list[XorCondition]] = pydantic.Field(
+        default=None, description="List of constraints"
     )
 
 

@@ -11,6 +11,7 @@ import deepdiff.model as deepdiff_model
 import kubernetes
 import pydantic
 from deepdiff.helper import NotPresent
+from typing_extensions import Self
 
 from acto.utils.thread_logger import get_thread_logger
 
@@ -46,6 +47,12 @@ class PropertyPath(pydantic.BaseModel):
 
     def __contains__(self, item: PathSegment):
         return item in self.path
+
+    @classmethod
+    def from_json_patch_string(cls, patch_path: str) -> Self:
+        """Convert a JSON patch string to a PropertyPath object"""
+        items = patch_path.split("/")
+        return cls(items[1:])
 
 
 class HashableDict(dict):

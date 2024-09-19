@@ -18,9 +18,15 @@ import yaml
 
 from acto.checker.checker_set import CheckerSet
 from acto.checker.impl.health import HealthChecker
-from acto.common import kubernetes_client, print_event
+from acto.common import (
+    PropertyPath,
+    kubernetes_client,
+    postprocess_diff,
+    print_event,
+)
 from acto.constant import CONST
 from acto.deploy import Deploy
+from acto.input.constraint import XorCondition
 from acto.input.input import DeterministicInputModel, InputModel
 from acto.input.testcase import TestCase
 from acto.input.testplan import TestGroup
@@ -55,8 +61,9 @@ def apply_testcase(
     path: list,
     testcase: TestCase,
     setup: bool = False,
+    constraints: Optional[list[XorCondition]] = None,
 ) -> jsonpatch.JsonPatch:
-    """Apply a testcase to a value"""
+    """This function realizes the testcase onto the current valueWithSchema"""
     logger = get_thread_logger(with_prefix=True)
 
     prev = value_with_schema.raw_value()
@@ -75,7 +82,27 @@ def apply_testcase(
             )
             curr = value_with_schema.raw_value()
 
-    patch = jsonpatch.make_patch(prev, curr)
+    # Satisfy constraints
+    assumptions: list[tuple[PropertyPath, bool]] = []
+    input_change = postprocess_diff(
+        deepdiff.DeepDiff(
+            prev,
+            curr,
+            view="tree",
+        )
+    )
+    for changes in input_change.values():
+        for diff in changes.values():
+            if isinstance(diff.curr, bool):
+                assumptions.append((diff.path, diff.curr))
+    if constraints is not None:
+        for constraint in constraints:
+            result = constraint.solve(assumptions)
+            if result is not None:
+                value_with_schema.set_value_by_path(result[1], result[0].path)
+
+    curr = value_with_schema.raw_value()
+    patch: list[dict] = jsonpatch.make_patch(prev, curr)
     logger.info("JSON patch: %s", patch)
     return patch
 
@@ -233,6 +260,7 @@ class TrialRunner:
         apply_testcase_f: Callable,
         acto_namespace: int,
         additional_exclude_paths: Optional[list[str]] = None,
+        constraints: Optional[list[XorCondition]] = None,
     ) -> None:
         self.context = context
         self.workdir = workdir
@@ -270,6 +298,7 @@ class TrialRunner:
         self.discarded_testcases: dict[str, list[TestCase]] = {}
 
         self.apply_testcase_f = apply_testcase_f
+        self.constraints = constraints
         self.curr_trial = 0
 
     def run(
@@ -476,6 +505,7 @@ class TrialRunner:
                             field_path,
                             testcase,
                             setup=True,
+                            constraints=self.constraints,
                         )
 
                         if not testcase.test_precondition(
@@ -598,7 +628,10 @@ class TrialRunner:
                 "testcase": str(testcase),
             }
             patch = self.apply_testcase_f(
-                curr_input_with_schema, field_path, testcase
+                curr_input_with_schema,
+                field_path,
+                testcase,
+                constraints=self.constraints,
             )
 
             # field_node.get_testcases().pop()  # finish testcase
@@ -1102,6 +1135,7 @@ class Acto:
                 self.apply_testcase_f,
                 self.acto_namespace,
                 self.operator_config.diff_ignore_fields,
+                constraints=self.operator_config.constraints,
             )
             runners.append(runner)
 
