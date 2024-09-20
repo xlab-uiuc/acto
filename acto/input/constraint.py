@@ -2,7 +2,7 @@
 
 from typing import Literal, Optional
 
-from common import PropertyPath
+from acto.common import PropertyPath
 
 
 class XorCondition:
