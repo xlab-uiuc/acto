@@ -124,6 +124,7 @@ class ArraySchema(BaseSchema):
         return []
 
     def gen(self, exclude_value=None, minimum: bool = False, **kwargs) -> list:
+        num = 0
         if "size" in kwargs and kwargs["size"] is not None:
             num = kwargs["size"]
 
