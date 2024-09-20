@@ -2,10 +2,13 @@
 
 from typing import Literal, Optional
 
+import pydantic
+
 from acto.common import PropertyPath
 
 
-class XorCondition:
+class XorCondition(pydantic.BaseModel):
+    """Condition that is the xor of two properties"""
 
     left: PropertyPath
     right: PropertyPath
@@ -14,6 +17,7 @@ class XorCondition:
     def solve(
         self, assumptions: list[tuple[PropertyPath, bool]]
     ) -> Optional[tuple[PropertyPath, bool]]:
+        """Solve the condition given the assumptions"""
         left = None
         right = None
         for assumption in assumptions:

@@ -3,13 +3,13 @@
 import argparse
 import glob
 import os
+
 import yaml
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Crawl CR examples in the project repo"
     )
-
     parser.add_argument(
         "--dir", dest="dir", help="Project repo dir", required=True
     )
