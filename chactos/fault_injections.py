@@ -13,6 +13,7 @@ from acto.common import kubernetes_client
 from acto.deploy import Deploy
 from acto.kubectl_client.helm import Helm
 from acto.kubectl_client.kubectl import KubectlClient
+from acto.post_process.post_process import PostProcessor
 from acto.kubernetes_engine.base import KubernetesEngine
 from acto.kubernetes_engine.kind import Kind
 from acto.system_state.kubernetes_system_state import KubernetesSystemState
@@ -169,6 +170,16 @@ class ExperimentDriver:
             )
             return False
         return True
+
+
+class ChactosDriver(PostProcessor):
+    def __init__(self, operator_config: FaultInjectionConfig, worker_id: int):
+        self._worker_id = worker_id
+        self._operator_config = operator_config
+        
+    # TODO: gather trial dirs like PostDiffTest
+    # TODO: rewrite ExperimentDriver.run in this class to run the trials with trial dir instead of local dir
+    # TODO: run only network partition first 
 
 
 def wait_for_converge(api_client, namespace, wait_time=60, hard_timeout=600):
