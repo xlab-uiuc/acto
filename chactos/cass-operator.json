@@ -1,0 +1,21 @@
+{
+    "deploy": {
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/cass-operator/v1.22/bundle.yaml",
+                    "operator": true
+                }
+            }
+        ]
+    },
+    "application_selector": {
+        "labelSelectors": {"app.kubernetes.io/name": "cassandra"}
+    },
+    "operator_selector": {
+        "labelSelectors": {"app.kubernetes.io/name": "cass-operator"}
+    },
+    "application_pod_prefix": "dev-dc1-",
+    "application_data_dir": "/var/lib/cassandra/data",
+    "input_dir": "data/cass-operator/v1.22/inputs"
+}
