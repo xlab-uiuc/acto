@@ -3,8 +3,24 @@
         "steps": [
             {
                 "apply": {
+                    "file": "data/cass-operator/v1.22/cert-manager.yaml",
+                    "namespace": null
+                }
+            },
+            {
+                "wait": {
+                    "duration": 10
+                }
+            },
+            {
+                "apply": {
                     "file": "data/cass-operator/v1.22/bundle.yaml",
                     "operator": true
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/cass-operator/v1.22/aux-examples.yaml"
                 }
             }
         ]
@@ -13,7 +29,7 @@
         "labelSelectors": {"app.kubernetes.io/name": "cassandra"}
     },
     "operator_selector": {
-        "labelSelectors": {"app.kubernetes.io/name": "cass-operator"}
+        "labelSelectors": {"app.kubernetes.io/name": "acto-namespace"}
     },
     "application_pod_prefix": "dev-dc1-",
     "application_data_dir": "/var/lib/cassandra/data",

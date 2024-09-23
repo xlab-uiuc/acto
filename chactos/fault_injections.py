@@ -25,6 +25,7 @@ from chactos.failures.file_chaos import (
 )
 from chactos.failures.network_chaos import OperatorApplicationPartitionFailure
 from chactos.fault_injection_config import FaultInjectionConfig
+from acto.lib.operator_config import OperatorConfig
 
 
 def load_inputs_from_dir(dir_: str) -> list[object]:
@@ -175,10 +176,17 @@ class ExperimentDriver:
 
 class ChactosDriver(PostProcessor):
     """Fault injection driver"""
-    def __init__(self, testrun_dir: str, operator_config: FaultInjectionConfig, worker_id: int):
+    def __init__(self, testrun_dir: str, operator_config: OperatorConfig, fault_injection_config: FaultInjectionConfig, context_file: str, worker_id: int):
         super().__init__(testrun_dir=testrun_dir, config=operator_config)
         self._worker_id = worker_id
         self._operator_config = operator_config
+        self._fault_injection_config = fault_injection_config
+        # with open(context_file, "r", encoding="utf-8") as context_fin:
+        #     self.context = json.load(context_fin)
+        #     self.context["preload_images"] = set(
+        #         self.context["preload_images"]
+        #     )
+        self.namespace = self._context["namespace"]
 
     def fetch_crs_from_trials(self) -> dict[str, object]:
         """
@@ -202,9 +210,9 @@ class ChactosDriver(PostProcessor):
 
 
     def run(self):
-        operator_selector = self._operator_config.operator_selector
+        operator_selector = self._fault_injection_config.operator_selector
         operator_selector["namespaces"] = [constant.CONST.ACTO_NAMESPACE]
-        app_selector = self._operator_config.application_selector
+        app_selector = self._fault_injection_config.application_selector
         app_selector["namespaces"] = [constant.CONST.ACTO_NAMESPACE]
         failures = []
         failures.append(
@@ -217,7 +225,7 @@ class ChactosDriver(PostProcessor):
         for failure in failures:
             logging.info("Applying failure %s", failure.name())
             k8s_cluster_engine: KubernetesEngine = Kind(
-                0, num_nodes=self._operator_config.kubernetes.num_nodes
+                0, num_nodes=self._fault_injection_config.kubernetes.num_nodes
             )
             cluster_name = f"acto-cluster-{self._worker_id}"
             kubecontext = k8s_cluster_engine.get_context_name(cluster_name)
@@ -247,19 +255,23 @@ class ChactosDriver(PostProcessor):
             if p.returncode != 0:
                 raise RuntimeError("Failed to install chaos-mesh", p.stderr)
 
-            deployer = Deploy(self._operator_config.deploy)
+            deployer = Deploy(self._fault_injection_config.deploy)
             deployer.deploy(
                 kubeconfig,
                 kubecontext,
                 kubectl_client=KubectlClient(
                     kubeconfig=kubeconfig, context_name=kubecontext
                 ),
-                namespace=constant.CONST.ACTO_NAMESPACE,
+                namespace=self.namespace,
             )
 
             # crs = load_inputs_from_dir(self._operator_config.input_dir)
             crs = self.fetch_crs_from_trials()
-            crs = crs[crs.keys()[0]]
+
+            # TODO: trying on the first trial yamls first
+            for key in crs.keys():
+                test_key = key
+            crs = crs[test_key]
 
             cr = crs.pop(0)
             self.apply_cr(cr, kubectl_client)
@@ -288,7 +300,7 @@ class ChactosDriver(PostProcessor):
                 # oracle
                 system_state = KubernetesSystemState.from_api_client(
                     api_client=apiclient,
-                    namespace=constant.CONST.ACTO_NAMESPACE,
+                    namespace=self.namespace,
                 )
                 health = system_state.check_health()
                 if not health.is_healthy():
@@ -304,18 +316,18 @@ class ChactosDriver(PostProcessor):
 
     def apply_cr(
         self,
-        cr: str,
+        cr,
         kubectl_client: KubectlClient,
     ):
         """Apply a CR."""
+
+        # TODO: trials already contain local yamls, just submit it
         cr_file = "cr.yaml"
-        python_dict = json.loads(cr)
-
         with open(cr_file, "w", encoding="utf-8") as f:
-            yaml.dump(python_dict, f)
-
+            yaml.dump(cr, f)
         p = kubectl_client.kubectl(
-            ["apply", "-f", cr_file, "-n", constant.CONST.ACTO_NAMESPACE]
+            ["apply", "-f", cr_file, "-n", self.namespace],
+            capture_output=True, text=True
         )
         if p.returncode != 0:
             logging.error(
