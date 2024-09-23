@@ -7,6 +7,7 @@ import time
 
 import kubernetes
 import yaml
+import json
 
 from acto import constant
 from acto.common import kubernetes_client
@@ -179,30 +180,40 @@ class ChactosDriver(PostProcessor):
         self._worker_id = worker_id
         self._operator_config = operator_config
 
-    def test(self):
+    def fetch_crs_from_trials(self) -> dict[str, object]:
+        """
+        Fetches crs from trials and put them into a list of string yamls
+        """
+
+        # TODO: IO ops exists program prematurely??
+        crs = {}
+        trials = self.trial_to_steps
+
+        for trial_names in trials:
+            input_crs = []
+            steps = trials[trial_names].steps
+            for tup in steps.items():
+                step = tup[1]
+                input_cr = step.snapshot.input_cr
+                input_crs.append(input_cr)
+            crs[trial_names] = input_crs
+            # print(len(crs[trial_names]))
+        return crs
+
+
+    def run(self):
         operator_selector = self._operator_config.operator_selector
         operator_selector["namespaces"] = [constant.CONST.ACTO_NAMESPACE]
         app_selector = self._operator_config.application_selector
         app_selector["namespaces"] = [constant.CONST.ACTO_NAMESPACE]
         failures = []
         failures.append(
-            ApplicationFileFailure(
-                app_selector=app_selector,
-                data_dir=self._operator_config.application_data_dir,
-            )
-        )
-        failures.append(
             OperatorApplicationPartitionFailure(
                 operator_selector=operator_selector,
                 app_selector=app_selector,
             )
         )
-        failures.append(
-            ApplicationFileDelay(
-                app_selector=app_selector,
-                data_dir=self._operator_config.application_data_dir,
-            )
-        )
+
         for failure in failures:
             logging.info("Applying failure %s", failure.name())
             k8s_cluster_engine: KubernetesEngine = Kind(
@@ -246,7 +257,9 @@ class ChactosDriver(PostProcessor):
                 namespace=constant.CONST.ACTO_NAMESPACE,
             )
 
-            crs = load_inputs_from_dir(self._operator_config.input_dir)
+            # crs = load_inputs_from_dir(self._operator_config.input_dir)
+            crs = self.fetch_crs_from_trials()
+            crs = crs[crs.keys()[0]]
 
             cr = crs.pop(0)
             self.apply_cr(cr, kubectl_client)
@@ -282,10 +295,37 @@ class ChactosDriver(PostProcessor):
                     logging.error("System is not healthy %s", health)
                     return
 
+
     # TODO: gather trial dirs like PostDiffTest
     # TODO: rewrite ExperimentDriver.run in this class to run the trials with
     # trial dir instead of local dir
     # TODO: run only network partition first
+
+
+    def apply_cr(
+        self,
+        cr: str,
+        kubectl_client: KubectlClient,
+    ):
+        """Apply a CR."""
+        cr_file = "cr.yaml"
+        python_dict = json.loads(cr)
+
+        with open(cr_file, "w", encoding="utf-8") as f:
+            yaml.dump(python_dict, f)
+
+        p = kubectl_client.kubectl(
+            ["apply", "-f", cr_file, "-n", constant.CONST.ACTO_NAMESPACE]
+        )
+        if p.returncode != 0:
+            logging.error(
+                "Failed to apply CR due to error from kubectl"
+                + f" (returncode={p.returncode})"
+                + f" (stdout={p.stdout})"
+                + f" (stderr={p.stderr})"
+            )
+            return False
+        return True
     
 
 
