@@ -91,7 +91,7 @@ class ExperimentDriver:
             p = helm_client.install(
                 release_name="chaos-mesh",
                 chart="chaos-mesh",
-                namespace="chaos-mesh",
+                namespace="cass-operator",
                 repo="https://charts.chaos-mesh.org",
                 args=[
                     "--set",
@@ -176,7 +176,15 @@ class ExperimentDriver:
 
 class ChactosDriver(PostProcessor):
     """Fault injection driver"""
-    def __init__(self, testrun_dir: str, operator_config: OperatorConfig, fault_injection_config: FaultInjectionConfig, context_file: str, worker_id: int):
+
+    def __init__(
+        self,
+        testrun_dir: str,
+        operator_config: OperatorConfig,
+        fault_injection_config: FaultInjectionConfig,
+        context_file: str,
+        worker_id: int,
+    ):
         super().__init__(testrun_dir=testrun_dir, config=operator_config)
         self._worker_id = worker_id
         self._operator_config = operator_config
@@ -208,12 +216,11 @@ class ChactosDriver(PostProcessor):
             # print(len(crs[trial_names]))
         return crs
 
-
     def run(self):
         operator_selector = self._fault_injection_config.operator_selector
-        operator_selector["namespaces"] = [constant.CONST.ACTO_NAMESPACE]
+        operator_selector["namespaces"] = [self.namespace]
         app_selector = self._fault_injection_config.application_selector
-        app_selector["namespaces"] = [constant.CONST.ACTO_NAMESPACE]
+        app_selector["namespaces"] = [self.namespace]
         failures = []
         failures.append(
             OperatorApplicationPartitionFailure(
@@ -276,7 +283,7 @@ class ChactosDriver(PostProcessor):
             cr = crs.pop(0)
             self.apply_cr(cr, kubectl_client)
             converged = wait_for_converge(
-                apiclient, constant.CONST.ACTO_NAMESPACE
+                apiclient, self.namespace
             )
 
             if not converged:
@@ -289,12 +296,12 @@ class ChactosDriver(PostProcessor):
                 cr = crs.pop(0)
                 self.apply_cr(cr, kubectl_client)
                 converged = wait_for_converge(
-                    apiclient, constant.CONST.ACTO_NAMESPACE, hard_timeout=180
+                    apiclient, self.namespace, hard_timeout=180
                 )
 
                 failure.cleanup(kubectl_client)
                 converged = wait_for_converge(
-                    apiclient, constant.CONST.ACTO_NAMESPACE
+                    apiclient, self.namespace
                 )
 
                 # oracle
@@ -307,13 +314,6 @@ class ChactosDriver(PostProcessor):
                     logging.error("System is not healthy %s", health)
                     return
 
-
-    # TODO: gather trial dirs like PostDiffTest
-    # TODO: rewrite ExperimentDriver.run in this class to run the trials with
-    # trial dir instead of local dir
-    # TODO: run only network partition first
-
-
     def apply_cr(
         self,
         cr,
@@ -321,13 +321,13 @@ class ChactosDriver(PostProcessor):
     ):
         """Apply a CR."""
 
-        # TODO: trials already contain local yamls, just submit it
         cr_file = "cr.yaml"
         with open(cr_file, "w", encoding="utf-8") as f:
             yaml.dump(cr, f)
         p = kubectl_client.kubectl(
             ["apply", "-f", cr_file, "-n", self.namespace],
-            capture_output=True, text=True
+            capture_output=True,
+            text=True,
         )
         if p.returncode != 0:
             logging.error(
@@ -338,7 +338,6 @@ class ChactosDriver(PostProcessor):
             )
             return False
         return True
-    
 
 
 def wait_for_converge(api_client, namespace, wait_time=60, hard_timeout=600):
