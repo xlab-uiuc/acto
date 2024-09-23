@@ -21,53 +21,10 @@
             },
             {
                 "apply": {
-                    "file": "data/tidb-operator/v1.6.0/tidb-cluster-issuer.yaml",
-                    "namespace": null
-                }
-            },
-            {
-                "apply": {
-                    "file": "data/tidb-operator/v1.6.0/pd-certs.yaml",
-                    "namespace": null
-                }
-            },
-            {
-                "apply": {
-                    "file": "data/tidb-operator/v1.6.0/pump-certs.yaml",
-                    "namespace": null
-                }
-            },
-            {
-                "apply": {
-                    "file": "data/tidb-operator/v1.6.0/ticdc-certs.yaml",
-                    "namespace": null
-                }
-            },
-            {
-                "apply": {
                     "file": "data/tidb-operator/v1.6.0/tidb-certs.yaml",
                     "namespace": null
                 }
-            },
-            {
-                "apply": {
-                    "file": "data/tidb-operator/v1.6.0/tiflash-certs.yaml",
-                    "namespace": null
-                }
-            },
-            {
-                "apply": {
-                    "file": "data/tidb-operator/v1.6.0/tikv-certs.yaml",
-                    "namespace": null
-                }
-            },
-            {
-                "apply": {
-                    "file": "data/tidb-operator/v1.6.0/client-certs.yaml",
-                    "namespace": null
-                }
             }
-
         ]
     },
     "crd_name": "tidbclusters.pingcap.com",
@@ -79,13 +36,11 @@
         "\\['tidb\\.pingcap\\.com\\\/store\\-id'\\]"
     ],
     "focus_fields": [
-        ["spec", "discovery", "env"],
         ["spec", "pd", "replicas"],
         ["spec", "pd", "config"],
         ["spec", "pd", "tlsClientSecretName"],
         ["spec", "pd", "mountClusterClientSecret"],
         ["spec", "pd", "hostNetwork"],
-        ["spec", "pd", "env"],
         ["spec", "pd", "startUpScriptVersion"],
         ["spec", "pd", "enableDashboardInternalProxy"],
         ["spec", "pdms", "ITEM", "name"],
@@ -93,7 +48,6 @@
         ["spec", "pdms", "ITEM", "config"],
         ["spec", "pdms", "ITEM", "mountClusterClientSecret"],
         ["spec", "pdms", "ITEM", "startUpScriptVersion"],
-        ["spec", "pdms", "ITEM", "env"],
         ["spec", "pdms", "ITEM", "hostNetwork"],
         ["spec", "tidb", "replicas"],
         ["spec", "tidb", "binlogEnabled"],
@@ -109,14 +63,12 @@
         ["spec", "tidb", "customizedStartupProbe"],
         ["spec", "tidb", "arguments"],
         ["spec", "tidb", "configUpdateStrategy"],
-        ["spec", "tidb", "env"],
         ["spec", "tidb", "scalePolicy"],
         ["spec", "tikv", "replicas"],
         ["spec", "tikv", "config"],
         ["spec", "tikv", "recoverFailover"],
         ["spec", "tikv", "mountClusterClientSecret"],
         ["spec", "tikv", "enableNamedStatusPort"],
-        ["spec", "tikv", "env"],
         ["spec", "tikv", "configUpdateStrategy"],
         ["spec", "tikv", "hostNetwork"],
         ["spec", "tikv", "limits"],
@@ -128,22 +80,18 @@
         ["spec", "tiflash", "recoverFailover"],
         ["spec", "tiflash", "scalePolicy"],
         ["spec", "tiflash", "hostNetwork"],
-        ["spec", "tiflash", "env"],
         ["spec", "tiflash", "configUpdateStrategy"],
         ["spec", "ticdc", "replicas"],
         ["spec", "ticdc", "tlsClientSecretNames"],
         ["spec", "ticdc", "config"],
-        ["spec", "ticdc", "env"],
         ["spec", "tiproxy", "replicas"],
         ["spec", "tiproxy", "sslEnableTiDB"],
         ["spec", "tiproxy", "tlsClientSecretName"],
         ["spec", "tiproxy", "config"],
-        ["spec", "tiproxy", "env"],
         ["spec", "pump", "replicas"],
         ["spec", "pump", "config"],
         ["spec", "pump", "setTimeZone"],
         ["spec", "pump", "hostNetwork"],
-        ["spec", "pump", "env"],
         ["spec", "pause"],
         ["spec", "version"],
         ["spec", "configUpdateStrategy"],
