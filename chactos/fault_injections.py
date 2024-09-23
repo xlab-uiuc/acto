@@ -173,13 +173,120 @@ class ExperimentDriver:
 
 
 class ChactosDriver(PostProcessor):
-    def __init__(self, operator_config: FaultInjectionConfig, worker_id: int):
+    """Fault injection driver"""
+    def __init__(self, testrun_dir: str, operator_config: FaultInjectionConfig, worker_id: int):
+        super().__init__(testrun_dir=testrun_dir, config=operator_config)
         self._worker_id = worker_id
         self._operator_config = operator_config
-        
+
+    def test(self):
+        operator_selector = self._operator_config.operator_selector
+        operator_selector["namespaces"] = [constant.CONST.ACTO_NAMESPACE]
+        app_selector = self._operator_config.application_selector
+        app_selector["namespaces"] = [constant.CONST.ACTO_NAMESPACE]
+        failures = []
+        failures.append(
+            ApplicationFileFailure(
+                app_selector=app_selector,
+                data_dir=self._operator_config.application_data_dir,
+            )
+        )
+        failures.append(
+            OperatorApplicationPartitionFailure(
+                operator_selector=operator_selector,
+                app_selector=app_selector,
+            )
+        )
+        failures.append(
+            ApplicationFileDelay(
+                app_selector=app_selector,
+                data_dir=self._operator_config.application_data_dir,
+            )
+        )
+        for failure in failures:
+            logging.info("Applying failure %s", failure.name())
+            k8s_cluster_engine: KubernetesEngine = Kind(
+                0, num_nodes=self._operator_config.kubernetes.num_nodes
+            )
+            cluster_name = f"acto-cluster-{self._worker_id}"
+            kubecontext = k8s_cluster_engine.get_context_name(cluster_name)
+            kubeconfig = os.path.join(
+                os.path.expanduser("~"), ".kube", kubecontext
+            )
+            k8s_cluster_engine.restart_cluster(cluster_name, kubeconfig)
+            apiclient = kubernetes_client(kubeconfig, kubecontext)
+            kubectl_client = KubectlClient(kubeconfig, kubecontext)
+
+            # Deploy dependencies and operator
+            helm_client = Helm(kubeconfig, kubecontext)
+            p = helm_client.install(
+                release_name="chaos-mesh",
+                chart="chaos-mesh",
+                namespace="chaos-mesh",
+                repo="https://charts.chaos-mesh.org",
+                args=[
+                    "--set",
+                    "chaosDaemon.runtime=containerd",
+                    "--set",
+                    "chaosDaemon.socketPath=/run/containerd/containerd.sock",
+                    "--version",
+                    "2.6.3",
+                ],
+            )
+            if p.returncode != 0:
+                raise RuntimeError("Failed to install chaos-mesh", p.stderr)
+
+            deployer = Deploy(self._operator_config.deploy)
+            deployer.deploy(
+                kubeconfig,
+                kubecontext,
+                kubectl_client=KubectlClient(
+                    kubeconfig=kubeconfig, context_name=kubecontext
+                ),
+                namespace=constant.CONST.ACTO_NAMESPACE,
+            )
+
+            crs = load_inputs_from_dir(self._operator_config.input_dir)
+
+            cr = crs.pop(0)
+            self.apply_cr(cr, kubectl_client)
+            converged = wait_for_converge(
+                apiclient, constant.CONST.ACTO_NAMESPACE
+            )
+
+            if not converged:
+                logging.error("Failed to converge")
+                return
+
+            while crs:
+                failure.apply(kubectl_client)
+
+                cr = crs.pop(0)
+                self.apply_cr(cr, kubectl_client)
+                converged = wait_for_converge(
+                    apiclient, constant.CONST.ACTO_NAMESPACE, hard_timeout=180
+                )
+
+                failure.cleanup(kubectl_client)
+                converged = wait_for_converge(
+                    apiclient, constant.CONST.ACTO_NAMESPACE
+                )
+
+                # oracle
+                system_state = KubernetesSystemState.from_api_client(
+                    api_client=apiclient,
+                    namespace=constant.CONST.ACTO_NAMESPACE,
+                )
+                health = system_state.check_health()
+                if not health.is_healthy():
+                    logging.error("System is not healthy %s", health)
+                    return
+
     # TODO: gather trial dirs like PostDiffTest
-    # TODO: rewrite ExperimentDriver.run in this class to run the trials with trial dir instead of local dir
-    # TODO: run only network partition first 
+    # TODO: rewrite ExperimentDriver.run in this class to run the trials with
+    # trial dir instead of local dir
+    # TODO: run only network partition first
+    
 
 
 def wait_for_converge(api_client, namespace, wait_time=60, hard_timeout=600):
