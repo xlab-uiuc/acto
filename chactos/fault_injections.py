@@ -216,7 +216,9 @@ class ChactosDriver(PostProcessor):
             # print(len(crs[trial_names]))
         return crs
 
+
     def run(self):
+        """Run the fault injection exp"""
         operator_selector = self._fault_injection_config.operator_selector
         operator_selector["namespaces"] = [self.namespace]
         app_selector = self._fault_injection_config.application_selector
@@ -226,6 +228,7 @@ class ChactosDriver(PostProcessor):
             OperatorApplicationPartitionFailure(
                 operator_selector=operator_selector,
                 app_selector=app_selector,
+                namespace=self.namespace
             )
         )
 
@@ -248,7 +251,7 @@ class ChactosDriver(PostProcessor):
             p = helm_client.install(
                 release_name="chaos-mesh",
                 chart="chaos-mesh",
-                namespace="chaos-mesh",
+                namespace=self.namespace,
                 repo="https://charts.chaos-mesh.org",
                 args=[
                     "--set",
@@ -256,7 +259,7 @@ class ChactosDriver(PostProcessor):
                     "--set",
                     "chaosDaemon.socketPath=/run/containerd/containerd.sock",
                     "--version",
-                    "2.6.3",
+                    "2.7.0",
                 ],
             )
             if p.returncode != 0:
