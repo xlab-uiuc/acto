@@ -33,25 +33,16 @@ class Helm:
         args: Optional[list] = None,
     ) -> subprocess.CompletedProcess:
         """Installs a helm chart. It uses the --wait flag to wait for the deployment to be ready"""
-        if namespace_existed:
-            cmd = [
-                "install",
-                release_name,
-                chart,
-                "--namespace",
-                namespace,
-                "--wait",
-            ]
-        else:
-            cmd = [
-                "install",
-                release_name,
-                chart,
-                "--namespace",
-                namespace,
-                "--create-namespace",
-                "--wait",
-            ]
+        cmd = [
+            "install",
+            release_name,
+            chart,
+            "--namespace",
+            namespace,
+            "--wait",
+        ]
+        if namespace_existed is False:
+            cmd.append("--create-namespace")
         if repo:
             cmd.extend(["--repo", repo])
         if version:
