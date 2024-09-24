@@ -183,18 +183,16 @@ if not args.checkonly:
     p.post_process(post_diff_test_dir, num_workers=args.num_workers)
 p.check(post_diff_test_dir, num_workers=args.num_workers)
 
-logger.info("Acto invokes Chactos for fault injection")
-print("Acto invokes Chactos for fault injection")
+# logger.info("Acto invokes Chactos for fault injection")
 
-chactos = ChactosDriver(
-    testrun_dir=args.workdir_path,
-    operator_config=config,
-    fault_injection_config=fault_injection_config,
-    context_file=context_cache,
-    worker_id=0,
-)
-chactos.run()
-print("Chactos finished running")
+# chactos = ChactosDriver(
+#     testrun_dir=args.workdir_path,
+#     operator_config=config,
+#     fault_injection_config=fault_injection_config,
+#     context_file=context_cache,
+#     worker_id=0,
+# )
+# chactos.run()
 
 end_time = datetime.now()
 logger.info("Acto end to end finished in %s", end_time - start_time)
