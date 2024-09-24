@@ -1,16 +1,49 @@
+import os
+import logging
 import yaml
 
 from chactos.failures.failure import Failure
+
+from acto.kubectl_client.kubectl import KubectlClient
+
+FAILURE_DIR = ".failures"
 
 
 class OperatorApplicationPartitionFailure(Failure):
     """Simulate a network partition between the operator and the application"""
 
-    def __init__(self, operator_selector: dict, app_selector: dict):
+    def __init__(
+        self, operator_selector: dict, app_selector: dict, namespace: str
+    ):
         self.operator_selector = operator_selector
         self.app_selector = app_selector
+        self.namespace = namespace
 
         super().__init__()
+
+    def apply(self, kubectl_client: KubectlClient):
+        """Apply the failure to the cluster"""
+        logging.info("Applying %s...", self.name())
+        failure_file = os.path.join(FAILURE_DIR, self.name() + ".yaml")
+        self.to_file(failure_file)
+        p = kubectl_client.kubectl(
+            ["apply", "-f", failure_file, "-n", "chaos-mesh"],
+            capture_output=True,
+            text=True,
+        )
+        if p.returncode != 0:
+            raise RuntimeError(f"Failed to apply {self.name()}: {p.stderr}")
+        p = kubectl_client.wait(
+            failure_file,
+            'jsonpath={.status.conditions[?(@.type=="AllInjected")].status}=True',
+            timeout=600,
+            namespace=self.namespace,
+        )
+        if p.returncode != 0:
+            raise RuntimeError(
+                f"Failed to wait for {self.name()} failure to be injected: {p.stderr}"
+            )
+        logging.info("%s failure applied", self.name())
 
     def name(self) -> str:
         """Get the name of the failure"""
