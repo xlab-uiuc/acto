@@ -64,6 +64,7 @@ class ExperimentDriver:
             OperatorApplicationPartitionFailure(
                 operator_selector=operator_selector,
                 app_selector=app_selector,
+                namespace=constant.CONST.ACTO_NAMESPACE
             )
         )
         failures.append(
@@ -282,60 +283,57 @@ class ChactosDriver(PostProcessor):
                 raise RuntimeError("Failed to install chaos-mesh", p.stderr)
 
             logging.info("Fetching CRs from trials made by Acto...")
-            crs = self.fetch_crs_from_trials()
+            trial_crs = self.fetch_crs_from_trials()
             logging.debug("Done")
 
-            # TODO: trying on the first trial yamls first
-            logging.info(
-                "Chactos's is in its preliminary stage: it will only run on the first trial."
-            )
-            keys = crs.keys()
-            for key in keys:
-                test_key = key
-            crs = crs[test_key]
-            cr = crs.pop(0)
-            logging.debug("Applying first CR in the trial")
-            self.apply_cr(cr, kubectl_client)
-            converged = wait_for_converge(
-                apiclient, self.namespace
-            )
+            for trial_name, trial_crs in trial_crs.items():
+                logging.info("Testing trial [%s]", trial_name)
 
-            if not converged:
-                logging.error("Failed to converge")
-                return
-
-            logging.debug("Running fault injection on all [%i] CRs in this trial", len(crs))
-            while crs:
-                logging.debug("Applying failure NOW %s", failure.name())
-                failure.apply(kubectl_client)
-
-                logging.debug("Applying next CR")
+                crs = trial_crs
                 cr = crs.pop(0)
+
+                logging.debug("Applying first CR in the trial")
                 self.apply_cr(cr, kubectl_client)
-
-                logging.debug("Waiting for CR to converge")
-                converged = wait_for_converge(
-                    apiclient, self.namespace, hard_timeout=180
-                )
-
-                logging.debug("Clearning up failure %s", failure.name())
-                failure.cleanup(kubectl_client)
-
-                logging.debug("Waiting for cleanup to converge")
                 converged = wait_for_converge(
                     apiclient, self.namespace
                 )
-
-                logging.debug("Acquiring oracle.")
-                # oracle
-                system_state = KubernetesSystemState.from_api_client(
-                    api_client=apiclient,
-                    namespace=self.namespace,
-                )
-                health = system_state.check_health()
-                if not health.is_healthy():
-                    logging.error("System is not healthy %s", health)
+                if not converged:
+                    logging.error("Failed to converge")
                     return
+
+                logging.debug("Running fault injection on all [%i] CRs in this trial", len(crs))
+                while crs:
+                    logging.debug("Applying failure NOW %s", failure.name())
+                    failure.apply(kubectl_client)
+
+                    logging.debug("Applying next CR")
+                    cr = crs.pop(0)
+                    self.apply_cr(cr, kubectl_client)
+
+                    logging.debug("Waiting for CR to converge")
+                    converged = wait_for_converge(
+                        apiclient, self.namespace, hard_timeout=180
+                    )
+
+                    logging.debug("Clearning up failure %s", failure.name())
+                    failure.cleanup(kubectl_client)
+
+                    logging.debug("Waiting for cleanup to converge")
+                    converged = wait_for_converge(
+                        apiclient, self.namespace
+                    )
+
+                    logging.debug("Acquiring oracle.")
+                    # oracle
+                    system_state = KubernetesSystemState.from_api_client(
+                        api_client=apiclient,
+                        namespace=self.namespace,
+                    )
+                    health = system_state.check_health()
+                    if not health.is_healthy():
+                        logging.error("System is not healthy %s", health)
+                        return
+
 
     def apply_cr(
         self,
