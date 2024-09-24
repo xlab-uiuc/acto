@@ -23,6 +23,7 @@ class Failure(abc.ABC):
         p = kubectl_client.kubectl(
             ["apply", "-f", failure_file, "-n", "chaos-mesh"],
             capture_output=True,
+            text=True
         )
         if p.returncode != 0:
             raise RuntimeError(f"Failed to apply {self.name()}: {p.stderr}")
