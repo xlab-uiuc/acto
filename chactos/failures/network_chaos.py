@@ -27,7 +27,7 @@ class OperatorApplicationPartitionFailure(Failure):
         failure_file = os.path.join(FAILURE_DIR, self.name() + ".yaml")
         self.to_file(failure_file)
         p = kubectl_client.kubectl(
-            ["apply", "-f", failure_file, "-n", "chaos-mesh"],
+            ["apply", "-f", failure_file, "-n", self.namespace],
             capture_output=True,
             text=True,
         )
