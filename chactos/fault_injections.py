@@ -246,25 +246,7 @@ class ChactosDriver(PostProcessor):
             apiclient = kubernetes_client(kubeconfig, kubecontext)
             kubectl_client = KubectlClient(kubeconfig, kubecontext)
 
-            # Deploy dependencies and operator
-            helm_client = Helm(kubeconfig, kubecontext)
-            p = helm_client.install(
-                release_name="chaos-mesh",
-                chart="chaos-mesh",
-                namespace=self.namespace,
-                repo="https://charts.chaos-mesh.org",
-                args=[
-                    "--set",
-                    "chaosDaemon.runtime=containerd",
-                    "--set",
-                    "chaosDaemon.socketPath=/run/containerd/containerd.sock",
-                    "--version",
-                    "2.7.0",
-                ],
-            )
-            if p.returncode != 0:
-                raise RuntimeError("Failed to install chaos-mesh", p.stderr)
-
+            logging.info("Installing the operator...")
             deployer = Deploy(self._fault_injection_config.deploy)
             deployer.deploy(
                 kubeconfig,
@@ -274,16 +256,45 @@ class ChactosDriver(PostProcessor):
                 ),
                 namespace=self.namespace,
             )
+            logging.debug("Done")
 
-            # crs = load_inputs_from_dir(self._operator_config.input_dir)
+            # Deploy dependencies and operator
+            logging.info("Installing chaos-mesh into namespace [%s]...", self.namespace)
+            helm_client = Helm(kubeconfig, kubecontext)
+            p = helm_client.install(
+                release_name="chaos-mesh",
+                chart="chaos-mesh",
+                namespace=self.namespace,
+                repo="https://charts.chaos-mesh.org",
+                namespace_existed=True,
+                args=[
+                    "--set",
+                    "chaosDaemon.runtime=containerd",
+                    "--set",
+                    "chaosDaemon.socketPath=/run/containerd/containerd.sock",
+                    "--version",
+                    "2.7.0",
+                ],
+            )
+            logging.debug("Done")
+
+            if p.returncode != 0:
+                raise RuntimeError("Failed to install chaos-mesh", p.stderr)
+
+            logging.info("Fetching CRs from trials made by Acto...")
             crs = self.fetch_crs_from_trials()
+            logging.debug("Done")
 
             # TODO: trying on the first trial yamls first
-            for key in crs.keys():
+            logging.info(
+                "Chactos's is in its preliminary stage: it will only run on the first trial."
+            )
+            keys = crs.keys()
+            for key in keys:
                 test_key = key
             crs = crs[test_key]
-
             cr = crs.pop(0)
+            logging.debug("Applying first CR in the trial")
             self.apply_cr(cr, kubectl_client)
             converged = wait_for_converge(
                 apiclient, self.namespace
@@ -293,20 +304,29 @@ class ChactosDriver(PostProcessor):
                 logging.error("Failed to converge")
                 return
 
+            logging.debug("Running fault injection on all [%i] CRs in this trial", len(crs))
             while crs:
+                logging.debug("Applying failure NOW %s", failure.name())
                 failure.apply(kubectl_client)
 
+                logging.debug("Applying next CR")
                 cr = crs.pop(0)
                 self.apply_cr(cr, kubectl_client)
+
+                logging.debug("Waiting for CR to converge")
                 converged = wait_for_converge(
                     apiclient, self.namespace, hard_timeout=180
                 )
 
+                logging.debug("Clearning up failure %s", failure.name())
                 failure.cleanup(kubectl_client)
+
+                logging.debug("Waiting for cleanup to converge")
                 converged = wait_for_converge(
                     apiclient, self.namespace
                 )
 
+                logging.debug("Acquiring oracle.")
                 # oracle
                 system_state = KubernetesSystemState.from_api_client(
                     api_client=apiclient,
