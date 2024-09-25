@@ -53,7 +53,9 @@ class StatefulSetState(KubernetesNamespacedDictObject):
                     + f"!= update[{stateful_set.status.update_revision}]",
                 )
 
-            if stateful_set.spec.replicas != stateful_set.status.ready_replicas:
+            if stateful_set.spec.replicas == 0 and stateful_set.status.ready_replicas is None:
+                pass
+            elif stateful_set.spec.replicas != stateful_set.status.ready_replicas:
                 return False, f"StatefulSet[{name}] replicas mismatch"
 
             if stateful_set.status.conditions is not None:
