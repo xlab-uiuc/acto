@@ -3,7 +3,7 @@ import json
 import logging
 from datetime import datetime
 
-from lib.operator_config import OperatorConfig
+from acto.lib.operator_config import OperatorConfig
 
 from chactos.fault_injections import ChactosDriver
 

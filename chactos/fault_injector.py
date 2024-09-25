@@ -1,6 +1,6 @@
 import abc
 
-from kubectl_client.helm import Helm
+from acto.kubectl_client.helm import Helm
 
 
 class FaultInjectorInterface(abc.ABC):
@@ -17,6 +17,7 @@ class ChaosMeshFaultInjector(FaultInjectorInterface):
         pass
 
     def install(self, kube_config: str, kube_context: str):
+        """install chaos-mesh"""
         helm_client = Helm(kube_config, kube_context)
         p = helm_client.install(
             release_name="chaos-mesh",
