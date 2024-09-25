@@ -2,6 +2,7 @@ import openai
 import argparse
 import os
 import json
+from openai import OpenAI
 
 def read_missing_properties(path):
     with open(path, 'r') as f:
@@ -10,22 +11,31 @@ def read_missing_properties(path):
 
 def gen_values(missing_values, path, api_key):
     openai.api_key = api_key
-    
+    client = OpenAI(api_key)
+
+    context = "You are a helpful assistant."
+
     prompt = "Here are some properties that need values:\n"
     for prop in missing_values:
         prompt += f"- {prop}\n"
 
-    response = openai.Completion.create(
-        model="chat:gpt-4-1o",
-        prompt=prompt,
-        max_tokens=150
+    format = ""
+
+    prompt += format
+
+    completion = client.chat.completions.create(
+        model="o1-preview",
+        messages=[
+            {"role": "system", "content": context},
+            {"role": "user", "content": prompt}
+        ]
     )
     
-    result_text = response.choices[0].text.strip()
+    result_text = completion.choices[0].message.content
     result_lines = result_text.split("\n")
     result_dict = {}
     
-    #TODO: modify the results processing part
+    # TODO: modify the results processing part
     for prop, value in zip(missing_values, result_lines):
         result_dict[prop] = value.strip("- ")
 
