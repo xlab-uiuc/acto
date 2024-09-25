@@ -11,9 +11,7 @@ from datetime import datetime
 from acto.engine import Acto, apply_testcase
 from acto.input.input import DeterministicInputModel
 from acto.lib.operator_config import OperatorConfig
-from chactos.fault_injection_config import FaultInjectionConfig
 from acto.post_process.post_diff_test import PostDiffTest
-from chactos.fault_injections import ChactosDriver
 from acto.utils.error_handler import handle_excepthook, thread_excepthook
 from acto.utils.thread_logger import get_thread_logger
 
@@ -37,14 +35,6 @@ parser.add_argument(
     dest="config",
     help="Operator porting config path",
     required=True,
-)
-parser.add_argument(
-    "--fault_injection_config",
-    "-fjc",
-    dest="fault_injection_config",
-    help="Operator porting fault injection config path",
-    required=False,
-    default="",
 )
 parser.add_argument(
     "--cluster-runtime",
@@ -131,15 +121,6 @@ with open(args.config, "r", encoding="utf-8") as config_file:
         del config["monkey_patch"]
     config = OperatorConfig.model_validate(config)
 
-if args.fault_injection_config != "":
-    with open(
-        args.fault_injection_config, "r", encoding="utf-8"
-    ) as fault_injection_config_file:
-        fault_injection_config = json.load(fault_injection_config_file)
-        fault_injection_config = FaultInjectionConfig.model_validate(
-            fault_injection_config
-        )
-
 logger.info("Acto started with [%s]", sys.argv)
 logger.info("Operator config: %s", config)
 
@@ -182,17 +163,6 @@ p = PostDiffTest(testrun_dir=args.workdir_path, config=config)
 if not args.checkonly:
     p.post_process(post_diff_test_dir, num_workers=args.num_workers)
 p.check(post_diff_test_dir, num_workers=args.num_workers)
-
-# logger.info("Acto invokes Chactos for fault injection")
-
-# chactos = ChactosDriver(
-#     testrun_dir=args.workdir_path,
-#     operator_config=config,
-#     fault_injection_config=fault_injection_config,
-#     context_file=context_cache,
-#     worker_id=0,
-# )
-# chactos.run()
 
 end_time = datetime.now()
 logger.info("Acto end to end finished in %s", end_time - start_time)
