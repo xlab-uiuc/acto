@@ -13,15 +13,22 @@ def gen_values(missing_values, path, api_key):
     openai.api_key = api_key
     client = OpenAI(api_key)
 
-    context = "You are a helpful assistant."
+    context = "You are a expert of the cass-operator of the Kubernetes ecosystem. You are tasked with providing values for the following properties of the cass-operator:"
 
-    prompt = "Here are some properties that need values:\n"
+    prompt = "Here are the properties that need values:\n"
     for prop in missing_values:
         prompt += f"- {prop}\n"
 
-    format = ""
+    prompt += "\nProvide three values for each property and follwoing the format below:\n"
+
+    format = "\{\"property1\": [\"value1\", \"value2\", \"value3\"]\}\n\n"
 
     prompt += format
+
+    prompt += "Here are some examples:\n"
+
+    exmaples = "\{\}"
+    prompt += exmaples
 
     completion = client.chat.completions.create(
         model="o1-preview",
