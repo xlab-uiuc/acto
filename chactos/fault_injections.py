@@ -213,14 +213,18 @@ class ChactosDriver(PostProcessor):
                 logging.debug("Acquiring oracle.")
                 # oracle
                 # TODO: use old runner class (below) for self.apply_cr
-                # TODO: build another int generation, should be reset every time chactos restarts from failure.
+                # TODO: build another int generation, should be reset every time
+                #  chactos restarts from failure.
                 system_state = KubernetesSystemState.from_api_client(
                     api_client=api_client,
                     namespace=self.namespace,
                 )
-                # TODO: run differential oracle on current sys state with old sys state (snapshot) in step.
-                # TODO: KubernetesSystemState is incompatible with the snapshot stored step
-                # TODO: use /users/yimingsu/acto/acto/runner/runner.py to collect system state, then compare with snapshot in step.
+                # TODO: run differential oracle on current sys state with old
+                # sys state (snapshot) in step.
+                # TODO: KubernetesSystemState is incompatible with the snapshot
+                # stored step
+                # TODO: use /users/yimingsu/acto/acto/runner/runner.py to
+                # collect system state, then compare with snapshot in step.
                 health = system_state.check_health()
                 if not health.is_healthy():
                     logging.error("System is not healthy %s", health)
