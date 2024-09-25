@@ -17,7 +17,7 @@ from acto.post_process.post_process import PostProcessor
 from acto.system_state.kubernetes_system_state import KubernetesSystemState
 from acto.trial import Trial
 from acto.utils import acto_timer
-from chactos.failures import failure
+from chactos.failures.failure import Failure
 from chactos.failures.network_chaos import OperatorApplicationPartitionFailure
 from chactos.fault_injection_config import FaultInjectionConfig
 
@@ -126,7 +126,7 @@ class ChactosDriver(PostProcessor):
         trial_name: str,
         trial: Trial,
         worker_id: int,
-        failure: failure.Failure,
+        failure: Failure,
     ):
         """Run a trial, this function can be parallelized
 
