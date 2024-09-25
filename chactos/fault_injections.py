@@ -218,6 +218,8 @@ class ChactosDriver(PostProcessor):
                     logging.error("System is not healthy %s", health)
                     break
 
+            fault_injection_sequence += 1
+
 
 def wait_for_converge(api_client, namespace, wait_time=60, hard_timeout=600):
     """This function blocks until the system converges. It keeps
