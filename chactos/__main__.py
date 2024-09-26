@@ -1,3 +1,5 @@
+import os
+
 import argparse
 import json
 import logging
@@ -42,9 +44,12 @@ parser.add_argument(
 args = parser.parse_args()
 
 logging.basicConfig(
+    filename=os.path.join(args.workdir_path, "fi-test.log"),
     level=logging.DEBUG,
+    filemode="w",
     format="%(asctime)s %(levelname)-7s, %(name)s, %(filename)-9s:%(lineno)d, %(message)s",
 )
+
 logging.getLogger("kubernetes").setLevel(logging.ERROR)
 logging.getLogger("sh").setLevel(logging.ERROR)
 
