@@ -1,3 +1,4 @@
+import json
 import logging
 import multiprocessing
 import os
@@ -15,9 +16,11 @@ from chactos.fault_injector import ChaosMeshFaultInjector
 from acto.checker.checker_set import CheckerSet
 from acto.common import kubernetes_client, print_event
 from acto.deploy import Deploy
+from acto.input.input import DeterministicInputModel
 from acto.kubectl_client.kubectl import KubectlClient
 from acto.kubernetes_engine import kind
 from acto.lib.operator_config import OperatorConfig
+from acto.oracle_handle import OracleHandle
 from acto.post_process.post_process import PostProcessor
 from acto.runner.runner import Runner
 from acto.system_state.kubernetes_system_state import KubernetesSystemState
@@ -169,8 +172,12 @@ class ChactosDriver(PostProcessor):
             self.kubernetes_provider.load_images(
                 self._images_archive, kubernetes_cluster_name
             )
-            kubectl_client = KubectlClient(kubernetes_config_dict, kubernetes_context_name)
-            api_client = kubernetes_client(kubernetes_config_dict, kubernetes_context_name)
+            kubectl_client = KubectlClient(
+                kubernetes_config_dict, kubernetes_context_name
+            )
+            api_client = kubernetes_client(
+                kubernetes_config_dict, kubernetes_context_name
+            )
 
             # Set up the operator and dependencies
             deployed = self._deployer.deploy_with_retry(
@@ -186,7 +193,8 @@ class ChactosDriver(PostProcessor):
             logging.debug("Installing chaos mesh")
             chaosmesh_injector = ChaosMeshFaultInjector()
             chaosmesh_injector.install(
-                kube_config=kubernetes_config_dict, kube_context=kubernetes_context_name
+                kube_config=kubernetes_config_dict,
+                kube_context=kubernetes_context_name,
             )
 
             logging.info("Initializing trial runner")
@@ -198,15 +206,7 @@ class ChactosDriver(PostProcessor):
                 context=self.context,
                 trial_dir=trial_dir,
                 kubeconfig=kubernetes_config_dict,
-                context_name=kubernetes_context_name
-            )
-
-            logging.info("Initializing checker")
-            checker = CheckerSet(
-                context=self.context,
-                trial_dir=trial_dir,
-                input_model=
-
+                context_name=kubernetes_context_name,
             )
 
             step_key = steps.pop(0)
@@ -216,11 +216,13 @@ class ChactosDriver(PostProcessor):
             inner_steps_generation = 0
             runner.run(
                 input_cr=step.snapshot.input_cr,
-                generation=inner_steps_generation
+                generation=inner_steps_generation,
             )
 
             wait_for_converge(
-                kubernetes_client(kubernetes_config_dict, kubernetes_context_name),
+                kubernetes_client(
+                    kubernetes_config_dict, kubernetes_context_name
+                ),
                 self.context["namespace"],
             )
 
@@ -233,10 +235,12 @@ class ChactosDriver(PostProcessor):
                 failure.apply(kubectl_client)
 
                 logging.debug("Applying next CR")
-                runner.run(
+                chactos_snapshot, err = runner.run(
                     input_cr=step.snapshot.input_cr,
-                    generation=inner_steps_generation
+                    generation=inner_steps_generation,
                 )
+                if err is not None:
+                    logging.debug("Error when applying CR: [%s]", err)
 
                 logging.debug("Waiting for CR to converge")
                 wait_for_converge(api_client, self.namespace, hard_timeout=180)
@@ -256,17 +260,65 @@ class ChactosDriver(PostProcessor):
 
                 logging.debug("Acquiring system states from runner.")
                 system_state = runner.collect_system_state()
-                
-                # TODO: run differential oracle on current sys state with old
-                # TODO: sys state (snapshot) in step.
-                # TODO: KubernetesSystemState is incompatible with the snapshot
-                # TODO: stored step
-                # TODO: use /users/yimingsu/acto/acto/runner/runner.py to
-                # TODO: collect system state, then compare with snapshot in step.
+
+                logging.info("Initializing pre reqs for checker")
+                with open(
+                    self._operator_config.seed_custom_resource,
+                    "r",
+                    encoding="utf-8",
+                ) as cr_file:
+                    seed = yaml.load(cr_file, Loader=yaml.FullLoader)
+                seed["metadata"]["name"] = "test-cluster"
+                det_inputmodel = DeterministicInputModel(
+                    crd=self.context["crd"]["body"],
+                    seed_input=seed,
+                    example_dir=self._operator_config.example_dir,
+                    num_workers=1,  # TODO: add this to chactos args?
+                    num_cases=1,  # TODO: add this too?
+                    kubernetes_version=self._operator_config.kubernetes_version,
+                    custom_module_path=self._operator_config.custom_module,
+                )
+
+                checking_snapshots = [step.snapshot, chactos_snapshot]
+                oracle_handle = OracleHandle(
+                    kubectl_client=kubectl_client,
+                    k8s_client=kubernetes_client,
+                    namespace=self.context["namespace"],
+                    snapshots=checking_snapshots,
+                )
+
+                logging.info("Initializing checker")
+                checker = CheckerSet(
+                    context=self.context,
+                    trial_dir=trial_dir,
+                    input_model=det_inputmodel,
+                    oracle_handle=oracle_handle,
+                )
+
+                oracle_results = checker.check(
+                    snapshot=chactos_snapshot,
+                    prev_snapshot=step.snapshot,
+                    generation=inner_steps_generation,
+                )
+
+                logging.info("Finished checking oracle:")
+                logging.debug("Dumping oracle to json regardless of healthiness")
+                with open(
+                    os.path.join(
+                        fault_injection_trial_dir,
+                        f"oracle-{inner_steps_generation}.json",
+                    ),
+                    "w",
+                    encoding="utf-8"
+                ) as oracle_json:
+                    json.dump(oracle_results, oracle_json)
+
                 health = deprecated_system_state.check_health()
                 if not health.is_healthy():
                     logging.error("System is not healthy %s", health)
                     break
+
+                inner_steps_generation += 1
 
             fault_injection_sequence += 1
 
