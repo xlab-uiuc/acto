@@ -9,10 +9,6 @@ import time
 
 import kubernetes
 import yaml
-from chactos.failures.failure import Failure
-from chactos.failures.network_chaos import OperatorApplicationPartitionFailure
-from chactos.fault_injection_config import FaultInjectionConfig
-from chactos.fault_injector import ChaosMeshFaultInjector
 
 from acto.checker.checker_set import CheckerSet
 from acto.common import kubernetes_client, print_event
@@ -27,6 +23,10 @@ from acto.runner.runner import Runner
 from acto.system_state.kubernetes_system_state import KubernetesSystemState
 from acto.trial import Trial
 from acto.utils import acto_timer
+from chactos.failures.failure import Failure
+from chactos.failures.network_chaos import OperatorApplicationPartitionFailure
+from chactos.fault_injection_config import FaultInjectionConfig
+from chactos.fault_injector import ChaosMeshFaultInjector
 
 
 class ChactosDriver(PostProcessor):

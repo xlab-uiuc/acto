@@ -1,14 +1,12 @@
-import os
-
 import argparse
 import json
 import logging
+import os
 from datetime import datetime
 
+from acto.lib.operator_config import OperatorConfig
 from chactos.fault_injection_config import FaultInjectionConfig
 from chactos.fault_injections import ChactosDriver
-
-from acto.lib.operator_config import OperatorConfig
 
 parser = argparse.ArgumentParser(
     description="Automatic, Continuous Testing for k8s/openshift Operators"
@@ -43,8 +41,7 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
-if not os.path.exists(args.workdir_path):
-    os.mkdir(args.workdir_path)
+os.makedirs(args.workdir_path, exist_ok=True)
 now = datetime.now()
 logging.basicConfig(
     filename=os.path.join(
