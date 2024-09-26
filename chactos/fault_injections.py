@@ -7,6 +7,10 @@ import time
 
 import kubernetes
 import yaml
+from chactos.failures.failure import Failure
+from chactos.failures.network_chaos import OperatorApplicationPartitionFailure
+from chactos.fault_injection_config import FaultInjectionConfig
+from chactos.fault_injector import ChaosMeshFaultInjector
 
 from acto.common import kubernetes_client, print_event
 from acto.deploy import Deploy
@@ -17,9 +21,6 @@ from acto.post_process.post_process import PostProcessor
 from acto.system_state.kubernetes_system_state import KubernetesSystemState
 from acto.trial import Trial
 from acto.utils import acto_timer
-from chactos.failures.failure import Failure
-from chactos.failures.network_chaos import OperatorApplicationPartitionFailure
-from chactos.fault_injection_config import FaultInjectionConfig
 
 
 class ChactosDriver(PostProcessor):
@@ -179,8 +180,10 @@ class ChactosDriver(PostProcessor):
                 logging.error("Failed to deploy the operator")
                 return
 
-            # TODO: install chaos-mesh, make sure not in the same namespace as operator.
-            # TODO: instantiate ChaosMeshFaultInjector and call install.
+            logging.debug("Installing chaos mesh")
+            chaosmesh_injector = ChaosMeshFaultInjector()
+            chaosmesh_injector.install(kube_config=kubeconfig, kube_context=kubernetes_context)
+
 
             step_key = steps.pop(0)
             step = trial.steps[step_key]
@@ -200,15 +203,16 @@ class ChactosDriver(PostProcessor):
                 self.apply_cr(step.snapshot.input_cr, kubectl_client)
 
                 logging.debug("Waiting for CR to converge")
-                converged = wait_for_converge(
+                wait_for_converge(
                     api_client, self.namespace, hard_timeout=180
                 )
+
 
                 logging.debug("Clearning up failure %s", failure.name())
                 failure.cleanup(kubectl_client)
 
                 logging.debug("Waiting for cleanup to converge")
-                converged = wait_for_converge(api_client, self.namespace)
+                wait_for_converge(api_client, self.namespace)
 
                 logging.debug("Acquiring oracle.")
                 # oracle
