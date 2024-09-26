@@ -9,10 +9,6 @@ import time
 
 import kubernetes
 import yaml
-from chactos.failures.failure import Failure
-from chactos.failures.network_chaos import OperatorApplicationPartitionFailure
-from chactos.fault_injection_config import FaultInjectionConfig
-from chactos.fault_injector import ChaosMeshFaultInjector
 
 from acto.checker.checker_set import CheckerSet
 from acto.common import kubernetes_client, print_event
@@ -27,6 +23,10 @@ from acto.runner.runner import Runner
 from acto.system_state.kubernetes_system_state import KubernetesSystemState
 from acto.trial import Trial
 from acto.utils import acto_timer
+from chactos.failures.failure import Failure
+from chactos.failures.network_chaos import OperatorApplicationPartitionFailure
+from chactos.fault_injection_config import FaultInjectionConfig
+from chactos.fault_injector import ChaosMeshFaultInjector
 
 
 class ChactosDriver(PostProcessor):
@@ -78,9 +78,13 @@ class ChactosDriver(PostProcessor):
 
         self._deployer = Deploy(operator_config.deploy)
 
-    def fault_injection_trial_dir(self, trial_name: str, sequence: int, worker: int):
+    def fault_injection_trial_dir(
+        self, trial_name: str, sequence: int, worker: int
+    ):
         """Return the fault injection trial directory"""
-        return os.path.join(self._work_dir, f"{trial_name}-fi-{sequence}-worker-{worker}")
+        return os.path.join(
+            self._work_dir, f"{trial_name}-fi-{sequence}-worker-{worker}"
+        )
 
     def run(self):
         """Run the fault injection exp"""
@@ -111,25 +115,19 @@ class ChactosDriver(PostProcessor):
             for trial_name, trial in self.trial_to_steps.items():
                 workqueue.put([trial_name, trial, failure])
 
-
         for worker_id in range(self._operator_config.num_nodes):
-            child_process_work_dir = os.path.join(self._work_dir, f"chactos-worker-{worker_id}")
+            child_process_work_dir = os.path.join(
+                self._work_dir, f"chactos-worker-{worker_id}"
+            )
             runner = DeployChactosDriver(
                 self._testrun_dir,
                 child_process_work_dir,
                 self._operator_config,
                 self.fault_injection_trial_dir,
                 worker_id,
-                workqueue
+                workqueue,
             )
             runners.append(runner)
-
-                    # self.run_trial(
-                    #     trial_name=trial_name,
-                    #     trial=trial,
-                    #     worker_id=worker_id,
-                    #     failure=failure,
-                    # )
 
         logging.debug("Launching processes")
         processes = []
@@ -195,7 +193,7 @@ class ChactosDriver(PostProcessor):
             fault_injection_trial_dir = self.fault_injection_trial_dir(
                 trial_name=trial_name,
                 sequence=fault_injection_sequence,
-                worker=worker_id
+                worker=worker_id,
             )
             os.makedirs(fault_injection_trial_dir, exist_ok=True)
 
@@ -550,6 +548,7 @@ class DeployChactosDriver(ChactosDriver):
     """
     The distributed wrapper for running in multi processes
     """
+
     def __init__(
         self,
         testrun_dir: str,
@@ -557,18 +556,15 @@ class DeployChactosDriver(ChactosDriver):
         operator_config: OperatorConfig,
         fault_injection_config: FaultInjectionConfig,
         worker_id: int,
-        workqueue: multiprocessing.Queue
+        workqueue: multiprocessing.Queue,
     ):
         super().__init__(
-            testrun_dir,
-            work_dir,
-            operator_config,
-            fault_injection_config
+            testrun_dir, work_dir, operator_config, fault_injection_config
         )
         self.worker_id = worker_id
         self.workqueue = workqueue
 
-        #FIXME: improve SE practice here
+        # FIXME: improve SE practice here
         self.trial = None
         self.trial_name = None
         self.failure = None
@@ -603,7 +599,7 @@ class DeployChactosDriver(ChactosDriver):
                 fault_injection_trial_dir = self.fault_injection_trial_dir(
                     trial_name=self.trial_name,
                     sequence=fault_injection_sequence,
-                    worker=self.worker_id
+                    worker=self.worker_id,
                 )
                 os.makedirs(fault_injection_trial_dir, exist_ok=True)
 
@@ -611,8 +607,10 @@ class DeployChactosDriver(ChactosDriver):
                 kubernetes_cluster_name = self.kubernetes_provider.cluster_name(
                     acto_namespace=0, worker_id=self.worker_id
                 )
-                kubernetes_context_name = self.kubernetes_provider.get_context_name(
-                    kubernetes_cluster_name
+                kubernetes_context_name = (
+                    self.kubernetes_provider.get_context_name(
+                        kubernetes_cluster_name
+                    )
                 )
                 kubernetes_config_dict = os.path.join(
                     os.path.expanduser("~"), ".kube", kubernetes_context_name
@@ -682,7 +680,9 @@ class DeployChactosDriver(ChactosDriver):
                     step_key = steps.pop(0)
                     step = self.trial.steps[step_key]
 
-                    logging.debug("Applying failure NOW %s", self.failure.name())
+                    logging.debug(
+                        "Applying failure NOW %s", self.failure.name()
+                    )
                     self.failure.apply(kubectl_client)
 
                     logging.debug("Applying next CR")
@@ -694,9 +694,13 @@ class DeployChactosDriver(ChactosDriver):
                         logging.debug("Error when applying CR: [%s]", err)
 
                     logging.debug("Waiting for CR to converge")
-                    wait_for_converge(api_client, self.namespace, hard_timeout=180)
+                    wait_for_converge(
+                        api_client, self.namespace, hard_timeout=180
+                    )
 
-                    logging.debug("Clearning up failure %s", self.failure.name())
+                    logging.debug(
+                        "Clearning up failure %s", self.failure.name()
+                    )
                     self.failure.cleanup(kubectl_client)
 
                     logging.debug("Waiting for cleanup to converge")
@@ -704,9 +708,11 @@ class DeployChactosDriver(ChactosDriver):
 
                     logging.debug("Acquiring oracle.")
                     # oracle
-                    deprecated_system_state = KubernetesSystemState.from_api_client(
-                        api_client=api_client,
-                        namespace=self.namespace,
+                    deprecated_system_state = (
+                        KubernetesSystemState.from_api_client(
+                            api_client=api_client,
+                            namespace=self.namespace,
+                        )
                     )
 
                     logging.debug("Acquiring system states from runner.")
