@@ -12,12 +12,14 @@ from chactos.failures.network_chaos import OperatorApplicationPartitionFailure
 from chactos.fault_injection_config import FaultInjectionConfig
 from chactos.fault_injector import ChaosMeshFaultInjector
 
+from acto.checker.checker_set import CheckerSet
 from acto.common import kubernetes_client, print_event
 from acto.deploy import Deploy
 from acto.kubectl_client.kubectl import KubectlClient
 from acto.kubernetes_engine import kind
 from acto.lib.operator_config import OperatorConfig
 from acto.post_process.post_process import PostProcessor
+from acto.runner.runner import Runner
 from acto.system_state.kubernetes_system_state import KubernetesSystemState
 from acto.trial import Trial
 from acto.utils import acto_timer
@@ -37,6 +39,7 @@ class ChactosDriver(PostProcessor):
         self._operator_config = operator_config
         self._fault_injection_config = fault_injection_config
         self._work_dir = work_dir
+        self._testrun_dir = testrun_dir
 
         self.namespace = self.context["namespace"]
 
@@ -154,25 +157,25 @@ class ChactosDriver(PostProcessor):
             kubernetes_cluster_name = self.kubernetes_provider.cluster_name(
                 acto_namespace=0, worker_id=worker_id
             )
-            kubernetes_context = self.kubernetes_provider.get_context_name(
+            kubernetes_context_name = self.kubernetes_provider.get_context_name(
                 kubernetes_cluster_name
             )
-            kubeconfig = os.path.join(
-                os.path.expanduser("~"), ".kube", kubernetes_context
+            kubernetes_config_dict = os.path.join(
+                os.path.expanduser("~"), ".kube", kubernetes_context_name
             )
             self.kubernetes_provider.restart_cluster(
-                kubernetes_cluster_name, kubeconfig
+                kubernetes_cluster_name, kubernetes_config_dict
             )
             self.kubernetes_provider.load_images(
                 self._images_archive, kubernetes_cluster_name
             )
-            kubectl_client = KubectlClient(kubeconfig, kubernetes_context)
-            api_client = kubernetes_client(kubeconfig, kubernetes_context)
+            kubectl_client = KubectlClient(kubernetes_config_dict, kubernetes_context_name)
+            api_client = kubernetes_client(kubernetes_config_dict, kubernetes_context_name)
 
             # Set up the operator and dependencies
             deployed = self._deployer.deploy_with_retry(
-                kubeconfig,
-                kubernetes_context,
+                kubernetes_config_dict,
+                kubernetes_context_name,
                 kubectl_client=kubectl_client,
                 namespace=self.context["namespace"],
             )
@@ -182,16 +185,46 @@ class ChactosDriver(PostProcessor):
 
             logging.debug("Installing chaos mesh")
             chaosmesh_injector = ChaosMeshFaultInjector()
-            chaosmesh_injector.install(kube_config=kubeconfig, kube_context=kubernetes_context)
+            chaosmesh_injector.install(
+                kube_config=kubernetes_config_dict, kube_context=kubernetes_context_name
+            )
 
+            logging.info("Initializing trial runner")
+            logging.debug("trial name: [%s]", trial_name)
+            trial_dir = os.path.join(self._testrun_dir, trial_name)
+            logging.debug("trial dir: [%s]", trial_dir)
+
+            runner = Runner(
+                context=self.context,
+                trial_dir=trial_dir,
+                kubeconfig=kubernetes_config_dict,
+                context_name=kubernetes_context_name
+            )
+
+            logging.info("Initializing checker")
+            checker = CheckerSet(
+                context=self.context,
+                trial_dir=trial_dir,
+                input_model=
+
+            )
 
             step_key = steps.pop(0)
             step = trial.steps[step_key]
-            self.apply_cr(step.snapshot.input_cr, kubectl_client)
+
+            logging.debug("Asking runner to run the first input cr")
+            inner_steps_generation = 0
+            runner.run(
+                input_cr=step.snapshot.input_cr,
+                generation=inner_steps_generation
+            )
+
             wait_for_converge(
-                kubernetes_client(kubeconfig, kubernetes_context),
+                kubernetes_client(kubernetes_config_dict, kubernetes_context_name),
                 self.context["namespace"],
             )
+
+            logging.debug("Looping on inner steps")
             while steps:
                 step_key = steps.pop(0)
                 step = trial.steps[step_key]
@@ -200,13 +233,13 @@ class ChactosDriver(PostProcessor):
                 failure.apply(kubectl_client)
 
                 logging.debug("Applying next CR")
-                self.apply_cr(step.snapshot.input_cr, kubectl_client)
-
-                logging.debug("Waiting for CR to converge")
-                wait_for_converge(
-                    api_client, self.namespace, hard_timeout=180
+                runner.run(
+                    input_cr=step.snapshot.input_cr,
+                    generation=inner_steps_generation
                 )
 
+                logging.debug("Waiting for CR to converge")
+                wait_for_converge(api_client, self.namespace, hard_timeout=180)
 
                 logging.debug("Clearning up failure %s", failure.name())
                 failure.cleanup(kubectl_client)
@@ -216,20 +249,21 @@ class ChactosDriver(PostProcessor):
 
                 logging.debug("Acquiring oracle.")
                 # oracle
-                # TODO: use old runner class (below) for self.apply_cr
-                # TODO: build another int generation, should be reset every time
-                #  chactos restarts from failure.
-                system_state = KubernetesSystemState.from_api_client(
+                deprecated_system_state = KubernetesSystemState.from_api_client(
                     api_client=api_client,
                     namespace=self.namespace,
                 )
+
+                logging.debug("Acquiring system states from runner.")
+                system_state = runner.collect_system_state()
+                
                 # TODO: run differential oracle on current sys state with old
-                # sys state (snapshot) in step.
+                # TODO: sys state (snapshot) in step.
                 # TODO: KubernetesSystemState is incompatible with the snapshot
-                # stored step
+                # TODO: stored step
                 # TODO: use /users/yimingsu/acto/acto/runner/runner.py to
-                # collect system state, then compare with snapshot in step.
-                health = system_state.check_health()
+                # TODO: collect system state, then compare with snapshot in step.
+                health = deprecated_system_state.check_health()
                 if not health.is_healthy():
                     logging.error("System is not healthy %s", health)
                     break
