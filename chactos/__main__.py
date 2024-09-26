@@ -4,6 +4,7 @@ import logging
 from datetime import datetime
 
 from acto.lib.operator_config import OperatorConfig
+from chactos.fault_injection_config import FaultInjectionConfig
 
 from chactos.fault_injections import ChactosDriver
 
@@ -53,7 +54,7 @@ with open(args.config, "r", encoding="utf-8") as config_file:
 
 with open(args.fi_config, "r", encoding="utf-8") as fi_config_file:
     fi_config_data = json.load(fi_config_file)
-    fi_config = OperatorConfig.model_validate(fi_config_data)
+    fi_config = FaultInjectionConfig.model_validate(fi_config_data)
 
 driver = ChactosDriver(
     testrun_dir=args.testrun_dir,
