@@ -1,0 +1,408 @@
+[
+  [
+    "spec",
+    "pd",
+    "startUpScriptVersion",
+    "Start up script version"
+  ],
+  [
+    "spec",
+    "pdms",
+    "ITEM",
+    "config",
+    "Config is the Configuration of pd Micro Service servers"
+  ],
+  [
+    "spec",
+    "pdms",
+    "ITEM",
+    "startUpScriptVersion",
+    "Start up script version"
+  ],
+  [
+    "spec",
+    "startScriptV2FeatureFlags",
+    "Feature flags used by v2 startup script to enable various features.\nExamples of supported feature flags:\n- WaitForDnsNameIpMatch indicates whether PD and TiKV has to wait until local IP address matches the one published to external DNS\n- PreferPDAddressesOverDiscovery advises start script to use TidbClusterSpec.PDAddresses (if supplied) as argument for pd-server, tikv-server and tidb-server commands"
+  ],
+  [
+    "spec",
+    "startScriptV2FeatureFlags",
+    "ITEM",
+    null
+  ],
+  [
+    "spec",
+    "startScriptVersion",
+    "StartScriptVersion is the version of start script\nWhen PD enables microservice mode, pd and pd microservice component will use start script v2.\n\n\ndefault to \"v1\""
+  ],
+  [
+    "spec",
+    "suspendAction",
+    "SuspendAction defines the suspend actions for all component."
+  ],
+  [
+    "spec",
+    "ticdc",
+    "tlsClientSecretNames",
+    "TLSClientSecretNames are the names of secrets that store the\nclient certificates for the downstream."
+  ],
+  [
+    "spec",
+    "ticdc",
+    "tlsClientSecretNames",
+    "ITEM",
+    null
+  ],
+  [
+    "spec",
+    "tidb",
+    "arguments",
+    "Arguments is the extra command line arguments for TiDB server."
+  ],
+  [
+    "spec",
+    "tidb",
+    "arguments",
+    "ITEM",
+    null
+  ],
+  [
+    "spec",
+    "tidb",
+    "bootstrapSQLConfigMapName",
+    "BootstrapSQLConfigMapName is the name of the ConfigMap which contains the bootstrap SQL file with the key `bootstrap-sql`,\nwhich will only be executed when a TiDB cluster bootstrap on the first time.\nThe field should be set ONLY when create a TC, since it only take effect on the first time bootstrap.\nOnly v6.5.1+ supports this feature."
+  ],
+  [
+    "spec",
+    "tidb",
+    "customizedStartupProbe",
+    "CustomizedStartupProbe is the customized startup probe for TiDB.\nYou can provide your own startup probe for TiDB.\nThe image will be an init container, and the tidb-server container will copy the probe binary from it, and execute it.\nThe probe binary in the image should be placed under the root directory, i.e., `/your-probe`."
+  ],
+  [
+    "spec",
+    "tidb",
+    "customizedStartupProbe",
+    "args",
+    "Args is the arguments of the probe binary."
+  ],
+  [
+    "spec",
+    "tidb",
+    "customizedStartupProbe",
+    "args",
+    "ITEM",
+    null
+  ],
+  [
+    "spec",
+    "tidb",
+    "customizedStartupProbe",
+    "binaryName",
+    "BinaryName is the name of the probe binary."
+  ],
+  [
+    "spec",
+    "tidb",
+    "customizedStartupProbe",
+    "image",
+    "Image is the image of the probe binary."
+  ],
+  [
+    "spec",
+    "tidb",
+    "lifecycle",
+    "postStart",
+    "httpGet",
+    "HTTPGet specifies the http request to perform."
+  ],
+  [
+    "spec",
+    "tidb",
+    "lifecycle",
+    "postStart",
+    "httpGet",
+    "host",
+    "Host name to connect to, defaults to the pod IP. You probably want to set\n\"Host\" in httpHeaders instead."
+  ],
+  [
+    "spec",
+    "tidb",
+    "lifecycle",
+    "postStart",
+    "httpGet",
+    "httpHeaders",
+    "Custom headers to set in the request. HTTP allows repeated headers."
+  ],
+  [
+    "spec",
+    "tidb",
+    "lifecycle",
+    "postStart",
+    "httpGet",
+    "httpHeaders",
+    "ITEM",
+    "HTTPHeader describes a custom header to be used in HTTP probes"
+  ],
+  [
+    "spec",
+    "tidb",
+    "lifecycle",
+    "postStart",
+    "httpGet",
+    "httpHeaders",
+    "ITEM",
+    "name",
+    "The header field name.\nThis will be canonicalized upon output, so case-variant names will be understood as the same header."
+  ],
+  [
+    "spec",
+    "tidb",
+    "lifecycle",
+    "postStart",
+    "httpGet",
+    "httpHeaders",
+    "ITEM",
+    "value",
+    "The header field value"
+  ],
+  [
+    "spec",
+    "tidb",
+    "lifecycle",
+    "postStart",
+    "httpGet",
+    "path",
+    "Path to access on the HTTP server."
+  ],
+  [
+    "spec",
+    "tidb",
+    "lifecycle",
+    "postStart",
+    "httpGet",
+    "port",
+    "Name or number of the port to access on the container.\nNumber must be in the range 1 to 65535.\nName must be an IANA_SVC_NAME."
+  ],
+  [
+    "spec",
+    "tidb",
+    "lifecycle",
+    "postStart",
+    "httpGet",
+    "scheme",
+    "Scheme to use for connecting to the host.\nDefaults to HTTP."
+  ],
+  [
+    "spec",
+    "tidb",
+    "lifecycle",
+    "postStart",
+    "tcpSocket",
+    "Deprecated. TCPSocket is NOT supported as a LifecycleHandler and kept\nfor the backward compatibility. There are no validation of this field and\nlifecycle hooks will fail in runtime when tcp handler is specified."
+  ],
+  [
+    "spec",
+    "tidb",
+    "lifecycle",
+    "postStart",
+    "tcpSocket",
+    "host",
+    "Optional: Host name to connect to, defaults to the pod IP."
+  ],
+  [
+    "spec",
+    "tidb",
+    "lifecycle",
+    "postStart",
+    "tcpSocket",
+    "port",
+    "Number or name of the port to access on the container.\nNumber must be in the range 1 to 65535.\nName must be an IANA_SVC_NAME."
+  ],
+  [
+    "spec",
+    "tidb",
+    "lifecycle",
+    "preStop",
+    "httpGet",
+    "HTTPGet specifies the http request to perform."
+  ],
+  [
+    "spec",
+    "tidb",
+    "lifecycle",
+    "preStop",
+    "httpGet",
+    "host",
+    "Host name to connect to, defaults to the pod IP. You probably want to set\n\"Host\" in httpHeaders instead."
+  ],
+  [
+    "spec",
+    "tidb",
+    "lifecycle",
+    "preStop",
+    "httpGet",
+    "httpHeaders",
+    "Custom headers to set in the request. HTTP allows repeated headers."
+  ],
+  [
+    "spec",
+    "tidb",
+    "lifecycle",
+    "preStop",
+    "httpGet",
+    "httpHeaders",
+    "ITEM",
+    "HTTPHeader describes a custom header to be used in HTTP probes"
+  ],
+  [
+    "spec",
+    "tidb",
+    "lifecycle",
+    "preStop",
+    "httpGet",
+    "httpHeaders",
+    "ITEM",
+    "name",
+    "The header field name.\nThis will be canonicalized upon output, so case-variant names will be understood as the same header."
+  ],
+  [
+    "spec",
+    "tidb",
+    "lifecycle",
+    "preStop",
+    "httpGet",
+    "httpHeaders",
+    "ITEM",
+    "value",
+    "The header field value"
+  ],
+  [
+    "spec",
+    "tidb",
+    "lifecycle",
+    "preStop",
+    "httpGet",
+    "path",
+    "Path to access on the HTTP server."
+  ],
+  [
+    "spec",
+    "tidb",
+    "lifecycle",
+    "preStop",
+    "httpGet",
+    "port",
+    "Name or number of the port to access on the container.\nNumber must be in the range 1 to 65535.\nName must be an IANA_SVC_NAME."
+  ],
+  [
+    "spec",
+    "tidb",
+    "lifecycle",
+    "preStop",
+    "httpGet",
+    "scheme",
+    "Scheme to use for connecting to the host.\nDefaults to HTTP."
+  ],
+  [
+    "spec",
+    "tidb",
+    "lifecycle",
+    "preStop",
+    "tcpSocket",
+    "Deprecated. TCPSocket is NOT supported as a LifecycleHandler and kept\nfor the backward compatibility. There are no validation of this field and\nlifecycle hooks will fail in runtime when tcp handler is specified."
+  ],
+  [
+    "spec",
+    "tidb",
+    "lifecycle",
+    "preStop",
+    "tcpSocket",
+    "host",
+    "Optional: Host name to connect to, defaults to the pod IP."
+  ],
+  [
+    "spec",
+    "tidb",
+    "lifecycle",
+    "preStop",
+    "tcpSocket",
+    "port",
+    "Number or name of the port to access on the container.\nNumber must be in the range 1 to 65535.\nName must be an IANA_SVC_NAME."
+  ],
+  [
+    "spec",
+    "tidb",
+    "plugins",
+    "Plugins is a list of plugins that are loaded by TiDB server, empty means plugin disabled"
+  ],
+  [
+    "spec",
+    "tidb",
+    "plugins",
+    "ITEM",
+    null
+  ],
+  [
+    "spec",
+    "tidb",
+    "scalePolicy",
+    "ScalePolicy is the scale configuration for TiDB."
+  ],
+  [
+    "spec",
+    "tiflash",
+    "limits",
+    "Limits describes the maximum amount of compute resources allowed.\nMore info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/"
+  ],
+  [
+    "spec",
+    "tiflash",
+    "limits",
+    "additional_properties",
+    null
+  ],
+  [
+    "spec",
+    "tiflash",
+    "scalePolicy",
+    "ScalePolicy is the scale configuration for TiFlash"
+  ],
+  [
+    "spec",
+    "tikv",
+    "limits",
+    "additional_properties",
+    null
+  ],
+  [
+    "spec",
+    "tikv",
+    "scalePolicy",
+    "ScalePolicy is the scale configuration for TiKV"
+  ],
+  [
+    "spec",
+    "tikv",
+    "storeLabels",
+    "StoreLabels configures additional labels for TiKV stores."
+  ],
+  [
+    "spec",
+    "tikv",
+    "storeLabels",
+    "ITEM",
+    null
+  ],
+  [
+    "spec",
+    "tiproxy",
+    "config",
+    "Config is the Configuration of tiproxy-servers"
+  ],
+  [
+    "spec",
+    "tiproxy",
+    "tlsClientSecretName",
+    "TLSClientSecretName is the name of secret which stores tidb server client certificate\nused by TiProxy to check health status."
+  ]
+]

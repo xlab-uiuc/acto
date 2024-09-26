@@ -160,6 +160,7 @@ class BaseSchema(SchemaInterface):
         self.used_fields: list[SchemaInterface] = []
 
         self.description = None if "description" not in schema else schema["description"]
+        self.type = schema["type"]
 
     def get_path(self) -> list:
         """Get path of the schema"""
