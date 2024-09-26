@@ -24,13 +24,12 @@ class ChaosMeshFaultInjector(FaultInjectorInterface):
             chart="chaos-mesh",
             namespace="chaos-mesh",
             repo="https://charts.chaos-mesh.org",
-            namespace_existed=True,
+            namespace_existed=False,
             args=[
                 "--set",
                 "chaosDaemon.runtime=containerd",
                 "--set",
                 "chaosDaemon.socketPath=/run/containerd/containerd.sock",
-                "--create-namespace"
                 "--version",
                 "2.7.0",
             ],
