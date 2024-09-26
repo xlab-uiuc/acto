@@ -8,7 +8,14 @@ def read_missing_properties(path):
     with open(path, 'r') as f:
         missing_properties = json.load(f)
     for i in range(len(missing_properties)):
-        missing_properties[i] = '.'.join(missing_properties[i])
+        description =  "\ndescription: "
+        if missing_properties[i][-1]:
+            description += missing_properties[i][-1]
+        else:
+            description += "No description available"
+        missing_properties[i] = '.'.join(missing_properties[i][:-1])
+        missing_properties[i] += description + "\n"
+
     return missing_properties
 
 def gen_values(missing_values, path, api_key, operator):
@@ -55,10 +62,14 @@ def gen_values(missing_values, path, api_key, operator):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--path", type=str, help="Path to the file containing the missing properties")
-    parser.add_argument("--api_key", type=str, help="API key for the OpenAI API")
-    parser.add_argument("--operator", type=str, help="Name of the operator")
+    # parser.add_argument("--api_key", type=str, help="API key for the OpenAI API")
+    # parser.add_argument("--operator", type=str, help="Name of the operator")
     args = parser.parse_args()
 
     missing_properties = read_missing_properties(args.path)
+    prompt = "Here are the properties that need values:\n"
+    for prop in missing_properties:
+        prompt += f"- {prop}\n"
+    print(prompt)
     
-    gen_values(missing_properties, args.path, args.api_key)
+    # gen_values(missing_properties, args.path, args.api_key)
