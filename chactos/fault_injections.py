@@ -54,6 +54,8 @@ class ChactosDriver(PostProcessor):
         )
 
         # Build an archive to be preloaded
+        if not os.path.exists(self._work_dir):
+            os.mkdir(self._work_dir)
         container_tool = os.getenv("IMAGE_TOOL", "docker")
         self._images_archive = os.path.join(work_dir, "images.tar")
         if len(self.context["preload_images"]) > 0:

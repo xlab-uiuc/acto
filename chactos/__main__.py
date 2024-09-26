@@ -3,10 +3,10 @@ import json
 import logging
 from datetime import datetime
 
-from acto.lib.operator_config import OperatorConfig
 from chactos.fault_injection_config import FaultInjectionConfig
-
 from chactos.fault_injections import ChactosDriver
+
+from acto.lib.operator_config import OperatorConfig
 
 parser = argparse.ArgumentParser(
     description="Automatic, Continuous Testing for k8s/openshift Operators"
