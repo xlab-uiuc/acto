@@ -30,6 +30,7 @@ class ChaosMeshFaultInjector(FaultInjectorInterface):
                 "chaosDaemon.runtime=containerd",
                 "--set",
                 "chaosDaemon.socketPath=/run/containerd/containerd.sock",
+                "--create-namespace"
                 "--version",
                 "2.7.0",
             ],
