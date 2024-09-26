@@ -43,14 +43,15 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
+if not os.path.exists(args.workdir_path):
+    os.mkdir(args.workdir_path)
 now = datetime.now()
-
 logging.basicConfig(
     filename=os.path.join(
         args.workdir_path,
         f"fi-test-{now.month:02d}m-{now.day}d-{now.hour}h-{now.minute:02d}m.log",
     ),
-    level=logging.INFO,
+    level=logging.DEBUG,
     filemode="w",
     format="%(asctime)s %(levelname)-7s, %(name)s, %(filename)-9s:%(lineno)d, %(message)s",
 )
