@@ -6,14 +6,16 @@ from openai import OpenAI
 
 def read_missing_properties(path):
     with open(path, 'r') as f:
-        missing_properties = f.read().splitlines()
+        missing_properties = json.load(f)
+    for i in range(len(missing_properties)):
+        missing_properties[i] = '.'.join(missing_properties[i])
     return missing_properties
 
-def gen_values(missing_values, path, api_key):
+def gen_values(missing_values, path, api_key, operator):
     openai.api_key = api_key
     client = OpenAI(api_key)
 
-    context = "You are a expert of the cass-operator of the Kubernetes ecosystem. You are tasked with providing values for the following properties of the cass-operator:"
+    context = f"You are a expert of the {operator} of the Kubernetes ecosystem. You are tasked with providing values for properties of the {operator} CRD"
 
     prompt = "Here are the properties that need values:\n"
     for prop in missing_values:
@@ -54,6 +56,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--path", type=str, help="Path to the file containing the missing properties")
     parser.add_argument("--api_key", type=str, help="API key for the OpenAI API")
+    parser.add_argument("--operator", type=str, help="Name of the operator")
     args = parser.parse_args()
 
     missing_properties = read_missing_properties(args.path)
