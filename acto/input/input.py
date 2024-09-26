@@ -325,7 +325,8 @@ class DeterministicInputModel(InputModel):
                 and len(schema.examples) == 0
             ):
                 logger.info("No examples for %s", path)
-                missing_examples.append(path)
+                info = path + [schema.description]
+                missing_examples.append(info)
 
             path_str = (
                 json.dumps(path)

@@ -159,6 +159,8 @@ class BaseSchema(SchemaInterface):
         self.mapped = False
         self.used_fields: list[SchemaInterface] = []
 
+        self.description = None if "description" not in schema else schema["description"]
+
     def get_path(self) -> list:
         """Get path of the schema"""
         return self.path
