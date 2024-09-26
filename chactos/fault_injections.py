@@ -39,6 +39,7 @@ class ChactosDriver(PostProcessor):
         fault_injection_config: FaultInjectionConfig,
     ):
         super().__init__(testrun_dir=testrun_dir, config=operator_config)
+        #FIXME: why is self.trials a doubly-nested list with only one element?
         self._operator_config = operator_config
         self._fault_injection_config = fault_injection_config
         self._work_dir = work_dir
@@ -82,11 +83,16 @@ class ChactosDriver(PostProcessor):
 
     def run(self):
         """Run the fault injection exp"""
+        logging.info("Starting fault injection exp")
         operator_selector = self._fault_injection_config.operator_selector
         operator_selector["namespaces"] = [self.namespace]
         app_selector = self._fault_injection_config.application_selector
         app_selector["namespaces"] = [self.namespace]
         failures = []
+
+        logging.info(
+            "TODO: Chactos only running on operator app network partition now"
+        )
         failures.append(
             OperatorApplicationPartitionFailure(
                 operator_selector=operator_selector,
@@ -95,8 +101,9 @@ class ChactosDriver(PostProcessor):
             )
         )
 
+        logging.debug("Trials: [%s]", self.trials)
         for failure in failures:
-            for trial_name, trial in self.trials.items():
+            for trial_name, trial in self.trial_to_steps.items():
                 for worker_id in range(self._operator_config.num_nodes):
                     self.run_trial(
                         trial_name=trial_name,
@@ -304,14 +311,16 @@ class ChactosDriver(PostProcessor):
                 )
 
                 logging.info("Finished checking oracle:")
-                logging.debug("Dumping oracle to json regardless of healthiness")
+                logging.debug(
+                    "Dumping oracle to json regardless of healthiness"
+                )
                 with open(
                     os.path.join(
                         fault_injection_trial_dir,
                         f"oracle-{inner_steps_generation}.json",
                     ),
                     "w",
-                    encoding="utf-8"
+                    encoding="utf-8",
                 ) as oracle_json:
                     json.dump(oracle_results, oracle_json)
 
