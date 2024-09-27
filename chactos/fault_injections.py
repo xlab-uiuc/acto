@@ -364,6 +364,7 @@ class ChactosTrialWorker:
                 trial_name: str = job_details[0]
                 failure: Failure = job_details[2]
             except queue.Empty:
+                logging.info("Worker %d finished", self._worker_id)
                 break
 
             fault_injection_sequence = 0
