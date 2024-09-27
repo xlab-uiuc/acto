@@ -106,7 +106,7 @@ class ChactosDriver(PostProcessor):
         workqueue: multiprocessing.Queue = multiprocessing.Queue()
         for failure in failures:
             for trial_name, trial in self.trial_to_steps.items():
-                workqueue.put([trial_name, trial, failure])
+                workqueue.put((trial_name, trial, failure))
 
         for worker_id in range(self._num_workers):
             worker = ChactosTrialWorker(
@@ -340,7 +340,7 @@ class ChactosTrialWorker:
     ):
         """Return the fault injection trial directory"""
         return os.path.join(
-            self._work_dir, f"{trial_name}-fi-{sequence}-worker-{worker}"
+            self._work_dir, f"{trial_name}-fi-worker-{worker}-{sequence}"
         )
 
     def run(
