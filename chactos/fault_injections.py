@@ -414,6 +414,7 @@ class ChactosTrialWorker:
                     return
 
                 logging.debug("Installing chaos mesh")
+                #TODO: Sometimes Helm install chaos mesh times out for 300s?
                 chaosmesh_injector = ChaosMeshFaultInjector()
                 chaosmesh_injector.install(
                     kube_config=kubernetes_config_dict,

@@ -33,6 +33,7 @@ class Failure(abc.ABC):
             timeout=600,
             namespace="chaos-mesh",
         )
+        #TODO: dump more information when waiting for failure convergence times out.
         if p.returncode != 0:
             raise RuntimeError(
                 f"Failed to wait for {self.name()} failure to be injected: {p.stderr}"
