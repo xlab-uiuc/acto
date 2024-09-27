@@ -40,6 +40,7 @@ class ChactosDriver(PostProcessor):
         work_dir: str,
         operator_config: OperatorConfig,
         fault_injection_config: FaultInjectionConfig,
+        num_workers: int,
     ):
         super().__init__(testrun_dir=testrun_dir, config=operator_config)
         # FIXME: why is self.trials a doubly-nested list with only one element?
@@ -47,8 +48,7 @@ class ChactosDriver(PostProcessor):
         self._fault_injection_config = fault_injection_config
         self._work_dir = work_dir
         self._testrun_dir = testrun_dir
-
-        self.namespace = self.context["namespace"]
+        self._num_workers = num_workers
 
         self.kubernetes_provider = kind.Kind(
             acto_namespace=0,
@@ -83,9 +83,9 @@ class ChactosDriver(PostProcessor):
         """Run the fault injection exp"""
         logging.info("Starting fault injection exp")
         operator_selector = self._fault_injection_config.operator_selector
-        operator_selector["namespaces"] = [self.namespace]
+        operator_selector["namespaces"] = [self.context["namespace"]]
         app_selector = self._fault_injection_config.application_selector
-        app_selector["namespaces"] = [self.namespace]
+        app_selector["namespaces"] = [self.context["namespace"]]
         failures = []
 
         logging.info(
@@ -95,7 +95,7 @@ class ChactosDriver(PostProcessor):
             OperatorApplicationPartitionFailure(
                 operator_selector=operator_selector,
                 app_selector=app_selector,
-                namespace=self.namespace,
+                namespace=self.context["namespace"],
             )
         )
 
@@ -108,7 +108,7 @@ class ChactosDriver(PostProcessor):
             for trial_name, trial in self.trial_to_steps.items():
                 workqueue.put([trial_name, trial, failure])
 
-        for worker_id in range(self._operator_config.num_nodes):
+        for worker_id in range(self._num_workers):
             worker = ChactosTrialWorker(
                 worker_id=worker_id,
                 work_dir=self._work_dir,

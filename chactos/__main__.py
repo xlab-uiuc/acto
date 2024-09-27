@@ -39,6 +39,13 @@ parser.add_argument(
     help="Testrun directory to load the inputs from",
     required=True,
 )
+parser.add_argument(
+    "--num-workers",
+    dest="num_workers",
+    type=int,
+    default=1,
+    help="Number of concurrent workers to run Chactos with",
+)
 args = parser.parse_args()
 
 os.makedirs(args.workdir_path, exist_ok=True)
@@ -69,5 +76,6 @@ driver = ChactosDriver(
     work_dir=args.workdir_path,
     operator_config=operator_config,
     fault_injection_config=fi_config,
+    num_workers=args.num_workers,
 )
 driver.run()
