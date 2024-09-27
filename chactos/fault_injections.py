@@ -390,25 +390,25 @@ class ChactosTrialWorker:
                         kubernetes_cluster_name
                     )
                 )
-                kubernetes_config_dict = os.path.join(
+                kubernetes_config = os.path.join(
                     os.path.expanduser("~"), ".kube", kubernetes_context_name
                 )
                 self._kubernetes_provider.restart_cluster(
-                    kubernetes_cluster_name, kubernetes_config_dict
+                    kubernetes_cluster_name, kubernetes_config
                 )
                 self._kubernetes_provider.load_images(
                     self._images_archive, kubernetes_cluster_name
                 )
                 kubectl_client = KubectlClient(
-                    kubernetes_config_dict, kubernetes_context_name
+                    kubernetes_config, kubernetes_context_name
                 )
                 api_client = kubernetes_client(
-                    kubernetes_config_dict, kubernetes_context_name
+                    kubernetes_config, kubernetes_context_name
                 )
 
                 # Set up the operator and dependencies
                 deployed = self._deployer.deploy_with_retry(
-                    kubernetes_config_dict,
+                    kubernetes_config,
                     kubernetes_context_name,
                     kubectl_client=kubectl_client,
                     namespace=self._context["namespace"],
@@ -421,7 +421,7 @@ class ChactosTrialWorker:
                 #TODO: Sometimes Helm install chaos mesh times out for 300s?
                 chaosmesh_injector = ChaosMeshFaultInjector()
                 chaosmesh_injector.install_with_retry(
-                    kube_config=kubernetes_config_dict,
+                    kube_config=kubernetes_config,
                     kube_context=kubernetes_context_name,
                 )
 
@@ -437,7 +437,7 @@ class ChactosTrialWorker:
                 runner = Runner(
                     context=self._context,
                     trial_dir=fi_trial_dir,
-                    kubeconfig=kubernetes_config_dict,
+                    kubeconfig=kubernetes_config,
                     context_name=kubernetes_context_name,
                 )
 
@@ -453,7 +453,7 @@ class ChactosTrialWorker:
 
                 wait_for_converge(
                     kubernetes_client(
-                        kubernetes_config_dict, kubernetes_context_name
+                        kubernetes_config, kubernetes_context_name
                     ),
                     self._context["namespace"],
                 )
