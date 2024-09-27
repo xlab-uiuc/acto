@@ -5,6 +5,7 @@ import queue
 import subprocess
 import threading
 import time
+from typing import Optional
 
 import kubernetes
 
@@ -119,6 +120,7 @@ class ChactosDriver(PostProcessor):
                 image_archive=self._images_archive,
                 deployer=self._deployer,
                 context=self.context,
+                diff_exclude_paths=self._operator_config.diff_ignore_fields,
             )
             workers.append(worker)
 
@@ -326,6 +328,7 @@ class ChactosTrialWorker:
         image_archive: str,
         deployer: Deploy,
         context: dict,
+        diff_exclude_paths: Optional[list[str]] = None,
     ):
         self._worker_id = worker_id
         self._workqueue = workqueue
@@ -334,6 +337,7 @@ class ChactosTrialWorker:
         self._images_archive = image_archive
         self._deployer = deployer
         self._context = context
+        self._diff_exclude_paths = diff_exclude_paths
 
     def fault_injection_trial_dir(
         self, trial_name: str, sequence: int, worker: int
@@ -512,6 +516,7 @@ class ChactosTrialWorker:
                             diff=post_diff_test.compare_system_equality(
                                 chactos_snapshot.system_state,
                                 step.snapshot.system_state,
+                                additional_exclude_paths=self._diff_exclude_paths,
                             ),
                             from_step=StepID(
                                 trial=trial_name, generation=int(step_key)
