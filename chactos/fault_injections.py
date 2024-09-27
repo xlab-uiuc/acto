@@ -43,7 +43,6 @@ class ChactosDriver(PostProcessor):
         num_workers: int,
     ):
         super().__init__(testrun_dir=testrun_dir, config=operator_config)
-        # FIXME: why is self.trials a doubly-nested list with only one element?
         self._operator_config = operator_config
         self._fault_injection_config = fault_injection_config
         self._work_dir = work_dir
@@ -88,6 +87,7 @@ class ChactosDriver(PostProcessor):
         app_selector["namespaces"] = [self.context["namespace"]]
         failures = []
 
+        # TODO: Chactos only running on one failure mode right now
         logging.info(
             "TODO: Chactos only running on operator app network partition now"
         )
@@ -129,9 +129,6 @@ class ChactosDriver(PostProcessor):
 
         for p in processes:
             p.join()
-
-    # TODO: surround run_trial with function that if queue has trial keep
-    # TODO: run_trial running
 
 
 def wait_for_converge(api_client, namespace, wait_time=60, hard_timeout=600):
