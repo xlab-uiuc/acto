@@ -1,4 +1,5 @@
 import logging
+import subprocess
 import time
 from typing import Optional
 
@@ -18,7 +19,11 @@ from acto.utils.preprocess import add_acto_label
 def wait_for_pod_ready(kubectl_client: KubectlClient) -> bool:
     """Wait for all pods to be ready"""
     now = time.time()
-    p = kubectl_client.wait_for_all_pods(timeout=600)
+    try:
+        p = kubectl_client.wait_for_all_pods(timeout=600)
+    except subprocess.TimeoutExpired:
+        logging.error("Timeout waiting for all pods to be ready")
+        return False
     if p.returncode != 0:
         logging.error(
             "Failed to wait for all pods to be ready due to error from kubectl"
