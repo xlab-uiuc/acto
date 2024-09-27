@@ -24,7 +24,7 @@ from acto.result import (
 from acto.runner.runner import Runner
 from acto.system_state.kubernetes_system_state import KubernetesSystemState
 from acto.trial import Trial
-from acto.utils import acto_timer
+from acto.utils import acto_timer, process_with_except
 from chactos.failures.failure import Failure
 from chactos.failures.network_chaos import OperatorApplicationPartitionFailure
 from chactos.fault_injection_config import FaultInjectionConfig
@@ -123,7 +123,7 @@ class ChactosDriver(PostProcessor):
         logging.debug("Launching processes")
         processes = []
         for worker in workers:
-            p = multiprocessing.Process(target=worker.run)
+            p = process_with_except.MyProcess(target=worker.run)
             p.start()
             processes.append(p)
 

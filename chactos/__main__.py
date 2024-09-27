@@ -2,9 +2,12 @@ import argparse
 import json
 import logging
 import os
+import sys
+import threading
 from datetime import datetime
 
 from acto.lib.operator_config import OperatorConfig
+from acto.utils import error_handler
 from chactos.fault_injection_config import FaultInjectionConfig
 from chactos.fault_injections import ChactosDriver
 
@@ -70,6 +73,10 @@ with open(args.config, "r", encoding="utf-8") as config_file:
 with open(args.fi_config, "r", encoding="utf-8") as fi_config_file:
     fi_config_data = json.load(fi_config_file)
     fi_config = FaultInjectionConfig.model_validate(fi_config_data)
+
+# Register custom exception hook
+sys.excepthook = error_handler.handle_excepthook
+threading.excepthook = error_handler.thread_excepthook
 
 driver = ChactosDriver(
     testrun_dir=args.testrun_dir,
