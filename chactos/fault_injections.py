@@ -7,7 +7,6 @@ import subprocess
 import time
 
 import kubernetes
-from result import DifferentialOracleResult, OracleResult, OracleResults, StepID
 
 from acto.common import kubernetes_client, print_event
 from acto.deploy import Deploy
@@ -16,6 +15,12 @@ from acto.kubernetes_engine import kind
 from acto.lib.operator_config import OperatorConfig
 from acto.post_process import post_diff_test
 from acto.post_process.post_process import PostProcessor
+from acto.result import (
+    DifferentialOracleResult,
+    OracleResult,
+    OracleResults,
+    StepID,
+)
 from acto.runner.runner import Runner
 from acto.system_state.kubernetes_system_state import KubernetesSystemState
 from acto.trial import Trial
