@@ -4,6 +4,7 @@ import multiprocessing.queues
 import os
 import queue
 import subprocess
+import threading
 import time
 
 import kubernetes
@@ -19,12 +20,14 @@ from acto.result import (
     DifferentialOracleResult,
     OracleResult,
     OracleResults,
+    RunResult,
     StepID,
+    check_kubectl_cli,
 )
 from acto.runner.runner import Runner
 from acto.system_state.kubernetes_system_state import KubernetesSystemState
 from acto.trial import Trial
-from acto.utils import acto_timer, process_with_except
+from acto.utils import acto_timer
 from chactos.failures.failure import Failure
 from chactos.failures.network_chaos import OperatorApplicationPartitionFailure
 from chactos.fault_injection_config import FaultInjectionConfig
@@ -103,7 +106,7 @@ class ChactosDriver(PostProcessor):
         logging.debug("Initializing runner list")
         workers: list[ChactosTrialWorker] = []
 
-        workqueue: multiprocessing.Queue = multiprocessing.Queue()
+        workqueue: queue.Queue = queue.Queue()
         for failure in failures:
             for trial_name, trial in self.trial_to_steps.items():
                 workqueue.put((trial_name, trial, failure))
@@ -123,7 +126,7 @@ class ChactosDriver(PostProcessor):
         logging.debug("Launching processes")
         processes = []
         for worker in workers:
-            p = process_with_except.MyProcess(target=worker.run)
+            p = threading.Thread(target=worker.run)
             p.start()
             processes.append(p)
 
@@ -318,7 +321,7 @@ class ChactosTrialWorker:
         self,
         worker_id: int,
         work_dir: str,
-        workqueue: multiprocessing.Queue,
+        workqueue: queue.Queue,
         kubernetes_provider: kind.Kind,
         image_archive: str,
         deployer: Deploy,
@@ -360,6 +363,7 @@ class ChactosTrialWorker:
                 trial: Trial = job_details[1]
                 trial_name: str = job_details[0]
                 failure: Failure = job_details[2]
+                logging.info("Progress [%d]", self._workqueue.qsize())
             except queue.Empty:
                 logging.info("Worker %d finished", self._worker_id)
                 break
@@ -416,7 +420,7 @@ class ChactosTrialWorker:
                 logging.debug("Installing chaos mesh")
                 #TODO: Sometimes Helm install chaos mesh times out for 300s?
                 chaosmesh_injector = ChaosMeshFaultInjector()
-                chaosmesh_injector.install(
+                chaosmesh_injector.install_with_retry(
                     kube_config=kubernetes_config_dict,
                     kube_context=kubernetes_context_name,
                 )
@@ -473,6 +477,7 @@ class ChactosTrialWorker:
                     )
                     if err is not None:
                         logging.debug("Error when applying CR: [%s]", err)
+                    chactos_snapshot.dump(fi_trial_dir)
 
                     logging.debug("Waiting for CR to converge")
                     wait_for_converge(
@@ -525,6 +530,22 @@ class ChactosTrialWorker:
                         oracle_results.health = OracleResult(
                             message=str(health)
                         )
+
+                    # Dump the RunResult to disk
+                    run_result = RunResult(
+                        testcase={
+                            "original_trial": trial_name,
+                            "original_step": step_key,
+                        },
+                        step_id=StepID(
+                            trial=trial_name,
+                            generation=int(inner_steps_generation),
+                        ),
+                        oracle_result=oracle_results,
+                        cli_status=check_kubectl_cli(chactos_snapshot),
+                        is_revert=False,
+                    )
+                    run_result.dump(fi_trial_dir)
 
                     if oracle_results.is_error():
                         logging.error("Oracle failed")
