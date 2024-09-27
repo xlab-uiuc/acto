@@ -502,6 +502,10 @@ class ChactosTrialWorker:
                     logger.debug("Waiting for cleanup to converge")
                     wait_for_converge(api_client, self._context["namespace"])
 
+                    chactos_snapshot.system_state = (
+                        runner.collect_system_state()
+                    )
+
                     logger.debug("Acquiring oracle.")
 
                     diff_result = post_diff_test.compare_system_equality(
