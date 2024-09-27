@@ -325,10 +325,11 @@ class DeterministicInputModel(InputModel):
                 and len(schema.examples) == 0
             ):
                 logger.info("No examples for %s", path)
-                info = path + [None if "description" not in schema.raw_schema else schema.raw_schema["description"], schema.raw_schema["type"]]
-                if schema.raw_schema["type"] == "object":
-                    info += [schema.raw_schema["properties"], schema.raw_schema["required"]]
-
+                info = [".".join(path), None if "description" not in schema.raw_schema else schema.raw_schema["description"],
+                                           "opaque" if "type" not in schema.raw_schema else schema.raw_schema["type"], 
+                                           None if "properties" not in schema.raw_schema else schema.raw_schema["properties"],
+                                           None if "required" not in schema.raw_schema else schema.raw_schema["required"]]
+                
                 missing_examples.append(info)
 
             path_str = (
