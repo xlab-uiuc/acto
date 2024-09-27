@@ -1,10 +1,9 @@
 import abc
 import os
 
-from common import kubernetes_client
-from system_state.kubernetes_system_state import KubernetesSystemState
-
+from acto.common import kubernetes_client
 from acto.kubectl_client.helm import Helm
+from acto.system_state.kubernetes_system_state import KubernetesSystemState
 
 
 class FaultInjectorInterface(abc.ABC):
