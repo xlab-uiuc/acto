@@ -1,10 +1,10 @@
 import abc
-import logging
 import os
 
 import yaml
 
 from acto.kubectl_client.kubectl import KubectlClient
+from acto.utils import thread_logger
 
 FAILURE_DIR = ".failures"
 
@@ -17,13 +17,14 @@ class Failure(abc.ABC):
 
     def apply(self, kubectl_client: KubectlClient):
         """Apply the failure to the cluster"""
-        logging.info("Applying %s...", self.name())
+        logger = thread_logger.get_thread_logger()
+        logger.info("Applying %s...", self.name())
         failure_file = os.path.join(FAILURE_DIR, self.name() + ".yaml")
         self.to_file(failure_file)
         p = kubectl_client.kubectl(
             ["apply", "-f", failure_file, "-n", "chaos-mesh"],
             capture_output=True,
-            text=True
+            text=True,
         )
         if p.returncode != 0:
             raise RuntimeError(f"Failed to apply {self.name()}: {p.stderr}")
@@ -33,13 +34,12 @@ class Failure(abc.ABC):
             timeout=10,
             namespace="chaos-mesh",
         )
-        #TODO: dump more information when waiting for failure convergence times out.
+        # TODO: dump more information when waiting for failure convergence times out.
         if p.returncode != 0:
-            logging.warning("Fault injection failed to be applied in 10 seconds.")
-            # raise RuntimeError(
-            #     f"Failed to wait for {self.name()} failure to be injected: {p.stderr}"
-            # )
-        logging.info("%s failure applied", self.name())
+            logger.warning(
+                "Fault injection failed to be applied in 10 seconds."
+            )
+        logger.info("%s failure applied", self.name())
 
     def cleanup(self, kubectl_client: KubectlClient):
         """Cleanup the failure from the cluster"""
@@ -48,7 +48,9 @@ class Failure(abc.ABC):
             ["delete", "-f", failure_file, "-n", "chaos-mesh", "--timeout=30s"],
             capture_output=True,
         )
-        logging.info("%s failure cleaned up", self.name())
+        thread_logger.get_thread_logger().info(
+            "%s failure cleaned up", self.name()
+        )
 
     @abc.abstractmethod
     def name(self) -> str:

@@ -1,4 +1,3 @@
-import logging
 import multiprocessing
 import multiprocessing.queues
 import os
@@ -8,6 +7,7 @@ import threading
 import time
 
 import kubernetes
+from utils import thread_logger
 
 from acto.common import kubernetes_client, print_event
 from acto.deploy import Deploy
@@ -66,7 +66,6 @@ class ChactosDriver(PostProcessor):
             print_event("Preparing required images...")
             # first make sure images are present locally
             for image in self.context["preload_images"]:
-                logging.info("Docker pulling image: [%s]", image)
                 subprocess.run(
                     [container_tool, "pull", image],
                     stdout=subprocess.DEVNULL,
@@ -83,7 +82,8 @@ class ChactosDriver(PostProcessor):
 
     def run(self) -> None:
         """Run the fault injection exp"""
-        logging.info("Starting fault injection exp")
+        logger = thread_logger.get_thread_logger()
+        logger.info("Starting fault injection exp")
         operator_selector = self._fault_injection_config.operator_selector
         operator_selector["namespaces"] = [self.context["namespace"]]
         app_selector = self._fault_injection_config.application_selector
@@ -91,7 +91,7 @@ class ChactosDriver(PostProcessor):
         failures = []
 
         # TODO: Chactos only running on one failure mode right now
-        logging.info(
+        logger.info(
             "TODO: Chactos only running on operator app network partition now"
         )
         failures.append(
@@ -102,8 +102,8 @@ class ChactosDriver(PostProcessor):
             )
         )
 
-        logging.debug("Trials: [%s]", self.trials)
-        logging.debug("Initializing runner list")
+        logger.debug("Trials: [%s]", self.trials)
+        logger.debug("Initializing runner list")
         workers: list[ChactosTrialWorker] = []
 
         workqueue: queue.Queue = queue.Queue()
@@ -123,7 +123,7 @@ class ChactosDriver(PostProcessor):
             )
             workers.append(worker)
 
-        logging.debug("Launching processes")
+        logger.debug("Launching processes")
         processes = []
         for worker in workers:
             p = threading.Thread(target=worker.run)
@@ -145,9 +145,10 @@ def wait_for_converge(api_client, namespace, wait_time=60, hard_timeout=600):
     Returns:
         True if the system converge within the hard timeout
     """
+    logger = thread_logger.get_thread_logger()
 
     start_timestamp = time.time()
-    logging.info("Waiting for system to converge... ")
+    logger.info("Waiting for system to converge... ")
 
     core_v1_api = kubernetes.client.CoreV1Api(api_client)
     event_stream = core_v1_api.list_namespaced_event(
@@ -200,14 +201,14 @@ def wait_for_converge(api_client, namespace, wait_time=60, hard_timeout=600):
                     continue
                 if sfs["status"]["replicas"] != sfs["status"]["ready_replicas"]:
                     ready = False
-                    logging.info(
+                    logger.info(
                         "Statefulset %s is not ready yet",
                         sfs["metadata"]["name"],
                     )
                     break
                 if sfs["spec"]["replicas"] != sfs["status"]["replicas"]:
                     ready = False
-                    logging.info(
+                    logger.info(
                         "Statefulset %s is not ready yet",
                         sfs["metadata"]["name"],
                     )
@@ -219,7 +220,7 @@ def wait_for_converge(api_client, namespace, wait_time=60, hard_timeout=600):
 
                 if dp["status"]["replicas"] != dp["status"]["ready_replicas"]:
                     ready = False
-                    logging.info(
+                    logger.info(
                         "Deployment %s is not ready yet",
                         dp["metadata"]["name"],
                     )
@@ -231,7 +232,7 @@ def wait_for_converge(api_client, namespace, wait_time=60, hard_timeout=600):
                         and condition["status"] != "True"
                     ):
                         ready = False
-                        logging.info(
+                        logger.info(
                             "Deployment %s is not ready yet",
                             dp["metadata"]["name"],
                         )
@@ -242,7 +243,7 @@ def wait_for_converge(api_client, namespace, wait_time=60, hard_timeout=600):
                         and condition["status"] != "True"
                     ):
                         ready = False
-                        logging.info(
+                        logger.info(
                             "Deployment %s is not ready yet",
                             dp["metadata"]["name"],
                         )
@@ -254,7 +255,7 @@ def wait_for_converge(api_client, namespace, wait_time=60, hard_timeout=600):
                     != ds["status"]["current_number_scheduled"]
                 ):
                     ready = False
-                    logging.info(
+                    logger.info(
                         "Daemonset %s is not ready yet",
                         ds["metadata"]["name"],
                     )
@@ -264,7 +265,7 @@ def wait_for_converge(api_client, namespace, wait_time=60, hard_timeout=600):
                     != ds["status"]["number_ready"]
                 ):
                     ready = False
-                    logging.info(
+                    logger.info(
                         "Daemonset %s is not ready yet",
                         ds["metadata"]["name"],
                     )
@@ -275,7 +276,7 @@ def wait_for_converge(api_client, namespace, wait_time=60, hard_timeout=600):
                     != ds["status"]["desired_number_scheduled"]
                 ):
                     ready = False
-                    logging.info(
+                    logger.info(
                         "Daemonset %s is not ready yet",
                         ds["metadata"]["name"],
                     )
@@ -294,10 +295,10 @@ def wait_for_converge(api_client, namespace, wait_time=60, hard_timeout=600):
         "%H:%M:%S", time.gmtime(time.time() - start_timestamp)
     )
     if converge:
-        logging.info("System took %s to converge", time_elapsed)
+        logger.info("System took %s to converge", time_elapsed)
         return True
     else:
-        logging.error(
+        logger.error(
             "System failed to converge within %d seconds", hard_timeout
         )
         return False
@@ -357,15 +358,16 @@ class ChactosTrialWorker:
         empty -> m3 -> m4
         if m2 -> m3 fails in the fault injection trial.
         """
+        logger = thread_logger.get_thread_logger()
         while True:
             try:
                 job_details = self._workqueue.get(block=True, timeout=5)
                 trial: Trial = job_details[1]
                 trial_name: str = job_details[0]
                 failure: Failure = job_details[2]
-                logging.info("Progress [%d]", self._workqueue.qsize())
+                logger.info("Progress [%d]", self._workqueue.qsize())
             except queue.Empty:
-                logging.info("Worker %d finished", self._worker_id)
+                logger.info("Worker %d finished", self._worker_id)
                 break
 
             fault_injection_sequence = 0
@@ -414,25 +416,25 @@ class ChactosTrialWorker:
                     namespace=self._context["namespace"],
                 )
                 if not deployed:
-                    logging.error("Failed to deploy the operator")
+                    logger.error("Failed to deploy the operator")
                     return
 
-                logging.debug("Installing chaos mesh")
-                #TODO: Sometimes Helm install chaos mesh times out for 300s?
+                logger.debug("Installing chaos mesh")
+                # TODO: Sometimes Helm install chaos mesh times out for 300s?
                 chaosmesh_injector = ChaosMeshFaultInjector()
                 chaosmesh_injector.install_with_retry(
                     kube_config=kubernetes_config,
                     kube_context=kubernetes_context_name,
                 )
 
-                logging.info("Initializing trial runner")
-                logging.debug("trial name: [%s]", trial_name)
+                logger.info("Initializing trial runner")
+                logger.debug("trial name: [%s]", trial_name)
                 fi_trial_dir = self.fault_injection_trial_dir(
                     trial_name=trial_name,
                     sequence=fault_injection_sequence,
                     worker=self._worker_id,
                 )
-                logging.debug("trial dir: [%s]", fi_trial_dir)
+                logger.debug("trial dir: [%s]", fi_trial_dir)
 
                 runner = Runner(
                     context=self._context,
@@ -444,7 +446,7 @@ class ChactosTrialWorker:
                 step_key = steps.pop(0)
                 step = trial.steps[step_key]
 
-                logging.debug("Asking runner to run the first input cr")
+                logger.debug("Asking runner to run the first input cr")
                 inner_steps_generation = 0
                 runner.run(
                     input_cr=step.snapshot.input_cr,
@@ -458,39 +460,41 @@ class ChactosTrialWorker:
                     self._context["namespace"],
                 )
 
-                logging.debug("Looping on inner steps")
+                logger.debug("Looping on inner steps")
                 while steps:
                     step_key = steps[0]
                     step = trial.steps[step_key]
 
-                    logging.debug("Applying failure NOW %s", failure.name())
+                    logger.debug("Applying failure NOW %s", failure.name())
                     try:
                         failure.apply(kubectl_client)
                     except subprocess.TimeoutExpired:
-                        logging.warning("Timeout in applying failure.")
-                        logging.warning("Current steps: [%s]", sorted(trial.steps.keys()))
+                        logger.warning("Timeout in applying failure.")
+                        logger.warning(
+                            "Current steps: [%s]", sorted(trial.steps.keys())
+                        )
 
-                    logging.debug("Applying next CR")
+                    logger.debug("Applying next CR")
                     chactos_snapshot, err = runner.run(
                         input_cr=step.snapshot.input_cr,
                         generation=inner_steps_generation,
                     )
                     if err is not None:
-                        logging.debug("Error when applying CR: [%s]", err)
+                        logger.debug("Error when applying CR: [%s]", err)
                     chactos_snapshot.dump(fi_trial_dir)
 
-                    logging.debug("Waiting for CR to converge")
+                    logger.debug("Waiting for CR to converge")
                     wait_for_converge(
                         api_client, self._context["namespace"], hard_timeout=180
                     )
 
-                    logging.debug("Clearning up failure %s", failure.name())
+                    logger.debug("Clearning up failure %s", failure.name())
                     failure.cleanup(kubectl_client)
 
-                    logging.debug("Waiting for cleanup to converge")
+                    logger.debug("Waiting for cleanup to converge")
                     wait_for_converge(api_client, self._context["namespace"])
 
-                    logging.debug("Acquiring oracle.")
+                    logger.debug("Acquiring oracle.")
 
                     diff_result = post_diff_test.compare_system_equality(
                         chactos_snapshot.system_state,
@@ -526,7 +530,7 @@ class ChactosTrialWorker:
 
                     health = deprecated_system_state.check_health()
                     if not health.is_healthy():
-                        logging.error("System is not healthy %s", health)
+                        logger.error("System is not healthy %s", health)
                         oracle_results.health = OracleResult(
                             message=str(health)
                         )
@@ -548,7 +552,7 @@ class ChactosTrialWorker:
                     run_result.dump(fi_trial_dir)
 
                     if oracle_results.is_error():
-                        logging.error("Oracle failed")
+                        logger.error("Oracle failed")
                         break
 
                     inner_steps_generation += 1
