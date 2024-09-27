@@ -460,7 +460,11 @@ class ChactosTrialWorker:
                     step = trial.steps[step_key]
 
                     logging.debug("Applying failure NOW %s", failure.name())
-                    failure.apply(kubectl_client)
+                    try:
+                        failure.apply(kubectl_client)
+                    except subprocess.TimeoutExpired:
+                        logging.warning("Timeout in applying failure.")
+                        logging.warning("Current steps: [%s]", sorted(trial.steps.keys()))
 
                     logging.debug("Applying next CR")
                     chactos_snapshot, err = runner.run(
