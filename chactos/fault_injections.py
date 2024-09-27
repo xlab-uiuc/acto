@@ -448,10 +448,14 @@ class ChactosTrialWorker:
 
                 logger.debug("Asking runner to run the first input cr")
                 inner_steps_generation = 0
-                runner.run(
+
+                chactos_snapshot, err = runner.run(
                     input_cr=step.snapshot.input_cr,
                     generation=inner_steps_generation,
                 )
+                if err is not None:
+                    logger.debug("Error when applying CR: [%s]", err)
+                chactos_snapshot.dump(fi_trial_dir)
 
                 wait_for_converge(
                     kubernetes_client(
@@ -459,6 +463,7 @@ class ChactosTrialWorker:
                     ),
                     self._context["namespace"],
                 )
+                inner_steps_generation += 1
 
                 logger.debug("Looping on inner steps")
                 while steps:
