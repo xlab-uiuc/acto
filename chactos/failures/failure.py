@@ -34,7 +34,10 @@ class Failure(abc.ABC):
             timeout=10,
             namespace="chaos-mesh",
         )
-        # TODO: dump more information when waiting for failure convergence times out.
+        # FIXME: We are continuing execution if network chaos failed to select 
+        # the pods currently (09/26) the only reason is that the pods are gone
+        #  (like when testing steopped: true).
+        # Is this the only case that we can skip??
         if p.returncode != 0:
             logger.warning(
                 "Fault injection failed to be applied in 10 seconds."
