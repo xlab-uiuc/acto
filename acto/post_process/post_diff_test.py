@@ -460,7 +460,7 @@ class DeployRunner:
         while True:
             after_k8s_bootstrap_time = time.time()
             try:
-                group = self._workqueue.get(block=False)
+                group = self._workqueue.get(block=True, timeout=5)
             except queue.Empty:
                 break
 
@@ -781,7 +781,7 @@ class PostDiffTest(PostProcessor):
 
         while True:
             try:
-                diff_test_result_path = workqueue.get(block=False)
+                diff_test_result_path = workqueue.get(block=True, timeout=5)
             except queue.Empty:
                 break
 
