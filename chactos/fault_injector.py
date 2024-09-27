@@ -1,4 +1,8 @@
 import abc
+import os
+
+from common import kubernetes_client
+from system_state.kubernetes_system_state import KubernetesSystemState
 
 from acto.kubectl_client.helm import Helm
 
@@ -16,7 +20,7 @@ class ChaosMeshFaultInjector(FaultInjectorInterface):
     def __init__(self) -> None:
         pass
 
-    def install(self, kube_config: str, kube_context: str):
+    def install(self, kube_config: str, kube_context: str) -> bool:
         """install chaos-mesh"""
         helm_client = Helm(kube_config, kube_context)
         p = helm_client.install(
@@ -32,8 +36,24 @@ class ChaosMeshFaultInjector(FaultInjectorInterface):
                 "chaosDaemon.socketPath=/run/containerd/containerd.sock",
                 "--version",
                 "2.7.0",
+                "--atomic",
             ],
         )
 
         if p.returncode != 0:
-            raise RuntimeError("Failed to install chaos-mesh", p.stderr)
+            return False
+        return True
+
+    def install_with_retry(
+        self, kube_config: str, kube_context: str, retry: int = 3
+    ) -> None:
+        """install chaos-mesh with retry"""
+        for _ in range(retry):
+            if self.install(kube_config, kube_context):
+                return
+        system_state = KubernetesSystemState.from_api_client(
+            api_client=kubernetes_client(kube_config, kube_context),
+            namespace="chaos-mesh",
+        )
+        system_state.dump(os.path.join(".", "chaos_failed_system_state.json"))
+        raise RuntimeError("Failed to install chaos-mesh")
