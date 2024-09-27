@@ -8,13 +8,8 @@ def read_missing_properties(path):
     with open(path, 'r') as f:
         missing_properties = json.load(f)
     for i in range(len(missing_properties)):
-        description =  "\ndescription: "
-        if missing_properties[i][-1]:
-            description += missing_properties[i][-1]
-        else:
-            description += "No description available"
-        missing_properties[i] = '.'.join(missing_properties[i][:-1])
-        missing_properties[i] += description + "\n"
+        prop = missing_properties[i]
+        missing_properties[i] = f"- {prop[0]}\n description: {prop[1]}\n type: {prop[2]}\n structure: {prop[3]}\n required fields of the structure: {prop[4]}\n"
 
     return missing_properties
 
@@ -69,7 +64,7 @@ if __name__ == "__main__":
     missing_properties = read_missing_properties(args.path)
     prompt = "Here are the properties that need values:\n"
     for prop in missing_properties:
-        prompt += f"- {prop}\n"
+        prompt += f"{prop}\n"
     print(prompt)
     
     # gen_values(missing_properties, args.path, args.api_key)
