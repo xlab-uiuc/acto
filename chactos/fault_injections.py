@@ -359,7 +359,7 @@ class ChactosTrialWorker:
         """
         while True:
             try:
-                job_details = self._workqueue.get(block=False)
+                job_details = self._workqueue.get(block=True, timeout=5)
                 trial: Trial = job_details[1]
                 trial_name: str = job_details[0]
                 failure: Failure = job_details[2]
