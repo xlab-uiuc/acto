@@ -7,7 +7,6 @@ import threading
 import time
 
 import kubernetes
-from utils import thread_logger
 
 from acto.common import kubernetes_client, print_event
 from acto.deploy import Deploy
@@ -27,7 +26,7 @@ from acto.result import (
 from acto.runner.runner import Runner
 from acto.system_state.kubernetes_system_state import KubernetesSystemState
 from acto.trial import Trial
-from acto.utils import acto_timer
+from acto.utils import acto_timer, thread_logger
 from chactos.failures.failure import Failure
 from chactos.failures.network_chaos import OperatorApplicationPartitionFailure
 from chactos.fault_injection_config import FaultInjectionConfig
