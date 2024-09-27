@@ -1,4 +1,3 @@
-import json
 import logging
 import multiprocessing
 import multiprocessing.queues
@@ -8,16 +7,14 @@ import subprocess
 import time
 
 import kubernetes
-import yaml
+from result import DifferentialOracleResult, OracleResult, OracleResults, StepID
 
-from acto.checker.checker_set import CheckerSet
 from acto.common import kubernetes_client, print_event
 from acto.deploy import Deploy
-from acto.input.input import DeterministicInputModel
 from acto.kubectl_client.kubectl import KubectlClient
 from acto.kubernetes_engine import kind
 from acto.lib.operator_config import OperatorConfig
-from acto.oracle_handle import OracleHandle
+from acto.post_process import post_diff_test
 from acto.post_process.post_process import PostProcessor
 from acto.runner.runner import Runner
 from acto.system_state.kubernetes_system_state import KubernetesSystemState
@@ -77,15 +74,7 @@ class ChactosDriver(PostProcessor):
 
         self._deployer = Deploy(operator_config.deploy)
 
-    def fault_injection_trial_dir(
-        self, trial_name: str, sequence: int, worker: int
-    ):
-        """Return the fault injection trial directory"""
-        return os.path.join(
-            self._work_dir, f"{trial_name}-fi-{sequence}-worker-{worker}"
-        )
-
-    def run(self):
+    def run(self) -> None:
         """Run the fault injection exp"""
         logging.info("Starting fault injection exp")
         operator_selector = self._fault_injection_config.operator_selector
@@ -107,7 +96,7 @@ class ChactosDriver(PostProcessor):
 
         logging.debug("Trials: [%s]", self.trials)
         logging.debug("Initializing runner list")
-        runners: list[DeployChactosDriver] = []
+        workers: list[ChactosTrialWorker] = []
 
         workqueue: multiprocessing.Queue = multiprocessing.Queue()
         for failure in failures:
@@ -115,254 +104,29 @@ class ChactosDriver(PostProcessor):
                 workqueue.put([trial_name, trial, failure])
 
         for worker_id in range(self._operator_config.num_nodes):
-            child_process_work_dir = os.path.join(
-                self._work_dir, f"chactos-worker-{worker_id}"
+            worker = ChactosTrialWorker(
+                worker_id=worker_id,
+                work_dir=self._work_dir,
+                workqueue=workqueue,
+                kubernetes_provider=self.kubernetes_provider,
+                image_archive=self._images_archive,
+                deployer=self._deployer,
+                context=self.context,
             )
-            runner = DeployChactosDriver(
-                self._testrun_dir,
-                child_process_work_dir,
-                self._operator_config,
-                self.fault_injection_trial_dir,
-                worker_id,
-                workqueue,
-            )
-            runners.append(runner)
+            workers.append(worker)
 
         logging.debug("Launching processes")
         processes = []
-        for runner in runners:
-            p = multiprocessing.Process(target=runner.run_trial_dist)
+        for worker in workers:
+            p = multiprocessing.Process(target=worker.run)
             p.start()
             processes.append(p)
 
         for p in processes:
             p.join()
 
-    def apply_cr(
-        self,
-        cr,
-        kubectl_client: KubectlClient,
-    ):
-        """Apply a CR."""
-
-        cr_file = "cr.yaml"
-        with open(cr_file, "w", encoding="utf-8") as f:
-            yaml.dump(cr, f)
-        p = kubectl_client.kubectl(
-            ["apply", "-f", cr_file, "-n", self.namespace],
-            capture_output=True,
-            text=True,
-        )
-        if p.returncode != 0:
-            logging.error(
-                "Failed to apply CR due to error from kubectl"
-                + f" (returncode={p.returncode})"
-                + f" (stdout={p.stdout})"
-                + f" (stderr={p.stderr})"
-            )
-            return False
-        return True
-
     # TODO: surround run_trial with function that if queue has trial keep
     # TODO: run_trial running
-
-    def run_trial(
-        self,
-        trial_name: str,
-        trial: Trial,
-        worker_id: int,
-        failure: Failure,
-    ):
-        """Run a trial, this function can be parallelized
-
-        This function takes a trial from the Acto's normal test run and
-        runs it with fault injections.
-
-        With a normal trial with sequence of empty -> m1 -> m2 -> m3 -> m4,
-        it may result in multiple fault injection trials:
-        empty -> m1 -> m2 -> m3
-        empty -> m3 -> m4
-        if m2 -> m3 fails in the fault injection trial.
-        """
-
-        fault_injection_sequence = 0
-
-        steps = sorted(trial.steps.keys())
-        while steps:
-            fault_injection_trial_dir = self.fault_injection_trial_dir(
-                trial_name=trial_name,
-                sequence=fault_injection_sequence,
-                worker=worker_id,
-            )
-            os.makedirs(fault_injection_trial_dir, exist_ok=True)
-
-            # Set up the Kubernetes cluster
-            kubernetes_cluster_name = self.kubernetes_provider.cluster_name(
-                acto_namespace=0, worker_id=worker_id
-            )
-            kubernetes_context_name = self.kubernetes_provider.get_context_name(
-                kubernetes_cluster_name
-            )
-            kubernetes_config_dict = os.path.join(
-                os.path.expanduser("~"), ".kube", kubernetes_context_name
-            )
-            self.kubernetes_provider.restart_cluster(
-                kubernetes_cluster_name, kubernetes_config_dict
-            )
-            self.kubernetes_provider.load_images(
-                self._images_archive, kubernetes_cluster_name
-            )
-            kubectl_client = KubectlClient(
-                kubernetes_config_dict, kubernetes_context_name
-            )
-            api_client = kubernetes_client(
-                kubernetes_config_dict, kubernetes_context_name
-            )
-
-            # Set up the operator and dependencies
-            deployed = self._deployer.deploy_with_retry(
-                kubernetes_config_dict,
-                kubernetes_context_name,
-                kubectl_client=kubectl_client,
-                namespace=self.context["namespace"],
-            )
-            if not deployed:
-                logging.error("Failed to deploy the operator")
-                return
-
-            logging.debug("Installing chaos mesh")
-            chaosmesh_injector = ChaosMeshFaultInjector()
-            chaosmesh_injector.install(
-                kube_config=kubernetes_config_dict,
-                kube_context=kubernetes_context_name,
-            )
-
-            logging.info("Initializing trial runner")
-            logging.debug("trial name: [%s]", trial_name)
-            trial_dir = os.path.join(self._testrun_dir, trial_name)
-            logging.debug("trial dir: [%s]", trial_dir)
-
-            runner = Runner(
-                context=self.context,
-                trial_dir=trial_dir,
-                kubeconfig=kubernetes_config_dict,
-                context_name=kubernetes_context_name,
-            )
-
-            step_key = steps.pop(0)
-            step = trial.steps[step_key]
-
-            logging.debug("Asking runner to run the first input cr")
-            inner_steps_generation = 0
-            runner.run(
-                input_cr=step.snapshot.input_cr,
-                generation=inner_steps_generation,
-            )
-
-            wait_for_converge(
-                kubernetes_client(
-                    kubernetes_config_dict, kubernetes_context_name
-                ),
-                self.context["namespace"],
-            )
-
-            logging.debug("Looping on inner steps")
-            while steps:
-                step_key = steps.pop(0)
-                step = trial.steps[step_key]
-
-                logging.debug("Applying failure NOW %s", failure.name())
-                failure.apply(kubectl_client)
-
-                logging.debug("Applying next CR")
-                chactos_snapshot, err = runner.run(
-                    input_cr=step.snapshot.input_cr,
-                    generation=inner_steps_generation,
-                )
-                if err is not None:
-                    logging.debug("Error when applying CR: [%s]", err)
-
-                logging.debug("Waiting for CR to converge")
-                wait_for_converge(api_client, self.namespace, hard_timeout=180)
-
-                logging.debug("Clearning up failure %s", failure.name())
-                failure.cleanup(kubectl_client)
-
-                logging.debug("Waiting for cleanup to converge")
-                wait_for_converge(api_client, self.namespace)
-
-                logging.debug("Acquiring oracle.")
-                # oracle
-                deprecated_system_state = KubernetesSystemState.from_api_client(
-                    api_client=api_client,
-                    namespace=self.namespace,
-                )
-
-                logging.debug("Acquiring system states from runner.")
-                # system_state = runner.collect_system_state()
-
-                logging.info("Initializing pre reqs for checker")
-                with open(
-                    self._operator_config.seed_custom_resource,
-                    "r",
-                    encoding="utf-8",
-                ) as cr_file:
-                    seed = yaml.load(cr_file, Loader=yaml.FullLoader)
-                seed["metadata"]["name"] = "test-cluster"
-                det_inputmodel = DeterministicInputModel(
-                    crd=self.context["crd"]["body"],
-                    seed_input=seed,
-                    example_dir=self._operator_config.example_dir,
-                    num_workers=1,  # TODO: add this to chactos args?
-                    num_cases=1,  # TODO: add this too?
-                    kubernetes_version=self._operator_config.kubernetes_version,
-                    custom_module_path=self._operator_config.custom_module,
-                )
-
-                checking_snapshots = [step.snapshot, chactos_snapshot]
-                oracle_handle = OracleHandle(
-                    kubectl_client=kubectl_client,
-                    k8s_client=kubernetes_client,
-                    namespace=self.context["namespace"],
-                    snapshots=checking_snapshots,
-                )
-
-                logging.info("Initializing checker")
-                checker = CheckerSet(
-                    context=self.context,
-                    trial_dir=trial_dir,
-                    input_model=det_inputmodel,
-                    oracle_handle=oracle_handle,
-                )
-
-                oracle_results = checker.check(
-                    snapshot=chactos_snapshot,
-                    prev_snapshot=step.snapshot,
-                    generation=inner_steps_generation,
-                )
-
-                logging.info("Finished checking oracle:")
-                logging.debug(
-                    "Dumping oracle to json regardless of healthiness"
-                )
-                with open(
-                    os.path.join(
-                        fault_injection_trial_dir,
-                        f"oracle-{inner_steps_generation}.json",
-                    ),
-                    "w",
-                    encoding="utf-8",
-                ) as oracle_json:
-                    json.dump(oracle_results.model_dump(), oracle_json)
-
-                health = deprecated_system_state.check_health()
-                if not health.is_healthy():
-                    logging.error("System is not healthy %s", health)
-                    break
-
-                inner_steps_generation += 1
-
-            fault_injection_sequence += 1
 
 
 def wait_for_converge(api_client, namespace, wait_time=60, hard_timeout=600):
@@ -543,34 +307,40 @@ def watch_system_events(event_stream, q: multiprocessing.Queue):
             pass
 
 
-class DeployChactosDriver(ChactosDriver):
+class ChactosTrialWorker:
     """
     The distributed wrapper for running in multi processes
     """
 
     def __init__(
         self,
-        testrun_dir: str,
-        work_dir: str,
-        operator_config: OperatorConfig,
-        fault_injection_config: FaultInjectionConfig,
         worker_id: int,
+        work_dir: str,
         workqueue: multiprocessing.Queue,
+        kubernetes_provider: kind.Kind,
+        image_archive: str,
+        deployer: Deploy,
+        context: dict,
     ):
-        super().__init__(
-            testrun_dir, work_dir, operator_config, fault_injection_config
+        self._worker_id = worker_id
+        self._workqueue = workqueue
+        self._work_dir = work_dir
+        self._kubernetes_provider = kubernetes_provider
+        self._images_archive = image_archive
+        self._deployer = deployer
+        self._context = context
+
+    def fault_injection_trial_dir(
+        self, trial_name: str, sequence: int, worker: int
+    ):
+        """Return the fault injection trial directory"""
+        return os.path.join(
+            self._work_dir, f"{trial_name}-fi-{sequence}-worker-{worker}"
         )
-        self.worker_id = worker_id
-        self.workqueue = workqueue
 
-        # FIXME: improve SE practice here
-        self.trial = None
-        self.trial_name = None
-        self.failure = None
-
-    def run_trial_dist(
+    def run(
         self,
-    ):
+    ) -> None:
         """Run a trial, this function can be parallelized
 
         This function takes a trial from the Acto's normal test run and
@@ -584,40 +354,42 @@ class DeployChactosDriver(ChactosDriver):
         """
         while True:
             try:
-                job_details = self.workqueue.get(block=False)
-                self.trial = job_details[1]
-                self.trial_name = job_details[0]
-                self.failure = job_details[2]
+                job_details = self._workqueue.get(block=False)
+                trial: Trial = job_details[1]
+                trial_name: str = job_details[0]
+                failure: Failure = job_details[2]
             except queue.Empty:
                 break
 
             fault_injection_sequence = 0
 
-            steps = sorted(self.trial.steps.keys())
+            steps = sorted(trial.steps.keys())
             while steps:
                 fault_injection_trial_dir = self.fault_injection_trial_dir(
-                    trial_name=self.trial_name,
+                    trial_name=trial_name,
                     sequence=fault_injection_sequence,
-                    worker=self.worker_id,
+                    worker=self._worker_id,
                 )
                 os.makedirs(fault_injection_trial_dir, exist_ok=True)
 
                 # Set up the Kubernetes cluster
-                kubernetes_cluster_name = self.kubernetes_provider.cluster_name(
-                    acto_namespace=0, worker_id=self.worker_id
+                kubernetes_cluster_name = (
+                    self._kubernetes_provider.cluster_name(
+                        acto_namespace=0, worker_id=self._worker_id
+                    )
                 )
                 kubernetes_context_name = (
-                    self.kubernetes_provider.get_context_name(
+                    self._kubernetes_provider.get_context_name(
                         kubernetes_cluster_name
                     )
                 )
                 kubernetes_config_dict = os.path.join(
                     os.path.expanduser("~"), ".kube", kubernetes_context_name
                 )
-                self.kubernetes_provider.restart_cluster(
+                self._kubernetes_provider.restart_cluster(
                     kubernetes_cluster_name, kubernetes_config_dict
                 )
-                self.kubernetes_provider.load_images(
+                self._kubernetes_provider.load_images(
                     self._images_archive, kubernetes_cluster_name
                 )
                 kubectl_client = KubectlClient(
@@ -632,7 +404,7 @@ class DeployChactosDriver(ChactosDriver):
                     kubernetes_config_dict,
                     kubernetes_context_name,
                     kubectl_client=kubectl_client,
-                    namespace=self.context["namespace"],
+                    namespace=self._context["namespace"],
                 )
                 if not deployed:
                     logging.error("Failed to deploy the operator")
@@ -646,19 +418,23 @@ class DeployChactosDriver(ChactosDriver):
                 )
 
                 logging.info("Initializing trial runner")
-                logging.debug("trial name: [%s]", self.trial_name)
-                trial_dir = os.path.join(self._testrun_dir, self.trial_name)
-                logging.debug("trial dir: [%s]", trial_dir)
+                logging.debug("trial name: [%s]", trial_name)
+                fi_trial_dir = self.fault_injection_trial_dir(
+                    trial_name=trial_name,
+                    sequence=fault_injection_sequence,
+                    worker=self._worker_id,
+                )
+                logging.debug("trial dir: [%s]", fi_trial_dir)
 
                 runner = Runner(
-                    context=self.context,
-                    trial_dir=self.fault_injection_trial_dir,
+                    context=self._context,
+                    trial_dir=fi_trial_dir,
                     kubeconfig=kubernetes_config_dict,
                     context_name=kubernetes_context_name,
                 )
 
                 step_key = steps.pop(0)
-                step = self.trial.steps[step_key]
+                step = trial.steps[step_key]
 
                 logging.debug("Asking runner to run the first input cr")
                 inner_steps_generation = 0
@@ -671,18 +447,16 @@ class DeployChactosDriver(ChactosDriver):
                     kubernetes_client(
                         kubernetes_config_dict, kubernetes_context_name
                     ),
-                    self.context["namespace"],
+                    self._context["namespace"],
                 )
 
                 logging.debug("Looping on inner steps")
                 while steps:
-                    step_key = steps.pop(0)
-                    step = self.trial.steps[step_key]
+                    step_key = steps[0]
+                    step = trial.steps[step_key]
 
-                    logging.debug(
-                        "Applying failure NOW %s", self.failure.name()
-                    )
-                    self.failure.apply(kubectl_client)
+                    logging.debug("Applying failure NOW %s", failure.name())
+                    failure.apply(kubectl_client)
 
                     logging.debug("Applying next CR")
                     chactos_snapshot, err = runner.run(
@@ -694,88 +468,61 @@ class DeployChactosDriver(ChactosDriver):
 
                     logging.debug("Waiting for CR to converge")
                     wait_for_converge(
-                        api_client, self.namespace, hard_timeout=180
+                        api_client, self._context["namespace"], hard_timeout=180
                     )
 
-                    logging.debug(
-                        "Clearning up failure %s", self.failure.name()
-                    )
-                    self.failure.cleanup(kubectl_client)
+                    logging.debug("Clearning up failure %s", failure.name())
+                    failure.cleanup(kubectl_client)
 
                     logging.debug("Waiting for cleanup to converge")
-                    wait_for_converge(api_client, self.namespace)
+                    wait_for_converge(api_client, self._context["namespace"])
 
                     logging.debug("Acquiring oracle.")
+
+                    diff_result = post_diff_test.compare_system_equality(
+                        chactos_snapshot.system_state,
+                        step.snapshot.system_state,
+                    )
+
+                    oracle_results = OracleResults()
+                    if diff_result:
+                        oracle_results.differential = DifferentialOracleResult(
+                            message="failed attempt recovering to seed state - system state diff",
+                            diff=post_diff_test.compare_system_equality(
+                                chactos_snapshot.system_state,
+                                step.snapshot.system_state,
+                            ),
+                            from_step=StepID(
+                                trial=trial_name, generation=int(step_key)
+                            ),
+                            from_state=step.snapshot.system_state,
+                            to_step=StepID(
+                                trial=fi_trial_dir,
+                                generation=inner_steps_generation,
+                            ),
+                            to_state=chactos_snapshot.system_state,
+                        )
+
                     # oracle
                     deprecated_system_state = (
                         KubernetesSystemState.from_api_client(
                             api_client=api_client,
-                            namespace=self.namespace,
+                            namespace=self._context["namespace"],
                         )
                     )
-
-                    logging.debug("Acquiring system states from runner.")
-                    # system_state = runner.collect_system_state()
-
-                    logging.info("Initializing pre reqs for checker")
-                    with open(
-                        self._operator_config.seed_custom_resource,
-                        "r",
-                        encoding="utf-8",
-                    ) as cr_file:
-                        seed = yaml.load(cr_file, Loader=yaml.FullLoader)
-                    seed["metadata"]["name"] = "test-cluster"
-                    det_inputmodel = DeterministicInputModel(
-                        crd=self.context["crd"]["body"],
-                        seed_input=seed,
-                        example_dir=self._operator_config.example_dir,
-                        num_workers=1,  # TODO: add this to chactos args?
-                        num_cases=1,  # TODO: add this too?
-                        kubernetes_version=self._operator_config.kubernetes_version,
-                        custom_module_path=self._operator_config.custom_module,
-                    )
-
-                    checking_snapshots = [step.snapshot, chactos_snapshot]
-                    oracle_handle = OracleHandle(
-                        kubectl_client=kubectl_client,
-                        k8s_client=kubernetes_client,
-                        namespace=self.context["namespace"],
-                        snapshots=checking_snapshots,
-                    )
-
-                    logging.info("Initializing checker")
-                    checker = CheckerSet(
-                        context=self.context,
-                        trial_dir=trial_dir,
-                        input_model=det_inputmodel,
-                        oracle_handle=oracle_handle,
-                    )
-
-                    oracle_results = checker.check(
-                        snapshot=chactos_snapshot,
-                        prev_snapshot=step.snapshot,
-                        generation=inner_steps_generation,
-                    )
-
-                    logging.info("Finished checking oracle:")
-                    logging.debug(
-                        "Dumping oracle to json regardless of healthiness"
-                    )
-                    with open(
-                        os.path.join(
-                            fault_injection_trial_dir,
-                            f"oracle-{inner_steps_generation}.json",
-                        ),
-                        "w",
-                        encoding="utf-8",
-                    ) as oracle_json:
-                        json.dump(oracle_results.model_dump(), oracle_json)
 
                     health = deprecated_system_state.check_health()
                     if not health.is_healthy():
                         logging.error("System is not healthy %s", health)
+                        oracle_results.health = OracleResult(
+                            message=str(health)
+                        )
+
+                    if oracle_results.is_error():
+                        logging.error("Oracle failed")
                         break
 
                     inner_steps_generation += 1
+                    steps.pop(0)
 
                 fault_injection_sequence += 1
