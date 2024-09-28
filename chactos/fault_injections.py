@@ -473,6 +473,13 @@ class ChactosTrialWorker:
                     step_key = steps[0]
                     step = trial.steps[step_key]
 
+                    if (
+                        step.run_result.is_invalid_input()
+                        or step.run_result.oracle_result.is_error()
+                    ):
+                        steps.pop(0)
+                        continue
+
                     logger.debug("Applying failure NOW %s", failure.name())
                     try:
                         failure.apply(kubectl_client)
