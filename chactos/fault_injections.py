@@ -512,17 +512,14 @@ class ChactosTrialWorker:
                     diff_result = post_diff_test.compare_system_equality(
                         chactos_snapshot.system_state,
                         step.snapshot.system_state,
+                        additional_exclude_paths=self._diff_exclude_paths,
                     )
 
                     oracle_results = OracleResults()
                     if diff_result:
                         oracle_results.differential = DifferentialOracleResult(
                             message="failed attempt recovering to seed state - system state diff",
-                            diff=post_diff_test.compare_system_equality(
-                                chactos_snapshot.system_state,
-                                step.snapshot.system_state,
-                                additional_exclude_paths=self._diff_exclude_paths,
-                            ),
+                            diff=diff_result,
                             from_step=StepID(
                                 trial=trial_name, generation=int(step_key)
                             ),
