@@ -1,0 +1,38 @@
+{
+    "deploy": {
+        "steps": [
+            {
+                "apply": {
+                    "file": "https://github.com/cert-manager/cert-manager/releases/download/v1.15.3/cert-manager.yaml",
+                    "namespace": null
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/tidb-operator/v1.6.0/crd.yaml",
+                    "namespace": null
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/tidb-operator/v1.6.0/manifest.yaml",
+                    "operator": true
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/tidb-operator/v1.6.0/tidb-certs.yaml",
+                    "namespace": null
+                }
+            }
+        ]
+    },
+    "application_selector": {
+        "labelSelectors": {"app.kubernetes.io/instance": "test-cluster"}
+    },
+    "operator_selector": {
+        "labelSelectors": {"instance": "tidb-operator"}
+    },
+    "application_pod_prefix": "test-cluster-",
+    "application_data_dir": "/tmp/tikv/store"
+}
