@@ -339,12 +339,10 @@ class ChactosTrialWorker:
         self._context = context
         self._diff_exclude_paths = diff_exclude_paths
 
-    def fault_injection_trial_dir(
-        self, trial_name: str, sequence: int, worker: int
-    ):
+    def fault_injection_trial_dir(self, trial_name: str, sequence: int):
         """Return the fault injection trial directory"""
         return os.path.join(
-            self._work_dir, f"{trial_name}-fi-worker-{worker}-{sequence}"
+            self._work_dir, f"{trial_name}-fi-worker-{sequence:02d}"
         )
 
     def run(
@@ -378,9 +376,7 @@ class ChactosTrialWorker:
             steps = sorted(trial.steps.keys())
             while steps:
                 fault_injection_trial_dir = self.fault_injection_trial_dir(
-                    trial_name=trial_name,
-                    sequence=fault_injection_sequence,
-                    worker=self._worker_id,
+                    trial_name=trial_name, sequence=fault_injection_sequence
                 )
                 os.makedirs(fault_injection_trial_dir, exist_ok=True)
 
@@ -433,9 +429,7 @@ class ChactosTrialWorker:
                 logger.info("Initializing trial runner")
                 logger.debug("trial name: [%s]", trial_name)
                 fi_trial_dir = self.fault_injection_trial_dir(
-                    trial_name=trial_name,
-                    sequence=fault_injection_sequence,
-                    worker=self._worker_id,
+                    trial_name=trial_name, sequence=fault_injection_sequence
                 )
                 logger.debug("trial dir: [%s]", fi_trial_dir)
 
@@ -518,17 +512,14 @@ class ChactosTrialWorker:
                     diff_result = post_diff_test.compare_system_equality(
                         chactos_snapshot.system_state,
                         step.snapshot.system_state,
+                        additional_exclude_paths=self._diff_exclude_paths,
                     )
 
                     oracle_results = OracleResults()
                     if diff_result:
                         oracle_results.differential = DifferentialOracleResult(
                             message="failed attempt recovering to seed state - system state diff",
-                            diff=post_diff_test.compare_system_equality(
-                                chactos_snapshot.system_state,
-                                step.snapshot.system_state,
-                                additional_exclude_paths=self._diff_exclude_paths,
-                            ),
+                            diff=diff_result,
                             from_step=StepID(
                                 trial=trial_name, generation=int(step_key)
                             ),
