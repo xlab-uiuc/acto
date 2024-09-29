@@ -501,7 +501,9 @@ class ChactosTrialWorker:
                     failure.cleanup(kubectl_client)
 
                     logger.debug("Waiting for cleanup to converge")
-                    wait_for_converge(api_client, self._context["namespace"])
+                    wait_for_converge(
+                        api_client, self._context["namespace"], wait_time=120
+                    )
 
                     chactos_snapshot.system_state = (
                         runner.collect_system_state()
