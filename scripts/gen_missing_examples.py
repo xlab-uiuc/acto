@@ -2,9 +2,9 @@ import openai
 import argparse
 import os
 import json
-from openai import OpenAI
 
 def read_missing_properties(path):
+    path = os.path.join(path, "missing_fields.json")
     with open(path, 'r') as f:
         missing_properties = json.load(f)
 
@@ -19,8 +19,7 @@ def read_missing_properties(path):
     return resutls
 
 def gen_values(missing_values, path, api_key, operator):
-    # openai.api_key = api_key
-    # client = OpenAI(api_key)
+    openai.api_key = api_key
 
     context = f"You are a expert of the {operator} of the Kubernetes ecosystem. You are tasked with providing values for properties of the {operator} CRD"
 
@@ -38,37 +37,31 @@ def gen_values(missing_values, path, api_key, operator):
 
     prompt += format
 
-    print(prompt)
-
-
-    # completion = client.chat.completions.create(
-    #     model="o1-preview",
-    #     messages=[
-    #         {"role": "system", "content": context},
-    #         {"role": "user", "content": prompt}
-    #     ]
-    # )
+    completion = openai.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": context},
+            {"role": "user", "content": prompt}
+        ]
+    )
     
-    # result_text = completion.choices[0].message.content
-    # result_lines = result_text.split("\n")
-    # result_dict = {}
-    
-    # # TODO: modify the results processing part
-    # for prop, value in zip(missing_values, result_lines):
-    #     result_dict[prop] = value.strip("- ")
+    result_text = completion.choices[0].message.content
 
-    # output_file = os.path.join(path, "values_for_missing_properties.json")
-    # with open(output_file, 'w') as f:
-    #     json.dump(result_dict, f, indent=4)
+    output_file = os.path.join(path, "values_for_missing_properties.txt")
+    with open(output_file, 'w') as f:
+        f.write(result_text)
+
+    output_file = os.path.join(path, "values_for_missing_properties.json")
+    with open(output_file, 'w') as f:
+        json.dump(result_text, f, indent=4)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--path", type=str, help="Path to the file containing the missing properties")
-    # parser.add_argument("--api_key", type=str, help="API key for the OpenAI API")
+    parser.add_argument("--api_key", type=str, help="API key for the OpenAI API")
     parser.add_argument("--operator", type=str, help="Name of the operator")
     args = parser.parse_args()
 
     missing_properties = read_missing_properties(args.path)
     
-    # gen_values(missing_properties, args.path, args.api_key)
-    gen_values(missing_properties, args.path, 111, args.operator)
+    gen_values(missing_properties, args.path, args.api_key, args.operator)
