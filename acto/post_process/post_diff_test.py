@@ -193,7 +193,7 @@ def compare_system_equality(
     ]
 
     if additional_exclude_paths is not None:
-        exclude_paths.extend(additional_exclude_paths)
+        exclude_paths.extend(compute_common_regex(additional_exclude_paths))
 
     diff = DeepDiff(
         prev_system_state,
