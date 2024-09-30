@@ -34,7 +34,7 @@ class Failure(abc.ABC):
             timeout=10,
             namespace="chaos-mesh",
         )
-        # FIXME: We are continuing execution if network chaos failed to select 
+        # FIXME: We are continuing execution if network chaos failed to select
         # the pods currently (09/26) the only reason is that the pods are gone
         #  (like when testing steopped: true).
         # Is this the only case that we can skip??
@@ -47,10 +47,14 @@ class Failure(abc.ABC):
     def cleanup(self, kubectl_client: KubectlClient):
         """Cleanup the failure from the cluster"""
         failure_file = os.path.join(FAILURE_DIR, self.name() + ".yaml")
-        kubectl_client.kubectl(
+        p = kubectl_client.kubectl(
             ["delete", "-f", failure_file, "-n", "chaos-mesh", "--timeout=30s"],
             capture_output=True,
         )
+        if p.returncode != 0:
+            thread_logger.get_thread_logger().error(
+                "Failed to delete %s: %s", self.name(), p.stderr
+            )
         thread_logger.get_thread_logger().info(
             "%s failure cleaned up", self.name()
         )

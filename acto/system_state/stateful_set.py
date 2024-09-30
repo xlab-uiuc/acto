@@ -45,7 +45,9 @@ class StatefulSetState(KubernetesNamespacedDictObject):
             if (
                 stateful_set.status.current_revision
                 != stateful_set.status.update_revision
-            ):
+            ) and stateful_set.spec.update_strategy.type != "OnDelete":
+                # OnDelete strategy does not update revision
+                # https://github.com/kubernetes/kubernetes/issues/106055
                 return (
                     False,
                     f"StatefulSet[{name}] revision mismatch"
@@ -53,9 +55,14 @@ class StatefulSetState(KubernetesNamespacedDictObject):
                     + f"!= update[{stateful_set.status.update_revision}]",
                 )
 
-            if stateful_set.spec.replicas == 0 and stateful_set.status.ready_replicas is None:
+            if (
+                stateful_set.spec.replicas == 0
+                and stateful_set.status.ready_replicas is None
+            ):
                 pass
-            elif stateful_set.spec.replicas != stateful_set.status.ready_replicas:
+            elif (
+                stateful_set.spec.replicas != stateful_set.status.ready_replicas
+            ):
                 return False, f"StatefulSet[{name}] replicas mismatch"
 
             if stateful_set.status.conditions is not None:
