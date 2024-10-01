@@ -62,6 +62,8 @@ class NumberSchema(BaseSchema):
     def load_examples(self, example: Optional[float]):
         if isinstance(example, float):
             self.examples.add(example)
+        elif isinstance(example, int):
+            self.examples.add(example)
         else:
             raise TypeError(
                 f"Expected float, got {type(example)} for property {self.path}"
