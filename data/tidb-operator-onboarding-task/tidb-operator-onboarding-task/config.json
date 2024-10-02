@@ -1,0 +1,25 @@
+{
+  "deploy": {
+    "steps": [
+      {
+        "apply": {
+            "file": "data/tidb-operator/crd.yaml",
+            "namespace": "tidb-admin"
+        }
+      },
+      {
+        "wait": {
+            "duration": 10
+        }
+      },
+      {
+        "apply": {
+          "file": "data/tidb-operator-onboarding-task/operator.yaml",
+          "operator": true
+        }
+      }
+    ]
+  },
+  "crd_name": "tidbclusters.pingcap.com",
+  "seed_custom_resource": "data/tidb-operator-onboarding-task/cr.yaml"
+}
