@@ -91,9 +91,7 @@ class ChactosDriver(PostProcessor):
         app_selector["namespaces"] = [self.context["namespace"]]
         failures = []
 
-        logger.info(
-            "TODO: Chactos only running on operator app network partition now"
-        )
+       
         # failures.append(
         #     OperatorApplicationPartitionFailure(
         #         operator_selector=operator_selector,
@@ -103,6 +101,7 @@ class ChactosDriver(PostProcessor):
         # )
 
         # TODO: failing minority pods that fits the app_selector criteria
+        logger.info("Adding pod failure to failure list")
         failures.append(
             PodFailure(
                 app_selector=app_selector,

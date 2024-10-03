@@ -36,9 +36,7 @@ class PodFailure(Failure):
                 "mode": "fixed-percent",
                 "value": self.failure_ratio,
                 "duration": '30s',
-                "selector": {
-                    "labelSelectors": self.app_selector
-                },        
+                "selector": self.app_selector 
             } 
         }
     
