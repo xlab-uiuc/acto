@@ -101,7 +101,7 @@ class ChactosDriver(PostProcessor):
         # )
 
         # TODO: failing minority pods that fits the app_selector criteria
-        logger.info("Adding pod failure to failure list, app_selector: %s", app_selector["labelSelectors"])
+        logger.info("Adding pod failure to failure list, app_selector: %s", app_selector)
         failure = []
         for i, (k, v) in enumerate(app_selector["labelSelectors"].items()):
             logger.debug("Adding failure with this app selector: %s", {k: v})
@@ -110,7 +110,7 @@ class ChactosDriver(PostProcessor):
             if i == 0:
                 failure.append(
                     PodFailure(
-                        app_selector={"labelSelectors": {k: v}},
+                        app_selector={"labelSelectors": {k: v}, "namespaces": [self.context["namespace"]]},
                         namespace=self.context["namespace"],
                         failure_ratio=100,
                         failure_index=i
@@ -120,7 +120,7 @@ class ChactosDriver(PostProcessor):
                 # then we fail the rest of the pods with a chance
                 failure.append(
                     PodFailure(
-                        app_selector={"labelSelectors": {k: v}},
+                        app_selector={"labelSelectors": {k: v}, "namespaces": [self.context["namespace"]]},
                         namespace=self.context["namespace"],
                         failure_ratio=30,
                         failure_index=i
