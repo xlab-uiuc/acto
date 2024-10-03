@@ -30,6 +30,7 @@ from acto.trial import Trial
 from acto.utils import acto_timer, thread_logger
 from chactos.failures.failure import Failure
 from chactos.failures.network_chaos import OperatorApplicationPartitionFailure
+from chactos.failures.pod_failures_chaos import PodFailure
 from chactos.fault_injection_config import FaultInjectionConfig
 from chactos.fault_injector import ChaosMeshFaultInjector
 
@@ -90,17 +91,26 @@ class ChactosDriver(PostProcessor):
         app_selector["namespaces"] = [self.context["namespace"]]
         failures = []
 
-        # TODO: Chactos only running on one failure mode right now
         logger.info(
             "TODO: Chactos only running on operator app network partition now"
         )
+        # failures.append(
+        #     OperatorApplicationPartitionFailure(
+        #         operator_selector=operator_selector,
+        #         app_selector=app_selector,
+        #         namespace=self.context["namespace"],
+        #     )
+        # )
+
+        # TODO: failing minority pods that fits the app_selector criteria
         failures.append(
-            OperatorApplicationPartitionFailure(
-                operator_selector=operator_selector,
+            PodFailure(
                 app_selector=app_selector,
                 namespace=self.context["namespace"],
+                failure_ratio=0.45
             )
         )
+
 
         logger.debug("Trials: [%s]", self.trials)
         logger.debug("Initializing runner list")
