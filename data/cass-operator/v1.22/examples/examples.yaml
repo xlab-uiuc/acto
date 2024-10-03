@@ -1,3 +1,12 @@
+spec:
+  spec.additionalAnnotations.additional_properties: key1=value1,key2=value2
+---
+spec:
+  spec.additionalAnnotations.additional_properties: author=admin,timestamp=2023-10-10
+---
+spec:
+  spec.additionalAnnotations.additional_properties: env=production,version=1.2.3
+---
 apiVersion: cassandra.datastax.com/v1beta1
 kind: CassandraDatacenter
 metadata:
@@ -1599,3 +1608,98 @@ spec:
         requests:
           storage: 10Gi
       storageClassName: server-storage
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc1
+spec:
+  clusterName: development
+  config:
+    cassandra-yaml:
+      authenticator: PasswordAuthenticator
+      authorizer: CassandraAuthorizer
+      num_tokens: 16
+      role_manager: CassandraRoleManager
+    jvm-server-options:
+      initial_heap_size: 1G
+      max_heap_size: 1G
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: rack1
+  - name: rack2
+  - name: rack3
+  resources:
+    requests:
+      cpu: 1000m
+      memory: 2Gi
+  serverType: cassandra
+  serverVersion: 4.1.2
+  size: 3
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 10Gi
+      storageClassName: standard
+  users:
+  - secretName: demo-secret
+    superuser: true
+  - secretName: demo-secret-2
+    superuser: false
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc1
+spec:
+  clusterName: development
+  config:
+    cassandra-yaml:
+      authenticator: PasswordAuthenticator
+      authorizer: CassandraAuthorizer
+      num_tokens: 8
+      role_manager: CassandraRoleManager
+    jvm-server-options:
+      initial_heap_size: 1G
+      max_heap_size: 1G
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: rack1
+  resources:
+    requests:
+      cpu: 1000m
+      memory: 4Gi
+  serverType: cassandra
+  serverVersion: 4.1.2
+  size: 3
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 10Gi
+      storageClassName: standard
+---
+spec:
+  additionalAnnotations:
+    backupRequired: 'true'
+    environment: production
+    owner: dev-team
+---
+spec:
+  additionalAnnotations:
+    critical: 'true'
+    monitoredBy: prometheus
+    team: sre
+---
+spec:
+  additionalAnnotations:
+    audit: enabled
+    department: engineering
+    maintainedBy: infra-team
