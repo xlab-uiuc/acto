@@ -110,18 +110,20 @@ class ChactosDriver(PostProcessor):
             if i == 0:
                 failure.append(
                     PodFailure(
-                        app_selector={k: v},
+                        app_selector={"labelSelectors": {k: v}},
                         namespace=self.context["namespace"],
-                        failure_ratio=100
+                        failure_ratio=100,
+                        failure_index=i
                     )
                 )
             else:
                 # then we fail the rest of the pods with a chance
                 failure.append(
                     PodFailure(
-                        app_selector={k: v},
+                        app_selector={"labelSelectors": {k: v}},
                         namespace=self.context["namespace"],
-                        failure_ratio=30
+                        failure_ratio=30,
+                        failure_index=i
                     )
                 )
         

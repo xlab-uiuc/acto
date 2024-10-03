@@ -11,10 +11,12 @@ class PodFailure(Failure):
         app_selector: dict,
         namespace: str,
         failure_ratio: int,
+        failure_index: int
     ):
         self.app_selector = app_selector
         self.namespace = namespace
         self.failure_ratio = failure_ratio
+        self.failure_index = failure_index
 
         super().__init__()
 
@@ -24,12 +26,12 @@ class PodFailure(Failure):
 
     def to_dict(self) -> dict:
         """Dump the spec to a dict"""
+        failure_name = f"pod-crash-failure-{self.failure_index}"
         return {
             "apiVersion": "chaos-mesh.org/v1alpha1",
             "kind": "PodChaos",
             "metadata": {
-                "name": "pod-crash-failure",
-                "namespace": "chaos-mesh",
+                "name": failure_name,
             },
             "spec": {
                 "action": "pod-failure",
