@@ -10,7 +10,7 @@ class PodFailure(Failure):
     """Simulates a pod crash failure in the cluster"""
 
     def __init__(
-        self, app_selector: dict, namespace: str, failure_ratio: float,
+        self, app_selector: dict, namespace: str, failure_ratio: int,
     ):
         self.app_selector = app_selector
         self.namespace = namespace
@@ -34,7 +34,7 @@ class PodFailure(Failure):
             "spec": {
                 "action": "pod-failure",
                 "mode": "fixed-percent",
-                "value": self.failure_ratio,
+                "value": str(self.failure_ratio),
                 "duration": '30s',
                 "selector": self.app_selector 
             } 
