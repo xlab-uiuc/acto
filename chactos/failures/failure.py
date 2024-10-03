@@ -31,7 +31,7 @@ class Failure(abc.ABC):
         p = kubectl_client.wait(
             failure_file,
             'jsonpath={.status.conditions[?(@.type=="AllInjected")].status}=True',
-            timeout=10,
+            timeout=60,
             namespace="chaos-mesh",
         )
         # FIXME: We are continuing execution if network chaos failed to select
