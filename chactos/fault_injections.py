@@ -101,14 +101,40 @@ class ChactosDriver(PostProcessor):
         # )
 
         # TODO: failing minority pods that fits the app_selector criteria
-        logger.info("Adding pod failure to failure list")
-        failures.append(
-            PodFailure(
-                app_selector=app_selector,
-                namespace=self.context["namespace"],
-                failure_ratio=0.45
-            )
-        )
+        logger.info("Adding pod failure to failure list, app_selector: %s", app_selector["labelSelectors"])
+        failure = []
+        for i, (k, v) in enumerate(app_selector["labelSelectors"].items()):
+            logger.debug("Adding failure with this app selector: %s", {k: v})
+
+            # We prioritize on failing all of the leaders first
+            if i == 0:
+                failure.append(
+                    PodFailure(
+                        app_selector={k: v},
+                        namespace=self.context["namespace"],
+                        failure_ratio=100
+                    )
+                )
+            else:
+                # then we fail the rest of the pods with a chance
+                failure.append(
+                    PodFailure(
+                        app_selector={k: v},
+                        namespace=self.context["namespace"],
+                        failure_ratio=30
+                    )
+                )
+        
+        failures.append(failure)
+
+        
+        # failures.append(
+        #     PodFailure(
+        #         app_selector=app_selector,
+        #         namespace=self.context["namespace"],
+        #         failure_ratio=30
+        #     )
+        # )
 
 
         logger.debug("Trials: [%s]", self.trials)
@@ -483,9 +509,10 @@ class ChactosTrialWorker:
                         steps.pop(0)
                         continue
 
-                    logger.debug("Applying failure NOW %s", failure.name())
                     try:
-                        failure.apply(kubectl_client)
+                        for f in failure:
+                            logger.debug("Applying failure NOW %s", f.name())
+                            f.apply(kubectl_client)
                     except subprocess.TimeoutExpired:
                         logger.warning("Timeout in applying failure.")
                         logger.warning(
@@ -506,8 +533,9 @@ class ChactosTrialWorker:
                         api_client, self._context["namespace"], hard_timeout=180
                     )
 
-                    logger.debug("Clearning up failure %s", failure.name())
-                    failure.cleanup(kubectl_client)
+                    for f in failure:
+                        logger.debug("Clearning up failure %s", failure.name())
+                        f.cleanup(kubectl_client)
 
                     logger.debug("Waiting for cleanup to converge")
                     wait_for_converge(
