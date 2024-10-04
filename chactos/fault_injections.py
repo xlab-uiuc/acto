@@ -88,6 +88,13 @@ class ChactosDriver(PostProcessor):
         operator_selector["namespaces"] = [self.context["namespace"]]
         app_selector = self._fault_injection_config.application_selector
         app_selector["namespaces"] = [self.context["namespace"]]
+        priority_app_selector = (
+            {}
+            if self._fault_injection_config.priority_application_selector
+            is None
+            else self._fault_injection_config.priority_application_selector
+        )
+        priority_app_selector["namespaces"] = [self.context["namespace"]]
         failures = []
 
         # failures.append(

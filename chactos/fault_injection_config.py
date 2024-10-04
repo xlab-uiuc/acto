@@ -24,6 +24,7 @@ class FaultInjectionConfig(pydantic.BaseModel, extra="forbid"):
 
     deploy: DeployConfig
     application_selector: dict
+    priority_application_selector: Optional[dict] = None
     operator_selector: dict
     application_pod_prefix: str
     application_data_dir: str
