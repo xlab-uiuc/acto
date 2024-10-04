@@ -29,7 +29,6 @@ from acto.system_state.kubernetes_system_state import KubernetesSystemState
 from acto.trial import Trial
 from acto.utils import acto_timer, thread_logger
 from chactos.failures.failure import Failure
-from chactos.failures.network_chaos import OperatorApplicationPartitionFailure
 from chactos.failures.pod_failures_chaos import PodFailure
 from chactos.fault_injection_config import FaultInjectionConfig
 from chactos.fault_injector import ChaosMeshFaultInjector
@@ -91,7 +90,6 @@ class ChactosDriver(PostProcessor):
         app_selector["namespaces"] = [self.context["namespace"]]
         failures = []
 
-       
         # failures.append(
         #     OperatorApplicationPartitionFailure(
         #         operator_selector=operator_selector,
@@ -101,7 +99,9 @@ class ChactosDriver(PostProcessor):
         # )
 
         # TODO: failing minority pods that fits the app_selector criteria
-        logger.info("Adding pod failure to failure list, app_selector: %s", app_selector)
+        logger.info(
+            "Adding pod failure to failure list, app_selector: %s", app_selector
+        )
         failure = []
         for i, (k, v) in enumerate(app_selector["labelSelectors"].items()):
             logger.debug("Adding failure with this app selector: %s", {k: v})
@@ -110,26 +110,31 @@ class ChactosDriver(PostProcessor):
             if i == 0:
                 failure.append(
                     PodFailure(
-                        app_selector={"labelSelectors": {k: v}, "namespaces": [self.context["namespace"]]},
+                        app_selector={
+                            "labelSelectors": {k: v},
+                            "namespaces": [self.context["namespace"]],
+                        },
                         namespace=self.context["namespace"],
                         failure_ratio=100,
-                        failure_index=i
+                        failure_index=i,
                     )
                 )
             else:
                 # then we fail the rest of the pods with a chance
                 failure.append(
                     PodFailure(
-                        app_selector={"labelSelectors": {k: v}, "namespaces": [self.context["namespace"]]},
+                        app_selector={
+                            "labelSelectors": {k: v},
+                            "namespaces": [self.context["namespace"]],
+                        },
                         namespace=self.context["namespace"],
                         failure_ratio=30,
-                        failure_index=i
+                        failure_index=i,
                     )
                 )
-        
+
         failures.append(failure)
 
-        
         # failures.append(
         #     PodFailure(
         #         app_selector=app_selector,
@@ -137,7 +142,6 @@ class ChactosDriver(PostProcessor):
         #         failure_ratio=30
         #     )
         # )
-
 
         logger.debug("Trials: [%s]", self.trials)
         logger.debug("Initializing runner list")
@@ -402,7 +406,7 @@ class ChactosTrialWorker:
                 job_details = self._workqueue.get(block=True, timeout=5)
                 trial: Trial = job_details[1]
                 trial_name: str = job_details[0]
-                failure: Failure = job_details[2]
+                failure: list[Failure] = job_details[2]
                 logger.info("Progress [%d]", self._workqueue.qsize())
             except queue.Empty:
                 logger.info("Worker %d finished", self._worker_id)
@@ -536,7 +540,7 @@ class ChactosTrialWorker:
                     )
 
                     for f in failure:
-                        logger.debug("Clearning up failure %s", failure.name())
+                        logger.debug("Clearning up failure %s", f.name())
                         f.cleanup(kubectl_client)
 
                     logger.debug("Waiting for cleanup to converge")
