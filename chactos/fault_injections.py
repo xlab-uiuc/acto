@@ -97,6 +97,43 @@ class ChactosDriver(PostProcessor):
         priority_app_selector["namespaces"] = [self.context["namespace"]]
         failures = []
 
+        kubernetes_cluster_name = (
+            self._kubernetes_provider.cluster_name(
+                acto_namespace=0, worker_id=self._worker_id
+            )
+        )
+        kubernetes_context_name = (
+            self._kubernetes_provider.get_context_name(
+                kubernetes_cluster_name
+            )
+        )
+        kubernetes_config = os.path.join(
+            os.path.expanduser("~"), ".kube", kubernetes_context_name
+        )
+        self._kubernetes_provider.load_images(
+            self._images_archive, kubernetes_cluster_name
+        )
+        kubectl_client = KubectlClient(
+            kubernetes_config, kubernetes_context_name
+        )
+
+        selected_pods_list = {}
+        selected_pods_list["priority"] = []
+        selected_pods_list["normal"] = []
+
+        # TODO: Hardcoded, assuming we are ONLY selecting by label, up to change.
+        priority_selection_label = priority_app_selector["labelSelectors"]
+        normal_selection_label = app_selector["labelSelectors"]
+
+        priority_selection_args = ["get", "pods", "-l", f"{priority_selection_label.keys()[0]}: {priority_selection_label.values()[0]}"]
+        normal_selection_args = ["get", "pods", "-l", f"{normal_selection_label.keys()[0]}: {normal_selection_label.values()[0]}"]
+
+        logger.debug("Selecting priority: %s", priority_selection_args) 
+        logger.debug("Selecting normal: %s", normal_selection_args)
+
+        priority_res = kubectl_client.kubectl(priority_selection_args, capture_output=True, text=True)
+        normal_res = kubectl_client.kubectl(normal_selection_args, capture_output=True, text=True)
+
         # failures.append(
         #     OperatorApplicationPartitionFailure(
         #         operator_selector=operator_selector,
