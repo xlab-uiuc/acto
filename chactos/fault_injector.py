@@ -4,6 +4,7 @@ import os
 from acto.common import kubernetes_client
 from acto.kubectl_client.helm import Helm
 from acto.system_state.kubernetes_system_state import KubernetesSystemState
+from acto.utils import thread_logger
 
 
 class FaultInjectorInterface(abc.ABC):
@@ -40,6 +41,9 @@ class ChaosMeshFaultInjector(FaultInjectorInterface):
         )
 
         if p.returncode != 0:
+            thread_logger.get_thread_logger().error(
+                "Failed to install chaos-mesh: %s", p.stderr
+            )
             return False
         return True
 
