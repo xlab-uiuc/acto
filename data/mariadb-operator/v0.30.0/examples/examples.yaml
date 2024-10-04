@@ -128,7 +128,7 @@ spec:
         requests:
           cpu: 100m
           memory: 128Mi
-    targetRecoveryTime: "2023-12-19 09:00:00+00:00"
+    targetRecoveryTime: '2023-12-19 09:00:00+00:00'
     volume:
       nfs:
         path: /volume1/mariadb
@@ -284,7 +284,7 @@ spec:
           key: ca.crt
           name: minio-ca
         enabled: true
-    targetRecoveryTime: "2023-12-19 09:00:00+00:00"
+    targetRecoveryTime: '2023-12-19 09:00:00+00:00'
   storage:
     size: 1Gi
 ---
@@ -321,7 +321,7 @@ spec:
           key: ca.crt
           name: minio-ca
         enabled: true
-    targetRecoveryTime: "2023-12-19 09:00:00+00:00"
+    targetRecoveryTime: '2023-12-19 09:00:00+00:00'
   galera:
     enabled: true
   metrics:
@@ -507,7 +507,7 @@ spec:
         requests:
           cpu: 100m
           memory: 128Mi
-    targetRecoveryTime: "2023-12-19 09:00:00+00:00"
+    targetRecoveryTime: '2023-12-19 09:00:00+00:00'
     volume:
       persistentVolumeClaim:
         claimName: backup-scheduled
@@ -738,7 +738,7 @@ spec:
         requests:
           cpu: 100m
           memory: 128Mi
-    targetRecoveryTime: "2023-12-19 09:00:00+00:00"
+    targetRecoveryTime: '2023-12-19 09:00:00+00:00'
   storage:
     size: 1Gi
 ---
@@ -1097,7 +1097,7 @@ spec:
         requests:
           cpu: 100m
           memory: 128Mi
-    targetRecoveryTime: "2023-12-28 09:00:00+00:00"
+    targetRecoveryTime: '2023-12-28 09:00:00+00:00'
   storage:
     size: 1Gi
 ---
@@ -1151,3 +1151,143 @@ spec:
     resources:
       requests:
         storage: 100Mi
+---
+spec:
+  command:
+  - /usr/bin/mysqld
+  - --user=mysql
+  - --character-set-server=utf8mb4
+---
+spec:
+  command:
+  - /bin/sh
+  - -c
+  - echo Starting MariaDB Server; /usr/bin/mysqld --user=mysql
+---
+spec:
+  command:
+  - /bin/bash
+  - -o
+  - pipefail
+  - -c
+  - /usr/bin/mysqld --datadir=/var/lib/mysql
+---
+spec:
+  spec.maxScale.config.params:
+    max_auth_errors_before_delay: '3'
+    max_connections: '2048'
+    query_retries: '10'
+---
+spec:
+  galera:
+    agent:
+      command:
+      - start
+      - --log-level=info
+      - --config=/etc/galera.conf
+---
+spec:
+  galera:
+    agent:
+      command:
+      - run
+      - --debug
+      - --port=3306
+---
+spec:
+  galera:
+    agent:
+      command:
+      - execute
+      - --timeout=30s
+      - --monitor
+---
+spec:
+  maxScale:
+    auth:
+      adminUsername: admin_user_1
+---
+spec:
+  maxScale:
+    auth:
+      adminUsername: admin_user_2
+---
+spec:
+  maxScale:
+    auth:
+      adminUsername: admin_mx1
+---
+spec:
+  galera:
+    providerOptions:
+      additional_properties: max_connections=1000
+---
+spec:
+  galera:
+    providerOptions:
+      additional_properties: innodb_flush_log_at_trx_commit=1
+---
+spec:
+  galera:
+    providerOptions:
+      additional_properties: wsrep_on=OFF
+---
+spec:
+  galera:
+    agent:
+      args:
+      - --name=node
+      - --cluster=galera-cluster
+      - --debug=true
+---
+spec:
+  galera:
+    agent:
+      args:
+      - --replicas=3
+      - --datadir=/var/lib/mysql
+      - --allow-root
+---
+spec:
+  galera:
+    agent:
+      args:
+      - --bind-address=0.0.0.0
+      - --disable-skip-networking
+      - --logging=error
+---
+spec:
+  args:
+  - --max-connections=100
+  - --innodb-buffer-pool-size=512M
+  - --log-bin
+---
+spec:
+  args:
+  - --character-set-server=utf8mb4
+  - --collation-server=utf8mb4_unicode_ci
+  - --skip-name-resolve
+---
+spec:
+  args:
+  - --default-authentication-plugin=mysql_native_password
+  - --expire-logs-days=10
+  - --innodb-flush-method=O_DIRECT
+---
+spec:
+  maxScale:
+    config:
+      params:
+        additional_properties: max_connections=1024;auth_connect_timeout=5s
+---
+spec:
+  maxScale:
+    config:
+      params:
+        additional_properties: query_cache_size=512M;log_bin_trust_function_creators=1
+---
+spec:
+  maxScale:
+    config:
+      params:
+        additional_properties: innodb_buffer_pool_size=2G;tmp_table_size=64M
