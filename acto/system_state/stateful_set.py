@@ -50,7 +50,7 @@ class StatefulSetState(KubernetesNamespacedDictObject):
                 # https://github.com/kubernetes/kubernetes/issues/106055
                 return (
                     False,
-                    f"StatefulSet[{name}] revision mismatch"
+                    f"StatefulSet[{name}] revision mismatch "
                     + f"current[{stateful_set.status.current_revision}] "
                     + f"!= update[{stateful_set.status.update_revision}]",
                 )
