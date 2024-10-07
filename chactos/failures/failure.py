@@ -42,6 +42,12 @@ class Failure(abc.ABC):
             logger.warning(
                 "Fault injection failed to be applied in 10 seconds."
             )
+            logger.warning(
+                "stdout: %s", p.stdout
+            )
+            logger.warning(
+                "stderr: %s", p.stderr
+            )
         logger.info("%s failure applied", self.name())
 
     def cleanup(self, kubectl_client: KubectlClient):

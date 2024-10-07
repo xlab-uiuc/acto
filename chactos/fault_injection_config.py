@@ -32,3 +32,4 @@ class FaultInjectionConfig(pydantic.BaseModel, extra="forbid"):
     kubernetes: Optional[KubernetesConfig] = pydantic.Field(
         description="Kubernetes Config", default=KubernetesConfig()
     )
+    pod_failure_ratio: Optional[float] = 1.0

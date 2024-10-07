@@ -1,3 +1,4 @@
+from math import ceil
 import multiprocessing
 import multiprocessing.queues
 import os
@@ -51,6 +52,7 @@ class ChactosDriver(PostProcessor):
         self._work_dir = work_dir
         self._testrun_dir = testrun_dir
         self._num_workers = num_workers
+        self._pod_failure_ratio = fault_injection_config.pod_failure_ratio
 
         self.kubernetes_provider = kind.Kind(
             acto_namespace=0,
@@ -86,53 +88,17 @@ class ChactosDriver(PostProcessor):
         logger.info("Starting fault injection exp")
         operator_selector = self._fault_injection_config.operator_selector
         operator_selector["namespaces"] = [self.context["namespace"]]
-        app_selector = self._fault_injection_config.application_selector
-        app_selector["namespaces"] = [self.context["namespace"]]
-        priority_app_selector = (
+        pod_selector = self._fault_injection_config.application_selector
+        pod_selector["namespaces"] = [self.context["namespace"]]
+        priority_pod_selector = (
             {}
             if self._fault_injection_config.priority_application_selector
             is None
             else self._fault_injection_config.priority_application_selector
         )
-        priority_app_selector["namespaces"] = [self.context["namespace"]]
+
+        priority_pod_selector["namespaces"] = [self.context["namespace"]]
         failures = []
-
-        kubernetes_cluster_name = (
-            self._kubernetes_provider.cluster_name(
-                acto_namespace=0, worker_id=self._worker_id
-            )
-        )
-        kubernetes_context_name = (
-            self._kubernetes_provider.get_context_name(
-                kubernetes_cluster_name
-            )
-        )
-        kubernetes_config = os.path.join(
-            os.path.expanduser("~"), ".kube", kubernetes_context_name
-        )
-        self._kubernetes_provider.load_images(
-            self._images_archive, kubernetes_cluster_name
-        )
-        kubectl_client = KubectlClient(
-            kubernetes_config, kubernetes_context_name
-        )
-
-        selected_pods_list = {}
-        selected_pods_list["priority"] = []
-        selected_pods_list["normal"] = []
-
-        # TODO: Hardcoded, assuming we are ONLY selecting by label, up to change.
-        priority_selection_label = priority_app_selector["labelSelectors"]
-        normal_selection_label = app_selector["labelSelectors"]
-
-        priority_selection_args = ["get", "pods", "-l", f"{priority_selection_label.keys()[0]}: {priority_selection_label.values()[0]}"]
-        normal_selection_args = ["get", "pods", "-l", f"{normal_selection_label.keys()[0]}: {normal_selection_label.values()[0]}"]
-
-        logger.debug("Selecting priority: %s", priority_selection_args) 
-        logger.debug("Selecting normal: %s", normal_selection_args)
-
-        priority_res = kubectl_client.kubectl(priority_selection_args, capture_output=True, text=True)
-        normal_res = kubectl_client.kubectl(normal_selection_args, capture_output=True, text=True)
 
         # failures.append(
         #     OperatorApplicationPartitionFailure(
@@ -143,41 +109,42 @@ class ChactosDriver(PostProcessor):
         # )
 
         # TODO: failing minority pods that fits the app_selector criteria
-        logger.info(
-            "Adding pod failure to failure list, app_selector: %s", app_selector
-        )
-        failure = []
-        for i, (k, v) in enumerate(app_selector["labelSelectors"].items()):
-            logger.debug("Adding failure with this app selector: %s", {k: v})
+        logger.info("Adding pod failure to failure list")
 
-            # We prioritize on failing all of the leaders first
-            if i == 0:
-                failure.append(
-                    PodFailure(
-                        app_selector={
-                            "labelSelectors": {k: v},
-                            "namespaces": [self.context["namespace"]],
-                        },
-                        namespace=self.context["namespace"],
-                        failure_ratio=100,
-                        failure_index=i,
-                    )
-                )
-            else:
-                # then we fail the rest of the pods with a chance
-                failure.append(
-                    PodFailure(
-                        app_selector={
-                            "labelSelectors": {k: v},
-                            "namespaces": [self.context["namespace"]],
-                        },
-                        namespace=self.context["namespace"],
-                        failure_ratio=30,
-                        failure_index=i,
-                    )
-                )
+        failures.append({"pod-failure": self._pod_failure_ratio})
 
-        failures.append(failure)
+        # failure = []
+        # for i, (k, v) in enumerate(pod_selector["labelSelectors"].items()):
+        #     logger.debug("Adding failure with this app selector: %s", {k: v})
+
+        #     # We prioritize on failing all of the leaders first
+        #     if i == 0:
+        #         failure.append(
+        #             PodFailure(
+        #                 selector={
+        #                     "labelSelectors": {k: v},
+        #                     "namespaces": [self.context["namespace"]],
+        #                 },
+        #                 namespace=self.context["namespace"],
+        #                 failure_ratio=100,
+        #                 failure_index=i,
+        #             )
+        #         )
+        #     else:
+        #         # then we fail the rest of the pods with a chance
+        #         failure.append(
+        #             PodFailure(
+        #                 selector={
+        #                     "labelSelectors": {k: v},
+        #                     "namespaces": [self.context["namespace"]],
+        #                 },
+        #                 namespace=self.context["namespace"],
+        #                 failure_ratio=30,
+        #                 failure_index=i,
+        #             )
+        #         )
+
+        # failures.append(failure)
 
         # failures.append(
         #     PodFailure(
@@ -206,6 +173,8 @@ class ChactosDriver(PostProcessor):
                 deployer=self._deployer,
                 context=self.context,
                 diff_exclude_paths=self._operator_config.diff_ignore_fields,
+                priority_pod_selector=priority_pod_selector,
+                pod_selector=pod_selector,
             )
             workers.append(worker)
 
@@ -413,6 +382,8 @@ class ChactosTrialWorker:
         image_archive: str,
         deployer: Deploy,
         context: dict,
+        priority_pod_selector: dict,
+        pod_selector: dict,
         diff_exclude_paths: Optional[list[str]] = None,
     ):
         self._worker_id = worker_id
@@ -423,6 +394,8 @@ class ChactosTrialWorker:
         self._deployer = deployer
         self._context = context
         self._diff_exclude_paths = diff_exclude_paths
+        self._priority_pod_selector = priority_pod_selector
+        self._pod_selector = pod_selector
 
     def fault_injection_trial_dir(self, trial_name: str, sequence: int):
         """Return the fault injection trial directory"""
@@ -450,7 +423,7 @@ class ChactosTrialWorker:
                 job_details = self._workqueue.get(block=True, timeout=5)
                 trial: Trial = job_details[1]
                 trial_name: str = job_details[0]
-                failure: list[Failure] = job_details[2]
+                failure: dict = job_details[2]
                 logger.info("Progress [%d]", self._workqueue.qsize())
             except queue.Empty:
                 logger.info("Worker %d finished", self._worker_id)
@@ -491,6 +464,8 @@ class ChactosTrialWorker:
                 api_client = kubernetes_client(
                     kubernetes_config, kubernetes_context_name
                 )
+
+                core_v1_api = kubernetes.client.CoreV1Api(api_client)
 
                 # Set up the operator and dependencies
                 deployed = self._deployer.deploy_with_retry(
@@ -539,6 +514,45 @@ class ChactosTrialWorker:
                     logger.debug("Error when applying CR: [%s]", err)
                 chactos_snapshot.dump(fi_trial_dir)
 
+                # Selecting pods to inject faults
+                selected_pods_list = {}
+                selected_pods_list["priority"] = []
+                selected_pods_list["normal"] = []
+
+                # TODO: Hardcoded, assuming we are ONLY selecting by label, up to change.
+                priority_selection_label = self._priority_pod_selector[
+                    "labelSelectors"
+                ]
+                normal_selection_label = self._pod_selector["labelSelectors"]
+
+                logger.debug("Using API to get pod names")
+                priority_res = core_v1_api.list_namespaced_pod(
+                    namespace=self._context["namespace"],
+                    watch=False,
+                    label_selector=f"{list(priority_selection_label.keys())[0]}={list(priority_selection_label.values())[0]}",
+                ).items
+
+                normal_res = core_v1_api.list_namespaced_pod(
+                    namespace=self._context["namespace"],
+                    watch=False,
+                    label_selector=f"{list(normal_selection_label.keys())[0]}={list(normal_selection_label.values())[0]}",
+                ).items
+
+                num_priority_pods = 0
+                num_normal_pods = 0
+
+                for pod in priority_res:
+                    logger.debug(
+                        "Selecting priority pod: %s", pod.metadata.name
+                    )
+                    selected_pods_list["priority"].append(pod.metadata.name)
+                    num_priority_pods += 1
+
+                for pod in normal_res:
+                    logger.debug("Selecting normal pod: %s", pod.metadata.name)
+                    selected_pods_list["normal"].append(pod.metadata.name)
+                    num_normal_pods += 1
+
                 wait_for_converge(
                     kubernetes_client(
                         kubernetes_config, kubernetes_context_name
@@ -558,11 +572,70 @@ class ChactosTrialWorker:
                     ):
                         steps.pop(0)
                         continue
+                    
+                    failures_to_clean_up = []
 
                     try:
-                        for f in failure:
-                            logger.debug("Applying failure NOW %s", f.name())
-                            f.apply(kubectl_client)
+                        failure_types = list(failure.keys())[0]
+                        logger.debug("Injecting %s failure NOW", failure_types)
+                        match failure_types:
+                            case "pod-failure":
+                                pod_failure_ratio = float(list(failure.values())[0])
+                                logger.debug("Injection ratio is %s", pod_failure_ratio)
+                                
+                                num_priority_pods_to_inject = ceil(num_normal_pods * pod_failure_ratio)
+                                logger.debug("Injecting %s priority pods, this number is ceiled", num_priority_pods_to_inject)
+                                
+                                priority_pods_to_inject = []
+                                normal_pods_to_inject = []
+                                if num_priority_pods_to_inject > num_priority_pods:
+                                    logger.debug("Injecting more than priority pods. Filling the rest with normal pods")
+                                    num_normal_pods_to_inject = num_priority_pods_to_inject - num_priority_pods
+                                    priority_pods_to_inject = selected_pods_list["priority"]
+                                    normal_pods_to_inject = selected_pods_list["normal"][0:num_normal_pods_to_inject]
+                                else: 
+                                    logger.debug("Injecting all or some of priority pods")
+                                    priority_pods_to_inject = selected_pods_list["priority"][0:num_priority_pods_to_inject]
+                                    
+                                logger.debug("List of priority pods to inject: [%s]", priority_pods_to_inject)
+                                logger.debug("List of normal pods to inject: [%s]", normal_pods_to_inject)
+                                
+                                # TODO: rename failure index to failure suffix?
+                                priority_pod_failure = PodFailure(
+                                    selector={
+                                        "pods": {
+                                            self._context["namespace"]: priority_pods_to_inject
+                                        },
+                                        "namespaces": [
+                                            self._context["namespace"]
+                                        ],
+                                    },
+                                    namespace=self._context["namespace"],
+                                    failure_ratio=pod_failure_ratio,
+                                    failure_index=0
+                                )
+                                
+                                normal_pod_failure = PodFailure(
+                                    selector={
+                                        "pods": {
+                                            self._context["namespace"]: normal_pods_to_inject
+                                        },
+                                        "namespaces": [
+                                            self._context["namespace"]
+                                        ],
+                                    },
+                                    namespace=self._context["namespace"],
+                                    failure_ratio=pod_failure_ratio,
+                                    failure_index=1
+                                )
+                                
+                                failures_to_clean_up.append(priority_pod_failure)
+                                failures_to_clean_up.append(normal_pod_failure)
+                                
+                                priority_pod_failure.apply(kubectl_client)
+                                normal_pod_failure.apply(kubectl_client)
+                            case _:
+                                logger.error("Unrecognized type of fault!")
                     except subprocess.TimeoutExpired:
                         logger.warning("Timeout in applying failure.")
                         logger.warning(
@@ -583,7 +656,7 @@ class ChactosTrialWorker:
                         api_client, self._context["namespace"], hard_timeout=180
                     )
 
-                    for f in failure:
+                    for f in failures_to_clean_up:
                         logger.debug("Clearning up failure %s", f.name())
                         f.cleanup(kubectl_client)
 
