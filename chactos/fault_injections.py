@@ -100,59 +100,10 @@ class ChactosDriver(PostProcessor):
         priority_pod_selector["namespaces"] = [self.context["namespace"]]
         failures = []
 
-        # failures.append(
-        #     OperatorApplicationPartitionFailure(
-        #         operator_selector=operator_selector,
-        #         app_selector=app_selector,
-        #         namespace=self.context["namespace"],
-        #     )
-        # )
-
         # TODO: failing minority pods that fits the app_selector criteria
         logger.info("Adding pod failure to failure list")
 
         failures.append({"pod-failure": self._pod_failure_ratio})
-
-        # failure = []
-        # for i, (k, v) in enumerate(pod_selector["labelSelectors"].items()):
-        #     logger.debug("Adding failure with this app selector: %s", {k: v})
-
-        #     # We prioritize on failing all of the leaders first
-        #     if i == 0:
-        #         failure.append(
-        #             PodFailure(
-        #                 selector={
-        #                     "labelSelectors": {k: v},
-        #                     "namespaces": [self.context["namespace"]],
-        #                 },
-        #                 namespace=self.context["namespace"],
-        #                 failure_ratio=100,
-        #                 failure_index=i,
-        #             )
-        #         )
-        #     else:
-        #         # then we fail the rest of the pods with a chance
-        #         failure.append(
-        #             PodFailure(
-        #                 selector={
-        #                     "labelSelectors": {k: v},
-        #                     "namespaces": [self.context["namespace"]],
-        #                 },
-        #                 namespace=self.context["namespace"],
-        #                 failure_ratio=30,
-        #                 failure_index=i,
-        #             )
-        #         )
-
-        # failures.append(failure)
-
-        # failures.append(
-        #     PodFailure(
-        #         app_selector=app_selector,
-        #         namespace=self.context["namespace"],
-        #         failure_ratio=30
-        #     )
-        # )
 
         logger.debug("Trials: [%s]", self.trials)
         logger.debug("Initializing runner list")
