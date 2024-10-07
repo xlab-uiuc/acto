@@ -2,8 +2,6 @@ from typing import Optional
 
 import pydantic
 
-from acto.lib.operator_config import DeployConfig
-
 
 class KubernetesConfig(pydantic.BaseModel, extra="forbid"):
     """Kubernetes Config"""
@@ -22,14 +20,9 @@ class KubernetesConfig(pydantic.BaseModel, extra="forbid"):
 class FaultInjectionConfig(pydantic.BaseModel, extra="forbid"):
     """Fault Injection Config"""
 
-    deploy: DeployConfig
     application_selector: dict
     priority_application_selector: Optional[dict] = None
     operator_selector: dict
     application_pod_prefix: str
     application_data_dir: str
-    input_dir: Optional[str] = None
-    kubernetes: Optional[KubernetesConfig] = pydantic.Field(
-        description="Kubernetes Config", default=KubernetesConfig()
-    )
     pod_failure_ratio: Optional[float] = 1.0

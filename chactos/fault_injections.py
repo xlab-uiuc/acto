@@ -649,7 +649,6 @@ class ChactosTrialWorker:
                     )
                     if err is not None:
                         logger.debug("Error when applying CR: [%s]", err)
-                    chactos_snapshot.dump(fi_trial_dir)
 
                     logger.debug("Waiting for CR to converge")
                     wait_for_converge(
@@ -668,6 +667,7 @@ class ChactosTrialWorker:
                     chactos_snapshot.system_state = (
                         runner.collect_system_state()
                     )
+                    chactos_snapshot.dump(fi_trial_dir)
 
                     logger.debug("Acquiring oracle.")
 
