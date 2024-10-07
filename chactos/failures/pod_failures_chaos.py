@@ -11,7 +11,7 @@ class PodFailure(Failure):
         selector: dict,
         namespace: str,
         failure_ratio: int,
-        failure_index: int
+        failure_index: int,
     ):
         self.selector = selector
         self.namespace = namespace
@@ -23,7 +23,7 @@ class PodFailure(Failure):
     def name(self) -> str:
         """Get the name of the failure"""
         return f"pod-crash-failure-{str(self.failure_ratio)}-{str(self.failure_index)}"
-    
+
     def set_selector(self, selector: dict):
         self.selector = selector
         pass
@@ -40,9 +40,9 @@ class PodFailure(Failure):
             "spec": {
                 "action": "pod-failure",
                 "mode": "all",
-                "duration": '30s',
-                "selector": self.selector 
-            } 
+                "duration": "30s",
+                "selector": self.selector,
+            },
         }
 
     def to_file(self, file_path: str):

@@ -572,7 +572,7 @@ class ChactosTrialWorker:
                     ):
                         steps.pop(0)
                         continue
-                    
+
                     failures_to_clean_up = []
 
                     try:
@@ -580,31 +580,66 @@ class ChactosTrialWorker:
                         logger.debug("Injecting %s failure NOW", failure_types)
                         match failure_types:
                             case "pod-failure":
-                                pod_failure_ratio = float(list(failure.values())[0])
-                                logger.debug("Injection ratio is %s", pod_failure_ratio)
-                                
-                                num_priority_pods_to_inject = ceil(num_normal_pods * pod_failure_ratio)
-                                logger.debug("Injecting %s priority pods, this number is ceiled", num_priority_pods_to_inject)
-                                
+                                pod_failure_ratio = float(
+                                    list(failure.values())[0]
+                                )
+                                logger.debug(
+                                    "Injection ratio is %s", pod_failure_ratio
+                                )
+
+                                num_priority_pods_to_inject = ceil(
+                                    num_normal_pods * pod_failure_ratio
+                                )
+                                logger.debug(
+                                    "Injecting %s priority pods, this number is ceiled",
+                                    num_priority_pods_to_inject,
+                                )
+
                                 priority_pods_to_inject = []
                                 normal_pods_to_inject = []
-                                if num_priority_pods_to_inject > num_priority_pods:
-                                    logger.debug("Injecting more than priority pods. Filling the rest with normal pods")
-                                    num_normal_pods_to_inject = num_priority_pods_to_inject - num_priority_pods
-                                    priority_pods_to_inject = selected_pods_list["priority"]
-                                    normal_pods_to_inject = selected_pods_list["normal"][0:num_normal_pods_to_inject]
-                                else: 
-                                    logger.debug("Injecting all or some of priority pods")
-                                    priority_pods_to_inject = selected_pods_list["priority"][0:num_priority_pods_to_inject]
-                                    
-                                logger.debug("List of priority pods to inject: [%s]", priority_pods_to_inject)
-                                logger.debug("List of normal pods to inject: [%s]", normal_pods_to_inject)
-                                
+                                if (
+                                    num_priority_pods_to_inject
+                                    > num_priority_pods
+                                ):
+                                    logger.debug(
+                                        "Injecting more than priority pods. Filling the rest with normal pods"
+                                    )
+                                    num_normal_pods_to_inject = (
+                                        num_priority_pods_to_inject
+                                        - num_priority_pods
+                                    )
+                                    priority_pods_to_inject = (
+                                        selected_pods_list["priority"]
+                                    )
+                                    normal_pods_to_inject = selected_pods_list[
+                                        "normal"
+                                    ][0:num_normal_pods_to_inject]
+                                else:
+                                    logger.debug(
+                                        "Injecting all or some of priority pods"
+                                    )
+                                    priority_pods_to_inject = (
+                                        selected_pods_list["priority"][
+                                            0:num_priority_pods_to_inject
+                                        ]
+                                    )
+
+                                logger.debug(
+                                    "List of priority pods to inject: [%s]",
+                                    priority_pods_to_inject,
+                                )
+                                logger.debug(
+                                    "List of normal pods to inject: [%s]",
+                                    normal_pods_to_inject,
+                                )
+
                                 # TODO: rename failure index to failure suffix?
                                 priority_pod_failure = PodFailure(
                                     selector={
                                         "pods": {
-                                            self._context["namespace"]: priority_pods_to_inject
+                                            self._context[
+                                                "namespace"
+                                            ]: priority_pods_to_inject
                                         },
                                         "namespaces": [
                                             self._context["namespace"]
@@ -612,13 +647,15 @@ class ChactosTrialWorker:
                                     },
                                     namespace=self._context["namespace"],
                                     failure_ratio=pod_failure_ratio,
-                                    failure_index=0
+                                    failure_index=0,
                                 )
-                                
+
                                 normal_pod_failure = PodFailure(
                                     selector={
                                         "pods": {
-                                            self._context["namespace"]: normal_pods_to_inject
+                                            self._context[
+                                                "namespace"
+                                            ]: normal_pods_to_inject
                                         },
                                         "namespaces": [
                                             self._context["namespace"]
@@ -626,12 +663,14 @@ class ChactosTrialWorker:
                                     },
                                     namespace=self._context["namespace"],
                                     failure_ratio=pod_failure_ratio,
-                                    failure_index=1
+                                    failure_index=1,
                                 )
-                                
-                                failures_to_clean_up.append(priority_pod_failure)
+
+                                failures_to_clean_up.append(
+                                    priority_pod_failure
+                                )
                                 failures_to_clean_up.append(normal_pod_failure)
-                                
+
                                 priority_pod_failure.apply(kubectl_client)
                                 normal_pod_failure.apply(kubectl_client)
                             case _:
