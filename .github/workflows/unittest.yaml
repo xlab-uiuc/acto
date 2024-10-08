@@ -34,15 +34,13 @@ jobs:
           --junitxml=pytest.xml
           --cov-report=
           --cov=acto
-      - name: Get coverage report path
-        id: coverage_path
-        run: echo "COVERAGE_PATH=$(realpath .coverage.${{ github.sha }}.unittest)" >> "$GITHUB_OUTPUT"
       - name: Upload coverage
         uses: actions/upload-artifact@v4
         with:
           name: .coverage.${{ github.sha }}.unittest
-          path: ${{ steps.coverage_path.outputs.COVERAGE_PATH }}
+          path: .coverage.${{ github.sha }}.unittest
           retention-days: 1
+          include-hidden-files: true
   integration-test:
     runs-on: ubuntu-latest
     steps:
@@ -77,6 +75,7 @@ jobs:
           name: .coverage.${{ github.sha }}.integration-test
           path: .coverage.${{ github.sha }}.integration-test
           retention-days: 1
+          include-hidden-files: true
   coverage-report:
     runs-on: ubuntu-latest
     needs: [unittest, integration-test]
