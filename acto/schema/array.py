@@ -1,5 +1,8 @@
 import random
-from typing import List, Tuple
+from typing import Any, List, Optional, Tuple
+
+from acto.common import HashableList
+from acto.utils.thread_logger import get_thread_logger
 
 from .base import BaseSchema, TreeNode
 
@@ -100,10 +103,19 @@ class ArraySchema(BaseSchema):
         node.add_child("ITEM", self.item_schema.to_tree())
         return node
 
-    def load_examples(self, example: list):
-        self.examples.append(example)
-        for item in example:
-            self.item_schema.load_examples(item)
+    def load_examples(self, example: Optional[List[Any]]):
+        if example is not None:
+            logger = get_thread_logger(with_prefix=True)
+            logger.debug("Loading example %s into %s", example, self.path)
+
+            if isinstance(example, list):
+                self.examples.add(HashableList(example))
+                for item in example:
+                    self.item_schema.load_examples(item)
+            else:
+                raise TypeError(
+                    f"Expected example to be of type list, got {type(example)}"
+                )
 
     def set_default(self, instance):
         self.default = instance
@@ -112,6 +124,10 @@ class ArraySchema(BaseSchema):
         return []
 
     def gen(self, exclude_value=None, minimum: bool = False, **kwargs) -> list:
+        num = 0
+        if "size" in kwargs and kwargs["size"] is not None:
+            num = kwargs["size"]
+
         if self.enum is not None:
             if exclude_value is not None:
                 return random.choice(
@@ -119,18 +135,23 @@ class ArraySchema(BaseSchema):
                 )
             else:
                 return random.choice(self.enum)
+
+        if self.examples and len(self.examples) > 0:
+            candidates = [
+                x for x in self.examples if x != exclude_value and len(x) > num
+            ]
+            if candidates:
+                return random.choice(candidates)[num:]
+
+        # XXX: need to handle exclude_value, but not important for now for array types
+        result = []
+        if minimum:
+            num = self.min_items
         else:
-            # XXX: need to handle exclude_value, but not important for now for array types
-            result = []
-            if "size" in kwargs and kwargs["size"] is not None:
-                num = kwargs["size"]
-            elif minimum:
-                num = self.min_items
-            else:
-                num = random.randint(self.min_items, self.max_items)
-            for _ in range(num):
-                result.append(self.item_schema.gen(minimum=minimum))
-            return result
+            num = random.randint(self.min_items, self.max_items)
+        for _ in range(num):
+            result.append(self.item_schema.gen(minimum=minimum))
+        return result
 
     def __str__(self) -> str:
         return "Array"

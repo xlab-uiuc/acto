@@ -1,9 +1,10 @@
 import random
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import exrex
 
 from acto.common import random_string
+from acto.utils.thread_logger import get_thread_logger
 
 from .base import BaseSchema, TreeNode
 
@@ -46,8 +47,16 @@ class StringSchema(BaseSchema):
     def to_tree(self) -> TreeNode:
         return TreeNode(self.path)
 
-    def load_examples(self, example: str):
-        self.examples.append(example)
+    def load_examples(self, example: Optional[str]):
+        if example is not None:
+            if isinstance(example, str):
+                logger = get_thread_logger(with_prefix=True)
+                logger.debug("Loading example %s into %s", example, self.path)
+                self.examples.add(example)
+            else:
+                raise TypeError(
+                    f"Expected string, got {type(example)} for {self.path}"
+                )
 
     def set_default(self, instance):
         self.default = str(instance)
@@ -55,7 +64,12 @@ class StringSchema(BaseSchema):
     def empty_value(self):
         return ""
 
-    def gen(self, exclude_value=None, minimum: bool = False, **kwargs):
+    def gen(
+        self,
+        exclude_value: Optional[str] = None,
+        minimum: bool = False,
+        **kwargs,
+    ):
         # TODO: Use minLength: the exrex does not support minLength
         if self.enum is not None:
             if exclude_value is not None:
@@ -64,12 +78,21 @@ class StringSchema(BaseSchema):
                 )
             else:
                 return random.choice(self.enum)
+        if self.examples:
+            if exclude_value is not None:
+                example_without_exclude = [
+                    x for x in self.examples if x != exclude_value
+                ]
+                if len(example_without_exclude) > 0:
+                    return random.choice(example_without_exclude)
+            else:
+                return random.choice(list(self.examples))
         if self.pattern is not None:
-            # XXX: since it's random, we don't need to exclude the value
+            # Since it's random, we don't need to exclude the value
             return exrex.getone(self.pattern, self.max_length)
         if minimum:
             return random_string(self.min_length)  # type: ignore
-        return "ACTOKEY"
+        return "ACTOSTRING"
 
     def __str__(self) -> str:
         return "String"

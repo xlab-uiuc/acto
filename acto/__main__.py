@@ -120,6 +120,7 @@ with open(args.config, "r", encoding="utf-8") as config_file:
     if "monkey_patch" in config:
         del config["monkey_patch"]
     config = OperatorConfig.model_validate(config)
+
 logger.info("Acto started with [%s]", sys.argv)
 logger.info("Operator config: %s", config)
 
@@ -137,7 +138,6 @@ acto = Acto(
     workdir_path=args.workdir_path,
     operator_config=config,
     cluster_runtime="KIND",
-    preload_images_=None,
     context_file=context_cache,
     helper_crd=args.helper_crd,
     num_workers=args.num_workers,
@@ -147,13 +147,12 @@ acto = Acto(
     is_reproduce=False,
     input_model=DeterministicInputModel,
     apply_testcase_f=apply_testcase_f,
-    delta_from=None,
     focus_fields=config.focus_fields,
 )
 generation_time = datetime.now()
 logger.info("Acto initialization finished in %s", generation_time - start_time)
 if not args.learn:
-    acto.run(modes=["normal"])
+    acto.run()
 normal_finish_time = datetime.now()
 logger.info("Acto normal run finished in %s", normal_finish_time - start_time)
 logger.info("Start post processing steps")

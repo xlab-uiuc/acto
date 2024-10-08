@@ -85,7 +85,7 @@ class TestSemanticTests(unittest.TestCase):
             custom_module_path=self.config.custom_module,
         )
 
-        input_model.generate_test_plan(delta_from=None, focus_fields=None)
+        input_model.generate_test_plan(focus_fields=None)
         input_model.set_worker_id(0)
         input_model.set_mode(InputModel.NORMAL)
 
