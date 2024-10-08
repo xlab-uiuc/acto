@@ -37,7 +37,6 @@ class TestLearnPhase(unittest.TestCase):
             workdir_path=workdir_path,
             operator_config=config,
             cluster_runtime="KIND",
-            preload_images_=None,
             context_file=context_cache,
             helper_crd=None,
             num_workers=1,
@@ -47,6 +46,5 @@ class TestLearnPhase(unittest.TestCase):
             is_reproduce=False,
             input_model=DeterministicInputModel,
             apply_testcase_f=apply_testcase,
-            delta_from=None,
             focus_fields=config.focus_fields,
         )
