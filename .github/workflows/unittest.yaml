@@ -36,12 +36,12 @@ jobs:
           --cov=acto
       - name: Get coverage report path
         id: coverage_path
-        run: echo "COVERAGE_PATH={realpath .coverage.${{ github.sha }}.unittest}" >> GITHUB_OUTPUT
+        run: echo "COVERAGE_PATH=$(realpath .coverage.${{ github.sha }}.unittest)" >> GITHUB_OUTPUT
       - name: Upload coverage
         uses: actions/upload-artifact@v4
         with:
           name: .coverage.${{ github.sha }}.unittest
-          path: steps.coverage_path.outputs.COVERAGE_PATH
+          path: ${{ steps.coverage_path.outputs.COVERAGE_PATH }}
           retention-days: 1
   integration-test:
     runs-on: ubuntu-latest
