@@ -1,5 +1,5 @@
 import random
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 from .base import BaseSchema, TreeNode
 
@@ -59,8 +59,15 @@ class NumberSchema(BaseSchema):
     def to_tree(self) -> TreeNode:
         return TreeNode(self.path)
 
-    def load_examples(self, example: float):
-        self.examples.append(example)
+    def load_examples(self, example: Optional[float]):
+        if isinstance(example, float):
+            self.examples.add(example)
+        elif isinstance(example, int):
+            self.examples.add(example)
+        else:
+            raise TypeError(
+                f"Expected float, got {type(example)} for property {self.path}"
+            )
 
     def set_default(self, instance):
         self.default = float(instance)

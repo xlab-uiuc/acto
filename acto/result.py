@@ -94,6 +94,15 @@ class InvalidInputResult(OracleResult):
     )
 
 
+class DeletionOracleResult(OracleResult):
+    """Model for the result of a deletion oracle run"""
+
+    message: str = pydantic.Field(
+        description="The message of the oracle run",
+        default="Deletion failed",
+    )
+
+
 class OracleResults(pydantic.BaseModel):
     """The results of a collection of oracles"""
 
@@ -117,6 +126,10 @@ class OracleResults(pydantic.BaseModel):
     )
     differential: Optional[DifferentialOracleResult] = pydantic.Field(
         description="The result of the differential oracle",
+        default=None,
+    )
+    deletion: Optional[OracleResult] = pydantic.Field(
+        description="The result of the deletion oracle",
         default=None,
     )
     custom: Optional[OracleResult] = pydantic.Field(

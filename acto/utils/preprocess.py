@@ -12,45 +12,9 @@ from acto.kubectl_client import KubectlClient
 from .thread_logger import get_thread_logger
 
 
-def update_preload_images(context: dict, worker_list):
-    """Get used images from pod"""
-    logger = get_thread_logger(with_prefix=False)
-
-    namespace = context.get("namespace", "")
-    if not namespace:
-        return
-
-    # block list when getting the operator specific images
-    k8s_images = [
-        "docker.io/kindest/kindnetd",
-        "docker.io/rancher/local-path-provisioner",
-        "docker.io/kindest/local-path-provisioner",
-        "docker.io/kindest/local-path-helper",
-        "k8s.gcr.io/build-image/debian-base",
-        "k8s.gcr.io/coredns/coredns",
-        "k8s.gcr.io/etcd",
-        "k8s.gcr.io/kube-apiserver",
-        "k8s.gcr.io/kube-controller-manager",
-        "k8s.gcr.io/kube-proxy",
-        "k8s.gcr.io/kube-scheduler",
-        "k8s.gcr.io/pause",
-        "docker.io/rancher/klipper-helm",
-        "docker.io/rancher/klipper-lb",
-        "docker.io/rancher/mirrored-coredns-coredns",
-        "docker.io/rancher/mirrored-library-busybox",
-        "docker.io/rancher/mirrored-library-traefik",
-        "docker.io/rancher/mirrored-metrics-server",
-        "docker.io/rancher/mirrored-paus",
-        # new k8s images
-        "registry.k8s.io/etcd",
-        "registry.k8s.io/kube-controller-manager",
-        "registry.k8s.io/pause",
-        "registry.k8s.io/kube-proxy",
-        "registry.k8s.io/coredns/coredns",
-        "registry.k8s.io/kube-apiserver",
-        "registry.k8s.io/kube-scheduler",
-    ]
-
+def get_existing_images(worker_list: list[str]) -> set[str]:
+    """Get existing images from pods"""
+    existing_images = set()
     for worker in worker_list:
         p = subprocess.run(
             [
@@ -69,24 +33,17 @@ def update_preload_images(context: dict, worker_list):
         output = p.stdout.strip()
         for line in output.split("\n")[1:]:
             items = line.split()
-            if items[0] in k8s_images:
-                continue
             if "none" not in items[1]:
                 image = f"{items[0]}:{items[1]}"
-            else:
-                logger.warning(
-                    "image %s has no tag, Acto will not preload this image for this run",
-                    items[0],
-                )
-                continue
-
-            context["preload_images"].add(image)
+                existing_images.add(image)
+    return existing_images
 
 
 def process_crd(
     apiclient: kubernetes.client.ApiClient,
     kubectl_client: KubectlClient,
     crd_name: Optional[str] = None,
+    crd_version: Optional[str] = None,
     helper_crd: Optional[str] = None,
 ) -> dict:
     """Get crd from k8s and set context['crd']
@@ -106,9 +63,9 @@ def process_crd(
 
     if helper_crd is None:
         apiextensions_v1_api = kubernetes.client.ApiextensionsV1Api(apiclient)
-        crds: list[
-            k8s_models.V1CustomResourceDefinition
-        ] = apiextensions_v1_api.list_custom_resource_definition().items
+        crds: list[k8s_models.V1CustomResourceDefinition] = (
+            apiextensions_v1_api.list_custom_resource_definition().items
+        )
         crd: Optional[k8s_models.V1CustomResourceDefinition] = None
         if len(crds) == 0:
             logger.error("No crd is found")
@@ -139,8 +96,11 @@ def process_crd(
             crd_data = {
                 "group": spec.group,
                 "plural": spec.names.plural,
-                # TODO: Handle multiple versions
-                "version": spec.versions[0].name,
+                "version": (
+                    spec.versions[-1].name
+                    if crd_version is None
+                    else crd_version
+                ),
                 "body": crd_obj,
             }
             return crd_data
@@ -149,13 +109,25 @@ def process_crd(
             sys.exit(1)
     else:
         with open(helper_crd, "r", encoding="utf-8") as helper_crd_f:
-            helper_crd_doc = yaml.load(helper_crd_f, Loader=yaml.FullLoader)
+            helper_crd_docs = list(yaml.safe_load_all(helper_crd_f))
+
+
+        if crd_name:
+            for doc in helper_crd_docs:
+                if doc["metadata"]["name"] == crd_name:
+                    helper_crd_doc = doc
+                    break
+        else:
+            helper_crd_doc = helper_crd_docs[0]
+        
         crd_data = {
             "group": helper_crd_doc["spec"]["group"],
             "plural": helper_crd_doc["spec"]["names"]["plural"],
-            "version": helper_crd_doc["spec"]["versions"][-1][
-                "name"
-            ],  # TODO: Handle multiple versions
+            "version": (
+                helper_crd_doc["spec"]["versions"][-1]["name"]
+                if crd_version is None
+                else crd_version
+            ),
             "body": helper_crd_doc,
         }
         return crd_data

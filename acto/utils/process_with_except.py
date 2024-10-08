@@ -4,7 +4,7 @@ from sys import excepthook
 
 
 class MyProcess(Process):
-    '''Process class with excepthook'''
+    """Process class with excepthook"""
 
     def run(self):
         try:

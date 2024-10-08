@@ -1,20 +1,29 @@
 import logging
+import subprocess
 import time
+from typing import Optional
 
-import yaml
-
-import acto.utils as utils
+from acto import utils
 from acto.common import kubernetes_client, print_event
+from acto.kubectl_client.helm import Helm
 from acto.kubectl_client.kubectl import KubectlClient
 from acto.lib.operator_config import DELEGATED_NAMESPACE, DeployConfig
 from acto.utils import get_thread_logger
+from acto.utils.k8s_helper import (
+    get_deployment_name_from_yaml,
+    get_yaml_existing_namespace,
+)
 from acto.utils.preprocess import add_acto_label
 
 
 def wait_for_pod_ready(kubectl_client: KubectlClient) -> bool:
     """Wait for all pods to be ready"""
     now = time.time()
-    p = kubectl_client.wait_for_all_pods(timeout=600)
+    try:
+        p = kubectl_client.wait_for_all_pods(timeout=600)
+    except subprocess.TimeoutExpired:
+        logging.error("Timeout waiting for all pods to be ready")
+        return False
     if p.returncode != 0:
         logging.error(
             "Failed to wait for all pods to be ready due to error from kubectl"
@@ -35,13 +44,16 @@ class Deploy:
     def __init__(self, deploy_config: DeployConfig) -> None:
         self._deploy_config = deploy_config
 
-        self._operator_yaml: str = None
+        self._operator_existing_namespace: Optional[str] = None
         for step in self._deploy_config.steps:
             if step.apply and step.apply.operator:
-                self._operator_yaml = step.apply.file
+                self._operator_existing_namespace = get_yaml_existing_namespace(
+                    step.apply.file
+                )
                 break
-        else:
-            raise RuntimeError("No operator yaml found in deploy config")
+            if step.helm_install and step.helm_install.operator:
+                self._operator_existing_namespace = None
+                break
 
         # Extract the operator_container_name from config
         self._operator_container_name = None
@@ -51,11 +63,30 @@ class Deploy:
                     step.apply.operator_container_name
                 )
                 break
+            if step.helm_install and step.helm_install.operator:
+                self._operator_container_name = (
+                    step.helm_install.operator_container_name
+                )
+                break
+
+        self._operator_deployment_name = None
+        for step in self._deploy_config.steps:
+            if step.apply and step.apply.operator:
+                if (
+                    ret := get_deployment_name_from_yaml(step.apply.file)
+                ) is not None:
+                    self._operator_deployment_name = ret
+                    break
+            if step.helm_install and step.helm_install.operator:
+                self._operator_deployment_name = (
+                    step.helm_install.operator_deployment_name
+                )
+                break
 
     @property
-    def operator_yaml(self) -> str:
+    def operator_existing_namespace(self) -> Optional[str]:
         """Get the operator yaml file path"""
-        return self._operator_yaml
+        return self._operator_existing_namespace
 
     def deploy(
         self,
@@ -106,6 +137,35 @@ class Deploy:
             elif step.wait:
                 # Simply wait for the specified duration
                 time.sleep(step.wait.duration)
+            elif step.helm_install:
+                # Use the namespace from the argument if the namespace is delegated
+                # If the namespace from the config is explicitly specified,
+                # use the specified namespace
+                # If the namespace from the config is set to None, do not apply
+                # with namespace
+                release_namespace = "default"
+                if step.helm_install.namespace == DELEGATED_NAMESPACE:
+                    release_namespace = namespace
+                elif step.helm_install.namespace is not None:
+                    release_namespace = step.helm_install.namespace
+
+                # Install the helm chart
+                helm = Helm(kubeconfig, context_name)
+                p = helm.install(
+                    release_name=step.helm_install.release_name,
+                    chart=step.helm_install.chart,
+                    namespace=release_namespace,
+                    repo=step.helm_install.repo,
+                    version=step.helm_install.version,
+                )
+                if p.returncode != 0:
+                    logger.error(
+                        "Failed to deploy operator due to error from helm"
+                        + f" (returncode={p.returncode})"
+                        + f" (stdout={p.stdout})"
+                        + f" (stderr={p.stderr})"
+                    )
+                    return False
 
         # Add acto label to the operator pod
         add_acto_label(api_client, namespace)
@@ -135,16 +195,11 @@ class Deploy:
                 logger.error("Failed to deploy operator, retrying...")
         return False
 
-    def operator_name(self) -> str:
+    def operator_name(self) -> Optional[str]:
         """Get the name of the operator deployment"""
-        with open(self._operator_yaml, "r", encoding="utf-8") as f:
-            operator_yamls = yaml.load_all(f, Loader=yaml.FullLoader)
-            for yaml_ in operator_yamls:
-                if yaml_["kind"] == "Deployment":
-                    return yaml_["metadata"]["name"]
-        return None
+        return self._operator_deployment_name
 
     @property
-    def operator_container_name(self) -> str:
+    def operator_container_name(self) -> Optional[str]:
         """Get the name of the operator container"""
         return self._operator_container_name
