@@ -6,36 +6,39 @@ version = "0.1.0"
 readme = "README.md"
 license = { file = "LICENSE" }
 dependencies = [
-    "deepdiff~=6.3.0",
-    "kubernetes==26.1.0",
-    "exrex~=0.11.0",
-    "jsonschema~=4.17.3",
-    "jsonpatch~=1.33",
-    "pandas~=2.0.2",
-    "PyYAML~=6.0",
-    "ruamel.yaml~=0.18",
-    "requests~=2.31.0",
-    "pydantic~=2.5.2",
-    "pytest~=7.4.0",
+    "deepdiff",
+    "kubernetes==31.0.0",
+    "exrex",
+    "jsonschema",
+    "jsonpatch",
+    "pandas",
+    "PyYAML",
+    "ruamel.yaml",
+    "requests",
+    "pydantic",
+    "pytest",
+    "urllib3>=2.2.3",     # security fix
+    "requests>=2.32.3",   # security fix
+    "idna>=3.10",         # security fix
+    "certifi>=2024.8.30", # security fix
 ]
 
 [project.optional-dependencies]
 dev = [
-    "docker~=6.1.3",
+    "docker",
     "prometheus_client",
-    "pytest-cov~=4.1.0",
-    "tabulate~=0.9.0",
-    "pip-tools~=7.3.0",
-    "pre-commit~=3.6.0",
-    "ansible-core>=2.16.3",
-    "cryptography>=42.0.4",
-    "aiohttp>=3.9.2",
-    "jinja2>=3.1.3",
+    "pytest-cov",
+    "tabulate",
+    "pip-tools",
+    "pre-commit",
+    "ansible-core>=2.17.5",
+    "jinja2>=3.1.4",
     "isort",
     "mypy",
-    "black",
+    "black>=24.10.0",
     "pylint",
     "jsonref",
+    "cryptography>=43.0.1", # security fix
 ]
 
 [build-system]
