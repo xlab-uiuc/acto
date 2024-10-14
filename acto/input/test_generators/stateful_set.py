@@ -50,7 +50,7 @@ def replicas_tests(schema: IntegerSchema) -> list[TestCase]:
         Store(),
         semantic=True,
     )
-    overload_test = TestCase(
+    _ = TestCase(
         "k8s-overload",
         lambda x: True,
         lambda x: 1000,
@@ -58,7 +58,7 @@ def replicas_tests(schema: IntegerSchema) -> list[TestCase]:
         invalid=True,
         semantic=True,
     )
-    return [invalid_test, scale_down_up_test, scale_up_down_test, overload_test]
+    return [invalid_test, scale_down_up_test, scale_up_down_test]
 
 
 @test_generator(

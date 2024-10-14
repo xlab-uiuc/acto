@@ -111,3 +111,8 @@ class KubernetesEngine(ABC):
             # no nodes can be found, returning an empty array
             return []
         return p.stdout.strip().split("\n")
+
+    @staticmethod
+    def cluster_name(acto_namespace: int, worker_id: int) -> str:
+        """Helper function to generate cluster name"""
+        return f"acto-{acto_namespace}-cluster-{worker_id}"

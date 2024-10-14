@@ -1,0 +1,1705 @@
+spec:
+  spec.additionalAnnotations.additional_properties: key1=value1,key2=value2
+---
+spec:
+  spec.additionalAnnotations.additional_properties: author=admin,timestamp=2023-10-10
+---
+spec:
+  spec.additionalAnnotations.additional_properties: env=production,version=1.2.3
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc1
+spec:
+  clusterName: cluster1
+  config:
+    cassandra-yaml:
+      authenticator: org.apache.cassandra.auth.PasswordAuthenticator
+      authorizer: org.apache.cassandra.auth.CassandraAuthorizer
+      role_manager: org.apache.cassandra.auth.CassandraRoleManager
+    jvm-options:
+      additional-jvm-opts:
+      - -Ddse.system_distributed_replication_dc_names=dc1
+      - -Ddse.system_distributed_replication_per_dc=3
+      initial_heap_size: 800M
+      max_direct_memory: 800M
+      max_heap_size: 800M
+  managementApiAuth:
+    insecure: {}
+  serverType: cassandra
+  serverVersion: 3.11.11
+  size: 3
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 5Gi
+      storageClassName: server-storage
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc1
+spec:
+  clusterName: cluster1
+  config:
+    cassandra-yaml:
+      authenticator: org.apache.cassandra.auth.PasswordAuthenticator
+      authorizer: org.apache.cassandra.auth.CassandraAuthorizer
+      num_tokens: 8
+      role_manager: org.apache.cassandra.auth.CassandraRoleManager
+    jvm-options:
+      additional-jvm-opts:
+      - -Dcassandra.system_distributed_replication_dc_names=dc1
+      - -Dcassandra.system_distributed_replication_per_dc=3
+      initial_heap_size: 2G
+      max_direct_memory: 1G
+      max_heap_size: 2G
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: rack1
+  - name: rack2
+  - name: rack3
+  resources:
+    requests:
+      cpu: 1000m
+      memory: 4Gi
+  serverType: cassandra
+  serverVersion: 3.11.11
+  size: 3
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 10Gi
+      storageClassName: server-storage
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc1
+spec:
+  allowMultipleNodesPerWorker: false
+  canaryUpgrade: false
+  clusterName: cluster1
+  config:
+    cassandra-yaml:
+      authenticator: org.apache.cassandra.auth.PasswordAuthenticator
+      authorizer: org.apache.cassandra.auth.CassandraAuthorizer
+      file_cache_size_in_mb: 1000
+      num_tokens: 8
+      role_manager: org.apache.cassandra.auth.CassandraRoleManager
+    jvm-options:
+      additional-jvm-opts:
+      - -Dcassandra.system_distributed_replication_dc_names=dc1
+      - -Dcassandra.system_distributed_replication_per_dc=3
+      initial_heap_size: 12G
+      max_direct_memory: 6G
+      max_heap_size: 12G
+  configBuilderImage: ''
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: rack1
+    nodeAffinityLabels:
+      failure-domain.beta.kubernetes.io/zone: us-central1-a
+  - name: rack2
+    nodeAffinityLabels:
+      failure-domain.beta.kubernetes.io/zone: us-central1-b
+  - name: rack3
+    nodeAffinityLabels:
+      failure-domain.beta.kubernetes.io/zone: us-central1-c
+  replaceNodes: []
+  resources:
+    limits:
+      cpu: 6000m
+      memory: 24Gi
+    requests:
+      cpu: 6000m
+      memory: 24Gi
+  rollingRestartRequested: false
+  serverImage: ''
+  serverType: cassandra
+  serverVersion: 3.11.7
+  serviceAccount: default
+  size: 6
+  stopped: false
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 100Gi
+      storageClassName: server-storage
+  superuserSecretName: ''
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc1
+spec:
+  clusterName: cluster2
+  config:
+    jvm-server-options:
+      additional-jvm-opts:
+      - -Ddse.system_distributed_replication_dc_names=dc1
+      - -Ddse.system_distributed_replication_per_dc=3
+      initial_heap_size: 800M
+      max_direct_memory: 800M
+      max_heap_size: 800M
+  managementApiAuth:
+    insecure: {}
+  serverType: dse
+  serverVersion: 6.8.4
+  size: 3
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 5Gi
+      storageClassName: server-storage
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc1
+spec:
+  clusterName: cluster2
+  config:
+    cassandra-yaml:
+      authenticator: com.datastax.bdp.cassandra.auth.DseAuthenticator
+      authorizer: com.datastax.bdp.cassandra.auth.DseAuthorizer
+      num_tokens: 8
+      role_manager: com.datastax.bdp.cassandra.auth.DseRoleManager
+    dse-yaml:
+      authentication_options:
+        default_scheme: internal
+        enabled: true
+      authorization_options:
+        enabled: true
+    jvm-server-options:
+      additional-jvm-opts:
+      - -Ddse.system_distributed_replication_dc_names=dc1
+      - -Ddse.system_distributed_replication_per_dc=3
+      initial_heap_size: 2G
+      max_direct_memory: 1G
+      max_heap_size: 2G
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: rack1
+  - name: rack2
+  - name: rack3
+  resources:
+    requests:
+      cpu: 1000m
+      memory: 4Gi
+  serverType: dse
+  serverVersion: 6.8.4
+  size: 3
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 10Gi
+      storageClassName: server-storage
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc1
+spec:
+  allowMultipleNodesPerWorker: false
+  canaryUpgrade: false
+  clusterName: cluster2
+  config:
+    10-write-prom-conf:
+      enabled: true
+      port: 9103
+      staleness-delta: 300
+    cassandra-yaml:
+      allocate_tokens_for_local_replication_factor: 3
+      authenticator: com.datastax.bdp.cassandra.auth.DseAuthenticator
+      authorizer: com.datastax.bdp.cassandra.auth.DseAuthorizer
+      backup_service:
+        enabled: true
+      num_tokens: 8
+      role_manager: com.datastax.bdp.cassandra.auth.DseRoleManager
+    dse-yaml:
+      authentication_options:
+        default_scheme: internal
+        enabled: true
+      authorization_options:
+        enabled: true
+    jvm-server-options:
+      additional-jvm-opts:
+      - -Ddse.system_distributed_replication_dc_names=dc1
+      - -Ddse.system_distributed_replication_per_dc=3
+      initial_heap_size: 12G
+      max_direct_memory: 6G
+      max_heap_size: 12G
+  configBuilderImage: ''
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: rack1
+    nodeAffinityLabels:
+      failure-domain.beta.kubernetes.io/zone: us-central1-a
+  - name: rack2
+    nodeAffinityLabels:
+      failure-domain.beta.kubernetes.io/zone: us-central1-b
+  - name: rack3
+    nodeAffinityLabels:
+      failure-domain.beta.kubernetes.io/zone: us-central1-c
+  replaceNodes: []
+  resources:
+    limits:
+      cpu: 6000m
+      memory: 24Gi
+    requests:
+      cpu: 6000m
+      memory: 24Gi
+  rollingRestartRequested: false
+  serverImage: ''
+  serverType: dse
+  serverVersion: 6.8.4
+  serviceAccount: default
+  size: 6
+  stopped: false
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 100Gi
+      storageClassName: server-storage
+  superuserSecretName: ''
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc1
+spec:
+  clusterName: cluster1
+  config:
+    jvm-options:
+      initial_heap_size: 512m
+      max_heap_size: 512m
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: r1
+  - name: r2
+  serverType: cassandra
+  serverVersion: 3.11.7
+  size: 6
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: standard
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc1
+spec:
+  clusterName: cluster1
+  config:
+    cassandra-yaml:
+      file_cache_size_in_mb: 200
+      memtable_space_in_mb: 200
+    jvm-server-options:
+      initial_heap_size: 2000m
+      max_heap_size: 2000m
+  dseWorkloads:
+    searchEnabled: true
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: r1
+  serverType: dse
+  serverVersion: 6.8.4
+  size: 1
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: standard
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc1
+spec:
+  clusterName: cluster1
+  config:
+    jvm-options:
+      initial_heap_size: 512m
+      max_heap_size: 512m
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: r1
+  - name: r2
+  - name: r3
+  serverType: cassandra
+  serverVersion: 3.11.10
+  size: 4
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 300Ki
+      storageClassName: standard
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc2
+spec:
+  clusterName: cluster2
+  config:
+    jvm-options:
+      initial_heap_size: 512m
+      max_heap_size: 512m
+  managementApiAuth:
+    insecure: {}
+  podTemplateSpec:
+    spec:
+      containers:
+      - args:
+        - /bin/sh
+        - -c
+        - tail -n+1 -F /var/log/cassandra/system.log
+        image: busybox
+        imagePullPolicy: Always
+        name: another-tailing-logger
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /var/log/cassandra
+          name: server-logs
+  racks:
+  - name: r1
+  serverType: cassandra
+  serverVersion: 3.11.10
+  size: 1
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: standard
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc1
+spec:
+  clusterName: cluster2
+  config:
+    cassandra-yaml:
+      allocate_tokens_for_local_replication_factor: 2
+    jvm-server-options:
+      initial_heap_size: 512m
+      max_heap_size: 512m
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: r1
+  serverType: cassandra
+  serverVersion: 4.0.4
+  size: 2
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: standard
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  annotations:
+    cassandra.datastax.com/allow-storage-changes: 'true'
+  name: dc1
+spec:
+  clusterName: cluster1
+  config:
+    jvm-server-options:
+      initial_heap_size: 512m
+      max_heap_size: 512m
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: r1
+  serverType: cassandra
+  serverVersion: 4.1.4
+  size: 1
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: topolvm-provisioner-thin
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc2
+spec:
+  clusterName: cluster2
+  config:
+    cassandra-yaml:
+      allocate_tokens_for_local_replication_factor: 2
+      authenticator: PasswordAuthenticator
+      authorizer: CassandraAuthorizer
+      role_manager: CassandraRoleManager
+      rpc_address: 0.0.0.0
+    jvm-server-options:
+      initial_heap_size: 512m
+      max_heap_size: 512m
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: r1
+  serverType: cassandra
+  serverVersion: 4.1.2
+  size: 2
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: standard
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc1
+spec:
+  clusterName: cluster1
+  config:
+    cassandra-yaml:
+      allocate_tokens_for_local_replication_factor: 2
+    jvm-options:
+      initial_heap_size: 512m
+      max_heap_size: 512m
+  managementApiAuth:
+    insecure: {}
+  networking:
+    nodePort:
+      internode: 30002
+      native: 30001
+  racks:
+  - name: r1
+  - name: r2
+  serverType: cassandra
+  serverVersion: 3.11.10
+  size: 2
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: standard
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc1
+spec:
+  clusterName: cluster1
+  config:
+    cassandra-yaml:
+      file_cache_size_in_mb: 100
+      memtable_space_in_mb: 100
+    jvm-server-options:
+      initial_heap_size: 2000m
+      max_heap_size: 2000m
+  dseWorkloads:
+    graphEnabled: true
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: r1
+  serverType: dse
+  serverVersion: 6.8.4
+  size: 1
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: standard
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  annotations:
+    cassandra.datastax.com/autoupdate-spec: always
+  name: dc1
+spec:
+  clusterName: cluster1
+  configSecret: test-config
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: r1
+  - name: r2
+  - name: r3
+  serverType: cassandra
+  serverVersion: 3.11.10
+  size: 3
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: standard
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  annotations:
+    cassandra.datastax.com/allow-parallel-starts: 'true'
+  name: dc1
+spec:
+  clusterName: cluster1
+  config:
+    jvm-options:
+      initial_heap_size: 512m
+      max_heap_size: 512m
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: r1
+  - name: r2
+  - name: r3
+  serverType: cassandra
+  serverVersion: 3.11.10
+  size: 3
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: standard
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc1
+spec:
+  clusterName: cluster1
+  config:
+    cassandra-yaml:
+      allocate_tokens_for_local_replication_factor: 2
+    jvm-server-options:
+      additional-jvm-opts:
+      - -Dcassandra.system_distributed_replication_dc_names=My_Super_Dc
+      - -Dcassandra.system_distributed_replication_per_dc=1
+      initial_heap_size: 512m
+      max_heap_size: 512m
+  datacenterName: My_Super_Dc
+  managementApiAuth:
+    insecure: {}
+  podTemplateSpec:
+    spec:
+      containers:
+      - name: cassandra
+      securityContext:
+        runAsGroup: 0
+        runAsNonRoot: true
+        runAsUser: 12345
+  racks:
+  - name: r1
+  - name: r2
+  serverType: cassandra
+  serverVersion: 4.0.10
+  size: 2
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: standard
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc1
+spec:
+  clusterName: cluster1
+  config:
+    jvm-options:
+      initial_heap_size: 512m
+      max_heap_size: 512m
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: r1
+  - name: r2
+  - name: r3
+  serverType: cassandra
+  serverVersion: 3.11.15
+  size: 3
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: standard
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc1
+spec:
+  clusterName: cluster1
+  config:
+    jvm-server-options:
+      initial_heap_size: 512m
+      max_heap_size: 512m
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: r1
+  - name: r2
+  - name: r3
+  serverType: cassandra
+  serverVersion: 4.1.4
+  size: 3
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: standard
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc1
+spec:
+  clusterName: cluster1
+  config:
+    jvm-options:
+      initial_heap_size: 512m
+      max_heap_size: 512m
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: r1
+  serverType: cassandra
+  serverVersion: 3.11.10
+  size: 1
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: standard
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc1
+spec:
+  clusterName: cluster1
+  config:
+    cassandra-yaml:
+      num_tokens: 1
+    jvm-server-options:
+      initial_heap_size: 512m
+      max_heap_size: 512m
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: r1
+  - name: r2
+  - name: r3
+  serverType: cassandra
+  serverVersion: 4.0.7
+  size: 3
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: standard
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc1
+spec:
+  clusterName: cluster1
+  config:
+    jvm-options:
+      additional-jvm-opts:
+      - -Ddse.system_distributed_replication_dc_names=dc1
+      - -Ddse.system_distributed_replication_per_dc=1
+      - -Dcassandra.system_distributed_replication_dc_names=dc1
+      - -Dcassandra.system_distributed_replication_per_dc=1
+      initial_heap_size: 512m
+      max_heap_size: 512m
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: r1
+  - name: r2
+  serverType: cassandra
+  serverVersion: 3.11.10
+  size: 4
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: standard
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc2
+spec:
+  clusterName: cluster2
+  config:
+    jvm-options:
+      initial_heap_size: 512m
+      max_heap_size: 512m
+  managementApiAuth:
+    insecure: {}
+  podTemplateSpec:
+    spec:
+      containers:
+      - lifecycle:
+          preStop:
+            exec:
+              command:
+              - /bin/sleep
+              - 6000s
+        name: cassandra
+  racks:
+  - name: r1
+  serverType: cassandra
+  serverVersion: 3.11.10
+  size: 1
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: standard
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc1
+spec:
+  clusterName: cluster1
+  config:
+    jvm-options:
+      initial_heap_size: 512m
+      max_heap_size: 512m
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: r1
+  - name: r2
+  - name: r3
+  serverType: cassandra
+  serverVersion: 3.11.10
+  size: 4
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: standard
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc2
+spec:
+  clusterName: cluster 2
+  config:
+    cassandra-yaml:
+      num_tokens: 16
+    jvm-server-options:
+      initial_heap_size: 512m
+      max_heap_size: 512m
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: r1
+  serverType: cassandra
+  serverVersion: 4.0.0
+  size: 1
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 250Mi
+      storageClassName: standard
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc2
+spec:
+  clusterName: cluster2
+  config:
+    cassandra-yaml:
+      file_cache_size_in_mb: 100
+      memtable_space_in_mb: 100
+    jvm-server-options:
+      initial_heap_size: 512m
+      max_heap_size: 512m
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: r1
+  serverType: dse
+  serverVersion: 6.8.31
+  size: 1
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 250Mi
+      storageClassName: standard
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc1
+spec:
+  clusterName: cluster1
+  config:
+    jvm-options:
+      initial_heap_size: 512m
+      max_heap_size: 512m
+  managementApiAuth:
+    insecure: {}
+  networking:
+    hostNetwork: true
+  racks:
+  - name: r1
+  - name: r2
+  - name: r3
+  serverType: cassandra
+  serverVersion: 3.11.10
+  size: 3
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: standard
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc2
+spec:
+  clusterName: cluster2
+  config:
+    jvm-options:
+      initial_heap_size: 512m
+      max_heap_size: 512m
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: r1
+  serverType: cassandra
+  serverVersion: 3.11.10
+  size: 1
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: standard
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc2
+spec:
+  clusterName: cluster2
+  config:
+    jvm-options:
+      initial_heap_size: 512m
+      max_heap_size: 512m
+  managementApiAuth:
+    insecure: {}
+  podTemplateSpec:
+    spec:
+      containers:
+      - args:
+        - /bin/sh
+        - -c
+        - tail -n+1 -F /var/log/cassandra/system.log
+        image: busybox
+        imagePullPolicy: Always
+        name: another-tailing-logger
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /var/log/cassandra
+          name: server-logs
+      initContainers:
+      - name: server-config-init
+        resources: {}
+  racks:
+  - name: r1
+  serverType: cassandra
+  serverVersion: 3.11.10
+  size: 1
+  storageConfig:
+    additionalVolumes:
+    - mountPath: /var/log/cassandra
+      name: server-logs
+      pvcSpec: &id001
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+        storageClassName: standard
+    - mountPath: /var/lib/cassandra/commitlog
+      name: cassandra-commitlogs
+      pvcSpec: *id001
+    cassandraDataVolumeClaimSpec: *id001
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc1
+spec:
+  clusterName: cluster1
+  config:
+    cassandra-yaml:
+      allocate_tokens_for_local_replication_factor: 2
+    jvm-options:
+      additional-jvm-opts:
+      - -Ddse.system_distributed_replication_dc_names=dc1
+      - -Ddse.system_distributed_replication_per_dc=1
+      - -Dcassandra.system_distributed_replication_dc_names=dc1
+      - -Dcassandra.system_distributed_replication_per_dc=1
+      initial_heap_size: 512m
+      max_heap_size: 512m
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: r1
+  - name: r2
+  serverType: cassandra
+  serverVersion: 3.11.15
+  size: 4
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: standard
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc2
+spec:
+  clusterName: cluster2
+  config:
+    jvm-server-options:
+      initial_heap_size: 512m
+      max_heap_size: 512m
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: r1
+  serverType: cassandra
+  serverVersion: 4.0.7
+  size: 1
+  storageConfig:
+    additionalVolumes:
+    - mountPath: /opt/management-api/configs
+      name: metrics-config
+      volumeSource:
+        configMap:
+          name: my-metrics-config
+    - mountPath: /etc/vector
+      name: vector-config
+      volumeSource:
+        configMap:
+          name: vector-config
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: standard
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc1
+spec:
+  clusterName: cluster1
+  config:
+    jvm-server-options:
+      initial_heap_size: 512m
+      max_heap_size: 512m
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: r1
+  serverType: cassandra
+  serverVersion: 4.0.4
+  size: 1
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: standard
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc1
+spec:
+  clusterName: cluster1
+  config:
+    cassandra-yaml:
+      file_cache_size_in_mb: 100
+      memtable_space_in_mb: 100
+    jvm-server-options:
+      initial_heap_size: 4000m
+      max_heap_size: 4000m
+  dseWorkloads:
+    analyticsEnabled: true
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: r1
+  serverType: dse
+  serverVersion: 6.8.4
+  size: 1
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: standard
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc1
+spec:
+  clusterName: cluster1
+  config:
+    cassandra-yaml:
+      full_query_logging_options:
+        log_dir: /var/log/cassandra/fql
+  managementApiAuth:
+    insecure: {}
+  serverType: cassandra
+  serverVersion: 4.0.0
+  size: 1
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: standard
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc1
+spec:
+  clusterName: cluster1
+  config:
+    jvm-server-options:
+      initial_heap_size: 512m
+      max_heap_size: 512m
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: r1
+  serverType: cassandra
+  serverVersion: 4.0.1
+  size: 3
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: standard
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc1
+spec:
+  clusterName: cluster1
+  config:
+    jvm-options:
+      initial_heap_size: 512m
+      max_heap_size: 512m
+  managementApiAuth:
+    manual:
+      clientSecretName: mgmt-api-client-credentials
+      serverSecretName: mgmt-api-server-credentials
+  racks:
+  - name: r1
+  serverType: cassandra
+  serverVersion: 3.11.7
+  size: 1
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: standard
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc1
+spec:
+  clusterName: cluster1
+  config:
+    jvm-options:
+      initial_heap_size: 512m
+      max_heap_size: 512m
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: r1
+  - name: r2
+  - name: r3
+  serverType: cassandra
+  serverVersion: 3.11.14
+  size: 3
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: standard
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc2
+spec:
+  clusterName: cluster2
+  config:
+    cassandra-yaml:
+      allocate_tokens_for_local_replication_factor: 2
+      server_encryption_options:
+        internode_encryption: all
+        keystore: /etc/encryption/node-keystore.jks
+        keystore_password: dc2
+        truststore: /etc/encryption/node-keystore.jks
+        truststore_password: dc2
+    jvm-options:
+      initial_heap_size: 512m
+      max_heap_size: 512m
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: r1
+  serverType: cassandra
+  serverVersion: 3.11.10
+  size: 2
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: standard
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc2
+spec:
+  clusterName: cluster2
+  config:
+    jvm-server-options:
+      initial_heap_size: 512m
+      max_heap_size: 512m
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: r1
+  serverType: cassandra
+  serverVersion: 4.1.1
+  size: 1
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: standard
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc2
+spec:
+  clusterName: cluster2
+  config:
+    cassandra-yaml:
+      allocate_tokens_for_local_replication_factor: 2
+    jvm-server-options:
+      initial_heap_size: 512m
+      max_heap_size: 512m
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: r1
+  serverType: cassandra
+  serverVersion: 4.0.4
+  size: 2
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: standard
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc2
+spec:
+  clusterName: cluster2
+  config:
+    jvm-server-options:
+      initial_heap_size: 512m
+      max_heap_size: 512m
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: r1
+  serverImage: datastax/hcd:1.0.0-early-preview-ubi
+  serverType: hcd
+  serverVersion: 1.0.0
+  size: 1
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: standard
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc1
+spec:
+  clusterName: cluster1
+  config:
+    jvm-server-options:
+      initial_heap_size: 512m
+      max_heap_size: 512m
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: r1
+  readOnlyRootFilesystem: true
+  serverImage: michaelburman290/cass-management-api:4.1.5-ubi8
+  serverType: cassandra
+  serverVersion: 4.1.5
+  size: 1
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: standard
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc2
+spec:
+  clusterName: cluster1
+  config:
+    cassandra-yaml:
+      allocate_tokens_for_local_replication_factor: 2
+    jvm-server-options:
+      additional-jvm-opts:
+      - -Dcassandra.system_distributed_replication_dc_names=dc2
+      - -Dcassandra.system_distributed_replication_per_dc=1
+      initial_heap_size: 512m
+      max_heap_size: 512m
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: r1
+  - name: r2
+  serverType: cassandra
+  serverVersion: 4.0.6
+  size: 2
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: standard
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc2
+spec:
+  additionalServiceConfig:
+    dcService:
+      additionalAnnotations:
+        external-dns.alpha.kubernetes.io/hostname: localhost
+      additionalLabels:
+        test: additional-serviceoptions
+  clusterName: cluster2
+  config:
+    jvm-options:
+      initial_heap_size: 512m
+      max_heap_size: 512m
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: r1
+  serverType: cassandra
+  serverVersion: 3.11.10
+  size: 1
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 250Mi
+      storageClassName: standard
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc2
+spec:
+  clusterName: cluster2
+  config:
+    cassandra-yaml:
+      allocate_tokens_for_local_replication_factor: 2
+      authenticator: PasswordAuthenticator
+      authorizer: CassandraAuthorizer
+      role_manager: CassandraRoleManager
+      rpc_address: 0.0.0.0
+    jvm-server-options:
+      initial_heap_size: 512m
+      max_heap_size: 512m
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: r1
+  serverType: cassandra
+  serverVersion: 4.1.2
+  size: 2
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: standard
+  superuserSecretName: my-superuser-secret
+  users:
+  - secretName: bobby-secret
+    superuser: false
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc1
+spec:
+  cdc:
+    cdcWorkingDir: /var/lib/cassandra/cdc
+    pulsarServiceUrl: pulsar://pulsar-proxy.pulsar.svc.cluster.local:6650
+    topicPrefix: persistent://public/default/events-
+  clusterName: test-cluster
+  config:
+    cassandra-yaml:
+      authenticator: AllowAllAuthenticator
+      authorizer: AllowAllAuthorizer
+  serverType: cassandra
+  serverVersion: 4.0.13
+  size: 1
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: standard
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: sample-dc
+spec:
+  allowMultipleNodesPerWorker: true
+  clusterName: sample-cluster
+  config:
+    cassandra-yaml: {}
+    jvm-server-options:
+      initial_heap_size: 800M
+      max_heap_size: 800M
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: sample-rack
+  serverType: cassandra
+  serverVersion: 4.1.5
+  size: 3
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: local-path
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc1
+spec:
+  clusterName: development
+  config:
+    cassandra-yaml:
+      authenticator: PasswordAuthenticator
+      authorizer: CassandraAuthorizer
+      num_tokens: 16
+      role_manager: CassandraRoleManager
+    jvm-server-options:
+      initial_heap_size: 1G
+      max_heap_size: 1G
+  managementApiAuth:
+    insecure: {}
+  podTemplateSpec:
+    spec:
+      containers:
+      - name: cassandra
+      securityContext: {}
+  racks:
+  - name: rack1
+  - name: rack2
+  - name: rack3
+  resources:
+    requests:
+      cpu: 1000m
+      memory: 2Gi
+  serverType: cassandra
+  serverVersion: 4.1.2
+  size: 3
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 10Gi
+      storageClassName: server-storage
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc1
+spec:
+  clusterName: development
+  config:
+    cassandra-yaml:
+      authenticator: PasswordAuthenticator
+      authorizer: CassandraAuthorizer
+      num_tokens: 16
+      role_manager: CassandraRoleManager
+    jvm-server-options:
+      initial_heap_size: 1G
+      max_heap_size: 1G
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: rack1
+  - name: rack2
+  - name: rack3
+  resources:
+    requests:
+      cpu: 1000m
+      memory: 2Gi
+  serverType: cassandra
+  serverVersion: 4.1.2
+  size: 3
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 10Gi
+      storageClassName: standard
+  users:
+  - secretName: demo-secret
+    superuser: true
+  - secretName: demo-secret-2
+    superuser: false
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc1
+spec:
+  clusterName: development
+  config:
+    cassandra-yaml:
+      authenticator: PasswordAuthenticator
+      authorizer: CassandraAuthorizer
+      num_tokens: 8
+      role_manager: CassandraRoleManager
+    jvm-server-options:
+      initial_heap_size: 1G
+      max_heap_size: 1G
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: rack1
+  resources:
+    requests:
+      cpu: 1000m
+      memory: 4Gi
+  serverType: cassandra
+  serverVersion: 4.1.2
+  size: 3
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 10Gi
+      storageClassName: standard
+---
+spec:
+  additionalAnnotations:
+    backupRequired: 'true'
+    environment: production
+    owner: dev-team
+---
+spec:
+  additionalAnnotations:
+    critical: 'true'
+    monitoredBy: prometheus
+    team: sre
+---
+spec:
+  additionalAnnotations:
+    audit: enabled
+    department: engineering
+    maintainedBy: infra-team

@@ -1,0 +1,7390 @@
+spec:
+  pdms:
+  - startUpScriptVersion: v1.0.0
+---
+spec:
+  pdms:
+  - startUpScriptVersion: v1.1.0
+---
+spec:
+  pdms:
+  - startUpScriptVersion: v2.0.0
+---
+spec:
+  startScriptV2FeatureFlags:
+  - WaitForDnsNameIpMatch
+  - PreferPDAddressesOverDiscovery
+---
+spec:
+  startScriptV2FeatureFlags:
+  - WaitForDnsNameIpMatch
+---
+spec:
+  startScriptV2FeatureFlags:
+  - PreferPDAddressesOverDiscovery
+---
+spec:
+  tikv:
+    scalePolicy:
+      scaleInParallelism: 2
+      scaleOutParallelism: 3
+---
+spec:
+  tikv:
+    scalePolicy:
+      scaleInParallelism: 1
+      scaleOutParallelism: 1
+---
+spec:
+  tikv:
+    scalePolicy:
+      scaleInParallelism: 4
+      scaleOutParallelism: 2
+---
+spec:
+  ticdc:
+    tlsClientSecretNames:
+    - downstream-client-cert-1
+    - downstream-client-cert-2
+    - downstream-client-cert-3
+---
+spec:
+  ticdc:
+    tlsClientSecretNames:
+    - client-secret-a
+    - client-secret-b
+    - client-secret-c
+---
+spec:
+  ticdc:
+    tlsClientSecretNames:
+    - my-client-cert
+    - another-client-cert
+    - yet-another-client-cert
+---
+spec:
+  tikv:
+    limits:
+      additional_properties: opaque_value_1
+---
+spec:
+  tikv:
+    limits:
+      additional_properties: opaque_value_2
+---
+spec:
+  tikv:
+    limits:
+      additional_properties: opaque_value_3
+---
+spec:
+  tiflash:
+    limits:
+      cpu: '4'
+      memory: 8Gi
+---
+spec:
+  tiflash:
+    limits:
+      cpu: '6'
+      memory: 12Gi
+---
+spec:
+  tiflash:
+    limits:
+      cpu: '8'
+      memory: 16Gi
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: advanced-tidb
+  namespace: default
+spec:
+  affinity: {}
+  annotations:
+    node.kubernetes.io/instance-type: some-vm-type
+    topology.kubernetes.io/region: some-region
+  cluster:
+    clusterDomain: cluster.local
+    name: tidb-cluster-to-join
+    namespace: default
+  clusterDomain: cluster.local
+  configUpdateStrategy: RollingUpdate
+  discovery:
+    affinity: {}
+    annotations:
+      node.kubernetes.io/instance-type: some-vm-type
+    env:
+    - name: MY_ENV_1
+      value: value1
+    hostNetwork: false
+    imagePullPolicy: IfNotPresent
+    labels: {}
+    limits:
+      cpu: 2000m
+      memory: 1Gi
+    nodeSelector:
+      app.kubernetes.io/component: discovery
+    priorityClassName: system-cluster-critical
+    requests:
+      cpu: 1000m
+      memory: 256Mi
+    schedulerName: default-scheduler
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: discovery
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  hostNetwork: false
+  imagePullPolicy: IfNotPresent
+  imagePullSecrets:
+  - name: secretName
+  nodeSelector:
+    node-role.kubernetes.io/tidb: true
+  paused: false
+  pd:
+    additionalContainers:
+    - image: ubuntu
+      name: myCustomContainer
+    additionalVolumeMounts:
+    - mountPath: /nfs
+      name: nfs
+    additionalVolumes:
+    - name: nfs
+      nfs:
+        path: /nfs
+        server: 192.168.0.2
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/component
+                operator: In
+                values:
+                - tidb
+                - tikv
+            topologyKey: kubernetes.io/hostname
+          weight: 100
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - pd
+          topologyKey: kubernetes.io/hostname
+    annotations:
+      node.kubernetes.io/instance-type: some-vm-type
+    baseImage: pingcap/pd
+    config: "[dashboard]\n  internal-proxy = true\n"
+    configUpdateStrategy: RollingUpdate
+    dataSubDir: ''
+    env:
+    - name: MY_ENV_1
+      value: value1
+    - name: MY_ENV_2
+      valueFrom:
+        fieldRef:
+          fieldPath: status.myEnv2
+    hostNetwork: false
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets:
+    - name: secretName
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+    maxFailoverCount: 0
+    mountClusterClientSecret: true
+    nodeSelector:
+      app.kubernetes.io/component: pd
+    podSecurityContext:
+      sysctls:
+      - name: net.core.somaxconn
+        value: '32768'
+    priorityClassName: system-cluster-critical
+    replicas: 3
+    requests:
+      cpu: 1000m
+      memory: 1Gi
+      storage: 10Gi
+    schedulerName: default-scheduler
+    service:
+      annotations:
+        foo: bar
+      portName: client
+      type: ClusterIP
+    serviceAccount: advanced-tidb-pd
+    statefulSetUpdateStrategy: RollingUpdate
+    storageClassName: ''
+    storageVolumes:
+    - mountPath: /some/path
+      name: volumeName
+      storageClassName: local-storage
+      storageSize: 1Gi
+    terminationGracePeriodSeconds: 30
+    tlsClientSecretName: custom-tidb-client-secret-name
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: pd
+    topologySpreadConstraints:
+    - maxSkew: 1
+      minDomains: 3
+      nodeAffinityPolicy: Honor
+      topologyKey: topology.kubernetes.io/zone
+    version: v8.1.0
+  pdAddresses:
+  - http://cluster1-pd-0.cluster1-pd-peer.default.svc:2379
+  - http://cluster1-pd-1.cluster1-pd-peer.default.svc:2379
+  podManagementPolicy: Parallel
+  priorityClassName: system-cluster-critical
+  pump:
+    additionalContainers: []
+    additionalVolumeMounts: []
+    additionalVolumes: []
+    annotations:
+      node.kubernetes.io/instance-type: some-vm-type
+    baseImage: pingcap/tidb-binlog
+    config: 'gc = 7
+
+      '
+    configUpdateStrategy: RollingUpdate
+    env: []
+    hostNetwork: false
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets:
+    - name: secretName
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+    nodeSelector:
+      app.kubernetes.io/component: pump
+    podSecurityContext: {}
+    priorityClassName: system-cluster-critical
+    replicas: 1
+    requests:
+      cpu: 1000m
+      memory: 1Gi
+      storage: 1Gi
+    schedulerName: default-scheduler
+    serviceAccount: advanced-tidb-pump
+    statefulSetUpdateStrategy: RollingUpdate
+    storageClassName: local-storage
+    terminationGracePeriodSeconds: 30
+    tolerations: []
+    topologySpreadConstraints:
+    - maxSkew: 1
+      minDomains: 3
+      nodeAffinityPolicy: Honor
+      topologyKey: topology.kubernetes.io/zone
+    version: v8.1.0
+  pvReclaimPolicy: Retain
+  schedulerName: default-scheduler
+  serviceAccount: advanced-tidb
+  statefulSetUpdateStrategy: RollingUpdate
+  ticdc:
+    additionalContainers: []
+    additionalVolumeMounts: []
+    additionalVolumes: []
+    annotations:
+      node.kubernetes.io/instance-type: some-vm-type
+    baseImage: pingcap/ticdc
+    config: 'gc-ttl = 86400
+
+      log-level = "info"
+
+      log-file = ""
+
+      '
+    configUpdateStrategy: RollingUpdate
+    env: []
+    hostNetwork: false
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets:
+    - name: secretName
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+    nodeSelector:
+      app.kubernetes.io/component: ticdc
+    podSecurityContext: {}
+    priorityClassName: system-cluster-critical
+    replicas: 3
+    requests:
+      cpu: 1000m
+      memory: 1Gi
+    schedulerName: default-scheduler
+    serviceAccount: advanced-tidb-ticdc
+    statefulSetUpdateStrategy: RollingUpdate
+    storageClassName: local-storage
+    storageVolumes: []
+    terminationGracePeriodSeconds: 30
+    tolerations: []
+    topologySpreadConstraints:
+    - maxSkew: 1
+      minDomains: 3
+      nodeAffinityPolicy: Honor
+      topologyKey: topology.kubernetes.io/zone
+    version: v8.1.0
+  tidb:
+    additionalContainers:
+    - image: ubuntu
+      name: myCustomContainer
+    additionalVolumeMounts:
+    - mountPath: /nfs
+      name: nfs
+    additionalVolumes:
+    - name: nfs
+      nfs:
+        path: /nfs
+        server: 192.168.0.2
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/component
+                operator: In
+                values:
+                - pd
+                - tikv
+            topologyKey: kubernetes.io/hostname
+          weight: 100
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - tidb
+          topologyKey: kubernetes.io/hostname
+    annotations:
+      node.kubernetes.io/instance-type: some-vm-type
+    baseImage: pingcap/tidb
+    binlogEnabled: false
+    config: "[performance]\n  tcp-keep-alive = true\n"
+    configUpdateStrategy: RollingUpdate
+    env:
+    - name: MY_ENV_1
+      value: value1
+    - name: MY_ENV_2
+      valueFrom:
+        fieldRef:
+          fieldPath: status.myEnv2
+    hostNetwork: false
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets:
+    - name: secretName
+    lifecycle:
+      postStart:
+        exec:
+          command:
+          - echo
+          - postStart
+      preStop:
+        exec:
+          command:
+          - echo
+          - preStop
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+    maxFailoverCount: 0
+    nodeSelector:
+      app.kubernetes.io/component: tidb
+    podSecurityContext:
+      sysctls:
+      - name: net.ipv4.tcp_keepalive_time
+        value: '300'
+      - name: net.ipv4.tcp_keepalive_intvl
+        value: '75'
+      - name: net.core.somaxconn
+        value: '32768'
+    priorityClassName: system-cluster-critical
+    readinessProbe:
+      type: command
+    replicas: 3
+    requests:
+      cpu: 1000m
+      memory: 1Gi
+    schedulerName: default-scheduler
+    separateSlowLog: true
+    service:
+      exposeStatus: true
+      externalTrafficPolicy: Local
+      mysqlNodePort: 30020
+      statusNodePort: 30040
+      type: NodePort
+    serviceAccount: advanced-tidb-tidb
+    slowLogTailer:
+      image: busybox
+      imagePullPolicy: IfNotPresent
+      limits:
+        cpu: 2000m
+        memory: 2Gi
+      requests:
+        cpu: 1000m
+        memory: 1Gi
+    slowLogVolumeName: ''
+    statefulSetUpdateStrategy: RollingUpdate
+    storageClassName: ''
+    storageVolumes:
+    - mountPath: /some/path
+      name: volumeName
+      storageClassName: local-storage
+      storageSize: 1Gi
+    terminationGracePeriodSeconds: 30
+    tlsClient:
+      disableClientAuthn: false
+      enabled: true
+      skipInternalClientCA: false
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: tidb
+    topologySpreadConstraints:
+    - maxSkew: 1
+      minDomains: 3
+      nodeAffinityPolicy: Honor
+      topologyKey: topology.kubernetes.io/zone
+    version: v8.1.0
+  tiflash:
+    additionalContainers: []
+    additionalVolumeMounts: []
+    additionalVolumes: []
+    annotations:
+      node.kubernetes.io/instance-type: some-vm-type
+    baseImage: pingcap/tiflash
+    config:
+      config: "[logger]\n  log = \"/data0/logs/somelog\"\n"
+      proxy: "[security]\n  cert-allowed-cn = [\"CNNAME\"]\n"
+    configUpdateStrategy: RollingUpdate
+    env: []
+    hostNetwork: false
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets:
+    - name: secretName
+    initializer:
+      limits:
+        cpu: 2000m
+        memory: 2Gi
+      requests:
+        cpu: 1000m
+        memory: 1Gi
+    maxFailoverCount: 0
+    nodeSelector:
+      app.kubernetes.io/component: tiflash
+    podSecurityContext: {}
+    priorityClassName: system-cluster-critical
+    privileged: false
+    recoverFailover: true
+    replicas: 1
+    schedulerName: default-scheduler
+    serviceAccount: advanced-tidb-tiflash
+    statefulSetUpdateStrategy: RollingUpdate
+    storageClaims:
+    - resources:
+        requests:
+          storage: 1Gi
+      storageClassName: local-storage
+    terminationGracePeriodSeconds: 30
+    tolerations: []
+    topologySpreadConstraints:
+    - maxSkew: 1
+      minDomains: 3
+      nodeAffinityPolicy: Honor
+      topologyKey: topology.kubernetes.io/zone
+    version: v8.1.0
+  tikv:
+    additionalContainers:
+    - image: ubuntu
+      name: myCustomContainer
+    additionalVolumeMounts:
+    - mountPath: /nfs
+      name: nfs
+    additionalVolumes:
+    - name: nfs
+      nfs:
+        path: /nfs
+        server: 192.168.0.2
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/component
+                operator: In
+                values:
+                - tidb
+                - pd
+            topologyKey: kubernetes.io/hostname
+          weight: 100
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - tikv
+          topologyKey: kubernetes.io/hostname
+    annotations:
+      node.kubernetes.io/instance-type: some-vm-type
+    baseImage: pingcap/tikv
+    config: 'log-level = "info"
+
+      '
+    configUpdateStrategy: RollingUpdate
+    dataSubDir: ''
+    env:
+    - name: MY_ENV_1
+      value: value1
+    - name: MY_ENV_2
+      valueFrom:
+        fieldRef:
+          fieldPath: status.myEnv2
+    evictLeaderTimeout: 3m
+    hostNetwork: false
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets:
+    - name: secretName
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+      storage: 10Gi
+    logTailer:
+      limits:
+        cpu: 2000m
+        memory: 2Gi
+      requests:
+        cpu: 1000m
+        memory: 1Gi
+    maxFailoverCount: 0
+    mountClusterClientSecret: true
+    nodeSelector:
+      app.kubernetes.io/component: tikv
+    podSecurityContext:
+      sysctls:
+      - name: net.ipv4.tcp_keepalive_time
+        value: '300'
+      - name: net.ipv4.tcp_keepalive_intvl
+        value: '75'
+      - name: net.core.somaxconn
+        value: '32768'
+    priorityClassName: system-cluster-critical
+    privileged: false
+    raftLogVolumeName: ''
+    recoverFailover: true
+    replicas: 3
+    requests:
+      storage: 100Gi
+    rocksDBLogVolumeName: ''
+    schedulerName: default-scheduler
+    separateRaftLog: true
+    separateRocksDBLog: true
+    serviceAccount: advanced-tidb-tikv
+    statefulSetUpdateStrategy: RollingUpdate
+    storageClassName: ''
+    storageVolumes:
+    - mountPath: /some/path
+      name: volumeName
+      storageClassName: local-storage
+      storageSize: 1Gi
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: tikv
+    topologySpreadConstraints:
+    - maxSkew: 1
+      minDomains: 3
+      nodeAffinityPolicy: Honor
+      topologyKey: topology.kubernetes.io/zone
+    version: v8.1.0
+  timezone: UTC
+  tlsCluster:
+    enabled: true
+  tolerations:
+  - effect: NoSchedule
+    key: dedicated
+    operator: Equal
+    value: tidb
+  topologySpreadConstraints:
+  - maxSkew: 1
+    minDomains: 3
+    nodeAffinityPolicy: Honor
+    topologyKey: topology.kubernetes.io/zone
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic-heterogeneous
+spec:
+  cluster:
+    name: basic
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tiflash:
+    baseImage: pingcap/tiflash
+    maxFailoverCount: 0
+    replicas: 1
+    storageClaims:
+    - resources:
+        requests:
+          storage: 100Gi
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: thanos-objectstorage
+stringData:
+  objectstorage.yaml: "type: S3\nconfig:\n  bucket: \"xxxxxx\"\n  endpoint: \"xxxx\"\
+    \n  region: \"\"\n  access_key: \"xxxx\"\n  insecure: true\n  signature_version2:\
+    \ true\n  secret_key: \"xxxx\"\n  put_user_metadata: {}\n  http_config:\n    idle_conn_timeout:\
+    \ 90s\n    response_header_timeout: 2m\n  trace:\n    enable: true\n  part_size:\
+    \ 41943040\n"
+type: Opaque
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config:
+      raftdb:
+        max-open-files: 256
+      rocksdb:
+        max-open-files: 256
+      storage:
+        reserve-space: 0MB
+    evictLeaderTimeout: 1m
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    initializer:
+      createPassword: true
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config:
+      raftdb:
+        max-open-files: 256
+      rocksdb:
+        max-open-files: 256
+      storage:
+        reserve-space: 0MB
+    evictLeaderTimeout: 1m
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: initialize-demo
+spec:
+  configUpdateStrategy: RollingUpdate
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config:
+      raftdb:
+        info-log-dir: /var/lib/raftlog
+      rocksdb:
+        info-log-dir: /var/lib/rocksdblog
+      storage:
+        reserve-space: 0MB
+    evictLeaderTimeout: 1m
+    maxFailoverCount: 0
+    raftLogVolumeName: raftlog
+    replicas: 1
+    requests:
+      storage: 100Gi
+    rocksDBLogVolumeName: rocksdblog
+    separateRaftLog: true
+    separateRocksDBLog: true
+    storageVolumes:
+    - mountPath: /var/lib/raftlog
+      name: raftlog
+      storageClassName: local-storage
+      storageSize: 1Gi
+    - mountPath: /var/lib/rocksdblog
+      name: rocksdblog
+      storageClassName: local-storage
+      storageSize: 1Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: auto-scaling-demo
+spec:
+  configUpdateStrategy: RollingUpdate
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: "[pd-server]\n  metric-storage = \"http://auto-scaling-demo-prometheus:9090/\"\
+      \n"
+    maxFailoverCount: 0
+    replicas: 3
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 2
+    requests:
+      cpu: '1'
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    replicas: 3
+    requests:
+      cpu: '1'
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 3
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 2
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    replicas: 3
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+  namespace: pingcap
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: hub.pingcap.net/devbuild/pd
+    config: {}
+    maxFailoverCount: 0
+    mode: ms
+    replicas: 1
+    requests:
+      storage: 1Gi
+    version: v8.3.0-5427
+  pdms:
+  - baseImage: hub.pingcap.net/devbuild/pd
+    name: tso
+    replicas: 2
+    version: v8.3.0-5427
+  - baseImage: hub.pingcap.net/devbuild/pd
+    name: scheduling
+    replicas: 2
+    version: v8.3.0-5427
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+    version: v8.1.0
+  tikv:
+    baseImage: pingcap/tikv
+    config:
+      raftdb:
+        max-open-files: 256
+      rocksdb:
+        max-open-files: 256
+      storage:
+        reserve-space: 0MB
+    evictLeaderTimeout: 1m
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+    version: v8.1.0
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config:
+      raftdb:
+        max-open-files: 256
+      rocksdb:
+        max-open-files: 256
+      storage:
+        reserve-space: 0MB
+    evictLeaderTimeout: 1m
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: ns2
+  namespace: ns2
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  imagePullPolicy: IfNotPresent
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  tlsCluster:
+    enabled: true
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: ns1
+  namespace: ns1
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  imagePullPolicy: IfNotPresent
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  tlsCluster:
+    enabled: true
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: ns2
+  namespace: ns2
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  imagePullPolicy: IfNotPresent
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: ns1
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  imagePullPolicy: IfNotPresent
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  discovery: {}
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Delete
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: "[rocksdb]\n  wal-dir = \"/var/lib/wal\"\n[titan]\n  dirname = \"/var/lib/titan\"\
+      \n"
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 100Gi
+    storageVolumes:
+    - mountPath: /var/lib/wal
+      name: wal
+      storageSize: 2Gi
+    - mountPath: /var/lib/titan
+      name: titan
+      storageSize: 2Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: cluster2
+  namespace: pingcap
+spec:
+  cluster:
+    clusterDomain: cluster1.com
+    name: cluster1
+    namespace: pingcap
+  clusterDomain: cluster2.com
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 20Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: cluster1
+  namespace: pingcap
+spec:
+  clusterDomain: cluster1.com
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 20Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    replicas: 3
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - pd
+          topologyKey: kubernetes.io/hostname
+    baseImage: pingcap/pd
+    config: "[dashboard]\n  internal-proxy = true\n[replication]\n  location-labels\
+      \ = [\"topology.kubernetes.io/zone\", \"kubernetes.io/hostname\"]\n  max-replicas\
+      \ = 3\n"
+    maxFailoverCount: 0
+    nodeSelector:
+      dedicated: pd
+    replicas: 3
+    requests:
+      storage: 10Gi
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: pd
+  pvReclaimPolicy: Retain
+  schedulerName: default-scheduler
+  tidb:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - tidb
+          topologyKey: kubernetes.io/hostname
+    annotations:
+      tidb.pingcap.com/sysctl-init: 'true'
+    baseImage: pingcap/tidb
+    config: "[performance]\n  tcp-keep-alive = true\n"
+    maxFailoverCount: 0
+    nodeSelector:
+      dedicated: tidb
+    podSecurityContext:
+      sysctls:
+      - name: net.ipv4.tcp_keepalive_time
+        value: '300'
+      - name: net.ipv4.tcp_keepalive_intvl
+        value: '75'
+      - name: net.core.somaxconn
+        value: '32768'
+    replicas: 2
+    separateSlowLog: true
+    service:
+      annotations:
+        cloud.google.com/load-balancer-type: Internal
+      exposeStatus: true
+      externalTrafficPolicy: Local
+      type: LoadBalancer
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: tidb
+  tikv:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - tikv
+          topologyKey: kubernetes.io/hostname
+    annotations:
+      tidb.pingcap.com/sysctl-init: 'true'
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    nodeSelector:
+      dedicated: tikv
+    podSecurityContext:
+      sysctls:
+      - name: net.core.somaxconn
+        value: '32768'
+    replicas: 3
+    requests:
+      storage: 100Gi
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: tikv
+  timezone: UTC
+  topologySpreadConstraints:
+  - topologyKey: topology.kubernetes.io/zone
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - pd
+          topologyKey: kubernetes.io/hostname
+    baseImage: pingcap/pd
+    config: "[dashboard]\n  internal-proxy = true\n[replication]\n  location-labels\
+      \ = [\"topology.kubernetes.io/zone\", \"kubernetes.io/hostname\"]\n  max-replicas\
+      \ = 3\n"
+    maxFailoverCount: 0
+    nodeSelector:
+      dedicated: pd
+    replicas: 3
+    requests:
+      storage: 10Gi
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: pd
+  pvReclaimPolicy: Retain
+  schedulerName: default-scheduler
+  tidb:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - tidb
+          topologyKey: kubernetes.io/hostname
+    annotations:
+      tidb.pingcap.com/sysctl-init: 'true'
+    baseImage: pingcap/tidb
+    config: "[performance]\n  tcp-keep-alive = true\n"
+    maxFailoverCount: 0
+    nodeSelector:
+      dedicated: tidb
+    podSecurityContext:
+      sysctls:
+      - name: net.ipv4.tcp_keepalive_time
+        value: '300'
+      - name: net.ipv4.tcp_keepalive_intvl
+        value: '75'
+      - name: net.core.somaxconn
+        value: '32768'
+    replicas: 2
+    separateSlowLog: true
+    service:
+      annotations:
+        service.beta.kubernetes.io/azure-load-balancer-internal: 'true'
+      exposeStatus: true
+      externalTrafficPolicy: Local
+      type: LoadBalancer
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: tidb
+  tikv:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - tikv
+          topologyKey: kubernetes.io/hostname
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    nodeSelector:
+      dedicated: tikv
+    replicas: 3
+    requests:
+      storage: 100Gi
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: tikv
+  timezone: UTC
+  topologySpreadConstraints:
+  - topologyKey: topology.kubernetes.io/zone
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: uhub.service.ucloud.cn/pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: uhub.service.ucloud.cn/pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: uhub.service.ucloud.cn/pingcap/tikv
+    config:
+      raftdb:
+        max-open-files: 256
+      rocksdb:
+        max-open-files: 256
+      storage:
+        reserve-space: 0MB
+    evictLeaderTimeout: 1m
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: busybox:1.34.1
+  pd:
+    additionalContainers:
+    - lifecycle:
+        preStop:
+          exec:
+            command:
+            - sh
+            - -c
+            - 'echo "test"
+
+              '
+      name: pd
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config:
+      raftdb:
+        max-open-files: 256
+      rocksdb:
+        max-open-files: 256
+      storage:
+        reserve-space: 0MB
+    evictLeaderTimeout: 1m
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: demo
+spec:
+  configUpdateStrategy: RollingUpdate
+  enableDynamicConfiguration: true
+  enablePVReclaim: false
+  helper:
+    image: alpine:3.16.0
+  imagePullPolicy: IfNotPresent
+  pd:
+    baseImage: pingcap/pd
+    config: "[replication]\n  enable-placement-rules = true\n"
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 3
+    requests:
+      storage: 10Gi
+    storageClassName: local-storage
+  pvReclaimPolicy: Retain
+  schedulerName: default-scheduler
+  services:
+  - name: pd
+    type: ClusterIP
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 2
+    separateSlowLog: true
+    service:
+      type: NodePort
+    slowLogTailer:
+      image: alpine:3.16.0
+      imagePullPolicy: IfNotPresent
+      limits:
+        cpu: 100m
+        memory: 50Mi
+      requests:
+        cpu: 20m
+        memory: 5Mi
+  tiflash:
+    baseImage: pingcap/tiflash
+    maxFailoverCount: 0
+    replicas: 2
+    storageClaims:
+    - resources:
+        requests:
+          storage: 100Gi
+      storageClassName: local-storage
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 3
+    requests:
+      storage: 100Gi
+    storageClassName: local-storage
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    readinessProbe:
+      type: tcp
+    replicas: 1
+    requests:
+      storage: 1Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    readinessProbe:
+      type: command
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config:
+      raftdb:
+        max-open-files: 256
+      rocksdb:
+        max-open-files: 256
+      storage:
+        reserve-space: 0MB
+    evictLeaderTimeout: 1m
+    maxFailoverCount: 0
+    readinessProbe:
+      type: tcp
+    replicas: 1
+    requests:
+      storage: 1Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: ns2
+  namespace: ns2
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  imagePullPolicy: IfNotPresent
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: ns1
+  namespace: ns1
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  imagePullPolicy: IfNotPresent
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: tls
+spec:
+  configUpdateStrategy: RollingUpdate
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+    tlsClient:
+      enabled: true
+  tikv:
+    baseImage: pingcap/tikv
+    config:
+      storage:
+        reserve-space: 0MB
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: v1
+data:
+  password: YWRtaW4=
+  username: YWRtaW4=
+kind: Secret
+metadata:
+  name: basic-grafana
+type: Opaque
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - pd
+          topologyKey: kubernetes.io/hostname
+    baseImage: pingcap/pd
+    config: "[dashboard]\n  internal-proxy = true\n[replication]\n  location-labels\
+      \ = [\"topology.kubernetes.io/zone\", \"kubernetes.io/hostname\"]\n  max-replicas\
+      \ = 3\n"
+    maxFailoverCount: 0
+    nodeSelector:
+      dedicated: pd
+    replicas: 3
+    requests:
+      storage: 10Gi
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: pd
+  pvReclaimPolicy: Retain
+  schedulerName: default-scheduler
+  tidb:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - tidb
+          topologyKey: kubernetes.io/hostname
+    annotations:
+      tidb.pingcap.com/sysctl-init: 'true'
+    baseImage: pingcap/tidb
+    config: "[performance]\n  tcp-keep-alive = true\n"
+    maxFailoverCount: 0
+    nodeSelector:
+      dedicated: tidb
+    podSecurityContext:
+      sysctls:
+      - name: net.ipv4.tcp_keepalive_time
+        value: '300'
+      - name: net.ipv4.tcp_keepalive_intvl
+        value: '75'
+      - name: net.core.somaxconn
+        value: '32768'
+    replicas: 2
+    separateSlowLog: true
+    service:
+      annotations:
+        service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: 'true'
+        service.beta.kubernetes.io/aws-load-balancer-internal: 'true'
+        service.beta.kubernetes.io/aws-load-balancer-scheme: internal
+        service.beta.kubernetes.io/aws-load-balancer-target-node-labels: dedicated=tidb
+        service.beta.kubernetes.io/aws-load-balancer-type: nlb
+      exposeStatus: true
+      externalTrafficPolicy: Local
+      type: LoadBalancer
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: tidb
+  tikv:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - tikv
+          topologyKey: kubernetes.io/hostname
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    nodeSelector:
+      dedicated: tikv
+    replicas: 3
+    requests:
+      storage: 100Gi
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: tikv
+  timezone: UTC
+  topologySpreadConstraints:
+  - topologyKey: topology.kubernetes.io/zone
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: heterogeneous
+spec:
+  cluster:
+    name: basic
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+    tlsClient:
+      enabled: true
+  tiflash:
+    baseImage: pingcap/tiflash
+    maxFailoverCount: 1
+    replicas: 1
+    storageClaims:
+    - resources:
+        requests:
+          storage: 100Gi
+    version: v8.1.0
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    mountClusterClientSecret: true
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  tlsCluster:
+    enabled: true
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  imagePullPolicy: IfNotPresent
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    mountClusterClientSecret: true
+    replicas: 1
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+    tlsClient:
+      enabled: true
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    mountClusterClientSecret: true
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  tlsCluster:
+    enabled: true
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config:
+      raftdb:
+        max-open-files: 256
+      rocksdb:
+        max-open-files: 256
+      storage:
+        reserve-space: 0MB
+    evictLeaderTimeout: 1m
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic-tls
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: "[security]\n  cert-allowed-cn = [ \"TiDB\" ]\n"
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Delete
+  tidb:
+    baseImage: pingcap/tidb
+    config: "[security]\n  cert-verify-cn = [ \"TiDB\" ]\n"
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: NodePort
+    tlsClient:
+      enabled: true
+  tikv:
+    baseImage: pingcap/tikv
+    config: "[security]\n  cert-allowed-cn = [ \"TiDB\" ]\n"
+    evictLeaderTimeout: 1m
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  tlsCluster:
+    enabled: true
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  annotations:
+    tikv.tidb.pingcap.com/delete-slots: '[1]'
+  name: asts
+spec:
+  configUpdateStrategy: RollingUpdate
+  enableDynamicConfiguration: true
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 3
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 2
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    replicas: 3
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: asts
+spec:
+  configUpdateStrategy: RollingUpdate
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 3
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 2
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    replicas: 4
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+spec:
+  suspendAction:
+    suspendStatefulSet: true
+---
+spec:
+  suspendAction:
+    suspendStatefulSet: false
+---
+spec:
+  suspendAction:
+    suspendStatefulSet: true
+---
+spec:
+  tiflash:
+    limits:
+      additional_properties: property1_value
+---
+spec:
+  tiflash:
+    limits:
+      additional_properties: property2_value
+---
+spec:
+  tiflash:
+    limits:
+      additional_properties: property3_value
+---
+spec:
+  tidb:
+    scalePolicy:
+      scaleInParallelism: 2
+      scaleOutParallelism: 3
+---
+spec:
+  tidb:
+    scalePolicy:
+      scaleInParallelism: 1
+      scaleOutParallelism: 2
+---
+spec:
+  tidb:
+    scalePolicy:
+      scaleInParallelism: 3
+      scaleOutParallelism: 1
+---
+spec:
+  tidb:
+    customizedStartupProbe:
+      args:
+      - --probe-timeout=5s
+      - --probe-retries=3
+      - --probe-interval=1s
+---
+spec:
+  tidb:
+    customizedStartupProbe:
+      args:
+      - --probe-timeout=10s
+      - --probe-retries=5
+      - --probe-threshold=50%
+---
+spec:
+  tidb:
+    customizedStartupProbe:
+      args:
+      - --probe-timeout=15s
+      - --probe-retries=7
+      - --probe-path=/health
+---
+spec:
+  tiproxy:
+    config: 'log-level: "info"
+
+      proxy-version: "v1.0.0"
+
+      api-endpoint: "http://127.0.0.1:2379"
+
+      '
+---
+spec:
+  tiproxy:
+    config: 'log-level: "debug"
+
+      proxy-version: "v2.0.0"
+
+      api-endpoint: "https://127.0.0.1:2380"
+
+      '
+---
+spec:
+  tiproxy:
+    config: 'log-level: "warn"
+
+      proxy-version: "v3.0.0"
+
+      api-endpoint: "http://127.0.0.1:2390"
+
+      '
+---
+spec:
+  tiproxy:
+    tlsClientSecretName: tidb-server-client-cert-secret
+---
+spec:
+  tiproxy:
+    tlsClientSecretName: prod-tidb-client-cert
+---
+spec:
+  tiproxy:
+    tlsClientSecretName: test-tidb-client-cert-secret
+---
+spec:
+  startScriptVersion: v1
+---
+spec:
+  startScriptVersion: v2
+---
+spec:
+  startScriptVersion: v1
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: advanced-tidb
+  namespace: default
+spec:
+  affinity: {}
+  annotations:
+    node.kubernetes.io/instance-type: some-vm-type
+    topology.kubernetes.io/region: some-region
+  cluster:
+    clusterDomain: cluster.local
+    name: tidb-cluster-to-join
+    namespace: default
+  clusterDomain: cluster.local
+  configUpdateStrategy: RollingUpdate
+  discovery:
+    affinity: {}
+    annotations:
+      node.kubernetes.io/instance-type: some-vm-type
+    env:
+    - name: MY_ENV_1
+      value: value1
+    hostNetwork: false
+    imagePullPolicy: IfNotPresent
+    labels: {}
+    limits:
+      cpu: 2000m
+      memory: 1Gi
+    nodeSelector:
+      app.kubernetes.io/component: discovery
+    priorityClassName: system-cluster-critical
+    requests:
+      cpu: 1000m
+      memory: 256Mi
+    schedulerName: default-scheduler
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: discovery
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  hostNetwork: false
+  imagePullPolicy: IfNotPresent
+  imagePullSecrets:
+  - name: secretName
+  nodeSelector:
+    node-role.kubernetes.io/tidb: true
+  paused: false
+  pd:
+    additionalContainers:
+    - image: ubuntu
+      name: myCustomContainer
+    additionalVolumeMounts:
+    - mountPath: /nfs
+      name: nfs
+    additionalVolumes:
+    - name: nfs
+      nfs:
+        path: /nfs
+        server: 192.168.0.2
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/component
+                operator: In
+                values:
+                - tidb
+                - tikv
+            topologyKey: kubernetes.io/hostname
+          weight: 100
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - pd
+          topologyKey: kubernetes.io/hostname
+    annotations:
+      node.kubernetes.io/instance-type: some-vm-type
+    baseImage: pingcap/pd
+    config: "[dashboard]\n  internal-proxy = true\n"
+    configUpdateStrategy: RollingUpdate
+    dataSubDir: ''
+    env:
+    - name: MY_ENV_1
+      value: value1
+    - name: MY_ENV_2
+      valueFrom:
+        fieldRef:
+          fieldPath: status.myEnv2
+    hostNetwork: false
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets:
+    - name: secretName
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+    maxFailoverCount: 0
+    mountClusterClientSecret: true
+    nodeSelector:
+      app.kubernetes.io/component: pd
+    podSecurityContext:
+      sysctls:
+      - name: net.core.somaxconn
+        value: '32768'
+    priorityClassName: system-cluster-critical
+    replicas: 3
+    requests:
+      cpu: 1000m
+      memory: 1Gi
+      storage: 10Gi
+    schedulerName: default-scheduler
+    service:
+      annotations:
+        foo: bar
+      portName: client
+      type: ClusterIP
+    serviceAccount: advanced-tidb-pd
+    statefulSetUpdateStrategy: RollingUpdate
+    storageClassName: ''
+    storageVolumes:
+    - mountPath: /some/path
+      name: volumeName
+      storageClassName: local-storage
+      storageSize: 1Gi
+    terminationGracePeriodSeconds: 30
+    tlsClientSecretName: custom-tidb-client-secret-name
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: pd
+    topologySpreadConstraints:
+    - maxSkew: 1
+      minDomains: 3
+      nodeAffinityPolicy: Honor
+      topologyKey: topology.kubernetes.io/zone
+    version: v8.1.0
+  pdAddresses:
+  - http://cluster1-pd-0.cluster1-pd-peer.default.svc:2379
+  - http://cluster1-pd-1.cluster1-pd-peer.default.svc:2379
+  podManagementPolicy: Parallel
+  priorityClassName: system-cluster-critical
+  pump:
+    additionalContainers: []
+    additionalVolumeMounts: []
+    additionalVolumes: []
+    annotations:
+      node.kubernetes.io/instance-type: some-vm-type
+    baseImage: pingcap/tidb-binlog
+    config: 'gc = 7
+
+      '
+    configUpdateStrategy: RollingUpdate
+    env: []
+    hostNetwork: false
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets:
+    - name: secretName
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+    nodeSelector:
+      app.kubernetes.io/component: pump
+    podSecurityContext: {}
+    priorityClassName: system-cluster-critical
+    replicas: 1
+    requests:
+      cpu: 1000m
+      memory: 1Gi
+      storage: 1Gi
+    schedulerName: default-scheduler
+    serviceAccount: advanced-tidb-pump
+    statefulSetUpdateStrategy: RollingUpdate
+    storageClassName: local-storage
+    terminationGracePeriodSeconds: 30
+    tolerations: []
+    topologySpreadConstraints:
+    - maxSkew: 1
+      minDomains: 3
+      nodeAffinityPolicy: Honor
+      topologyKey: topology.kubernetes.io/zone
+    version: v8.1.0
+  pvReclaimPolicy: Retain
+  schedulerName: default-scheduler
+  serviceAccount: advanced-tidb
+  statefulSetUpdateStrategy: RollingUpdate
+  ticdc:
+    additionalContainers: []
+    additionalVolumeMounts: []
+    additionalVolumes: []
+    annotations:
+      node.kubernetes.io/instance-type: some-vm-type
+    baseImage: pingcap/ticdc
+    config: 'gc-ttl = 86400
+
+      log-level = "info"
+
+      log-file = ""
+
+      '
+    configUpdateStrategy: RollingUpdate
+    env: []
+    hostNetwork: false
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets:
+    - name: secretName
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+    nodeSelector:
+      app.kubernetes.io/component: ticdc
+    podSecurityContext: {}
+    priorityClassName: system-cluster-critical
+    replicas: 3
+    requests:
+      cpu: 1000m
+      memory: 1Gi
+    schedulerName: default-scheduler
+    serviceAccount: advanced-tidb-ticdc
+    statefulSetUpdateStrategy: RollingUpdate
+    storageClassName: local-storage
+    storageVolumes: []
+    terminationGracePeriodSeconds: 30
+    tolerations: []
+    topologySpreadConstraints:
+    - maxSkew: 1
+      minDomains: 3
+      nodeAffinityPolicy: Honor
+      topologyKey: topology.kubernetes.io/zone
+    version: v8.1.0
+  tidb:
+    additionalContainers:
+    - image: ubuntu
+      name: myCustomContainer
+    additionalVolumeMounts:
+    - mountPath: /nfs
+      name: nfs
+    additionalVolumes:
+    - name: nfs
+      nfs:
+        path: /nfs
+        server: 192.168.0.2
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/component
+                operator: In
+                values:
+                - pd
+                - tikv
+            topologyKey: kubernetes.io/hostname
+          weight: 100
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - tidb
+          topologyKey: kubernetes.io/hostname
+    annotations:
+      node.kubernetes.io/instance-type: some-vm-type
+    baseImage: pingcap/tidb
+    binlogEnabled: false
+    config: "[performance]\n  tcp-keep-alive = true\n"
+    configUpdateStrategy: RollingUpdate
+    env:
+    - name: MY_ENV_1
+      value: value1
+    - name: MY_ENV_2
+      valueFrom:
+        fieldRef:
+          fieldPath: status.myEnv2
+    hostNetwork: false
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets:
+    - name: secretName
+    lifecycle:
+      postStart:
+        exec:
+          command:
+          - echo
+          - postStart
+      preStop:
+        exec:
+          command:
+          - echo
+          - preStop
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+    maxFailoverCount: 0
+    nodeSelector:
+      app.kubernetes.io/component: tidb
+    podSecurityContext:
+      sysctls:
+      - name: net.ipv4.tcp_keepalive_time
+        value: '300'
+      - name: net.ipv4.tcp_keepalive_intvl
+        value: '75'
+      - name: net.core.somaxconn
+        value: '32768'
+    priorityClassName: system-cluster-critical
+    readinessProbe:
+      type: command
+    replicas: 3
+    requests:
+      cpu: 1000m
+      memory: 1Gi
+    schedulerName: default-scheduler
+    separateSlowLog: true
+    service:
+      exposeStatus: true
+      externalTrafficPolicy: Local
+      mysqlNodePort: 30020
+      statusNodePort: 30040
+      type: NodePort
+    serviceAccount: advanced-tidb-tidb
+    slowLogTailer:
+      image: busybox
+      imagePullPolicy: IfNotPresent
+      limits:
+        cpu: 2000m
+        memory: 2Gi
+      requests:
+        cpu: 1000m
+        memory: 1Gi
+    slowLogVolumeName: ''
+    statefulSetUpdateStrategy: RollingUpdate
+    storageClassName: ''
+    storageVolumes:
+    - mountPath: /some/path
+      name: volumeName
+      storageClassName: local-storage
+      storageSize: 1Gi
+    terminationGracePeriodSeconds: 30
+    tlsClient:
+      disableClientAuthn: false
+      enabled: true
+      skipInternalClientCA: false
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: tidb
+    topologySpreadConstraints:
+    - maxSkew: 1
+      minDomains: 3
+      nodeAffinityPolicy: Honor
+      topologyKey: topology.kubernetes.io/zone
+    version: v8.1.0
+  tiflash:
+    additionalContainers: []
+    additionalVolumeMounts: []
+    additionalVolumes: []
+    annotations:
+      node.kubernetes.io/instance-type: some-vm-type
+    baseImage: pingcap/tiflash
+    config:
+      config: "[logger]\n  log = \"/data0/logs/somelog\"\n"
+      proxy: "[security]\n  cert-allowed-cn = [\"CNNAME\"]\n"
+    configUpdateStrategy: RollingUpdate
+    env: []
+    hostNetwork: false
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets:
+    - name: secretName
+    initializer:
+      limits:
+        cpu: 2000m
+        memory: 2Gi
+      requests:
+        cpu: 1000m
+        memory: 1Gi
+    maxFailoverCount: 0
+    nodeSelector:
+      app.kubernetes.io/component: tiflash
+    podSecurityContext: {}
+    priorityClassName: system-cluster-critical
+    privileged: false
+    recoverFailover: true
+    replicas: 1
+    schedulerName: default-scheduler
+    serviceAccount: advanced-tidb-tiflash
+    statefulSetUpdateStrategy: RollingUpdate
+    storageClaims:
+    - resources:
+        requests:
+          storage: 1Gi
+      storageClassName: local-storage
+    terminationGracePeriodSeconds: 30
+    tolerations: []
+    topologySpreadConstraints:
+    - maxSkew: 1
+      minDomains: 3
+      nodeAffinityPolicy: Honor
+      topologyKey: topology.kubernetes.io/zone
+    version: v8.1.0
+  tikv:
+    additionalContainers:
+    - image: ubuntu
+      name: myCustomContainer
+    additionalVolumeMounts:
+    - mountPath: /nfs
+      name: nfs
+    additionalVolumes:
+    - name: nfs
+      nfs:
+        path: /nfs
+        server: 192.168.0.2
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/component
+                operator: In
+                values:
+                - tidb
+                - pd
+            topologyKey: kubernetes.io/hostname
+          weight: 100
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - tikv
+          topologyKey: kubernetes.io/hostname
+    annotations:
+      node.kubernetes.io/instance-type: some-vm-type
+    baseImage: pingcap/tikv
+    config: 'log-level = "info"
+
+      '
+    configUpdateStrategy: RollingUpdate
+    dataSubDir: ''
+    env:
+    - name: MY_ENV_1
+      value: value1
+    - name: MY_ENV_2
+      valueFrom:
+        fieldRef:
+          fieldPath: status.myEnv2
+    evictLeaderTimeout: 3m
+    hostNetwork: false
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets:
+    - name: secretName
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+      storage: 10Gi
+    logTailer:
+      limits:
+        cpu: 2000m
+        memory: 2Gi
+      requests:
+        cpu: 1000m
+        memory: 1Gi
+    maxFailoverCount: 0
+    mountClusterClientSecret: true
+    nodeSelector:
+      app.kubernetes.io/component: tikv
+    podSecurityContext:
+      sysctls:
+      - name: net.ipv4.tcp_keepalive_time
+        value: '300'
+      - name: net.ipv4.tcp_keepalive_intvl
+        value: '75'
+      - name: net.core.somaxconn
+        value: '32768'
+    priorityClassName: system-cluster-critical
+    privileged: false
+    raftLogVolumeName: ''
+    recoverFailover: true
+    replicas: 3
+    requests:
+      storage: 100Gi
+    rocksDBLogVolumeName: ''
+    schedulerName: default-scheduler
+    separateRaftLog: true
+    separateRocksDBLog: true
+    serviceAccount: advanced-tidb-tikv
+    statefulSetUpdateStrategy: RollingUpdate
+    storageClassName: ''
+    storageVolumes:
+    - mountPath: /some/path
+      name: volumeName
+      storageClassName: local-storage
+      storageSize: 1Gi
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: tikv
+    topologySpreadConstraints:
+    - maxSkew: 1
+      minDomains: 3
+      nodeAffinityPolicy: Honor
+      topologyKey: topology.kubernetes.io/zone
+    version: v8.1.0
+  timezone: UTC
+  tlsCluster:
+    enabled: true
+  tolerations:
+  - effect: NoSchedule
+    key: dedicated
+    operator: Equal
+    value: tidb
+  topologySpreadConstraints:
+  - maxSkew: 1
+    minDomains: 3
+    nodeAffinityPolicy: Honor
+    topologyKey: topology.kubernetes.io/zone
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic-heterogeneous
+spec:
+  cluster:
+    name: basic
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tiflash:
+    baseImage: pingcap/tiflash
+    maxFailoverCount: 0
+    replicas: 1
+    storageClaims:
+    - resources:
+        requests:
+          storage: 100Gi
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: thanos-objectstorage
+stringData:
+  objectstorage.yaml: "type: S3\nconfig:\n  bucket: \"xxxxxx\"\n  endpoint: \"xxxx\"\
+    \n  region: \"\"\n  access_key: \"xxxx\"\n  insecure: true\n  signature_version2:\
+    \ true\n  secret_key: \"xxxx\"\n  put_user_metadata: {}\n  http_config:\n    idle_conn_timeout:\
+    \ 90s\n    response_header_timeout: 2m\n  trace:\n    enable: true\n  part_size:\
+    \ 41943040\n"
+type: Opaque
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config:
+      raftdb:
+        max-open-files: 256
+      rocksdb:
+        max-open-files: 256
+      storage:
+        reserve-space: 0MB
+    evictLeaderTimeout: 1m
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    initializer:
+      createPassword: true
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config:
+      raftdb:
+        max-open-files: 256
+      rocksdb:
+        max-open-files: 256
+      storage:
+        reserve-space: 0MB
+    evictLeaderTimeout: 1m
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: initialize-demo
+spec:
+  configUpdateStrategy: RollingUpdate
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config:
+      raftdb:
+        info-log-dir: /var/lib/raftlog
+      rocksdb:
+        info-log-dir: /var/lib/rocksdblog
+      storage:
+        reserve-space: 0MB
+    evictLeaderTimeout: 1m
+    maxFailoverCount: 0
+    raftLogVolumeName: raftlog
+    replicas: 1
+    requests:
+      storage: 100Gi
+    rocksDBLogVolumeName: rocksdblog
+    separateRaftLog: true
+    separateRocksDBLog: true
+    storageVolumes:
+    - mountPath: /var/lib/raftlog
+      name: raftlog
+      storageClassName: local-storage
+      storageSize: 1Gi
+    - mountPath: /var/lib/rocksdblog
+      name: rocksdblog
+      storageClassName: local-storage
+      storageSize: 1Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: auto-scaling-demo
+spec:
+  configUpdateStrategy: RollingUpdate
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: "[pd-server]\n  metric-storage = \"http://auto-scaling-demo-prometheus:9090/\"\
+      \n"
+    maxFailoverCount: 0
+    replicas: 3
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 2
+    requests:
+      cpu: '1'
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    replicas: 3
+    requests:
+      cpu: '1'
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 3
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 2
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    replicas: 3
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+  namespace: pingcap
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: hub.pingcap.net/devbuild/pd
+    config: {}
+    maxFailoverCount: 0
+    mode: ms
+    replicas: 1
+    requests:
+      storage: 1Gi
+    version: v8.3.0-5427
+  pdms:
+  - baseImage: hub.pingcap.net/devbuild/pd
+    name: tso
+    replicas: 2
+    version: v8.3.0-5427
+  - baseImage: hub.pingcap.net/devbuild/pd
+    name: scheduling
+    replicas: 2
+    version: v8.3.0-5427
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+    version: v8.1.0
+  tikv:
+    baseImage: pingcap/tikv
+    config:
+      raftdb:
+        max-open-files: 256
+      rocksdb:
+        max-open-files: 256
+      storage:
+        reserve-space: 0MB
+    evictLeaderTimeout: 1m
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+    version: v8.1.0
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config:
+      raftdb:
+        max-open-files: 256
+      rocksdb:
+        max-open-files: 256
+      storage:
+        reserve-space: 0MB
+    evictLeaderTimeout: 1m
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: ns2
+  namespace: ns2
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  imagePullPolicy: IfNotPresent
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  tlsCluster:
+    enabled: true
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: ns1
+  namespace: ns1
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  imagePullPolicy: IfNotPresent
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  tlsCluster:
+    enabled: true
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: ns2
+  namespace: ns2
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  imagePullPolicy: IfNotPresent
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: ns1
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  imagePullPolicy: IfNotPresent
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  discovery: {}
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Delete
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: "[rocksdb]\n  wal-dir = \"/var/lib/wal\"\n[titan]\n  dirname = \"/var/lib/titan\"\
+      \n"
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 100Gi
+    storageVolumes:
+    - mountPath: /var/lib/wal
+      name: wal
+      storageSize: 2Gi
+    - mountPath: /var/lib/titan
+      name: titan
+      storageSize: 2Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: cluster2
+  namespace: pingcap
+spec:
+  cluster:
+    clusterDomain: cluster1.com
+    name: cluster1
+    namespace: pingcap
+  clusterDomain: cluster2.com
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 20Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: cluster1
+  namespace: pingcap
+spec:
+  clusterDomain: cluster1.com
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 20Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    replicas: 3
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - pd
+          topologyKey: kubernetes.io/hostname
+    baseImage: pingcap/pd
+    config: "[dashboard]\n  internal-proxy = true\n[replication]\n  location-labels\
+      \ = [\"topology.kubernetes.io/zone\", \"kubernetes.io/hostname\"]\n  max-replicas\
+      \ = 3\n"
+    maxFailoverCount: 0
+    nodeSelector:
+      dedicated: pd
+    replicas: 3
+    requests:
+      storage: 10Gi
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: pd
+  pvReclaimPolicy: Retain
+  schedulerName: default-scheduler
+  tidb:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - tidb
+          topologyKey: kubernetes.io/hostname
+    annotations:
+      tidb.pingcap.com/sysctl-init: 'true'
+    baseImage: pingcap/tidb
+    config: "[performance]\n  tcp-keep-alive = true\n"
+    maxFailoverCount: 0
+    nodeSelector:
+      dedicated: tidb
+    podSecurityContext:
+      sysctls:
+      - name: net.ipv4.tcp_keepalive_time
+        value: '300'
+      - name: net.ipv4.tcp_keepalive_intvl
+        value: '75'
+      - name: net.core.somaxconn
+        value: '32768'
+    replicas: 2
+    separateSlowLog: true
+    service:
+      annotations:
+        cloud.google.com/load-balancer-type: Internal
+      exposeStatus: true
+      externalTrafficPolicy: Local
+      type: LoadBalancer
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: tidb
+  tikv:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - tikv
+          topologyKey: kubernetes.io/hostname
+    annotations:
+      tidb.pingcap.com/sysctl-init: 'true'
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    nodeSelector:
+      dedicated: tikv
+    podSecurityContext:
+      sysctls:
+      - name: net.core.somaxconn
+        value: '32768'
+    replicas: 3
+    requests:
+      storage: 100Gi
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: tikv
+  timezone: UTC
+  topologySpreadConstraints:
+  - topologyKey: topology.kubernetes.io/zone
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - pd
+          topologyKey: kubernetes.io/hostname
+    baseImage: pingcap/pd
+    config: "[dashboard]\n  internal-proxy = true\n[replication]\n  location-labels\
+      \ = [\"topology.kubernetes.io/zone\", \"kubernetes.io/hostname\"]\n  max-replicas\
+      \ = 3\n"
+    maxFailoverCount: 0
+    nodeSelector:
+      dedicated: pd
+    replicas: 3
+    requests:
+      storage: 10Gi
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: pd
+  pvReclaimPolicy: Retain
+  schedulerName: default-scheduler
+  tidb:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - tidb
+          topologyKey: kubernetes.io/hostname
+    annotations:
+      tidb.pingcap.com/sysctl-init: 'true'
+    baseImage: pingcap/tidb
+    config: "[performance]\n  tcp-keep-alive = true\n"
+    maxFailoverCount: 0
+    nodeSelector:
+      dedicated: tidb
+    podSecurityContext:
+      sysctls:
+      - name: net.ipv4.tcp_keepalive_time
+        value: '300'
+      - name: net.ipv4.tcp_keepalive_intvl
+        value: '75'
+      - name: net.core.somaxconn
+        value: '32768'
+    replicas: 2
+    separateSlowLog: true
+    service:
+      annotations:
+        service.beta.kubernetes.io/azure-load-balancer-internal: 'true'
+      exposeStatus: true
+      externalTrafficPolicy: Local
+      type: LoadBalancer
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: tidb
+  tikv:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - tikv
+          topologyKey: kubernetes.io/hostname
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    nodeSelector:
+      dedicated: tikv
+    replicas: 3
+    requests:
+      storage: 100Gi
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: tikv
+  timezone: UTC
+  topologySpreadConstraints:
+  - topologyKey: topology.kubernetes.io/zone
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: uhub.service.ucloud.cn/pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: uhub.service.ucloud.cn/pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: uhub.service.ucloud.cn/pingcap/tikv
+    config:
+      raftdb:
+        max-open-files: 256
+      rocksdb:
+        max-open-files: 256
+      storage:
+        reserve-space: 0MB
+    evictLeaderTimeout: 1m
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: busybox:1.34.1
+  pd:
+    additionalContainers:
+    - lifecycle:
+        preStop:
+          exec:
+            command:
+            - sh
+            - -c
+            - 'echo "test"
+
+              '
+      name: pd
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config:
+      raftdb:
+        max-open-files: 256
+      rocksdb:
+        max-open-files: 256
+      storage:
+        reserve-space: 0MB
+    evictLeaderTimeout: 1m
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: demo
+spec:
+  configUpdateStrategy: RollingUpdate
+  enableDynamicConfiguration: true
+  enablePVReclaim: false
+  helper:
+    image: alpine:3.16.0
+  imagePullPolicy: IfNotPresent
+  pd:
+    baseImage: pingcap/pd
+    config: "[replication]\n  enable-placement-rules = true\n"
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 3
+    requests:
+      storage: 10Gi
+    storageClassName: local-storage
+  pvReclaimPolicy: Retain
+  schedulerName: default-scheduler
+  services:
+  - name: pd
+    type: ClusterIP
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 2
+    separateSlowLog: true
+    service:
+      type: NodePort
+    slowLogTailer:
+      image: alpine:3.16.0
+      imagePullPolicy: IfNotPresent
+      limits:
+        cpu: 100m
+        memory: 50Mi
+      requests:
+        cpu: 20m
+        memory: 5Mi
+  tiflash:
+    baseImage: pingcap/tiflash
+    maxFailoverCount: 0
+    replicas: 2
+    storageClaims:
+    - resources:
+        requests:
+          storage: 100Gi
+      storageClassName: local-storage
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 3
+    requests:
+      storage: 100Gi
+    storageClassName: local-storage
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    readinessProbe:
+      type: tcp
+    replicas: 1
+    requests:
+      storage: 1Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    readinessProbe:
+      type: command
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config:
+      raftdb:
+        max-open-files: 256
+      rocksdb:
+        max-open-files: 256
+      storage:
+        reserve-space: 0MB
+    evictLeaderTimeout: 1m
+    maxFailoverCount: 0
+    readinessProbe:
+      type: tcp
+    replicas: 1
+    requests:
+      storage: 1Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: ns2
+  namespace: ns2
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  imagePullPolicy: IfNotPresent
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: ns1
+  namespace: ns1
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  imagePullPolicy: IfNotPresent
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: tls
+spec:
+  configUpdateStrategy: RollingUpdate
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+    tlsClient:
+      enabled: true
+  tikv:
+    baseImage: pingcap/tikv
+    config:
+      storage:
+        reserve-space: 0MB
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: v1
+data:
+  password: YWRtaW4=
+  username: YWRtaW4=
+kind: Secret
+metadata:
+  name: basic-grafana
+type: Opaque
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - pd
+          topologyKey: kubernetes.io/hostname
+    baseImage: pingcap/pd
+    config: "[dashboard]\n  internal-proxy = true\n[replication]\n  location-labels\
+      \ = [\"topology.kubernetes.io/zone\", \"kubernetes.io/hostname\"]\n  max-replicas\
+      \ = 3\n"
+    maxFailoverCount: 0
+    nodeSelector:
+      dedicated: pd
+    replicas: 3
+    requests:
+      storage: 10Gi
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: pd
+  pvReclaimPolicy: Retain
+  schedulerName: default-scheduler
+  tidb:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - tidb
+          topologyKey: kubernetes.io/hostname
+    annotations:
+      tidb.pingcap.com/sysctl-init: 'true'
+    baseImage: pingcap/tidb
+    config: "[performance]\n  tcp-keep-alive = true\n"
+    maxFailoverCount: 0
+    nodeSelector:
+      dedicated: tidb
+    podSecurityContext:
+      sysctls:
+      - name: net.ipv4.tcp_keepalive_time
+        value: '300'
+      - name: net.ipv4.tcp_keepalive_intvl
+        value: '75'
+      - name: net.core.somaxconn
+        value: '32768'
+    replicas: 2
+    separateSlowLog: true
+    service:
+      annotations:
+        service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: 'true'
+        service.beta.kubernetes.io/aws-load-balancer-internal: 'true'
+        service.beta.kubernetes.io/aws-load-balancer-scheme: internal
+        service.beta.kubernetes.io/aws-load-balancer-target-node-labels: dedicated=tidb
+        service.beta.kubernetes.io/aws-load-balancer-type: nlb
+      exposeStatus: true
+      externalTrafficPolicy: Local
+      type: LoadBalancer
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: tidb
+  tikv:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - tikv
+          topologyKey: kubernetes.io/hostname
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    nodeSelector:
+      dedicated: tikv
+    replicas: 3
+    requests:
+      storage: 100Gi
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: tikv
+  timezone: UTC
+  topologySpreadConstraints:
+  - topologyKey: topology.kubernetes.io/zone
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: heterogeneous
+spec:
+  cluster:
+    name: basic
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+    tlsClient:
+      enabled: true
+  tiflash:
+    baseImage: pingcap/tiflash
+    maxFailoverCount: 1
+    replicas: 1
+    storageClaims:
+    - resources:
+        requests:
+          storage: 100Gi
+    version: v8.1.0
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    mountClusterClientSecret: true
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  tlsCluster:
+    enabled: true
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  imagePullPolicy: IfNotPresent
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    mountClusterClientSecret: true
+    replicas: 1
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+    tlsClient:
+      enabled: true
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    mountClusterClientSecret: true
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  tlsCluster:
+    enabled: true
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config:
+      raftdb:
+        max-open-files: 256
+      rocksdb:
+        max-open-files: 256
+      storage:
+        reserve-space: 0MB
+    evictLeaderTimeout: 1m
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic-tls
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: "[security]\n  cert-allowed-cn = [ \"TiDB\" ]\n"
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Delete
+  tidb:
+    baseImage: pingcap/tidb
+    config: "[security]\n  cert-verify-cn = [ \"TiDB\" ]\n"
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: NodePort
+    tlsClient:
+      enabled: true
+  tikv:
+    baseImage: pingcap/tikv
+    config: "[security]\n  cert-allowed-cn = [ \"TiDB\" ]\n"
+    evictLeaderTimeout: 1m
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  tlsCluster:
+    enabled: true
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  annotations:
+    tikv.tidb.pingcap.com/delete-slots: '[1]'
+  name: asts
+spec:
+  configUpdateStrategy: RollingUpdate
+  enableDynamicConfiguration: true
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 3
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 2
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    replicas: 3
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: asts
+spec:
+  configUpdateStrategy: RollingUpdate
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 3
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 2
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    replicas: 4
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+spec:
+  pdms:
+  - startUpScriptVersion: v1.0.0
+---
+spec:
+  pdms:
+  - startUpScriptVersion: v1.1.0
+---
+spec:
+  pdms:
+  - startUpScriptVersion: v2.0.0
+---
+spec:
+  startScriptV2FeatureFlags:
+  - WaitForDnsNameIpMatch
+  - PreferPDAddressesOverDiscovery
+---
+spec:
+  startScriptV2FeatureFlags:
+  - WaitForDnsNameIpMatch
+---
+spec:
+  startScriptV2FeatureFlags:
+  - PreferPDAddressesOverDiscovery
+---
+spec:
+  tikv:
+    scalePolicy:
+      scaleInParallelism: 2
+      scaleOutParallelism: 3
+---
+spec:
+  tikv:
+    scalePolicy:
+      scaleInParallelism: 1
+      scaleOutParallelism: 1
+---
+spec:
+  tikv:
+    scalePolicy:
+      scaleInParallelism: 4
+      scaleOutParallelism: 2
+---
+spec:
+  ticdc:
+    tlsClientSecretNames:
+    - downstream-client-cert-1
+    - downstream-client-cert-2
+    - downstream-client-cert-3
+---
+spec:
+  ticdc:
+    tlsClientSecretNames:
+    - client-secret-a
+    - client-secret-b
+    - client-secret-c
+---
+spec:
+  ticdc:
+    tlsClientSecretNames:
+    - my-client-cert
+    - another-client-cert
+    - yet-another-client-cert
+---
+spec:
+  tikv:
+    limits:
+      additional_properties: opaque_value_1
+---
+spec:
+  tikv:
+    limits:
+      additional_properties: opaque_value_2
+---
+spec:
+  tikv:
+    limits:
+      additional_properties: opaque_value_3
+---
+spec:
+  tiflash:
+    limits:
+      cpu: '4'
+      memory: 8Gi
+---
+spec:
+  tiflash:
+    limits:
+      cpu: '6'
+      memory: 12Gi
+---
+spec:
+  tiflash:
+    limits:
+      cpu: '8'
+      memory: 16Gi
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: advanced-tidb
+  namespace: default
+spec:
+  affinity: {}
+  annotations:
+    node.kubernetes.io/instance-type: some-vm-type
+    topology.kubernetes.io/region: some-region
+  cluster:
+    clusterDomain: cluster.local
+    name: tidb-cluster-to-join
+    namespace: default
+  clusterDomain: cluster.local
+  configUpdateStrategy: RollingUpdate
+  discovery:
+    affinity: {}
+    annotations:
+      node.kubernetes.io/instance-type: some-vm-type
+    env:
+    - name: MY_ENV_1
+      value: value1
+    hostNetwork: false
+    imagePullPolicy: IfNotPresent
+    labels: {}
+    limits:
+      cpu: 2000m
+      memory: 1Gi
+    nodeSelector:
+      app.kubernetes.io/component: discovery
+    priorityClassName: system-cluster-critical
+    requests:
+      cpu: 1000m
+      memory: 256Mi
+    schedulerName: default-scheduler
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: discovery
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  hostNetwork: false
+  imagePullPolicy: IfNotPresent
+  imagePullSecrets:
+  - name: secretName
+  nodeSelector:
+    node-role.kubernetes.io/tidb: true
+  paused: false
+  pd:
+    additionalContainers:
+    - image: ubuntu
+      name: myCustomContainer
+    additionalVolumeMounts:
+    - mountPath: /nfs
+      name: nfs
+    additionalVolumes:
+    - name: nfs
+      nfs:
+        path: /nfs
+        server: 192.168.0.2
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/component
+                operator: In
+                values:
+                - tidb
+                - tikv
+            topologyKey: kubernetes.io/hostname
+          weight: 100
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - pd
+          topologyKey: kubernetes.io/hostname
+    annotations:
+      node.kubernetes.io/instance-type: some-vm-type
+    baseImage: pingcap/pd
+    config: "[dashboard]\n  internal-proxy = true\n"
+    configUpdateStrategy: RollingUpdate
+    dataSubDir: ''
+    env:
+    - name: MY_ENV_1
+      value: value1
+    - name: MY_ENV_2
+      valueFrom:
+        fieldRef:
+          fieldPath: status.myEnv2
+    hostNetwork: false
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets:
+    - name: secretName
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+    maxFailoverCount: 0
+    mountClusterClientSecret: true
+    nodeSelector:
+      app.kubernetes.io/component: pd
+    podSecurityContext:
+      sysctls:
+      - name: net.core.somaxconn
+        value: '32768'
+    priorityClassName: system-cluster-critical
+    replicas: 3
+    requests:
+      cpu: 1000m
+      memory: 1Gi
+      storage: 10Gi
+    schedulerName: default-scheduler
+    service:
+      annotations:
+        foo: bar
+      portName: client
+      type: ClusterIP
+    serviceAccount: advanced-tidb-pd
+    statefulSetUpdateStrategy: RollingUpdate
+    storageClassName: ''
+    storageVolumes:
+    - mountPath: /some/path
+      name: volumeName
+      storageClassName: local-storage
+      storageSize: 1Gi
+    terminationGracePeriodSeconds: 30
+    tlsClientSecretName: custom-tidb-client-secret-name
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: pd
+    topologySpreadConstraints:
+    - maxSkew: 1
+      minDomains: 3
+      nodeAffinityPolicy: Honor
+      topologyKey: topology.kubernetes.io/zone
+    version: v8.1.0
+  pdAddresses:
+  - http://cluster1-pd-0.cluster1-pd-peer.default.svc:2379
+  - http://cluster1-pd-1.cluster1-pd-peer.default.svc:2379
+  podManagementPolicy: Parallel
+  priorityClassName: system-cluster-critical
+  pump:
+    additionalContainers: []
+    additionalVolumeMounts: []
+    additionalVolumes: []
+    annotations:
+      node.kubernetes.io/instance-type: some-vm-type
+    baseImage: pingcap/tidb-binlog
+    config: 'gc = 7
+
+      '
+    configUpdateStrategy: RollingUpdate
+    env: []
+    hostNetwork: false
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets:
+    - name: secretName
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+    nodeSelector:
+      app.kubernetes.io/component: pump
+    podSecurityContext: {}
+    priorityClassName: system-cluster-critical
+    replicas: 1
+    requests:
+      cpu: 1000m
+      memory: 1Gi
+      storage: 1Gi
+    schedulerName: default-scheduler
+    serviceAccount: advanced-tidb-pump
+    statefulSetUpdateStrategy: RollingUpdate
+    storageClassName: local-storage
+    terminationGracePeriodSeconds: 30
+    tolerations: []
+    topologySpreadConstraints:
+    - maxSkew: 1
+      minDomains: 3
+      nodeAffinityPolicy: Honor
+      topologyKey: topology.kubernetes.io/zone
+    version: v8.1.0
+  pvReclaimPolicy: Retain
+  schedulerName: default-scheduler
+  serviceAccount: advanced-tidb
+  statefulSetUpdateStrategy: RollingUpdate
+  ticdc:
+    additionalContainers: []
+    additionalVolumeMounts: []
+    additionalVolumes: []
+    annotations:
+      node.kubernetes.io/instance-type: some-vm-type
+    baseImage: pingcap/ticdc
+    config: 'gc-ttl = 86400
+
+      log-level = "info"
+
+      log-file = ""
+
+      '
+    configUpdateStrategy: RollingUpdate
+    env: []
+    hostNetwork: false
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets:
+    - name: secretName
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+    nodeSelector:
+      app.kubernetes.io/component: ticdc
+    podSecurityContext: {}
+    priorityClassName: system-cluster-critical
+    replicas: 3
+    requests:
+      cpu: 1000m
+      memory: 1Gi
+    schedulerName: default-scheduler
+    serviceAccount: advanced-tidb-ticdc
+    statefulSetUpdateStrategy: RollingUpdate
+    storageClassName: local-storage
+    storageVolumes: []
+    terminationGracePeriodSeconds: 30
+    tolerations: []
+    topologySpreadConstraints:
+    - maxSkew: 1
+      minDomains: 3
+      nodeAffinityPolicy: Honor
+      topologyKey: topology.kubernetes.io/zone
+    version: v8.1.0
+  tidb:
+    additionalContainers:
+    - image: ubuntu
+      name: myCustomContainer
+    additionalVolumeMounts:
+    - mountPath: /nfs
+      name: nfs
+    additionalVolumes:
+    - name: nfs
+      nfs:
+        path: /nfs
+        server: 192.168.0.2
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/component
+                operator: In
+                values:
+                - pd
+                - tikv
+            topologyKey: kubernetes.io/hostname
+          weight: 100
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - tidb
+          topologyKey: kubernetes.io/hostname
+    annotations:
+      node.kubernetes.io/instance-type: some-vm-type
+    baseImage: pingcap/tidb
+    binlogEnabled: false
+    config: "[performance]\n  tcp-keep-alive = true\n"
+    configUpdateStrategy: RollingUpdate
+    env:
+    - name: MY_ENV_1
+      value: value1
+    - name: MY_ENV_2
+      valueFrom:
+        fieldRef:
+          fieldPath: status.myEnv2
+    hostNetwork: false
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets:
+    - name: secretName
+    lifecycle:
+      postStart:
+        exec:
+          command:
+          - echo
+          - postStart
+      preStop:
+        exec:
+          command:
+          - echo
+          - preStop
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+    maxFailoverCount: 0
+    nodeSelector:
+      app.kubernetes.io/component: tidb
+    podSecurityContext:
+      sysctls:
+      - name: net.ipv4.tcp_keepalive_time
+        value: '300'
+      - name: net.ipv4.tcp_keepalive_intvl
+        value: '75'
+      - name: net.core.somaxconn
+        value: '32768'
+    priorityClassName: system-cluster-critical
+    readinessProbe:
+      type: command
+    replicas: 3
+    requests:
+      cpu: 1000m
+      memory: 1Gi
+    schedulerName: default-scheduler
+    separateSlowLog: true
+    service:
+      exposeStatus: true
+      externalTrafficPolicy: Local
+      mysqlNodePort: 30020
+      statusNodePort: 30040
+      type: NodePort
+    serviceAccount: advanced-tidb-tidb
+    slowLogTailer:
+      image: busybox
+      imagePullPolicy: IfNotPresent
+      limits:
+        cpu: 2000m
+        memory: 2Gi
+      requests:
+        cpu: 1000m
+        memory: 1Gi
+    slowLogVolumeName: ''
+    statefulSetUpdateStrategy: RollingUpdate
+    storageClassName: ''
+    storageVolumes:
+    - mountPath: /some/path
+      name: volumeName
+      storageClassName: local-storage
+      storageSize: 1Gi
+    terminationGracePeriodSeconds: 30
+    tlsClient:
+      disableClientAuthn: false
+      enabled: true
+      skipInternalClientCA: false
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: tidb
+    topologySpreadConstraints:
+    - maxSkew: 1
+      minDomains: 3
+      nodeAffinityPolicy: Honor
+      topologyKey: topology.kubernetes.io/zone
+    version: v8.1.0
+  tiflash:
+    additionalContainers: []
+    additionalVolumeMounts: []
+    additionalVolumes: []
+    annotations:
+      node.kubernetes.io/instance-type: some-vm-type
+    baseImage: pingcap/tiflash
+    config:
+      config: "[logger]\n  log = \"/data0/logs/somelog\"\n"
+      proxy: "[security]\n  cert-allowed-cn = [\"CNNAME\"]\n"
+    configUpdateStrategy: RollingUpdate
+    env: []
+    hostNetwork: false
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets:
+    - name: secretName
+    initializer:
+      limits:
+        cpu: 2000m
+        memory: 2Gi
+      requests:
+        cpu: 1000m
+        memory: 1Gi
+    maxFailoverCount: 0
+    nodeSelector:
+      app.kubernetes.io/component: tiflash
+    podSecurityContext: {}
+    priorityClassName: system-cluster-critical
+    privileged: false
+    recoverFailover: true
+    replicas: 1
+    schedulerName: default-scheduler
+    serviceAccount: advanced-tidb-tiflash
+    statefulSetUpdateStrategy: RollingUpdate
+    storageClaims:
+    - resources:
+        requests:
+          storage: 1Gi
+      storageClassName: local-storage
+    terminationGracePeriodSeconds: 30
+    tolerations: []
+    topologySpreadConstraints:
+    - maxSkew: 1
+      minDomains: 3
+      nodeAffinityPolicy: Honor
+      topologyKey: topology.kubernetes.io/zone
+    version: v8.1.0
+  tikv:
+    additionalContainers:
+    - image: ubuntu
+      name: myCustomContainer
+    additionalVolumeMounts:
+    - mountPath: /nfs
+      name: nfs
+    additionalVolumes:
+    - name: nfs
+      nfs:
+        path: /nfs
+        server: 192.168.0.2
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/component
+                operator: In
+                values:
+                - tidb
+                - pd
+            topologyKey: kubernetes.io/hostname
+          weight: 100
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - tikv
+          topologyKey: kubernetes.io/hostname
+    annotations:
+      node.kubernetes.io/instance-type: some-vm-type
+    baseImage: pingcap/tikv
+    config: 'log-level = "info"
+
+      '
+    configUpdateStrategy: RollingUpdate
+    dataSubDir: ''
+    env:
+    - name: MY_ENV_1
+      value: value1
+    - name: MY_ENV_2
+      valueFrom:
+        fieldRef:
+          fieldPath: status.myEnv2
+    evictLeaderTimeout: 3m
+    hostNetwork: false
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets:
+    - name: secretName
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+      storage: 10Gi
+    logTailer:
+      limits:
+        cpu: 2000m
+        memory: 2Gi
+      requests:
+        cpu: 1000m
+        memory: 1Gi
+    maxFailoverCount: 0
+    mountClusterClientSecret: true
+    nodeSelector:
+      app.kubernetes.io/component: tikv
+    podSecurityContext:
+      sysctls:
+      - name: net.ipv4.tcp_keepalive_time
+        value: '300'
+      - name: net.ipv4.tcp_keepalive_intvl
+        value: '75'
+      - name: net.core.somaxconn
+        value: '32768'
+    priorityClassName: system-cluster-critical
+    privileged: false
+    raftLogVolumeName: ''
+    recoverFailover: true
+    replicas: 3
+    requests:
+      storage: 100Gi
+    rocksDBLogVolumeName: ''
+    schedulerName: default-scheduler
+    separateRaftLog: true
+    separateRocksDBLog: true
+    serviceAccount: advanced-tidb-tikv
+    statefulSetUpdateStrategy: RollingUpdate
+    storageClassName: ''
+    storageVolumes:
+    - mountPath: /some/path
+      name: volumeName
+      storageClassName: local-storage
+      storageSize: 1Gi
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: tikv
+    topologySpreadConstraints:
+    - maxSkew: 1
+      minDomains: 3
+      nodeAffinityPolicy: Honor
+      topologyKey: topology.kubernetes.io/zone
+    version: v8.1.0
+  timezone: UTC
+  tlsCluster:
+    enabled: true
+  tolerations:
+  - effect: NoSchedule
+    key: dedicated
+    operator: Equal
+    value: tidb
+  topologySpreadConstraints:
+  - maxSkew: 1
+    minDomains: 3
+    nodeAffinityPolicy: Honor
+    topologyKey: topology.kubernetes.io/zone
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic-heterogeneous
+spec:
+  cluster:
+    name: basic
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tiflash:
+    baseImage: pingcap/tiflash
+    maxFailoverCount: 0
+    replicas: 1
+    storageClaims:
+    - resources:
+        requests:
+          storage: 100Gi
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: thanos-objectstorage
+stringData:
+  objectstorage.yaml: "type: S3\nconfig:\n  bucket: \"xxxxxx\"\n  endpoint: \"xxxx\"\
+    \n  region: \"\"\n  access_key: \"xxxx\"\n  insecure: true\n  signature_version2:\
+    \ true\n  secret_key: \"xxxx\"\n  put_user_metadata: {}\n  http_config:\n    idle_conn_timeout:\
+    \ 90s\n    response_header_timeout: 2m\n  trace:\n    enable: true\n  part_size:\
+    \ 41943040\n"
+type: Opaque
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config:
+      raftdb:
+        max-open-files: 256
+      rocksdb:
+        max-open-files: 256
+      storage:
+        reserve-space: 0MB
+    evictLeaderTimeout: 1m
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    initializer:
+      createPassword: true
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config:
+      raftdb:
+        max-open-files: 256
+      rocksdb:
+        max-open-files: 256
+      storage:
+        reserve-space: 0MB
+    evictLeaderTimeout: 1m
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: initialize-demo
+spec:
+  configUpdateStrategy: RollingUpdate
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config:
+      raftdb:
+        info-log-dir: /var/lib/raftlog
+      rocksdb:
+        info-log-dir: /var/lib/rocksdblog
+      storage:
+        reserve-space: 0MB
+    evictLeaderTimeout: 1m
+    maxFailoverCount: 0
+    raftLogVolumeName: raftlog
+    replicas: 1
+    requests:
+      storage: 100Gi
+    rocksDBLogVolumeName: rocksdblog
+    separateRaftLog: true
+    separateRocksDBLog: true
+    storageVolumes:
+    - mountPath: /var/lib/raftlog
+      name: raftlog
+      storageClassName: local-storage
+      storageSize: 1Gi
+    - mountPath: /var/lib/rocksdblog
+      name: rocksdblog
+      storageClassName: local-storage
+      storageSize: 1Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: auto-scaling-demo
+spec:
+  configUpdateStrategy: RollingUpdate
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: "[pd-server]\n  metric-storage = \"http://auto-scaling-demo-prometheus:9090/\"\
+      \n"
+    maxFailoverCount: 0
+    replicas: 3
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 2
+    requests:
+      cpu: '1'
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    replicas: 3
+    requests:
+      cpu: '1'
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 3
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 2
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    replicas: 3
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+  namespace: pingcap
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: hub.pingcap.net/devbuild/pd
+    config: {}
+    maxFailoverCount: 0
+    mode: ms
+    replicas: 1
+    requests:
+      storage: 1Gi
+    version: v8.3.0-5427
+  pdms:
+  - baseImage: hub.pingcap.net/devbuild/pd
+    name: tso
+    replicas: 2
+    version: v8.3.0-5427
+  - baseImage: hub.pingcap.net/devbuild/pd
+    name: scheduling
+    replicas: 2
+    version: v8.3.0-5427
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+    version: v8.1.0
+  tikv:
+    baseImage: pingcap/tikv
+    config:
+      raftdb:
+        max-open-files: 256
+      rocksdb:
+        max-open-files: 256
+      storage:
+        reserve-space: 0MB
+    evictLeaderTimeout: 1m
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+    version: v8.1.0
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config:
+      raftdb:
+        max-open-files: 256
+      rocksdb:
+        max-open-files: 256
+      storage:
+        reserve-space: 0MB
+    evictLeaderTimeout: 1m
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: ns2
+  namespace: ns2
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  imagePullPolicy: IfNotPresent
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  tlsCluster:
+    enabled: true
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: ns1
+  namespace: ns1
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  imagePullPolicy: IfNotPresent
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  tlsCluster:
+    enabled: true
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: ns2
+  namespace: ns2
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  imagePullPolicy: IfNotPresent
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: ns1
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  imagePullPolicy: IfNotPresent
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  discovery: {}
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Delete
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: "[rocksdb]\n  wal-dir = \"/var/lib/wal\"\n[titan]\n  dirname = \"/var/lib/titan\"\
+      \n"
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 100Gi
+    storageVolumes:
+    - mountPath: /var/lib/wal
+      name: wal
+      storageSize: 2Gi
+    - mountPath: /var/lib/titan
+      name: titan
+      storageSize: 2Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: cluster2
+  namespace: pingcap
+spec:
+  cluster:
+    clusterDomain: cluster1.com
+    name: cluster1
+    namespace: pingcap
+  clusterDomain: cluster2.com
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 20Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: cluster1
+  namespace: pingcap
+spec:
+  clusterDomain: cluster1.com
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 20Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    replicas: 3
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - pd
+          topologyKey: kubernetes.io/hostname
+    baseImage: pingcap/pd
+    config: "[dashboard]\n  internal-proxy = true\n[replication]\n  location-labels\
+      \ = [\"topology.kubernetes.io/zone\", \"kubernetes.io/hostname\"]\n  max-replicas\
+      \ = 3\n"
+    maxFailoverCount: 0
+    nodeSelector:
+      dedicated: pd
+    replicas: 3
+    requests:
+      storage: 10Gi
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: pd
+  pvReclaimPolicy: Retain
+  schedulerName: default-scheduler
+  tidb:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - tidb
+          topologyKey: kubernetes.io/hostname
+    annotations:
+      tidb.pingcap.com/sysctl-init: 'true'
+    baseImage: pingcap/tidb
+    config: "[performance]\n  tcp-keep-alive = true\n"
+    maxFailoverCount: 0
+    nodeSelector:
+      dedicated: tidb
+    podSecurityContext:
+      sysctls:
+      - name: net.ipv4.tcp_keepalive_time
+        value: '300'
+      - name: net.ipv4.tcp_keepalive_intvl
+        value: '75'
+      - name: net.core.somaxconn
+        value: '32768'
+    replicas: 2
+    separateSlowLog: true
+    service:
+      annotations:
+        cloud.google.com/load-balancer-type: Internal
+      exposeStatus: true
+      externalTrafficPolicy: Local
+      type: LoadBalancer
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: tidb
+  tikv:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - tikv
+          topologyKey: kubernetes.io/hostname
+    annotations:
+      tidb.pingcap.com/sysctl-init: 'true'
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    nodeSelector:
+      dedicated: tikv
+    podSecurityContext:
+      sysctls:
+      - name: net.core.somaxconn
+        value: '32768'
+    replicas: 3
+    requests:
+      storage: 100Gi
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: tikv
+  timezone: UTC
+  topologySpreadConstraints:
+  - topologyKey: topology.kubernetes.io/zone
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - pd
+          topologyKey: kubernetes.io/hostname
+    baseImage: pingcap/pd
+    config: "[dashboard]\n  internal-proxy = true\n[replication]\n  location-labels\
+      \ = [\"topology.kubernetes.io/zone\", \"kubernetes.io/hostname\"]\n  max-replicas\
+      \ = 3\n"
+    maxFailoverCount: 0
+    nodeSelector:
+      dedicated: pd
+    replicas: 3
+    requests:
+      storage: 10Gi
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: pd
+  pvReclaimPolicy: Retain
+  schedulerName: default-scheduler
+  tidb:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - tidb
+          topologyKey: kubernetes.io/hostname
+    annotations:
+      tidb.pingcap.com/sysctl-init: 'true'
+    baseImage: pingcap/tidb
+    config: "[performance]\n  tcp-keep-alive = true\n"
+    maxFailoverCount: 0
+    nodeSelector:
+      dedicated: tidb
+    podSecurityContext:
+      sysctls:
+      - name: net.ipv4.tcp_keepalive_time
+        value: '300'
+      - name: net.ipv4.tcp_keepalive_intvl
+        value: '75'
+      - name: net.core.somaxconn
+        value: '32768'
+    replicas: 2
+    separateSlowLog: true
+    service:
+      annotations:
+        service.beta.kubernetes.io/azure-load-balancer-internal: 'true'
+      exposeStatus: true
+      externalTrafficPolicy: Local
+      type: LoadBalancer
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: tidb
+  tikv:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - tikv
+          topologyKey: kubernetes.io/hostname
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    nodeSelector:
+      dedicated: tikv
+    replicas: 3
+    requests:
+      storage: 100Gi
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: tikv
+  timezone: UTC
+  topologySpreadConstraints:
+  - topologyKey: topology.kubernetes.io/zone
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: uhub.service.ucloud.cn/pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: uhub.service.ucloud.cn/pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: uhub.service.ucloud.cn/pingcap/tikv
+    config:
+      raftdb:
+        max-open-files: 256
+      rocksdb:
+        max-open-files: 256
+      storage:
+        reserve-space: 0MB
+    evictLeaderTimeout: 1m
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: busybox:1.34.1
+  pd:
+    additionalContainers:
+    - lifecycle:
+        preStop:
+          exec:
+            command:
+            - sh
+            - -c
+            - 'echo "test"
+
+              '
+      name: pd
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config:
+      raftdb:
+        max-open-files: 256
+      rocksdb:
+        max-open-files: 256
+      storage:
+        reserve-space: 0MB
+    evictLeaderTimeout: 1m
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: demo
+spec:
+  configUpdateStrategy: RollingUpdate
+  enableDynamicConfiguration: true
+  enablePVReclaim: false
+  helper:
+    image: alpine:3.16.0
+  imagePullPolicy: IfNotPresent
+  pd:
+    baseImage: pingcap/pd
+    config: "[replication]\n  enable-placement-rules = true\n"
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 3
+    requests:
+      storage: 10Gi
+    storageClassName: local-storage
+  pvReclaimPolicy: Retain
+  schedulerName: default-scheduler
+  services:
+  - name: pd
+    type: ClusterIP
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 2
+    separateSlowLog: true
+    service:
+      type: NodePort
+    slowLogTailer:
+      image: alpine:3.16.0
+      imagePullPolicy: IfNotPresent
+      limits:
+        cpu: 100m
+        memory: 50Mi
+      requests:
+        cpu: 20m
+        memory: 5Mi
+  tiflash:
+    baseImage: pingcap/tiflash
+    maxFailoverCount: 0
+    replicas: 2
+    storageClaims:
+    - resources:
+        requests:
+          storage: 100Gi
+      storageClassName: local-storage
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 3
+    requests:
+      storage: 100Gi
+    storageClassName: local-storage
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    readinessProbe:
+      type: tcp
+    replicas: 1
+    requests:
+      storage: 1Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    readinessProbe:
+      type: command
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config:
+      raftdb:
+        max-open-files: 256
+      rocksdb:
+        max-open-files: 256
+      storage:
+        reserve-space: 0MB
+    evictLeaderTimeout: 1m
+    maxFailoverCount: 0
+    readinessProbe:
+      type: tcp
+    replicas: 1
+    requests:
+      storage: 1Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: ns2
+  namespace: ns2
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  imagePullPolicy: IfNotPresent
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: ns1
+  namespace: ns1
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  imagePullPolicy: IfNotPresent
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: tls
+spec:
+  configUpdateStrategy: RollingUpdate
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+    tlsClient:
+      enabled: true
+  tikv:
+    baseImage: pingcap/tikv
+    config:
+      storage:
+        reserve-space: 0MB
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: v1
+data:
+  password: YWRtaW4=
+  username: YWRtaW4=
+kind: Secret
+metadata:
+  name: basic-grafana
+type: Opaque
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - pd
+          topologyKey: kubernetes.io/hostname
+    baseImage: pingcap/pd
+    config: "[dashboard]\n  internal-proxy = true\n[replication]\n  location-labels\
+      \ = [\"topology.kubernetes.io/zone\", \"kubernetes.io/hostname\"]\n  max-replicas\
+      \ = 3\n"
+    maxFailoverCount: 0
+    nodeSelector:
+      dedicated: pd
+    replicas: 3
+    requests:
+      storage: 10Gi
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: pd
+  pvReclaimPolicy: Retain
+  schedulerName: default-scheduler
+  tidb:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - tidb
+          topologyKey: kubernetes.io/hostname
+    annotations:
+      tidb.pingcap.com/sysctl-init: 'true'
+    baseImage: pingcap/tidb
+    config: "[performance]\n  tcp-keep-alive = true\n"
+    maxFailoverCount: 0
+    nodeSelector:
+      dedicated: tidb
+    podSecurityContext:
+      sysctls:
+      - name: net.ipv4.tcp_keepalive_time
+        value: '300'
+      - name: net.ipv4.tcp_keepalive_intvl
+        value: '75'
+      - name: net.core.somaxconn
+        value: '32768'
+    replicas: 2
+    separateSlowLog: true
+    service:
+      annotations:
+        service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: 'true'
+        service.beta.kubernetes.io/aws-load-balancer-internal: 'true'
+        service.beta.kubernetes.io/aws-load-balancer-scheme: internal
+        service.beta.kubernetes.io/aws-load-balancer-target-node-labels: dedicated=tidb
+        service.beta.kubernetes.io/aws-load-balancer-type: nlb
+      exposeStatus: true
+      externalTrafficPolicy: Local
+      type: LoadBalancer
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: tidb
+  tikv:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - tikv
+          topologyKey: kubernetes.io/hostname
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    nodeSelector:
+      dedicated: tikv
+    replicas: 3
+    requests:
+      storage: 100Gi
+    tolerations:
+    - effect: NoSchedule
+      key: dedicated
+      operator: Equal
+      value: tikv
+  timezone: UTC
+  topologySpreadConstraints:
+  - topologyKey: topology.kubernetes.io/zone
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: heterogeneous
+spec:
+  cluster:
+    name: basic
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+    tlsClient:
+      enabled: true
+  tiflash:
+    baseImage: pingcap/tiflash
+    maxFailoverCount: 1
+    replicas: 1
+    storageClaims:
+    - resources:
+        requests:
+          storage: 100Gi
+    version: v8.1.0
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    mountClusterClientSecret: true
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  tlsCluster:
+    enabled: true
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  imagePullPolicy: IfNotPresent
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    mountClusterClientSecret: true
+    replicas: 1
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+    tlsClient:
+      enabled: true
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    imagePullPolicy: IfNotPresent
+    maxFailoverCount: 0
+    mountClusterClientSecret: true
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  tlsCluster:
+    enabled: true
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config:
+      raftdb:
+        max-open-files: 256
+      rocksdb:
+        max-open-files: 256
+      storage:
+        reserve-space: 0MB
+    evictLeaderTimeout: 1m
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 1Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic-tls
+spec:
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: "[security]\n  cert-allowed-cn = [ \"TiDB\" ]\n"
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Delete
+  tidb:
+    baseImage: pingcap/tidb
+    config: "[security]\n  cert-verify-cn = [ \"TiDB\" ]\n"
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: NodePort
+    tlsClient:
+      enabled: true
+  tikv:
+    baseImage: pingcap/tikv
+    config: "[security]\n  cert-allowed-cn = [ \"TiDB\" ]\n"
+    evictLeaderTimeout: 1m
+    maxFailoverCount: 0
+    replicas: 1
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  tlsCluster:
+    enabled: true
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  annotations:
+    tikv.tidb.pingcap.com/delete-slots: '[1]'
+  name: asts
+spec:
+  configUpdateStrategy: RollingUpdate
+  enableDynamicConfiguration: true
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 3
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 2
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    replicas: 3
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: asts
+spec:
+  configUpdateStrategy: RollingUpdate
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: {}
+    maxFailoverCount: 0
+    replicas: 3
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    config: {}
+    maxFailoverCount: 0
+    replicas: 2
+    service:
+      type: ClusterIP
+  tikv:
+    baseImage: pingcap/tikv
+    config: {}
+    maxFailoverCount: 0
+    replicas: 4
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
+---
+spec:
+  suspendAction:
+    suspendStatefulSet: true
+---
+spec:
+  suspendAction:
+    suspendStatefulSet: false
+---
+spec:
+  suspendAction:
+    suspendStatefulSet: true
+---
+spec:
+  tiflash:
+    limits:
+      additional_properties: property1_value
+---
+spec:
+  tiflash:
+    limits:
+      additional_properties: property2_value
+---
+spec:
+  tiflash:
+    limits:
+      additional_properties: property3_value
+---
+spec:
+  tidb:
+    scalePolicy:
+      scaleInParallelism: 2
+      scaleOutParallelism: 3
+---
+spec:
+  tidb:
+    scalePolicy:
+      scaleInParallelism: 1
+      scaleOutParallelism: 2
+---
+spec:
+  tidb:
+    scalePolicy:
+      scaleInParallelism: 3
+      scaleOutParallelism: 1
+---
+spec:
+  tidb:
+    customizedStartupProbe:
+      args:
+      - --probe-timeout=5s
+      - --probe-retries=3
+      - --probe-interval=1s
+---
+spec:
+  tidb:
+    customizedStartupProbe:
+      args:
+      - --probe-timeout=10s
+      - --probe-retries=5
+      - --probe-threshold=50%
+---
+spec:
+  tidb:
+    customizedStartupProbe:
+      args:
+      - --probe-timeout=15s
+      - --probe-retries=7
+      - --probe-path=/health
+---
+spec:
+  tiproxy:
+    config: 'log-level: "info"
+
+      proxy-version: "v1.0.0"
+
+      api-endpoint: "http://127.0.0.1:2379"
+
+      '
+---
+spec:
+  tiproxy:
+    config: 'log-level: "debug"
+
+      proxy-version: "v2.0.0"
+
+      api-endpoint: "https://127.0.0.1:2380"
+
+      '
+---
+spec:
+  tiproxy:
+    config: 'log-level: "warn"
+
+      proxy-version: "v3.0.0"
+
+      api-endpoint: "http://127.0.0.1:2390"
+
+      '
+---
+spec:
+  tiproxy:
+    tlsClientSecretName: tidb-server-client-cert-secret
+---
+spec:
+  tiproxy:
+    tlsClientSecretName: prod-tidb-client-cert
+---
+spec:
+  tiproxy:
+    tlsClientSecretName: test-tidb-client-cert-secret
+---
+spec:
+  startScriptVersion: v1
+---
+spec:
+  startScriptVersion: v2
+---
+spec:
+  startScriptVersion: v1
+---
+spec:
+  tidb:
+    customizedStartupProbe:
+      image: pingcap/tidb-probe:v1.0
+---
+spec:
+  tidb:
+    customizedStartupProbe:
+      image: pingcap/tidb-probe:latest
+---
+spec:
+  tidb:
+    customizedStartupProbe:
+      image: myorg/custom-tidb-probe:v2.0
+---
+spec:
+  tidb:
+    bootstrapSQLConfigMapName: tidb-bootstrap-sql-config1
+---
+spec:
+  tidb:
+    bootstrapSQLConfigMapName: tidb-bootstrap-sql-config2
+---
+spec:
+  tidb:
+    bootstrapSQLConfigMapName: tidb-bootstrap-sql-config3
+---
+spec:
+  tidb:
+    customizedStartupProbe:
+      args:
+      - --probe-arg1
+      - --probe-arg2
+      binaryName: custom-probe-binary
+      failureThreshold: 3
+      image: custom-probe-image:v1.0.0
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      successThreshold: 1
+      timeoutSeconds: 2
+---
+spec:
+  tidb:
+    customizedStartupProbe:
+      args:
+      - --check-status
+      - --endpoint=/status
+      binaryName: status-check-probe
+      failureThreshold: 5
+      image: status-check-image:v1.0.0
+      initialDelaySeconds: 10
+      periodSeconds: 5
+      successThreshold: 1
+      timeoutSeconds: 3
+---
+spec:
+  tidb:
+    customizedStartupProbe:
+      args:
+      - --health-check
+      binaryName: health-probe
+      failureThreshold: 2
+      image: health-probe-image:v2.1.0
+      initialDelaySeconds: 20
+      periodSeconds: 15
+      successThreshold: 1
+      timeoutSeconds: 4
+---
+spec:
+  tidb:
+    arguments:
+    - --log-level=info
+    - --store=tikv
+    - --path=127.0.0.1:2379
+---
+spec:
+  tidb:
+    arguments:
+    - --token-limit=10000
+    - --enable-table-lock=true
+---
+spec:
+  tidb:
+    arguments:
+    - --plugin-dir=/path/to/plugin
+    - --plugin-load=plugin1,plugin2
+    - --host=0.0.0.0
+---
+spec:
+  pdms:
+  - config: '[pd]
+
+      replication.max-replicas = 3
+
+      schedule.leader-schedule-limit = 4
+
+      '
+---
+spec:
+  pdms:
+  - config: '[pd]
+
+      replication.max-replicas = 1
+
+      schedule.leader-schedule-limit = 8
+
+      '
+---
+spec:
+  pdms:
+  - config: '[pd]
+
+      replication.max-replicas = 5
+
+      schedule.leader-schedule-limit = 10
+
+      '
+---
+spec:
+  tikv:
+    storeLabels:
+    - "environment: production"
+    - "region: us-west2"
+    - "environment: staging"
+    - "region: us-central1"
+---
+spec:
+  pd:
+    startUpScriptVersion: v1.0
+---
+spec:
+  pd:
+    startUpScriptVersion: v2.1
+---
+spec:
+  pd:
+    startUpScriptVersion: latest
+---
+spec:
+  tidb:
+    customizedStartupProbe:
+      binaryName: startup-probe-1
+---
+spec:
+  tidb:
+    customizedStartupProbe:
+      binaryName: tidb-start-probe
+---
+spec:
+  tidb:
+    customizedStartupProbe:
+      binaryName: health-checker
+---
+spec:
+  tidb:
+    plugins:
+    - audit
+    - slow-query
+    - prometheus
+---
+spec:
+  tidb:
+    plugins:
+    - plugin1
+    - plugin2
+    - plugin3
+---
+spec:
+  tidb:
+    plugins:
+    - pluginA
+    - pluginB
+    - pluginC
+---
+spec:
+  tiflash:
+    scalePolicy:
+      scaleInParallelism: 1
+      scaleOutParallelism: 1
+---
+spec:
+  tiflash:
+    scalePolicy:
+      scaleInParallelism: 2
+      scaleOutParallelism: 3
+---
+spec:
+  tiflash:
+    scalePolicy:
+      scaleInParallelism: 3
+      scaleOutParallelism: 2
+---
+spec:
+  tidb:
+    customizedStartupProbe:
+      image: pingcap/tidb-probe:v1.0
+---
+spec:
+  tidb:
+    customizedStartupProbe:
+      image: pingcap/tidb-probe:latest
+---
+spec:
+  tidb:
+    customizedStartupProbe:
+      image: myorg/custom-tidb-probe:v2.0
+---
+spec:
+  tidb:
+    bootstrapSQLConfigMapName: tidb-bootstrap-sql-config1
+---
+spec:
+  tidb:
+    bootstrapSQLConfigMapName: tidb-bootstrap-sql-config2
+---
+spec:
+  tidb:
+    bootstrapSQLConfigMapName: tidb-bootstrap-sql-config3
+---
+spec:
+  tidb:
+    customizedStartupProbe:
+      args:
+      - --probe-arg1
+      - --probe-arg2
+      binaryName: custom-probe-binary
+      failureThreshold: 3
+      image: custom-probe-image:v1.0.0
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      successThreshold: 1
+      timeoutSeconds: 2
+---
+spec:
+  tidb:
+    customizedStartupProbe:
+      args:
+      - --check-status
+      - --endpoint=/status
+      binaryName: status-check-probe
+      failureThreshold: 5
+      image: status-check-image:v1.0.0
+      initialDelaySeconds: 10
+      periodSeconds: 5
+      successThreshold: 1
+      timeoutSeconds: 3
+---
+spec:
+  tidb:
+    customizedStartupProbe:
+      args:
+      - --health-check
+      binaryName: health-probe
+      failureThreshold: 2
+      image: health-probe-image:v2.1.0
+      initialDelaySeconds: 20
+      periodSeconds: 15
+      successThreshold: 1
+      timeoutSeconds: 4
+---
+spec:
+  tidb:
+    arguments:
+    - --log-level=info
+    - --store=tikv
+    - --path=127.0.0.1:2379
+---
+spec:
+  tidb:
+    arguments:
+    - --token-limit=10000
+    - --enable-table-lock=true
+---
+spec:
+  tidb:
+    arguments:
+    - --plugin-dir=/path/to/plugin
+    - --plugin-load=plugin1,plugin2
+    - --host=0.0.0.0
+---
+spec:
+  pdms:
+  - config: '[pd]
+
+      replication.max-replicas = 3
+
+      schedule.leader-schedule-limit = 4
+
+      '
+---
+spec:
+  pdms:
+  - config: '[pd]
+
+      replication.max-replicas = 1
+
+      schedule.leader-schedule-limit = 8
+
+      '
+---
+spec:
+  pdms:
+  - config: '[pd]
+
+      replication.max-replicas = 5
+
+      schedule.leader-schedule-limit = 10
+
+      '
+---
+spec:
+  tikv:
+    storeLabels:
+    - "environment: production"
+    - "region: us-west2"
+    - "environment: staging"
+    - "region: us-central1"
+---
+spec:
+  pd:
+    startUpScriptVersion: v1.0
+---
+spec:
+  pd:
+    startUpScriptVersion: v2.1
+---
+spec:
+  pd:
+    startUpScriptVersion: latest
+---
+spec:
+  tidb:
+    customizedStartupProbe:
+      binaryName: startup-probe-1
+---
+spec:
+  tidb:
+    customizedStartupProbe:
+      binaryName: tidb-start-probe
+---
+spec:
+  tidb:
+    customizedStartupProbe:
+      binaryName: health-checker
+---
+spec:
+  tidb:
+    plugins:
+    - audit
+    - slow-query
+    - prometheus
+---
+spec:
+  tidb:
+    plugins:
+    - plugin1
+    - plugin2
+    - plugin3
+---
+spec:
+  tidb:
+    plugins:
+    - pluginA
+    - pluginB
+    - pluginC
+---
+spec:
+  tiflash:
+    scalePolicy:
+      scaleInParallelism: 1
+      scaleOutParallelism: 1
+---
+spec:
+  tiflash:
+    scalePolicy:
+      scaleInParallelism: 2
+      scaleOutParallelism: 3
+---
+spec:
+  tiflash:
+    scalePolicy:
+      scaleInParallelism: 3
+      scaleOutParallelism: 2

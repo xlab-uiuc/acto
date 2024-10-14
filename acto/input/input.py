@@ -4,10 +4,11 @@ import importlib
 import json
 import logging
 import operator
+import os
 import random
 import threading
 from functools import reduce
-from typing import List, Optional, Tuple
+from typing import Optional, Tuple
 
 import pydantic
 import yaml
@@ -17,7 +18,7 @@ from acto.common import is_subfield
 from acto.input import k8s_schemas, property_attribute
 from acto.input.get_matched_schemas import find_matched_schema
 from acto.input.test_generators.generator import get_testcases
-from acto.schema import BaseSchema
+from acto.schema import BaseSchema, BooleanSchema, IntegerSchema
 from acto.schema.schema import extract_schema
 from acto.utils import get_thread_logger
 
@@ -67,7 +68,6 @@ class InputModel(abc.ABC):
     @abc.abstractmethod
     def generate_test_plan(
         self,
-        delta_from: Optional[str] = None,
         focus_fields: Optional[list] = None,
     ) -> dict:
         """Generate test plan based on CRD"""
@@ -116,7 +116,7 @@ class InputModel(abc.ABC):
     @abc.abstractmethod
     def next_test(
         self,
-    ) -> Optional[List[Tuple[TestGroup, tuple[str, TestCase]]]]:
+    ) -> Optional[list[Tuple[TestGroup, tuple[str, TestCase]]]]:
         """Selects next test case to run from the test plan
 
         Instead of random, it selects the next test case from the group.
@@ -157,7 +157,9 @@ class DeterministicInputModel(InputModel):
         self.example_dir = example_dir
         example_docs = []
         if self.example_dir is not None:
-            for example_filepath in glob.glob(self.example_dir + "*.yaml"):
+            for example_filepath in glob.glob(
+                os.path.join(self.example_dir, "*.yaml")
+            ):
                 with open(
                     example_filepath, "r", encoding="utf-8"
                 ) as example_file:
@@ -165,6 +167,8 @@ class DeterministicInputModel(InputModel):
                     for doc in docs:
                         example_docs.append(doc)
         for example_doc in example_docs:
+            logger = get_thread_logger(with_prefix=True)
+            logger.info("Loading example document %s", example_doc)
             self.root_schema.load_examples(example_doc)
 
         self.num_workers = num_workers
@@ -281,7 +285,6 @@ class DeterministicInputModel(InputModel):
 
     def generate_test_plan(
         self,
-        delta_from: Optional[str] = None,
         focus_fields: Optional[list] = None,
     ) -> dict:
         """Generate test plan based on CRD"""
@@ -303,6 +306,7 @@ class DeterministicInputModel(InputModel):
         num_semantic_test_cases = 0
         num_misoperations = 0
         num_pruned_test_cases = 0
+        missing_examples = []
         for path, test_case_list in test_cases:
             # First, check if the path is in the focus fields
             if focus_fields is not None:
@@ -313,6 +317,31 @@ class DeterministicInputModel(InputModel):
                         break
                 if not focused:
                     continue
+
+            schema = self.get_schema_by_path(path)
+            if (
+                not isinstance(schema, BooleanSchema)
+                and not isinstance(schema, IntegerSchema)
+                and len(schema.examples) == 0
+            ):
+                logger.info("No examples for %s", path)
+                info = [
+                    ".".join(path),
+                    None
+                    if "description" not in schema.raw_schema
+                    else schema.raw_schema["description"],
+                    "opaque"
+                    if "type" not in schema.raw_schema
+                    else schema.raw_schema["type"],
+                    None
+                    if "properties" not in schema.raw_schema
+                    else schema.raw_schema["properties"],
+                    None
+                    if "required" not in schema.raw_schema
+                    else schema.raw_schema["required"],
+                ]
+
+                missing_examples.append(info)
 
             path_str = (
                 json.dumps(path)
@@ -340,6 +369,18 @@ class DeterministicInputModel(InputModel):
 
             normal_testcases[path_str] = filtered_test_case_list
 
+        logger.info(
+            "There are %d properties that do not have examples",
+            len(missing_examples),
+        )
+        if self.example_dir is not None:
+            with open(
+                os.path.join(self.example_dir, "missing_fields.json"),
+                "w",
+                encoding="utf-8",
+            ) as f:
+                json.dump(missing_examples, f, indent=2)
+
         self.metadata.total_number_of_test_cases = num_test_cases
         self.metadata.number_of_run_test_cases = num_run_test_cases
         self.metadata.number_of_primitive_test_cases = num_pruned_test_cases
@@ -347,6 +388,7 @@ class DeterministicInputModel(InputModel):
         self.metadata.number_of_misoperations = num_misoperations
         self.metadata.number_of_pruned_test_cases = num_pruned_test_cases
 
+        logger.info("Got %d schemas to focus on", len(normal_testcases))
         logger.info("Generated %d test cases in total", num_test_cases)
         logger.info("Generated %d test cases to run", num_run_test_cases)
         logger.info(
@@ -395,7 +437,7 @@ class DeterministicInputModel(InputModel):
 
     def next_test(
         self,
-    ) -> Optional[List[Tuple[TestGroup, tuple[str, TestCase]]]]:
+    ) -> Optional[list[Tuple[TestGroup, tuple[str, TestCase]]]]:
         """Selects next test case to run from the test plan
 
         Instead of random, it selects the next test case from the group.

@@ -1,6 +1,7 @@
 import random
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
+from acto.common import HashableDict
 from acto.utils.thread_logger import get_thread_logger
 
 from .base import BaseSchema, TreeNode
@@ -128,11 +129,20 @@ class ObjectSchema(BaseSchema):
 
         return node
 
-    def load_examples(self, example: dict):
-        self.examples.append(example)
-        for key, value in example.items():
-            if key in self.properties:
-                self.properties[key].load_examples(value)
+    def load_examples(self, example: Optional[dict]):
+        if example is not None:
+            logger = get_thread_logger(with_prefix=True)
+            logger.debug("Loading example %s into %s", example, self.path)
+
+            if isinstance(example, dict):
+                self.examples.add(HashableDict(example))
+                for key, value in example.items():
+                    if key in self.properties:
+                        self.properties[key].load_examples(value)
+            else:
+                raise TypeError(
+                    f"Example {example} is not a dictionary, cannot load it into {self.path}"
+                )
 
     def set_default(self, instance):
         self.default = instance
@@ -172,6 +182,16 @@ class ObjectSchema(BaseSchema):
                 )
             else:
                 return random.choice(self.enum)
+
+        if self.examples:
+            if exclude_value is not None:
+                example_without_exclude = [
+                    x for x in self.examples if x != exclude_value
+                ]
+                if example_without_exclude:
+                    return random.choice(example_without_exclude)
+            else:
+                return random.choice(list(self.examples))
 
         # XXX: need to handle exclude_value, but not important for now for object types
         result = {}

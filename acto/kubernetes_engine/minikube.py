@@ -61,7 +61,7 @@ class Minikube(base.KubernetesEngine):
         else:
             raise RuntimeError("Missing kubeconfig for minikube create")
 
-        cmd.extend(["--nodes", str(self.num_nodes)])
+        cmd.extend(["--nodes", str(self.num_nodes + 1)])
 
         if self._k8s_version != "":
             cmd.extend(["--kubernetes-version", str(self._k8s_version)])

@@ -73,7 +73,7 @@ class CollectTestResult(PostProcessor):
                 {
                     "Trial number": str(result.to_step),
                     "Testcase": input_digest,
-                    "Alarm": is_alarm,
+                    "Alarm": True,
                     "Crash": None,
                     "Health": None,
                     "Operator log": None,

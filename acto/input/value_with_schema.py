@@ -175,20 +175,20 @@ class ValueWithObjectSchema(ValueWithSchema):
         """Ensures the path exists"""
         if len(path) == 0:
             return
-        key = path.pop(0)
+        key = path[0]
         if self.store is None:
             self.update(self.schema.gen(minimum=True))
             self[key] = None
         elif key not in self.store:
             self[key] = None
-        self.store[key].create_path(path)
+        self.store[key].create_path(path[1:])
 
     def set_value_by_path(self, value, path):
         if len(path) == 0:
             self.update(value)
         else:
-            key = path.pop(0)
-            self.store[key].set_value_by_path(value, path)
+            key = path[0]
+            self.store[key].set_value_by_path(value, path[1:])
 
     def __getitem__(self, key):
         return self.store[key]
@@ -206,7 +206,7 @@ class ValueWithObjectSchema(ValueWithSchema):
 class ValueWithArraySchema(ValueWithSchema):
     """Value with ArraySchema attached"""
 
-    def __init__(self, value, schema) -> None:
+    def __init__(self, value, schema: ArraySchema) -> None:
         self.schema = schema
         if value is None:
             self.store = None
@@ -306,7 +306,7 @@ class ValueWithArraySchema(ValueWithSchema):
         """Ensures the path exists"""
         if len(path) == 0:
             return
-        key = path.pop(0)
+        key = path[0]
         if self.store is None:
             self.store = []
             for _ in range(0, key):
@@ -316,14 +316,14 @@ class ValueWithArraySchema(ValueWithSchema):
             for _ in range(len(self.store), key):
                 self.append(None)
             self.append(None)
-        self.store[key].create_path(path)
+        self.store[key].create_path(path[1:])
 
     def set_value_by_path(self, value, path):
         if len(path) == 0:
             self.update(value)
         else:
-            key = path.pop(0)
-            self.store[key].set_value_by_path(value, path)
+            key = path[0]
+            self.store[key].set_value_by_path(value, path[1:])
 
     def __getitem__(self, key):
         return self.store[key]

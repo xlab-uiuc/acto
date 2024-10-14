@@ -149,7 +149,7 @@ class BaseSchema(SchemaInterface):
         self.raw_schema = schema
         self.default = None if "default" not in schema else schema["default"]
         self.enum = None if "enum" not in schema else schema["enum"]
-        self.examples: list[Any] = []
+        self.examples: set[Any] = set()
 
         self.attributes = PropertyAttribute(value=0)
         self.copied_over = False

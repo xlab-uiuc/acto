@@ -18,9 +18,15 @@ import yaml
 
 from acto.checker.checker_set import CheckerSet
 from acto.checker.impl.health import HealthChecker
-from acto.common import kubernetes_client, print_event
+from acto.common import (
+    PropertyPath,
+    kubernetes_client,
+    postprocess_diff,
+    print_event,
+)
 from acto.constant import CONST
 from acto.deploy import Deploy
+from acto.input.constraint import XorCondition
 from acto.input.input import DeterministicInputModel, InputModel
 from acto.input.testcase import TestCase
 from acto.input.testplan import TestGroup
@@ -31,6 +37,7 @@ from acto.lib.operator_config import OperatorConfig
 from acto.oracle_handle import OracleHandle
 from acto.result import (
     CliStatus,
+    DeletionOracleResult,
     DifferentialOracleResult,
     OracleResults,
     RunResult,
@@ -41,12 +48,8 @@ from acto.result import (
 from acto.runner import Runner
 from acto.serialization import ActoEncoder, ContextEncoder
 from acto.snapshot import Snapshot
-from acto.utils import (
-    delete_operator_pod,
-    get_yaml_existing_namespace,
-    process_crd,
-    update_preload_images,
-)
+from acto.utils import delete_operator_pod, process_crd
+from acto.utils.preprocess import get_existing_images
 from acto.utils.thread_logger import get_thread_logger, set_thread_logger_prefix
 from ssa.analysis import analyze
 
@@ -58,8 +61,9 @@ def apply_testcase(
     path: list,
     testcase: TestCase,
     setup: bool = False,
+    constraints: Optional[list[XorCondition]] = None,
 ) -> jsonpatch.JsonPatch:
-    """Apply a testcase to a value"""
+    """This function realizes the testcase onto the current valueWithSchema"""
     logger = get_thread_logger(with_prefix=True)
 
     prev = value_with_schema.raw_value()
@@ -78,7 +82,27 @@ def apply_testcase(
             )
             curr = value_with_schema.raw_value()
 
-    patch = jsonpatch.make_patch(prev, curr)
+    # Satisfy constraints
+    assumptions: list[tuple[PropertyPath, bool]] = []
+    input_change = postprocess_diff(
+        deepdiff.DeepDiff(
+            prev,
+            curr,
+            view="tree",
+        )
+    )
+    for changes in input_change.values():
+        for diff in changes.values():
+            if isinstance(diff.curr, bool):
+                assumptions.append((diff.path, diff.curr))
+    if constraints is not None:
+        for constraint in constraints:
+            result = constraint.solve(assumptions)
+            if result is not None:
+                value_with_schema.set_value_by_path(result[1], result[0].path)
+
+    curr = value_with_schema.raw_value()
+    patch: list[dict] = jsonpatch.make_patch(prev, curr)
     logger.info("JSON patch: %s", patch)
     return patch
 
@@ -236,6 +260,7 @@ class TrialRunner:
         apply_testcase_f: Callable,
         acto_namespace: int,
         additional_exclude_paths: Optional[list[str]] = None,
+        constraints: Optional[list[XorCondition]] = None,
     ) -> None:
         self.context = context
         self.workdir = workdir
@@ -273,6 +298,7 @@ class TrialRunner:
         self.discarded_testcases: dict[str, list[TestCase]] = {}
 
         self.apply_testcase_f = apply_testcase_f
+        self.constraints = constraints
         self.curr_trial = 0
 
     def run(
@@ -415,6 +441,7 @@ class TrialRunner:
 
         generation = 0
         trial_id = f"trial-{self.worker_id + self.sequence_base:02d}-{self.curr_trial:04d}"
+        trial_err: Optional[OracleResults] = None
         while (
             generation < num_mutation
         ):  # every iteration gets a new list of next tests
@@ -436,12 +463,9 @@ class TrialRunner:
                 # if test_group is None, it means this group is exhausted
                 # break and move to the next trial
                 if test_groups is None:
-                    return TrialResult(
-                        trial_id=trial_id,
-                        duration=time.time() - trial_start_time,
-                        error=None,
-                    )
+                    break
 
+                setup_fail = False  # to break the loop if setup fails
                 # First make sure all the next tests are valid
                 for (
                     group,
@@ -455,6 +479,14 @@ class TrialRunner:
                     }
                     field_curr_value = curr_input_with_schema.get_value_by_path(
                         list(field_path)
+                    )
+
+                    logger.info(
+                        "Path [%s] has examples: %s",
+                        field_path,
+                        self.input_model.get_schema_by_path(
+                            field_path
+                        ).examples,
                     )
 
                     if testcase.test_precondition(field_curr_value):
@@ -473,6 +505,7 @@ class TrialRunner:
                             field_path,
                             testcase,
                             setup=True,
+                            constraints=self.constraints,
                         )
 
                         if not testcase.test_precondition(
@@ -500,11 +533,9 @@ class TrialRunner:
                             == CliStatus.CONNECTION_REFUSED
                         ):
                             logger.error("Connection refused, exiting")
-                            return TrialResult(
-                                trial_id=trial_id,
-                                duration=time.time() - trial_start_time,
-                                error=None,
-                            )
+                            trial_err = None
+                            setup_fail = True
+                            break
                         if (
                             run_result.is_invalid_input()
                             and run_result.oracle_result.health is None
@@ -525,16 +556,17 @@ class TrialRunner:
                                 runner
                             )
                             generation += 1
-                            return TrialResult(
-                                trial_id=trial_id,
-                                duration=time.time() - trial_start_time,
-                                error=run_result.oracle_result,
-                            )
+                            trial_err = run_result.oracle_result
+                            setup_fail = True
+                            break
                         elif run_result.cli_status == CliStatus.UNCHANGED:
                             logger.info("Setup produced unchanged input")
                             group.discard_testcase(self.discarded_testcases)
                         else:
                             ready_testcases.append((group, testcase_with_path))
+
+                if setup_fail:
+                    break
 
                 if len(ready_testcases) == 0:
                     logger.info("All setups failed")
@@ -555,22 +587,24 @@ class TrialRunner:
                     runner
                 )
                 generation += 1
-
-                return TrialResult(
-                    trial_id=f"trial-{self.worker_id + self.sequence_base:02d}"
-                    + f"-{self.curr_trial:04d}",
-                    duration=time.time() - trial_start_time,
-                    error=run_result.oracle_result,
-                )
+                trial_err = run_result.oracle_result
+                break
 
             if self.input_model.is_empty():
                 logger.info("Input model is empty, break")
+                trial_err = None
                 break
 
+        if trial_err is not None:
+            trial_err.deletion = self.run_delete(runner, generation=generation)
+        else:
+            trial_err = OracleResults()
+            trial_err.deletion = self.run_delete(runner, generation=generation)
+
         return TrialResult(
-            trial_id=f"trial-{self.worker_id + self.sequence_base:02d}-{self.curr_trial:04d}",
+            trial_id=trial_id,
             duration=time.time() - trial_start_time,
-            error=None,
+            error=trial_err,
         )
 
     def run_testcases(
@@ -594,7 +628,10 @@ class TrialRunner:
                 "testcase": str(testcase),
             }
             patch = self.apply_testcase_f(
-                curr_input_with_schema, field_path, testcase
+                curr_input_with_schema,
+                field_path,
+                testcase,
+                constraints=self.constraints,
             )
 
             # field_node.get_testcases().pop()  # finish testcase
@@ -723,6 +760,20 @@ class TrialRunner:
         else:
             return None
 
+    def run_delete(
+        self, runner: Runner, generation: int
+    ) -> Optional[DeletionOracleResult]:
+        """Runs the deletion test to check if the operator can properly handle deletion"""
+        logger = get_thread_logger(with_prefix=True)
+
+        logger.debug("Running delete")
+        success = runner.delete(generation=generation)
+
+        if not success:
+            return DeletionOracleResult(message="Deletion test case")
+        else:
+            return None
+
     def revert(self, runner, checker, generation) -> ValueWithSchema:
         """Revert to the previous system state"""
         curr_input_with_schema = attach_schema_to_value(
@@ -751,7 +802,6 @@ class Acto:
         workdir_path: str,
         operator_config: OperatorConfig,
         cluster_runtime: str,
-        preload_images_: Optional[list],
         context_file: str,
         helper_crd: Optional[str],
         num_workers: int,
@@ -761,7 +811,6 @@ class Acto:
         is_reproduce: bool,
         input_model: type[DeterministicInputModel],
         apply_testcase_f: Callable,
-        delta_from: Optional[str] = None,
         mount: Optional[list] = None,
         focus_fields: Optional[list] = None,
         acto_namespace: int = 0,
@@ -773,6 +822,7 @@ class Acto:
                 operator_config.seed_custom_resource, "r", encoding="utf-8"
             ) as cr_file:
                 self.seed = yaml.load(cr_file, Loader=yaml.FullLoader)
+                self.seed["metadata"]["name"] = "test-cluster"
         except yaml.YAMLError as e:
             logger.error("Failed to read seed yaml, aborting: %s", e)
             sys.exit(1)
@@ -802,6 +852,7 @@ class Acto:
         self.deploy = deploy
         self.operator_config = operator_config
         self.crd_name = operator_config.crd_name
+        self.crd_version = operator_config.crd_version
         self.workdir_path = workdir_path
         self.images_archive = os.path.join(workdir_path, "images.tar")
         self.num_workers = num_workers
@@ -820,10 +871,6 @@ class Acto:
             analysis_only=analysis_only,
         )
 
-        # Add additional preload images from arguments
-        if preload_images_ is not None:
-            self.context["preload_images"].update(preload_images_)
-
         self.input_model: DeterministicInputModel = input_model(
             crd=self.context["crd"]["body"],
             seed_input=self.seed,
@@ -835,7 +882,7 @@ class Acto:
             custom_module_path=operator_config.custom_module,
         )
 
-        self.sequence_base = 20 if delta_from else 0
+        self.sequence_base = 0
 
         if operator_config.custom_oracle is not None:
             module = importlib.import_module(operator_config.custom_oracle)
@@ -846,11 +893,8 @@ class Acto:
             self.custom_on_init = None
 
         # Generate test cases
-        testplan_path = None
-        if delta_from is not None:
-            testplan_path = os.path.join(delta_from, "test_plan.json")
         self.test_plan = self.input_model.generate_test_plan(
-            testplan_path, focus_fields=focus_fields
+            focus_fields=focus_fields
         )
         with open(
             os.path.join(self.workdir_path, "test_plan.json"),
@@ -935,9 +979,13 @@ class Acto:
             )
 
             self.cluster.restart_cluster("learn", learn_kubeconfig)
+
+            existing_images = get_existing_images(
+                self.cluster.get_node_list("learn")
+            )
+
             namespace = (
-                get_yaml_existing_namespace(self.deploy.operator_yaml)
-                or CONST.ACTO_NAMESPACE
+                self.deploy.operator_existing_namespace or CONST.ACTO_NAMESPACE
             )
             self.context["namespace"] = namespace
             kubectl_client = KubectlClient(learn_kubeconfig, learn_context_name)
@@ -949,7 +997,7 @@ class Acto:
             )
             if not deployed:
                 raise RuntimeError(
-                    f"Failed to deploy operator due to max retry exceed"
+                    "Failed to deploy operator due to max retry exceed"
                 )
 
             apiclient = kubernetes_client(learn_kubeconfig, learn_context_name)
@@ -958,6 +1006,7 @@ class Acto:
                 apiclient,
                 KubectlClient(learn_kubeconfig, learn_context_name),
                 self.crd_name,
+                self.crd_version,
                 helper_crd,
             )
 
@@ -982,9 +1031,13 @@ class Acto:
                     "Please make sure the operator config is correct"
                 )
 
-            update_preload_images(
-                self.context, self.cluster.get_node_list("learn")
+            current_images = get_existing_images(
+                self.cluster.get_node_list("learn")
             )
+            for current_image in current_images:
+                if current_image not in existing_images:
+                    self.context["preload_images"].add(current_image)
+
             self.cluster.delete_cluster("learn", learn_kubeconfig)
 
             run_end_time = time.time()
@@ -1037,9 +1090,7 @@ class Acto:
                     sort_keys=True,
                 )
 
-    def run(
-        self, modes: list = ["normal", "overspecified", "copiedover"]
-    ) -> list[OracleResults]:
+    def run(self) -> list[OracleResults]:
         """Run the test cases"""
         logger = get_thread_logger(with_prefix=True)
 
@@ -1084,65 +1135,22 @@ class Acto:
                 self.apply_testcase_f,
                 self.acto_namespace,
                 self.operator_config.diff_ignore_fields,
+                constraints=self.operator_config.constraints,
             )
             runners.append(runner)
 
-        if "normal" in modes:
-            threads = []
-            for runner in runners:
-                t = threading.Thread(
-                    target=runner.run, args=[errors, InputModel.NORMAL]
-                )
-                t.start()
-                threads.append(t)
+        threads = []
+        for runner in runners:
+            t = threading.Thread(
+                target=runner.run, args=[errors, InputModel.NORMAL]
+            )
+            t.start()
+            threads.append(t)
 
-            for t in threads:
-                t.join()
+        for t in threads:
+            t.join()
 
         normal_time = time.time()
-
-        if "overspecified" in modes:
-            threads = []
-            for runner in runners:
-                t = threading.Thread(
-                    target=runner.run, args=([errors, InputModel.OVERSPECIFIED])
-                )
-                t.start()
-                threads.append(t)
-
-            for t in threads:
-                t.join()
-
-        overspecified_time = time.time()
-
-        if "copiedover" in modes:
-            threads = []
-            for runner in runners:
-                t = threading.Thread(
-                    target=runner.run, args=([errors, InputModel.COPIED_OVER])
-                )
-                t.start()
-                threads.append(t)
-
-            for t in threads:
-                t.join()
-
-        additional_semantic_time = time.time()
-
-        if InputModel.ADDITIONAL_SEMANTIC in modes:
-            threads = []
-            for runner in runners:
-                t = threading.Thread(
-                    target=runner.run,
-                    args=([errors, InputModel.ADDITIONAL_SEMANTIC]),
-                )
-                t.start()
-                threads.append(t)
-
-            for t in threads:
-                t.join()
-
-        end_time = time.time()
 
         num_total_failed = 0
         for runner in runners:
@@ -1151,10 +1159,6 @@ class Acto:
 
         testrun_info = {
             "normal_duration": normal_time - start_time,
-            "overspecified_duration": overspecified_time - normal_time,
-            "copied_over_duration": additional_semantic_time
-            - overspecified_time,
-            "additional_semantic_duration": end_time - additional_semantic_time,
             "num_workers": self.num_workers,
             "num_total_testcases": self.input_model.metadata,
             "num_total_failed": num_total_failed,

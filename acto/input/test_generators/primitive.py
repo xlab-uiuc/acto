@@ -96,11 +96,6 @@ def array_tests(schema: ArraySchema):
         if len(schema.examples) > 0:
             for example in schema.examples:
                 if len(example) > 1:
-                    logger.info(
-                        "Using example for setting up field [%s]: [%s]",
-                        schema.path,
-                        schema.examples[0],
-                    )
                     return example
         if prev is None:
             return schema.gen(minimum=True)
@@ -120,16 +115,9 @@ def array_tests(schema: ArraySchema):
         return prev
 
     def pop_setup(prev):
-        logger = get_thread_logger(with_prefix=True)
-
         if len(schema.examples) > 0:
             for example in schema.examples:
                 if len(example) > 1:
-                    logger.info(
-                        "Using example for setting up field [%s]: [%s]",
-                        schema.path,
-                        schema.examples[0],
-                    )
                     return example
         if prev is None:
             return schema.gen(size=schema.min_items + 1)
@@ -142,7 +130,7 @@ def array_tests(schema: ArraySchema):
         return []
 
     def empty_setup(prev):
-        return prev
+        return schema.gen(size=1)
 
     def delete(prev):
         return schema.empty_value()
@@ -155,15 +143,9 @@ def array_tests(schema: ArraySchema):
         )
 
     def delete_setup(prev):
-        logger = get_thread_logger(with_prefix=True)
         if len(schema.examples) > 0:
-            logger.info(
-                "Using example for setting up field [%s]: [%s]",
-                schema.path,
-                schema.examples[0],
-            )
             example_without_default = [
-                x for x in schema.enum if x != schema.default
+                x for x in schema.examples if x != schema.default
             ]
             if len(example_without_default) > 0:
                 return random.choice(example_without_default)
@@ -261,15 +243,9 @@ def boolean_tests(schema: BooleanSchema):
         )
 
     def delete_setup(prev):
-        logger = get_thread_logger(with_prefix=True)
         if len(schema.examples) > 0:
-            logger.info(
-                "Using example for setting up field [%s]: [%s]",
-                schema.path,
-                schema.examples[0],
-            )
             example_without_default = [
-                x for x in schema.enum if x != schema.default
+                x for x in schema.examples if x != schema.default
             ]
             if len(example_without_default) > 0:
                 return random.choice(example_without_default)
@@ -519,22 +495,7 @@ def integer_tests(schema: IntegerSchema):
         )
 
     def delete_setup(prev):
-        logger = get_thread_logger(with_prefix=True)
-        if len(schema.examples) > 0:
-            logger.info(
-                "Using example for setting up field [%s]: [%s]",
-                schema.path,
-                schema.examples[0],
-            )
-            example_without_default = [
-                x for x in schema.enum if x != schema.default
-            ]
-            if len(example_without_default) > 0:
-                return random.choice(example_without_default)
-            else:
-                return schema.gen(exclude_value=schema.default)
-        else:
-            return schema.gen(exclude_value=schema.default)
+        return schema.gen(exclude_value=schema.default)
 
     testcases = [
         TestCase(
@@ -579,6 +540,7 @@ def object_tests(schema: ObjectSchema):
 
     DELETION_TEST = "object-deletion"
     EMPTY_TEST = "object-empty"
+    CHANGE_TEST = "object-change"
 
     def empty_precondition(prev):
         return prev != {}
@@ -587,7 +549,7 @@ def object_tests(schema: ObjectSchema):
         return {}
 
     def empty_setup(prev):
-        return prev
+        return schema.gen(exclude_value=schema.default)
 
     def delete(prev):
         return schema.empty_value()
@@ -600,15 +562,9 @@ def object_tests(schema: ObjectSchema):
         )
 
     def delete_setup(prev):
-        logger = get_thread_logger(with_prefix=True)
         if len(schema.examples) > 0:
-            logger.info(
-                "Using example for setting up field [%s]: [%s]",
-                schema.path,
-                schema.examples[0],
-            )
             example_without_default = [
-                x for x in schema.enum if x != schema.default
+                x for x in schema.examples if x != schema.default
             ]
             if len(example_without_default) > 0:
                 return random.choice(example_without_default)
@@ -616,6 +572,9 @@ def object_tests(schema: ObjectSchema):
                 return schema.gen(exclude_value=schema.default)
         else:
             return schema.gen(exclude_value=schema.default)
+
+    def change_precondition(prev):
+        return prev is not None
 
     ret = [
         TestCase(
@@ -639,13 +598,53 @@ def object_tests(schema: ObjectSchema):
                 primitive=True,
             )
         )
+
+        if schema.examples is not None and len(schema.examples) > 1:
+            example_list = list(schema.examples)
+            ret.append(
+                TestCase(
+                    CHANGE_TEST,
+                    change_precondition,
+                    lambda prev: example_list[1],
+                    lambda prev: example_list[0],
+                    primitive=True,
+                )
+            )
     return ret
 
 
 @test_generator(property_type="Opaque", priority=Priority.PRIMITIVE)
-def opaque_gen(schema: OpaqueSchema):
-    """Opaque schema to handle the fields that do not have a schema"""
-    return []
+def opaque_tests(schema: OpaqueSchema):
+    """Opaque schema to handle the fields that do not have a schema
+
+    It only generates testcases if there are examples provided
+    """
+    DELETION_TEST = "opaque-deletion"
+    CHANGE_TEST = "opaque-change"
+    ret = []
+    if schema.examples is not None and len(schema.examples) > 0:
+        example_list = list(schema.examples)
+        ret.append(
+            TestCase(
+                DELETION_TEST,
+                lambda prev: prev is not None,
+                lambda prev: None,
+                lambda prev: example_list[0],
+                primitive=True,
+            )
+        )
+
+        if len(schema.examples) > 1:
+            ret.append(
+                TestCase(
+                    CHANGE_TEST,
+                    lambda prev: prev is not None,
+                    lambda prev: example_list[1],
+                    lambda prev: example_list[0],
+                    primitive=True,
+                )
+            )
+    return ret
 
 
 @test_generator(property_type="String", priority=Priority.PRIMITIVE)
@@ -669,9 +668,11 @@ def string_tests(schema: StringSchema):
         """Test case to change the value to another one"""
         logger = get_thread_logger(with_prefix=True)
         if schema.enum is not None:
-            logger.fatal(
+            logger.critical(
                 "String field with enum should not call change to mutate"
             )
+        if schema.examples is not None and len(schema.examples) > 0:
+            return schema.gen(exclude_value=prev)
         if schema.pattern is not None:
             new_string = exrex.getone(schema.pattern, schema.max_length)
         else:
@@ -683,16 +684,7 @@ def string_tests(schema: StringSchema):
         return new_string
 
     def change_setup(prev):
-        logger = get_thread_logger(with_prefix=True)
-        if len(schema.examples) > 0:
-            logger.info(
-                "Using example for setting up field [%s]: [%s]",
-                schema.path,
-                schema.examples[0],
-            )
-            return schema.examples[0]
-        else:
-            return schema.gen()
+        return schema.gen()
 
     def empty_precondition(prev):
         return prev != ""
@@ -701,7 +693,7 @@ def string_tests(schema: StringSchema):
         return ""
 
     def empty_setup(prev):
-        return prev
+        return schema.gen(exclude_value=schema.default)
 
     def delete(prev):
         return schema.empty_value()
@@ -716,13 +708,8 @@ def string_tests(schema: StringSchema):
     def delete_setup(prev):
         logger = get_thread_logger(with_prefix=True)
         if len(schema.examples) > 0:
-            logger.info(
-                "Using example for setting up field [%s]: [%s]",
-                schema.path,
-                schema.examples[0],
-            )
             example_without_default = [
-                x for x in schema.enum if x != schema.default
+                x for x in schema.examples if x != schema.default
             ]
             if len(example_without_default) > 0:
                 return random.choice(example_without_default)
