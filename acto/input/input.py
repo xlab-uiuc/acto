@@ -18,7 +18,7 @@ from acto.common import is_subfield
 from acto.input import k8s_schemas, property_attribute
 from acto.input.get_matched_schemas import find_matched_schema
 from acto.input.test_generators.generator import get_testcases
-from acto.schema import BaseSchema, BooleanSchema, IntegerSchema
+from acto.schema import BaseSchema
 from acto.schema.schema import extract_schema
 from acto.utils import get_thread_logger
 
@@ -325,11 +325,63 @@ class DeterministicInputModel(InputModel):
                 and len(schema.examples) == 0
             ):
                 logger.info("No examples for %s", path)
-                info = [".".join(path), None if "description" not in schema.raw_schema else schema.raw_schema["description"],
-                                           "opaque" if "type" not in schema.raw_schema else schema.raw_schema["type"], 
-                                           None if "properties" not in schema.raw_schema else schema.raw_schema["properties"],
-                                           None if "required" not in schema.raw_schema else schema.raw_schema["required"]]
-                
+                info = [
+                    ".".join(path),
+                    (
+                        None
+                        if "description" not in schema.raw_schema
+                        else schema.raw_schema["description"]
+                    ),
+                    (
+                        "opaque"
+                        if "type" not in schema.raw_schema
+                        else schema.raw_schema["type"]
+                    ),
+                    (
+                        None
+                        if "properties" not in schema.raw_schema
+                        else schema.raw_schema["properties"]
+                    ),
+                    (
+                        None
+                        if "required" not in schema.raw_schema
+                        else schema.raw_schema["required"]
+                    ),
+                ]
+
+                missing_examples.append(info)
+
+            schema = self.get_schema_by_path(path)
+            if (
+                not isinstance(schema, BooleanSchema)
+                and not isinstance(schema, IntegerSchema)
+                and len(schema.examples) == 0
+            ):
+                logger.info("No examples for %s", path)
+                info = [
+                    ".".join(path),
+                    (
+                        None
+                        if "description" not in schema.raw_schema
+                        else schema.raw_schema["description"]
+                    ),
+                    (
+                        "opaque"
+                        if "type" not in schema.raw_schema
+                        else schema.raw_schema["type"]
+                    ),
+                    (
+                        None
+                        if "properties" not in schema.raw_schema
+                        else schema.raw_schema["properties"]
+                    ),
+                    (
+                        None
+                        if "required" not in schema.raw_schema
+                        else schema.raw_schema["required"]
+                    ),
+                ]
+
                 missing_examples.append(info)
 
             path_str = (

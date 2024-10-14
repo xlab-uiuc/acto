@@ -1,0 +1,58 @@
+{
+    "deploy": {
+        "steps": [
+            {
+                "helm_install": {
+                    "release_name": "mariadb-operator",
+                    "chart": "mariadb-operator",
+                    "repo": "https://helm.mariadb.com/mariadb-operator",
+                    "version": "0.30.0",
+                    "operator": true,
+                    "operator_deployment_name": "mariadb-operator",
+                    "operator_container_name": "controller"
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/mariadb-operator/v0.30.0/mariadb-dependencies.yaml"
+                }
+            }
+        ]
+    },
+    "kubernetes_version": "v1.31.0",
+    "crd_name": "mariadbs.k8s.mariadb.com",
+    "example_dir": "data/mariadb-operator/v0.30.0/examples",
+    "seed_custom_resource": "data/mariadb-operator/v0.30.0/cr.yaml",
+    "num_nodes": 5,
+    "diff_ignore_fields": [],
+    "focus_fields": [
+        ["spec", "args"],
+        ["spec", "command"],
+        ["spec", "galera", "agent", "args"],
+        ["spec", "galera", "agent", "command"],
+        ["spec", "galera", "config", "resueStorageVolume"],
+        ["spec", "galera", "enabled"],
+        ["spec", "galera", "galeraLibPath"],
+        ["spec", "galera", "primary", "podIndex"],
+        ["spec", "galera", "providerOptions"],
+        ["spec", "galera", "recovery", "enabled"],
+        ["spec", "galera", "recovery", "forceClusterBootstrapInPod"],
+        ["spec", "galera", "replicaThreads"],
+        ["spec", "galera", "sst"],
+        ["spec", "maxScale", "admin", "guiEnabled"],
+        ["spec", "maxScale", "admin", "port"],
+        ["spec", "maxScale", "auth", "adminUsername"],
+        ["spec", "maxScale", "config", "params"],
+        ["spec", "maxScale", "enabled"],
+        ["spec", "maxScale", "replicas"],
+        ["spec", "myCnf"],
+        ["spec", "replicas"],
+        ["spec", "replication", "enabled"],
+        ["spec", "replication", "primary", "podIndex"],
+        ["spec", "replication", "probesEnabled"],
+        ["spec", "replication", "replica"],
+        ["spec", "replication", "syncBinlog"],
+        ["spec", "replication", "rootEmptyPassword"],
+        ["spec", "timeZone"]
+    ]
+}

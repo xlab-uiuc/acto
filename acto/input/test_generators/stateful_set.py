@@ -50,7 +50,7 @@ def replicas_tests(schema: IntegerSchema) -> list[TestCase]:
         Store(),
         semantic=True,
     )
-    overload_test = TestCase(
+    _ = TestCase(
         "k8s-overload",
         lambda x: True,
         lambda x: 1000,

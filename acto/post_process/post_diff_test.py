@@ -195,6 +195,9 @@ def compare_system_equality(
     if additional_exclude_paths is not None:
         exclude_paths.extend(additional_exclude_paths)
 
+    for e in exclude_paths:
+        re.compile(e)
+
     diff = DeepDiff(
         prev_system_state,
         curr_system_state,
@@ -460,7 +463,7 @@ class DeployRunner:
         while True:
             after_k8s_bootstrap_time = time.time()
             try:
-                group = self._workqueue.get(block=False)
+                group = self._workqueue.get(block=True, timeout=5)
             except queue.Empty:
                 break
 
@@ -589,7 +592,7 @@ def compute_common_regex(paths: list[str]) -> list[str]:
                 common_regex.add(regex_candidate)
                 curr_regex = regex_candidate
             else:
-                common_regex.add(path)
+                common_regex.add("^" + re.escape(path) + "$")
     return list(common_regex)
 
 
@@ -781,7 +784,7 @@ class PostDiffTest(PostProcessor):
 
         while True:
             try:
-                diff_test_result_path = workqueue.get(block=False)
+                diff_test_result_path = workqueue.get(block=True, timeout=5)
             except queue.Empty:
                 break
 

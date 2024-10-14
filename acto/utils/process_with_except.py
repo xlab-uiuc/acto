@@ -9,5 +9,5 @@ class MyProcess(Process):
     def run(self):
         try:
             super().run()
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             excepthook(*sys.exc_info())
