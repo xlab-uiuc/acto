@@ -113,12 +113,14 @@ class TestSemanticTests(unittest.TestCase):
                         curr_input_with_schema, field_path, testcase, setup=True
                     )
 
-                if not testcase.test_precondition(
-                    curr_input_with_schema.get_value_by_path(list(field_path))
-                ):
+                field_curr_value = curr_input_with_schema.get_value_by_path(
+                    list(field_path)
+                )
+                if not testcase.test_precondition(field_curr_value):
                     raise AssertionError(
                         "Test precondition failed after applying the test case"
                         f" {testcase} to the field {field_path_str}"
+                        f" current value: {field_curr_value}"
                     )
 
                 group.finish_testcase()

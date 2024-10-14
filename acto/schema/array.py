@@ -127,6 +127,10 @@ class ArraySchema(BaseSchema):
         num = 0
         if "size" in kwargs and kwargs["size"] is not None:
             num = kwargs["size"]
+        elif minimum:
+            num = self.min_items
+        else:
+            num = random.randint(self.min_items, self.max_items)
 
         if self.enum is not None:
             if exclude_value is not None:
@@ -145,10 +149,6 @@ class ArraySchema(BaseSchema):
 
         # XXX: need to handle exclude_value, but not important for now for array types
         result = []
-        if minimum:
-            num = self.min_items
-        else:
-            num = random.randint(self.min_items, self.max_items)
         for _ in range(num):
             result.append(self.item_schema.gen(minimum=minimum))
         return result
