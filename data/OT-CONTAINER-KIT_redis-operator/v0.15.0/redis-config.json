@@ -1,0 +1,59 @@
+{
+  "deploy": {
+    "steps": [            
+      {
+      "apply": {
+          "file": "https://github.com/cert-manager/cert-manager/releases/download/v1.15.3/cert-manager.yaml",
+          "namespace": null
+        }
+      },
+      {
+        "apply": {
+          "file": "https://raw.githubusercontent.com/OT-CONTAINER-KIT/redis-operator/master/config/crd/bases/redis.redis.opstreelabs.in_redisclusters.yaml"
+        }
+      },
+      {
+        "apply": {
+          "file": "https://raw.githubusercontent.com/OT-CONTAINER-KIT/redis-operator/master/config/crd/bases/redis.redis.opstreelabs.in_redissentinels.yaml"
+        }
+      },
+      {
+        "apply": {
+          "file": "https://raw.githubusercontent.com/OT-CONTAINER-KIT/redis-operator/master/config/crd/bases/redis.redis.opstreelabs.in_redis.yaml"
+        }
+      },
+      {
+        "apply": {
+          "file": "https://raw.githubusercontent.com/OT-CONTAINER-KIT/redis-operator/master/config/crd/bases/redis.redis.opstreelabs.in_redisreplications.yaml"
+        }
+      },
+      {
+        "apply": {
+          "file": "data/OT-CONTAINER-KIT/v0.15.0/manifest.yaml",
+          "operator": true
+        }
+      },
+      {
+        "apply": {
+            "file": "data/OT-CONTAINER-KIT_redis-operator/v0.15.0/redis-certs.yaml",
+            "namespace": "acto-namespace"
+        }
+      }
+    ]
+  },
+  "crd_name": "redisclusters.redis.redis.opstreelabs.in",
+  "seed_custom_resource": "data/OT-CONTAINER-KIT/rredis-cr.yaml",
+  "example_dir": "data/OT-CONTAINER-KIT/v0.15.0/examples",
+  "focus_fields": [
+    ["spec", "clusterSize"],
+    ["spec", "kubernetesConfig", "redisSecret"],
+    ["spec", "kubernetesConfig", "service"],
+    ["spec", "redisLeader", "replicas"],
+    ["spec", "redisLeader", "redisConfig"],
+    ["spec", "redisFollower", "replicas"],
+    ["spec", "redisFollower", "redisConfig"],
+    ["spec", "redisExporter", "enabled"],
+    ["spec", "redisFollower", "redisConfig"],
+    ["spec", "TLS"]
+  ]
+}
