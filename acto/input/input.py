@@ -18,7 +18,7 @@ from acto.common import is_subfield
 from acto.input import k8s_schemas, property_attribute
 from acto.input.get_matched_schemas import find_matched_schema
 from acto.input.test_generators.generator import get_testcases
-from acto.schema import BaseSchema
+from acto.schema import BaseSchema, BooleanSchema, IntegerSchema
 from acto.schema.schema import extract_schema
 from acto.utils import get_thread_logger
 

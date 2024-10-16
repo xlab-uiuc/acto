@@ -110,10 +110,11 @@ def get_deployment_name_from_yaml(fn: str) -> Optional[str]:
 
 def create_namespace(apiclient, name: str) -> V1Namespace:
     """Create a namespace in kubernetes"""
+    logger = get_thread_logger(with_prefix=False)
     corev1_api = kubernetes.client.CoreV1Api(apiclient)
     namespace = None
     try:
-        namespace = corev1Api.create_namespace(
+        namespace = corev1_api.create_namespace(
             V1Namespace(metadata=V1ObjectMeta(name=name))
         )
     except Exception as e:
