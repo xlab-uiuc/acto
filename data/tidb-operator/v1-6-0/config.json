@@ -1,0 +1,43 @@
+{
+    "deploy": {
+        "steps": [
+            {
+                "apply": {
+                    "file": "https://github.com/cert-manager/cert-manager/releases/download/v1.15.3/cert-manager.yaml",
+                    "namespace": null
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/tidb-operator/v1-6-0/crd.yaml",
+                    "namespace": null
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/tidb-operator/v1-6-0/manifest.yaml",
+                    "operator": true
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/tidb-operator/v1-6-0/tidb-certs.yaml",
+                    "namespace": null
+                }
+            }
+        ]
+    },
+    "crd_name": "tidbclusters.pingcap.com",
+    "seed_custom_resource": "data/tidb-operator/v1-6-0/cr.yaml",
+    "example_dir": "data/tidb-operator/v1-6-0/examples",
+    "custom_module": "data.tidb-operator.v1-6-0.custom_mapping",
+    "diff_ignore_fields": [
+        "\\['tidb\\.pingcap\\.com\\\/cluster\\-id'\\]",
+        "\\['tidb\\.pingcap\\.com\\\/member\\-id'\\]",
+        "\\['tidb\\.pingcap\\.com\\\/store\\-id'\\]",
+        "\\['tidb\\.pingcap\\.com\\\/owner\\-generation'\\]"
+    ],
+    "focus_fields": [
+        ["spec", "pd", "config"]
+    ]
+}
