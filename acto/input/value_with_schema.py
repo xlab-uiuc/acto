@@ -164,12 +164,12 @@ class ValueWithObjectSchema(ValueWithSchema):
             return None
         if len(path) == 0:
             return self.raw_value()
-        key = path.pop(0)
+        key = path[0]
         if key not in self.store:
             # path does not exist yet
             return None
         else:
-            return self.store[key].get_value_by_path(path)
+            return self.store[key].get_value_by_path(path[1:])
 
     def create_path(self, path: list):
         """Ensures the path exists"""
