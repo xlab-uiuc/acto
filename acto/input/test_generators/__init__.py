@@ -1,3 +1,4 @@
+from .configuration import *
 from .cron_job import *
 from .deployment import *
 from .generator import TEST_GENERATORS, get_testcases, test_generator

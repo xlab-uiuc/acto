@@ -20,6 +20,7 @@ from acto.input.get_matched_schemas import find_matched_schema
 from acto.input.test_generators.generator import get_testcases
 from acto.schema import BaseSchema, BooleanSchema, IntegerSchema
 from acto.schema.schema import extract_schema
+from acto.schema.under_specified import UnderSpecifiedSchema
 from acto.utils import get_thread_logger
 
 from .testcase import TestCase
@@ -32,6 +33,13 @@ class CustomKubernetesMapping(pydantic.BaseModel):
 
     schema_path: list[str]
     kubernetes_schema_name: str
+
+
+class CustomPropertySchemaMapping(pydantic.BaseModel):
+    """Class for specifying custom property schema"""
+
+    schema_path: list[str]
+    custom_schema: type[UnderSpecifiedSchema]
 
 
 class InputMetadata(pydantic.BaseModel):
@@ -226,6 +234,48 @@ class DeterministicInputModel(InputModel):
                             raise TypeError(
                                 "Expected CustomKubernetesMapping in KUBERNETES_TYPE_MAPPING, "
                                 f"but got {type(custom_mapping)}"
+                            )
+
+            if hasattr(custom_module, "CUSTOM_PROPERTY_SCHEMA_MAPPING"):
+                custom_property_schema_mapping = (
+                    custom_module.CUSTOM_PROPERTY_SCHEMA_MAPPING
+                )
+                if isinstance(custom_property_schema_mapping, list):
+                    for custom_mapping in custom_property_schema_mapping:
+                        if isinstance(
+                            custom_mapping, CustomPropertySchemaMapping
+                        ):
+                            try:
+                                schema = self.get_schema_by_path(
+                                    custom_mapping.schema_path
+                                )
+                                self.set_schema_by_path(
+                                    custom_mapping.schema_path,
+                                    custom_mapping.custom_schema.from_original_schema(
+                                        schema
+                                    ),
+                                )
+                                logger.info(
+                                    "Applying custom schema to property %s",
+                                    custom_mapping.schema_path,
+                                )
+                                schema = self.get_schema_by_path(
+                                    custom_mapping.schema_path
+                                )
+                                logger.info("Original schema: %s", type(schema))
+                                if issubclass(
+                                    type(schema), UnderSpecifiedSchema
+                                ):
+                                    print("is subclass")
+                            except KeyError as exc:
+                                raise RuntimeError(
+                                    "Schema path of the custom mapping is invalid: "
+                                    f"{custom_mapping.schema_path}"
+                                ) from exc
+                        else:
+                            raise TypeError(
+                                "Expected CustomPropertySchemaMapping in "
+                                f"CUSTOM_PROPERTY_SCHEMA_MAPPING, but got {type(custom_mapping)}"
                             )
 
         # Do the matching from CRD to Kubernetes schemas
@@ -529,6 +579,10 @@ class DeterministicInputModel(InputModel):
 
     def get_schema_by_path(self, path: list) -> BaseSchema:
         return reduce(operator.getitem, path, self.root_schema)  # type: ignore
+
+    def set_schema_by_path(self, path: list, schema: BaseSchema):
+        """Set the schema by path"""
+        reduce(operator.getitem, path[:-1], self.root_schema)[path[-1]] = schema  # type: ignore
 
     def get_all_schemas(self):
         """Get all the schemas as a list"""
