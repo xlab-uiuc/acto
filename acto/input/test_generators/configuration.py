@@ -40,7 +40,7 @@ def configuration_tests(schema: UnderSpecifiedSchema) -> list[TestCase]:
                 curr_value = value_with_schema.get_value_by_path(config_path)
                 value_with_schema.create_path(config_path)
                 new_value = config_test_case.mutator(curr_value)
-                value_with_schema.set_value_by_path(config_path, new_value)
+                value_with_schema.set_value_by_path(new_value, config_path)
                 return schema.encode(value_with_schema.raw_value())
 
             def config_setup(
@@ -54,7 +54,7 @@ def configuration_tests(schema: UnderSpecifiedSchema) -> list[TestCase]:
                     value_with_schema.get_value_by_path(config_path)
                 )
                 value_with_schema.create_path(config_path)
-                value_with_schema.set_value_by_path(config_path, new_value)
+                value_with_schema.set_value_by_path(new_value, config_path)
                 return schema.encode(value_with_schema.raw_value())
 
             config_test = TestCase(
