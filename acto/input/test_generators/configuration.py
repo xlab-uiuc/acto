@@ -6,8 +6,9 @@ from acto.input.test_generators.generator import (
     get_testcases,
     test_generator,
 )
-from acto.input.testcase import TestCase
+from acto.input.testcase import EnumTestCase, TestCase
 from acto.input.value_with_schema import attach_schema_to_value
+from acto.schema.boolean import BooleanSchema
 from acto.schema.under_specified import UnderSpecifiedSchema
 
 
@@ -19,6 +20,10 @@ def configuration_tests(schema: UnderSpecifiedSchema) -> list[TestCase]:
 
     for path, test_case_list in test_cases:
         for test_case in test_case_list:
+            if not isinstance(test_case, EnumTestCase) and not isinstance(
+                schema, BooleanSchema
+            ):
+                continue
 
             def config_precondition(
                 value: Any, config_path: list[str], config_test_case: TestCase

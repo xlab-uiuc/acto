@@ -1,4 +1,6 @@
+import builtins
 import json
+from typing import Any
 
 import tomlkit
 from typing_extensions import Self
@@ -8,11 +10,28 @@ from acto.schema.base import BaseSchema
 from acto.schema.under_specified import UnderSpecifiedSchema
 
 
+def eliminate_null(value: Any) -> Any:
+    """Eliminate null values from the dictionary"""
+    match type(value):
+        case builtins.dict:
+            new_value = {}
+            for key, val in value.items():
+                if val is not None:
+                    new_value[key] = eliminate_null(val)
+            return new_value
+        case builtins.list:
+            return [eliminate_null(item) for item in value if item is not None]
+        case _:
+            return value
+
+
 class PdConfigSchema(UnderSpecifiedSchema):
     """Under-specified schema for pd.config"""
 
     def encode(self, value: dict) -> str:
-        return tomlkit.dumps(value)
+        if value is None:
+            return None
+        return tomlkit.dumps(eliminate_null(value))
 
     def decode(self, value: str) -> dict:
         return tomlkit.loads(value)
