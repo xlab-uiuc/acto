@@ -1,4 +1,5 @@
 import dataclasses
+import functools
 from typing import Any, Callable, Optional, Union
 
 from acto.utils import get_thread_logger
@@ -65,8 +66,13 @@ class TestCase:
                 ret = ret and precondition(prev, self.store)
             else:
                 ret = ret and precondition(prev)
+            precondition_name = (
+                precondition.func.__name__
+                if isinstance(precondition, functools.partial)
+                else precondition.__name__
+            )
             logger.debug(
-                "Precondition [%s] Result [%s]", precondition.__name__, ret
+                "Precondition [%s] Result [%s]", precondition_name, ret
             )
 
         return ret
