@@ -1,14 +1,13 @@
 import functools
 from typing import Any
 
-from input.value_with_schema import attach_schema_to_value
-
 from acto.input.test_generators.generator import (
     Priority,
     get_testcases,
     test_generator,
 )
 from acto.input.testcase import TestCase
+from acto.input.value_with_schema import attach_schema_to_value
 from acto.schema.under_specified import UnderSpecifiedSchema
 
 
