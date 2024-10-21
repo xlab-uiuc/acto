@@ -54,6 +54,11 @@ class StringSchema(BaseSchema):
                 logger.debug("Loading example %s into %s", example, self.path)
                 self.examples.add(example)
             else:
+                if (
+                    self.raw_schema.get("x-kubernetes-preserve-unknown-fields")
+                    is True
+                ):
+                    return
                 raise TypeError(
                     f"Expected string, got {type(example)} for {self.path}"
                 )
