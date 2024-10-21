@@ -767,9 +767,9 @@ class TrialRunner:
         logger = get_thread_logger(with_prefix=True)
 
         logger.debug("Running delete")
-        success = runner.delete(generation=generation)
+        deletion_failed = runner.delete(generation=generation)
 
-        if not success:
+        if deletion_failed:
             return DeletionOracleResult(message="Deletion test case")
         else:
             return None

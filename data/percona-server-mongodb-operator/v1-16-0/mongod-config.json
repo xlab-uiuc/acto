@@ -1,0 +1,775 @@
+{
+    "type": "object",
+    "properties": {
+        "systemLog": {
+            "type": "object",
+            "properties": {
+                "verbosity": {
+                    "type": "integer",
+                    "default": 0,
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ],
+                    "description": "The default log message verbosity level for components. The verbosity level determines the amount of Informational and Debug messages MongoDB outputs. [The verbosity level can range from 0 to 5:0 is the MongoDB's default log verbosity level, to include Informational messages.1 to 5 increases the verbosity level to include Debug messages."
+                },
+                "quiet": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Run mongos or mongod in a quiet mode that attempts to limit the amount of output."
+                },
+                "traceAllExceptions": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Print verbose information for debugging. Use for additional logging for support-related troubleshooting."
+                },
+                "syslogFacility": {
+                    "type": "string",
+                    "default": "user",
+                    "enum": [
+                        "user",
+                        "local0"
+                    ],
+                    "description": "The facility level used when logging messages to syslog. The value you specify must be supported by your operating system's implementation of syslog. To use this option, you must set systemLog.destination to syslog."
+                },
+                "logAppend": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "When true, mongos or mongod appends new entries to the end of the existing log file when the instance restarts. Without this option, mongod or mongos backs up the existing log and create a new file."
+                },
+                "logRotate": {
+                    "type": "string",
+                    "default": "rename",
+                    "enum": [
+                        "rename",
+                        "reopen",
+                        "invalid"
+                    ],
+                    "description": "Determines the behavior for the logRotate command when rotating the server log and/or the audit log. Specify either rename or reopen"
+                },
+                "timeStampFormat": {
+                    "type": "string",
+                    "default": "iso8601-utc",
+                    "enum": [
+                        "iso8601-utc",
+                        "iso8601-local",
+                        "invalid"
+                    ],
+                    "description": "The time format for timestamps in log messages. Specify one of the following values:iso8601-utc Displays timestamps in Coordinated Universal Time (UTC) in the ISO-8601 format. For example, for New York at the start of the Epoch: 1970-01-01T00:00:00.000Ziso8601-local Displays timestamps in local time in the ISO-8601 format. For example, for New York at the start of the Epoch: 1969-12-31T19:00:00.000-05:00"
+                },
+                "component": {
+                    "type": "object",
+                    "properties": {
+                        "accessControl": {
+                            "type": "object",
+                            "properties": {
+                                "verbosity": {
+                                    "type": "integer",
+                                    "default": 0,
+                                    "enum": [
+                                        0,
+                                        1,
+                                        2
+                                    ],
+                                    "description": "The default log message verbosity level for components. The verbosity level determines the amount of Informational and Debug messages MongoDB outputs. [The verbosity level can range from 0 to 5:0 is the MongoDB's default log verbosity level, to include Informational messages.1 to 5 increases the verbosity level to include Debug messages."
+                                }
+                            },
+                            "description": ""
+                        },
+                        "command": {
+                            "type": "object",
+                            "properties": {
+                                "verbosity": {
+                                    "type": "integer",
+                                    "default": 0,
+                                    "enum": [
+                                        0,
+                                        1,
+                                        2
+                                    ],
+                                    "description": "The default log message verbosity level for components. The verbosity level determines the amount of Informational and Debug messages MongoDB outputs. [The verbosity level can range from 0 to 5:0 is the MongoDB's default log verbosity level, to include Informational messages.1 to 5 increases the verbosity level to include Debug messages."
+                                }
+                            },
+                            "description": ""
+                        },
+                        "control": {
+                            "type": "object",
+                            "properties": {
+                                "verbosity": {
+                                    "type": "integer",
+                                    "default": 0,
+                                    "enum": [
+                                        0,
+                                        1,
+                                        2
+                                    ],
+                                    "description": "The default log message verbosity level for components. The verbosity level determines the amount of Informational and Debug messages MongoDB outputs. [The verbosity level can range from 0 to 5:0 is the MongoDB's default log verbosity level, to include Informational messages.1 to 5 increases the verbosity level to include Debug messages."
+                                }
+                            },
+                            "description": ""
+                        },
+                        "ftdc": {
+                            "type": "object",
+                            "properties": {
+                                "verbosity": {
+                                    "type": "integer",
+                                    "default": 0,
+                                    "enum": [
+                                        0,
+                                        1,
+                                        2
+                                    ],
+                                    "description": "The default log message verbosity level for components. The verbosity level determines the amount of Informational and Debug messages MongoDB outputs. [The verbosity level can range from 0 to 5:0 is the MongoDB's default log verbosity level, to include Informational messages.1 to 5 increases the verbosity level to include Debug messages."
+                                }
+                            },
+                            "description": ""
+                        },
+                        "geo": {
+                            "type": "object",
+                            "properties": {
+                                "verbosity": {
+                                    "type": "integer",
+                                    "default": 0,
+                                    "enum": [
+                                        0,
+                                        1,
+                                        2
+                                    ],
+                                    "description": "The default log message verbosity level for components. The verbosity level determines the amount of Informational and Debug messages MongoDB outputs. [The verbosity level can range from 0 to 5:0 is the MongoDB's default log verbosity level, to include Informational messages.1 to 5 increases the verbosity level to include Debug messages."
+                                }
+                            },
+                            "description": ""
+                        },
+                        "index": {
+                            "type": "object",
+                            "properties": {
+                                "verbosity": {
+                                    "type": "integer",
+                                    "default": 0,
+                                    "enum": [
+                                        0,
+                                        1,
+                                        2
+                                    ],
+                                    "description": "The default log message verbosity level for components. The verbosity level determines the amount of Informational and Debug messages MongoDB outputs. [The verbosity level can range from 0 to 5:0 is the MongoDB's default log verbosity level, to include Informational messages.1 to 5 increases the verbosity level to include Debug messages."
+                                }
+                            },
+                            "description": ""
+                        },
+                        "network": {
+                            "type": "object",
+                            "properties": {
+                                "verbosity": {
+                                    "type": "integer",
+                                    "default": 0,
+                                    "enum": [
+                                        0,
+                                        1,
+                                        2
+                                    ],
+                                    "description": "The default log message verbosity level for components. The verbosity level determines the amount of Informational and Debug messages MongoDB outputs. [The verbosity level can range from 0 to 5:0 is the MongoDB's default log verbosity level, to include Informational messages.1 to 5 increases the verbosity level to include Debug messages."
+                                }
+                            },
+                            "description": ""
+                        },
+                        "query": {
+                            "type": "object",
+                            "properties": {
+                                "verbosity": {
+                                    "type": "integer",
+                                    "default": 0,
+                                    "enum": [
+                                        0,
+                                        1,
+                                        2
+                                    ],
+                                    "description": "The default log message verbosity level for components. The verbosity level determines the amount of Informational and Debug messages MongoDB outputs. [The verbosity level can range from 0 to 5:0 is the MongoDB's default log verbosity level, to include Informational messages.1 to 5 increases the verbosity level to include Debug messages."
+                                }
+                            },
+                            "description": ""
+                        },
+                        "queryStats": {
+                            "type": "object",
+                            "properties": {
+                                "verbosity": {
+                                    "type": "integer",
+                                    "default": 0,
+                                    "enum": [
+                                        0,
+                                        1,
+                                        2
+                                    ],
+                                    "description": "The default log message verbosity level for components. The verbosity level determines the amount of Informational and Debug messages MongoDB outputs. [The verbosity level can range from 0 to 5:0 is the MongoDB's default log verbosity level, to include Informational messages.1 to 5 increases the verbosity level to include Debug messages."
+                                }
+                            },
+                            "description": ""
+                        },
+                        "replication": {
+                            "type": "object",
+                            "properties": {
+                                "verbosity": {
+                                    "type": "integer",
+                                    "default": 0,
+                                    "enum": [
+                                        0,
+                                        1,
+                                        2
+                                    ],
+                                    "description": "The default log message verbosity level for components. The verbosity level determines the amount of Informational and Debug messages MongoDB outputs. [The verbosity level can range from 0 to 5:0 is the MongoDB's default log verbosity level, to include Informational messages.1 to 5 increases the verbosity level to include Debug messages."
+                                },
+                                "election": {
+                                    "type": "object",
+                                    "properties": {
+                                        "verbosity": {
+                                            "type": "integer",
+                                            "default": 0,
+                                            "enum": [
+                                                0,
+                                                1,
+                                                2
+                                            ],
+                                            "description": "The default log message verbosity level for components. The verbosity level determines the amount of Informational and Debug messages MongoDB outputs. [The verbosity level can range from 0 to 5:0 is the MongoDB's default log verbosity level, to include Informational messages.1 to 5 increases the verbosity level to include Debug messages."
+                                        }
+                                    },
+                                    "description": ""
+                                },
+                                "heartbeats": {
+                                    "type": "object",
+                                    "properties": {
+                                        "verbosity": {
+                                            "type": "integer",
+                                            "default": 0,
+                                            "enum": [
+                                                0,
+                                                1,
+                                                2
+                                            ],
+                                            "description": "The default log message verbosity level for components. The verbosity level determines the amount of Informational and Debug messages MongoDB outputs. [The verbosity level can range from 0 to 5:0 is the MongoDB's default log verbosity level, to include Informational messages.1 to 5 increases the verbosity level to include Debug messages."
+                                        }
+                                    },
+                                    "description": ""
+                                },
+                                "initialSync": {
+                                    "type": "object",
+                                    "properties": {
+                                        "verbosity": {
+                                            "type": "integer",
+                                            "default": 0,
+                                            "enum": [
+                                                0,
+                                                1,
+                                                2
+                                            ],
+                                            "description": "The default log message verbosity level for components. The verbosity level determines the amount of Informational and Debug messages MongoDB outputs. [The verbosity level can range from 0 to 5:0 is the MongoDB's default log verbosity level, to include Informational messages.1 to 5 increases the verbosity level to include Debug messages."
+                                        }
+                                    },
+                                    "description": ""
+                                },
+                                "rollback": {
+                                    "type": "object",
+                                    "properties": {
+                                        "verbosity": {
+                                            "type": "integer",
+                                            "default": 0,
+                                            "enum": [
+                                                0,
+                                                1,
+                                                2
+                                            ],
+                                            "description": "The default log message verbosity level for components. The verbosity level determines the amount of Informational and Debug messages MongoDB outputs. [The verbosity level can range from 0 to 5:0 is the MongoDB's default log verbosity level, to include Informational messages.1 to 5 increases the verbosity level to include Debug messages."
+                                        }
+                                    },
+                                    "description": ""
+                                }
+                            },
+                            "description": ""
+                        },
+                        "sharding": {
+                            "type": "object",
+                            "properties": {
+                                "verbosity": {
+                                    "type": "integer",
+                                    "default": 0,
+                                    "enum": [
+                                        0,
+                                        1,
+                                        2
+                                    ],
+                                    "description": "The default log message verbosity level for components. The verbosity level determines the amount of Informational and Debug messages MongoDB outputs. [The verbosity level can range from 0 to 5:0 is the MongoDB's default log verbosity level, to include Informational messages.1 to 5 increases the verbosity level to include Debug messages."
+                                }
+                            },
+                            "description": ""
+                        },
+                        "storage": {
+                            "type": "object",
+                            "properties": {
+                                "verbosity": {
+                                    "type": "integer",
+                                    "default": 0,
+                                    "enum": [
+                                        0,
+                                        1,
+                                        2
+                                    ],
+                                    "description": "The default log message verbosity level for components. The verbosity level determines the amount of Informational and Debug messages MongoDB outputs. [The verbosity level can range from 0 to 5:0 is the MongoDB's default log verbosity level, to include Informational messages.1 to 5 increases the verbosity level to include Debug messages."
+                                },
+                                "journal": {
+                                    "type": "object",
+                                    "properties": {
+                                        "verbosity": {
+                                            "type": "integer",
+                                            "default": 0,
+                                            "enum": [
+                                                0,
+                                                1,
+                                                2
+                                            ],
+                                            "description": "The default log message verbosity level for components. The verbosity level determines the amount of Informational and Debug messages MongoDB outputs. [The verbosity level can range from 0 to 5:0 is the MongoDB's default log verbosity level, to include Informational messages.1 to 5 increases the verbosity level to include Debug messages."
+                                        }
+                                    },
+                                    "description": ""
+                                },
+                                "recovery": {
+                                    "type": "object",
+                                    "properties": {
+                                        "verbosity": {
+                                            "type": "integer",
+                                            "default": 0,
+                                            "enum": [
+                                                0,
+                                                1,
+                                                2
+                                            ],
+                                            "description": "The default log message verbosity level for components. The verbosity level determines the amount of Informational and Debug messages MongoDB outputs. [The verbosity level can range from 0 to 5:0 is the MongoDB's default log verbosity level, to include Informational messages.1 to 5 increases the verbosity level to include Debug messages."
+                                        }
+                                    },
+                                    "description": ""
+                                },
+                                "wt": {
+                                    "type": "object",
+                                    "properties": {
+                                        "verbosity": {
+                                            "type": "integer",
+                                            "default": 0,
+                                            "enum": [
+                                                0,
+                                                1,
+                                                2
+                                            ],
+                                            "description": "The default log message verbosity level for components. The verbosity level determines the amount of Informational and Debug messages MongoDB outputs. [The verbosity level can range from 0 to 5:0 is the MongoDB's default log verbosity level, to include Informational messages.1 to 5 increases the verbosity level to include Debug messages."
+                                        },
+                                        "wtBackup": {
+                                            "type": "object",
+                                            "properties": {
+                                                "verbosity": {
+                                                    "type": "integer",
+                                                    "default": 0,
+                                                    "enum": [
+                                                        0,
+                                                        1,
+                                                        2
+                                                    ],
+                                                    "description": "The default log message verbosity level for components. The verbosity level determines the amount of Informational and Debug messages MongoDB outputs. [The verbosity level can range from 0 to 5:0 is the MongoDB's default log verbosity level, to include Informational messages.1 to 5 increases the verbosity level to include Debug messages."
+                                                }
+                                            },
+                                            "description": ""
+                                        },
+                                        "wtCheckpoint": {
+                                            "type": "object",
+                                            "properties": {
+                                                "verbosity": {
+                                                    "type": "integer",
+                                                    "default": -1,
+                                                    "enum": [
+                                                        -1,
+                                                        1,
+                                                        2
+                                                    ],
+                                                    "description": "The default log message verbosity level for components. The verbosity level determines the amount of Informational and Debug messages MongoDB outputs. [The verbosity level can range from 0 to 5:0 is the MongoDB's default log verbosity level, to include Informational messages.1 to 5 increases the verbosity level to include Debug messages."
+                                                }
+                                            },
+                                            "description": ""
+                                        }
+                                    },
+                                    "description": ""
+                                }
+                            },
+                            "description": ""
+                        }
+                    },
+                    "description": ""
+                }
+            },
+            "description": ""
+        },
+        "processManagement": {
+            "type": "object",
+            "properties": {
+                "fork": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable a daemon mode that runs the mongos or mongod process in the background. By default mongos or mongod does not run as a daemon. To use mongos or mongod as a daemon, set processManagement.fork or use a controlling process that handles the daemonization process (for example, systemd)."
+                },
+                "timeZoneInfo": {
+                    "type": "string",
+                    "default": "/usr/share/zoneinfo",
+                    "enum": [
+                        "/usr/share/zoneinfo",
+                        "invalid"
+                    ],
+                    "description": "The full path from which to load the time zone database. If this option is not provided, then MongoDB uses its built-in time zone database."
+                }
+            },
+            "description": ""
+        },
+        "net": {
+            "type": "object",
+            "properties": {
+                "port": {
+                    "type": "integer",
+                    "default": 27017,
+                    "enum": [
+                        27017,
+                        27018,
+                        80
+                    ],
+                    "description": "The TCP port on which the MongoDB instance listens for client connections.Default:27017 for mongod (if not a shard member or a config server member) or mongos instance27018 if mongod is a shard member27019 if mongod is a config server member"
+                },
+                "bindIp": {
+                    "type": "string",
+                    "default": "localhost",
+                    "enum": [
+                        "localhost",
+                        "/tmp/mongod.sock"
+                    ],
+                    "description": "The hostnames and/or IP addresses and/or full Unix domain socket paths on which mongos or mongod should listen for client connections. You may attach mongos or mongod to any interface. To bind to multiple addresses, enter a list of comma-separated values.example: localhost,/tmp/mongod.sock"
+                },
+                "bindIpAll": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "If true, the mongos or mongod instance binds to all IPv4 addresses (i.e. 0.0.0.0). If mongos or mongod starts with net.ipv6 : true, net.bindIpAll also binds to all IPv6 addresses (i.e. ::)."
+                },
+                "maxIncomingConnections": {
+                    "type": "integer",
+                    "default": 65536,
+                    "enum": [
+                        65536,
+                        2147483647,
+                        1
+                    ],
+                    "description": "The maximum number of simultaneous connections that mongos or mongod accepts. This setting has no effect if it is higher than your operating system's configured maximum connection tracking threshold."
+                },
+                "wireObjectCheck": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "When true, the mongod or mongos instance validates all requests from clients upon receipt to prevent clients from inserting malformed or invalid BSON into a MongoDB database."
+                },
+                "ipv6": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Set net.ipv6 to true to enable IPv6 support. mongos/mongod disables IPv6 support by default."
+                },
+                "unixDomainSocket": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean",
+                            "default": true,
+                            "description": "Enable or disable listening on the UNIX domain socket. net.unixDomainSocket.enabled applies only to Unix-based systems."
+                        },
+                        "pathPrefix": {
+                            "type": "string",
+                            "default": "/tmp",
+                            "enum": [
+                                "/tmp",
+                                "/var/tmp"
+                            ],
+                            "description": "The path for the UNIX socket. net.unixDomainSocket.pathPrefix applies only to Unix-based systems."
+                        },
+                        "filePermissions": {
+                            "type": "integer",
+                            "default": 700,
+                            "enum": [
+                                700,
+                                755
+                            ],
+                            "description": "Sets the permission for the UNIX domain socket file."
+                        }
+                    },
+                    "description": ""
+                },
+                "tls": {
+                    "type": "object",
+                    "properties": {
+                        "mode": {
+                            "type": "string",
+                            "default": "allowTLS",
+                            "enum": [
+                                "allowTLS",
+                                "preferTLS",
+                                "requireTLS"
+                            ],
+                            "description": "Enables TLS used for all network connections. The argument to the net.tls.mode setting can be one of the following:disabled: TLS is disabled.allowTLS: Connections between servers do not use TLS. For incoming connections, the server accepts both TLS and non-TLS.preferTLS: Connections between servers use TLS. For incoming connections, the server accepts both TLS and non-TLS.requireTLS: Connections between servers use TLS. For incoming connections, the server only accepts connections using TLS."
+                        },
+                        "allowConnectionsWithoutCertificates": {
+                            "type": "boolean",
+                            "default": false,
+                            "description": "If false, all clients must provide client TLS certificates. If true, clients don't need to provide client certificates, but mongod or mongos encrypts the TLS/SSL connection."
+                        },
+                        "allowInvalidCertificates": {
+                            "type": "boolean",
+                            "default": false,
+                            "description": "Enable or disable the validation checks for TLS certificates on other servers in the cluster and allows the use of invalid certificates to connect."
+                        },
+                        "allowInvalidHostnames": {
+                            "type": "boolean",
+                            "default": false,
+                            "description": "When net.tls.allowInvalidHostnames is true, MongoDB disables the validation of the hostnames in TLS certificates. This allows mongod or mongos to connect to other MongoDB instances in the cluster, even if the hostname of their certificates does not match the specified hostname."
+                        },
+                        "disabledProtocols": {
+                            "type": "string",
+                            "default": "TLS1_0,TLS1_1",
+                            "enum": [
+                                "TLS1_0,TLS1_1",
+                                "TLS1_0,TLS1_1,TLS1_2",
+                                "TLS1_0"
+                            ],
+                            "description": "net.tls.disabledProtocols recognizes the following protocols: TLS1_0, TLS1_1, TLS1_2, and TLS1_3."
+                        },
+                        "FIPSMode": {
+                            "type": "boolean",
+                            "default": false,
+                            "description": "Enable or disable the use of the FIPS mode of the TLS library for the mongos or mongod. Your system must have a FIPS compliant library to use the net.tls.FIPSMode option."
+                        },
+                        "logVersions": {
+                            "type": "string",
+                            "default": "TLS1_2,TLS1_3",
+                            "enum": [
+                                "TLS1_2,TLS1_3",
+                                "TLS1_0,TLS1_1,TLS1_2",
+                                "TLS1_0"
+                            ],
+                            "description": "Instructs mongos or mongod to log a message when a client connects using a specified TLS version."
+                        },
+                        "clusterAuthX509": {
+                            "type": "object",
+                            "properties": {},
+                            "description": ""
+                        }
+                    },
+                    "description": ""
+                },
+                "compression": {
+                    "type": "object",
+                    "properties": {
+                        "compressors": {
+                            "type": "string",
+                            "default": "snappy,zstd,zlib",
+                            "enum": [
+                                "snappy,zstd,zlib",
+                                "snappy,zlib"
+                            ],
+                            "description": "Specifies the default compressor(s) to use for communication between this mongod or mongos instance and:- other members of the deployment if the instance is part of a replica set or a sharded cluster- mongosh- drivers that support the OP_COMPRESSED message format."
+                        }
+                    },
+                    "description": ""
+                }
+            },
+            "description": ""
+        },
+        "storage": {
+            "type": "object",
+            "properties": {
+                "dbPath": {
+                    "type": "string",
+                    "default": "/data/db",
+                    "enum": [
+                        "/data/db",
+                        "/var/lib/mongodb"
+                    ],
+                    "description": "The directory where the mongod instance stores its data."
+                },
+                "directoryPerDB": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "When true, MongoDB uses a separate directory to store data for each database. The directories are under the storage.dbPath directory, and each subdirectory name corresponds to the database name."
+                },
+                "syncPeriodSecs": {
+                    "type": "integer",
+                    "default": 60,
+                    "enum": [
+                        60,
+                        300
+                    ],
+                    "description": "The amount of time that can pass before MongoDB flushes data to the data files."
+                },
+                "engine": {
+                    "type": "string",
+                    "default": "wiredTiger",
+                    "enum": [
+                        "wiredTiger",
+                        "inMemory"
+                    ],
+                    "description": "The storage engine for the mongod database. Available values include:wiredTigerinMemory"
+                },
+                "oplogMinRetentionHours": {
+                    "type": "integer",
+                    "default": 0,
+                    "enum": [
+                        0,
+                        1
+                    ],
+                    "description": "Specifies the minimum number of hours to preserve an oplog entry, where the decimal values represent the fractions of an hour. For example, a value of 1.5 represents one hour and thirty minutes.The value must be greater than or equal to 0. A value of 0 indicates that the mongod should truncate the oplog starting with the oldest entries to maintain the configured maximum oplog size."
+                },
+                "wiredTiger": {
+                    "type": "object",
+                    "properties": {
+                        "engineConfig": {
+                            "type": "object",
+                            "properties": {
+                                "zstdCompressionLevel": {
+                                    "type": "integer",
+                                    "default": 6,
+                                    "enum": [
+                                        6,
+                                        1
+                                    ],
+                                    "description": ""
+                                }
+                            },
+                            "description": "Specifies the level of compression applied when using the zstd compressor.Values can range from 1 to 22.Only applicable when blockCompressor is set to zstd."
+                        },
+                        "collectionConfig": {
+                            "type": "object",
+                            "properties": {
+                                "blockCompressor": {
+                                    "type": "string",
+                                    "default": "snappy",
+                                    "enum": [
+                                        "snappy",
+                                        "zlib",
+                                        "zstd"
+                                    ],
+                                    "description": ""
+                                }
+                            },
+                            "description": "Specifies the default compression for collection data. You can override this on a per-collection basis when creating collections.Available compressors are:nonesnappyzlibzstd"
+                        },
+                        "indexConfig": {
+                            "type": "object",
+                            "properties": {
+                                "prefixCompression": {
+                                    "type": "boolean",
+                                    "default": true,
+                                    "description": ""
+                                }
+                            },
+                            "description": "Enables or disables prefix compression for index data."
+                        }
+                    },
+                    "description": ""
+                },
+                "inmemory": {
+                    "type": "object",
+                    "properties": {
+                        "engineConfig": {
+                            "type": "object",
+                            "properties": {
+                                "inMemorySizeGB": {
+                                    "type": "integer",
+                                    "default": 1,
+                                    "enum": [
+                                        1,
+                                        2
+                                    ],
+                                    "description": ""
+                                }
+                            },
+                            "description": ""
+                        }
+                    },
+                    "description": ""
+                },
+                "journal": {
+                    "type": "object",
+                    "properties": {
+                        "commitIntervalMs": {
+                            "type": "integer",
+                            "default": 100,
+                            "enum": [
+                                100,
+                                50
+                            ],
+                            "description": "The maximum amount of time in milliseconds that the mongod process allows between journal operations. Values can range from 1 to 500 milliseconds. Lower values increase the durability of the journal, at the expense of disk performance."
+                        }
+                    },
+                    "description": ""
+                }
+            },
+            "description": ""
+        },
+        "operationProfiling": {
+            "type": "object",
+            "properties": {
+                "mode": {
+                    "type": "string",
+                    "default": "off",
+                    "enum": [
+                        "off",
+                        "slowOp",
+                        "all"
+                    ],
+                    "description": "Specifies which operations should be profiled. The following profiler levels are available:off - No operations are profiled.slowOp - Only slow operations are profiled.all - All operations are profiled."
+                },
+                "slowOpThresholdMs": {
+                    "type": "integer",
+                    "default": 100,
+                    "enum": [
+                        100,
+                        50
+                    ],
+                    "description": "The slow operation time threshold, in milliseconds. Operations that run for longer than this threshold are considered slow."
+                },
+                "slowOpSampleRate": {
+                    "type": "number",
+                    "default": 1.0,
+                    "enum": [
+                        1.0,
+                        0.5
+                    ],
+                    "description": "The fraction of slow operations that should be profiled or logged. operationProfiling.slowOpSampleRate accepts values between 0 and 1, inclusive."
+                }
+            },
+            "description": ""
+        },
+        "replication": {
+            "type": "object",
+            "properties": {
+                "oplogSizeMB": {
+                    "type": "integer",
+                    "default": 5,
+                    "enum": [
+                        5,
+                        10
+                    ],
+                    "description": "The maximum size in megabytes for the oplog. The oplogSizeMB setting configures the uncompressed size of the oplog, not the size on disk."
+                },
+                "replSetName": {
+                    "type": "string",
+                    "default": "rs0",
+                    "enum": [
+                        "rs0"
+                    ],
+                    "description": "The name of the replica set that the mongod is part of. All hosts in the replica set must have the same set name."
+                },
+                "readConcernMajority": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Configures support for \"majority\" read concern."
+                }
+            },
+            "description": ""
+        }
+    }
+}

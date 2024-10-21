@@ -263,10 +263,6 @@ class DeterministicInputModel(InputModel):
                                     custom_mapping.schema_path
                                 )
                                 logger.info("Original schema: %s", type(schema))
-                                if issubclass(
-                                    type(schema), UnderSpecifiedSchema
-                                ):
-                                    print("is subclass")
                             except KeyError as exc:
                                 raise RuntimeError(
                                     "Schema path of the custom mapping is invalid: "
