@@ -2,7 +2,7 @@ import builtins
 import json
 from typing import Any
 
-import tomlkit
+import yaml
 from typing_extensions import Self
 
 from acto.input.input import CustomPropertySchemaMapping
@@ -31,10 +31,10 @@ class MongodConfigSchema(UnderSpecifiedSchema):
     def encode(self, value: dict) -> str:
         if value is None:
             return None
-        return tomlkit.dumps(eliminate_null(value))
+        return yaml.dump(eliminate_null(value))
 
     def decode(self, value: str) -> dict:
-        return tomlkit.loads(value)
+        return yaml.safe_load(value)
 
     @classmethod
     def from_original_schema(cls, original_schema: BaseSchema) -> Self:
