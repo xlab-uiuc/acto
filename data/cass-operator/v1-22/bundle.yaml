@@ -219,10 +219,10 @@ spec:
                 minLength: 2
                 type: string
               config:
-                description: |-
-                  Config is a map of configuration options that will be applied to the Cassandra
-                  nodes. The map is expected to be in the following format:
-                type: object
+                description: Config for the server, in YAML format
+                format: byte
+                type: string
+                x-kubernetes-preserve-unknown-fields: true
               configBuilderImage:
                 description: Container image for the config builder init container.
                   Overrides value from ImageConfig ConfigBuilderImage
