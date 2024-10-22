@@ -46,6 +46,12 @@ class CassandraConfigSchema(UnderSpecifiedSchema):
             original_schema.path, original_schema.raw_schema, config_schema
         )
 
+    def __getitem__(self, key):
+        return self.underlying_schema[key]
+
+    def __setitem__(self, key, value):
+        self.underlying_schema[key] = value
+
 
 CUSTOM_PROPERTY_SCHEMA_MAPPING = [
     CustomPropertySchemaMapping(
