@@ -15,11 +15,6 @@ from .thread_logger import get_thread_logger
 def get_existing_images(worker_list: list[str]) -> set[str]:
     """Get existing images from pods"""
     existing_images = set()
-
-
-def get_existing_images(worker_list: list[str]) -> set[str]:
-    """Get existing images from pods"""
-    existing_images = set()
     for worker in worker_list:
         p = subprocess.run(
             [
@@ -127,11 +122,6 @@ def process_crd(
         crd_data = {
             "group": helper_crd_doc["spec"]["group"],
             "plural": helper_crd_doc["spec"]["names"]["plural"],
-            "version": (
-                helper_crd_doc["spec"]["versions"][-1]["name"]
-                if crd_version is None
-                else crd_version
-            ),
             "version": (
                 helper_crd_doc["spec"]["versions"][-1]["name"]
                 if crd_version is None
