@@ -12,6 +12,7 @@ from typing import Optional, Tuple
 
 import pydantic
 import yaml
+from schema.opaque import OpaqueSchema
 
 from acto import DEFAULT_KUBERNETES_VERSION
 from acto.common import is_subfield
@@ -249,25 +250,24 @@ class DeterministicInputModel(InputModel):
                                 schema = self.get_schema_by_path(
                                     custom_mapping.schema_path
                                 )
-                                self.set_schema_by_path(
-                                    custom_mapping.schema_path,
-                                    custom_mapping.custom_schema.from_original_schema(
-                                        schema
-                                    ),
-                                )
-                                logger.info(
-                                    "Applying custom schema to property %s",
+                            except KeyError:
+                                logger.warning(
+                                    "Specified schema path does not exist: %s, using opaque schema",
                                     custom_mapping.schema_path,
                                 )
-                                schema = self.get_schema_by_path(
-                                    custom_mapping.schema_path
+                                schema = OpaqueSchema(
+                                    custom_mapping.schema_path, {}
                                 )
-                                logger.info("Original schema: %s", type(schema))
-                            except KeyError as exc:
-                                raise RuntimeError(
-                                    "Schema path of the custom mapping is invalid: "
-                                    f"{custom_mapping.schema_path}"
-                                ) from exc
+                            self.set_schema_by_path(
+                                custom_mapping.schema_path,
+                                custom_mapping.custom_schema.from_original_schema(
+                                    schema
+                                ),
+                            )
+                            logger.info(
+                                "Applying custom schema to property %s",
+                                custom_mapping.schema_path,
+                            )
                         else:
                             raise TypeError(
                                 "Expected CustomPropertySchemaMapping in "

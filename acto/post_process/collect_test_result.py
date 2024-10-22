@@ -35,9 +35,9 @@ class CollectTestResult(PostProcessor):
                 )
             with open(result_file, "r", encoding="utf-8") as file:
                 results = json.load(file)
-                self.diff_test_results[
-                    input_digest
-                ] = DifferentialOracleResult.model_validate(results[0])
+                self.diff_test_results[input_digest] = (
+                    DifferentialOracleResult.model_validate(results[0])
+                )
 
     def post_process(self, output_path: str):
         """Post process the results"""
@@ -64,6 +64,7 @@ class CollectTestResult(PostProcessor):
                         "Differential": str(
                             step.run_result.oracle_result.differential
                         ),
+                        "Deletion": step.run_result.oracle_result.deletion,
                         "Custom": step.run_result.oracle_result.custom,
                     }
                 )
@@ -79,6 +80,7 @@ class CollectTestResult(PostProcessor):
                     "Operator log": None,
                     "Consistency": None,
                     "Differential": str(result),
+                    "Deletion": None,
                     "Custom": None,
                 }
             )
