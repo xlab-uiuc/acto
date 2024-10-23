@@ -1,4 +1,5 @@
 import functools
+import operator
 from typing import Any
 
 from acto.input.test_generators.generator import (
@@ -20,8 +21,11 @@ def configuration_tests(schema: UnderSpecifiedSchema) -> list[TestCase]:
 
     for path, test_case_list in test_cases:
         for test_case in test_case_list:
+            test_schema = functools.reduce(
+                operator.getitem, path, schema.underlying_schema
+            )
             if not isinstance(test_case, EnumTestCase) and not isinstance(
-                schema, BooleanSchema
+                test_schema, BooleanSchema
             ):
                 continue
 
