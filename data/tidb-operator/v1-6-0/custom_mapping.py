@@ -39,7 +39,7 @@ class TiDBConfigSchema(UnderSpecifiedSchema):
     @classmethod
     def from_original_schema(cls, original_schema: BaseSchema) -> Self:
         with open(
-            "data/tidb-operator/v1-6-0/pd==tidb_config.json",
+            "data/tidb-operator/v1-6-0/tidb_config.json",
             "r",
             encoding="utf-8",
         ) as file:
