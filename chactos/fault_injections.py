@@ -488,8 +488,11 @@ class ChactosTrialWorker:
 
                 logger.debug("Looping on inner steps")
                 while steps:
+                    # TODO: add policy 1 here
+
                     step_key = steps[0]
                     step = trial.steps[step_key]
+                    failure_types = list(failure.keys())[0]
 
                     if (
                         step.run_result.is_invalid_input()
@@ -500,88 +503,172 @@ class ChactosTrialWorker:
 
                     failures_to_clean_up: list[Failure] = []
 
-                    try:
-                        failure_types = list(failure.keys())[0]
-                        logger.debug("Injecting %s failure NOW", failure_types)
+                    # We need to dynamically select pods to inject faults
+                    # Selecting pods to inject faults
+                    priority_pod_names = set()
+                    normal_pod_names = set()
 
-                        # We need to dynamically select pods to inject faults
-                        # Selecting pods to inject faults
-                        priority_pod_names = set()
-                        normal_pod_names = set()
-
-                        if self._priority_pod_selector is not None:
-                            # TODO: only support labelSelector right now
-                            priority_label_selector = build_label_selector(
-                                self._priority_pod_selector["labelSelectors"]
-                            )
-                            priority_pods = core_v1_api.list_namespaced_pod(
-                                namespace=self._context["namespace"],
-                                watch=False,
-                                label_selector=priority_label_selector,
-                            ).items
-
-                            for pod in priority_pods:
-                                priority_pod_names.add(pod.metadata.name)
-
-                        normal_selection_label = build_label_selector(
-                            self._pod_selector["labelSelectors"]
+                    if self._priority_pod_selector is not None:
+                        # TODO: only support labelSelector right now
+                        priority_label_selector = build_label_selector(
+                            self._priority_pod_selector["labelSelectors"]
                         )
-                        normal_pods = core_v1_api.list_namespaced_pod(
+                        priority_pods = core_v1_api.list_namespaced_pod(
                             namespace=self._context["namespace"],
                             watch=False,
-                            label_selector=normal_selection_label,
+                            label_selector=priority_label_selector,
                         ).items
-                        for pod in normal_pods:
-                            normal_pod_names.add(pod.metadata.name)
-                        num_total_pods = len(
-                            priority_pod_names | normal_pod_names
+
+                        for pod in priority_pods:
+                            priority_pod_names.add(pod.metadata.name)
+
+                    normal_selection_label = build_label_selector(
+                        self._pod_selector["labelSelectors"]
+                    )
+                    normal_pods = core_v1_api.list_namespaced_pod(
+                        namespace=self._context["namespace"],
+                        watch=False,
+                        label_selector=normal_selection_label,
+                    ).items
+                    for pod in normal_pods:
+                        normal_pod_names.add(pod.metadata.name)
+                    num_total_pods = len(
+                        priority_pod_names | normal_pod_names
+                    )
+
+                    match failure_types:
+                        case "pod-failure":
+                            pod_failure_ratio = float(
+                                list(failure.values())[0]
+                            )
+                            logger.debug(
+                                "Injection ratio is %s", pod_failure_ratio
+                            )
+
+                            num_pods_to_fail = ceil(
+                                num_total_pods * pod_failure_ratio
+                            )
+                            selected_pods = select_pods(
+                                priority_pod_names,
+                                normal_pod_names,
+                                num_pods_to_fail,
+                            )
+
+                            logger.debug(
+                                "List of pods to inject: [%s]",
+                                selected_pods,
+                            )
+
+                            # TODO: rename failure index to failure suffix?
+                            pod_failure = PodFailure(
+                                selector={
+                                    "pods": {
+                                        self._context[
+                                            "namespace"
+                                        ]: selected_pods
+                                    },
+                                    "namespaces": [
+                                        self._context["namespace"]
+                                    ],
+                                },
+                                namespace=self._context["namespace"],
+                                failure_ratio=int(pod_failure_ratio * 100),
+                                failure_index=0,
+                            )
+
+                            failures_to_clean_up.append(pod_failure)
+                        case _:
+                            logger.error("Unrecognized type of fault!")
+
+                    logger.debug("Collecting *steady* system state before fault injection")
+                    steady_system_state = runner.collect_system_state()                    
+
+                    try: 
+                        logger.debug("Injecting %s failure before any CR (policy 1)", failure_types)
+                        pod_failure.apply(kubectl_client)
+                    except subprocess.TimeoutExpired:
+                        logger.warning("Timeout in applying failure.")
+                        logger.warning(
+                            "Current steps: [%s]", sorted(trial.steps.keys())
                         )
 
-                        match failure_types:
-                            case "pod-failure":
-                                pod_failure_ratio = float(
-                                    list(failure.values())[0]
-                                )
-                                logger.debug(
-                                    "Injection ratio is %s", pod_failure_ratio
-                                )
+                    logger.debug("Waiting for system to converge for the first failure")
+                    wait_for_converge(
+                        api_client, self._context["namespace"], hard_timeout=180
+                    )
 
-                                num_pods_to_fail = ceil(
-                                    num_total_pods * pod_failure_ratio
-                                )
-                                selected_pods = select_pods(
-                                    priority_pod_names,
-                                    normal_pod_names,
-                                    num_pods_to_fail,
-                                )
+                    logger.debug("System converged, now lifting failure")
+                    pod_failure.cleanup(kubectl_client)
 
-                                logger.debug(
-                                    "List of pods to inject: [%s]",
-                                    selected_pods,
-                                )
+                    logger.debug("Waiting for cleanup to converge")
+                    wait_for_converge(
+                        api_client, self._context["namespace"], wait_time=120
+                    )
 
-                                # TODO: rename failure index to failure suffix?
-                                pod_failure = PodFailure(
-                                    selector={
-                                        "pods": {
-                                            self._context[
-                                                "namespace"
-                                            ]: selected_pods
-                                        },
-                                        "namespaces": [
-                                            self._context["namespace"]
-                                        ],
-                                    },
-                                    namespace=self._context["namespace"],
-                                    failure_ratio=int(pod_failure_ratio * 100),
-                                    failure_index=0,
-                                )
+                    logger.debug("Collecting *post-fault-injection* system state before fault injection")
+                    steady_system_state = runner.collect_system_state() 
+                    post_fault_system_state = runner.collect_system_state()
 
-                                failures_to_clean_up.append(pod_failure)
+                    post_fault_oracle_results = OracleResults()
 
-                                pod_failure.apply(kubectl_client)
-                            case _:
-                                logger.error("Unrecognized type of fault!")
+                    logger.debug("Diffing steady state and post fault state")
+                    diff_result = post_diff_test.compare_system_equality(
+                        steady_system_state,
+                        post_fault_system_state,
+                        additional_exclude_paths=self._diff_exclude_paths,
+                    )
+
+                    # FIXME: this new dir is for the case if steady state FI gets overwritten by actual FI if both have oracle
+                    post_steady_fault_fi_trial_dir = os.path.join(fi_trial_dir, "post-steady-fault")
+                    if diff_result:
+                        post_fault_oracle_results.differential = DifferentialOracleResult(
+                            message="failed attempt recovering to *steady* system state - system state diff",
+                            diff=diff_result,
+                            from_step=StepID(
+                                trial=post_steady_fault_fi_trial_dir,
+                                generation=inner_steps_generation,
+                            ),
+                            from_state=steady_system_state,
+                            to_step=StepID(
+                                trial=post_steady_fault_fi_trial_dir,
+                                generation=inner_steps_generation,
+                            ),
+                            to_state=post_fault_system_state,
+                        )
+                    deprecated_system_state = (
+                        KubernetesSystemState.from_api_client(
+                            api_client=api_client,
+                            namespace=self._context["namespace"],
+                        )
+                    )
+
+                    health = deprecated_system_state.check_health()
+                    if not health.is_healthy():
+                        logger.error("System is not healthy %s post fault", health)
+                        post_fault_oracle_results.health = OracleResult(
+                            message=str(health)
+                        )
+                    
+                    post_fault_run_result = RunResult(
+                        testcase={
+                            "original_trial": trial_name,
+                            "original_step": step_key,
+                        },
+                        step_id=StepID(
+                            trial=post_steady_fault_fi_trial_dir,
+                            generation=inner_steps_generation,
+                        ),
+                        oracle_result=oracle_results,
+                        cli_status=check_kubectl_cli(chactos_snapshot),
+                        is_revert=False,
+                    )
+                    post_fault_run_result.dump(post_steady_fault_fi_trial_dir)
+
+                    logger.debug("Fault injection on steady state completed, now onto normal fault injection")
+
+                    try: 
+                        logger.debug("Injecting %s failure", failure_types)
+                        pod_failure.apply(kubectl_client)
                     except subprocess.TimeoutExpired:
                         logger.warning("Timeout in applying failure.")
                         logger.warning(
@@ -602,7 +689,7 @@ class ChactosTrialWorker:
                     )
 
                     for f in failures_to_clean_up:
-                        logger.debug("Clearning up failure %s", f.name())
+                        logger.debug("Cleaning up failure %s", f.name())
                         f.cleanup(kubectl_client)
 
                     logger.debug("Waiting for cleanup to converge")
