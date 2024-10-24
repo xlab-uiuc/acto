@@ -1,30 +1,4 @@
 {
-    "deploy": {
-        "steps": [
-            {
-                "apply": {
-                    "file": "data/cass-operator/v1.22/cert-manager.yaml",
-                    "namespace": null
-                }
-            },
-            {
-                "wait": {
-                    "duration": 10
-                }
-            },
-            {
-                "apply": {
-                    "file": "data/cass-operator/v1.22/bundle.yaml",
-                    "operator": true
-                }
-            },
-            {
-                "apply": {
-                    "file": "data/cass-operator/v1.22/aux-examples.yaml"
-                }
-            }
-        ]
-    },
     "application_selector": {
         "labelSelectors": {
             "app.kubernetes.io/name": "cassandra"
@@ -40,6 +14,5 @@
     },
     "application_pod_prefix": "dev-dc1-",
     "application_data_dir": "/var/lib/cassandra/data",
-    "input_dir": "data/cass-operator/v1.22/inputs",
     "pod_failure_ratio": 0.6
 }

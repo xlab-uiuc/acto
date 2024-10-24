@@ -602,7 +602,7 @@ class ChactosTrialWorker:
 
                     logger.debug("Waiting for cleanup to converge")
                     wait_for_converge(
-                        api_client, self._context["namespace"], wait_time=120
+                        api_client, self._context["namespace"], wait_time=120, hard_timeout=420
                     )
 
                     logger.debug("Collecting *post-fault-injection* system state before fault injection")
@@ -620,6 +620,8 @@ class ChactosTrialWorker:
 
                     # FIXME: this new dir is for the case if steady state FI gets overwritten by actual FI if both have oracle
                     post_steady_fault_fi_trial_dir = os.path.join(fi_trial_dir, "post-steady-fault")
+                    os.makedirs(post_steady_fault_fi_trial_dir, exist_ok=True)
+                    
                     if diff_result:
                         post_fault_oracle_results.differential = DifferentialOracleResult(
                             message="failed attempt recovering to *steady* system state - system state diff",
@@ -658,7 +660,7 @@ class ChactosTrialWorker:
                             trial=post_steady_fault_fi_trial_dir,
                             generation=inner_steps_generation,
                         ),
-                        oracle_result=oracle_results,
+                        oracle_result=post_fault_oracle_results,
                         cli_status=check_kubectl_cli(chactos_snapshot),
                         is_revert=False,
                     )
