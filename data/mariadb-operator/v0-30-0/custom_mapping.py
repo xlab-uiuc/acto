@@ -1,4 +1,5 @@
 import builtins
+import configparser
 import json
 from typing import Any
 
@@ -34,7 +35,31 @@ class MariaDBConfigSchema(UnderSpecifiedSchema):
         return tomlkit.dumps(eliminate_null(value))
 
     def decode(self, value: str) -> dict:
-        return tomlkit.loads(value)
+        config = configparser.ConfigParser()
+        config.read_string(value)
+
+        sections_dict = {}
+
+        # get all defaults
+        defaults = config.defaults()
+        temp_dict = {}
+        for key in defaults.keys():
+            temp_dict[key] = defaults[key]
+
+        sections_dict["default"] = temp_dict
+
+        # get sections and iterate over each
+        sections = config.sections()
+
+        for section in sections:
+            options = config.options(section)
+            temp_dict = {}
+            for option in options:
+                temp_dict[option] = config.get(section, option)
+
+            sections_dict[section] = temp_dict
+
+        return sections_dict
 
     @classmethod
     def from_original_schema(cls, original_schema: BaseSchema) -> Self:
