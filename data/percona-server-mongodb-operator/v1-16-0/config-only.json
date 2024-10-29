@@ -1,0 +1,31 @@
+{
+
+    "deploy": {
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/percona-server-mongodb-operator/v1-16-0/bundle.yaml",
+                    "operator": true
+                }
+            }
+        ]
+    },
+    "crd_name": "perconaservermongodbs.psmdb.percona.com",
+    "crd_version": "v1",
+    "seed_custom_resource": "data/percona-server-mongodb-operator/v1-16-0/cr.yaml",
+    "example_dir": "data/percona-server-mongodb-operator/v1-16-0/examples",
+    "num_nodes": 5,
+    "custom_module": "data.percona-server-mongodb-operator.v1-16-0.custom_mapping",
+    "diff_ignore_fields": [
+        "\\['secret'\\]\\['default\\-token\\-.*'\\]",
+        "\\['secret'\\]\\['percona\\-server\\-mongodb\\-operator\\-token-.*'\\]",
+        "\\['secret'\\]\\[.*\\]\\['data'\\]",
+        "\\['metadata'\\]\\['annotations'\\]\\['percona\\.com\\\/ssl\\-hash'\\]",
+        "\\['metadata'\\]\\['annotations'\\]\\['percona\\.com\\\/ssl\\-internal\\-hash'\\]",
+        "\\['metadata'\\]\\['annotations'\\]\\['percona\\.com\\\/last\\-config\\-hash'\\]",
+        "\\['image_pull_policy'\\]"
+    ],
+    "focus_fields": [
+        ["spec", "replsets", "ITEM", "configuration"]
+    ]
+}
