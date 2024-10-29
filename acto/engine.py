@@ -555,7 +555,6 @@ class TrialRunner:
                             run_result.oracle_result.differential = self.run_recovery(  # pylint: disable=assigning-non-slot
                                 runner
                             )
-                            generation += 1
                             trial_err = run_result.oracle_result
                             setup_fail = True
                             break
@@ -586,7 +585,6 @@ class TrialRunner:
                 run_result.oracle_result.differential = self.run_recovery(
                     runner
                 )
-                generation += 1
                 trial_err = run_result.oracle_result
                 break
 
@@ -596,10 +594,10 @@ class TrialRunner:
                 break
 
         if trial_err is not None:
-            trial_err.deletion = self.run_delete(runner, generation=generation)
+            trial_err.deletion = self.run_delete(runner, generation=0)
         else:
             trial_err = OracleResults()
-            trial_err.deletion = self.run_delete(runner, generation=generation)
+            trial_err.deletion = self.run_delete(runner, generation=0)
 
         return TrialResult(
             trial_id=trial_id,
