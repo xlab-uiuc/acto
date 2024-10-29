@@ -145,6 +145,7 @@ class OracleResults(pydantic.BaseModel):
             or self.consistency is not None
             or self.differential is not None
             or self.custom is not None
+            or self.deletion is not None
         )
 
     @pydantic.field_serializer("consistency")
