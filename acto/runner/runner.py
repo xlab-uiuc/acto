@@ -337,39 +337,64 @@ class Runner:
             self.core_v1_api.list_namespaced_pod(self.namespace)
         ).items
         for pod in pods:
+
+            # Check if the pod is ready, if not, get the logs
+            for condition in pod.status.conditions:
+                if condition.type == "Ready" and condition.status != "True":
+                    break
+                if (
+                    condition.type == "Initialized"
+                    and condition.status != "True"
+                ):
+                    break
+                if (
+                    condition.type == "ContainersReady"
+                    and condition.status != "True"
+                ):
+                    break
+            else:
+                continue
+
             for container_statuses in [
                 pod.status.container_statuses or [],
                 pod.status.init_container_statuses or [],
             ]:
                 for container_status in container_statuses:
-                    if not container_status.ready:
-                        try:
+                    try:
+                        log = self.core_v1_api.read_namespaced_pod_log(
+                            pod.metadata.name,
+                            self.namespace,
+                            container=container_status.name,
+                        )
+                        ret[f"{pod.metadata.name}-{container_status.name}"] = (
+                            log.splitlines()
+                        )
+                    except kubernetes.client.rest.ApiException as e:
+                        logger = get_thread_logger(with_prefix=True)
+                        logger.error(
+                            "Failed to get crash log of pod %s",
+                            pod.metadata.name,
+                            exc_info=e,
+                        )
+
+                    try:
+                        if container_status.last_state.terminated is not None:
                             log = self.core_v1_api.read_namespaced_pod_log(
                                 pod.metadata.name,
                                 self.namespace,
                                 container=container_status.name,
+                                previous=True,
                             )
-                            ret[pod.metadata.name] = log.splitlines()
-                            if (
-                                container_status.last_state.terminated
-                                is not None
-                            ):
-                                log = self.core_v1_api.read_namespaced_pod_log(
-                                    pod.metadata.name,
-                                    self.namespace,
-                                    container=container_status.name,
-                                    previous=True,
-                                )
-                                ret[
-                                    f"{pod.metadata.name}-previous"
-                                ] = log.splitlines()
-                        except kubernetes.client.rest.ApiException as e:
-                            logger = get_thread_logger(with_prefix=True)
-                            logger.error(
-                                "Failed to get previous log of pod %s",
-                                pod.metadata.name,
-                                exc_info=e,
-                            )
+                            ret[
+                                f"{pod.metadata.name}-{container_status.name}-previous"
+                            ] = log.splitlines()
+                    except kubernetes.client.rest.ApiException as e:
+                        logger = get_thread_logger(with_prefix=True)
+                        logger.error(
+                            "Failed to get previous log of pod %s",
+                            pod.metadata.name,
+                            exc_info=e,
+                        )
         if len(ret) > 0:
             return ret
         else:
