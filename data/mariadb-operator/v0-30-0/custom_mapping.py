@@ -1,9 +1,9 @@
 import builtins
 import configparser
+import io
 import json
 from typing import Any
 
-import tomlkit
 from typing_extensions import Self
 
 from acto.input.input import CustomPropertySchemaMapping
@@ -32,7 +32,15 @@ class MariaDBConfigSchema(UnderSpecifiedSchema):
     def encode(self, value: dict) -> str:
         if value is None:
             return None
-        return tomlkit.dumps(eliminate_null(value))
+        config = configparser.ConfigParser()
+        for section, options in value.items():
+            config.add_section(section)
+            for key, val in options.items():
+                config.set(section, key, val)
+        with io.StringIO() as ss:
+            config.write(ss)
+            ss.seek(0)  # rewind
+            return ss.read()
 
     def decode(self, value: str) -> dict:
         config = configparser.ConfigParser()
