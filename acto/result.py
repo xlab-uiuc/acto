@@ -75,10 +75,10 @@ class DifferentialOracleResult(OracleResult):
     @pydantic.field_serializer("diff")
     def serialize_diff(self, value: deepdiff.DeepDiff):
         """Serialize the diff"""
-        return value.to_dict(view_override=deepdiff.helper.TEXT_VIEW)
+        return value.to_dict(view_override=deepdiff.helper.DELTA_VIEW)
 
     def __str__(self) -> str:
-        return f"{self.from_step} -> {self.to_step}: {self.message}"
+        return f"{self.diff}"
 
 
 class InvalidInputResult(OracleResult):

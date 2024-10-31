@@ -8,7 +8,7 @@ import pandas as pd
 
 from acto.lib.operator_config import OperatorConfig
 from acto.post_process.post_process import PostProcessor
-from acto.result import DifferentialOracleResult
+from acto.result import DifferentialOracleResult, OracleResult
 
 
 class CollectTestResult(PostProcessor):
@@ -18,7 +18,7 @@ class CollectTestResult(PostProcessor):
         super().__init__(testrun_dir, config)
 
         # Load the post diff test results
-        self.diff_test_results: dict[str, DifferentialOracleResult] = {}
+        self.diff_test_results: dict[str, OracleResult] = {}
         post_diff_test_result_files = glob.glob(
             os.path.join(
                 testrun_dir, "post_diff_test", "compare-results-*.json"
@@ -35,9 +35,15 @@ class CollectTestResult(PostProcessor):
                 )
             with open(result_file, "r", encoding="utf-8") as file:
                 results = json.load(file)
-                self.diff_test_results[input_digest] = (
-                    DifferentialOracleResult.model_validate(results[0])
-                )
+
+                if "diff" in results[0]:
+                    self.diff_test_results[input_digest] = (
+                        DifferentialOracleResult.model_validate(results[0])
+                    )
+                else:
+                    self.diff_test_results[input_digest] = (
+                        OracleResult.model_validate(results[0])
+                    )
 
     def post_process(self, output_path: str):
         """Post process the results"""
@@ -72,7 +78,7 @@ class CollectTestResult(PostProcessor):
         for input_digest, result in self.diff_test_results.items():
             normal_results.append(
                 {
-                    "Trial number": str(result.to_step),
+                    "Trial number": input_digest,
                     "Testcase": input_digest,
                     "Alarm": True,
                     "Crash": None,

@@ -43,7 +43,7 @@ def operator_log_path(trial_dir: str, generation: int) -> str:
 
 class Snapshot(pydantic.BaseModel):
     """A Snapshot is a snapshot of the system state at a point of time.
-    It contains the input_cr, CLI result of the kubectl, operator log, 
+    It contains the input_cr, CLI result of the kubectl, operator log,
     system state containing all Kubernetes resources"""
 
     input_cr: dict = pydantic.Field(
@@ -56,7 +56,9 @@ class Snapshot(pydantic.BaseModel):
         description="System state of the cluster, including all Kubernetes resources"
     )
     operator_log: list[str]
-    events: dict = pydantic.Field(description="Serialized Kubernetes V1EventList object")
+    events: dict = pydantic.Field(
+        description="Serialized Kubernetes V1EventList object"
+    )
     not_ready_pods_logs: Optional[dict] = pydantic.Field(
         description="Logs from unready pods", default=None
     )
