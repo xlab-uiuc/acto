@@ -36,7 +36,8 @@ class MariaDBConfigSchema(UnderSpecifiedSchema):
         for section, options in value.items():
             config.add_section(section)
             for key, val in options.items():
-                config.set(section, key, val)
+                if val is not None:
+                    config.set(section, key, str(val))
         with io.StringIO() as ss:
             config.write(ss)
             ss.seek(0)  # rewind
