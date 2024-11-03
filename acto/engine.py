@@ -81,6 +81,11 @@ def apply_testcase(
                 testcase.mutator(field_curr_value), list(path)
             )
             curr = value_with_schema.raw_value()
+        else:
+            raise RuntimeError(
+                "Running test case while precondition fails"
+                f" {path} {field_curr_value}"
+            )
 
     # Satisfy constraints
     assumptions: list[tuple[PropertyPath, bool]] = []
