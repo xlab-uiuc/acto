@@ -11,9 +11,9 @@ import kubernetes
 import kubernetes.client.models as kubernetes_models
 import yaml
 
+from acto import snapshot
 from acto.common import kubernetes_client
 from acto.kubectl_client import KubectlClient
-from acto.snapshot import Snapshot
 from acto.utils import acto_timer, get_thread_logger
 
 RunnerHookType = Callable[[kubernetes.client.ApiClient], None]
@@ -91,7 +91,7 @@ class Runner:
         input_cr: dict,
         generation: int,
         hooks: Optional[list[RunnerHookType]] = None,
-    ) -> tuple[Snapshot, bool]:
+    ) -> tuple[snapshot.Snapshot, bool]:
         """Simply run the cmd and dumps system_state, delta, operator log,
         events and input files without checking.
         The function blocks until system converges.
@@ -99,6 +99,7 @@ class Runner:
             Args:
                 input_cr: CR to be applied in the format of dict
                 generation: the generation number of the input file
+                hooks: a list of hooks to be called before applying the CR
 
             Returns:
                 result, err
@@ -110,7 +111,7 @@ class Runner:
             for hook in hooks:
                 hook(self.apiclient)
 
-        mutated_filename = f"{self.trial_dir}/mutated-{generation:03d}.yaml"
+        mutated_filename = snapshot.input_cr_path(self.trial_dir, generation)
         with open(mutated_filename, "w", encoding="utf-8") as mutated_cr_file:
             yaml.dump(input_cr, mutated_cr_file)
 
@@ -130,7 +131,7 @@ class Runner:
             )
             logger.error("STDOUT: %s", cli_result.stdout)
             logger.error("STDERR: %s", cli_result.stderr)
-            snapshot = Snapshot(
+            s = snapshot.Snapshot(
                 input_cr=input_cr,
                 cli_result=self.collect_cli_result(cli_result),
                 system_state={},
@@ -139,8 +140,8 @@ class Runner:
                 not_ready_pods_logs=None,
                 generation=generation,
             )
-            snapshot.dump(self.trial_dir)
-            return snapshot, True
+            s.dump(self.trial_dir)
+            return s, True
 
         err = None
 
@@ -172,7 +173,7 @@ class Runner:
         events = self.collect_events()
         unready_pod_logs = self.collect_not_ready_pods_logs()
 
-        snapshot = Snapshot(
+        s = snapshot.Snapshot(
             input_cr=input_cr,
             cli_result=self.collect_cli_result(cli_result),
             system_state=system_state,
@@ -181,7 +182,7 @@ class Runner:
             not_ready_pods_logs=unready_pod_logs,
             generation=generation,
         )
-        return snapshot, err
+        return s, err
 
     def run_without_collect(self, seed_file: str):
         """Simply run the cmd without collecting system_state"""
@@ -200,7 +201,7 @@ class Runner:
         """Delete the mutated CR"""
         logger = get_thread_logger(with_prefix=True)
         start = time.time()
-        mutated_filename = f"{self.trial_dir}/mutated-{generation}.yaml"
+        mutated_filename = snapshot.input_cr_path(self.trial_dir, generation)
         logger.info("Deleting: %s", mutated_filename)
 
         cmd = ["delete", "-f", mutated_filename, "-n", self.namespace]
