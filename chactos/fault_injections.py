@@ -612,7 +612,6 @@ class ChactosTrialWorker:
                     logger.debug(
                         "Collecting *post-fault-injection* system state before fault injection"
                     )
-                    steady_system_state = runner.collect_system_state()
                     post_fault_system_state = runner.collect_system_state()
 
                     post_fault_oracle_results = OracleResults()
