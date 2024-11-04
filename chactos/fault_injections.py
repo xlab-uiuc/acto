@@ -532,15 +532,11 @@ class ChactosTrialWorker:
                     ).items
                     for pod in normal_pods:
                         normal_pod_names.add(pod.metadata.name)
-                    num_total_pods = len(
-                        priority_pod_names | normal_pod_names
-                    )
+                    num_total_pods = len(priority_pod_names | normal_pod_names)
 
                     match failure_types:
                         case "pod-failure":
-                            pod_failure_ratio = float(
-                                list(failure.values())[0]
-                            )
+                            pod_failure_ratio = float(list(failure.values())[0])
                             logger.debug(
                                 "Injection ratio is %s", pod_failure_ratio
                             )
@@ -567,9 +563,7 @@ class ChactosTrialWorker:
                                             "namespace"
                                         ]: selected_pods
                                     },
-                                    "namespaces": [
-                                        self._context["namespace"]
-                                    ],
+                                    "namespaces": [self._context["namespace"]],
                                 },
                                 namespace=self._context["namespace"],
                                 failure_ratio=int(pod_failure_ratio * 100),
@@ -580,11 +574,16 @@ class ChactosTrialWorker:
                         case _:
                             logger.error("Unrecognized type of fault!")
 
-                    logger.debug("Collecting *steady* system state before fault injection")
-                    steady_system_state = runner.collect_system_state()                    
+                    logger.debug(
+                        "Collecting *steady* system state before fault injection"
+                    )
+                    steady_system_state = runner.collect_system_state()
 
-                    try: 
-                        logger.debug("Injecting %s failure before any CR (policy 1)", failure_types)
+                    try:
+                        logger.debug(
+                            "Injecting %s failure before any CR (policy 1)",
+                            failure_types,
+                        )
                         pod_failure.apply(kubectl_client)
                     except subprocess.TimeoutExpired:
                         logger.warning("Timeout in applying failure.")
@@ -592,7 +591,9 @@ class ChactosTrialWorker:
                             "Current steps: [%s]", sorted(trial.steps.keys())
                         )
 
-                    logger.debug("Waiting for system to converge for the first failure")
+                    logger.debug(
+                        "Waiting for system to converge for the first failure"
+                    )
                     wait_for_converge(
                         api_client, self._context["namespace"], hard_timeout=180
                     )
@@ -602,11 +603,16 @@ class ChactosTrialWorker:
 
                     logger.debug("Waiting for cleanup to converge")
                     wait_for_converge(
-                        api_client, self._context["namespace"], wait_time=120, hard_timeout=420
+                        api_client,
+                        self._context["namespace"],
+                        wait_time=120,
+                        hard_timeout=420,
                     )
 
-                    logger.debug("Collecting *post-fault-injection* system state before fault injection")
-                    steady_system_state = runner.collect_system_state() 
+                    logger.debug(
+                        "Collecting *post-fault-injection* system state before fault injection"
+                    )
+                    steady_system_state = runner.collect_system_state()
                     post_fault_system_state = runner.collect_system_state()
 
                     post_fault_oracle_results = OracleResults()
@@ -619,9 +625,11 @@ class ChactosTrialWorker:
                     )
 
                     # FIXME: this new dir is for the case if steady state FI gets overwritten by actual FI if both have oracle
-                    post_steady_fault_fi_trial_dir = os.path.join(fi_trial_dir, "post-steady-fault")
+                    post_steady_fault_fi_trial_dir = os.path.join(
+                        fi_trial_dir, "post-steady-fault"
+                    )
                     os.makedirs(post_steady_fault_fi_trial_dir, exist_ok=True)
-                    
+
                     if diff_result:
                         post_fault_oracle_results.differential = DifferentialOracleResult(
                             message="failed attempt recovering to *steady* system state - system state diff",
@@ -646,11 +654,13 @@ class ChactosTrialWorker:
 
                     health = deprecated_system_state.check_health()
                     if not health.is_healthy():
-                        logger.error("System is not healthy %s post fault", health)
+                        logger.error(
+                            "System is not healthy %s post fault", health
+                        )
                         post_fault_oracle_results.health = OracleResult(
                             message=str(health)
                         )
-                    
+
                     post_fault_run_result = RunResult(
                         testcase={
                             "original_trial": trial_name,
@@ -666,9 +676,11 @@ class ChactosTrialWorker:
                     )
                     post_fault_run_result.dump(post_steady_fault_fi_trial_dir)
 
-                    logger.debug("Fault injection on steady state completed, now onto normal fault injection")
+                    logger.debug(
+                        "Fault injection on steady state completed, now onto normal fault injection"
+                    )
 
-                    try: 
+                    try:
                         logger.debug("Injecting %s failure", failure_types)
                         pod_failure.apply(kubectl_client)
                     except subprocess.TimeoutExpired:
