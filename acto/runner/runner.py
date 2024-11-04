@@ -14,6 +14,7 @@ import yaml
 from acto import snapshot
 from acto.common import kubernetes_client
 from acto.kubectl_client import KubectlClient
+from acto.system_state import kubernetes_system_state
 from acto.utils import acto_timer, get_thread_logger
 
 RunnerHookType = Callable[[kubernetes.client.ApiClient], None]
@@ -486,116 +487,10 @@ class Runner:
                     converge = False
                     break
             except queue.Empty:
-                ready = True
-                statefulsets = self.__get_all_objects(
-                    self.app_v1_api.list_namespaced_stateful_set
-                )
-                deployments = self.__get_all_objects(
-                    self.app_v1_api.list_namespaced_deployment
-                )
-                daemonsets = self.__get_all_objects(
-                    self.app_v1_api.list_namespaced_daemon_set
-                )
-
-                for sfs in statefulsets.values():
-                    if (
-                        sfs["status"]["ready_replicas"] is None
-                        and sfs["status"]["replicas"] == 0
-                    ):
-                        # replicas could be 0
-                        continue
-                    if (
-                        sfs["status"]["replicas"]
-                        != sfs["status"]["ready_replicas"]
-                    ):
-                        ready = False
-                        logger.info(
-                            "Statefulset %s is not ready yet",
-                            sfs["metadata"]["name"],
-                        )
-                        break
-                    if sfs["spec"]["replicas"] != sfs["status"]["replicas"]:
-                        ready = False
-                        logger.info(
-                            "Statefulset %s is not ready yet",
-                            sfs["metadata"]["name"],
-                        )
-                        break
-
-                for dp in deployments.values():
-                    if dp["spec"]["replicas"] == 0:
-                        continue
-
-                    if (
-                        dp["status"]["replicas"]
-                        != dp["status"]["ready_replicas"]
-                    ):
-                        ready = False
-                        logger.info(
-                            "Deployment %s is not ready yet",
-                            dp["metadata"]["name"],
-                        )
-                        break
-
-                    for condition in dp["status"]["conditions"]:
-                        if (
-                            condition["type"] == "Available"
-                            and condition["status"] != "True"
-                        ):
-                            ready = False
-                            logger.info(
-                                "Deployment %s is not ready yet",
-                                dp["metadata"]["name"],
-                            )
-                            break
-
-                        if (
-                            condition["type"] == "Progressing"
-                            and condition["status"] != "True"
-                        ):
-                            ready = False
-                            logger.info(
-                                "Deployment %s is not ready yet",
-                                dp["metadata"]["name"],
-                            )
-                            break
-
-                for ds in daemonsets.values():
-                    if (
-                        ds["status"]["number_ready"]
-                        != ds["status"]["current_number_scheduled"]
-                    ):
-                        ready = False
-                        logger.info(
-                            "Daemonset %s is not ready yet",
-                            ds["metadata"]["name"],
-                        )
-                        break
-                    if (
-                        ds["status"]["desired_number_scheduled"]
-                        != ds["status"]["number_ready"]
-                    ):
-                        ready = False
-                        logger.info(
-                            "Daemonset %s is not ready yet",
-                            ds["metadata"]["name"],
-                        )
-                        break
-                    if (
-                        "updated_number_scheduled" in ds["status"]
-                        and ds["status"]["updated_number_scheduled"]
-                        != ds["status"]["desired_number_scheduled"]
-                    ):
-                        ready = False
-                        logger.info(
-                            "Daemonset %s is not ready yet",
-                            ds["metadata"]["name"],
-                        )
-                        break
-
-                if ready:
-                    # only stop waiting if all deployments and statefulsets are ready
-                    # else, keep waiting until ready or hard timeout
+                health = kubernetes_system_state.KubernetesSystemState.from_api_client(
+                    self.apiclient, self.namespace
+                ).check_health()
+                if health.is_healthy():
                     break
 
         event_stream.close()
