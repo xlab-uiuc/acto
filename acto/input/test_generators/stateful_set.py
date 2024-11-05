@@ -37,16 +37,16 @@ def replicas_tests(schema: IntegerSchema) -> list[TestCase]:
     scale_down_up_test = TestCase(
         "k8s-scaleDownUp",
         scale_down_up_precondition,
-        lambda x: 4 if x is None else x + 2,
-        lambda x: 1 if x is None else x - 2,
+        lambda x: 4 if x is None else x * 2 + 1,
+        lambda x: 1 if x is None else x // 2,
         Store(),
         semantic=True,
     )
     scale_up_down_test = TestCase(
         "k8s-scaleUpDown",
         scale_up_down_precondition,
-        lambda x: 1 if x is None else x - 2,
-        lambda x: 5 if x is None else x + 2,
+        lambda x: 1 if x is None else x // 2,
+        lambda x: 5 if x is None else x * 2 + 1,
         Store(),
         semantic=True,
     )

@@ -6,6 +6,8 @@ import yaml
 from typing_extensions import Self
 
 from acto.input.input import CustomPropertySchemaMapping
+from acto.input.test_generators.generator import test_generator
+from acto.input.test_generators.stateful_set import replicas_tests
 from acto.schema.base import BaseSchema
 from acto.schema.under_specified import UnderSpecifiedSchema
 
@@ -56,3 +58,5 @@ CUSTOM_PROPERTY_SCHEMA_MAPPING = [
         custom_schema=MongodConfigSchema,
     )
 ]
+
+test_generator(property_name="size")(replicas_tests)
