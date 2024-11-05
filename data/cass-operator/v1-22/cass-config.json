@@ -5,7 +5,7 @@
         "allocate_tokens_for_local_replication_factor": {
           "enum": [
             0,
-            1,
+            3,
             -9999999999
           ],
           "type": "integer"
@@ -94,7 +94,7 @@
         },
         "cache_load_timeout": {
           "enum": [
-            "0s",
+            "3s",
             "-9999999999s",
             "15s"
           ],
@@ -136,24 +136,24 @@
         },
         "collection_size_fail_threshold": {
           "enum": [
-            "0KiB",
             "1KiB",
+            "2KiB",
             "-9999999999KiB"
           ],
           "type": "string"
         },
         "collection_size_warn_threshold": {
           "enum": [
-            0,
-            1,
-            -9999999999
+            "1KiB",
+            "2KiB",
+            "-9999999999KiB"
           ],
-          "type": "integer"
+          "type": "string"
         },
         "column_index_cache_size": {
           "enum": [
-            "0KiB",
             "1KiB",
+            "2KiB",
             "-9999999999KiB"
           ],
           "type": "string"
@@ -169,16 +169,16 @@
         "columns_per_table_fail_threshold": {
           "enum": [
             0,
-            -9999999999,
-            1
+            1,
+            2
           ],
           "type": "integer"
         },
         "columns_per_table_warn_threshold": {
           "enum": [
             0,
-            -9999999999,
-            1
+            1,
+            2
           ],
           "type": "integer"
         },
@@ -192,11 +192,26 @@
         },
         "commitlog_compression": {
           "enum": [
-            "None",
-            "Snappy",
-            "Deflate"
+            [
+              {
+                "class_name": "LZ4Compressor",
+                "parameters": []
+              }
+            ],
+            [
+              {
+                "class_name": "SnappyCompressor",
+                "parameters": []
+              }
+            ],
+            [
+              {
+                "class_name": "INVALID",
+                "parameters": []
+              }
+            ]
           ],
-          "type": "string"
+          "type": "array"
         },
         "commitlog_segment_size": {
           "enum": [
@@ -264,8 +279,8 @@
         },
         "concurrent_compactors": {
           "enum": [
-            0,
-            1,
+            2,
+            8,
             -9999999999
           ],
           "type": "integer"
@@ -282,7 +297,7 @@
           "enum": [
             0,
             1,
-            -9999999999
+            2
           ],
           "type": "integer"
         },
@@ -297,8 +312,8 @@
         "concurrent_merkle_tree_requests": {
           "enum": [
             0,
-            -9999999999,
-            9999999999
+            1,
+            -1
           ],
           "type": "integer"
         },
@@ -344,9 +359,9 @@
         },
         "corrupted_tombstone_strategy": {
           "enum": [
-            "fail",
+            "exception",
             "warn",
-            "treat_as_expiring_value"
+            "INVALID"
           ],
           "type": "string"
         },
@@ -368,11 +383,11 @@
         },
         "counter_cache_size": {
           "enum": [
-            0,
-            1,
-            -9999999999
+            "1MiB",
+            "2MiB",
+            "-9999999999MiB"
           ],
-          "type": "integer"
+          "type": "string"
         },
         "counter_write_request_timeout": {
           "enum": [
@@ -389,7 +404,7 @@
           "enum": [
             "4000ms",
             "-9999999999ms",
-            "0ms"
+            "8000ms"
           ],
           "type": "string"
         },
@@ -403,24 +418,24 @@
         },
         "data_disk_usage_max_disk_size": {
           "enum": [
-            "0MiB",
             "1MiB",
+            "2MiB",
             "-9999999999MiB"
           ],
           "type": "string"
         },
         "data_disk_usage_percentage_fail_threshold": {
           "enum": [
+            -1,
             0,
-            -9999999999,
             1
           ],
           "type": "integer"
         },
         "data_disk_usage_percentage_warn_threshold": {
           "enum": [
+            -1,
             0,
-            -9999999999,
             1
           ],
           "type": "integer"
@@ -472,7 +487,7 @@
         },
         "denylist_refresh": {
           "enum": [
-            "0s",
+            "1s",
             "-9999999999s",
             "300s"
           ],
@@ -495,8 +510,8 @@
         "disk_optimization_strategy": {
           "enum": [
             "ssd",
-            "hdd",
-            "auto"
+            "spinning",
+            "INVALID"
           ],
           "type": "string"
         },
@@ -524,7 +539,7 @@
         },
         "dynamic_snitch_update_interval": {
           "enum": [
-            "0ms",
+            "200ms",
             "-9999999999ms",
             "100ms"
           ],
@@ -556,7 +571,7 @@
         },
         "fields_per_udt_fail_threshold": {
           "enum": [
-            0,
+            -1,
             -9999999999,
             1
           ],
@@ -564,7 +579,7 @@
         },
         "fields_per_udt_warn_threshold": {
           "enum": [
-            0,
+            -1,
             -9999999999,
             1
           ],
@@ -583,8 +598,8 @@
         },
         "flush_compression": {
           "enum": [
-            "LZ4",
-            "Snappy"
+            "fast",
+            "INVALID"
           ],
           "type": "string"
         },
@@ -623,31 +638,46 @@
         },
         "hints_compression": {
           "enum": [
-            "LZ4",
-            "Snappy",
-            "Deflate",
-            "None"
+            [
+              {
+                "class_name": "LZ4Compressor",
+                "parameters": {}
+              }
+            ],
+            [
+              {
+                "class_name": "SnappyCompressor",
+                "parameters": {}
+              }
+            ],
+            [
+              {
+                "class_name": "INVALID",
+                "parameters": {}
+              }
+            ]
           ],
-          "type": "string"
+          "type": "array"
         },
         "hints_flush_period": {
           "enum": [
             "20000ms",
             "-9999999999ms",
-            "0ms"
+            "10000ms"
           ],
           "type": "string"
         },
         "ideal_consistency_level": {
           "enum": [
             "EACH_QUORUM",
-            "alt_string"
+            "LOCAL_QUORUM",
+            "INVALID"
           ],
           "type": "string"
         },
         "in_select_cartesian_product_fail_threshold": {
           "enum": [
-            0,
+            2,
             -9999999999,
             1
           ],
@@ -655,7 +685,7 @@
         },
         "in_select_cartesian_product_warn_threshold": {
           "enum": [
-            0,
+            2,
             -9999999999,
             1
           ],
@@ -675,15 +705,15 @@
         "index_summary_resize_interval": {
           "enum": [
             "0m",
-            "-9999999999m",
+            "240m",
             "120m"
           ],
           "type": "string"
         },
         "initial_token": {
           "enum": [
-            "TOKEN",
-            "alt_string"
+            "token1,token2,token3,token4,token5,token6,token7,token8,token9,token10,token11,token12,token13,token14,token15,token16",
+            "token1,token2,token3,token4,token5,token6,token7,token8"
           ],
           "type": "string"
         },
@@ -700,7 +730,7 @@
         },
         "internode_application_receive_queue_capacity": {
           "enum": [
-            "0MiB",
+            "1MiB",
             "-9999999999MiB",
             "2MiB"
           ],
@@ -724,7 +754,7 @@
         },
         "internode_application_send_queue_capacity": {
           "enum": [
-            "0MiB",
+            "1MiB",
             "-9999999999MiB",
             "2MiB"
           ],
@@ -748,10 +778,24 @@
         },
         "internode_authenticator": {
           "enum": [
-            "AllowAllAuthenticator",
-            "PasswordAuthenticator"
+            {
+              "class_name": "org.apache.cassandra.auth.AllowAllInternodeAuthenticator",
+              "parameters": {}
+            },
+            {
+              "class_name": "org.apache.cassandra.auth.MutualTlsInternodeAuthenticator",
+              "parameters": {
+                "validator_class_name": "org.apache.cassandra.auth.SpiffeCertificateValidator",
+                "trusted_peer_identities": "spiffe1,spiffe2",
+                "node_identity": "spiffe1"
+              }
+            },
+            {
+              "class_name": "INVALID",
+              "parameters": {}
+            }
           ],
-          "type": "string"
+          "type": "object"
         },
         "internode_compression": {
           "enum": [
@@ -789,7 +833,7 @@
           "enum": [
             "4000ms",
             "-9999999999ms",
-            "0ms"
+            "8000ms"
           ],
           "type": "string"
         },
@@ -806,17 +850,17 @@
         },
         "items_per_collection_fail_threshold": {
           "enum": [
-            0,
+            1,
             -9999999999,
-            1
+            2
           ],
           "type": "integer"
         },
         "items_per_collection_warn_threshold": {
           "enum": [
-            0,
+            1,
             -9999999999,
-            1
+            2
           ],
           "type": "integer"
         },
@@ -846,7 +890,7 @@
         },
         "keyspace_count_warn_threshold": {
           "enum": [
-            0,
+            80,
             -9999999999,
             40
           ],
@@ -854,17 +898,17 @@
         },
         "keyspaces_fail_threshold": {
           "enum": [
-            0,
+            1,
             -9999999999,
-            1
+            2
           ],
           "type": "integer"
         },
         "keyspaces_warn_threshold": {
           "enum": [
-            0,
+            1,
             -9999999999,
-            1
+            2
           ],
           "type": "integer"
         },
@@ -895,7 +939,7 @@
         },
         "materialized_views_per_table_fail_threshold": {
           "enum": [
-            0,
+            2,
             -9999999999,
             1
           ],
@@ -903,7 +947,7 @@
         },
         "materialized_views_per_table_warn_threshold": {
           "enum": [
-            0,
+            2,
             -9999999999,
             1
           ],
@@ -927,8 +971,8 @@
         },
         "max_hints_delivery_threads": {
           "enum": [
-            0,
             1,
+            2,
             -9999999999
           ],
           "type": "integer"
@@ -959,8 +1003,9 @@
         },
         "memtable_allocation_type": {
           "enum": [
-            "enum heap_buffers",
-            "offheap_objects"
+            "heap_buffers",
+            "offheap_objects",
+            "INVALID"
           ],
           "type": "string"
         },
@@ -998,17 +1043,17 @@
         },
         "minimum_replication_factor_fail_threshold": {
           "enum": [
-            0,
+            1,
             -9999999999,
-            1
+            2
           ],
           "type": "integer"
         },
         "minimum_replication_factor_warn_threshold": {
           "enum": [
-            0,
+            1,
             -9999999999,
-            1
+            2
           ],
           "type": "integer"
         },
@@ -1046,7 +1091,7 @@
           "enum": [
             "32MiB",
             "-9999999999MiB",
-            "0MiB"
+            "16MiB"
           ],
           "type": "string"
         },
@@ -1067,7 +1112,12 @@
           "type": "integer"
         },
         "native_transport_port_ssl": {
-          "type": "boolean"
+          "enum": [
+            9142,
+            9143,
+            -9999999999
+          ],
+          "type": "integer"
         },
         "native_transport_rate_limiting_enabled": {
           "type": "boolean"
@@ -1091,7 +1141,7 @@
           "enum": [
             32,
             -9999999999,
-            0
+            16
           ],
           "type": "integer"
         },
@@ -1116,17 +1166,17 @@
         },
         "partition_keys_in_select_fail_threshold": {
           "enum": [
-            0,
+            1,
             -9999999999,
-            1
+            2
           ],
           "type": "integer"
         },
         "partition_keys_in_select_warn_threshold": {
           "enum": [
-            0,
+            1,
             -9999999999,
-            1
+            2
           ],
           "type": "integer"
         },
@@ -1152,7 +1202,7 @@
           "enum": [
             "4000ms",
             "-9999999999ms",
-            "0ms"
+            "2000ms"
           ],
           "type": "string"
         },
@@ -1174,11 +1224,11 @@
         },
         "prepared_statements_cache_size": {
           "enum": [
-            0,
-            1,
-            -9999999999
+            "auto",
+            "1MiB",
+            "-9999999999MiB"
           ],
-          "type": "integer"
+          "type": "string"
         },
         "range_request_timeout": {
           "enum": [
@@ -1204,7 +1254,7 @@
         },
         "repair_session_space": {
           "enum": [
-            "0MiB",
+            "2MiB",
             "1MiB",
             "-9999999999MiB"
           ],
@@ -1217,7 +1267,25 @@
           "type": "boolean"
         },
         "replica_filtering_protection": {
-          "type": "boolean"
+          "properties": {
+            "cached_rows_warn_threshold": {
+              "enum": [
+                1,
+                2,
+                -9999999999
+              ],
+              "type": "integer"
+            },
+            "cached_rows_fail_threshold": {
+              "enum": [
+                1,
+                2,
+                -9999999999
+              ],
+              "type": "integer"
+            }
+          },
+          "type": "object"
         },
         "report_unconfirmed_repaired_data_mismatches": {
           "type": "boolean"
@@ -1244,14 +1312,15 @@
           "enum": [
             "4000ms",
             "-9999999999ms",
-            "0ms"
+            "2000ms"
           ],
           "type": "string"
         },
         "roles_validity": {
           "enum": [
-            "SimpleRoleManager",
-            "CassandraRoleManager"
+            "2000ms",
+            "4000ms",
+            "-9999999999ms"
           ],
           "type": "string"
         },
@@ -1274,7 +1343,7 @@
           "enum": [
             "0s",
             "-9999999999s",
-            "9999999999s"
+            "500s"
           ],
           "type": "string"
         },
@@ -1319,7 +1388,7 @@
         },
         "secondary_indexes_per_table_fail_threshold": {
           "enum": [
-            0,
+            -1,
             -9999999999,
             1
           ],
@@ -1327,7 +1396,7 @@
         },
         "secondary_indexes_per_table_warn_threshold": {
           "enum": [
-            0,
+            -1,
             -9999999999,
             1
           ],
@@ -1368,9 +1437,6 @@
           "type": "string"
         },
         "start_native_transport": {
-          "type": "boolean"
-        },
-        "startup_checks": {
           "type": "boolean"
         },
         "stream_entire_sstables": {
@@ -1436,7 +1502,7 @@
         },
         "tables_fail_threshold": {
           "enum": [
-            0,
+            -1,
             -9999999999,
             1
           ],
@@ -1444,7 +1510,7 @@
         },
         "tables_warn_threshold": {
           "enum": [
-            0,
+            -1,
             -9999999999,
             1
           ],
