@@ -428,7 +428,6 @@ class ChactosTrialWorker:
                 api_client = kubernetes_client(
                     kubernetes_config, kubernetes_context_name
                 )
-
                 core_v1_api = kubernetes.client.CoreV1Api(api_client)
 
                 # Set up the operator and dependencies
@@ -478,18 +477,11 @@ class ChactosTrialWorker:
                     logger.debug("Error when applying CR: [%s]", err)
                 chactos_snapshot.dump(fi_trial_dir)
 
-                wait_for_converge(
-                    kubernetes_client(
-                        kubernetes_config, kubernetes_context_name
-                    ),
-                    self._context["namespace"],
-                )
+                runner.wait_for_system_converge()
                 inner_steps_generation += 1
 
                 logger.debug("Looping on inner steps")
                 while steps:
-                    # TODO: add policy 1 here
-
                     step_key = steps[0]
                     step = trial.steps[step_key]
                     failure_types = list(failure.keys())[0]
@@ -594,20 +586,13 @@ class ChactosTrialWorker:
                     logger.debug(
                         "Waiting for system to converge for the first failure"
                     )
-                    wait_for_converge(
-                        api_client, self._context["namespace"], hard_timeout=180
-                    )
+                    runner.wait_for_system_converge(hard_timeout=180)
 
                     logger.debug("System converged, now lifting failure")
                     pod_failure.cleanup(kubectl_client)
 
                     logger.debug("Waiting for cleanup to converge")
-                    wait_for_converge(
-                        api_client,
-                        self._context["namespace"],
-                        wait_time=120,
-                        hard_timeout=420,
-                    )
+                    runner.wait_for_system_converge()
 
                     logger.debug(
                         "Collecting *post-fault-injection* system state before fault injection"
@@ -697,18 +682,14 @@ class ChactosTrialWorker:
                         logger.debug("Error when applying CR: [%s]", err)
 
                     logger.debug("Waiting for CR to converge")
-                    wait_for_converge(
-                        api_client, self._context["namespace"], hard_timeout=180
-                    )
+                    runner.wait_for_system_converge(hard_timeout=180)
 
                     for f in failures_to_clean_up:
                         logger.debug("Cleaning up failure %s", f.name())
                         f.cleanup(kubectl_client)
 
                     logger.debug("Waiting for cleanup to converge")
-                    wait_for_converge(
-                        api_client, self._context["namespace"], wait_time=120
-                    )
+                    runner.wait_for_system_converge(hard_timeout=180)
 
                     chactos_snapshot.system_state = (
                         runner.collect_system_state()
