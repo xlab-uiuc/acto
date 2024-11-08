@@ -873,6 +873,11 @@ class PostDiffTest(PostProcessor):
         if original_result.run_result.oracle_result.health is not None:
             return None
 
+        if diff_test_result.snapshot.cli_result["stderr"]:
+            # Input is considered as invalid by the APIServer
+            # Do not run oracle on this input
+            return None
+
         if original_result.run_result.cli_status == CliStatus.INVALID:
             # we run the system health oracle here only,
             # without running the differential oracle
