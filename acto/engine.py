@@ -16,6 +16,7 @@ import deepdiff
 import jsonpatch
 import yaml
 
+from acto.checker.checker import CheckerInterface
 from acto.checker.checker_set import CheckerSet
 from acto.checker.impl.health import HealthChecker
 from acto.common import (
@@ -254,8 +255,8 @@ class TrialRunner:
         runner_t: type,
         checker_t: type,
         wait_time: int,
-        custom_on_init: list[Callable],
-        custom_oracle: list[Callable],
+        custom_on_init: Optional[Callable],
+        custom_checker: Optional[type[CheckerInterface]],
         workdir: str,
         cluster: base.KubernetesEngine,
         worker_id: int,
@@ -293,7 +294,7 @@ class TrialRunner:
         )
 
         self.custom_on_init = custom_on_init
-        self.custom_oracle = custom_oracle
+        self.custom_checker = custom_checker
         self.dryrun = dryrun
         self.is_reproduce = is_reproduce
 
@@ -412,8 +413,7 @@ class TrialRunner:
         )
         # first run the on_init callbacks if any
         if self.custom_on_init is not None:
-            for on_init in self.custom_on_init:
-                on_init(oracle_handle)
+            self.custom_on_init(oracle_handle)
 
         runner: Runner = self.runner_t(
             self.context,
@@ -428,7 +428,7 @@ class TrialRunner:
             trial_dir,
             self.input_model,
             oracle_handle,
-            self.custom_oracle,
+            self.custom_checker,
         )
 
         curr_input = self.input_model.get_seed_input()
@@ -887,13 +887,16 @@ class Acto:
 
         self.sequence_base = 0
 
+        self.custom_oracle: Optional[type[CheckerInterface]] = None
+        self.custom_on_init: Optional[Callable] = None
         if operator_config.custom_oracle is not None:
             module = importlib.import_module(operator_config.custom_oracle)
-            self.custom_oracle = module.CUSTOM_CHECKER
-            self.custom_on_init = module.ON_INIT
-        else:
-            self.custom_oracle = None
-            self.custom_on_init = None
+            if hasattr(module, "CUSTOM_CHECKER") and issubclass(
+                module.CUSTOM_CHECKER, CheckerInterface
+            ):
+                self.custom_checker = module.CUSTOM_CHECKER
+            if hasattr(module, "ON_INIT"):
+                self.custom_on_init = module.ON_INIT
 
         # Generate test cases
         self.test_plan = self.input_model.generate_test_plan(

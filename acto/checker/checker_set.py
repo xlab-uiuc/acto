@@ -2,6 +2,8 @@
 
 from typing import Optional
 
+from checker.checker import CheckerInterface
+
 from acto.checker.impl.consistency import ConsistencyChecker
 from acto.checker.impl.crash import CrashChecker
 from acto.checker.impl.health import HealthChecker
@@ -23,10 +25,8 @@ class CheckerSet:
         trial_dir: str,
         input_model: InputModel,
         oracle_handle: OracleHandle,
-        checker_generators: Optional[list] = None,
+        custom_checker: Optional[type[CheckerInterface]] = None,
     ):
-        if checker_generators:
-            checker_generators.extend(checker_generators)
         self.context = context
         self.input_model = input_model
         self.trial_dir = trial_dir
@@ -39,7 +39,12 @@ class CheckerSet:
             context=self.context,
             input_model=self.input_model,
         )
-        _ = oracle_handle
+
+        # Custom checker
+        self._oracle_handle = oracle_handle
+        self._custom_checker: Optional[CheckerInterface] = (
+            custom_checker(self._oracle_handle) if custom_checker else None
+        )
 
     def check(
         self,
@@ -68,12 +73,6 @@ class CheckerSet:
                 num_delta,
             )
 
-        # generation_result_path = os.path.join(
-        #     self.trial_dir, f"generation-{generation:03d}-runtime.json"
-        # )
-        # with open(generation_result_path, "w", encoding="utf-8") as f:
-        #     json.dump(run_result.to_dict(), f, cls=ActoEncoder, indent=4)
-
         return OracleResults(
             crash=self._crash_checker.check(
                 generation, snapshot, prev_snapshot
@@ -86,6 +85,11 @@ class CheckerSet:
             ),
             consistency=self._consistency_checker.check(
                 generation, snapshot, prev_snapshot
+            ),
+            custom=(
+                self._custom_checker.check(generation, snapshot, prev_snapshot)
+                if self._custom_checker
+                else None
             ),
         )
 
