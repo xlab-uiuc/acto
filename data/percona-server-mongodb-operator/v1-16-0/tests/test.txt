@@ -1,0 +1,94 @@
+Defaulted container "mongod" out of: mongod, backup-agent, mongo-init (init)
+Current Mongosh Log ID: 673522c2828ca584a5cff086
+Connecting to:          mongodb://<credentials>@127.0.0.1:27017/?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+2.1.5
+Using MongoDB:          7.0.8-5
+Using Mongosh:          2.1.5
+mongosh 2.3.3 is available for download: https://www.mongodb.com/try/download/shell
+
+For mongosh info see: https://docs.mongodb.com/mongodb-shell/
+
+------
+   The server generated these startup warnings when booting
+   2024-11-12T21:14:12.633+00:00: While invalid X509 certificates may be used to connect to this server, they will not be considered permissible for authentication
+   2024-11-12T21:14:12.635+00:00: vm.max_map_count is too low
+------
+
+{
+  argv: [
+    'mongod',
+    '--bind_ip_all',
+    '--auth',
+    '--dbpath=/data/db',
+    '--port=27017',
+    '--replSet=rs0',
+    '--storageEngine=wiredTiger',
+    '--relaxPermChecks',
+    '--clusterAuthMode=x509',
+    '--shardsvr',
+    '--enableEncryption',
+    '--encryptionKeyFile=/etc/mongodb-encryption/encryption-key',
+    '--wiredTigerCacheSizeGB=0.25',
+    '--wiredTigerIndexPrefixCompression=true',
+    '--config=/etc/mongodb-config/mongod.conf',
+    '--quiet',
+    '--tlsMode',
+    'preferTLS',
+    '--sslPEMKeyFile',
+    '/tmp/tls.pem',
+    '--tlsAllowInvalidCertificates',
+    '--tlsClusterFile',
+    '/tmp/tls-internal.pem',
+    '--tlsCAFile',
+    '/etc/mongodb-ssl/ca.crt',
+    '--tlsClusterCAFile',
+    '/etc/mongodb-ssl-internal/ca.crt'
+  ],
+  parsed: {
+    config: '/etc/mongodb-config/mongod.conf',
+    net: {
+      bindIp: '*',
+      port: 27017,
+      tls: {
+        CAFile: '/etc/mongodb-ssl/ca.crt',
+        allowInvalidCertificates: true,
+        certificateKeyFile: '/tmp/tls.pem',
+        clusterCAFile: '/etc/mongodb-ssl-internal/ca.crt',
+        clusterFile: '/tmp/tls-internal.pem',
+        mode: 'preferTLS'
+      }
+    },
+    operationProfiling: { mode: 'slowOp' },
+    replication: { replSet: 'rs0' },
+    security: {
+      authorization: 'enabled',
+      clusterAuthMode: 'x509',
+      enableEncryption: true,
+      encryptionKeyFile: '/etc/mongodb-encryption/encryption-key',
+      relaxPermChecks: true
+    },
+    sharding: { clusterRole: 'shardsvr' },
+    storage: {
+      dbPath: '/data/db',
+      engine: 'wiredTiger',
+      wiredTiger: {
+        collectionConfig: { blockCompressor: 'snappy' },
+        engineConfig: {
+          cacheSizeGB: 0.25,
+          directoryForIndexes: false,
+          journalCompressor: 'snappy'
+        },
+        indexConfig: { prefixCompression: true }
+      }
+    },
+    systemLog: { quiet: true, verbosity: 1 }
+  },
+  ok: 1,
+  '$clusterTime': {
+    clusterTime: Timestamp({ t: 1731535554, i: 3 }),
+    signature: {
+      hash: Binary.createFromBase64('4M3RKvKUo3f0eM9tqJu0a3jNd1c=', 0),
+      keyId: Long('7436504348516941847')
+    }
+  },
+  operationTime: Timestamp({ t: 1731535554, i: 2 })
+}
