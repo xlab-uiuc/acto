@@ -30,11 +30,11 @@ class MongoDBConfigChecker(CheckerInterface):
         logger = get_thread_logger()
 
         if (
-            "replsets" in snapshot.system_state["custom_resource_spec"]
-            and len(snapshot.system_state["custom_resource_spec"]["replsets"]) > 0
-            and "configuration" in snapshot.system_state["custom_resource_spec"]["replsets"][0]
+            "replsets" in snapshot.input_cr["spec"]
+            and len(snapshot.input_cr["spec"]["replsets"]) > 0
+            and "configuration" in snapshot.input_cr["spec"]["replsets"][0]
         ):
-            mongo_yaml = yaml.load(snapshot.system_state["custom_resource_spec"]["replsets"][
+            mongo_yaml = yaml.load(snapshot.input_cr["spec"]["replsets"][0][
                 "configuration"], Loader=yaml.FullLoader)
         else:
             return None

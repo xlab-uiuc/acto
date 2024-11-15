@@ -19,9 +19,9 @@ for i in range(len(config_data)):
 config_data[mark - 1] = re.sub("(\w*)},", '\g<1>}', config_data[mark - 1])
 config_data = json.loads("".join(config_data[:mark] + ["}"]))["parsed"]
 
-with open("system_state.json") as f:
-    mongo_yaml = json.load(f)
-cr = mongo_yaml["custom_resource_spec"]
+with open("system_state.yaml") as f:
+    mongo_yaml = yaml.load(f, Loader=yaml.FullLoader)
+cr = mongo_yaml["spec"]
 
 if (
     "replsets" in cr
