@@ -48,20 +48,6 @@ class TiDBConfigChecker(CheckerInterface):
             else:
                 logger.error("Failed to parse line: %s", tidb_config[i])
 
-
-        sts_list = self.oracle_handle.get_stateful_sets()
-        pod_list = self.oracle_handle.get_pods_in_stateful_set(sts_list[0])
-
-        core_v1 = kubernetes.client.CoreV1Api(self.oracle_handle.k8s_client)
-
-        # secret = core_v1.read_namespaced_secret(
-        #     "my-cluster-name-secrets", self.oracle_handle.namespace
-        # ).data
-
-        # username = base64.b64decode(secret["MONGODB_DATABASE_ADMIN_USER"]).decode("utf-8")
-        # password = base64.b64decode(secret["MONGODB_DATABASE_ADMIN_PASSWORD"]).decode("utf-8")
-
-        pod = pod_list[0]
         p = self.oracle_handle.kubectl_client.exec(
             "mysql-pod",
             "acto-namespace",
@@ -107,7 +93,7 @@ class TiDBConfigChecker(CheckerInterface):
     
 def deploy_mysql(handle: OracleHandle):
     handle.kubectl_client.kubectl([
-        'apply', '-f', 'kubectl apply -f - <<EOF\napiVersion: v1\nkind: Pod\nmetadata:\n  name: busybox-sleep\nspec:\n  containers:\n  - name: busybox\n    image: busybox:1.28\n    args:\n    - sleep\n    - "1000000"\n---\napiVersion: v1\nkind: Pod\nmetadata:\n  name: busybox-sleep-less\nspec:\n  containers:\n  - name: busybox\n    image: busybox:1.28\n    args:\n    - sleep\n    - "1000"\nEOF', '-l', 'acto/tag=custom-oracle', '-n',
+        'apply', '-f', '- <<EOF\napiVersion: v1\nkind: Pod\nmetadata:\n  name: busybox-sleep\nspec:\n  containers:\n  - name: busybox\n    image: busybox:1.28\n    args:\n    - sleep\n    - "1000000"\n---\napiVersion: v1\nkind: Pod\nmetadata:\n  name: busybox-sleep-less\nspec:\n  containers:\n  - name: busybox\n    image: busybox:1.28\n    args:\n    - sleep\n    - "1000"\nEOF', '-l', 'acto/tag=custom-oracle', '-n',
         handle.namespace
     ])
 
