@@ -12,6 +12,7 @@ from acto.checker.impl.state_compare import CustomCompareMethods
 import json
 import yaml
 import re
+import tomlkit
 
 
 class TiDBConfigChecker(CheckerInterface):
@@ -37,16 +38,7 @@ class TiDBConfigChecker(CheckerInterface):
         else:
             return None
         
-        prefix = ""
-        tidb_spec_config = tidb_spec_config.split("\n")
-        tidb_config = {}
-        for i in range(len(tidb_config)):
-            if re.match("[(\w+)]", tidb_config[i]):
-                prefix = re.match("[(\w+)]", tidb_config[i]).group(1)
-            elif re.match("\w+=", tidb_config[i]):
-                tidb_config[prefix + "." +re.match("\w+=", tidb_config[i]).group(1)] = re.match("\w+=", tidb_config[i]).group(2)
-            else:
-                logger.error("Failed to parse line: %s", tidb_config[i])
+        tidb_config = tomlkit.loads(tidb_spec_config)
 
         p = self.oracle_handle.kubectl_client.exec(
             "mysql-pod",
@@ -77,24 +69,29 @@ class TiDBConfigChecker(CheckerInterface):
                 continue
             if compoents[1] not in all_node_config:
                 all_node_config[compoents[1]] = {}
-            all_node_config[compoents[1]][compoents[2]] = compoents[3]
-        
-        first_node = all_node_config.keys()[0]
-        first_tidb_config = all_node_config[first_node]
-        for node in all_node_config:
-            if all_node_config[node] != first_tidb_config:
-                return OracleResult(message=f"TiDB config check failed due to inconsistent config between nodes {first_node} and {node}")
+            result = all_node_config[compoents[1]]
+            keys = compoents[2].split(".")
+            for key in keys[:-1]:
+                if key not in result:
+                    result[key] = {}
+                result = result[key]
+            if compoents[3] == "true" or compoents[3] == "false":
+                result[keys[-1]] = bool(compoents[3])
+            elif re.match(r"^\d+$", compoents[3]) or re.match(r"^\d+\.\d+$", compoents[3]):
+                result[keys[-1]] = float(compoents[3])
+            else:
+                result[keys[-1]] = compoents[3]
 
         compare_methods = CustomCompareMethods()
-        if not compare_methods.equals(tidb_config, first_tidb_config):
-            return OracleResult(message="TiDB config check failed due to missing keys or wrong values")
+        for node in all_node_config:
+            if not compare_methods.equals(tidb_config, all_node_config[node]):
+                return OracleResult(message=f"TiDB config check failed due to missing keys or wrong values in node {node}")
 
         return None
     
 def deploy_mysql(handle: OracleHandle):
     handle.kubectl_client.kubectl([
-        'apply', '-f', '- <<EOF\napiVersion: v1\nkind: Pod\nmetadata:\n  name: busybox-sleep\nspec:\n  containers:\n  - name: busybox\n    image: busybox:1.28\n    args:\n    - sleep\n    - "1000000"\n---\napiVersion: v1\nkind: Pod\nmetadata:\n  name: busybox-sleep-less\nspec:\n  containers:\n  - name: busybox\n    image: busybox:1.28\n    args:\n    - sleep\n    - "1000"\nEOF', '-l', 'acto/tag=custom-oracle', '-n',
-        handle.namespace
+        'apply', '-f', 'data/tidb-operator/v1-6-0/mysql_pod.yaml', '-n', handle.namespace
     ])
 
 
