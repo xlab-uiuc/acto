@@ -2,7 +2,7 @@
 
 from typing import Optional
 
-from checker.checker import CheckerInterface
+from acto.checker.checker import CheckerInterface
 
 from acto.checker.impl.consistency import ConsistencyChecker
 from acto.checker.impl.crash import CrashChecker

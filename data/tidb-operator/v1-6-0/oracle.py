@@ -95,5 +95,5 @@ def deploy_mysql(handle: OracleHandle):
     ])
 
 
-CUSTOM_CHECKER: list[type] = [TiDBConfigChecker]
+CUSTOM_CHECKER: type[CheckerInterface] = TiDBConfigChecker
 ON_INIT: list[callable] = [deploy_mysql]
