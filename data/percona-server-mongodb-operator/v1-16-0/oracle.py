@@ -90,4 +90,4 @@ class MongoDBConfigChecker(CheckerInterface):
         return None
 
 
-CUSTOM_CHECKER: type[CheckerInterface] = [MongoDBConfigChecker]
+CUSTOM_CHECKER: type[CheckerInterface] = MongoDBConfigChecker
