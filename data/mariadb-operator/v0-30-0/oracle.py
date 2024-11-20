@@ -9,11 +9,6 @@ from acto.result import OracleResult
 from acto.snapshot import Snapshot
 from acto.utils.thread_logger import get_thread_logger
 from acto.checker.impl.state_compare import CustomCompareMethods
-import json
-import yaml
-import re
-import tomlkit
-from acto.common import flatten_dict
 import configparser
 from acto.k8s_util.k8sutil import canonicalize_quantity
 
@@ -67,11 +62,11 @@ class MariaDBConfigChecker(CheckerInterface):
         else:
             return None
         
-        mariadb_spec_config = decode(mairadb_spec_config)
-        flatten_config = flatten_dict(mariadb_spec_config, [])
-        mariadb_spec_config = {}
-        for key, value in flatten_config:
-            mariadb_spec_config["_".join(key)] = canonicalize_quantity(value)
+        mariadb_spec_config = decode(mairadb_spec_config)["mariadb"]
+
+        for key, value in mariadb_spec_config.items():
+            mariadb_spec_config[key] = canonicalize_quantity(value)
+            print(canonicalize_quantity(value))
         
         # Get the configuration from the cqlsh
         sts_list = self.oracle_handle.get_stateful_sets()

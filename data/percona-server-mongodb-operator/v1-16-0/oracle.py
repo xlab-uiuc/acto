@@ -71,7 +71,7 @@ class MongoDBConfigChecker(CheckerInterface):
             return OracleResult(message="MongoDB config check failed")
 
         lines = p.stdout.split("\n")
-        lines = [x + "\n" for x in lines[15:]]
+        lines = [x + "\n" for x in lines[17:]]
 
         mark = 0
         for i in range(len(lines)):

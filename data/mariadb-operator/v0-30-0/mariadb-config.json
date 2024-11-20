@@ -803,11 +803,11 @@
                 },
                 "join_buffer_space_limit": {
                     "description": "Maximum size in bytes of the query buffer, By default 1024*128*10. See Block-based join algorithms.",
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        2048,
-                        4096,
-                        -1
+                        "Mi",
+                        "4096MB",
+                        "-1"
                     ]
                 },
                 "join_cache_level": {
@@ -1113,11 +1113,11 @@
                 },
                 "max_allowed_packet": {
                     "description": "Maximum size in bytes of a packet or a generated/intermediate string. The packet message buffer is initialized with the value from net_buffer_length, but can grow up to max_allowed_packet bytes. Set as large as the largest BLOB, in multiples of 1024. If this value is changed, it should be changed on the client side as well. See slave_max_allowed_packet for a specific limit for replication purposes.",
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        1024,
-                        2048,
-                        -1
+                        "1024Mi",
+                        "Mi",
+                        "-1"
                     ]
                 },
                 "max_connect_errors": {
@@ -1203,11 +1203,11 @@
                 },
                 "max_long_data_size": {
                     "description": "Maximum size for parameter values sent with mysql_stmt_send_long_data(). If not set, will default to the value of max_allowed_packet. Deprecated in MariaDB 5.5 and removed in MariaDB 10.5.0; use max_allowed_packet instead.",
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        1024,
-                        2048,
-                        -1
+                        "1024Mi",
+                        "Mi",
+                        "-1"
                     ]
                 },
                 "max_password_errors": {
@@ -1239,11 +1239,11 @@
                 },
                 "max_rowid_filter_size": {
                     "description": "The maximum size of the container of a rowid filter.",
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        1024,
-                        2048,
-                        -1
+                        "1024Mi",
+                        "Mi",
+                        "-1"
                     ]
                 },
                 "max_seeks_for_key": {
@@ -1266,11 +1266,11 @@
                 },
                 "max_sort_length": {
                     "description": "Maximum size in bytes used for sorting data values - anything exceeding this is ignored. The server uses only the first max_sort_length bytes of each value and ignores the rest. Increasing this may require sort_buffer_size to be increased (especially if ER_OUT_OF_SORTMEMORY errors start appearing). From MariaDB 11.7, a warning is generated when max_sort_length is exceeded.",
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        1024,
-                        2048,
-                        -1
+                        "1024Mi",
+                        "Mi",
+                        "-1"
                     ]
                 },
                 "max_sp_recursion_depth": {
@@ -1313,9 +1313,9 @@
                     "description": "Unused since 10.1.4",
                     "type": "integer",
                     "enum": [
-                        1024,
-                        2048,
-                        -1
+                        "1024Mi",
+                        "Mi",
+                        "-1"
                     ]
                 },
                 "metadata_locks_hash_instances": {
@@ -1329,20 +1329,20 @@
                 },
                 "min_examined_row_limit": {
                     "description": "Don't write queries to slow query log that examine fewer rows than the set value. If set to 0, the default, no row limit is used. From MariaDB 10.11.0, this is an alias for log_slow_min_examined_row_limit.",
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        1024,
-                        2048,
-                        -1
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
                     ]
                 },
                 "mrr_buffer_size": {
                     "description": "Size of buffer to use when using multi-range read with range access. See Multi Range Read optimization for more information.",
                     "type": "integer",
                     "enum": [
-                        1024,
-                        2048,
-                        -1
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
                     ]
                 },
                 "mysql56_temporal_format": {
@@ -1363,38 +1363,38 @@
                 },
                 "net_buffer_length": {
                     "description": "The starting size, in bytes, for the connection and thread buffers for each client thread. The size can grow to max_allowed_packet. This variable's session value is read-only. Can be set to the expected length of client statements if memory is a limitation.",
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        1024,
-                        2048,
-                        -1
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
                     ]
                 },
                 "net_read_timeout": {
                     "description": "Time in seconds the server will wait for a client connection to send more data before aborting the read. See also net_write_timeout and slave_net_timeout",
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        1024,
-                        2048,
-                        -1
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
                     ]
                 },
                 "net_retry_count": {
                     "description": "Permit this many retries before aborting when attempting to read or write on a communication port. On FreeBSD systems should be set higher as threads are sent internal interrupts..",
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        1024,
-                        2048,
-                        -1
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
                     ]
                 },
                 "net_write_timeout": {
                     "description": "Time in seconds to wait on writing a block to a connection before aborting the write. See also net_read_timeout and slave_net_timeout.",
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        1024,
-                        2048,
-                        -1
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
                     ]
                 },
                 "note_verbosity": {
@@ -1442,11 +1442,11 @@
                 },
                 "open_files_limit": {
                     "description": "The number of file descriptors available to MariaDB. If you are getting the Too many open files error, then you should increase this limit. If set to 0, then MariaDB will calculate a limit based on the following: \n\nMAX(max_connections*5, max_connections +table_open_cache*2) \n\nMariaDB sets the limit with setrlimit. MariaDB cannot set this to exceed the hard limit imposed by the operating system. Therefore, you may also need to change the hard limit. There are a few ways to do so. \nIf you are using mariadbd_safe to start mariadbd, then see the instructions at mariadbd_safe: Configuring the Open Files Limit. \nIf you are using systemd to start mariadbd, then see the instructions at systemd: Configuring the Open Files Limit. \nOtherwise, you can change the hard limit for the mysql user account by modifying /etc/security/limits.conf. See Configuring Linux for MariaDB: Configuring the Open Files Limit for more details.",
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        1024,
-                        2048,
-                        -1
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
                     ]
                 },
                 "optimizer_extra_pruning_depth": {
@@ -1460,29 +1460,29 @@
                 },
                 "optimizer_join_limit_pref_ratio": {
                     "description": "ontrols the optimizer_join_limit_pref_ratio optimization.",
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        1024,
-                        2048,
-                        -1
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
                     ]
                 },
                 "optimizer_max_sel_arg_weight": {
                     "description": "This is an actively enforced maximum effective SEL_ARG tree weight limit. A SEL_ARG weight is the number of effective \"ranges\" hanging off this root (that is, merged tree elements are \"unmerged\" to count the weight). During range analysis, looking for possible index merges, SEL_ARG graphs related to key ranges in query conditions are being processed. Graphs exceeding this limit will stop keys being 'and'ed and 'or'ed together to form a new larger SEL_ARG graph.  After each 'and' or 'or' process, this maximum weight limit is enforced. It enforces this limit by pruning the key part being used. This key part pruning can be used to limit/disable index merge SEL_ARG graph construction on overly long query conditions.\nSee optimizer_max_sel_arg_weight for details.",
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        1024,
-                        2048,
-                        -1
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
                     ]
                 },
                 "optimizer_max_sel_args": {
                     "description": "The maximum number of SEL_ARG objects created when optimizing a range. If more objects would be needed, range scans will not be used by the optimizer.",
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        1024,
-                        2048,
-                        -1
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
                     ]
                 },
                 "optimizer_prune_level": {
@@ -1505,11 +1505,11 @@
                 },
                 "optimizer_selectivity_sampling_limit": {
                     "description": "Controls number of record samples to check condition selectivity. Only used if optimizer_use_condition_selectivity > 4.",
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        1024,
-                        2048,
-                        -1
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
                     ]
                 },
                 "optimizer_switch": {
@@ -1532,11 +1532,11 @@
                 },
                 "optimizer_trace_max_mem_size": {
                     "description": "Limits the memory used while tracing a query by specifying the maximum allowed cumulated size, in bytes, of stored optimizer traces.",
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        1024,
-                        2048,
-                        -1
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
                     ]
                 },
                 "optimizer_use_condition_selectivity": {
@@ -1553,7 +1553,7 @@
                     "type": "string",
                     "enum": [
                         "/var/run/mariadb/mariadb.pid",
-                        -1
+                        "-1"
                     ]
                 },
                 "plugin_dir": {
@@ -1561,7 +1561,7 @@
                     "type": "string",
                     "enum": [
                         "/usr/lib64/mysql/plugin",
-                        -1
+                        "-1"
                     ]
                 },
                 "plugin_maturity": {
@@ -1570,7 +1570,7 @@
                     "enum": [
                         "alpha",
                         "beta",
-                        -1
+                        "-1"
                     ]
                 },
                 "port": {
@@ -1584,11 +1584,11 @@
                 },
                 "preload_buffer_size": {
                     "description": "Size in bytes of the buffer allocated when indexes are preloaded.",
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        1024,
-                        2048,
-                        -1
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
                     ]
                 },
                 "profiling": {
@@ -1610,11 +1610,11 @@
                 },
                 "progress_report_time": {
                     "description": "Time in seconds between sending progress reports to the client for time-consuming statements. If set to 0, progress reporting will be disabled.",
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        1024,
-                        2048,
-                        -1
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
                     ]
                 },
                 "protocol_version": {
@@ -1654,38 +1654,38 @@
                 },
                 "query_alloc_block_size": {
                     "description": "Size in bytes of the extra blocks allocated during query parsing and execution (after query_prealloc_size is used up).",
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        1024,
-                        2048,
-                        -1
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
                     ]
                 },
                 "query_cache_limit": {
                     "description": "Size in bytes for which results larger than this are not stored in the query cache.",
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        1024,
-                        2048,
-                        -1
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
                     ]
                 },
                 "query_cache_min_res_unit": {
                     "description": "Minimum size in bytes of the blocks allocated for query cache results.",
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        1024,
-                        2048,
-                        -1
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
                     ]
                 },
                 "query_cache_size": {
                     "description": "Size in bytes available to the query cache. About 40KB is needed for query cache structures, so setting a size lower than this will result in a warning. 0, the default before MariaDB 10.1.7, effectively disables the query cache. ",
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        1024,
-                        2048,
-                        -1
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
                     ]
                 },
                 "query_cache_strip_comments": {
@@ -1715,38 +1715,38 @@
                 },
                 "query_prealloc_size": {
                     "description": "Size in bytes of the persistent buffer for query parsing and execution, allocated on connect and freed on disconnect. Increasing may be useful if complex queries are being run, as this will reduce the need for more memory allocations during query operation. See also query_alloc_block_size.",
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        1024,
-                        2048,
-                        -1
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
                     ]
                 },
                 "rand_seed1": {
                     "description": "rand_seed1 and rand_seed2 facilitate replication of the RAND() function. The master passes the value of these to the slaves so that the random number generator is seeded in the same way, and generates the same value, on the slave as on the master. Until MariaDB 10.1.4, the variable value could not be viewed, with the SHOW VARIABLES output always displaying zero.",
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        1024,
-                        2048,
-                        -1
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
                     ]
                 },
                 "rand_seed2": {
                     "description": "See rand_seed1. ",
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        1024,
-                        2048,
-                        -1
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
                     ]
                 },
                 "range_alloc_block_size": {
                     "description": "Size in bytes of blocks allocated during range optimization. The unit size in 1024.",
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        1024,
-                        2048,
-                        -1
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
                     ]
                 },
                 "read_buffer_size": {
@@ -1794,11 +1794,11 @@
                 },
                 "rowid_merge_buff_size": {
                     "description": "The maximum size in bytes of the memory available to the Rowid-merge strategy. See Non-semi-join subquery optimizations for more information.",
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        1024,
-                        2048,
-                        -1
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
                     ]
                 },
                 "safe_show_database": {
@@ -2052,11 +2052,11 @@
                 },
                 "sql_select_limit": {
                     "description": "Maximum number of rows that can be returned from a SELECT query. Default is the maximum number of rows permitted per table by the server, usually 232-1 or 264-1. Can be restored to the default value after being changed by assigning it a value of DEFAULT.",
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        1024,
-                        2048,
-                        -1
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
                     ]
                 },
                 "sql_warnings": {
@@ -2077,11 +2077,11 @@
                 },
                 "stored_program_cache": {
                     "description": "Limit to the number of stored routines held in the stored procedures and stored functions caches. Each time a stored routine is executed, this limit is first checked, and if the number held in the cache exceeds this, that cache is flushed and memory freed.",
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        256,
-                        512,
-                        -1
+                        "256M",
+                        "512M",
+                        "-1"
                     ]
                 },
                 "strict_password_validation": {
@@ -2223,29 +2223,29 @@
                 },
                 "tmp_disk_table_size": {
                     "description": "Max size for data for an internal temporary on-disk MyISAM or Aria table.  These tables are created as part of complex queries when the result doesn't fit into the memory engine. You can set this variable if you want to limit the size of temporary tables created in your temporary directory tmpdir.",
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        1024,
-                        2048,
-                        -1
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
                     ]
                 },
                 "tmp_memory_table_size": {
                     "description": "An alias for tmp_table_size.",
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        1024,
-                        2048,
-                        -1
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
                     ]
                 },
                 "tmp_table_size": {
                     "description": "The largest size for temporary tables in memory (not MEMORY tables) although if max_heap_table_size is smaller the lower limit will apply. You can see if it's necessary to increase by comparing the status variables Created_tmp_disk_tables and Created_tmp_tables to see how many temporary tables out of the total created needed to be converted to disk. Often complex GROUP BY queries are responsible for exceeding the limit. Defaults may be different on some systems, see for example Differences in MariaDB in Debian. From MariaDB 10.2.7, tmp_memory_table_size is an alias.",
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        1024,
-                        2048,
-                        -1
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
                     ]
                 },
                 "tmpdir": {
@@ -2253,16 +2253,16 @@
                     "type": "string",
                     "enum": [
                         "/var/lib/mysql/tmp",
-                        -1
+                        "-1"
                     ]
                 },
                 "transaction_alloc_block_size": {
                     "description": "Size in bytes to increase the memory pool available to each transaction when the available pool is not large enough. See transaction_prealloc_size.",
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        1024,
-                        2048,
-                        -1
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
                     ]
                 },
                 "transaction_isolation": {
@@ -2276,11 +2276,11 @@
                 },
                 "transaction_prealloc_size": {
                     "description": "Initial size of a memory pool available to each transaction for various memory allocations. If the memory pool is not large enough for an allocation, it is increased by transaction_alloc_block_size bytes, and truncated back to transaction_prealloc_size bytes when the transaction is completed. If set large enough to contain all statements in a transaction, extra malloc() calls are avoided.",
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        1024,
-                        2048,
-                        -1
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
                     ]
                 },
                 "transaction_read_only": {
