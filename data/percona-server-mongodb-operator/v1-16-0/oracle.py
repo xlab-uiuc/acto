@@ -79,14 +79,14 @@ class MongoDBConfigChecker(CheckerInterface):
         config_data = [x + "\n" for x in lines[i:]]
 
         mark = 0
-        for i in range(len(lines)):
-            lines[i] = re.sub("(\w+):", '"\g<1>":', lines[i])
-            lines[i] = re.sub("'(.+)'", '"\g<1>"', lines[i])
-            if '\"ok\":' in lines[i]:
+        for i in range(len(config_data)):
+            config_data[i] = re.sub("(\w+):", '"\g<1>":', config_data[i])
+            config_data[i] = re.sub("'(.+)'", '"\g<1>"', config_data[i])
+            if '\"ok\":' in config_data[i]:
                 mark = i
                 break
-        lines[mark - 1] = re.sub("(\w*)},", '\g<1>}', lines[mark - 1])
-        config_data = json.loads("".join(lines[:mark] + ["}"]))["parsed"]
+        config_data[mark - 1] = re.sub("(\w*)},", '\g<1>}', config_data[mark - 1])
+        config_data = json.loads("".join(config_data[:mark] + ["}"]))["parsed"]
 
         compare_methods = CustomCompareMethods()
         if not compare_methods.equals(mongo_yaml, config_data):
