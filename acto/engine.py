@@ -1131,7 +1131,7 @@ class Acto:
                 self.checker_type,
                 self.operator_config.wait_time,
                 self.custom_on_init,
-                self.custom_oracle,
+                self.custom_checker,
                 self.workdir_path,
                 self.cluster,
                 i,
