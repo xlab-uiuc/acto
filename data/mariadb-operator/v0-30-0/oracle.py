@@ -75,7 +75,7 @@ class MariaDBConfigChecker(CheckerInterface):
         core_v1 = kubernetes.client.CoreV1Api(self.oracle_handle.k8s_client)
 
         secret = core_v1.read_namespaced_secret(
-            "development-superuser", self.oracle_handle.namespace
+            "mariadb", self.oracle_handle.namespace
         ).data
 
         username = base64.b64decode(secret["username"]).decode("utf-8")
