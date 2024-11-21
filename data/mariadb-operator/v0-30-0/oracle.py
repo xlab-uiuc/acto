@@ -65,8 +65,7 @@ class MariaDBConfigChecker(CheckerInterface):
         mariadb_spec_config = decode(mairadb_spec_config)["mariadb"]
 
         for key, value in mariadb_spec_config.items():
-            mariadb_spec_config[key] = canonicalize_quantity(value)
-            print(canonicalize_quantity(value))
+            mariadb_spec_config[key] = canonicalize_quantity(value) if type(canonicalize_quantity(value)) != str else canonicalize_quantity(value).lower()
         
         # Get the configuration from the cqlsh
         sts_list = self.oracle_handle.get_stateful_sets()
@@ -78,7 +77,6 @@ class MariaDBConfigChecker(CheckerInterface):
             "mariadb", self.oracle_handle.namespace
         ).data
 
-        username = base64.b64decode(secret["username"]).decode("utf-8")
         password = base64.b64decode(secret["password"]).decode("utf-8")
 
         pod = pod_list[0]
@@ -89,7 +87,7 @@ class MariaDBConfigChecker(CheckerInterface):
             [
                 "mariadb",
                 "-u", 
-                username, 
+                "root", 
                 f"-p{password}", 
                 "-e", 
                 "SHOW VARIABLES;"
@@ -107,7 +105,7 @@ class MariaDBConfigChecker(CheckerInterface):
             if len(compoents) < 2:
                 continue
             else:
-                mariadb_config[compoents[0]] = canonicalize_quantity(compoents[1])
+                mariadb_config[compoents[0]] = canonicalize_quantity(compoents[1]) if type(canonicalize_quantity(compoents[1])) != str else canonicalize_quantity(compoents[1]).lower()
 
         compare_methods = CustomCompareMethods()
         if not compare_methods.equals(mariadb_spec_config, mariadb_config):
