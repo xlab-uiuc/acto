@@ -40,7 +40,11 @@ class MongoDBConfigChecker(CheckerInterface):
             return None
 
         sts_list = self.oracle_handle.get_stateful_sets()
-        pod_list = self.oracle_handle.get_pods_in_stateful_set(sts_list[0])
+        rs_sts = None
+        for sts in sts_list:
+            if sts.metadata.labels["app.kubernetes.io/component"] == "mongod":
+                rs_sts = sts
+        pod_list = self.oracle_handle.get_pods_in_stateful_set(rs_sts)
 
         core_v1 = kubernetes.client.CoreV1Api(self.oracle_handle.k8s_client)
 
