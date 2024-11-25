@@ -147,16 +147,16 @@ def check_state_equality(
     # remove pods that belong to jobs from both states to avoid observability problem
     curr_pods = curr_system_state["pod"]
     prev_pods = prev_system_state["pod"]
-    curr_system_state["pod"] = {
-        k: v
-        for k, v in curr_pods.items()
-        if v["metadata"]["owner_references"][0]["kind"] != "Job"
-    }
-    prev_system_state["pod"] = {
-        k: v
-        for k, v in prev_pods.items()
-        if v["metadata"]["owner_references"][0]["kind"] != "Job"
-    }
+    
+    for k, v in curr_pods.items():
+        if "owner_reference" in v["metadata"] and v["metadata"]["owner_reference"] is not None and ["owner_references"][0]["kind"] == "Job":
+            continue
+        curr_system_state[k] = v
+    
+    for k, v in prev_pods.items():
+        if "owner_reference" in v["metadata"] and v["metadata"]["owner_reference"] is not None and ["owner_references"][0]["kind"] == "Job":
+            continue
+        prev_system_state[k] = v
 
     for obj in prev_system_state["secret"].values():
         if "data" in obj and obj["data"] is not None:

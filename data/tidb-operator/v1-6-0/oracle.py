@@ -49,7 +49,7 @@ class TiDBConfigChecker(CheckerInterface):
                 "-h",
                 "test-cluster-tidb"
                 "-P",
-                4000,
+                "4000",
                 "-u",
                 "root",
                 "--execute",
