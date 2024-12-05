@@ -73,10 +73,19 @@ class CassandraConfigChecker(CheckerInterface):
 
         config_data = {}
         for line in lines:
-            matches = re.match(r"\s*\((\w+), '?(\w+)'?\)", line)
+            line = line.strip()
+            matches = re.match(r"\s*\('(.*)', (None|'(.*)')\)", line)
             if matches:
                 key = matches.group(1)
-                value = matches.group(2)
+                if matches.group(3):
+                    value = matches.group(3)
+                    if re.match(r'^-?\d+(?:\.\d+)?$', value):
+                        value = float(value)
+                    elif re.match(r'true|false', value):
+                        value = eval(value[0].upper() + value[1:])
+                else:
+                    value = None
+                
                 config_data[key] = value
             else:
                 logger.error("Failed to parse line: %s", line)
@@ -94,4 +103,4 @@ class CassandraConfigChecker(CheckerInterface):
         return None
 
 
-CUSTOM_CHECKER: list[type] = [CassandraConfigChecker]
+CUSTOM_CHECKER: type[CheckerInterface] = CassandraConfigChecker
