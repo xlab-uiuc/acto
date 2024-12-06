@@ -194,25 +194,32 @@
           "enum": [
             [
               {
-                "class_name": "LZ4Compressor",
-                "parameters": []
+                "class_name": "LZ4Compressor"
               }
             ],
             [
               {
-                "class_name": "SnappyCompressor",
-                "parameters": []
+                "class_name": "SnappyCompressor"
               }
             ],
             [
               {
-                "class_name": "INVALID",
-                "parameters": []
+                "class_name": "INVALID"
               }
             ]
           ],
           "items": {
-            "type": "object"
+            "type": "object",
+            "properties": {
+              "class_name": {
+                "enum": [
+                  "LZ4Compressor",
+                  "SnappyCompressor",
+                  "INVALID"
+                ],
+                "type": "string"
+              }
+            }
           },
           "type": "array"
         },
@@ -643,25 +650,32 @@
           "enum": [
             [
               {
-                "class_name": "LZ4Compressor",
-                "parameters": {}
+                "class_name": "LZ4Compressor"
               }
             ],
             [
               {
-                "class_name": "SnappyCompressor",
-                "parameters": {}
+                "class_name": "SnappyCompressor"
               }
             ],
             [
               {
-                "class_name": "INVALID",
-                "parameters": {}
+                "class_name": "INVALID"
               }
             ]
           ],
           "items": {
-            "type": "object"
+            "type": "object",
+            "properties": {
+              "class_name": {
+                "enum": [
+                  "LZ4Compressor",
+                  "SnappyCompressor",
+                  "INVALID"
+                ],
+                "type": "string"
+              }
+            }
           },
           "type": "array"
         },
@@ -784,24 +798,11 @@
         },
         "internode_authenticator": {
           "enum": [
-            {
-              "class_name": "org.apache.cassandra.auth.AllowAllInternodeAuthenticator",
-              "parameters": {}
-            },
-            {
-              "class_name": "org.apache.cassandra.auth.MutualTlsInternodeAuthenticator",
-              "parameters": {
-                "validator_class_name": "org.apache.cassandra.auth.SpiffeCertificateValidator",
-                "trusted_peer_identities": "spiffe1,spiffe2",
-                "node_identity": "spiffe1"
-              }
-            },
-            {
-              "class_name": "INVALID",
-              "parameters": {}
-            }
+              "org.apache.cassandra.auth.AllowAllInternodeAuthenticator",
+              "org.apache.cassandra.auth.MutualTlsInternodeAuthenticator",
+              "INVALID"
           ],
-          "type": "object"
+          "type": "string"
         },
         "internode_compression": {
           "enum": [
