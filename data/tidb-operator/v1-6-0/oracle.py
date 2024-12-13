@@ -29,7 +29,7 @@ class TiDBConfigChecker(CheckerInterface):
     ) -> Optional[OracleResult]:
         """Check the Cassandra config"""
         logger = get_thread_logger()
-
+        logger.info("Checking TiDB config")
         if (
             "tidb" in snapshot.input_cr["spec"]
             and "config" in snapshot.input_cr["spec"]["tidb"]["config"]
