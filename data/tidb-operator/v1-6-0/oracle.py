@@ -32,7 +32,7 @@ class TiDBConfigChecker(CheckerInterface):
         logger.info("Checking TiDB config")
         if (
             "tidb" in snapshot.input_cr["spec"]
-            and "config" in snapshot.input_cr["spec"]["tidb"]["config"]
+            and "config" in snapshot.input_cr["spec"]["tidb"]
         ):
             tidb_spec_config = snapshot.input_cr["spec"]["tidb"]["config"]
         else:
