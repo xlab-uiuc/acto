@@ -27,7 +27,11 @@ class TestCassOpBugs(unittest.TestCase):
 
         # prepare and load config
         config_path = os.path.join(
-            test_dir.parent.parent, "data", "cass-operator", "config.json"
+            test_dir.parent.parent,
+            "data",
+            "cass-operator",
+            "v1-10-3",
+            "config.json",
         )
         with open(config_path, "r", encoding="utf-8") as config_file:
             self.config = OperatorConfig.model_validate(json.load(config_file))

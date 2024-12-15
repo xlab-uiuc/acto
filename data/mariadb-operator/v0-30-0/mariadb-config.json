@@ -1,0 +1,2357 @@
+{
+    "type": "object",
+    "properties": {
+        "mariadb": {
+            "type": "object",
+            "properties": {
+                "allow_suspicious_udfs": {
+                    "description": "Allows use of user-defined functions consisting of only one symbol x() without corresponding x_init() or x_deinit(). That also means that one can load any function from any library, for example exit() from libc.so. Not recommended unless you require old UDFs with one symbol that cannot be recompiled. Before MariaDB 10.10, available as an option only.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "alter_algorithm": {
+                    "description": "The implied ALGORITHM for ALTER TABLE if no ALGORITHM clause is specified. The deprecated variable old_alter_table is an alias for this. The feature was removed in MariaDB 11.5. See ALGORITHM=DEFAULT.\nCOPY corresponds to the pre-MySQL 5.1 approach of creating an intermediate table, copying data one row at a time, and renaming and dropping tables. \nINPLACE requests that the operation be refused if it cannot be done natively inside a the storage engine. \nDEFAULT (the default) chooses INPLACE if available, and falls back to COPY. \nNOCOPY refuses to copy a table. \nINSTANT refuses an operation that would involve any other than metadata changes.",
+                    "type": "integer",
+                    "enum": [
+                        "COPY",
+                        "INPLACE",
+                        "INVALID"
+                    ]
+                },
+                "analyze_sample_percentage": {
+                    "description": "Percentage of rows from the table ANALYZE TABLE will sample to collect table statistics. Set to 0 to let MariaDB decide what percentage of rows to sample.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "autocommit": {
+                    "description": "If set to 1, the default, all queries are committed immediately. The LOCK IN SHARE MODE and FOR UPDATE clauses therefore have no effect. If set to 0, they are only committed upon a COMMIT statement, or rolled back with a ROLLBACK statement. If autocommit is set to 0, and then changed to 1, all open transactions are immediately committed.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "automatic_sp_privileges": {
+                    "description": "When set to 1, the default, when a stored routine is created, the creator is automatically granted permission to ALTER (which includes dropping) and to EXECUTE the routine. If set to 0, the creator is not automatically granted these privileges.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "back_log": {
+                    "description": "Connections take a small amount of time to start, and this setting determines the number of outstanding connection requests MariaDB can have, or the size of the listen queue for incoming TCP/IP requests. Requests beyond this will be refused. Increase if you expect short bursts of connections. Cannot be set higher than the operating system limit (see the Unix listen() man page). If not set, set to 0, or the --autoset-back-log option is used, will be autoset to the lower of 900 and (50 + max_connections/5).",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "basedir": {
+                    "description": "Path to the MariaDB installation directory. Other paths are usually resolved relative to this base directory.",
+                    "type": "string",
+                    "enum": [
+                        "/usr",
+                        "/usr/local",
+                        "INVALID"
+                    ]
+                },
+                "big_tables": {
+                    "description": "If this system variable is set to 1, then temporary tables will be saved to disk intead of memory.\nThis system variable's original intention was to allow result sets that were too big for memory-based temporary tables and to avoid the resulting 'table full' errors. \nThis system variable is no longer needed, because the server can automatically convert large memory-based temporary tables into disk-based temporary tables when they exceed the value of the tmp_memory_table_size system variable.\nTo prevent memory-based temporary tables from being used at all, set the tmp_memory_table_size system variable to 0.\nIn MariaDB 5.5 and earlier, sql_big_tables is a synonym.\nIn MariaDB 10.5, this system variable is deprecated.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "bind_address": {
+                    "description": "By default, the MariaDB server listens for TCP/IP connections on all addresses. You can specify an alternative when the server starts using this option; either a host name, an IPv4 or an IPv6 address, \"::\" or \"*\" (all addresses). In some systems, such as Debian and Ubuntu, the bind_address is set to 127.0.0.1, which binds the server to listen on localhost only. bind_address has always been available as a mariadbd option; from MariaDB 10.3.3 its also available as a system variable. Before MariaDB 10.6.0 \"::\" implied listening additionally on IPv4 addresses like \"*\". From 10.6.0 onwards it refers to IPv6 stictly. Starting with MariaDB 10.11, a comma-separated list of addresses to bind to can be given. See also Configuring MariaDB for Remote Client Access.",
+                    "type": "string",
+                    "enum": [
+                        "localhost",
+                        "::",
+                        "INVALID"
+                    ]
+                },
+                "block_encryption_mode": {
+                    "description": "Default block encryption mode for AES_ENCRYPT() and AES_DECRYPT() functions.",
+                    "type": "integer",
+                    "enum": ["aes-128-ecb", "aes-192-ecb", "INVALID"]
+                },
+                "bulk_insert_buffer_size": {
+                    "description": "Size in bytes of the per-thread cache tree used to speed up bulk inserts into MyISAM and Aria tables. A value of 0 disables the cache tree.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "character_set_client": {
+                    "description": "Determines the character set for queries arriving from the client. It can be set per session by the client, although the server can be configured to ignore client requests with the --skip-character-set-client-handshake option. If the client does not request a character set, or requests a character set that the server does not support, the global value will be used. utf16, utf16le, utf32 and ucs2 cannot be used as client character sets. From MariaDB 10.6, the utf8 character set (and related collations) is by default an alias for utf8mb3 rather than the other way around. It can be set to imply utf8mb4 by changing the value of the old_mode system variable.",
+                    "type": "string",
+                    "enum": [
+                        "utf8",
+                        "utf8mb4",
+                        "INVALID"
+                    ]
+                },
+                "character_set_collations": {
+                    "description": "Overrides for character set default collations. Takes a comma-delimited list of character set and collation settings, for example SET @@character_set_collations = 'utf8mb4=uca1400_ai_ci, latin2=latin2_hungarian_ci'; The new variable will take effect in all cases where a character set is explicitly or implicitly specified without an explicit COLLATE clause, including but not limited to:\nColumn collation\nTable collation\nDatabase collation\nCHAR(expr USING csname)\nCONVERT(expr USING csname)\nCAST(expr AS CHAR CHARACTER SET csname)\n'' - character string literal\n_utf8mb3'text' - a character string literal with an introducer\n_utf8mb3 X'61' - a character string literal with an introducer with hex notation\n_utf8mb3 0x61 - a character string literal with an introducer with hex hybrid notation\n@@collation_connection after a SET NAMES without COLLATE",
+                    "type": "string",
+                    "enum": [
+                        "utf8mb4=uca1400_ai_ci",
+                        "latin2=latin2_hungarian_ci",
+                        "INVALID"
+                    ]
+                },
+                "character_set_connection": {
+                    "description": "Character set used for number to string conversion, as well as for literals that don't have a character set introducer. From MariaDB 10.6, the utf8 character set (and related collations) is by default an alias for utf8mb3 rather than the other way around. It can be set to imply utf8mb4 by changing the value of the old_mode system variable.",
+                    "type": "string",
+                    "enum": [
+                        "utf8",
+                        "utf8mb4",
+                        "INVALID"
+                    ]
+                },
+                "character_set_database": {
+                    "description": "Character set used by the default database, and set by the server whenever the default database is changed. If there's no default database, character_set_database contains the same value as character_set_server. This variable is dynamic, but should not be set manually, only by the server.",
+                    "type": "string",
+                    "enum": [
+                        "utf8",
+                        "utf8mb4",
+                        "INVALID"
+                    ]
+                },
+                "character_set_filesystem": {
+                    "description": "The character set for the filesystem. Used for converting file names specified as a string literal from character_set_client to character_set_filesystem before opening the file. By default set to binary, so no conversion takes place. This could be useful for statements such as LOAD_FILE() or LOAD DATA INFILE on system where multi-byte file names are use.",
+                    "type": "string",
+                    "enum": [
+                        "utf8",
+                        "utf8mb4",
+                        "INVALID"
+                    ]
+                },
+                "character_set_results": {
+                    "description": "Character set used for results and error messages returned to the client. From MariaDB 10.6, the utf8 character set (and related collations) is by default an alias for utf8mb3 rather than the other way around. It can be set to imply utf8mb4 by changing the value of the old_mode system variable.",
+                    "type": "string",
+                    "enum": [
+                        "utf8",
+                        "utf8mb4",
+                        "INVALID"
+                    ]
+                },
+                "character_set_server": {
+                    "description": "Default character set used by the server. See character_set_database for character sets used by the default database. Defaults may be different on some systems, see for example Differences in MariaDB in Debian.",
+                    "type": "string",
+                    "enum": [
+                        "utf8",
+                        "utf8mb4",
+                        "INVALID"
+                    ]
+                },
+                "character_set_system": {
+                    "description": "Character set used by the server to store identifiers, always set to utf8, or its synonym utf8mb3 starting with MariaDB 10.6. From MariaDB 10.6, the utf8 character set (and related collations) is by default an alias for utf8mb3 rather than the other way around. It can be set to imply utf8mb4 by changing the value of the old_mode system variable.",
+                    "type": "string",
+                    "enum": [
+                        "utf8",
+                        "utf8mb4",
+                        "INVALID"
+                    ]
+                },
+                "character_sets_dir": {
+                    "description": "Directory where the character sets are installed.",
+                    "type": "string",
+                    "enum": [
+                        "/usr/share/mysql/charsets",
+                        "/usr/local/share/mysql/charsets",
+                        "INVALID"
+                    ]
+                },
+                "check_constraint_checks": {
+                    "description": "If set to 0, will disable constraint checks, for example when loading a table that violates some constraints that you plan to fix later.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "collation_connection": {
+                    "description": "Collation used for the connection character set.",
+                    "type": "string",
+                    "enum": [
+                        "utf8_general_ci",
+                        "utf8mb4_general_ci",
+                        "INVALID"
+                    ]
+                },
+                "collation_database": {
+                    "description": "Collation used for the default database. Set by the server if the default database changes, if there is no default database the value from the collation_server variable is used. This variable is dynamic, but should not be set manually, only by the server.",
+                    "type": "string",
+                    "enum": [
+                        "big5_chinese_ci",
+                        "utf8mb4_general_ci",
+                        "INVALID"
+                    ]
+                },
+                "collation_server": {
+                    "description": "Default collation used by the server. This is set to the default collation for a given character set automatically when character_set_server is changed, but it can also be set manually. Defaults may be different on some systems, see for example Differences in MariaDB in Debian.",
+                    "type": "string",
+                    "enum": [
+                        "big5_chinese_ci",
+                        "utf8mb4_general_ci",
+                        "INVALID"
+                    ]
+                },
+                "completion_type": {
+                    "description": "The transaction completion type. If set to NO_CHAIN or 0 (the default), there is no effect on commits and rollbacks. If set to CHAIN or 1, a COMMIT statement is equivalent to COMMIT AND CHAIN, while a ROLLBACK is equivalent to ROLLBACK AND CHAIN, so a new transaction starts straight away with the same isolation level as transaction that's just finished. If set to RELEASE or 2, a COMMIT statement is equivalent to COMMIT RELEASE, while a ROLLBACK is equivalent to ROLLBACK RELEASE, so the server will disconnect after the transaction completes. Note that the transaction completion type only applies to explicit commits, not implicit commits.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2
+                    ]
+                },
+                "concurrent_insert": {
+                    "description": "If set to AUTO or 1, the default, MariaDB allows concurrent INSERTs and SELECTs for MyISAM tables with no free blocks in the data (deleted rows in the middle). If set to NEVER or 0, concurrent inserts are disabled. If set to ALWAYS or 2, concurrent inserts are permitted for all MyISAM tables, even those with holes, in which case new rows are added at the end of a table if the table is being used by another thread. If the --skip-new option is used when starting the server, concurrent_insert is set to NEVER. Changing the variable only affects new opened tables. Use FLUSH TABLES If you want it to also affect cached tables. See  Concurrent Inserts for more.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2
+                    ]
+                },
+                "connect_timeout": {
+                    "description": "Time in seconds that the server waits for a connect packet before returning a 'Bad handshake'. Increasing may help if clients regularly encounter 'Lost connection to MySQL server at 'X', system error: error_number' type-errors.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "core_file": {
+                    "description": "Write a core-file on crashes. The file name and location are system dependent. On Linux it is usually called core.${PID}, and it is usually written to the data directory. However, this can be changed.\nSee Enabling Core Dumps for more information.\nPreviously this system variable existed only as an option, but it was also made into a read-only system variable starting with MariaDB 10.3.9, MariaDB 10.2.17 and MariaDB 10.1.35.\nOn Windows >= MariaDB 10.4.3, this option is set by default. \nNote that the option accepts no arguments; specifying --core-file sets the value to ON. It cannot be disabled in the case of Windows >= MariaDB 10.4.3.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "datadir": {
+                    "description": "Directory where the data is stored.",
+                    "type": "string",
+                    "enum": [
+                        "/var/lib/mysql",
+                        "/usr/local/mysql/data",
+                        "INVALID"
+                    ]
+                },
+                "debug/debug_dbug": {
+                    "description": "Available in debug builds only (built with -DWITH_DEBUG=1). Used in debugging through the DBUG library to write to a trace file. Just using --debug will write a trace of what mariadbd is doing to the default trace file. ",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "debug_no_thread_alarm": {
+                    "description": "Disable system thread alarm calls. Disabling it may be useful in debugging or testing, never do it in production.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "debug_sync": {
+                    "description": "Used in debugging to show the interface to the Debug Sync facility. MariaDB needs to be configured with -DENABLE_DEBUG_SYNC=1 for this variable to be available.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "default_password_lifetime": {
+                    "description": "This defines the global password expiration policy. 0 means automatic password expiration is disabled. If the value is a positive integer N, the passwords must be changed every N days. This behavior can be overridden using the password expiration options in ALTER USER.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "default_regex_flags": {
+                    "description": "Introduced to address remaining incompatibilities between PCRE and the old regex library. Accepts a comma-separated list of zero or more of the following values:",
+                    "type": "string",
+                    "enum": [
+                        "DOTALL",
+                        "DUPNAMES",
+                        "INVALID"
+                    ]
+                },
+                "default_storage_engine": {
+                    "description": "The default storage engine. The default storage engine must be enabled at server startup or the server won't start.",
+                    "type": "string",
+                    "enum": [
+                        "InnoDB",
+                        "MyISAM",
+                        "INVALID"
+                    ]
+                },
+                "default_table_type": {
+                    "description": "A synonym for default_storage_engine. Removed in MariaDB 5.5.",
+                    "type": "string",
+                    "enum": [
+                        "InnoDB",
+                        "MyISAM",
+                        "INVALID"
+                    ]
+                },
+                "default_tmp_storage_engine": {
+                    "description": " Default storage engine that will be used for tables created with CREATE TEMPORARY TABLE where no engine is specified. For internal temporary tables see aria_used_for_temp_tables). The storage engine used must be active or the server will not start. See default_storage_engine for the default for non-temporary tables. Defaults to NULL, in which case the value from default_storage_engine is used. ROCKSDB temporary tables cannot be created. Before MariaDB 10.7, attempting to do so would silently fail, and a MyISAM table would instead be created. From MariaDB 10.7, an error is returned.",
+                    "type": "integer",
+                    "enum": [
+                        "InnoDB",
+                        "MyISAM",
+                        "INVALID"
+                    ]
+                },
+                "default_week_format": {
+                    "description": "Default mode for the WEEK() function. See that page for details on the different modes",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "delay_key_write": {
+                    "description": "Specifies how MyISAM tables handles CREATE TABLE DELAY_KEY_WRITE. If set to ON, the default, any DELAY KEY WRITEs are honored. The key buffer is then flushed only when the table closes, speeding up writes. MyISAM tables should be automatically checked upon startup in this case, and --external locking should not be used, as it can lead to index corruption. If set to OFF, DELAY KEY WRITEs are ignored, while if set to ALL, all new opened tables are treated as if created with DELAY KEY WRITEs enabled.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF",
+                        "ALL"
+                    ]
+                },
+                "delayed_insert_limit": {
+                    "description": "After this many rows have been inserted with INSERT DELAYED, the handler will check for and execute any waiting SELECT statements.",
+                    "type": "integer",
+                    "enum": [
+                        1,
+                        2,
+                        -1
+                    ]
+                },
+                "delayed_insert_timeout": {
+                    "description": "Time in seconds that the INSERT DELAYED handler will wait for INSERTs before terminating.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "delayed_queue_size": {
+                    "description": "Number of rows, per table, that can be queued when performing INSERT DELAYED statements. If the queue becomes full, clients attempting to perform INSERT DELAYED's will wait until the queue has room available again.",
+                    "type": "integer",
+                    "enum": [
+                        1,
+                        2,
+                        -1
+                    ]
+                },
+                "disconnect_on_expired_password": {
+                    "description": "When a user password has expired (see User Password Expiry), this variable controls how the server handles clients that are not aware of the sandbox mode. If enabled, the client is not permitted to connect, otherwise the server puts the client in a sandbox mode.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "div_precision_increment": {
+                    "description": "The precision of the result of the decimal division will be the larger than the precision of the dividend by that number. By default it's 4, so SELECT 2/15 would return 0.1333 and SELECT 2.0/15 would return 0.13333. After setting div_precision_increment to 6, for example, the same operation would return  0.133333 and 0.1333333 respectively.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "encrypt_tmp_disk_tables": {
+                    "description": "Enables automatic encryption of all internal on-disk temporary tables that are created during query execution if aria_used_for_temp_tables=ON is set. See Data at Rest Encryption and Enabling Encryption for Internal On-disk Temporary Tables.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "encrypt_tmp_files": {
+                    "description": "Enables automatic encryption of temporary files, such as those created for filesort operations, binary log file caches, etc. See Data at Rest Encryption.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "encryption_algorithm": {
+                    "description": "Which encryption algorithm to use for table encryption. aes_cbc is the recommended one. See Table and Tablespace Encryption.",
+                    "type": "string",
+                    "enum": [
+                        "aes_cbc",
+                        "aes_gcm",
+                        "INVALID"
+                    ]
+                },
+                "enforce_storage_engine": {
+                    "description": "Force the use of a particular storage engine for new tables. Used to avoid unwanted creation of tables using another engine. For example, setting to InnoDB will prevent any MyISAM tables from being created. If another engine is specified in a CREATE TABLE statement, the outcome depends on whether the NO_ENGINE_SUBSTITUTION SQL_MODE has been set or not. If set, the query will fail, while if not set, a warning will be returned and the table created according to the engine specified by this variable. The variable has a session scope, but is only modifiable by a user with the SUPER privilege.",
+                    "type": "string",
+                    "enum": [
+                        "InnoDB",
+                        "MyISAM",
+                        "INVALID"
+                    ]
+                },
+                "engine_condition_pushdown": {
+                    "description": "Deprecated in MariaDB 5.5 and removed and replaced by the optimizer_switch engine_condition_pushdown={on|off} flag in MariaDB 10.0.. Specifies whether the engine condition pushdown optimization is enabled. Since MariaDB 10.1.1, engine condition pushdown is enabled for all engines that support it.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "eq_range_index_dive_limit": {
+                    "description": "Limit used for speeding up queries listed by long nested INs. The optimizer will use existing index statistics instead of doing index dives for equality ranges if the number of equality ranges for the index is larger than or equal to this number. If set to 0 (unlimited), index dives are always used.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "error_count": {
+                    "description": "Read-only variable denoting the number of errors from the most recent statement in the current session that generated errors. See SHOW_ERRORS().",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "event_scheduler": {
+                    "description": "Status of the Event Scheduler. Can be set to ON or OFF, while DISABLED means it cannot be set at runtime. Setting the variable will cause a load of events if they were not loaded at startup.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF",
+                        "DISABLED"
+                    ]
+                },
+                "expensive_subquery_limit": {
+                    "description": "Number of rows to be examined for a query to be considered expensive, that is, maximum number of rows a subquery may examine in order to be executed during optimization and used for constant optimization.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "explicit_defaults_for_timestamp": {
+                    "description": "This option causes CREATE TABLE to create all TIMESTAMP columns as NULL with the DEFAULT NULL attribute, Without this option, TIMESTAMP columns are NOT NULL and have implicit DEFAULT clauses.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "external_user": {
+                    "description": "External user name set by the plugin used to authenticate the client. NULL if native MariaDB authentication is used.",
+                    "type": "string",
+                    "enum": [
+                        "root",
+                        "NULL",
+                        "INVALID"
+                    ]
+                },
+                "flush": {
+                    "description": "Usually, MariaDB writes changes to disk after each SQL statement, and the operating system handles synchronizing (flushing) it to disk. If set to ON, the server will synchronize all changes to disk after each statement.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "flush_time": {
+                    "description": "Interval in seconds that tables are closed to synchronize (flush) data to disk and free up resources. If set to 0, the default, there is no automatic synchronizing tables and closing of tables. This option should not be necessary on systems with sufficient resources.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "foreign_key_checks": {
+                    "description": "If set to 1 (the default) foreign key constraints (including ON UPDATE and ON DELETE behavior) InnoDB tables are checked, while if set to 0, they are not checked. 0 is not recommended for normal use, though it can be useful in situations where you know the data is consistent, but want to reload data in a different order from that that specified by parent/child relationships. Setting this variable to 1 does not retrospectively check for inconsistencies introduced while set to 0.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "ft_boolean_syntax": {
+                    "description": "List of operators supported by an IN BOOLEAN MODE full-text search. If you wish to change, note that each character must be ASCII and non-alphanumeric, the full string must be 14 characters and the first or second character must be a space. Positions 10, 13 and 14 are reserved for future extensions. Also, no duplicates are permitted except for the phrase quoting characters in positions 11 and 12, which may be the same.",
+                    "type": "string",
+                    "enum": [
+                        "+ -><()*:\"\"&|",
+                        ""
+                    ]
+                },
+                "ft_max_word_len": {
+                    "description": "Maximum length for a word to be included in the MyISAM full-text index. If this variable is changed, the full-text index must be rebuilt in order for the new value to take effect. The quickest way to do this is by issuing a REPAIR TABLE table_name QUICK statement. See innodb_ft_max_token_size for the InnoDB equivalent.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "ft_min_word_len": {
+                    "description": "Minimum length for a word to be included in the MyISAM full-text index. If this variable is changed, the full-text index must be rebuilt in order for the new value to take effect. The quickest way to do this is by issuing a REPAIR TABLE table_name QUICK statement. See innodb_ft_min_token_size for the InnoDB equivalent.",
+                    "type": "integer",
+                    "enum": [
+                        1,
+                        5,
+                        -1
+                    ]
+                },
+                "ft_query_expansion_limit": {
+                    "description": "For full-text searches, denotes the numer of top matches when using WITH QUERY EXPANSION.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "ft_stopword_file": {
+                    "description": "File containing a list of stopwords for use in MyISAM full-text searches. Unless an absolute path is specified the file will be looked for in the data directory. The file is not parsed for comments, so all words found become stopwords. By default, a built-in list of words (built from storage/myisam/ft_static.c file) is used. Stopwords can be disabled by setting this variable to '' (an empty string). If this variable is changed, the full-text index must be rebuilt. The quickest way to do this is by issuing a REPAIR TABLE table_name QUICK statement. See innodb_ft_server_stopword_table for the InnoDB equivalent.",
+                    "type": "string",
+                    "enum": [
+                        "/usr/share/mysql/english_stopwords.txt",
+                        "/usr/local/share/mysql/english_stopwords.txt",
+                        "INVALID"
+                    ]
+                },
+                "general_log": {
+                    "description": "If set to 0, the default unless the --general-log option is used, the general query log is disabled, while if set to 1, the general query log is enabled. See log_output for how log files are written. If that variable is set to NONE, no logs will be written even if general_query_log is set to 1.  ",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "general_log_file": {
+                    "description": "Name of the general query log file. If this is not specified, the name is taken from the log-basename setting or from your system hostname with .log as a suffix.",
+                    "type": "string",
+                    "enum": [
+                        "/var/lib/mysql/mariadb.log",
+                        "/usr/local/mysql/data/mariadb.log",
+                        "INVALID"
+                    ]
+                },
+                "group_concat_max_len": {
+                    "description": "Maximum length in bytes of the returned result for the functions GROUP_CONCAT(), JSON_OBJECTAGG and JSON_ARRAYAGG.",
+                    "type": "integer",
+                    "enum": [
+                        4,
+                        4294967295,
+                        -1
+                    ]
+                },
+                "have_compress": {
+                    "description": "If the zlib compression library is accessible to the server, this will be set to YES, otherwise it will be NO. The COMPRESS() and UNCOMPRESS() functions will only be available if set to YES.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "have_crypt": {
+                    "description": "If the crypt() system call is available this variable will be set to YES, otherwise it will be set to NO.  If set to NO, the ENCRYPT() function cannot be used.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "have_csv": {
+                    "description": "If the server supports CSV tables, will be set to YES, otherwise will be set to NO. Removed in MariaDB 10.0, use the Information Schema PLUGINS table or SHOW ENGINES instead. "
+                },
+                "have_dynamic_loading": {
+                    "description": "If the server supports dynamic loading of plugins, will be set to YES, otherwise will be set to NO. ",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "have_geometry": {
+                    "description": "If the server supports spatial data types, will be set to YES, otherwise will be set to NO. ",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "have_ndbcluster": {
+                    "description": "If the server supports NDBCluster (disabled in MariaDB).",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "have_partitioning": {
+                    "description": "If the server supports partitioning, will be set to YES, unless the --skip-partition option is used, in which case will be set to DISABLED. Will be set to NO otherwise. Removed in MariaDB 10.0 - SHOW PLUGINS should be used instead.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "have_profiling": {
+                    "description": "If statement profiling is available, will be set to YES, otherwise will be set to NO.  See SHOW PROFILES() and SHOW PROFILE().",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "have_query_cache": {
+                    "description": "If the server supports the query cache, will be set to YES, otherwise will be set to NO.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "have_rtree_keys": {
+                    "description": "If RTREE indexes (used for spatial indexes) are available, will be set to YES, otherwise will be set to NO.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "have_symlink": {
+                    "description": "This system variable can be used to determine whether the server supports symbolic links (note that it has no meaning on Windows).\nIf symbolic links are supported, then the value will be YES.\nIf symbolic links are not supported, then the value will be NO.\nIf symbolic links are disabled with the --symbolic-links option and the skip option prefix (i.e. --skip-symbolic-links), then the value will be DISABLED.\nSymbolic link support is required for the INDEX DIRECTORY and DATA DIRECTORY table options.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "histogram_size": {
+                    "description": "Number of bytes used for a histogram, or, from MariaDB 10.7 when histogram_type is set to JSON_HB, number of buckets. If set to 0, no histograms are created by ANALYZE. ",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "histogram_type": {
+                    "description": "Specifies the type of histograms created by ANALYZE. \nSINGLE_PREC_HB - single precision height-balanced.\nDOUBLE_PREC_HB - double precision height-balanced.\nJSON_HB - JSON histograms (from MariaDB 10.7)",
+                    "type": "string",
+                    "enum": [
+                        "SINGLE_PREC_HB",
+                        "DOUBLE_PREC_HB",
+                        "JSON_HB"
+                    ]
+                },
+                "host_cache_size": {
+                    "description": "Number of host names that will be cached to avoid resolving. Setting to 0 disables the cache. Changing the value while the server is running causes an implicit FLUSH HOSTS, clearing the host cache and truncating the performance_schema.host_cache table. If you are connecting from a lot of different machines you should consider increasing.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "hostname": {
+                    "description": "When the server starts, this variable is set to the server host name. ",
+                    "type": "string",
+                    "enum": [
+                        "localhost",
+                        ""
+                    ]
+                },
+                "identity": {
+                    "description": "A synonym for last_insert_id variable.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "idle_readonly_transaction_timeout": {
+                    "description": "Time in seconds that the server waits for idle read-only transactions before killing the connection. If set to 0, the default, connections are never killed. See also idle_transaction_timeout, idle_write_transaction_timeout and Transaction Timeouts.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "idle_transaction_timeout": {
+                    "description": "Time in seconds that the server waits for idle transactions before killing the connection. If set to 0, the default, connections are never killed. See also idle_readonly_transaction_timeout, idle_write_transaction_timeout and Transaction Timeouts.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "idle_write_transaction_timeout": {
+                    "description": "Time in seconds that the server waits for idle read-write transactions before killing the connection. If set to 0, the default, connections are never killed. See also idle_transaction_timeout, idle_readonly_transaction_timeout and  Transaction Timeouts. Called idle_readwrite_transaction_timeout until MariaDB 10.3.2.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "ignore_db_dirs": {
+                    "description": "Tells the server that this directory can never be a database. That means two things - firstly it is ignored by the SHOW DATABASES command and INFORMATION_SCHEMA tables. And secondly, USE, CREATE DATABASE and SELECT statements will return an error if the database from the ignored list specified. Use this option several times if you need to ignore more than one directory. To make the list empty set the void value to the option as --ignore-db-dir=. If the option or configuration is specified multiple times, viewing this value will list the ignore directories separated by commas.",
+                    "type": "string",
+                    "enum": [
+                        "/var/lib/mysql/mysql",
+                        "/var/lib/mysql/test",
+                        "INVALID"
+                    ]
+                },
+                "in_predicate_conversion_threshold": {
+                    "description": "The minimum number of scalar elements in the value list of an IN predicate that triggers its conversion to an IN subquery. Set to 0 to disable the conversion. See Conversion of Big IN Predicates Into Subqueries.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "in_transaction": {
+                    "description": "Session-only and read-only variable that is set to 1 if a transaction is in progress, 0 if not.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "init_connect": {
+                    "description": "String containing one or more SQL statements, separated by semicolons, that will be executed by the server for each client connecting. If there's a syntax error in the one of the statements, the client will fail to connect. For this reason, the statements are not executed for users with the SUPER privilege or, from MariaDB 10.5.2, the CONNECTION ADMIN privilege, who can then still connect and correct the error. See also init_file.",
+                    "type": "string",
+                    "enum": [
+                        "SET @a = 1",
+                        "SET @b = 2",
+                        "INVALID"
+                    ]
+                },
+                "init_file": {
+                    "description": "Name of a file containing SQL statements that will be executed by the server on startup. Each statement should be on a new line, and end with a semicolon. See also init_connect.",
+                    "type": "string",
+                    "enum": [
+                        "/etc/mysql/init.sql",
+                        "/usr/local/mysql/data/init.sql",
+                        "INVALID"
+                    ]
+                },
+                "insert_id": {
+                    "description": "Value to be used for the next statement inserting a new AUTO_INCREMENT value.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "interactive_timeout": {
+                    "description": "Time in seconds that the server waits for an interactive connection (one that connects with the mysql_real_connect() CLIENT_INTERACTIVE option) to become active before closing it. See also wait_timeout. ",
+                    "type": "integer",
+                    "enum": [
+                        1,
+                        2,
+                        -1
+                    ]
+                },
+                "join_buffer_size": {
+                    "description": "Minimum size in bytes of the buffer used for queries that cannot use an index, and instead perform a full table scan. Increase to get faster full joins when adding indexes is not possible, although be aware of memory issues, since joins will always allocate the minimum size. Best left low globally and set high in sessions that require large full joins. In 64-bit platforms, Windows truncates values above 4GB to 4GB with a warning. See also Block-Based Join Algorithms - Size of Join Buffers.",
+                    "type": "integer",
+                    "enum": [
+                        128,
+                        256,
+                        -1
+                    ]
+                },
+                "join_buffer_space_limit": {
+                    "description": "Maximum size in bytes of the query buffer, By default 1024*128*10. See Block-based join algorithms.",
+                    "type": "string",
+                    "enum": [
+                        "Mi",
+                        "4096MB",
+                        "-1"
+                    ]
+                },
+                "join_cache_level": {
+                    "description": "Controls which of the eight block-based algorithms can be used for join operations. See Block-based join algorithms for more information.\n1 \u2013 flat (Block Nested Loop) BNL\n2 \u2013 incremental BNL\n3 \u2013 flat Block Nested Loop Hash (BNLH)\n4 \u2013 incremental BNLH\n5 \u2013 flat Batch Key Access (BKA)\n6 \u2013 incremental BKA\n7 \u2013 flat Batch Key Access Hash (BKAH)\n8 \u2013 incremental BKAH ",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "keep_files_on_create": {
+                    "description": "If a MyISAM table is created with no DATA DIRECTORY option, the .MYD file is stored in the database directory. When set to 0, the default, if MariaDB finds another .MYD file in the database directory it will overwrite it. Setting this variable to 1 means that MariaDB will return an error instead, just as it usually does in the same situation outside of the database directory. The same applies for .MYI files and no INDEX DIRECTORY option. Deprecated in MariaDB 10.8.0.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "large_files_support": {
+                    "description": "ON if the server if was compiled with large file support or not, else OFF",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "large_page_size": {
+                    "description": "Indicates the size of memory page if large page support (Linux only) is enabled. The page size is determined from the Hugepagesize setting in /proc/meminfo. See large_pages. Deprecated and unused in MariaDB 10.5.3 since multiple page size support was added.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "large_pages": {
+                    "description": "Indicates whether large page support (prior to MariaDB 10.5, Linux only, by now supported Windows and BSD distros, also called huge pages) is used.  This is set with --large-pages or disabled with --skip-large-pages. Large pages are used for the innodb buffer pool and for online DDL (of size 3* innodb_sort_buffer_size (or 6 when encryption is used)). To use large pages, the Linux sysctl variable kernel.shmmax must be large than the llocation. Also the sysctl variable vm.nr_hugepages multipled by large-page) must be larger than the usage. The ulimit for locked memory must be sufficient to cover the amount used (ulimit -l and equalivent in /etc/security/limits.conf / or in systemd LimitMEMLOCK). If these operating system controls or insufficient free huge pages are available, the allocation of large pages will fall back to conventional memory allocation and a warning will appear in the logs. Only allocations of the default Hugepagesize currently occur (see /proc/meminfo).",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "last_insert_id": {
+                    "description": "Contains the same value as that returned by LAST_INSERT_ID(). Note that setting this variable doen't update the value returned by the underlying function.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "lc_messages": {
+                    "description": "This system variable can be specified as a locale name. The language of the associated locale will be used for error messages. See Server Locales for a list of supported locales and their associated languages.\nThis system variable is set to en_US by default, which means that error messages are in English by default.\nIf this system variable is set to a valid locale name, but the server can't find an error message file for the language associated with the locale, then the default language will be used instead.\nThis system variable is used along with the lc_messages_dir system variable to construct the path to the error messages file.\nSee Setting the Language for Error Messages for more information.",
+                    "type": "string",
+                    "enum": [
+                        "en_US",
+                        "en_ZA",
+                        "INVALID"
+                    ]
+                },
+                "lc_messages_dir": {
+                    "description": "This system variable can be specified either as the path to the directory storing the server's error message files or as the path to the directory storing the specific language's error message file. See Server Locales for a list of available locales and their related languages.\nThe server initially tries to interpret the value of this system variable as a path to the directory storing the server's error message files. Therefore, it constructs the path to the language's error message file by concatenating the value of this system variable with the language name of the locale specified by the lc_messages system variable .\nIf the server does not find the error message file for the language, then it tries to interpret the value of this system variable as a direct path to the directory storing the specific language's error message file.\nSee Setting the Language for Error Messages for more information.",
+                    "type": "string",
+                    "enum": [
+                        "/usr/share/mysql",
+                        "/usr/local/share/mysql",
+                        "INVALID"
+                    ]
+                },
+                "lc_time_names": {
+                    "description": "The locale that determines the language used for the date and time functions DAYNAME(), MONTHNAME() and DATE_FORMAT(). Locale names are language and region subtags, for example 'en_ZA' (English - South Africa) or 'es_US: Spanish - United States'. The default is always 'en-US' regardless of the system's locale setting. See server locale for a full list of supported locales.",
+                    "type": "string",
+                    "enum": [
+                        "en_US",
+                        "en_ZA",
+                        "INVALID"
+                    ]
+                },
+                "legacy_xa_rollback_at_disconnect": {
+                    "description": "If a user session disconnects after putting a transaction into the XA PREPARE state, roll back the transaction. Can be used for backwards compatibility to enable this pre-10.5 behavior for applications that expect it. Note that this violates the XA Specification and should not be used for new code.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "license": {
+                    "description": "Server license, for example GPL.",
+                    "type": "string",
+                    "enum": [
+                        "GPL",
+                        "INVALID"
+                    ]
+                },
+                "local_infile": {
+                    "description": "If set to 1, LOCAL is supported for LOAD DATA INFILE statements. If set to 0, usually for security reasons, attempts to perform a LOAD DATA LOCAL will fail with an error message.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "lock_wait_timeout": {
+                    "description": "Timeout in seconds for attempts to acquire metadata locks. Statements using metadata locks include FLUSH TABLES WITH READ LOCK, LOCK TABLES, HANDLER and DML and DDL operations on tables, stored procedures and functions, and views. The timeout is separate for each attempt, of which there may be multiple in a single statement. 0 means no wait. See WAIT and NOWAIT.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "locked_in_memory": {
+                    "description": "Indicates whether --memlock was used to lock mariadbd in memory.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "log_disabled_statements": {
+                    "description": "If set, the specified type of statements (slave and/or stored procedure statements) will not be logged to the general log. Multiple values are comma-separated, without spaces.",
+                    "type": "string",
+                    "enum": [
+                        "slave",
+                        "stored_procedure",
+                        "INVALID"
+                    ]
+                },
+                "log_error": {
+                    "description": "Specifies the name of the error log. If --console is specified later in the configuration (Windows only) or this option isn't specified, errors will be logged to stderr. If no name is provided, errors will still be logged to hostname.err in the datadir directory by default. If a configuration file sets --log-error, one can reset it with --skip-log-error (useful to override a system wide configuration file). MariaDB always writes its error log, but the destination is configurable. See error log for details.",
+                    "type": "string",
+                    "enum": [
+                        "/var/lib/mysql/mariadb.err",
+                        "/usr/local/mysql/data/mariadb.err",
+                        "INVALID"
+                    ]
+                },
+                "log_output": {
+                    "description": "How the output for the general query log and the slow query log is stored. By default written to file (FILE), it can also be stored in the general_log and slow_log tables in the mysql database (TABLE), or not stored at all (NONE). More than one option can be chosen at the same time, with NONE taking precedence if present. Logs will not be written if logging is not enabled. See Writing logs into tables, and the slow_query_log and general_log server system variables.",
+                    "type": "string",
+                    "enum": [
+                        "FILE",
+                        "TABLE",
+                        "NONE"
+                    ]
+                },
+                "log_queries_not_using_indexes": {
+                    "description": "Queries that don't use an index, or that perform a  full index scan where the index doesn't limit the number of rows, will be logged to the slow query log (regardless of time taken). The slow query log needs to be enabled for this to have an effect. Mapped to log_slow_filter='not_using_index' from MariaDB 10.3.1.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "log_slow_admin_statements": {
+                    "description": "Log slow OPTIMIZE, ANALYZE, ALTER and other administrative statements to the slow log if it is open. See also log_slow_disabled_statements and log_slow_filter. Deprecated, use log_slow_filter without admin.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "log_slow_disabled_statements": {
+                    "description": "If set, the specified type of statements will not be logged to the slow query log. See also log_slow_admin_statements and log_slow_filter.",
+                    "type": "string",
+                    "enum": [
+                        ["sp"],
+                        ["sp", "slave"],
+                        ["sp", "slave", "admin"]
+                    ]
+                },
+                "log_slow_filter": {
+                    "description": "Comma-delimited string (without spaces) containing one or more settings for filtering what is logged to the slow query log. If a query matches one of the types listed in the filter, and takes longer than long_query_time, it will be logged(except for 'not_using_index' which is always logged if enabled, regardless of the time). Sets log-slow-admin-statements to ON. See also log_slow_disabled_statements.\nadmin log administrative queries (create, optimize, drop etc...) \nfilesort logs queries that use a filesort. \nfilesort_on_disk logs queries that perform a a filesort on disk.\nfilesort_priority_queue\nfull_join logs queries that perform a join without indexes.\nfull_scan logs queries that perform full table scans.\nnot_using_index logs queries that don't use an index, or that perform a full index scan where the index doesn't limit the number of rows. Disregards long_query_time, unlike other options. log_queries_not_using_indexes maps to this option. From MariaDB 10.3.1.\nquery_cache log queries that are resolved by the query cache.\nquery_cache_miss logs queries that are not found in the query cache.\ntmp_table logs queries that create an implicit temporary table. \ntmp_table_on_disk logs queries that create a temporary table on disk.",
+                    "type": "string",
+                    "enum": [
+                        "admin",
+                        "filesort",
+                        "INVALID"
+                    ]
+                },
+                "log_slow_max_warnings": {
+                    "description": "Max numbers of warnings printed to slow query log per statement",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "log_slow_min_examined_row_limit": {
+                    "description": "Don't write queries to slow query log that examine fewer rows than the set value. If set to 0, the default, no row limit is used. min_examined_row_limit is an alias. From MariaDB 11.7, queries slower than log_slow_always_query_time will always be logged.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "log_slow_queries": {
+                    "description": "Deprecated and removed in MariaDB 10.0, use slow_query_log instead.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "log_slow_query": {
+                    "description": "If set to 0, the default unless the --slow-query-log option is used, the slow query log is disabled, while if set to 1 (both global and session variables), the slow query log is enabled. Named slow_query_log before MariaDB 10.11.0, which is now an alias.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "log_slow_query_file": {
+                    "description": "Name of the slow query log file. Before MariaDB 10.11, was named slow_query_log_file. This was named log_slow_query_file_name in the MariaDB 10.11.0 preview release.",
+                    "type": "string",
+                    "enum": [
+                        "/var/lib/mysql/mariadb-slow.log",
+                        "/usr/local/mysql/data/mariadb-slow.log",
+                        "INVALID"
+                    ]
+                },
+                "log_slow_query_time": {
+                    "description": "If a query takes longer than this many seconds to execute (microseconds can be specified too), the Slow_queries status variable is incremented and, if enabled, the query is logged to the slow query log. Before MariaDB 10.11, was named long_query_time. Affected by log_slow_rate_limit and log_slow_min_examined_row_limit.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "log_slow_rate_limit": {
+                    "description": "The slow query log will log every this many queries. The default is 1, or every query, while setting it to 20 would log every 20 queries, or five percent. Aims to reduce I/O usage and excessively large slow query logs. See also Slow Query Log Extended Statistics. From MariaDB 11.7, queries slower than log_slow_always_query_time will always be logged.",
+                    "type": "integer",
+                    "enum": [
+                        1,
+                        2,
+                        -1
+                    ]
+                },
+                "log_slow_verbosity": {
+                    "description": "Controls information to be added to the slow query log. Options are added in a comma-delimited string. See also Slow Query Log Extended Statistics. log_slow_verbosity is not supported when log_output='TABLE'.\nquery_plan logs query execution plan information\ninnodb Alias to engine (from MariaDB 10.6.15 and MariaDB 10.11.5), previously ignored.\nexplain prints EXPLAIN output in the slow query log. See EXPLAIN in the Slow Query Log.\nengine Logs engine statistics (from MariaDB 10.6.15 and MariaDB 10.11.5).\nwarnings Print all errors, warnings and notes for the statement to the slow query log. (from MariaDB 10.6.16).\nall Enables all above options (From MariaDB 10.6.16)\nfull Enables all above options.",
+                    "type": "string",
+                    "enum": [
+                        "query_plan",
+                        "innodb",
+                        "INVALID"
+                    ]
+                },
+                "log_tc_size": {
+                    "description": "Defines the size in bytes of the memory-mapped file-based transaction coordinator log, which is only used if the binary log is disabled. If you have two or more XA-capable storage engines enabled, then a transaction coordinator log must be available. This size is defined in multiples of 4096. See Transaction Coordinator Log for more information. Also see the --log-tc server option and the --tc-heuristic-recover option.",
+                    "type": "integer",
+                    "enum": [
+                        12288,
+                        24576,
+                        -1
+                    ]
+                },
+                "log_warnings": {
+                    "description": "Determines which additional warnings are logged. Setting to 0 disables additional warning logging. Note that this does not prevent all warnings, there is a core set of warnings that will always be written to the error log. The additional warnings are as follows:\nlog_warnings >= 1\nEvent scheduler information.\nSystem signals\nWrong usage of --user\nFailed setrlimit() and mlockall()\nChanged limits\nWrong values of lower_case_table_names and stack_size\nWrong values for command line options\nStart log position and some master information when starting slaves\nSlave reconnects\nKilled slaves\nError reading relay logs\nUnsafe statements for statement-based replication. If this warning occurs frequently, it is throttled to prevent flooding the log.\nDisabled plugins that one tried to enable or use.\nUDF files that didn't include the required init functions.\nDNS lookup failures.\n\nlog_warnings >= 2\nAccess denied errors.\nConnections aborted or closed due to errors or timeouts.\nTable handler errors\nMessages related to the files used to persist replication state:\nEither the default master.info file or the file that is configured by the master_info_file option.\nEither the default relay-log.info file or the file that is configured by the relay_log_info_file system variable.\n\nInformation about a master's binary log dump thread.\n\nlog_warnings >= 3\nAll errors and warnings during MyISAM repair and auto recover.\nInformation about old-style language options.\nInformation about progress of InnoDB online DDL.\n\nlog_warnings >=4\nConnections aborted due to \"Too many connections\" errors.\nConnections closed normally without authentication.\nConnections aborted due to KILL.\nConnections closed due to released connections, such as when completion_type is set to RELEASE.\nCould not read packet: (a lot more information)\nAll read/write errors for a connection are logged to the error log.\n\nlog_warnings >=9\nInformation about initializing plugins.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "long_query_time": {
+                    "description": "If a query takes longer than this many seconds to execute (microseconds can be specified too), the Slow_queries status variable is incremented and, if enabled, the query is logged to the slow query log. From MariaDB 10.11.0, this is an alias for log_slow_query_time.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "low_priority_updates": {
+                    "description": "If set to 1 (0 is the default), for storage engines that use only table-level locking (Aria, MyISAM, MEMORY and MERGE), all INSERTs, UPDATEs, DELETEs and LOCK TABLE WRITEs will wait until there are no more SELECTs or LOCK TABLE READs pending on the relevant tables. Set this to 1 if reads are prioritized over writes. \nIn MariaDB 5.5 and earlier, sql_low_priority_updates is a synonym.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "lower_case_file_system": {
+                    "description": "Read-only variable describing whether the file system is case-sensitive. If set to OFF, file names are case-sensitive. If set to ON, they are not case-sensitive.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "lower_case_table_names": {
+                    "description": "If set to 0 (the default on Unix-based systems), table names and aliases and database names  are compared in a case-sensitive manner. If set to 1 (the default on Windows), names are stored in lowercase and not compared in a case-sensitive manner. If set to 2 (the default on Mac OS X), names are stored as declared, but compared in lowercase.\nThis system variable's value cannot be changed after the datadir has been initialized. lower_case_table_names is set when a MariaDB instance starts, and it remains constant afterwards.",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "max_allowed_packet": {
+                    "description": "Maximum size in bytes of a packet or a generated/intermediate string. The packet message buffer is initialized with the value from net_buffer_length, but can grow up to max_allowed_packet bytes. Set as large as the largest BLOB, in multiples of 1024. If this value is changed, it should be changed on the client side as well. See slave_max_allowed_packet for a specific limit for replication purposes.",
+                    "type": "string",
+                    "enum": [
+                        "1024Mi",
+                        "Mi",
+                        "-1"
+                    ]
+                },
+                "max_connect_errors": {
+                    "description": "Limit to the number of successive failed connects from a host before the host is blocked from making further connections. The count for a host is reset to zero if they successfully connect. To unblock, flush the host cache with a FLUSH HOSTS statement or mariadb-admin flush-hosts. The performance_schema.host_cache table contains the status of the current hosts.",
+                    "type": "integer",
+                    "enum": [
+                        1,
+                        2,
+                        -1
+                    ]
+                },
+                "max_connections": {
+                    "description": "The maximum number of simultaneous client connections. See also Handling Too Many Connections. Note that this value affects the number of file descriptors required on the operating system. Minimum was changed from 1 to 10 to avoid possible unexpected results for the user (MDEV-18252). Note that MariaDB always has one reserved connection for a SUPER (or CONNECTION ADMIN user). Additionally it can listen on a separate port, so will be available even when the max_connections limit is reached.",
+                    "type": "integer",
+                    "enum": [
+                        10,
+                        20,
+                        -1
+                    ]
+                },
+                "max_delayed_threads": {
+                    "description": "Limits to the number of INSERT DELAYED threads. Once this limit is reached, the insert is handled as if there was no DELAYED attribute. If set to 0, DELAYED is ignored entirely. The session value can only be set to 0 or to the same as the global value.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "max_digest_length": {
+                    "description": "Maximum length considered for computing a statement digest, such as used by the Performance Schema and query rewrite plugins. Statements that differ after this many bytes produce the same digest, and are aggregated for statistics purposes. The variable is allocated per session. Increasing will allow longer statements to be distinguished from each other, but increase memory use, while decreasing will reduce memory use, but more statements may become indistinguishable.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "max_error_count": {
+                    "description": "Specifies the maximum number of messages stored for display by SHOW ERRORS and SHOW WARNINGS statements.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "max_heap_table_size": {
+                    "description": "Maximum size in bytes for user-created MEMORY tables. Setting the variable while the server is active has no effect on existing tables unless they are recreated or altered. The smaller of max_heap_table_size and tmp_table_size also limits internal in-memory tables. When the maximum size is reached, any further attempts to insert data will receive a \"table ... is full\" error. Temporary tables created with CREATE TEMPORARY will not be converted to Aria, as occurs with internal temporary tables, but will also receive a table full error.",
+                    "type": "integer",
+                    "enum": [
+                        16777216,
+                        33554432,
+                        -1
+                    ]
+                },
+                "max_insert_delayed_threads": {
+                    "description": "Synonym for max_delayed_threads.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "max_join_size": {
+                    "description": "Statements will not be performed if they are likely to need to examine more than this number of rows, row combinations or do more disk seeks. Can prevent poorly-formatted queries from taking server resources. Changing this value to anything other the default will reset sql_big_selects to 0. If sql_big_selects is set again, max_join_size will be ignored. This limit is also ignored if the query result is sitting in the query cache. Previously named sql_max_join_size, which is still a synonym.",
+                    "type": "integer",
+                    "enum": [
+                        1000000,
+                        2000000,
+                        -1
+                    ]
+                },
+                "max_length_for_sort_data": {
+                    "description": "Used to decide which algorithm to choose when sorting rows. If the total size of the column data, not including columns that are part of the sort, is less than max_length_for_sort_data, then we add these to the sort key. This can speed up the sort as we don't have to re-read the same row again later. Setting the value too high can slow things down as there will be a higher disk activity for doing the sort.",
+                    "type": "integer",
+                    "enum": [
+                        4,
+                        8,
+                        -1
+                    ]
+                },
+                "max_long_data_size": {
+                    "description": "Maximum size for parameter values sent with mysql_stmt_send_long_data(). If not set, will default to the value of max_allowed_packet. Deprecated in MariaDB 5.5 and removed in MariaDB 10.5.0; use max_allowed_packet instead.",
+                    "type": "string",
+                    "enum": [
+                        "1024Mi",
+                        "Mi",
+                        "-1"
+                    ]
+                },
+                "max_password_errors": {
+                    "description": "The maximum permitted number of failed connection attempts due to an invalid password before a user is blocked from further connections. FLUSH_PRIVILEGES will permit the user to connect again. This limit is ignored for users with the SUPER privilege or, from MariaDB 10.5.2, the CONNECTION ADMIN privilege. The maximum also doesn't apply to users with a hostname of localhost, 127.0.0.1 or ::1. See also the Information Schema USERS table.",
+                    "type": "integer",
+                    "enum": [
+                        1,
+                        2,
+                        -1
+                    ]
+                },
+                "max_prepared_stmt_count": {
+                    "description": "Maximum number of prepared statements on the server. Can help prevent certain forms of denial-of-service attacks. If set to 0, no prepared statements are permitted on the server.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "max_recursive_iterations": {
+                    "description": "Maximum number of iterations when executing recursive queries, used to prevent infinite loops in recursive CTEs.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "max_rowid_filter_size": {
+                    "description": "The maximum size of the container of a rowid filter.",
+                    "type": "string",
+                    "enum": [
+                        "1024Mi",
+                        "Mi",
+                        "-1"
+                    ]
+                },
+                "max_seeks_for_key": {
+                    "description": "The optimizer assumes that the number specified here is the most key seeks required when searching with an index, regardless of the actual index cardinality. If this value is set lower than its default and maximum, indexes will tend to be preferred over table scans.",
+                    "type": "integer",
+                    "enum": [
+                        1,
+                        2,
+                        -1
+                    ]
+                },
+                "max_session_mem_used": {
+                    "description": "Amount of memory a single user session is allowed to allocate. This limits the value of the session variable Memory_used.",
+                    "type": "integer",
+                    "enum": [
+                        8192,
+                        16384,
+                        -1
+                    ]
+                },
+                "max_sort_length": {
+                    "description": "Maximum size in bytes used for sorting data values - anything exceeding this is ignored. The server uses only the first max_sort_length bytes of each value and ignores the rest. Increasing this may require sort_buffer_size to be increased (especially if ER_OUT_OF_SORTMEMORY errors start appearing). From MariaDB 11.7, a warning is generated when max_sort_length is exceeded.",
+                    "type": "string",
+                    "enum": [
+                        "1024Mi",
+                        "Mi",
+                        "-1"
+                    ]
+                },
+                "max_sp_recursion_depth": {
+                    "description": "Permitted number of recursive calls for a stored procedure. 0, the default, no recursion is permitted. Increasing this value increases the thread stack requirements, so you may need to increase thread_stack as well. This limit doesn't apply to stored functions.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "max_statement_time": {
+                    "description": "Maximum time in seconds that a query can execute before being aborted. This includes all queries, not just SELECT statements, but excludes statements in stored procedures. If set to 0, no limit is applied. See Aborting statements that take longer than a certain time to execute for details and limitations. Useful when combined with SET STATEMENT for limiting the execution times of individual queries. Replicas are not affected by this variable, however, from MariaDB 10.10, there's slave_max_statement_time that sets the limit to abort queries on a replica.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "max_user_connections": {
+                    "description": "\nMaximum simultaneous connections permitted for each user account.  When set to 0, there is no per user limit.  Setting it to -1 stops users without the SUPER privilege or, from MariaDB 10.5.2, the CONNECTION ADMIN privilege, from connecting to the server.  The session variable is always read-only and only privileged users can modify user limits.  The session variable defaults to the global max_user_connections variable, unless the user's specific MAX_USER_CONNECTIONS resource option is non-zero.  When both global variable and the user resource option are set, the user's MAX_USER_CONNECTIONS is used.  Note: This variable does not affect users with the SUPER privilege or, from MariaDB 10.5.2, the CONNECTION ADMIN privilege.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "max_write_lock_count": {
+                    "description": "Read lock requests will be permitted for processing after this many write locks. Applies only to storage engines that use table level locks (thr_lock), so no effect with InnoDB or Archive.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "metadata_locks_cache_size": {
+                    "description": "Unused since 10.1.4",
+                    "type": "integer",
+                    "enum": [
+                        "1024Mi",
+                        "Mi",
+                        "-1"
+                    ]
+                },
+                "metadata_locks_hash_instances": {
+                    "description": "Unused since 10.1.4",
+                    "type": "integer",
+                    "enum": [
+                        1,
+                        1024,
+                        -1
+                    ]
+                },
+                "min_examined_row_limit": {
+                    "description": "Don't write queries to slow query log that examine fewer rows than the set value. If set to 0, the default, no row limit is used. From MariaDB 10.11.0, this is an alias for log_slow_min_examined_row_limit.",
+                    "type": "string",
+                    "enum": [
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
+                    ]
+                },
+                "mrr_buffer_size": {
+                    "description": "Size of buffer to use when using multi-range read with range access. See Multi Range Read optimization for more information.",
+                    "type": "integer",
+                    "enum": [
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
+                    ]
+                },
+                "mysql56_temporal_format": {
+                    "description": "If set (the default), MariaDB uses the MySQL 5.6 low level formats for TIME, DATETIME and TIMESTAMP instead of the MariaDB 5.3 version. The version MySQL introduced in 5.6 requires more storage, but potentially allows negative dates and has some advantages in replication. There should be no reason to revert to the old MariaDB 5.3 microsecond format. See also MDEV-10723.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "named_pipe": {
+                    "description": "On Windows systems, determines whether connections over named pipes are permitted.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "net_buffer_length": {
+                    "description": "The starting size, in bytes, for the connection and thread buffers for each client thread. The size can grow to max_allowed_packet. This variable's session value is read-only. Can be set to the expected length of client statements if memory is a limitation.",
+                    "type": "string",
+                    "enum": [
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
+                    ]
+                },
+                "net_read_timeout": {
+                    "description": "Time in seconds the server will wait for a client connection to send more data before aborting the read. See also net_write_timeout and slave_net_timeout",
+                    "type": "string",
+                    "enum": [
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
+                    ]
+                },
+                "net_retry_count": {
+                    "description": "Permit this many retries before aborting when attempting to read or write on a communication port. On FreeBSD systems should be set higher as threads are sent internal interrupts..",
+                    "type": "string",
+                    "enum": [
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
+                    ]
+                },
+                "net_write_timeout": {
+                    "description": "Time in seconds to wait on writing a block to a connection before aborting the write. See also net_read_timeout and slave_net_timeout.",
+                    "type": "string",
+                    "enum": [
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
+                    ]
+                },
+                "note_verbosity": {
+                    "description": "Verbosity level for note-warnings given to the user.  Options are added in a comma-delimited string, except for all, which sets all options. See also Notes when an index cannot be used. Be aware that if the old sql_notes variable is 0, one will not get any notes. Setting note_verbosity to \"\" is the recommended way to disable notes.\nbasic All old notes.\nunusable_keys Give warnings for unusable keys for SELECT, DELETE and UPDATE.\nexplain Give warnings for unusable keys for EXPLAIN.\nall Enables all above options. This has to be given alone.",
+                    "type": "string",
+                    "enum": [
+                        "basic",
+                        "unusable_keys",
+                        "INVALID"
+                    ]
+                },
+                "old": {
+                    "description": "Disabled by default, enabling it reverts index hints to those used before MySQL 5.1.17. Enabling may lead to replication errors. Deprecated and replaced by old_mode from MariaDB 10.9.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "old_alter_table": {
+                    "description": "From MariaDB 10.3.7, an alias for alter_algorithm. Prior to that, if set to 1 (0 is default), MariaDB reverts to the non-optimized, pre-MySQL 5.1, method of processing ALTER TABLE statements. A temporary table is created, the data is copied over, and then the temporary table is renamed to the original. ",
+                    "type": "string",
+                    "enum": [
+                        "DEFAULT",
+                        "INPLACE",
+                        "INVALID"
+                    ]
+                },
+                "old_mode": {
+                    "description": "Used for getting MariaDB to emulate behavior from an old version of MySQL or MariaDB. See OLD Mode. Fully replaces the old variable from MariaDB 10.9. Non-default OLD_MODE options are by design deprecated and will eventually be removed.",
+                    "type": "string",
+                    "enum": [
+                        "NO_INDEX_MERGE",
+                        "NO_INDEX_MERGE,NO_ENGINE_SUBSTITUTION",
+                        "INVALID"
+                    ]
+                },
+                "old_passwords": {
+                    "description": "If set to 1 (0 is default), MariaDB reverts to using the mysql_old_password authentication plugin by default for newly created users and passwords, instead of the mysql_native_password authentication plugin.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "open_files_limit": {
+                    "description": "The number of file descriptors available to MariaDB. If you are getting the Too many open files error, then you should increase this limit. If set to 0, then MariaDB will calculate a limit based on the following: \n\nMAX(max_connections*5, max_connections +table_open_cache*2) \n\nMariaDB sets the limit with setrlimit. MariaDB cannot set this to exceed the hard limit imposed by the operating system. Therefore, you may also need to change the hard limit. There are a few ways to do so. \nIf you are using mariadbd_safe to start mariadbd, then see the instructions at mariadbd_safe: Configuring the Open Files Limit. \nIf you are using systemd to start mariadbd, then see the instructions at systemd: Configuring the Open Files Limit. \nOtherwise, you can change the hard limit for the mysql user account by modifying /etc/security/limits.conf. See Configuring Linux for MariaDB: Configuring the Open Files Limit for more details.",
+                    "type": "string",
+                    "enum": [
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
+                    ]
+                },
+                "optimizer_extra_pruning_depth": {
+                    "description": "f the optimizer needs to enumerate a join prefix of this size or larger, then it will try aggressively prune away the search space.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "optimizer_join_limit_pref_ratio": {
+                    "description": "ontrols the optimizer_join_limit_pref_ratio optimization.",
+                    "type": "string",
+                    "enum": [
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
+                    ]
+                },
+                "optimizer_max_sel_arg_weight": {
+                    "description": "This is an actively enforced maximum effective SEL_ARG tree weight limit. A SEL_ARG weight is the number of effective \"ranges\" hanging off this root (that is, merged tree elements are \"unmerged\" to count the weight). During range analysis, looking for possible index merges, SEL_ARG graphs related to key ranges in query conditions are being processed. Graphs exceeding this limit will stop keys being 'and'ed and 'or'ed together to form a new larger SEL_ARG graph.  After each 'and' or 'or' process, this maximum weight limit is enforced. It enforces this limit by pruning the key part being used. This key part pruning can be used to limit/disable index merge SEL_ARG graph construction on overly long query conditions.\nSee optimizer_max_sel_arg_weight for details.",
+                    "type": "string",
+                    "enum": [
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
+                    ]
+                },
+                "optimizer_max_sel_args": {
+                    "description": "The maximum number of SEL_ARG objects created when optimizing a range. If more objects would be needed, range scans will not be used by the optimizer.",
+                    "type": "string",
+                    "enum": [
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
+                    ]
+                },
+                "optimizer_prune_level": {
+                    "description": "ontrols the heuristic(s) applied during query optimization to prune less-promising partial plans from the optimizer search space.\n0: heuristics are disabled and an exhaustive search is performed\n1: the optimizer will use heuristics to prune less-promising partial plans from the optimizer search space\n2: tables using EQ_REF will be joined together as 'one entity' and the different combinations of these tables will not be considered (from MariaDB 10.10)",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "optimizer_search_depth": {
+                    "description": "Maximum search depth by the query optimizer. Smaller values lead to less time spent on execution plans, but potentially less optimal results. If set to 0, MariaDB will automatically choose a reasonable value. Since the better results from more optimal planning usually offset the longer time spent on planning, this is set as high as possible by default. 63 is a valid value, but its effects (switching to the original find_best search) are deprecated.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "optimizer_selectivity_sampling_limit": {
+                    "description": "Controls number of record samples to check condition selectivity. Only used if optimizer_use_condition_selectivity > 4.",
+                    "type": "string",
+                    "enum": [
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
+                    ]
+                },
+                "optimizer_switch": {
+                    "description": "A series of flags for controlling the query optimizer. See Optimizer Switch for defaults, and a comparison to MySQL.",
+                    "type": "string",
+                    "enum": [
+                        "condition_pushdown_for_derived=on",
+                        "condition_pushdown_for_derived=off",
+                        "INVALID"
+                    ]
+                },
+                "optimizer_trace": {
+                    "description": "Controls tracing of the optimizer: optimizer_trace=option=val[,option=val...], where option is one of {enabled} and val is one of {on, off, default}",
+                    "type": "string",
+                    "enum": [
+                        "enabled=on",
+                        "enabled=off",
+                        "INVALID"
+                    ]
+                },
+                "optimizer_trace_max_mem_size": {
+                    "description": "Limits the memory used while tracing a query by specifying the maximum allowed cumulated size, in bytes, of stored optimizer traces.",
+                    "type": "string",
+                    "enum": [
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
+                    ]
+                },
+                "optimizer_use_condition_selectivity": {
+                    "description": "Controls which statistics can be used by the optimizer when looking for\nthe best query execution plan.\n1 Use selectivity of predicates as in MariaDB 5.5.\n2 Use selectivity of all range predicates supported by indexes.\n3 Use selectivity of all range predicates estimated without histogram.\n4 Use selectivity of all range predicates estimated with histogram.\n5 Additionally use selectivity of certain non-range predicates calculated on record sample.",
+                    "type": "integer",
+                    "enum": [
+                        1,
+                        2,
+                        -1
+                    ]
+                },
+                "pid_file": {
+                    "description": "Full path of the process ID file.",
+                    "type": "string",
+                    "enum": [
+                        "/var/run/mariadb/mariadb.pid",
+                        "-1"
+                    ]
+                },
+                "plugin_dir": {
+                    "description": "Path to the plugin directory. For security reasons, either make sure this directory can only be read by the server, or set secure_file_priv.",
+                    "type": "string",
+                    "enum": [
+                        "/usr/lib64/mysql/plugin",
+                        "-1"
+                    ]
+                },
+                "plugin_maturity": {
+                    "description": "The lowest acceptable plugin maturity. MariaDB will not load plugins less mature than the specified level.",
+                    "type": "string",
+                    "enum": [
+                        "alpha",
+                        "beta",
+                        "-1"
+                    ]
+                },
+                "port": {
+                    "description": "Port to listen for TCP/IP connections. If set to 0, will default to, in order of preference, my.cnf, the MYSQL_TCP_PORT environment variable, /etc/services, built-in default (3306).",
+                    "type": "integer",
+                    "enum": [
+                        3306,
+                        3307,
+                        -1
+                    ]
+                },
+                "preload_buffer_size": {
+                    "description": "Size in bytes of the buffer allocated when indexes are preloaded.",
+                    "type": "string",
+                    "enum": [
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
+                    ]
+                },
+                "profiling": {
+                    "description": "If set to 1 (0 is default), statement profiling will be enabled. See SHOW PROFILES() and SHOW PROFILE(). ",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "profiling_history_size": {
+                    "description": "Number of statements about which profiling information is maintained. If set to 0, no profiles are stored. See SHOW PROFILES.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "progress_report_time": {
+                    "description": "Time in seconds between sending progress reports to the client for time-consuming statements. If set to 0, progress reporting will be disabled.",
+                    "type": "string",
+                    "enum": [
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
+                    ]
+                },
+                "protocol_version": {
+                    "description": "The version of the client/server protocol used by the MariaDB server.",
+                    "type": "integer",
+                    "enum": [
+                        10,
+                        20,
+                        -1
+                    ]
+                },
+                "proxy_protocol_networks": {
+                    "description": "Enable proxy protocol for these source networks. The syntax is a comma separated list of IPv4 and IPv6 networks. If the network doesn't contain a mask, it is considered to be a single host. \"*\" represents all networks and must be the only directive on the line. String \"localhost\" represents non-TCP local connections (Unix domain socket, Windows named pipe or shared memory). See Proxy Protocol Support.",
+                    "type": "string",
+                    "enum": [
+                        "localhost",
+                        "*",
+                        "INVALID"
+                    ]
+                },
+                "proxy_user": {
+                    "description": "Set to the proxy user account name if the current client is a proxy, else  NULL.",
+                    "type": "string",
+                    "enum": [
+                        "proxy",
+                        "NULL",
+                        "INVALID"
+                    ]
+                },
+                "pseudo_slave_mode": {
+                    "description": "For internal use by the server.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "query_alloc_block_size": {
+                    "description": "Size in bytes of the extra blocks allocated during query parsing and execution (after query_prealloc_size is used up).",
+                    "type": "string",
+                    "enum": [
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
+                    ]
+                },
+                "query_cache_limit": {
+                    "description": "Size in bytes for which results larger than this are not stored in the query cache.",
+                    "type": "string",
+                    "enum": [
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
+                    ]
+                },
+                "query_cache_min_res_unit": {
+                    "description": "Minimum size in bytes of the blocks allocated for query cache results.",
+                    "type": "string",
+                    "enum": [
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
+                    ]
+                },
+                "query_cache_size": {
+                    "description": "Size in bytes available to the query cache. About 40KB is needed for query cache structures, so setting a size lower than this will result in a warning. 0, the default before MariaDB 10.1.7, effectively disables the query cache. ",
+                    "type": "string",
+                    "enum": [
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
+                    ]
+                },
+                "query_cache_strip_comments": {
+                    "description": "If set to 1 (0 is default), the server will strip any comments from the query before searching to see if it exists in the query cache.  Multiple space, line feeds, tab and other white space characters will also be removed.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "query_cache_type": {
+                    "description": "If set to 0, the query cache is disabled (although a buffer of  query_cache_size bytes is still allocated). If set to 1 all SELECT queries will be cached unless SQL_NO_CACHE is specified. If set to 2 (or DEMAND), only queries with the SQL CACHE clause will be cached. Note that if the server is started with the query cache disabled, it cannot be enabled at runtime. ",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "query_cache_wlock_invalidate": {
+                    "description": "If set to 0, the default, results present in the query cache will be returned even if there's a write lock on the table. If set to 1, the client will first have to wait for the lock to be released.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "query_prealloc_size": {
+                    "description": "Size in bytes of the persistent buffer for query parsing and execution, allocated on connect and freed on disconnect. Increasing may be useful if complex queries are being run, as this will reduce the need for more memory allocations during query operation. See also query_alloc_block_size.",
+                    "type": "string",
+                    "enum": [
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
+                    ]
+                },
+                "rand_seed1": {
+                    "description": "rand_seed1 and rand_seed2 facilitate replication of the RAND() function. The master passes the value of these to the slaves so that the random number generator is seeded in the same way, and generates the same value, on the slave as on the master. Until MariaDB 10.1.4, the variable value could not be viewed, with the SHOW VARIABLES output always displaying zero.",
+                    "type": "string",
+                    "enum": [
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
+                    ]
+                },
+                "rand_seed2": {
+                    "description": "See rand_seed1. ",
+                    "type": "string",
+                    "enum": [
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
+                    ]
+                },
+                "range_alloc_block_size": {
+                    "description": "Size in bytes of blocks allocated during range optimization. The unit size in 1024.",
+                    "type": "string",
+                    "enum": [
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
+                    ]
+                },
+                "read_buffer_size": {
+                    "description": "Each thread performing a sequential scan (for MyISAM, Aria and MERGE tables) allocates a buffer of this size in bytes for each table scanned. Increase if you perform many sequential scans. If not in a multiple of 4KB, will be rounded down to the nearest multiple. Also used in ORDER BY's for caching indexes in a temporary file (not temporary table), for caching results of nested queries, for bulk inserts into partitions, and to determine the memory block size of MEMORY tables.",
+                    "type": "integer",
+                    "enum": [
+                        8200,
+                        16384,
+                        -1
+                    ]
+                },
+                "read_only": {
+                    "description": "When set to 1 (0 is default), no updates are permitted except from users with the SUPER privilege or, from MariaDB 10.5.2, the  READ ONLY ADMIN privilege, or replica servers updating from a primary. The read_only variable is useful for replica servers to ensure no updates are accidentally made outside of what are performed on the primary. Inserting rows to log tables, updates to temporary tables and OPTIMIZE TABLE or ANALYZE TABLE statements are excluded from this limitation. If read_only is set to 1, then the SET PASSWORD statement is limited only to users with the SUPER privilege (<= MariaDB 10.5.1) or READ ONLY ADMIN privilege (>= MariaDB 10.5.2). Attempting to set this variable to 1 will fail if the current session has table locks or transactions pending, while if other sessions hold table locks, the statement will wait until these locks are released before completing. While the attempt to set read_only is waiting, other requests for table locks or transactions will also wait until read_only has been set. See Read-Only Replicas for more. From MariaDB 10.5.2, the READ_ONLY ADMIN privilege will allow users granted that privilege to perform writes, even if the read_only variable is set. In earlier versions, and until MariaDB 10.11.0, users with the SUPER can perform writes while this variable is set.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "read_rnd_buffer_size": {
+                    "description": "Size in bytes of the buffer used when reading rows from a MyISAM table in sorted order after a key sort. Larger values improve ORDER BY performance, although rather increase the size by SESSION where the need arises to avoid excessive memory use.",
+                    "type": "integer",
+                    "enum": [
+                        8200,
+                        16384,
+                        -1
+                    ]
+                },
+                "redirect_url": {
+                    "description": "URL of another server to redirect clients to. Format should be {mysql,mariadb}://host[:port]. Empty string means no redirection. For example set global redirect_url=\"mysql://mariadb.org:12345\". See Connection Redirection Mechanism in the MariaDB Client/Server Protocol.",
+                    "type": "string",
+                    "enum": [
+                        "mysql://mariadb.org:12345",
+                        "",
+                        -1
+                    ]
+                },
+                "require_secure_transport": {
+                    "description": "When this option is enabled, connections attempted using insecure transport will be rejected. Secure transports are SSL/TLS, Unix sockets or named pipes. Note that per-account requirements take precedence.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "rowid_merge_buff_size": {
+                    "description": "The maximum size in bytes of the memory available to the Rowid-merge strategy. See Non-semi-join subquery optimizations for more information.",
+                    "type": "string",
+                    "enum": [
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
+                    ]
+                },
+                "safe_show_database": {
+                    "description": "This variable was removed in MariaDB 5.5, and has been replaced by the more flexible SHOW DATABASES privilege.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "secure_auth": {
+                    "description": "Connections will be blocked if they use the the mysql_old_password authentication plugin. The server will also fail to start if the privilege tables are in the old, pre-MySQL 4.1 format. secure_auth=0 was deprecated in MariaDB 10.6.17, MariaDB 10.11.7, MariaDB 11.0.5, MariaDB 11.1.4, MariaDB 11.2.3.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "secure_file_priv": {
+                    "description": "LOAD DATA, SELECT ... INTO and LOAD FILE() will only work with files in the specified path. If not set, the default, or set to empty string, the statements will work with any files that can be accessed.",
+                    "type": "string",
+                    "enum": [
+                        "/var/lib/mysql-files",
+                        "",
+                        -1
+                    ]
+                },
+                "secure_timestamp": {
+                    "description": "Restricts direct setting of a session timestamp. Possible levels are: \nYES - timestamp cannot deviate from the system clock. Intended to prevent tampering with system versioning history. Should not be used on replicas, as when a value based on the timestamp is inserted in statement mode, discrepancies can occur.\nREPLICATION - replication thread can adjust timestamp to match the primary's\nSUPER - a user with this privilege and a replication thread can adjust timestamp\nNO - historical behavior, anyone can modify session timestamp",
+                    "type": "string",
+                    "enum": [
+                        "YES",
+                        "REPLICATION",
+                        "INVALID"
+                    ]
+                },
+                "server_uid": {
+                    "description": "Automatically calculated server unique id hash. Added to the error log to allow one to verify if error reports are from the same server.  UID is a base64-encoded SHA1 hash of the MAC address of one of the interfaces, and the tcp port that the server is listening on.",
+                    "type": "string",
+                    "enum": [
+                        "INVALID"
+                    ]
+                },
+                "session_track_schema": {
+                    "description": "Whether to track changes to the default schema within the current session.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "session_track_state_change": {
+                    "description": "Whether to track changes to the session state.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "session_track_system_variables": {
+                    "description": "Comma-separated list of session system variables for which to track changes. For compatibility with MySQL defaults, this variable should be set to \"autocommit, character_set_client, character_set_connection, character_set_results, time_zone\". The * character tracks all session variables.",
+                    "type": "string",
+                    "enum": [
+                        "autocommit, character_set_client, character_set_connection, character_set_results, time_zone",
+                        "*",
+                        "INVALID"
+                    ]
+                },
+                "session_track_transaction_info": {
+                    "description": "Track changes to the transaction attributes. OFF to disable; STATE to track just transaction state (Is there an active transaction? Does it have any data? etc.); CHARACTERISTICS to track transaction state and report all statements needed to start a transaction with the same characteristics (isolation level, read only/read write,snapshot - but not any work done / data modified within the transaction).",
+                    "type": "string",
+                    "enum": [
+                        "OFF",
+                        "STATE",
+                        "INVALID"
+                    ]
+                },
+                "shared_memory_base_name": {
+                    "description": "Windows only, specifies the name of the shared memory to use for shared memory connection. Mainly used when running more than one instance on the same physical machine. By default the name is MYSQL and is case sensitive. See also shared_memory.",
+                    "type": "string",
+                    "enum": [
+                        "INVALID"
+                    ]
+                },
+                "skip_external_locking": {
+                    "description": "If this system variable is set, then some kinds of external table locks will be disabled for some storage engines.\nIf this system variable is set, then the MyISAM storage engine will not use file-based locks. Otherwise, it will use the fcntl() function with the F_SETLK option to get file-based locks on Unix, and it will use the LockFileEx() function to get file-based locks on Windows.\nIf this system variable is set, then the Aria storage engine will not lock a table when it decrements the table's in-file counter that keeps track of how many connections currently have the table open. See MDEV-19393 for more information.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "skip_grant_tables": {
+                    "description": "Start without grant tables. This gives all users FULL ACCESS to all tables. Before MariaDB 10.10, available as an option only. Use mariadb-admin flush-privileges, mariadb-admin reload or FLUSH PRIVILEGES to resume using the grant tables.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "skip_name_resolve": {
+                    "description": "If set to 1 (0 is the default), only IP addresses are used for connections. Host names are not resolved. All host values in the GRANT tables must be IP addresses (or localhost). ",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "skip_networking": {
+                    "description": "If set to 1, (0 is the default), the server does not listen for TCP/IP connections. All interaction with the server will be through socket files (Unix) or named pipes or shared memory (Windows). It's recommended to use this option if only local clients are permitted to connect to the server.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "skip_show_database": {
+                    "description": "If set to 1, (0 is the default), only users with the SHOW DATABASES privilege can use the SHOW DATABASES statement to see all database names.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "slow_launch_time": {
+                    "description": "Time in seconds. If a thread takes longer than this to launch, the slow_launch_threads server status variable is incremented. ",
+                    "type": "integer",
+                    "enum": []
+                },
+                "slow_query_log": {
+                    "description": "If set to 0, the default unless the --slow-query-log option is used, the slow query log is disabled, while if set to 1 (both global and session variables), the slow query log is enabled. From MariaDB 10.11.0, an alias for log_slow_query.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "slow_query_log_file": {
+                    "description": "Name of the slow query log file. From MariaDB 10.11, an alias for log_slow_query_file.",
+                    "type": "string",
+                    "enum": [
+                        "/var/lib/mysql/mariadb-slow.log",
+                        -1
+                    ]
+                },
+                "socket": {
+                    "description": "On Unix-like systems, this is the name of the socket file used for local client connections, by default /tmp/mysql.sock, often changed by the distribution, for example /var/lib/mysql/mysql.sock. On Windows, this is the name of the named pipe used for local client connections, by default MySQL. On Windows, this is not case-sensitive.",
+                    "type": "string",
+                    "enum": [
+                        "/var/lib/mysql/mysql.sock",
+                        -1
+                    ]
+                },
+                "sort_buffer_size": {
+                    "description": "Each session performing a sort allocates a buffer with this amount of memory. Not specific to any storage engine. If the status variable sort_merge_passes is too high, you may need to look at improving your query indexes, or increasing this. Consider reducing where there are many small sorts, such as OLTP, and increasing where needed by session. 16k is a suggested minimum.",
+                    "type": "string",
+                    "enum": [
+                        "16K",
+                        "32K",
+                        -1
+                    ]
+                },
+                "sql_auto_is_null": {
+                    "description": "If set to 1, the query SELECT * FROM table_name WHERE auto_increment_column IS NULL will return an auto-increment that has just been successfully inserted, the same as the LAST_INSERT_ID() function. Some ODBC programs make use of this IS NULL comparison.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "sql_big_selects": {
+                    "description": "If set to 0, MariaDB will not perform large SELECTs. See max_join_size for details. If max_join_size is set to anything but DEFAULT, sql_big_selects is automatically set to 0. If sql_big_selects is again set, max_join_size will be ignored. ",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "sql_big_tables": {
+                    "description": "Old variable, which if set to 1, allows large result sets by saving all temporary sets to disk, avoiding 'table full' errors. No longer needed, as the server now handles this automatically.\nThis is a synonym for big_tables.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "sql_buffer_result": {
+                    "description": "If set to 1 (0 is default), results from SELECT statements are always placed into temporary tables. This can help the server when it takes a long time to send the results to the client by allowing the table locks to be freed early.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "sql_if_exists": {
+                    "description": "If set to 1, adds an implicit IF EXISTS to ALTER, RENAME and DROP of TABLES, VIEWS, FUNCTIONS and PACKAGES. This variable is mainly used in replication to tag DDLs that can be ignored on the slave if the target table doesn't exist.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "sql_log_off": {
+                    "description": "If set to 1 (0 is the default), no logging to the general query log is done for the client. Only clients with the SUPER privilege can update this variable.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "sql_low_priority_updates": {
+                    "description": "If set to 1 (0 is the default), for storage engines that use only table-level locking (Aria, MyISAM, MEMORY and MERGE), all INSERTs, UPDATEs, DELETEs and LOCK TABLE WRITEs will wait until there are no more SELECTs or LOCK TABLE READs pending on the relevant tables. Set this to 1 if reads are prioritized over writes.\nThis is a synonym for low_priority_updates.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "sql_mode": {
+                    "description": "Sets the SQL Mode. Multiple modes can be set, separated by a comma. ",
+                    "type": "string",
+                    "enum": [
+                        "NO_ENGINE_SUBSTITUTION",
+                        "NO_ENGINE_SUBSTITUTION,NO_AUTO_CREATE_USER",
+                        "INVALID"
+                    ]
+                },
+                "sql_notes": {
+                    "description": "If set to 1, the default, warning_count is incremented each time a Note warning is encountered. If set to 0, Note warnings are not recorded. mariadb-dump has outputs to set this variable to 0 so that no unnecessary increments occur when data is reloaded. See also note_verbosity, which defines which notes should be given. The recommended way, as of MariaDB 10.6.16, to disable notes is to set note_verbosity to \"\".",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "sql_quote_show_create": {
+                    "description": "If set to 1, the default, the server will quote identifiers for SHOW CREATE DATABASE, SHOW CREATE TABLE and SHOW CREATE VIEW statements. Quoting is disabled if set to 0. Enable to ensure replication works when identifiers require quoting.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "sql_safe_updates": {
+                    "description": "If set to 1, UPDATEs and DELETEs must be executed by using an index (simply mentioning an indexed column in a WHERE clause is not enough, optimizer must actually use it) or they must mention an indexed column and specify a LIMIT clause. Otherwise a statement will be aborted. Prevents the common mistake of accidentally deleting or updating every row in a table. Until MariaDB 10.3.11, could not be set as a command-line option or in my.cnf.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "sql_select_limit": {
+                    "description": "Maximum number of rows that can be returned from a SELECT query. Default is the maximum number of rows permitted per table by the server, usually 232-1 or 264-1. Can be restored to the default value after being changed by assigning it a value of DEFAULT.",
+                    "type": "string",
+                    "enum": [
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
+                    ]
+                },
+                "sql_warnings": {
+                    "description": "If set to 1, single-row INSERTs will produce a string containing warning information if a warning occurs.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "standard_compliant_cte": {
+                    "description": "Allow only standard-compliant common table expressions. Prior to MariaDB 10.2.4, this variable was named standards_compliant_cte.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "stored_program_cache": {
+                    "description": "Limit to the number of stored routines held in the stored procedures and stored functions caches. Each time a stored routine is executed, this limit is first checked, and if the number held in the cache exceeds this, that cache is flushed and memory freed.",
+                    "type": "string",
+                    "enum": [
+                        "256M",
+                        "512M",
+                        "-1"
+                    ]
+                },
+                "strict_password_validation": {
+                    "description": "When password validation plugins are enabled, reject passwords that cannot be validated (passwords specified as a hash). This excludes direct updates to the privilege tables.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "sync_frm": {
+                    "description": "If set to 1, the default, each time a non-temporary table is created, its .frm definition file is synced to disk. Fractionally slower, but safer in case of a crash.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "system_time_zone": {
+                    "description": "The system time zone is determined when the server starts. The system time zone is usually read from the operating system's environment but can be overridden by setting the 'TZ' environment variable before starting the server. See Time Zones: System Time Zone for the various ways to change the system time zone. This variable is not the same as the time_zone system variable, which is the variable that actually controls a session's active time zone. The system time zone is used for a session when time_zone is set to the special value SYSTEM. ",
+                    "type": "string",
+                    "enum": [
+                        "SYSTEM",
+                        "INVALID"
+                    ]
+                },
+                "table_definition_cache": {
+                    "description": "Number of table definitions that can be cached. Table definitions are taken from the .frm files, and if there are a large number of tables increasing the cache size can speed up table opening. Unlike the table_open_cache, as the table_definition_cache doesn't use file descriptors, and is much smaller.",
+                    "type": "integer",
+                    "enum": [
+                        400,
+                        800,
+                        -1
+                    ]
+                },
+                "table_open_cache": {
+                    "description": "Maximum number of open tables cached in one table cache instance. See Optimizing table_open_cache for suggestions on optimizing. Increasing table_open_cache increases the number of file descriptors required.",
+                    "type": "integer",
+                    "enum": [
+                        400,
+                        800,
+                        -1
+                    ]
+                },
+                "table_open_cache_instances": {
+                    "description": "This system variable specifies the maximum number of table cache instances. MariaDB Server initially creates just a single instance. However, whenever it detects contention on the existing instances, it will automatically create a new instance. When the number of instances has been increased due to contention, it does not decrease again. The default value of this system variable is 8, which is expected to handle up to 100 CPU cores. If your system is larger than this, then you may benefit from increasing the value of this system variable.\nDepending on the ratio of actual available file handles, and table_open_cache size, the max. instance count may be auto adjusted to a lower value on server startup.\nThe implementation and behavior of this feature is different than the same feature in MySQL 5.6.\nSee Optimizing table_open_cache: Automatic Creation of New Table Open Cache Instances for more information.",
+                    "type": "integer",
+                    "enum": [
+                        1,
+                        2,
+                        -1
+                    ]
+                },
+                "tcp_keepalive_interval": {
+                    "description": "The interval, in seconds, between when successive keep-alive packets are sent if no acknowledgement is received. If set to 0, the system dependent default is used.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "tcp_keepalive_probes": {
+                    "description": "The number of unacknowledged probes to send before considering the connection dead and notifying the application layer. If set to 0, a system dependent default is used.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "tcp_keepalive_time": {
+                    "description": "Timeout, in seconds, with no activity until the first TCP keep-alive packet is sent. If set to 0, a system dependent default is used.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "tcp_nodelay": {
+                    "description": "Set the TCP_NODELAY option (disable Nagle's algorithm) on socket.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "thread_cache_size": {
+                    "description": "Number of threads server caches for re-use. If this limit hasn't been reached, when a client disconnects, its threads are put into the cache, and re-used where possible. In MariaDB 10.2.0 and newer the threads are freed after 5 minutes of idle time. Normally this setting has little effect, as the other aspects of the thread implementation are more important, but increasing it can help servers with high volumes of connections per second so that most can use a cached, rather than a new, thread. The cache miss rate can be calculated as the server status variables threads_created/connections. If the thread pool is active, thread_cache_size is ignored. If thread_cache_size is set to greater than the value of max_connections, thread_cache_size will be set to the max_connections value.",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                },
+                "thread_concurrency": {
+                    "description": "Allows applications to give the system a hint about the desired number of threads. Specific to Solaris only, invokes thr_setconcurrency(). Deprecated and has no effect from MariaDB 5.5.",
+                    "type": "integer",
+                    "enum": [
+                        1,
+                        2,
+                        -1
+                    ]
+                },
+                "thread_stack": {
+                    "description": "Stack size for each thread. If set too small, limits recursion depth of stored procedures and complexity of SQL statements the server can handle in memory. Also affects limits in the crash-me test.",
+                    "type": "integer",
+                    "enum": [
+                        131072,
+                        262144,
+                        -1
+                    ]
+                },
+                "time_zone": {
+                    "description": "The global value determines the default time zone for sessions that connect. The session value determines the session's active time zone. When it is set to SYSTEM, the session's time zone is determined by the system_time_zone system variable. ",
+                    "type": "string",
+                    "enum": [
+                        "SYSTEM",
+                        "INVALID"
+                    ]
+                },
+                "timed_mutexes": {
+                    "description": "Determines whether InnoDB mutexes are timed. OFF, the default, disables mutex timing, while ON enables it. See also SHOW ENGINE for more on mutex statistics. Deprecated and has no effect.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "timestamp": {
+                    "description": "Sets the time for the client. This will affect the result returned by the NOW() function, not the SYSDATE() function, unless the server is started with the --sysdate-is-now option, in which case SYSDATE becomes an alias of NOW, and will also be affected. Also used to get the original timestamp when restoring rows from the binary log.",
+                    "type": "string",
+                    "enum": [
+                        "DEFAULT",
+                        "INVALID"
+                    ]
+                },
+                "tmp_disk_table_size": {
+                    "description": "Max size for data for an internal temporary on-disk MyISAM or Aria table.  These tables are created as part of complex queries when the result doesn't fit into the memory engine. You can set this variable if you want to limit the size of temporary tables created in your temporary directory tmpdir.",
+                    "type": "string",
+                    "enum": [
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
+                    ]
+                },
+                "tmp_memory_table_size": {
+                    "description": "An alias for tmp_table_size.",
+                    "type": "string",
+                    "enum": [
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
+                    ]
+                },
+                "tmp_table_size": {
+                    "description": "The largest size for temporary tables in memory (not MEMORY tables) although if max_heap_table_size is smaller the lower limit will apply. You can see if it's necessary to increase by comparing the status variables Created_tmp_disk_tables and Created_tmp_tables to see how many temporary tables out of the total created needed to be converted to disk. Often complex GROUP BY queries are responsible for exceeding the limit. Defaults may be different on some systems, see for example Differences in MariaDB in Debian. From MariaDB 10.2.7, tmp_memory_table_size is an alias.",
+                    "type": "string",
+                    "enum": [
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
+                    ]
+                },
+                "tmpdir": {
+                    "description": "Directory for storing temporary tables and files. Can specify a list (separated by semicolons in Windows, and colons in Unix) that will then be used in round-robin fashion. This can be used for load balancing across several disks. Note that if the server is a replication replica, and slave_load_tmpdir, which overrides tmpdir for replicas, is not set, you should not set tmpdir to a directory that is cleared when the machine restarts, or else replication may fail.",
+                    "type": "string",
+                    "enum": [
+                        "/var/lib/mysql/tmp",
+                        "-1"
+                    ]
+                },
+                "transaction_alloc_block_size": {
+                    "description": "Size in bytes to increase the memory pool available to each transaction when the available pool is not large enough. See transaction_prealloc_size.",
+                    "type": "string",
+                    "enum": [
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
+                    ]
+                },
+                "transaction_isolation": {
+                    "description": "The transaction isolation level. See also SET TRANSACTION ISOLATION LEVEL. Introduced in MariaDB 11.1.1 to replace the tx_isolation system variable and align the option and the system variable name.",
+                    "type": "string",
+                    "enum": [
+                        "READ-UNCOMMITTED",
+                        "READ-COMMITTED",
+                        "INVALID"
+                    ]
+                },
+                "transaction_prealloc_size": {
+                    "description": "Initial size of a memory pool available to each transaction for various memory allocations. If the memory pool is not large enough for an allocation, it is increased by transaction_alloc_block_size bytes, and truncated back to transaction_prealloc_size bytes when the transaction is completed. If set large enough to contain all statements in a transaction, extra malloc() calls are avoided.",
+                    "type": "string",
+                    "enum": [
+                        "1024Mi",
+                        "2048Mi",
+                        "-1"
+                    ]
+                },
+                "transaction_read_only": {
+                    "description": "Default transaction access mode. If set to OFF, the default, access is read/write. If set to ON, access is read-only. The SET TRANSACTION statement can also change the value of this variable. See SET TRANSACTION and START TRANSACTION.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "tx_isolation": {
+                    "description": "The transaction isolation level. Setting this session variable via set @@tx_isolation= will take effect for only the subsequent transaction in the current session, much like SET TRANSACTION ISOLATION LEVEL. To set for a session, use SET SESSION tx_isolation or SET @@session.tx_isolation. See MDEV-31751. See also SET TRANSACTION ISOLATION LEVEL. In MariaDB 11.1, this system variable is deprecated and replaced by transaction_isolation.",
+                    "type": "string",
+                    "enum": [
+                        "READ-UNCOMMITTED",
+                        "READ-COMMITTED",
+                        "INVALID"
+                    ]
+                },
+                "tx_read_only": {
+                    "description": "Default transaction access mode. If set to OFF, the default, access is read/write. If set to ON, access is read-only. The SET TRANSACTION statement can also change the value of this variable. See SET TRANSACTION and START TRANSACTION. In MariaDB 11.1, this system variable is deprecated and replaced by transaction_read_only.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "unique_checks": {
+                    "description": "If set to 0, storage engines can (but are not required to) assume that duplicate keys are not present in input data. If set to 0, inserting duplicates into a UNIQUE index can succeed, causing the table to become corrupted. Set to 0 to speed up imports of large tables to InnoDB.",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "updatable_views_with_limit": {
+                    "description": "Determines whether view updates can be made with an UPDATE or DELETE statement with a LIMIT clause if the view does not contain all primary or not null unique key columns from the underlying table. 0 prohibits this, while 1 permits it while issuing a warning (the default).",
+                    "type": "string",
+                    "enum": [
+                        "ON",
+                        "OFF"
+                    ]
+                },
+                "use_stat_tables": {
+                    "description": "Controls the use of engine-independent table statistics. \nnever: The optimizer will not use data from statistics tables. \ncomplementary: The optimizer uses data from statistics tables if the same kind of data is not provided by the storage engine.\npreferably: Prefer the data from statistics tables, if it's not available there, use the data from the storage engine.\ncomplementary_for_queries: Same as complementary, but for queries only (to avoid needlessly collecting for ANALYZE TABLE).\npreferably_for_queries: Same as preferably, but for queries only (to avoid needlessly collecting for ANALYZE TABLE).",
+                    "type": "string",
+                    "enum": [
+                        "preferably",
+                        "preferably_for_queries",
+                        "INVALID"
+                    ]
+                },
+                "wait_timeout": {
+                    "description": "Time in seconds that the server waits for a connection to become active before closing it. The session value is initialized when a thread starts up from either the global value, if the connection is non-interactive, or from the interactive_timeout value, if the connection is interactive.",
+                    "type": "integer",
+                    "enum": [
+                        28800,
+                        57600,
+                        -1
+                    ]
+                },
+                "warning_count": {
+                    "description": "Read-only variable indicating the number of warnings, errors and notes resulting from the most recent statement that generated messages. See SHOW WARNINGS for more. Note warnings will only be recorded if sql_notes is true (the default).",
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        -1
+                    ]
+                }
+            }
+        }
+    }
+}

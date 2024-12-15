@@ -1,0 +1,96 @@
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: MariaDB
+metadata:
+  name: mariadb
+spec:
+  rootPasswordSecretKeyRef:
+    name: mariadb
+    key: root-password
+
+  username: mariadb
+  passwordSecretKeyRef:
+    name: mariadb
+    key: password
+  database: mariadb
+
+  port: 3306
+
+  replicas: 3
+
+  galera:
+    enabled: true
+
+  storage:
+    size: 1Gi
+    storageClassName: standard
+    resizeInUseVolumes: true
+    waitForVolumeResize: true
+
+  connection:
+    secretName: connection-mariadb
+    secretTemplate:
+      key: dsn
+    healthCheck:
+      interval: 10s
+      retryInterval: 3s
+    params:
+      parseTime: "true"
+
+  myCnf: |
+    [mariadb]
+    bind_address=*
+    default_storage_engine=InnoDB
+    binlog_format=row
+    innodb_autoinc_lock_mode=2
+    innodb_buffer_pool_size=1024Mi
+    max_allowed_packet=256Mi
+
+  timeZone: "UTC"
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 1Gi
+
+  env:
+    - name: TZ
+      value: SYSTEM
+
+  securityContext:
+    allowPrivilegeEscalation: false
+
+  livenessProbe:
+    exec:
+      command:
+        - bash
+        - -c
+        - mariadb -u root -p"${MARIADB_ROOT_PASSWORD}" -e "SELECT 1;"
+    initialDelaySeconds: 20
+    periodSeconds: 5
+    timeoutSeconds: 5
+
+  readinessProbe:
+    exec:
+      command:
+        - bash
+        - -c
+        - mariadb -u root -p"${MARIADB_ROOT_PASSWORD}" -e "SELECT 1;"
+    initialDelaySeconds: 20
+    periodSeconds: 5
+    timeoutSeconds: 5
+
+  podDisruptionBudget:
+    maxUnavailable: 50%
+
+  updateStrategy:
+    type: ReplicasFirstPrimaryLast
+
+  service:
+    type: ClusterIP
+
+  metrics:
+    enabled: true
+
+  suspend: false

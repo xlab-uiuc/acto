@@ -1,0 +1,82 @@
+{
+
+    "deploy": {
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/percona-server-mongodb-operator/v1-16-0/bundle.yaml",
+                    "operator": true
+                }
+            }
+        ]
+    },
+    "crd_name": "perconaservermongodbs.psmdb.percona.com",
+    "crd_version": "v1",
+    "seed_custom_resource": "data/percona-server-mongodb-operator/v1-16-0/cr.yaml",
+    "example_dir": "data/percona-server-mongodb-operator/v1-16-0/examples",
+    "num_nodes": 5,
+    "custom_module": "data.percona-server-mongodb-operator.v1-16-0.custom_mapping",
+    "diff_ignore_fields": [
+        "\\['secret'\\]\\['default\\-token\\-.*'\\]",
+        "\\['secret'\\]\\['percona\\-server\\-mongodb\\-operator\\-token-.*'\\]",
+        "\\['secret'\\]\\[.*\\]\\['data'\\]",
+        "\\['metadata'\\]\\['annotations'\\]\\['percona\\.com\\\/ssl\\-hash'\\]",
+        "\\['metadata'\\]\\['annotations'\\]\\['percona\\.com\\\/ssl\\-internal\\-hash'\\]",
+        "\\['metadata'\\]\\['annotations'\\]\\['percona\\.com\\\/last\\-config\\-hash'\\]",
+        "\\['image_pull_policy'\\]"
+    ],
+    "focus_fields": [
+        ["spec", "replsets", "ITEM", "arbiter", "enabled"],
+        ["spec", "replsets", "ITEM", "size"],
+        ["spec", "replsets", "ITEM", "name"],
+        ["spec", "replsets", "ITEM", "storage", "engine"],
+        ["spec", "replsets", "ITEM", "storage", "wiredTiger"],
+        ["spec", "replsets", "ITEM", "storage", "inMemory", "engineConfig", "inMemorySizeRatio"],
+        ["spec", "replsets", "ITEM", "splitHorizons"],
+        ["spec", "replsets", "ITEM", "expose", "enabled"],
+        ["spec", "replsets", "ITEM", "expose", "exposeType"],
+        ["spec", "replsets", "ITEM", "nonvoting", "enabled"],
+        ["spec", "replsets", "ITEM", "nonvoting", "size"],
+        ["spec", "replsets", "ITEM", "nonvoting", "resources", "requests"],
+        ["spec", "replsets", "ITEM", "arbiter", "enabled"],
+        ["spec", "replsets", "ITEM", "arbiter", "size"],
+        ["spec", "replsets", "ITEM", "resources", "requests"],
+        ["spec", "pmm", "enabled"],
+        ["spec", "pmm", "serverHost"],
+        ["spec", "pmm", "image"],
+        ["spec", "pmm", "mongodParams"],
+        ["spec", "sharding", "enabled"],
+        ["spec", "sharding", "configsvr", "size"],
+        ["spec", "sharding", "configsvr", "expose", "enabled"],
+        ["spec", "sharding", "configsvr", "expose", "exposeType"],
+        ["spec", "sharding", "mongos", "size"],
+        ["spec", "sharding", "mongos", "configuration"],
+        ["spec", "sharding", "mongos", "expose", "exposeType"],
+        ["spec", "sharding", "mongos", "expose", "servicePerPod"],
+        ["spec", "sharding", "mongos", "expose", "nodePort"],
+        ["spec", "backup", "enabled"],
+        ["spec","pause"],
+        ["spec","unmanaged"],
+        ["spec","image"],
+        ["spec","ClusterServiceDNSSuffix"],
+        ["spec","clusterServiceDNSMode"],
+        ["spec", "allowUnsafeConfigurations"],
+        ["spec", "updateStrategy"],
+        ["spec", "multiCluster", "enabled"],
+        ["spec", "multiCluster", "DNSSuffix"],
+        ["spec", "unsafeFlags", "tls"],
+        ["spec", "unsafeFlags", "replsetSize"],
+        ["spec", "unsafeFlags", "mongosSize"],
+        ["spec", "unsafeFlags", "backupIfUnhealthy"],
+        ["spec", "tls", "mode"],
+        ["spec", "tls", "allowInvalidCertificates"],
+        ["spec", "upgradeOptions", "apply"],
+        ["spec", "upgradeOptions", "setFCV"],
+        ["spec", "secrets", "users"],
+        ["spec", "secrets", "sse"],
+        ["spec", "secrets", "ssl"],
+        ["spec", "secrets", "sslInternal"],
+        ["spec", "secrets", "encryptionKey"],
+        ["spec", "secrets", "vault"]
+    ]
+}

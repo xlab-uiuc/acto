@@ -1,0 +1,33 @@
+{
+
+    "deploy": {
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/percona-server-mongodb-operator/v1-12-0/bundle.yaml",
+                    "operator": true
+                }
+            }
+        ]
+    },
+    "crd_name": "perconaservermongodbs.psmdb.percona.com",
+    "custom_module": "data.percona-server-mongodb-operator.v1-12-0.custom_mapping",
+    "seed_custom_resource": "data/percona-server-mongodb-operator/v1-12-0/cr.yaml",
+    "example_dir": "data/percona-server-mongodb-operator/v1-12-0/examples",
+    "analysis": {
+        "github_link": "https://github.com/percona/percona-server-mongodb-operator.git",
+        "commit": "54950f7e56cde893c4b36a061c6335598b84873d",
+        "entrypoint": "cmd/manager",
+        "type": "PerconaServerMongoDB",
+        "package": "github.com/percona/percona-server-mongodb-operator/pkg/apis/psmdb/v1"
+    },
+    "num_nodes": 5,
+    "diff_ignore_fields": [
+        "\\['secret'\\]\\['default\\-token\\-.*'\\]",
+        "\\['secret'\\]\\['percona\\-server\\-mongodb\\-operator\\-token-.*'\\]",
+        "\\['secret'\\]\\[.*\\]\\['data'\\]",
+        "\\['metadata'\\]\\['annotations'\\]\\['percona\\.com\\\/ssl\\-hash'\\]",
+        "\\['metadata'\\]\\['annotations'\\]\\['percona\\.com\\\/ssl\\-internal\\-hash'\\]",
+        "\\['metadata'\\]\\['annotations'\\]\\['percona\\.com\\\/last\\-config\\-hash'\\]"
+    ]
+}

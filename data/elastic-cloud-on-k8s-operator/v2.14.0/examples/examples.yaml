@@ -1,0 +1,30 @@
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: elasticsearch-sample
+spec:
+  nodeSets:
+  - config:
+      node.roles:
+      - master
+      - data
+      - ingest
+      - ml
+      node.store.allow_mmap: false
+    count: 3
+    name: default
+    podTemplate:
+      metadata:
+        labels:
+          foo: bar
+      spec:
+        containers:
+        - env:
+          - name: ES_JAVA_OPTS
+            value: -Xms2g -Xmx2g
+          name: elasticsearch
+          resources:
+            limits:
+              cpu: 1
+              memory: 4Gi
+  version: 8.15.0

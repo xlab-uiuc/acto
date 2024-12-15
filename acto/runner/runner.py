@@ -11,9 +11,10 @@ import kubernetes
 import kubernetes.client.models as kubernetes_models
 import yaml
 
+from acto import snapshot
 from acto.common import kubernetes_client
 from acto.kubectl_client import KubectlClient
-from acto.snapshot import Snapshot
+from acto.system_state import kubernetes_system_state
 from acto.utils import acto_timer, get_thread_logger
 
 RunnerHookType = Callable[[kubernetes.client.ApiClient], None]
@@ -91,7 +92,7 @@ class Runner:
         input_cr: dict,
         generation: int,
         hooks: Optional[list[RunnerHookType]] = None,
-    ) -> tuple[Snapshot, bool]:
+    ) -> tuple[snapshot.Snapshot, bool]:
         """Simply run the cmd and dumps system_state, delta, operator log,
         events and input files without checking.
         The function blocks until system converges.
@@ -99,6 +100,7 @@ class Runner:
             Args:
                 input_cr: CR to be applied in the format of dict
                 generation: the generation number of the input file
+                hooks: a list of hooks to be called before applying the CR
 
             Returns:
                 result, err
@@ -110,7 +112,7 @@ class Runner:
             for hook in hooks:
                 hook(self.apiclient)
 
-        mutated_filename = f"{self.trial_dir}/mutated-{generation:03d}.yaml"
+        mutated_filename = snapshot.input_cr_path(self.trial_dir, generation)
         with open(mutated_filename, "w", encoding="utf-8") as mutated_cr_file:
             yaml.dump(input_cr, mutated_cr_file)
 
@@ -130,7 +132,7 @@ class Runner:
             )
             logger.error("STDOUT: %s", cli_result.stdout)
             logger.error("STDERR: %s", cli_result.stderr)
-            snapshot = Snapshot(
+            s = snapshot.Snapshot(
                 input_cr=input_cr,
                 cli_result=self.collect_cli_result(cli_result),
                 system_state={},
@@ -139,8 +141,8 @@ class Runner:
                 not_ready_pods_logs=None,
                 generation=generation,
             )
-            snapshot.dump(self.trial_dir)
-            return snapshot, True
+            s.dump(self.trial_dir)
+            return s, True
 
         err = None
 
@@ -172,7 +174,7 @@ class Runner:
         events = self.collect_events()
         unready_pod_logs = self.collect_not_ready_pods_logs()
 
-        snapshot = Snapshot(
+        s = snapshot.Snapshot(
             input_cr=input_cr,
             cli_result=self.collect_cli_result(cli_result),
             system_state=system_state,
@@ -181,7 +183,7 @@ class Runner:
             not_ready_pods_logs=unready_pod_logs,
             generation=generation,
         )
-        return snapshot, err
+        return s, err
 
     def run_without_collect(self, seed_file: str):
         """Simply run the cmd without collecting system_state"""
@@ -200,7 +202,7 @@ class Runner:
         """Delete the mutated CR"""
         logger = get_thread_logger(with_prefix=True)
         start = time.time()
-        mutated_filename = f"{self.trial_dir}/mutated-{generation}.yaml"
+        mutated_filename = snapshot.input_cr_path(self.trial_dir, generation)
         logger.info("Deleting: %s", mutated_filename)
 
         cmd = ["delete", "-f", mutated_filename, "-n", self.namespace]
@@ -337,39 +339,64 @@ class Runner:
             self.core_v1_api.list_namespaced_pod(self.namespace)
         ).items
         for pod in pods:
+
+            # Check if the pod is ready, if not, get the logs
+            for condition in pod.status.conditions:
+                if condition.type == "Ready" and condition.status != "True":
+                    break
+                if (
+                    condition.type == "Initialized"
+                    and condition.status != "True"
+                ):
+                    break
+                if (
+                    condition.type == "ContainersReady"
+                    and condition.status != "True"
+                ):
+                    break
+            else:
+                continue
+
             for container_statuses in [
                 pod.status.container_statuses or [],
                 pod.status.init_container_statuses or [],
             ]:
                 for container_status in container_statuses:
-                    if not container_status.ready:
-                        try:
+                    try:
+                        log = self.core_v1_api.read_namespaced_pod_log(
+                            pod.metadata.name,
+                            self.namespace,
+                            container=container_status.name,
+                        )
+                        ret[f"{pod.metadata.name}-{container_status.name}"] = (
+                            log.splitlines()
+                        )
+                    except kubernetes.client.rest.ApiException as e:
+                        logger = get_thread_logger(with_prefix=True)
+                        logger.error(
+                            "Failed to get crash log of pod %s",
+                            pod.metadata.name,
+                            exc_info=e,
+                        )
+
+                    try:
+                        if container_status.last_state.terminated is not None:
                             log = self.core_v1_api.read_namespaced_pod_log(
                                 pod.metadata.name,
                                 self.namespace,
                                 container=container_status.name,
+                                previous=True,
                             )
-                            ret[pod.metadata.name] = log.splitlines()
-                            if (
-                                container_status.last_state.terminated
-                                is not None
-                            ):
-                                log = self.core_v1_api.read_namespaced_pod_log(
-                                    pod.metadata.name,
-                                    self.namespace,
-                                    container=container_status.name,
-                                    previous=True,
-                                )
-                                ret[
-                                    f"{pod.metadata.name}-previous"
-                                ] = log.splitlines()
-                        except kubernetes.client.rest.ApiException as e:
-                            logger = get_thread_logger(with_prefix=True)
-                            logger.error(
-                                "Failed to get previous log of pod %s",
-                                pod.metadata.name,
-                                exc_info=e,
-                            )
+                            ret[
+                                f"{pod.metadata.name}-{container_status.name}-previous"
+                            ] = log.splitlines()
+                    except kubernetes.client.rest.ApiException as e:
+                        logger = get_thread_logger(with_prefix=True)
+                        logger.error(
+                            "Failed to get previous log of pod %s",
+                            pod.metadata.name,
+                            exc_info=e,
+                        )
         if len(ret) > 0:
             return ret
         else:
@@ -460,116 +487,10 @@ class Runner:
                     converge = False
                     break
             except queue.Empty:
-                ready = True
-                statefulsets = self.__get_all_objects(
-                    self.app_v1_api.list_namespaced_stateful_set
-                )
-                deployments = self.__get_all_objects(
-                    self.app_v1_api.list_namespaced_deployment
-                )
-                daemonsets = self.__get_all_objects(
-                    self.app_v1_api.list_namespaced_daemon_set
-                )
-
-                for sfs in statefulsets.values():
-                    if (
-                        sfs["status"]["ready_replicas"] is None
-                        and sfs["status"]["replicas"] == 0
-                    ):
-                        # replicas could be 0
-                        continue
-                    if (
-                        sfs["status"]["replicas"]
-                        != sfs["status"]["ready_replicas"]
-                    ):
-                        ready = False
-                        logger.info(
-                            "Statefulset %s is not ready yet",
-                            sfs["metadata"]["name"],
-                        )
-                        break
-                    if sfs["spec"]["replicas"] != sfs["status"]["replicas"]:
-                        ready = False
-                        logger.info(
-                            "Statefulset %s is not ready yet",
-                            sfs["metadata"]["name"],
-                        )
-                        break
-
-                for dp in deployments.values():
-                    if dp["spec"]["replicas"] == 0:
-                        continue
-
-                    if (
-                        dp["status"]["replicas"]
-                        != dp["status"]["ready_replicas"]
-                    ):
-                        ready = False
-                        logger.info(
-                            "Deployment %s is not ready yet",
-                            dp["metadata"]["name"],
-                        )
-                        break
-
-                    for condition in dp["status"]["conditions"]:
-                        if (
-                            condition["type"] == "Available"
-                            and condition["status"] != "True"
-                        ):
-                            ready = False
-                            logger.info(
-                                "Deployment %s is not ready yet",
-                                dp["metadata"]["name"],
-                            )
-                            break
-
-                        if (
-                            condition["type"] == "Progressing"
-                            and condition["status"] != "True"
-                        ):
-                            ready = False
-                            logger.info(
-                                "Deployment %s is not ready yet",
-                                dp["metadata"]["name"],
-                            )
-                            break
-
-                for ds in daemonsets.values():
-                    if (
-                        ds["status"]["number_ready"]
-                        != ds["status"]["current_number_scheduled"]
-                    ):
-                        ready = False
-                        logger.info(
-                            "Daemonset %s is not ready yet",
-                            ds["metadata"]["name"],
-                        )
-                        break
-                    if (
-                        ds["status"]["desired_number_scheduled"]
-                        != ds["status"]["number_ready"]
-                    ):
-                        ready = False
-                        logger.info(
-                            "Daemonset %s is not ready yet",
-                            ds["metadata"]["name"],
-                        )
-                        break
-                    if (
-                        "updated_number_scheduled" in ds["status"]
-                        and ds["status"]["updated_number_scheduled"]
-                        != ds["status"]["desired_number_scheduled"]
-                    ):
-                        ready = False
-                        logger.info(
-                            "Daemonset %s is not ready yet",
-                            ds["metadata"]["name"],
-                        )
-                        break
-
-                if ready:
-                    # only stop waiting if all deployments and statefulsets are ready
-                    # else, keep waiting until ready or hard timeout
+                health = kubernetes_system_state.KubernetesSystemState.from_api_client(
+                    self.apiclient, self.namespace
+                ).check_health()
+                if health.is_healthy():
                     break
 
         event_stream.close()

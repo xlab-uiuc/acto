@@ -109,6 +109,7 @@ def get_deployment_name_from_yaml(fn: str) -> Optional[str]:
 
 
 def create_namespace(apiclient, name: str) -> V1Namespace:
+    """Create a namespace in kubernetes"""
     logger = get_thread_logger(with_prefix=False)
     corev1_api = kubernetes.client.CoreV1Api(apiclient)
     namespace = None
@@ -122,17 +123,14 @@ def create_namespace(apiclient, name: str) -> V1Namespace:
 
 
 def delete_namespace(apiclient, name: str) -> bool:
-    logger = get_thread_logger(with_prefix=False)
+    """Delete a namespace in kubernetes"""
     corev1_api = kubernetes.client.CoreV1Api(apiclient)
-    try:
-        corev1_api.delete_namespace(name=name)
-    except Exception as e:
-        logger.error(e)
-        return False
+    corev1_api.delete_namespace(name=name)
     return True
 
 
 def delete_operator_pod(apiclient, namespace: str) -> bool:
+    """Delete the operator pod in kubernetes"""
     logger = get_thread_logger(with_prefix=False)
 
     corev1_api = kubernetes.client.CoreV1Api(apiclient)

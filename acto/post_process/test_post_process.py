@@ -17,7 +17,11 @@ class TestPostProcessor(unittest.TestCase):
     def __init__(self, methodName: str = "runTest") -> None:
         super().__init__(methodName)
         config_path = os.path.join(
-            test_dir.parent.parent, "data", "cass-operator", "config.json"
+            test_dir.parent.parent,
+            "data",
+            "cass-operator",
+            "v1-10-3",
+            "config.json",
         )
         self.testrun_dir = os.path.join(
             test_dir, "test_data", "testrun-cass-whitebox-1"
@@ -37,7 +41,11 @@ class TestPostDiffTest(unittest.TestCase):
     def __init__(self, methodName: str = "runTest") -> None:
         super().__init__(methodName)
         config_path = os.path.join(
-            test_dir.parent.parent, "data", "cass-operator", "config.json"
+            test_dir.parent.parent,
+            "data",
+            "cass-operator",
+            "v1-10-3",
+            "config.json",
         )
         self.testrun_dir = os.path.join(
             test_dir, "test_data", "testrun-cass-whitebox-1"

@@ -24,7 +24,7 @@ def input_model_and_context_mapping() -> (
     Dict[str, Tuple[Dict, DeterministicInputModel]]
 ):
     """Returns a mapping from apiVersion to (context, input_model)"""
-    configs = glob.glob("./data/**/config.json")
+    configs = glob.glob("./data/**/config.json", recursive=True)
     ret = {}
     for config_path in configs:
         with open(config_path, "r", encoding="utf-8") as f:

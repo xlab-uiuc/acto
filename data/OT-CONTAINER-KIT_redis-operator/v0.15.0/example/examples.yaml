@@ -1,0 +1,2102 @@
+apiVersion: redis.redis.opstreelabs.in/v1beta1
+kind: RedisCluster
+metadata:
+  labels:
+    app.kubernetes.io/created-by: redis-operator
+    app.kubernetes.io/instance: rediscluster-sample
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: rediscluster
+    app.kubernetes.io/part-of: redis-operator
+  name: rediscluster-sample
+spec: null
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: redis-cluster
+spec:
+  clusterSize: 3
+  clusterVersion: v7
+  kubernetesConfig:
+    image: quay.io/opstree/redis:v7.0.12
+    imagePullPolicy: IfNotPresent
+    resources:
+      limits:
+        cpu: 101m
+        memory: 128Mi
+      requests:
+        cpu: 101m
+        memory: 128Mi
+  persistenceEnabled: true
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  redisExporter:
+    enabled: false
+    image: quay.io/opstree/redis-exporter:v1.44.0
+    imagePullPolicy: Always
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+  storage:
+    nodeConfVolume: true
+    nodeConfVolumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: redis-cluster
+spec:
+  clusterSize: 3
+  clusterVersion: v7
+  kubernetesConfig:
+    image: quay.io/opstree/redis:v7.0.12
+    imagePullPolicy: Always
+  persistenceEnabled: true
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  redisExporter:
+    enabled: true
+    image: quay.io/opstree/redis-exporter:v1.44.0
+    imagePullPolicy: Always
+  storage:
+    nodeConfVolumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: redis-cluster
+spec:
+  clusterSize: 3
+  clusterVersion: v7
+  kubernetesConfig:
+    image: quay.io/opstree/redis:v7.0.12
+    imagePullSecrets:
+    - name: regcred
+    resources:
+      limits:
+        cpu: 101m
+        memory: 128Mi
+      requests:
+        cpu: 101m
+        memory: 128Mi
+  persistenceEnabled: true
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  redisExporter:
+    enabled: false
+    image: quay.io/opstree/redis-exporter:v1.44.0
+  storage:
+    nodeConfVolumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: redis-cluster
+spec:
+  clusterSize: 3
+  clusterVersion: v7
+  kubernetesConfig:
+    image: quay.io/opstree/redis:v7.0.12
+  persistenceEnabled: true
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  redisExporter:
+    enabled: false
+    image: quay.io/opstree/redis-exporter:v1.44.0
+  redisFollower:
+    livenessProbe:
+      failureThreshold: 5
+      initialDelaySeconds: 15
+      periodSeconds: 15
+      successThreshold: 1
+      timeoutSeconds: 5
+    readinessProbe:
+      failureThreshold: 5
+      initialDelaySeconds: 15
+      periodSeconds: 15
+      successThreshold: 1
+      timeoutSeconds: 5
+  redisLeader:
+    livenessProbe:
+      failureThreshold: 5
+      initialDelaySeconds: 15
+      periodSeconds: 15
+      successThreshold: 1
+      timeoutSeconds: 5
+    readinessProbe:
+      failureThreshold: 5
+      initialDelaySeconds: 15
+      periodSeconds: 15
+      successThreshold: 1
+      timeoutSeconds: 5
+  storage:
+    nodeConfVolumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: redis-cluster
+spec:
+  clusterSize: 3
+  clusterVersion: v7
+  kubernetesConfig:
+    image: quay.io/opstree/redis:v7.0.12
+    imagePullPolicy: IfNotPresent
+  persistenceEnabled: true
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  redisExporter:
+    enabled: false
+    image: quay.io/opstree/redis-exporter:v1.44.0
+  redisFollower:
+    nodeSelector:
+      kubernetes.io/os: linux
+  redisLeader:
+    nodeSelector:
+      kubernetes.io/os: linux
+  storage:
+    nodeConfVolumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: redis-cluster
+spec:
+  clusterSize: 3
+  clusterVersion: v7
+  kubernetesConfig:
+    image: quay.io/opstree/redis:v7.0.12
+    imagePullPolicy: IfNotPresent
+  persistenceEnabled: true
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  redisExporter:
+    enabled: false
+    image: quay.io/opstree/redis-exporter:v1.44.0
+  redisFollower:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app
+              operator: In
+              values:
+              - redis-cluster-follower
+          topologyKey: kubernetes.io/hostname
+    pdb:
+      enabled: true
+      minAvailable: 1
+  redisLeader:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app
+              operator: In
+              values:
+              - redis-cluster-leader
+          topologyKey: kubernetes.io/hostname
+    pdb:
+      enabled: true
+      minAvailable: 1
+  storage:
+    nodeConfVolumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: redis-cluster
+spec:
+  clusterSize: 3
+  clusterVersion: v7
+  kubernetesConfig:
+    image: quay.io/opstree/redis:v7.0.12
+    imagePullPolicy: IfNotPresent
+  persistenceEnabled: true
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  redisExporter:
+    enabled: false
+    image: quay.io/opstree/redis-exporter:v1.44.0
+  storage:
+    nodeConfVolumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: redis-cluster
+spec:
+  clusterSize: 3
+  clusterVersion: v7
+  kubernetesConfig:
+    image: quay.io/opstree/redis:v7.0.12
+    imagePullPolicy: IfNotPresent
+  persistenceEnabled: true
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  redisExporter:
+    enabled: false
+    image: quay.io/opstree/redis-exporter:v1.44.0
+  redisFollower:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app
+              operator: In
+              values:
+              - redis-cluster-follower
+              - redis-cluster-leader
+          topologyKey: kubernetes.io/hostname
+  redisLeader:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app
+              operator: In
+              values:
+              - redis-cluster-leader
+              - redis-cluster-follower
+          topologyKey: kubernetes.io/hostname
+  storage:
+    nodeConfVolumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: redis-cluster
+spec:
+  clusterSize: 3
+  clusterVersion: v7
+  initContainer:
+    command:
+    - /bin/bash
+    - -c
+    - /app/restore.bash
+    enabled: true
+    env:
+    - name: CLUSTER_NAME
+      valueFrom:
+        secretKeyRef:
+          key: CLUSTER_NAME
+          name: env-secrets
+    - name: CLUSTER_NAMESPACE
+      valueFrom:
+        secretKeyRef:
+          key: CLUSTER_NAMESPACE
+          name: env-secrets
+    - name: DEFAULT_FILE_PATH
+      valueFrom:
+        secretKeyRef:
+          key: DEFAULT_FILE_PATH
+          name: env-secrets
+    - name: RESTIC_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          key: RESTIC_PASSWORD
+          name: env-secrets
+    - name: RESTIC_CACHE_DIR
+      valueFrom:
+        secretKeyRef:
+          key: RESTIC_CACHE_DIR
+          name: env-secrets
+    - name: BACKUP_DESTINATION
+      valueFrom:
+        secretKeyRef:
+          key: BACKUP_DESTINATION
+          name: env-secrets
+    - name: AWS_S3_BUCKET
+      valueFrom:
+        secretKeyRef:
+          key: AWS_S3_BUCKET
+          name: env-secrets
+    - name: AWS_DEFAULT_REGION
+      valueFrom:
+        secretKeyRef:
+          key: AWS_DEFAULT_REGION
+          name: env-secrets
+    - name: AWS_ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          key: AWS_ACCESS_KEY_ID
+          name: env-secrets
+    - name: AWS_SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          key: AWS_SECRET_ACCESS_KEY
+          name: env-secrets
+    image: quay.io/opstree/redis-operator-restore:latest
+    imagePullPolicy: Always
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+  kubernetesConfig:
+    image: quay.io/opstree/redis:v7.0.12
+    imagePullPolicy: IfNotPresent
+    resources:
+      limits:
+        cpu: 101m
+        memory: 128Mi
+      requests:
+        cpu: 101m
+        memory: 128Mi
+  persistenceEnabled: true
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  redisFollower:
+    redisConfig:
+      additionalRedisConfig: redis-external-config
+  redisLeader:
+    redisConfig:
+      additionalRedisConfig: redis-external-config
+  storage:
+    nodeConfVolume: true
+    nodeConfVolumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: redis-cluster
+spec:
+  clusterSize: 3
+  clusterVersion: v7
+  kubernetesConfig:
+    image: quay.io/opstree/redis:v7.0.12
+    imagePullPolicy: IfNotPresent
+    updateStrategy:
+      type: OnDelete
+  persistenceEnabled: true
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  redisExporter:
+    enabled: false
+    image: quay.io/opstree/redis-exporter:v1.44.0
+  storage:
+    nodeConfVolumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: redis-cluster
+spec:
+  clusterSize: 3
+  clusterVersion: v7
+  kubernetesConfig:
+    image: quay.io/opstree/redis:v7.0.12
+    imagePullPolicy: IfNotPresent
+    redisSecret:
+      key: password
+      name: redis-secret
+    resources:
+      limits:
+        cpu: 101m
+        memory: 128Mi
+      requests:
+        cpu: 101m
+        memory: 128Mi
+  persistenceEnabled: true
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  redisExporter:
+    enabled: false
+    image: quay.io/opstree/redis-exporter:v1.44.0
+    imagePullPolicy: Always
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+  storage:
+    nodeConfVolumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+    volumeMount:
+      mountPath:
+      - mountPath: /config
+        name: example-config
+      volume:
+      - configMap:
+          name: example-configmap
+        name: example-config
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: redis-cluster
+spec:
+  TLS:
+    ca: ca.key
+    cert: tls.crt
+    key: tls.key
+    secret:
+      secretName: redis-tls-cert
+  clusterSize: 3
+  clusterVersion: v7
+  kubernetesConfig:
+    image: quay.io/opstree/redis:v7.0.12
+    imagePullPolicy: IfNotPresent
+    redisSecret:
+      key: password
+      name: redis-secret
+    resources:
+      limits:
+        cpu: 101m
+        memory: 128Mi
+      requests:
+        cpu: 101m
+        memory: 128Mi
+  persistenceEnabled: true
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  redisExporter:
+    enabled: false
+    image: quay.io/opstree/redis-exporter:v1.44.0
+    imagePullPolicy: Always
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+  storage:
+    nodeConfVolumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: redis-cluster
+spec:
+  clusterSize: 3
+  clusterVersion: v7
+  env:
+  - name: CUSTOM_ENV_VAR_1
+    value: custom_value_1
+  - name: CUSTOM_ENV_VAR_2
+    value: custom_value_2
+  kubernetesConfig:
+    image: quay.io/opstree/redis:v7.0.12
+    imagePullPolicy: IfNotPresent
+    resources:
+      limits:
+        cpu: 101m
+        memory: 128Mi
+      requests:
+        cpu: 101m
+        memory: 128Mi
+  persistenceEnabled: true
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  storage:
+    nodeConfVolume: true
+    nodeConfVolumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: redis-cluster
+spec:
+  clusterSize: 3
+  clusterVersion: v7
+  kubernetesConfig:
+    image: quay.io/opstree/redis:v7.0.12
+    imagePullPolicy: IfNotPresent
+    redisSecret:
+      key: password
+      name: redis-secret
+  persistenceEnabled: true
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  redisExporter:
+    enabled: false
+    image: quay.io/opstree/redis-exporter:v1.44.0
+  storage:
+    nodeConfVolumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: redis-cluster
+spec:
+  clusterSize: 3
+  clusterVersion: v7
+  kubernetesConfig:
+    image: quay.io/opstree/redis:v7.0.12
+    imagePullPolicy: IfNotPresent
+  persistenceEnabled: true
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  redisExporter:
+    enabled: false
+    image: quay.io/opstree/redis-exporter:v1.44.0
+  redisFollower:
+    tolerations:
+    - effect: NoSchedule
+      key: key1
+      operator: Equal
+      value: value1
+  redisLeader:
+    tolerations:
+    - effect: NoSchedule
+      key: key1
+      operator: Equal
+      value: value1
+  storage:
+    nodeConfVolumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: redis-cluster
+spec:
+  clusterSize: 3
+  clusterVersion: v7
+  kubernetesConfig:
+    image: quay.io/opstree/redis:v7.0.12
+    imagePullPolicy: IfNotPresent
+  persistenceEnabled: true
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  redisExporter:
+    enabled: false
+    image: quay.io/opstree/redis-exporter:v1.44.0
+  redisFollower:
+    redisConfig:
+      additionalRedisConfig: redis-external-config
+  redisLeader:
+    redisConfig:
+      additionalRedisConfig: redis-external-config
+  storage:
+    nodeConfVolumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: redis-cluster
+spec:
+  acl:
+    secret:
+      secretName: acl-secret
+  clusterSize: 3
+  clusterVersion: v7
+  kubernetesConfig:
+    image: shubham192001/redis:2.0
+    imagePullPolicy: IfNotPresent
+    resources:
+      limits:
+        cpu: 101m
+        memory: 128Mi
+      requests:
+        cpu: 101m
+        memory: 128Mi
+  persistenceEnabled: true
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  redisExporter:
+    enabled: true
+    image: quay.io/opstree/redis-exporter:v1.44.0
+    imagePullPolicy: Always
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+  storage:
+    nodeConfVolumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: redis-cluster
+spec:
+  clusterSize: 3
+  clusterVersion: v7
+  kubernetesConfig:
+    image: quay.io/opstree/redis:v7.0.12
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets:
+    - name: regcred
+  persistenceEnabled: true
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  redisExporter:
+    enabled: false
+    image: quay.io/opstree/redis-exporter:v1.44.0
+  storage:
+    nodeConfVolumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  annotations:
+    redis.opstreelabs.in/recreate-statefulset: 'true'
+  name: redis-cluster
+spec:
+  clusterSize: 3
+  clusterVersion: v7
+  kubernetesConfig:
+    image: quay.io/opstree/redis:v7.0.12
+    imagePullPolicy: IfNotPresent
+  persistenceEnabled: true
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  priorityClassName: priority-100
+  redisExporter:
+    enabled: false
+    image: quay.io/opstree/redis-exporter:v1.44.0
+  storage:
+    nodeConfVolumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta1
+kind: RedisCluster
+metadata:
+  name: redis-cluster
+spec:
+  clusterSize: 3
+  clusterVersion: v7
+  kubernetesConfig:
+    image: quay.io/opstree/redis:v7.0.5
+    imagePullPolicy: IfNotPresent
+    redisSecret:
+      key: password
+      name: redis-secret
+    resources:
+      limits:
+        cpu: 101m
+        memory: 128Mi
+      requests:
+        cpu: 101m
+        memory: 128Mi
+  persistenceEnabled: true
+  redisExporter:
+    enabled: false
+    image: quay.io/opstree/redis-exporter:v1.44.0
+    imagePullPolicy: Always
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+  securityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  storage:
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta1
+kind: RedisCluster
+metadata:
+  name: redis-cluster
+spec:
+  clusterSize: 3
+  clusterVersion: v7
+  kubernetesConfig:
+    image: quay.io/opstree/redis:v7.0.5
+    imagePullPolicy: Always
+  persistenceEnabled: true
+  redisExporter:
+    enabled: true
+    image: quay.io/opstree/redis-exporter:v1.44.0
+    imagePullPolicy: Always
+  securityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  storage:
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta1
+kind: RedisCluster
+metadata:
+  name: redis-cluster
+spec:
+  clusterSize: 3
+  clusterVersion: v7
+  kubernetesConfig:
+    image: quay.io/opstree/redis:v7.0.5
+    imagePullSecrets:
+    - name: regcred
+    resources:
+      limits:
+        cpu: 101m
+        memory: 128Mi
+      requests:
+        cpu: 101m
+        memory: 128Mi
+  persistenceEnabled: true
+  redisExporter:
+    enabled: false
+    image: quay.io/opstree/redis-exporter:v1.44.0
+  securityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  storage:
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta1
+kind: RedisCluster
+metadata:
+  name: redis-cluster
+spec:
+  clusterSize: 3
+  clusterVersion: v7
+  kubernetesConfig:
+    image: quay.io/opstree/redis:v7.0.5
+  persistenceEnabled: true
+  redisExporter:
+    enabled: false
+    image: quay.io/opstree/redis-exporter:v1.44.0
+  redisFollower:
+    livenessProbe:
+      failureThreshold: 5
+      initialDelaySeconds: 15
+      periodSeconds: 15
+      successThreshold: 1
+      timeoutSeconds: 5
+    readinessProbe:
+      failureThreshold: 5
+      initialDelaySeconds: 15
+      periodSeconds: 15
+      successThreshold: 1
+      timeoutSeconds: 5
+  redisLeader:
+    livenessProbe:
+      failureThreshold: 5
+      initialDelaySeconds: 15
+      periodSeconds: 15
+      successThreshold: 1
+      timeoutSeconds: 5
+    readinessProbe:
+      failureThreshold: 5
+      initialDelaySeconds: 15
+      periodSeconds: 15
+      successThreshold: 1
+      timeoutSeconds: 5
+  securityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  storage:
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta1
+kind: RedisCluster
+metadata:
+  name: redis-cluster
+spec:
+  clusterSize: 3
+  clusterVersion: v7
+  kubernetesConfig:
+    image: quay.io/opstree/redis:v7.0.5
+    imagePullPolicy: IfNotPresent
+  persistenceEnabled: true
+  redisExporter:
+    enabled: false
+    image: quay.io/opstree/redis-exporter:v1.44.0
+  redisFollower:
+    nodeSelector:
+      kubernetes.io/os: linux
+  redisLeader:
+    nodeSelector:
+      kubernetes.io/os: linux
+  securityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  storage:
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta1
+kind: RedisCluster
+metadata:
+  name: redis-cluster
+spec:
+  clusterSize: 3
+  clusterVersion: v7
+  kubernetesConfig:
+    image: quay.io/opstree/redis:v7.0.5
+    imagePullPolicy: IfNotPresent
+  persistenceEnabled: true
+  redisExporter:
+    enabled: false
+    image: quay.io/opstree/redis-exporter:v1.44.0
+  redisFollower:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app
+              operator: In
+              values:
+              - redis-cluster-follower
+          topologyKey: kubernetes.io/hostname
+    pdb:
+      enabled: true
+      minAvailable: 1
+  redisLeader:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app
+              operator: In
+              values:
+              - redis-cluster-leader
+          topologyKey: kubernetes.io/hostname
+    pdb:
+      enabled: true
+      minAvailable: 1
+  securityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  storage:
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta1
+kind: RedisCluster
+metadata:
+  name: redis-cluster
+spec:
+  clusterSize: 3
+  clusterVersion: v7
+  kubernetesConfig:
+    image: quay.io/opstree/redis:v7.0.5
+    imagePullPolicy: IfNotPresent
+  persistenceEnabled: true
+  redisExporter:
+    enabled: false
+    image: quay.io/opstree/redis-exporter:v1.44.0
+  securityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  storage:
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta1
+kind: RedisCluster
+metadata:
+  name: redis-cluster
+spec:
+  clusterSize: 3
+  clusterVersion: v7
+  kubernetesConfig:
+    image: quay.io/opstree/redis:v7.0.5
+    imagePullPolicy: IfNotPresent
+  persistenceEnabled: true
+  redisExporter:
+    enabled: false
+    image: quay.io/opstree/redis-exporter:v1.44.0
+  redisFollower:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app
+              operator: In
+              values:
+              - redis-cluster-follower
+              - redis-cluster-leader
+          topologyKey: kubernetes.io/hostname
+  redisLeader:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app
+              operator: In
+              values:
+              - redis-cluster-leader
+              - redis-cluster-follower
+          topologyKey: kubernetes.io/hostname
+  securityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  storage:
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta1
+kind: RedisCluster
+metadata:
+  name: redis-cluster
+spec:
+  clusterSize: 3
+  clusterVersion: v7
+  kubernetesConfig:
+    image: quay.io/opstree/redis:v7.0.5
+    imagePullPolicy: IfNotPresent
+    updateStrategy:
+      type: OnDelete
+  persistenceEnabled: true
+  redisExporter:
+    enabled: false
+    image: quay.io/opstree/redis-exporter:v1.44.0
+  securityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  storage:
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta1
+kind: RedisCluster
+metadata:
+  name: redis-cluster
+spec:
+  clusterSize: 3
+  clusterVersion: v7
+  kubernetesConfig:
+    image: quay.io/opstree/redis:v7.0.5
+    imagePullPolicy: IfNotPresent
+    redisSecret:
+      key: password
+      name: redis-secret
+    resources:
+      limits:
+        cpu: 101m
+        memory: 128Mi
+      requests:
+        cpu: 101m
+        memory: 128Mi
+  persistenceEnabled: true
+  redisExporter:
+    enabled: false
+    image: quay.io/opstree/redis-exporter:v1.44.0
+    imagePullPolicy: Always
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+  securityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  storage:
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+    volumeMount:
+      mountPath:
+      - mountPath: /config
+        name: example-config
+      volume:
+      - configMap:
+          name: example-configmap
+        name: example-config
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta1
+kind: RedisCluster
+metadata:
+  name: redis-cluster
+spec:
+  TLS:
+    ca: ca.key
+    cert: tls.crt
+    key: tls.key
+    secret:
+      secretName: redis-tls-cert
+  clusterSize: 3
+  clusterVersion: v7
+  kubernetesConfig:
+    image: quay.io/opstree/redis:v7.0.5
+    imagePullPolicy: IfNotPresent
+    redisSecret:
+      key: password
+      name: redis-secret
+    resources:
+      limits:
+        cpu: 101m
+        memory: 128Mi
+      requests:
+        cpu: 101m
+        memory: 128Mi
+  persistenceEnabled: true
+  redisExporter:
+    enabled: false
+    image: quay.io/opstree/redis-exporter:v1.44.0
+    imagePullPolicy: Always
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+  securityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  storage:
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta1
+kind: RedisCluster
+metadata:
+  name: redis-cluster
+spec:
+  clusterSize: 3
+  clusterVersion: v7
+  kubernetesConfig:
+    image: quay.io/opstree/redis:v7.0.5
+    imagePullPolicy: IfNotPresent
+    redisSecret:
+      key: password
+      name: redis-secret
+  persistenceEnabled: true
+  redisExporter:
+    enabled: false
+    image: quay.io/opstree/redis-exporter:v1.44.0
+  securityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  storage:
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta1
+kind: RedisCluster
+metadata:
+  name: redis-cluster
+spec:
+  clusterSize: 3
+  clusterVersion: v7
+  kubernetesConfig:
+    image: quay.io/opstree/redis:v7.0.5
+    imagePullPolicy: IfNotPresent
+  persistenceEnabled: true
+  redisExporter:
+    enabled: false
+    image: quay.io/opstree/redis-exporter:v1.44.0
+  redisFollower:
+    tolerations:
+    - effect: NoSchedule
+      key: key1
+      operator: Equal
+      value: value1
+  redisLeader:
+    tolerations:
+    - effect: NoSchedule
+      key: key1
+      operator: Equal
+      value: value1
+  securityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  storage:
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta1
+kind: RedisCluster
+metadata:
+  name: redis-cluster
+spec:
+  clusterSize: 3
+  clusterVersion: v7
+  kubernetesConfig:
+    image: quay.io/opstree/redis:v7.0.5
+    imagePullPolicy: IfNotPresent
+  persistenceEnabled: true
+  redisExporter:
+    enabled: false
+    image: quay.io/opstree/redis-exporter:v1.44.0
+  redisFollower:
+    redisConfig:
+      additionalRedisConfig: redis-external-config
+  redisLeader:
+    redisConfig:
+      additionalRedisConfig: redis-external-config
+  securityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  storage:
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta1
+kind: RedisCluster
+metadata:
+  name: redis-cluster
+spec:
+  clusterSize: 3
+  clusterVersion: v7
+  kubernetesConfig:
+    image: quay.io/opstree/redis:v7.0.5
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets:
+    - name: regcred
+  persistenceEnabled: true
+  redisExporter:
+    enabled: false
+    image: quay.io/opstree/redis-exporter:v1.44.0
+  securityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  storage:
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta1
+kind: RedisCluster
+metadata:
+  annotations:
+    redis.opstreelabs.in/recreate-statefulset: 'true'
+  name: redis-cluster
+spec:
+  clusterSize: 3
+  clusterVersion: v7
+  kubernetesConfig:
+    image: quay.io/opstree/redis:v7.0.5
+    imagePullPolicy: IfNotPresent
+  persistenceEnabled: true
+  priorityClassName: priority-100
+  redisExporter:
+    enabled: false
+    image: quay.io/opstree/redis-exporter:v1.44.0
+  securityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  storage:
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: redis-cluster-v1beta2
+spec:
+  clusterSize: 3
+  clusterVersion: v6
+  kubernetesConfig:
+    image: quay.io/opstree/redis:v6.2.14
+    imagePullPolicy: Always
+    resources:
+      limits:
+        cpu: 101m
+        memory: 128Mi
+      requests:
+        cpu: 101m
+        memory: 128Mi
+    service:
+      serviceType: NodePort
+  persistenceEnabled: true
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  redisExporter:
+    enabled: true
+    image: quay.io/opstree/redis-exporter:v1.44.0
+    imagePullPolicy: Always
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+  storage:
+    nodeConfVolume: true
+    nodeConfVolumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: redis-cluster-v1beta2
+status:
+  readyFollowerReplicas: 3
+  readyLeaderReplicas: 3
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: redis-cluster-v1beta2
+spec:
+  clusterSize: 3
+  clusterVersion: v7
+  kubernetesConfig:
+    image: quay.io/opstree/redis:latest
+    imagePullPolicy: Always
+    redisSecret:
+      key: password
+      name: redis-secret
+    resources:
+      limits:
+        cpu: 101m
+        memory: 128Mi
+      requests:
+        cpu: 101m
+        memory: 128Mi
+  persistenceEnabled: true
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  redisExporter:
+    enabled: true
+    image: quay.io/opstree/redis-exporter:v1.44.0
+    imagePullPolicy: Always
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+  storage:
+    nodeConfVolume: true
+    nodeConfVolumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: redis-cluster-v1beta2
+status:
+  readyFollowerReplicas: 3
+  readyLeaderReplicas: 3
+  reason: RedisCluster is ready
+  state: Ready
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: redis-cluster-v1beta2
+spec:
+  clusterSize: 3
+  clusterVersion: v7
+  kubernetesConfig:
+    image: quay.io/opstree/redis:latest
+    imagePullPolicy: Always
+    resources:
+      limits:
+        cpu: 101m
+        memory: 128Mi
+      requests:
+        cpu: 101m
+        memory: 128Mi
+  persistenceEnabled: true
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  redisExporter:
+    enabled: true
+    image: quay.io/opstree/redis-exporter:v1.44.0
+    imagePullPolicy: Always
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+  storage:
+    nodeConfVolume: true
+    nodeConfVolumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: redis-cluster-v1beta2
+status:
+  readyFollowerReplicas: 3
+  readyLeaderReplicas: 3
+  reason: RedisCluster is ready
+  state: Ready
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: redis-cluster-v1beta2
+spec:
+  clusterSize: 3
+  clusterVersion: v7
+  kubernetesConfig:
+    image: quay.io/opstree/redis:latest
+    imagePullPolicy: Always
+    resources:
+      limits:
+        cpu: 101m
+        memory: 128Mi
+      requests:
+        cpu: 101m
+        memory: 128Mi
+  persistenceEnabled: true
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  redisExporter:
+    enabled: true
+    image: quay.io/opstree/redis-exporter:v1.44.0
+    imagePullPolicy: Always
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+  storage:
+    nodeConfVolume: true
+    nodeConfVolumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: redis-cluster-v1beta2
+status:
+  readyFollowerReplicas: 3
+  readyLeaderReplicas: 3
+  reason: RedisCluster is ready
+  state: Ready
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: redis-cluster-v1beta2
+spec:
+  clusterSize: 3
+  clusterVersion: v6
+  hostNetwork: true
+  kubernetesConfig:
+    image: quay.io/opstree/redis:latest
+    imagePullPolicy: Always
+    resources:
+      limits:
+        cpu: 101m
+        memory: 128Mi
+      requests:
+        cpu: 101m
+        memory: 128Mi
+  persistenceEnabled: true
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  port: 6380
+  redisExporter:
+    enabled: true
+    image: quay.io/opstree/redis-exporter:v1.44.0
+    imagePullPolicy: Always
+    port: 9122
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+  storage:
+    nodeConfVolume: true
+    nodeConfVolumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: redis-cluster-v1beta2
+status:
+  readyFollowerReplicas: 3
+  readyLeaderReplicas: 3
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: redis-cluster-v1beta2
+status:
+  readyFollowerReplicas: 6
+  readyLeaderReplicas: 6
+  reason: RedisCluster is ready
+  state: Ready
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: redis-cluster-v1beta2
+status:
+  readyFollowerReplicas: 6
+  readyLeaderReplicas: 6
+  reason: RedisCluster is bootstrapping
+  state: Bootstrap
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: redis-cluster-v1beta2
+status:
+  readyFollowerReplicas: 3
+  readyLeaderReplicas: 3
+  reason: RedisCluster is ready
+  state: Ready
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: redis-cluster-v1beta2
+status:
+  readyFollowerReplicas: 3
+  readyLeaderReplicas: 6
+  reason: RedisCluster is initializing followers
+  state: Initializing
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: redis-cluster-v1beta2
+spec:
+  clusterSize: 3
+  clusterVersion: v7
+  kubernetesConfig:
+    image: quay.io/opstree/redis:latest
+    imagePullPolicy: Always
+    resources:
+      limits:
+        cpu: 101m
+        memory: 128Mi
+      requests:
+        cpu: 101m
+        memory: 128Mi
+  persistenceEnabled: true
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  redisExporter:
+    enabled: true
+    image: quay.io/opstree/redis-exporter:v1.44.0
+    imagePullPolicy: Always
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+  storage:
+    nodeConfVolume: true
+    nodeConfVolumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: redis-cluster-v1beta2
+status:
+  readyFollowerReplicas: 3
+  readyLeaderReplicas: 3
+  reason: RedisCluster is initializing leaders
+  state: Initializing
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: redis-cluster-v1beta2
+spec:
+  clusterSize: 6
+  clusterVersion: v7
+  kubernetesConfig:
+    image: quay.io/opstree/redis:latest
+    imagePullPolicy: Always
+    resources:
+      limits:
+        cpu: 101m
+        memory: 128Mi
+      requests:
+        cpu: 101m
+        memory: 128Mi
+  persistenceEnabled: true
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  redisExporter:
+    enabled: true
+    image: quay.io/opstree/redis-exporter:v1.44.0
+    imagePullPolicy: Always
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+  storage:
+    nodeConfVolume: true
+    nodeConfVolumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: redis-cluster-v1beta2
+spec:
+  acl:
+    secret:
+      secretName: acl-secret
+  clusterSize: 3
+  clusterVersion: v7
+  kubernetesConfig:
+    image: quay.io/opstree/redis:latest
+    imagePullPolicy: Always
+    resources:
+      limits:
+        cpu: 101m
+        memory: 128Mi
+      requests:
+        cpu: 101m
+        memory: 128Mi
+  persistenceEnabled: true
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  redisExporter:
+    enabled: true
+    image: quay.io/opstree/redis-exporter:v1.44.0
+    imagePullPolicy: Always
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+  storage:
+    nodeConfVolume: true
+    nodeConfVolumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: redis-cluster-v1beta2
+status:
+  readyFollowerReplicas: 3
+  readyLeaderReplicas: 3
+  reason: RedisCluster is ready
+  state: Ready
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: redis-cluster-v1beta2
+spec:
+  clusterSize: 3
+  clusterVersion: v7
+  kubernetesConfig:
+    image: quay.io/opstree/redis:latest
+    imagePullPolicy: Always
+    resources:
+      limits:
+        cpu: 101m
+        memory: 128Mi
+      requests:
+        cpu: 101m
+        memory: 128Mi
+  persistenceEnabled: true
+  podSecurityContext:
+    fsGroup: 1000
+    runAsUser: 1000
+  redisExporter:
+    enabled: true
+    image: quay.io/opstree/redis-exporter:v1.44.0
+    imagePullPolicy: Always
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+  storage:
+    keepAfterDelete: true
+    nodeConfVolume: true
+    nodeConfVolumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: RedisCluster
+metadata:
+  name: redis-cluster-v1beta2
+status:
+  readyFollowerReplicas: 3
+  readyLeaderReplicas: 3
+  reason: RedisCluster is ready
+  state: Ready

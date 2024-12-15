@@ -1,0 +1,47 @@
+{
+    "deploy": {
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/elastic-cloud-on-k8s-operator/v2-14-0/crds.yaml",
+                    "namespace": null
+                }
+            },
+            {
+                "wait": {
+                    "duration": 10
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/elastic-cloud-on-k8s-operator/v2-14-0/operator.yaml",
+                    "operator": true
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/elastic-cloud-on-k8s-operator/v2-14-0/aux-examples.yaml"
+                }
+            }
+        ]
+    },
+    "crd_name": "elasticsearches.elasticsearch.k8s.elastic.co",
+    "kubernetes_version": "v1.29.1",
+    "seed_custom_resource": "data/elastic-cloud-on-k8s-operator/v2-14-0/es.yaml",
+    "example_dir": "data/elastic-cloud-on-k8s-operator/v2-14-0/examples",
+    "diff_ignore_fields": [],
+    "focus_fields": [
+        ["spec", "http", "tls"],
+        ["spec", "transport", "tls"],
+        ["spec", "nodeSets", "ITEM", "name"],
+        ["spec", "nodeSets", "ITEM", "count"],
+        ["spec", "nodeSets", "ITEM", "podTemplate"],
+        ["spec", "nodeSets", "ITEM", "volumeClaimTemplates", "ITEM"],
+        ["spec", "updateStrategy", "changeBudget", "maxUnavailable"],
+        ["spec", "updateStrategy", "changeBudget", "maxSurge"],
+        ["spec", "remoteClusters", "ITEM", "name"],
+        ["spec", "remoteClusters", "ITEM", "elasticsearchRef"],
+        ["spec", "podDisruptionBudget"],
+        ["spec", "revisionHistoryLimit"]
+    ]
+}

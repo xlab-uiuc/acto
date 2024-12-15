@@ -1,0 +1,43 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: selfsigned-issuer
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: redis-tls-ca
+spec:
+  ca:
+    secretName: redis-tls-ca-cert
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: redis-tls-ca
+spec:
+  isCA: true
+  commonName: redis
+  secretName: redis-tls-ca-cert
+  issuerRef:
+    name: selfsigned-issuer
+    kind: Issuer
+    group: cert-manager.io
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: redis-tls  # this name should match the one appeared in kustomizeconfig.yaml
+spec:
+  dnsNames:
+    - redis-headless.ot-operators.svc.cluster.local
+    - redis-headless.ot-operators.svc
+    - redis-headless
+  issuerRef:
+    kind: Issuer
+    name: redis-tls-ca
+    group: cert-manager.io
+  secretName: redis-tls-cert

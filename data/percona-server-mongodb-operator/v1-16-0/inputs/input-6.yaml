@@ -1,0 +1,36 @@
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: test-cluster
+spec:
+  crVersion: 1.16.0
+  image: percona/percona-server-mongodb:7.0.11
+  upgradeOptions:
+    apply: disabled
+    schedule: "0 2 * * *"
+  secrets:
+    users: test-cluster
+  replsets:
+  - name: rs0
+    size: 3
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 3Gi
+    configuration: |
+      operationProfiling:
+        mode: slowOp
+  sharding:
+    enabled: true
+
+    configsvrReplSet:
+      size: 3
+      volumeSpec:
+        persistentVolumeClaim:
+          resources:
+            requests:
+              storage: 3Gi
+
+    mongos:
+      size: 3

@@ -4,6 +4,7 @@ from typing import Any
 from deepdiff.helper import NotPresent
 
 from acto.k8s_util.k8sutil import canonicalize_quantity
+from acto.common import flatten_dict
 
 
 def is_none_or_not_present(value: Any) -> bool:
@@ -83,6 +84,18 @@ def input_config_is_subset_of_output_config(input_config: Any, output_config: An
             return False
     return False
 
+def compare_application_config(input_config: Any, output_config: Any) -> bool:
+    if isinstance(input_config, dict) and isinstance(output_config, dict):
+        try:
+            set_input_config = flatten_dict(input_config, ["root"])
+            set_output_config = flatten_dict(output_config, ["root"])
+            for item in set_input_config:
+                if item not in set_output_config:
+                    return False
+            return True
+        except configparser.Error:
+            return False
+    return False
 
 class CompareMethods:
     def __init__(self, enable_k8s_value_canonicalization=True):
@@ -143,3 +156,23 @@ class CompareMethods:
 
         # return original values
         return in_prev, in_curr, out_prev, out_curr
+
+class CustomCompareMethods():
+    def __init__(self):
+        self.custom_equality_checkers = []
+        self.custom_equality_checkers.extend([compare_application_config])
+    
+    def equals(self, left: Any, right: Any) -> bool:
+        """
+        Compare two values. If the values are not equal, then try to use custom_equality_checkers to see if they are
+        @param left:
+        @param right:
+        @return:
+        """
+        if left == right:
+            return True
+        else:
+            for equals in self.custom_equality_checkers:
+                if equals(left, right):
+                    return True
+            return False

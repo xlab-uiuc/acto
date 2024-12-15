@@ -19,7 +19,9 @@ from acto.input import k8s_schemas, property_attribute
 from acto.input.get_matched_schemas import find_matched_schema
 from acto.input.test_generators.generator import get_testcases
 from acto.schema import BaseSchema, BooleanSchema, IntegerSchema
+from acto.schema.opaque import OpaqueSchema
 from acto.schema.schema import extract_schema
+from acto.schema.under_specified import UnderSpecifiedSchema
 from acto.utils import get_thread_logger
 
 from .testcase import TestCase
@@ -32,6 +34,13 @@ class CustomKubernetesMapping(pydantic.BaseModel):
 
     schema_path: list[str]
     kubernetes_schema_name: str
+
+
+class CustomPropertySchemaMapping(pydantic.BaseModel):
+    """Class for specifying custom property schema"""
+
+    schema_path: list[str]
+    custom_schema: type[UnderSpecifiedSchema]
 
 
 class InputMetadata(pydantic.BaseModel):
@@ -228,6 +237,43 @@ class DeterministicInputModel(InputModel):
                                 f"but got {type(custom_mapping)}"
                             )
 
+            if hasattr(custom_module, "CUSTOM_PROPERTY_SCHEMA_MAPPING"):
+                custom_property_schema_mapping = (
+                    custom_module.CUSTOM_PROPERTY_SCHEMA_MAPPING
+                )
+                if isinstance(custom_property_schema_mapping, list):
+                    for custom_mapping in custom_property_schema_mapping:
+                        if isinstance(
+                            custom_mapping, CustomPropertySchemaMapping
+                        ):
+                            try:
+                                schema = self.get_schema_by_path(
+                                    custom_mapping.schema_path
+                                )
+                            except KeyError:
+                                logger.warning(
+                                    "Specified schema path does not exist: %s, using opaque schema",
+                                    custom_mapping.schema_path,
+                                )
+                                schema = OpaqueSchema(
+                                    custom_mapping.schema_path, {}
+                                )
+                            self.set_schema_by_path(
+                                custom_mapping.schema_path,
+                                custom_mapping.custom_schema.from_original_schema(
+                                    schema
+                                ),
+                            )
+                            logger.info(
+                                "Applying custom schema to property %s",
+                                custom_mapping.schema_path,
+                            )
+                        else:
+                            raise TypeError(
+                                "Expected CustomPropertySchemaMapping in "
+                                f"CUSTOM_PROPERTY_SCHEMA_MAPPING, but got {type(custom_mapping)}"
+                            )
+
         # Do the matching from CRD to Kubernetes schemas
         mounted_schema = self.get_schema_by_path(self.mount)
         self.metadata.total_number_of_schemas = len(
@@ -325,11 +371,63 @@ class DeterministicInputModel(InputModel):
                 and len(schema.examples) == 0
             ):
                 logger.info("No examples for %s", path)
-                info = [".".join(path), None if "description" not in schema.raw_schema else schema.raw_schema["description"],
-                                           "opaque" if "type" not in schema.raw_schema else schema.raw_schema["type"], 
-                                           None if "properties" not in schema.raw_schema else schema.raw_schema["properties"],
-                                           None if "required" not in schema.raw_schema else schema.raw_schema["required"]]
-                
+                info = [
+                    ".".join(path),
+                    (
+                        None
+                        if "description" not in schema.raw_schema
+                        else schema.raw_schema["description"]
+                    ),
+                    (
+                        "opaque"
+                        if "type" not in schema.raw_schema
+                        else schema.raw_schema["type"]
+                    ),
+                    (
+                        None
+                        if "properties" not in schema.raw_schema
+                        else schema.raw_schema["properties"]
+                    ),
+                    (
+                        None
+                        if "required" not in schema.raw_schema
+                        else schema.raw_schema["required"]
+                    ),
+                ]
+
+                missing_examples.append(info)
+
+            schema = self.get_schema_by_path(path)
+            if (
+                not isinstance(schema, BooleanSchema)
+                and not isinstance(schema, IntegerSchema)
+                and len(schema.examples) == 0
+            ):
+                logger.info("No examples for %s", path)
+                info = [
+                    ".".join(path),
+                    (
+                        None
+                        if "description" not in schema.raw_schema
+                        else schema.raw_schema["description"]
+                    ),
+                    (
+                        "opaque"
+                        if "type" not in schema.raw_schema
+                        else schema.raw_schema["type"]
+                    ),
+                    (
+                        None
+                        if "properties" not in schema.raw_schema
+                        else schema.raw_schema["properties"]
+                    ),
+                    (
+                        None
+                        if "required" not in schema.raw_schema
+                        else schema.raw_schema["required"]
+                    ),
+                ]
+
                 missing_examples.append(info)
 
             path_str = (
@@ -477,6 +575,10 @@ class DeterministicInputModel(InputModel):
 
     def get_schema_by_path(self, path: list) -> BaseSchema:
         return reduce(operator.getitem, path, self.root_schema)  # type: ignore
+
+    def set_schema_by_path(self, path: list, schema: BaseSchema):
+        """Set the schema by path"""
+        reduce(operator.getitem, path[:-1], self.root_schema)[path[-1]] = schema  # type: ignore
 
     def get_all_schemas(self):
         """Get all the schemas as a list"""
