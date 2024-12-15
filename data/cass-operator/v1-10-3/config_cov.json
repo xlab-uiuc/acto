@@ -1,0 +1,34 @@
+{
+    "deploy": {
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/cass-operator/v1-10-3/init.yaml",
+                    "namespace": null
+                }
+            },
+            {
+                "wait": {
+                    "duration": 10
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/cass-operator/v1-10-3/bundle_cov.yaml",
+                    "operator": true
+                }
+            }
+        ]
+    },
+    "crd_name": "cassandradatacenters.cassandra.datastax.com",
+    "custom_fields": "data.cass-operator.v1-10-3.prune",
+    "seed_custom_resource": "data/cass-operator/v1-10-3/cr.yaml",
+    "example_dir": "data/cass-operator/v1-10-3/examples", 
+    "analysis": {
+        "github_link": "https://github.com/k8ssandra/cass-operator.git",
+        "commit": "241e71cdd32bd9f8a7e5c00d5427cdcaf9f55497",
+        "entrypoint": null,
+        "type": "CassandraDatacenter",
+        "package": "github.com/k8ssandra/cass-operator/apis/cassandra/v1beta1"
+    }
+}

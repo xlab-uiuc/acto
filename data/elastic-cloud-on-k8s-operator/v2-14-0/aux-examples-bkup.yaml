@@ -1,0 +1,128 @@
+
+apiVersion: logstash.k8s.elastic.co/v1alpha1
+kind: Logstash
+metadata:
+  name: logstash-sample
+spec:
+  config:
+    api.http.host: 0.0.0.0
+    log.level: info
+    queue.type: memory
+  count: 3
+  pipelines:
+  - config.string: input { exec { command => 'uptime' interval => 10 } } output {
+      stdout{} }
+    pipeline.id: main
+  version: 8.15.0
+---
+apiVersion: logstash.k8s.elastic.co/v1alpha1
+kind: Logstash
+metadata:
+  name: d
+spec:
+  config:
+    queue.type: persisted
+  count: 1
+  pipelines:
+  - config.string: input { exec { command => 'uptime' interval => 10 } } output {
+      stdout{} }
+    pipeline.id: main
+  podTemplate:
+    spec:
+      containers:
+      - name: logstash
+        volumeMounts:
+        - mountPath: /usr/share/logstash/data/queue
+          name: pq
+          readOnly: false
+  version: 8.15.0
+  volumeClaimTemplates:
+  - metadata:
+      name: logstash-data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+  - metadata:
+      name: pq
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 2Gi
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    istio-injection: enabled
+  name: istio-apps
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/cluster-issuer: selfsigning-issuer
+    kubernetes.io/ingress.allow-http: 'false'
+  labels:
+    app: hulk
+  name: hulk
+spec:
+  rules:
+  - host: elasticsearch.hulk
+    http:
+      paths:
+      - backend:
+          service:
+            name: hulk-es-http
+            port:
+              name: https
+        path: /*
+        pathType: Exact
+  - host: kibana.hulk
+    http:
+      paths:
+      - backend:
+          service:
+            name: hulk-kb-http
+            port:
+              name: https
+        path: /*
+        pathType: Exact
+  tls:
+  - hosts:
+    - elasticsearch.hulk
+    secretName: hulk-elasticsearch-cert
+  - hosts:
+    - kibana.hulk
+    secretName: hulk-kibana-cert
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: selfsigning-issuer
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  labels:
+    app: hulk
+  name: hulk-certs
+spec:
+  dnsNames:
+  - elasticsearch.hulk
+  - kibana.hulk
+  - apm.hulk
+  isCA: true
+  issuerRef:
+    kind: ClusterIssuer
+    name: selfsigning-issuer
+  secretName: hulk-certs
+  subject:
+    organizations:
+    - hulk

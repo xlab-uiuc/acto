@@ -1,0 +1,1622 @@
+{
+  "properties": {
+    "cassandra-yaml": {
+      "properties": {
+        "allocate_tokens_for_local_replication_factor": {
+          "enum": [
+            0,
+            3,
+            -9999999999
+          ],
+          "type": "integer"
+        },
+        "allow_filtering_enabled": {
+          "type": "boolean"
+        },
+        "auth_cache_warming_enabled": {
+          "type": "boolean"
+        },
+        "auth_read_consistency_level": {
+          "enum": [
+            "LOCAL_QUORUM",
+            "EACH_QUORUM",
+            "ALL"
+          ],
+          "type": "string"
+        },
+        "auth_write_consistency_level": {
+          "enum": [
+            "LOCAL_QUORUM",
+            "EACH_QUORUM",
+            "ALL"
+          ],
+          "type": "string"
+        },
+        "authenticator": {
+          "enum": [
+            "AllowAllAuthenticator",
+            "PasswordAuthenticator",
+            "INVALID"
+          ],
+          "type": "string"
+        },
+        "authorizer": {
+          "enum": [
+            "AllowAllAuthorizer",
+            "CassandraAuthorizer",
+            "INVALID"
+          ],
+          "type": "string"
+        },
+        "auto_hints_cleanup_enabled": {
+          "type": "boolean"
+        },
+        "auto_snapshot": {
+          "type": "boolean"
+        },
+        "auto_snapshot_ttl": {
+          "enum": [
+            "0d",
+            "-9999999999d",
+            "15d"
+          ],
+          "type": "string"
+        },
+        "automatic_sstable_upgrade": {
+          "type": "boolean"
+        },
+        "batch_size_fail_threshold": {
+          "enum": [
+            "0KiB",
+            "-9999999999KiB",
+            "100KiB"
+          ],
+          "type": "string"
+        },
+        "batch_size_warn_threshold": {
+          "enum": [
+            "0KiB",
+            "-9999999999KiB",
+            "2KiB"
+          ],
+          "type": "string"
+        },
+        "batchlog_replay_throttle": {
+          "enum": [
+            "1024KiB",
+            "2048KiB",
+            "-9999999999KiB"
+          ],
+          "type": "string"
+        },
+        "buffer_pool_use_heap_if_exhausted": {
+          "type": "boolean"
+        },
+        "cache_load_timeout": {
+          "enum": [
+            "3s",
+            "-9999999999s",
+            "15s"
+          ],
+          "type": "string"
+        },
+        "cas_contention_timeout": {
+          "enum": [
+            "0ms",
+            "-9999999999ms",
+            "1000ms"
+          ],
+          "type": "string"
+        },
+        "cdc_enabled": {
+          "type": "boolean"
+        },
+        "cdc_free_space_check_interval": {
+          "enum": [
+            "0ms",
+            "-9999999999ms",
+            "500ms"
+          ],
+          "type": "string"
+        },
+        "cdc_total_space": {
+          "enum": [
+            "4096MiB",
+            "8192MiB",
+            "-9999999999MiB"
+          ],
+          "type": "string"
+        },
+        "cluster_name": {
+          "enum": [
+            "'Test Cluster'",
+            "alt_string"
+          ],
+          "type": "string"
+        },
+        "collection_size_fail_threshold": {
+          "enum": [
+            "1KiB",
+            "2KiB",
+            "-9999999999KiB"
+          ],
+          "type": "string"
+        },
+        "collection_size_warn_threshold": {
+          "enum": [
+            "1KiB",
+            "2KiB",
+            "-9999999999KiB"
+          ],
+          "type": "string"
+        },
+        "column_index_cache_size": {
+          "enum": [
+            "1KiB",
+            "2KiB",
+            "-9999999999KiB"
+          ],
+          "type": "string"
+        },
+        "column_index_size": {
+          "enum": [
+            "64KiB",
+            "-9999999999KiB",
+            "32KiB"
+          ],
+          "type": "string"
+        },
+        "columns_per_table_fail_threshold": {
+          "enum": [
+            0,
+            1,
+            2
+          ],
+          "type": "integer"
+        },
+        "columns_per_table_warn_threshold": {
+          "enum": [
+            0,
+            1,
+            2
+          ],
+          "type": "integer"
+        },
+        "commit_failure_policy": {
+          "enum": [
+            "die",
+            "stop",
+            "stop_commit"
+          ],
+          "type": "string"
+        },
+        "commitlog_compression": {
+          "enum": [
+            [
+              {
+                "class_name": "LZ4Compressor"
+              }
+            ],
+            [
+              {
+                "class_name": "SnappyCompressor"
+              }
+            ],
+            [
+              {
+                "class_name": "INVALID"
+              }
+            ]
+          ],
+          "items": {
+            "type": "object",
+            "properties": {
+              "class_name": {
+                "enum": [
+                  "LZ4Compressor",
+                  "SnappyCompressor",
+                  "INVALID"
+                ],
+                "type": "string"
+              }
+            }
+          },
+          "type": "array"
+        },
+        "commitlog_segment_size": {
+          "enum": [
+            "32MiB",
+            "64MiB",
+            "-9999999999MiB"
+          ],
+          "type": "string"
+        },
+        "commitlog_sync_batch_window_in_ms": {
+          "enum": [
+            "0",
+            "1",
+            "-9999999999"
+          ],
+          "type": "string"
+        },
+        "commitlog_sync_group_window": {
+          "enum": [
+            "0ms",
+            "-9999999999ms",
+            "1000ms"
+          ],
+          "type": "string"
+        },
+        "commitlog_sync_period": {
+          "enum": [
+            "20000ms",
+            "-9999999999ms",
+            "0ms"
+          ],
+          "type": "string"
+        },
+        "commitlog_total_space": {
+          "enum": [
+            "8192MiB",
+            "4096MiB",
+            "-9999999999MiB"
+          ],
+          "type": "string"
+        },
+        "compaction_large_partition_warning_threshold": {
+          "enum": [
+            "0MiB",
+            "-9999999999MiB",
+            "100MiB"
+          ],
+          "type": "string"
+        },
+        "compaction_throughput": {
+          "enum": [
+            "64MiB/s",
+            "-9999999999MiB/s",
+            "32MiB/s"
+          ],
+          "type": "string"
+        },
+        "compaction_tombstone_warning_threshold": {
+          "enum": [
+            "100000",
+            "-9999999999",
+            "200000"
+          ],
+          "type": "string"
+        },
+        "concurrent_compactors": {
+          "enum": [
+            2,
+            8,
+            -9999999999
+          ],
+          "type": "integer"
+        },
+        "concurrent_counter_writes": {
+          "enum": [
+            32,
+            64,
+            -9999999999
+          ],
+          "type": "integer"
+        },
+        "concurrent_materialized_view_builders": {
+          "enum": [
+            0,
+            1,
+            2
+          ],
+          "type": "integer"
+        },
+        "concurrent_materialized_view_writes": {
+          "enum": [
+            32,
+            64,
+            -9999999999
+          ],
+          "type": "integer"
+        },
+        "concurrent_merkle_tree_requests": {
+          "enum": [
+            0,
+            1,
+            -1
+          ],
+          "type": "integer"
+        },
+        "concurrent_reads": {
+          "enum": [
+            32,
+            64,
+            -9999999999
+          ],
+          "type": "integer"
+        },
+        "concurrent_validations": {
+          "enum": [
+            0,
+            -9999999999,
+            9999999999
+          ],
+          "type": "integer"
+        },
+        "concurrent_writes": {
+          "enum": [
+            32,
+            64,
+            -9999999999
+          ],
+          "type": "integer"
+        },
+        "coordinator_read_size_fail_threshold": {
+          "enum": [
+            "0MiB",
+            "1MiB",
+            "-9999999999MiB"
+          ],
+          "type": "string"
+        },
+        "coordinator_read_size_warn_threshold": {
+          "enum": [
+            "0MiB",
+            "1MiB",
+            "-9999999999MiB"
+          ],
+          "type": "string"
+        },
+        "corrupted_tombstone_strategy": {
+          "enum": [
+            "exception",
+            "warn",
+            "INVALID"
+          ],
+          "type": "string"
+        },
+        "counter_cache_keys_to_save": {
+          "enum": [
+            0,
+            -9999999999,
+            100
+          ],
+          "type": "integer"
+        },
+        "counter_cache_save_period": {
+          "enum": [
+            "7200s",
+            "14400s",
+            "-9999999999s"
+          ],
+          "type": "string"
+        },
+        "counter_cache_size": {
+          "enum": [
+            "1MiB",
+            "2MiB",
+            "-9999999999MiB"
+          ],
+          "type": "string"
+        },
+        "counter_write_request_timeout": {
+          "enum": [
+            "0ms",
+            "-9999999999ms",
+            "2500ms"
+          ],
+          "type": "string"
+        },
+        "credentials_cache_active_update": {
+          "type": "boolean"
+        },
+        "credentials_update_interval": {
+          "enum": [
+            "4000ms",
+            "-9999999999ms",
+            "8000ms"
+          ],
+          "type": "string"
+        },
+        "credentials_validity": {
+          "enum": [
+            "4000ms",
+            "-9999999999ms",
+            "0ms"
+          ],
+          "type": "string"
+        },
+        "data_disk_usage_max_disk_size": {
+          "enum": [
+            "1MiB",
+            "2MiB",
+            "-9999999999MiB"
+          ],
+          "type": "string"
+        },
+        "data_disk_usage_percentage_fail_threshold": {
+          "enum": [
+            -1,
+            0,
+            1
+          ],
+          "type": "integer"
+        },
+        "data_disk_usage_percentage_warn_threshold": {
+          "enum": [
+            -1,
+            0,
+            1
+          ],
+          "type": "integer"
+        },
+        "default_keyspace_rf": {
+          "enum": [
+            0,
+            1,
+            -9999999999
+          ],
+          "type": "integer"
+        },
+        "denylist_consistency_level": {
+          "enum": [
+            "QUORUM",
+            "LOCAL_QUORUM"
+          ],
+          "type": "string"
+        },
+        "denylist_initial_load_retry": {
+          "enum": [
+            "0s",
+            "-9999999999s",
+            "2s"
+          ],
+          "type": "string"
+        },
+        "denylist_max_keys_per_table": {
+          "enum": [
+            0,
+            -9999999999,
+            1000
+          ],
+          "type": "integer"
+        },
+        "denylist_max_keys_total": {
+          "enum": [
+            20000,
+            -9999999999,
+            0
+          ],
+          "type": "integer"
+        },
+        "denylist_range_reads_enabled": {
+          "type": "boolean"
+        },
+        "denylist_reads_enabled": {
+          "type": "boolean"
+        },
+        "denylist_refresh": {
+          "enum": [
+            "1s",
+            "-9999999999s",
+            "300s"
+          ],
+          "type": "string"
+        },
+        "denylist_writes_enabled": {
+          "type": "boolean"
+        },
+        "diagnostic_events_enabled": {
+          "type": "boolean"
+        },
+        "disk_failure_policy": {
+          "enum": [
+            "die",
+            "stop_paranoid",
+            "stop"
+          ],
+          "type": "string"
+        },
+        "disk_optimization_strategy": {
+          "enum": [
+            "ssd",
+            "spinning",
+            "INVALID"
+          ],
+          "type": "string"
+        },
+        "drop_compact_storage_enabled": {
+          "type": "boolean"
+        },
+        "drop_truncate_table_enabled": {
+          "type": "boolean"
+        },
+        "dynamic_snitch_badness_threshold": {
+          "enum": [
+            0.5,
+            1,
+            -9999999999
+          ],
+          "type": "number"
+        },
+        "dynamic_snitch_reset_interval": {
+          "enum": [
+            "600000ms",
+            "-9999999999ms",
+            "300000ms"
+          ],
+          "type": "string"
+        },
+        "dynamic_snitch_update_interval": {
+          "enum": [
+            "200ms",
+            "-9999999999ms",
+            "100ms"
+          ],
+          "type": "string"
+        },
+        "endpoint_snitch": {
+          "enum": [
+            "SimpleSnitch",
+            "GossipingPropertyFileSnitch",
+            "DynamicEndpointSnitch"
+          ],
+          "type": "string"
+        },
+        "entire_sstable_inter_dc_stream_throughput_outbound": {
+          "enum": [
+            "0MiB/s",
+            "-9999999999MiB/s",
+            "12MiB/s"
+          ],
+          "type": "string"
+        },
+        "entire_sstable_stream_throughput_outbound": {
+          "enum": [
+            "0MiB/s",
+            "-9999999999MiB/s",
+            "12MiB/s"
+          ],
+          "type": "string"
+        },
+        "fields_per_udt_fail_threshold": {
+          "enum": [
+            -1,
+            -9999999999,
+            1
+          ],
+          "type": "integer"
+        },
+        "fields_per_udt_warn_threshold": {
+          "enum": [
+            -1,
+            -9999999999,
+            1
+          ],
+          "type": "integer"
+        },
+        "file_cache_enabled": {
+          "type": "boolean"
+        },
+        "file_cache_size": {
+          "enum": [
+            "512MiB",
+            "1024MiB",
+            "-9999999999MiB"
+          ],
+          "type": "string"
+        },
+        "flush_compression": {
+          "enum": [
+            "fast",
+            "INVALID"
+          ],
+          "type": "string"
+        },
+        "gc_log_threshold": {
+          "enum": [
+            "0ms",
+            "-9999999999ms",
+            "100ms"
+          ],
+          "type": "string"
+        },
+        "gc_warn_threshold": {
+          "enum": [
+            "0ms",
+            "-9999999999ms",
+            "1000ms"
+          ],
+          "type": "string"
+        },
+        "group_by_enabled": {
+          "type": "boolean"
+        },
+        "hint_window_persistent_enabled": {
+          "type": "boolean"
+        },
+        "hinted_handoff_enabled": {
+          "type": "boolean"
+        },
+        "hinted_handoff_throttle": {
+          "enum": [
+            "1024KiB",
+            "2048KiB",
+            "-9999999999KiB"
+          ],
+          "type": "string"
+        },
+        "hints_compression": {
+          "enum": [
+            [
+              {
+                "class_name": "LZ4Compressor"
+              }
+            ],
+            [
+              {
+                "class_name": "SnappyCompressor"
+              }
+            ],
+            [
+              {
+                "class_name": "INVALID"
+              }
+            ]
+          ],
+          "items": {
+            "type": "object",
+            "properties": {
+              "class_name": {
+                "enum": [
+                  "LZ4Compressor",
+                  "SnappyCompressor",
+                  "INVALID"
+                ],
+                "type": "string"
+              }
+            }
+          },
+          "type": "array"
+        },
+        "hints_flush_period": {
+          "enum": [
+            "20000ms",
+            "-9999999999ms",
+            "10000ms"
+          ],
+          "type": "string"
+        },
+        "ideal_consistency_level": {
+          "enum": [
+            "EACH_QUORUM",
+            "LOCAL_QUORUM",
+            "INVALID"
+          ],
+          "type": "string"
+        },
+        "in_select_cartesian_product_fail_threshold": {
+          "enum": [
+            2,
+            -9999999999,
+            1
+          ],
+          "type": "integer"
+        },
+        "in_select_cartesian_product_warn_threshold": {
+          "enum": [
+            2,
+            -9999999999,
+            1
+          ],
+          "type": "integer"
+        },
+        "incremental_backups": {
+          "type": "boolean"
+        },
+        "index_summary_capacity": {
+          "enum": [
+            "0MiB",
+            "1MiB",
+            "-9999999999MiB"
+          ],
+          "type": "string"
+        },
+        "index_summary_resize_interval": {
+          "enum": [
+            "0m",
+            "240m",
+            "120m"
+          ],
+          "type": "string"
+        },
+        "initial_token": {
+          "enum": [
+            "token1,token2,token3,token4,token5,token6,token7,token8,token9,token10,token11,token12,token13,token14,token15,token16",
+            "token1,token2,token3,token4,token5,token6,token7,token8"
+          ],
+          "type": "string"
+        },
+        "inter_dc_stream_throughput_outbound": {
+          "enum": [
+            "0MiB/s",
+            "-9999999999MiB/s",
+            "12MiB/s"
+          ],
+          "type": "string"
+        },
+        "inter_dc_tcp_nodelay": {
+          "type": "boolean"
+        },
+        "internode_application_receive_queue_capacity": {
+          "enum": [
+            "1MiB",
+            "-9999999999MiB",
+            "2MiB"
+          ],
+          "type": "string"
+        },
+        "internode_application_receive_queue_reserve_endpoint_capacity": {
+          "enum": [
+            "128MiB",
+            "256MiB",
+            "-9999999999MiB"
+          ],
+          "type": "string"
+        },
+        "internode_application_receive_queue_reserve_global_capacity": {
+          "enum": [
+            "512MiB",
+            "1024MiB",
+            "-9999999999MiB"
+          ],
+          "type": "string"
+        },
+        "internode_application_send_queue_capacity": {
+          "enum": [
+            "1MiB",
+            "-9999999999MiB",
+            "2MiB"
+          ],
+          "type": "string"
+        },
+        "internode_application_send_queue_reserve_endpoint_capacity": {
+          "enum": [
+            "128MiB",
+            "256MiB",
+            "-9999999999MiB"
+          ],
+          "type": "string"
+        },
+        "internode_application_send_queue_reserve_global_capacity": {
+          "enum": [
+            "512MiB",
+            "1024MiB",
+            "-9999999999MiB"
+          ],
+          "type": "string"
+        },
+        "internode_authenticator": {
+          "enum": [
+              "org.apache.cassandra.auth.AllowAllInternodeAuthenticator",
+              "org.apache.cassandra.auth.MutualTlsInternodeAuthenticator",
+              "INVALID"
+          ],
+          "type": "string"
+        },
+        "internode_compression": {
+          "enum": [
+            "dc",
+            "all",
+            "none"
+          ],
+          "type": "string"
+        },
+        "internode_socket_receive_buffer_size": {
+          "enum": [
+            "0KiB",
+            "1KiB",
+            "-9999999999KiB"
+          ],
+          "type": "string"
+        },
+        "internode_socket_send_buffer_size": {
+          "enum": [
+            "0KiB",
+            "1KiB",
+            "-9999999999KiB"
+          ],
+          "type": "string"
+        },
+        "internode_streaming_tcp_user_timeout": {
+          "enum": [
+            "300000ms",
+            "-9999999999ms",
+            "600000ms"
+          ],
+          "type": "string"
+        },
+        "internode_tcp_connect_timeout": {
+          "enum": [
+            "4000ms",
+            "-9999999999ms",
+            "8000ms"
+          ],
+          "type": "string"
+        },
+        "internode_tcp_user_timeout": {
+          "enum": [
+            "60000ms",
+            "-9999999999ms",
+            "0ms"
+          ],
+          "type": "string"
+        },
+        "internode_timeout": {
+          "type": "boolean"
+        },
+        "items_per_collection_fail_threshold": {
+          "enum": [
+            1,
+            -9999999999,
+            2
+          ],
+          "type": "integer"
+        },
+        "items_per_collection_warn_threshold": {
+          "enum": [
+            1,
+            -9999999999,
+            2
+          ],
+          "type": "integer"
+        },
+        "key_cache_keys_to_save": {
+          "enum": [
+            0,
+            -9999999999,
+            100
+          ],
+          "type": "integer"
+        },
+        "key_cache_save_period": {
+          "enum": [
+            "0h",
+            "-9999999999h",
+            "2h"
+          ],
+          "type": "string"
+        },
+        "key_cache_size": {
+          "enum": [
+            "0MiB",
+            "1MiB",
+            "-9999999999MiB"
+          ],
+          "type": "string"
+        },
+        "keyspace_count_warn_threshold": {
+          "enum": [
+            80,
+            -9999999999,
+            40
+          ],
+          "type": "integer"
+        },
+        "keyspaces_fail_threshold": {
+          "enum": [
+            1,
+            -9999999999,
+            2
+          ],
+          "type": "integer"
+        },
+        "keyspaces_warn_threshold": {
+          "enum": [
+            1,
+            -9999999999,
+            2
+          ],
+          "type": "integer"
+        },
+        "listen_interface_prefer_ipv6": {
+          "type": "boolean"
+        },
+        "listen_on_broadcast_address": {
+          "type": "boolean"
+        },
+        "local_read_size_fail_threshold": {
+          "enum": [
+            "0MiB",
+            "1MiB",
+            "-9999999999MiB"
+          ],
+          "type": "string"
+        },
+        "local_read_size_warn_threshold": {
+          "enum": [
+            "0MiB",
+            "1MiB",
+            "-9999999999MiB"
+          ],
+          "type": "string"
+        },
+        "materialized_views_enabled": {
+          "type": "boolean"
+        },
+        "materialized_views_per_table_fail_threshold": {
+          "enum": [
+            2,
+            -9999999999,
+            1
+          ],
+          "type": "integer"
+        },
+        "materialized_views_per_table_warn_threshold": {
+          "enum": [
+            2,
+            -9999999999,
+            1
+          ],
+          "type": "integer"
+        },
+        "max_concurrent_automatic_sstable_upgrades": {
+          "enum": [
+            0,
+            1,
+            -9999999999
+          ],
+          "type": "integer"
+        },
+        "max_hint_window": {
+          "enum": [
+            "0h",
+            "1h",
+            "-9999999999h"
+          ],
+          "type": "string"
+        },
+        "max_hints_delivery_threads": {
+          "enum": [
+            1,
+            2,
+            -9999999999
+          ],
+          "type": "integer"
+        },
+        "max_hints_file_size": {
+          "enum": [
+            "128MiB",
+            "256MiB",
+            "-9999999999MiB"
+          ],
+          "type": "string"
+        },
+        "max_hints_size_per_host": {
+          "enum": [
+            "0MiB",
+            "-9999999999MiB",
+            "9999999999MiB"
+          ],
+          "type": "string"
+        },
+        "max_value_size": {
+          "enum": [
+            "256MiB",
+            "512MiB",
+            "-9999999999MiB"
+          ],
+          "type": "string"
+        },
+        "memtable_allocation_type": {
+          "enum": [
+            "heap_buffers",
+            "offheap_objects",
+            "INVALID"
+          ],
+          "type": "string"
+        },
+        "memtable_cleanup_threshold": {
+          "enum": [
+            0.11,
+            -9999999999,
+            0.22
+          ],
+          "type": "number"
+        },
+        "memtable_flush_writers": {
+          "enum": [
+            0,
+            1,
+            -9999999999
+          ],
+          "type": "integer"
+        },
+        "memtable_heap_space": {
+          "enum": [
+            "2048MiB",
+            "4096MiB",
+            "-9999999999MiB"
+          ],
+          "type": "string"
+        },
+        "memtable_offheap_space": {
+          "enum": [
+            "2048MiB",
+            "4096MiB",
+            "-9999999999MiB"
+          ],
+          "type": "string"
+        },
+        "minimum_replication_factor_fail_threshold": {
+          "enum": [
+            1,
+            -9999999999,
+            2
+          ],
+          "type": "integer"
+        },
+        "minimum_replication_factor_warn_threshold": {
+          "enum": [
+            1,
+            -9999999999,
+            2
+          ],
+          "type": "integer"
+        },
+        "native_transport_allow_older_protocols": {
+          "type": "boolean"
+        },
+        "native_transport_flush_in_batches_legacy": {
+          "type": "boolean"
+        },
+        "native_transport_idle_timeout": {
+          "enum": [
+            "60000ms",
+            "-9999999999ms",
+            "120000ms"
+          ],
+          "type": "string"
+        },
+        "native_transport_max_concurrent_connections": {
+          "enum": [
+            0,
+            -9999999999,
+            1
+          ],
+          "type": "integer"
+        },
+        "native_transport_max_concurrent_connections_per_ip": {
+          "enum": [
+            0,
+            -9999999999,
+            1
+          ],
+          "type": "integer"
+        },
+        "native_transport_max_frame_size": {
+          "enum": [
+            "32MiB",
+            "-9999999999MiB",
+            "16MiB"
+          ],
+          "type": "string"
+        },
+        "native_transport_max_requests_per_second": {
+          "enum": [
+            1000000,
+            -9999999999,
+            500000
+          ],
+          "type": "integer"
+        },
+        "native_transport_max_threads": {
+          "enum": [
+            128,
+            256,
+            -9999999999
+          ],
+          "type": "integer"
+        },
+        "native_transport_port_ssl": {
+          "enum": [
+            9142,
+            9143,
+            -9999999999
+          ],
+          "type": "integer"
+        },
+        "native_transport_rate_limiting_enabled": {
+          "type": "boolean"
+        },
+        "network_authorizer": {
+          "enum": [
+            "AllowAllNetworkAuthorizer",
+            "CassandraNetworkAuthorizer"
+          ],
+          "type": "string"
+        },
+        "networking_cache_size": {
+          "enum": [
+            "128MiB",
+            "256MiB",
+            "-9999999999MiB"
+          ],
+          "type": "string"
+        },
+        "num_tokens": {
+          "enum": [
+            32,
+            -9999999999,
+            16
+          ],
+          "type": "integer"
+        },
+        "page_size_fail_threshold": {
+          "enum": [
+            -0.5,
+            -9999999999,
+            0
+          ],
+          "type": "number"
+        },
+        "page_size_warn_threshold": {
+          "enum": [
+            -0.5,
+            -9999999999,
+            0
+          ],
+          "type": "number"
+        },
+        "partition_denylist_enabled": {
+          "type": "boolean"
+        },
+        "partition_keys_in_select_fail_threshold": {
+          "enum": [
+            1,
+            -9999999999,
+            2
+          ],
+          "type": "integer"
+        },
+        "partition_keys_in_select_warn_threshold": {
+          "enum": [
+            1,
+            -9999999999,
+            2
+          ],
+          "type": "integer"
+        },
+        "partitioner": {
+          "enum": [
+            "org.apache.cassandra.dht.Murmur3Partitioner",
+            "alt_string"
+          ],
+          "type": "string"
+        },
+        "periodic_commitlog_sync_lag_block": {
+          "enum": [
+            "0ms",
+            "1ms",
+            "-9999999999ms"
+          ],
+          "type": "string"
+        },
+        "permissions_cache_active_update": {
+          "type": "boolean"
+        },
+        "permissions_update_interval": {
+          "enum": [
+            "4000ms",
+            "-9999999999ms",
+            "2000ms"
+          ],
+          "type": "string"
+        },
+        "permissions_validity": {
+          "enum": [
+            "4000ms",
+            "-9999999999ms",
+            "0ms"
+          ],
+          "type": "string"
+        },
+        "phi_convict_threshold": {
+          "enum": [
+            0,
+            -9999999999,
+            4
+          ],
+          "type": "number"
+        },
+        "prepared_statements_cache_size": {
+          "enum": [
+            "auto",
+            "1MiB",
+            "-9999999999MiB"
+          ],
+          "type": "string"
+        },
+        "range_request_timeout": {
+          "enum": [
+            "20000ms",
+            "-9999999999ms",
+            "0ms"
+          ],
+          "type": "string"
+        },
+        "read_before_write_list_operations_enabled": {
+          "type": "boolean"
+        },
+        "read_request_timeout": {
+          "enum": [
+            "0ms",
+            "-9999999999ms",
+            "2500ms"
+          ],
+          "type": "string"
+        },
+        "read_thresholds_enabled": {
+          "type": "boolean"
+        },
+        "repair_session_space": {
+          "enum": [
+            "2MiB",
+            "1MiB",
+            "-9999999999MiB"
+          ],
+          "type": "string"
+        },
+        "repaired_data_tracking_for_partition_reads_enabled": {
+          "type": "boolean"
+        },
+        "repaired_data_tracking_for_range_reads_enabled": {
+          "type": "boolean"
+        },
+        "replica_filtering_protection": {
+          "properties": {
+            "cached_rows_warn_threshold": {
+              "enum": [
+                1,
+                2,
+                -9999999999
+              ],
+              "type": "integer"
+            },
+            "cached_rows_fail_threshold": {
+              "enum": [
+                1,
+                2,
+                -9999999999
+              ],
+              "type": "integer"
+            }
+          },
+          "type": "object"
+        },
+        "report_unconfirmed_repaired_data_mismatches": {
+          "type": "boolean"
+        },
+        "request_timeout": {
+          "enum": [
+            "20000ms",
+            "-9999999999ms",
+            "0ms"
+          ],
+          "type": "string"
+        },
+        "role_manager": {
+          "enum": [
+            "SimpleRoleManager",
+            "CassandraRoleManager"
+          ],
+          "type": "string"
+        },
+        "roles_cache_active_update": {
+          "type": "boolean"
+        },
+        "roles_update_interval": {
+          "enum": [
+            "4000ms",
+            "-9999999999ms",
+            "2000ms"
+          ],
+          "type": "string"
+        },
+        "roles_validity": {
+          "enum": [
+            "2000ms",
+            "4000ms",
+            "-9999999999ms"
+          ],
+          "type": "string"
+        },
+        "row_cache_class_name": {
+          "enum": [
+            "org.apache.cassandra.cache.OHCProvider",
+            "alt_string"
+          ],
+          "type": "string"
+        },
+        "row_cache_keys_to_save": {
+          "enum": [
+            0,
+            -9999999999,
+            100
+          ],
+          "type": "integer"
+        },
+        "row_cache_save_period": {
+          "enum": [
+            "0s",
+            "-9999999999s",
+            "500s"
+          ],
+          "type": "string"
+        },
+        "row_cache_size": {
+          "enum": [
+            "0MiB",
+            "-9999999999MiB",
+            "9999999999MiB"
+          ],
+          "type": "string"
+        },
+        "row_index_read_size_fail_threshold": {
+          "enum": [
+            "0MiB",
+            "1MiB",
+            "-9999999999MiB"
+          ],
+          "type": "string"
+        },
+        "row_index_read_size_warn_threshold": {
+          "enum": [
+            "0MiB",
+            "1MiB",
+            "-9999999999MiB"
+          ],
+          "type": "string"
+        },
+        "rpc_interface_prefer_ipv6": {
+          "type": "boolean"
+        },
+        "rpc_keepalive": {
+          "type": "boolean"
+        },
+        "sasi_indexes_enabled": {
+          "type": "boolean"
+        },
+        "scripted_user_defined_functions_enabled": {
+          "type": "boolean"
+        },
+        "secondary_indexes_enabled": {
+          "type": "boolean"
+        },
+        "secondary_indexes_per_table_fail_threshold": {
+          "enum": [
+            -1,
+            -9999999999,
+            1
+          ],
+          "type": "integer"
+        },
+        "secondary_indexes_per_table_warn_threshold": {
+          "enum": [
+            -1,
+            -9999999999,
+            1
+          ],
+          "type": "integer"
+        },
+        "seed_provider": {
+          "enum": [
+            "None",
+            "SimpleSeedProvider"
+          ],
+          "type": "string"
+        },
+        "slow_query_log_timeout": {
+          "enum": [
+            "0ms",
+            "-9999999999ms",
+            "1000ms"
+          ],
+          "type": "string"
+        },
+        "snapshot_before_compaction": {
+          "type": "boolean"
+        },
+        "snapshot_links_per_second": {
+          "enum": [
+            0,
+            -9999999999,
+            9999999999
+          ],
+          "type": "integer"
+        },
+        "sstable_preemptive_open_interval": {
+          "enum": [
+            "0MiB",
+            "-9999999999MiB",
+            "100MiB"
+          ],
+          "type": "string"
+        },
+        "start_native_transport": {
+          "type": "boolean"
+        },
+        "stream_entire_sstables": {
+          "type": "boolean"
+        },
+        "stream_throughput_outbound": {
+          "enum": [
+            "0MiB/s",
+            "-9999999999MiB/s",
+            "12MiB/s"
+          ],
+          "type": "string"
+        },
+        "streaming_connections_per_host": {
+          "enum": [
+            0,
+            1,
+            -9999999999
+          ],
+          "type": "integer"
+        },
+        "streaming_keep_alive_period": {
+          "enum": [
+            "0s",
+            "-9999999999s",
+            "300s"
+          ],
+          "type": "string"
+        },
+        "streaming_state_expires": {
+          "enum": [
+            "0d",
+            "1d",
+            "-9999999999d"
+          ],
+          "type": "string"
+        },
+        "streaming_state_size": {
+          "enum": [
+            "0MiB",
+            "-9999999999MiB",
+            "40MiB"
+          ],
+          "type": "string"
+        },
+        "streaming_stats_enabled": {
+          "type": "boolean"
+        },
+        "table": {
+          "enum": [
+            "none",
+            "alt_string"
+          ],
+          "type": "string"
+        },
+        "table_count_warn_threshold": {
+          "enum": [
+            0,
+            -9999999999,
+            75
+          ],
+          "type": "integer"
+        },
+        "tables_fail_threshold": {
+          "enum": [
+            -1,
+            -9999999999,
+            1
+          ],
+          "type": "integer"
+        },
+        "tables_warn_threshold": {
+          "enum": [
+            -1,
+            -9999999999,
+            1
+          ],
+          "type": "integer"
+        },
+        "tombstone_failure_threshold": {
+          "enum": [
+            100000,
+            -9999999999,
+            200000
+          ],
+          "type": "integer"
+        },
+        "tombstone_warn_threshold": {
+          "enum": [
+            0,
+            -9999999999,
+            1000
+          ],
+          "type": "integer"
+        },
+        "trace_type_query_ttl": {
+          "enum": [
+            "0d",
+            "1d",
+            "2d"
+          ],
+          "type": "string"
+        },
+        "trace_type_repair_ttl": {
+          "enum": [
+            "0d",
+            "-9999999999d",
+            "3d"
+          ],
+          "type": "string"
+        },
+        "transfer_hints_on_decommission": {
+          "type": "boolean"
+        },
+        "transient_replication_enabled": {
+          "type": "boolean"
+        },
+        "traverse_auth_from_root": {
+          "type": "boolean"
+        },
+        "trickle_fsync": {
+          "type": "boolean"
+        },
+        "trickle_fsync_interval": {
+          "enum": [
+            "10240KiB",
+            "20480KiB",
+            "5120KiB"
+          ],
+          "type": "string"
+        },
+        "truncate_request_timeout": {
+          "enum": [
+            "60000ms",
+            "-9999999999ms",
+            "120000ms"
+          ],
+          "type": "string"
+        },
+        "uncompressed_tables_enabled": {
+          "type": "boolean"
+        },
+        "unlogged_batch_across_partitions_warn_threshold": {
+          "enum": [
+            0,
+            -9999999999,
+            5
+          ],
+          "type": "integer"
+        },
+        "use_statements_enabled": {
+          "type": "boolean"
+        },
+        "user_defined_functions_enabled": {
+          "type": "boolean"
+        },
+        "user_timestamps_enabled": {
+          "type": "boolean"
+        },
+        "uuid_sstable_identifiers_enabled": {
+          "type": "boolean"
+        },
+        "write_request_timeout": {
+          "enum": [
+            "4000ms",
+            "-9999999999ms",
+            "0ms"
+          ],
+          "type": "string"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "type": "object"
+}

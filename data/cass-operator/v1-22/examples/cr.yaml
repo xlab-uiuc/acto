@@ -1,0 +1,76 @@
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc1
+spec:
+  clusterName: development
+  serverType: cassandra
+  serverVersion: "4.1.2"
+  managementApiAuth:
+    insecure: {}
+  size: 3
+  storageConfig:
+      cassandraDataVolumeClaimSpec:
+        storageClassName: standard
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+  resources:
+    requests:
+      memory: 2Gi
+      cpu: 1000m
+  racks:
+    - name: rack1
+    - name: rack2
+    - name: rack3
+  config:
+    jvm-server-options:
+      initial_heap_size: "1G"
+      max_heap_size: "1G"
+    cassandra-yaml:
+      num_tokens: 16
+      authenticator: PasswordAuthenticator
+      authorizer: CassandraAuthorizer
+      role_manager: CassandraRoleManager
+  users:
+  - secretName: demo-secret
+    superuser: true
+  - secretName: demo-secret-2
+    superuser: false
+---
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: dc1
+spec:
+  clusterName: development
+  serverType: cassandra
+  serverVersion: "4.1.2"
+  managementApiAuth:
+    insecure: {}
+  size: 3
+  storageConfig:
+      cassandraDataVolumeClaimSpec:
+        storageClassName: standard
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+  resources:
+    requests:
+      memory: 4Gi
+      cpu: 1000m
+  racks:
+    - name: rack1
+  config:
+    jvm-server-options:
+      initial_heap_size: "1G"
+      max_heap_size: "1G"
+    cassandra-yaml:
+      num_tokens: 8
+      authenticator: PasswordAuthenticator
+      authorizer: CassandraAuthorizer
+      role_manager: CassandraRoleManager
