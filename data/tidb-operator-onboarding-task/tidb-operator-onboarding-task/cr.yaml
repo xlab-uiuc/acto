@@ -1,0 +1,90 @@
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: test-cluster
+spec:
+  version: "v5.4.0"
+  timezone: UTC
+  configUpdateStrategy: RollingUpdate
+  helper:
+    image: busybox:1.34.1
+  pvReclaimPolicy: Retain
+  enableDynamicConfiguration: true
+
+  tidb:
+  baseImage: pingcap/tidb
+  config: |
+    [performance]
+      tcp-keep-alive = true
+  replicas: 2 
+  maxFailoverCount: 0
+  service:
+    type: NodePort
+    externalTrafficPolicy: Local
+
+
+  tikv:
+    baseImage: pingcap/tikv
+    config: |
+      log-level = "info"
+    replicas: 2 
+    maxFailoverCount: 0
+    separateRaftLog: true
+    requests:
+      storage: 2Gi
+    mountClusterClientSecret: true
+    recoverFailover: false
+  
+  pd:
+    baseImage: pingcap/pd
+    config: |
+      [dashboard]
+        internal-proxy = true
+    replicas: 3
+    maxFailoverCount: 0
+    requests:
+      storage: 2Gi  
+    mountClusterClientSecret: true
+
+
+
+#  # Monitoring configuration
+#   monitor:
+#     baseImage: pingcap/tidb-monitor-initializer
+#     replicas: 1
+#     prometheus:
+#       baseImage: prom/prometheus:v2.11.1
+#       version: v2.11.1
+#       persistent: true
+#       storage: 20Gi
+#     grafana:
+#       baseImage: grafana/grafana:6.0.0
+#       version: 6.0.0
+#       service:
+#         type: NodePort
+#       storage: 10Gi
+#     initializer:
+#       baseImage: pingcap/tidb-monitor-initializer
+#     storageClassName: "standard"
+
+#   # Backup configuration
+#   backup:
+#     baseImage: pingcap/br
+#     version: "v5.4.0"
+#     storageClassName: "backup-storage"
+#     storageSize: "100Gi"
+#     schedule: "*/30 * * * *"
+#     gcs:
+#       projectId: your-gcs-project-id
+#       bucket: your-bucket-name
+#       secretName: gcs-secret
+
+#   # Log collector for cluster-wide log management
+#   logCollector:
+#     baseImage: fluent/fluentd:v1.7
+#     replicas: 1
+#     requests:
+#       cpu: "500m"
+#       memory: "1Gi"
+#     storageClassName: "log-storage"
+#     storageSize: "5Gi"
