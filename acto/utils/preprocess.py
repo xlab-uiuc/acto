@@ -111,7 +111,6 @@ def process_crd(
         with open(helper_crd, "r", encoding="utf-8") as helper_crd_f:
             helper_crd_docs = list(yaml.safe_load_all(helper_crd_f))
 
-
         if crd_name:
             for doc in helper_crd_docs:
                 if doc["metadata"]["name"] == crd_name:
@@ -119,7 +118,7 @@ def process_crd(
                     break
         else:
             helper_crd_doc = helper_crd_docs[0]
-        
+
         crd_data = {
             "group": helper_crd_doc["spec"]["group"],
             "plural": helper_crd_doc["spec"]["names"]["plural"],

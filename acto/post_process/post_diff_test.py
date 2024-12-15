@@ -25,13 +25,19 @@ from deepdiff.helper import CannotCompare
 from deepdiff.model import DiffLevel, TreeResult
 from deepdiff.operator import BaseOperator
 
+from acto.checker.impl.health import HealthChecker
 from acto.common import invalid_input_message_regex, kubernetes_client
 from acto.deploy import Deploy
 from acto.kubectl_client.kubectl import KubectlClient
 from acto.kubernetes_engine import base, kind
 from acto.lib.operator_config import OperatorConfig
 from acto.post_process.post_process import PostProcessor
-from acto.result import DifferentialOracleResult, StepID
+from acto.result import (
+    CliStatus,
+    DifferentialOracleResult,
+    OracleResult,
+    StepID,
+)
 from acto.runner import Runner
 from acto.serialization import ActoEncoder
 from acto.snapshot import Snapshot
@@ -165,7 +171,6 @@ def compare_system_equality(
         r".*\['metadata'\]\['annotations'\]\['.*\.kubernetes\.io.*'\]",
         r".*\['metadata'\]\['labels'\]\['.*revision.*'\]",
         r".*\['metadata'\]\['labels'\]\['owner-rv'\]",
-        r".*\['status'\]",
         r"\['metadata'\]\['deletion_grace_period_seconds'\]",
         r"\['metadata'\]\['deletion_timestamp'\]",
         r".*\['spec'\]\['init_containers'\]\[.*\]\['volume_mounts'\]\[.*\]\['name'\]$",
@@ -190,16 +195,35 @@ def compare_system_equality(
         r".*\['metadata'\]\['generate_name'\]",
         r".*\['metadata'\]\['labels'\]\['pod\-template\-hash'\]",
         r"\['deployment_pods'\].*\['metadata'\]\['owner_references'\]\[.*\]\['name'\]",
+        r"\['status'\]\['conditions'\]\[.*\]\['last_transition_time'\]",
+        r".*\['container_id'\]",
+        r".*\['started_at'\]",
+        r".*\['finished_at'\]",
+        r".*\['host_ip'\]",
+        r".*\['status'\]\['host_ip'\]",
+        r".*\['status'\]\['host_i_ps'\]\[.*\]\['ip'\]",
+        r".*\['status'\]\['pod_ip'\]",
+        r".*\['status'\]\['pod_i_ps'\]\[.*\]\['ip'\]",
+        r".*\['status'\]\['start_time'\]",
+        r".*\['status'\]\['observed_generation'\]",
+        r".*\['last_transition_time'\]",
+        r".*\['last_update_time'\]",
+        r".*\['image_id'\]",
+        r".*\['restart_count'\]",
     ]
 
     if additional_exclude_paths is not None:
         exclude_paths.extend(additional_exclude_paths)
+
+    for e in exclude_paths:
+        re.compile(e)
 
     diff = DeepDiff(
         prev_system_state,
         curr_system_state,
         exclude_regex_paths=exclude_paths,
         iterable_compare_func=compare_func,
+        ignore_order=True,
         custom_operators=[
             NameOperator(r".*\['name'\]$"),
             TypeChangeOperator(r".*\['annotations'\]$"),
@@ -251,16 +275,21 @@ def postprocess_deepdiff(diff: TreeResult):
 def compare_func(x, y, _: DiffLevel = None):
     """Compare function for deepdiff taking key and operator into account"""
     try:
-        if "name" not in x or "name" not in y:
-            return x["key"] == y["key"] and x["operator"] == y["operator"]
-        x_name = x["name"]
-        y_name = y["name"]
-        if len(x_name) < 5 or len(y_name) < 5:
-            return x_name == y_name
-        else:
+        if "name" in x and "name" in y:
+            # Take name into account, e.g., PVCs, volumes
+            x_name = x["name"]
+            y_name = y["name"]
+            if len(x_name) < 5 or len(y_name) < 5:
+                return x_name == y_name
             return x_name[:5] == y_name[:5]
+        if "key" in (x, y) and "operator" in (x, y):
+            return x["key"] == y["key"] and x["operator"] == y["operator"]
+        if "type" in (x, y):
+            # Compare the Pod conditions
+            return x["type"] == y["type"]
     except:
         raise CannotCompare() from None
+    raise CannotCompare() from None
 
 
 class NameOperator(BaseOperator):
@@ -460,7 +489,7 @@ class DeployRunner:
         while True:
             after_k8s_bootstrap_time = time.time()
             try:
-                group = self._workqueue.get(block=False)
+                group = self._workqueue.get(block=True, timeout=5)
             except queue.Empty:
                 break
 
@@ -589,7 +618,7 @@ def compute_common_regex(paths: list[str]) -> list[str]:
                 common_regex.add(regex_candidate)
                 curr_regex = regex_candidate
             else:
-                common_regex.add(path)
+                common_regex.add("^" + re.escape(path) + "$")
     return list(common_regex)
 
 
@@ -610,9 +639,15 @@ class PostDiffTest(PostProcessor):
         self.all_inputs = []
         for trial_name, trial in self.trial_to_steps.items():
             for step in trial.steps.values():
-                invalid = step.run_result.is_invalid_input()
-                if invalid and not ignore_invalid:
-                    continue
+                if step.run_result.cli_status == CliStatus.INVALID:
+                    # If the input is rejected by the operator webhook,
+                    # we still run it, but the oracle only checks the explicit
+                    # error state
+                    pass
+                else:
+                    invalid = step.run_result.is_invalid_input()
+                    if invalid and not ignore_invalid:
+                        continue
                 self.all_inputs.append(
                     {
                         "trial": trial_name,
@@ -781,7 +816,7 @@ class PostDiffTest(PostProcessor):
 
         while True:
             try:
-                diff_test_result_path = workqueue.get(block=False)
+                diff_test_result_path = workqueue.get(block=True, timeout=5)
             except queue.Empty:
                 break
 
@@ -828,7 +863,7 @@ class PostDiffTest(PostProcessor):
         config: OperatorConfig,
         run_check_indeterministic: bool = False,
         additional_runner: Optional[AdditionalRunner] = None,
-    ) -> Optional[DifferentialOracleResult]:
+    ) -> Optional[OracleResult]:
         """Check the diff test step result and return the differential oracle "
         "result if it fails, otherwise return None"""
         logger = get_thread_logger(with_prefix=True)
@@ -837,6 +872,16 @@ class PostDiffTest(PostProcessor):
 
         if original_result.run_result.oracle_result.health is not None:
             return None
+
+        if diff_test_result.snapshot.cli_result["stderr"]:
+            # Input is considered as invalid by the APIServer
+            # Do not run oracle on this input
+            return None
+
+        if original_result.run_result.cli_status == CliStatus.INVALID:
+            # we run the system health oracle here only,
+            # without running the differential oracle
+            return HealthChecker().check(snapshot=diff_test_result.snapshot)
 
         original_operator_log = original_result.snapshot.operator_log
         if invalid_input_message_regex(original_operator_log):
@@ -848,7 +893,7 @@ class PostDiffTest(PostProcessor):
             original_system_state,
             config.diff_ignore_fields,
         )
-        if result is None:
+        if not result:
             logger.info("Pass diff test for trial %s gen %d", trial_dir, gen)
             return None
         elif run_check_indeterministic:
@@ -985,7 +1030,7 @@ def get_diff_paths_helper(
         diff_test_result, original_result, config
     )
     indeterministic_regex = set()
-    if diff_result is not None:
+    if isinstance(diff_result, DifferentialOracleResult):
         for diff in diff_result.diff.values():
             if not isinstance(diff, list):
                 continue

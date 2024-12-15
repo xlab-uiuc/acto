@@ -16,6 +16,7 @@ import deepdiff
 import jsonpatch
 import yaml
 
+from acto.checker.checker import CheckerInterface
 from acto.checker.checker_set import CheckerSet
 from acto.checker.impl.health import HealthChecker
 from acto.common import (
@@ -81,6 +82,11 @@ def apply_testcase(
                 testcase.mutator(field_curr_value), list(path)
             )
             curr = value_with_schema.raw_value()
+        else:
+            raise RuntimeError(
+                "Running test case while precondition fails"
+                f" {path} {field_curr_value}"
+            )
 
     # Satisfy constraints
     assumptions: list[tuple[PropertyPath, bool]] = []
@@ -141,16 +147,16 @@ def check_state_equality(
     # remove pods that belong to jobs from both states to avoid observability problem
     curr_pods = curr_system_state["pod"]
     prev_pods = prev_system_state["pod"]
-    curr_system_state["pod"] = {
-        k: v
-        for k, v in curr_pods.items()
-        if v["metadata"]["owner_references"][0]["kind"] != "Job"
-    }
-    prev_system_state["pod"] = {
-        k: v
-        for k, v in prev_pods.items()
-        if v["metadata"]["owner_references"][0]["kind"] != "Job"
-    }
+
+    for k, v in curr_pods.items():
+        if "owner_reference" in v["metadata"] and v["metadata"]["owner_reference"] is not None and ["owner_references"][0]["kind"] == "Job":
+            continue
+        curr_system_state[k] = v
+    
+    for k, v in prev_pods.items():
+        if "owner_reference" in v["metadata"] and v["metadata"]["owner_reference"] is not None and ["owner_references"][0]["kind"] == "Job":
+            continue
+        prev_system_state[k] = v
 
     for obj in prev_system_state["secret"].values():
         if "data" in obj and obj["data"] is not None:
@@ -249,8 +255,8 @@ class TrialRunner:
         runner_t: type,
         checker_t: type,
         wait_time: int,
-        custom_on_init: list[Callable],
-        custom_oracle: list[Callable],
+        custom_on_init: Optional[Callable],
+        custom_checker: Optional[type[CheckerInterface]],
         workdir: str,
         cluster: base.KubernetesEngine,
         worker_id: int,
@@ -288,7 +294,7 @@ class TrialRunner:
         )
 
         self.custom_on_init = custom_on_init
-        self.custom_oracle = custom_oracle
+        self.custom_checker = custom_checker
         self.dryrun = dryrun
         self.is_reproduce = is_reproduce
 
@@ -407,8 +413,8 @@ class TrialRunner:
         )
         # first run the on_init callbacks if any
         if self.custom_on_init is not None:
-            for on_init in self.custom_on_init:
-                on_init(oracle_handle)
+            for callback in self.custom_on_init:
+                callback(oracle_handle)
 
         runner: Runner = self.runner_t(
             self.context,
@@ -423,7 +429,7 @@ class TrialRunner:
             trial_dir,
             self.input_model,
             oracle_handle,
-            self.custom_oracle,
+            self.custom_checker,
         )
 
         curr_input = self.input_model.get_seed_input()
@@ -555,7 +561,6 @@ class TrialRunner:
                             run_result.oracle_result.differential = self.run_recovery(  # pylint: disable=assigning-non-slot
                                 runner
                             )
-                            generation += 1
                             trial_err = run_result.oracle_result
                             setup_fail = True
                             break
@@ -586,7 +591,6 @@ class TrialRunner:
                 run_result.oracle_result.differential = self.run_recovery(
                     runner
                 )
-                generation += 1
                 trial_err = run_result.oracle_result
                 break
 
@@ -596,10 +600,10 @@ class TrialRunner:
                 break
 
         if trial_err is not None:
-            trial_err.deletion = self.run_delete(runner, generation=generation)
+            trial_err.deletion = self.run_delete(runner, generation=0)
         else:
             trial_err = OracleResults()
-            trial_err.deletion = self.run_delete(runner, generation=generation)
+            trial_err.deletion = self.run_delete(runner, generation=0)
 
         return TrialResult(
             trial_id=trial_id,
@@ -767,9 +771,9 @@ class TrialRunner:
         logger = get_thread_logger(with_prefix=True)
 
         logger.debug("Running delete")
-        success = runner.delete(generation=generation)
+        deletion_failed = runner.delete(generation=generation)
 
-        if not success:
+        if deletion_failed:
             return DeletionOracleResult(message="Deletion test case")
         else:
             return None
@@ -884,13 +888,16 @@ class Acto:
 
         self.sequence_base = 0
 
+        self.custom_oracle: Optional[type[CheckerInterface]] = None
+        self.custom_on_init: Optional[Callable] = None
         if operator_config.custom_oracle is not None:
             module = importlib.import_module(operator_config.custom_oracle)
-            self.custom_oracle = module.CUSTOM_CHECKER
-            self.custom_on_init = module.ON_INIT
-        else:
-            self.custom_oracle = None
-            self.custom_on_init = None
+            if hasattr(module, "CUSTOM_CHECKER") and issubclass(
+                module.CUSTOM_CHECKER, CheckerInterface
+            ):
+                self.custom_checker = module.CUSTOM_CHECKER
+            if hasattr(module, "ON_INIT"):
+                self.custom_on_init = module.ON_INIT
 
         # Generate test cases
         self.test_plan = self.input_model.generate_test_plan(
@@ -1125,7 +1132,7 @@ class Acto:
                 self.checker_type,
                 self.operator_config.wait_time,
                 self.custom_on_init,
-                self.custom_oracle,
+                self.custom_checker,
                 self.workdir_path,
                 self.cluster,
                 i,

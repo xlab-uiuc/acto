@@ -24,6 +24,7 @@ from acto.schema import (
     OpaqueSchema,
     StringSchema,
 )
+from acto.schema.under_specified import UnderSpecifiedSchema
 
 
 class Priority(IntEnum):
@@ -51,6 +52,7 @@ class TestGenerator:
             "OneOf",
             "Opaque",
             "String",
+            "UnderSpecified",
         ]
     ]
     paths: Optional[list[str]]
@@ -98,6 +100,7 @@ class TestGenerator:
             "OneOf": OneOfSchema,
             "Opaque": OpaqueSchema,
             "String": StringSchema,
+            "UnderSpecified": UnderSpecifiedSchema,
         }
         if schema_type_obj := matching_types.get(self.property_type):
             if isinstance(schema, schema_type_obj):
@@ -158,6 +161,7 @@ def test_generator(
             "OneOf",
             "Opaque",
             "String",
+            "UnderSpecified",
         ]
     ] = None,
     paths: Optional[list[str]] = None,

@@ -20,7 +20,12 @@ def wait_for_pod_ready(kubectl_client: KubectlClient) -> bool:
     """Wait for all pods to be ready"""
     now = time.time()
     try:
-        p = kubectl_client.wait_for_all_pods(timeout=600)
+        i = 0
+        while i < 3:
+            p = kubectl_client.wait_for_all_pods(timeout=600)
+            if p.returncode == 0:
+                break
+            i += 1
     except subprocess.TimeoutExpired:
         logging.error("Timeout waiting for all pods to be ready")
         return False

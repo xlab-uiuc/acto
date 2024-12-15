@@ -10,9 +10,14 @@ class HealthChecker(CheckerInterface):
     """System health oracle"""
 
     def check(
-        self, _: int, snapshot: Snapshot, __: Snapshot
+        self,
+        _: int = 0,
+        snapshot: Optional[Snapshot] = None,
+        __: Optional[Snapshot] = None,
     ) -> Optional[OracleResult]:
         """System health oracle"""
+        if snapshot is None:
+            return None
         logger = get_thread_logger(with_prefix=True)
 
         system_state = snapshot.system_state
