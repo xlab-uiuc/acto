@@ -47,13 +47,13 @@ if __name__ == "__main__":
                 except KeyError as e:
                     print("No metadata.namespace, no op")
 
-                try:
-                    if file_content["spec"]["datacenter"]["namespace"] != "":
-                        file_content["spec"]["datacenter"].pop(
-                            "namespace", None
-                        )
-                except KeyError as e:
-                    print("No spec.datacenter.namespace, no op")
+                # try:
+                #     if file_content["spec"]["datacenter"]["namespace"] != "":
+                #         file_content["spec"]["datacenter"].pop(
+                #             "namespace", None
+                #         )
+                # except KeyError as e:
+                #     print("No spec.datacenter.namespace, no op")
 
                 if file_content["kind"] == "Deployment":
                     continue
