@@ -213,20 +213,20 @@
                 },
                 "completion_type": {
                     "description": "The transaction completion type. If set to NO_CHAIN or 0 (the default), there is no effect on commits and rollbacks. If set to CHAIN or 1, a COMMIT statement is equivalent to COMMIT AND CHAIN, while a ROLLBACK is equivalent to ROLLBACK AND CHAIN, so a new transaction starts straight away with the same isolation level as transaction that's just finished. If set to RELEASE or 2, a COMMIT statement is equivalent to COMMIT RELEASE, while a ROLLBACK is equivalent to ROLLBACK RELEASE, so the server will disconnect after the transaction completes. Note that the transaction completion type only applies to explicit commits, not implicit commits.",
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        0,
-                        1,
-                        2
+                        "CHAIN",
+                        "NO_CHAIN",
+                        "RELEASE"
                     ]
                 },
                 "concurrent_insert": {
                     "description": "If set to AUTO or 1, the default, MariaDB allows concurrent INSERTs and SELECTs for MyISAM tables with no free blocks in the data (deleted rows in the middle). If set to NEVER or 0, concurrent inserts are disabled. If set to ALWAYS or 2, concurrent inserts are permitted for all MyISAM tables, even those with holes, in which case new rows are added at the end of a table if the table is being used by another thread. If the --skip-new option is used when starting the server, concurrent_insert is set to NEVER. Changing the variable only affects new opened tables. Use FLUSH TABLES If you want it to also affect cached tables. See  Concurrent Inserts for more.",
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        0,
-                        1,
-                        2
+                        "NEVER",
+                        "AUTO",
+                        "ALWAYS"
                     ]
                 },
                 "connect_timeout": {
@@ -580,16 +580,16 @@
                     "description": "If the zlib compression library is accessible to the server, this will be set to YES, otherwise it will be NO. The COMPRESS() and UNCOMPRESS() functions will only be available if set to YES.",
                     "type": "string",
                     "enum": [
-                        "ON",
-                        "OFF"
+                        "YES",
+                        "NO"
                     ]
                 },
                 "have_crypt": {
                     "description": "If the crypt() system call is available this variable will be set to YES, otherwise it will be set to NO.  If set to NO, the ENCRYPT() function cannot be used.",
                     "type": "string",
                     "enum": [
-                        "ON",
-                        "OFF"
+                        "YES",
+                        "NO"
                     ]
                 },
                 "have_csv": {
@@ -599,64 +599,56 @@
                     "description": "If the server supports dynamic loading of plugins, will be set to YES, otherwise will be set to NO. ",
                     "type": "string",
                     "enum": [
-                        "ON",
-                        "OFF"
+                        "YES",
+                        "NO"
                     ]
                 },
                 "have_geometry": {
                     "description": "If the server supports spatial data types, will be set to YES, otherwise will be set to NO. ",
                     "type": "string",
                     "enum": [
-                        "ON",
-                        "OFF"
-                    ]
-                },
-                "have_ndbcluster": {
-                    "description": "If the server supports NDBCluster (disabled in MariaDB).",
-                    "type": "string",
-                    "enum": [
-                        "ON",
-                        "OFF"
+                        "YES",
+                        "NO"
                     ]
                 },
                 "have_partitioning": {
                     "description": "If the server supports partitioning, will be set to YES, unless the --skip-partition option is used, in which case will be set to DISABLED. Will be set to NO otherwise. Removed in MariaDB 10.0 - SHOW PLUGINS should be used instead.",
                     "type": "string",
                     "enum": [
-                        "ON",
-                        "OFF"
+                        "YES",
+                        "NO"
                     ]
                 },
                 "have_profiling": {
                     "description": "If statement profiling is available, will be set to YES, otherwise will be set to NO.  See SHOW PROFILES() and SHOW PROFILE().",
                     "type": "string",
                     "enum": [
-                        "ON",
-                        "OFF"
+                        "YES",
+                        "NO"
                     ]
                 },
                 "have_query_cache": {
                     "description": "If the server supports the query cache, will be set to YES, otherwise will be set to NO.",
                     "type": "string",
                     "enum": [
-                        "ON",
-                        "OFF"
+                        "YES",
+                        "NO"
                     ]
                 },
                 "have_rtree_keys": {
                     "description": "If RTREE indexes (used for spatial indexes) are available, will be set to YES, otherwise will be set to NO.",
                     "type": "string",
                     "enum": [
-                        "ON",
-                        "OFF"
+                        "YES",
+                        "NO"
                     ]
                 },
                 "have_symlink": {
                     "description": "This system variable can be used to determine whether the server supports symbolic links (note that it has no meaning on Windows).\nIf symbolic links are supported, then the value will be YES.\nIf symbolic links are not supported, then the value will be NO.\nIf symbolic links are disabled with the --symbolic-links option and the skip option prefix (i.e. --skip-symbolic-links), then the value will be DISABLED.\nSymbolic link support is required for the INDEX DIRECTORY and DATA DIRECTORY table options.",
                     "type": "string",
                     "enum": [
-                        "ON",
-                        "OFF"
+                        "YES",
+                        "NO"
                     ]
                 },
                 "histogram_size": {
