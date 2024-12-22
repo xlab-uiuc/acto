@@ -47,7 +47,7 @@ class TiDBConfigChecker(CheckerInterface):
                 "mysql",
                 "--comments",
                 "-h",
-                "test-cluster-tidb"
+                "test-cluster-tidb",
                 "-P",
                 "4000",
                 "-u",
@@ -75,8 +75,10 @@ class TiDBConfigChecker(CheckerInterface):
                 if key not in result:
                     result[key] = {}
                 result = result[key]
-            if compoents[3] == "true" or compoents[3] == "false":
-                result[keys[-1]] = bool(compoents[3])
+            if compoents[3] == "true":
+                result[keys[-1]] = True
+            elif compoents[3] == "false":
+                result[keys[-1]] = False
             elif re.match(r"^\d+$", compoents[3]) or re.match(r"^\d+\.\d+$", compoents[3]):
                 result[keys[-1]] = float(compoents[3])
             else:
