@@ -210,6 +210,10 @@ def compare_system_equality(
         r".*\['last_update_time'\]",
         r".*\['image_id'\]",
         r".*\['restart_count'\]",
+        r".*\['status'\]\['container_statuses'\]\[.*\]\['last_state'\]",
+        r".*\['status'\]\['current_replicas'\]",
+        r".*\['status'\]\['current_revision'\]",
+        r".*\['status'\]\['update_revision'\]",
     ]
 
     if additional_exclude_paths is not None:
