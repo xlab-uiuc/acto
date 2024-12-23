@@ -576,81 +576,6 @@
                         -1
                     ]
                 },
-                "have_compress": {
-                    "description": "If the zlib compression library is accessible to the server, this will be set to YES, otherwise it will be NO. The COMPRESS() and UNCOMPRESS() functions will only be available if set to YES.",
-                    "type": "string",
-                    "enum": [
-                        "YES",
-                        "NO"
-                    ]
-                },
-                "have_crypt": {
-                    "description": "If the crypt() system call is available this variable will be set to YES, otherwise it will be set to NO.  If set to NO, the ENCRYPT() function cannot be used.",
-                    "type": "string",
-                    "enum": [
-                        "YES",
-                        "NO"
-                    ]
-                },
-                "have_csv": {
-                    "description": "If the server supports CSV tables, will be set to YES, otherwise will be set to NO. Removed in MariaDB 10.0, use the Information Schema PLUGINS table or SHOW ENGINES instead. "
-                },
-                "have_dynamic_loading": {
-                    "description": "If the server supports dynamic loading of plugins, will be set to YES, otherwise will be set to NO. ",
-                    "type": "string",
-                    "enum": [
-                        "YES",
-                        "NO"
-                    ]
-                },
-                "have_geometry": {
-                    "description": "If the server supports spatial data types, will be set to YES, otherwise will be set to NO. ",
-                    "type": "string",
-                    "enum": [
-                        "YES",
-                        "NO"
-                    ]
-                },
-                "have_partitioning": {
-                    "description": "If the server supports partitioning, will be set to YES, unless the --skip-partition option is used, in which case will be set to DISABLED. Will be set to NO otherwise. Removed in MariaDB 10.0 - SHOW PLUGINS should be used instead.",
-                    "type": "string",
-                    "enum": [
-                        "YES",
-                        "NO"
-                    ]
-                },
-                "have_profiling": {
-                    "description": "If statement profiling is available, will be set to YES, otherwise will be set to NO.  See SHOW PROFILES() and SHOW PROFILE().",
-                    "type": "string",
-                    "enum": [
-                        "YES",
-                        "NO"
-                    ]
-                },
-                "have_query_cache": {
-                    "description": "If the server supports the query cache, will be set to YES, otherwise will be set to NO.",
-                    "type": "string",
-                    "enum": [
-                        "YES",
-                        "NO"
-                    ]
-                },
-                "have_rtree_keys": {
-                    "description": "If RTREE indexes (used for spatial indexes) are available, will be set to YES, otherwise will be set to NO.",
-                    "type": "string",
-                    "enum": [
-                        "YES",
-                        "NO"
-                    ]
-                },
-                "have_symlink": {
-                    "description": "This system variable can be used to determine whether the server supports symbolic links (note that it has no meaning on Windows).\nIf symbolic links are supported, then the value will be YES.\nIf symbolic links are not supported, then the value will be NO.\nIf symbolic links are disabled with the --symbolic-links option and the skip option prefix (i.e. --skip-symbolic-links), then the value will be DISABLED.\nSymbolic link support is required for the INDEX DIRECTORY and DATA DIRECTORY table options.",
-                    "type": "string",
-                    "enum": [
-                        "YES",
-                        "NO"
-                    ]
-                },
                 "histogram_size": {
                     "description": "Number of bytes used for a histogram, or, from MariaDB 10.7 when histogram_type is set to JSON_HB, number of buckets. If set to 0, no histograms are created by ANALYZE. ",
                     "type": "integer",
@@ -2331,15 +2256,6 @@
                     "enum": [
                         28800,
                         57600,
-                        -1
-                    ]
-                },
-                "warning_count": {
-                    "description": "Read-only variable indicating the number of warnings, errors and notes resulting from the most recent statement that generated messages. See SHOW WARNINGS for more. Note warnings will only be recorded if sql_notes is true (the default).",
-                    "type": "integer",
-                    "enum": [
-                        0,
-                        1,
                         -1
                     ]
                 }
