@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import glob
 
 
 def count_recovery_deletion_tests(folder_path: str):
@@ -49,24 +50,43 @@ def read_normal_tests(folder_path) -> int:
 
     return normal_tests_
 
+def read_fi_folder(folder_path):
+    """Read the number of fault injection tests in the testrun folder"""
+    # Initialize the test counter
+    fi_tests_ = 0
+
+    for dir in os.listdir(folder_path):
+        if dir.startswith("trial"):
+            fi_tests_ += (len(glob.glob(os.path.join(folder_path, dir, "*.yaml"))) - 1) * 2
+
+    return fi_tests_
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--path", type=str, help="Path to the testrun folder")
     parser.add_argument("--operator", type=str, help="Name of the operator")
+    parser.add_argument("--type", type=str, help="Type of the testrun")
     args = parser.parse_args()
 
-    deletion_tests, recovery_tests = count_recovery_deletion_tests(args.path)
-    normal_tests = read_normal_tests(args.path)
-    post_diff_tests = count_post_diff_tests(  # pylint: disable=invalid-name
-        args.path
-    )
+    if args.type != "fault_injection":
+        deletion_tests, recovery_tests = count_recovery_deletion_tests(args.path)
+        normal_tests = read_normal_tests(args.path)
+        post_diff_tests = count_post_diff_tests(  # pylint: disable=invalid-name
+            args.path
+        )
 
-    total = deletion_tests + recovery_tests + post_diff_tests + normal_tests
+        total = deletion_tests + recovery_tests + post_diff_tests + normal_tests
 
-    print(f"Operator: {args.operator}")
-    print(f"Total tests: {total}")
-    print(f"    Normal tests: {normal_tests}")
-    print(f"    Deletion tests: {deletion_tests}")
-    print(f"    Recovery tests: {recovery_tests}")
-    print(f"    Post-diff tests: {post_diff_tests}")
+        print(f"Operator: {args.operator}")
+        print(f"Total tests: {total}")
+        print(f"    Normal tests: {normal_tests}")
+        print(f"    Deletion tests: {deletion_tests}")
+        print(f"    Recovery tests: {recovery_tests}")
+        print(f"    Post-diff tests: {post_diff_tests}")
+
+    else:
+        fi_tests = read_fi_folder(args.path)
+        print(f"Operator: {args.operator}")
+        print(f"Total tests: {fi_tests}")
+        print(f"    Fault injection tests: {fi_tests}")
