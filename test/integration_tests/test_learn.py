@@ -6,6 +6,7 @@ from datetime import datetime
 
 from acto.engine import Acto, apply_testcase
 from acto.input.input import DeterministicInputModel
+from acto.kubernetes_engine import kind
 from acto.lib.operator_config import OperatorConfig
 
 test_dir = pathlib.Path(__file__).parent.resolve()
@@ -33,10 +34,17 @@ class TestLearnPhase(unittest.TestCase):
             os.path.dirname(config.seed_custom_resource), "context.json"
         )
 
+        kubernetes_engine = kind.Kind(
+            acto_namespace=0,
+            feature_gates=config.kubernetes_engine.feature_gates,
+            num_nodes=config.num_nodes,
+            version=config.kubernetes_version,
+        )
+
         Acto(
             workdir_path=workdir_path,
             operator_config=config,
-            cluster_runtime="KIND",
+            kubernetes_engine=kubernetes_engine,
             context_file=context_cache,
             helper_crd=None,
             num_workers=1,

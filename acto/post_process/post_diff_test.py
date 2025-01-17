@@ -29,7 +29,7 @@ from acto.checker.impl.health import HealthChecker
 from acto.common import invalid_input_message_regex, kubernetes_client
 from acto.deploy import Deploy
 from acto.kubectl_client.kubectl import KubectlClient
-from acto.kubernetes_engine import base, kind
+from acto.kubernetes_engine import base, kind, provided
 from acto.lib.operator_config import OperatorConfig
 from acto.post_process.post_process import PostProcessor
 from acto.result import (
@@ -692,12 +692,23 @@ class PostDiffTest(PostProcessor):
         """Start the post process"""
         if not os.path.exists(workdir):
             os.mkdir(workdir)
-        cluster = kind.Kind(
-            acto_namespace=self.acto_namespace,
-            feature_gates=self.config.kubernetes_engine.feature_gates,
-            num_nodes=self.config.num_nodes,
-            version=self.config.kubernetes_version,
-        )
+
+        kubernetes_engine: base.KubernetesEngine
+        if self.config.kubernetes_engine.self_provided:
+            kubernetes_engine = provided.ProvidedKubernetesEngine(
+                acto_namespace=self.acto_namespace,
+                feature_gates=self.config.kubernetes_engine.feature_gates,
+                num_nodes=self.config.num_nodes,
+                version=self.config.kubernetes_version,
+                provided=self.config.kubernetes_engine.self_provided,
+            )
+        else:
+            kubernetes_engine = kind.Kind(
+                acto_namespace=self.acto_namespace,
+                feature_gates=self.config.kubernetes_engine.feature_gates,
+                num_nodes=self.config.num_nodes,
+                version=self.config.kubernetes_version,
+            )
         deploy = Deploy(self.config.deploy)
         # Build an archive to be preloaded
         images_archive = os.path.join(workdir, "images.tar")
@@ -722,7 +733,7 @@ class PostDiffTest(PostProcessor):
                 self.context,
                 deploy,
                 workdir,
-                cluster,
+                kubernetes_engine,
                 i,
                 self.acto_namespace,
             )
@@ -796,12 +807,23 @@ class PostDiffTest(PostProcessor):
         additional_runner_dir = os.path.join(
             workdir, f"additional-runner-{worker_id}"
         )
-        cluster = kind.Kind(
-            acto_namespace=self.acto_namespace,
-            feature_gates=self.config.kubernetes_engine.feature_gates,
-            num_nodes=self.config.num_nodes,
-            version=self.config.kubernetes_version,
-        )
+
+        kubernetes_engine: base.KubernetesEngine
+        if self.config.kubernetes_engine.self_provided:
+            kubernetes_engine = provided.ProvidedKubernetesEngine(
+                acto_namespace=self.acto_namespace,
+                feature_gates=self.config.kubernetes_engine.feature_gates,
+                num_nodes=self.config.num_nodes,
+                version=self.config.kubernetes_version,
+                provided=self.config.kubernetes_engine.self_provided,
+            )
+        else:
+            kubernetes_engine = kind.Kind(
+                acto_namespace=self.acto_namespace,
+                feature_gates=self.config.kubernetes_engine.feature_gates,
+                num_nodes=self.config.num_nodes,
+                version=self.config.kubernetes_version,
+            )
 
         deploy = Deploy(self.config.deploy)
 
@@ -809,7 +831,7 @@ class PostDiffTest(PostProcessor):
             context=self.context,
             deploy=deploy,
             workdir=additional_runner_dir,
-            cluster=cluster,
+            cluster=kubernetes_engine,
             worker_id=worker_id,
             acto_namespace=self.acto_namespace,
         )

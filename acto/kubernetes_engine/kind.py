@@ -2,7 +2,7 @@ import logging
 import os
 import subprocess
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import kubernetes
 import yaml
@@ -19,8 +19,8 @@ class Kind(base.KubernetesEngine):
     def __init__(
         self,
         acto_namespace: int,
-        posthooks: List[base.KubernetesEnginePostHookType] = None,
-        feature_gates: Dict[str, bool] = None,
+        posthooks: Optional[list[base.KubernetesEnginePostHookType]] = None,
+        feature_gates: Optional[dict[str, bool]] = None,
         num_nodes=1,
         version: Optional[str] = None,
     ):
@@ -140,7 +140,7 @@ class Kind(base.KubernetesEngine):
 
         if self._posthooks:
             for posthook in self._posthooks:
-                posthook(apiclient=apiclient)
+                posthook(apiclient)
 
     def load_images(self, images_archive_path: str, name: str):
         logging.info("Loading preload images")

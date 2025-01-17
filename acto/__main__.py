@@ -10,6 +10,7 @@ from datetime import datetime
 
 from acto.engine import Acto, apply_testcase
 from acto.input.input import DeterministicInputModel
+from acto.kubernetes_engine import base, kind, provided
 from acto.lib.operator_config import OperatorConfig
 from acto.post_process.post_diff_test import PostDiffTest
 from acto.utils.error_handler import handle_excepthook, thread_excepthook
@@ -133,11 +134,28 @@ else:
 
 apply_testcase_f = apply_testcase
 
+kubernetes_engine: base.KubernetesEngine
+if config.kubernetes_engine.self_provided:
+    kubernetes_engine = provided.ProvidedKubernetesEngine(
+        acto_namespace=0,
+        feature_gates=config.kubernetes_engine.feature_gates,
+        num_nodes=config.num_nodes,
+        version=config.kubernetes_version,
+        provided=config.kubernetes_engine.provided,
+    )
+else:
+    kubernetes_engine = kind.Kind(
+        acto_namespace=0,
+        feature_gates=config.kubernetes_engine.feature_gates,
+        num_nodes=config.num_nodes,
+        version=config.kubernetes_version,
+    )
+
 start_time = datetime.now()
 acto = Acto(
     workdir_path=args.workdir_path,
     operator_config=config,
-    cluster_runtime="KIND",
+    kubernetes_engine=kubernetes_engine,
     context_file=context_cache,
     helper_crd=args.helper_crd,
     num_workers=args.num_workers,

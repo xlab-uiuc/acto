@@ -19,6 +19,7 @@ from acto.input.input import CustomKubernetesMapping, DeterministicInputModel
 from acto.input.testcase import TestCase
 from acto.input.testplan import TestGroup
 from acto.input.value_with_schema import ValueWithSchema
+from acto.kubernetes_engine import base, kind, provided
 from acto.lib.operator_config import OperatorConfig
 from acto.post_process.post_diff_test import PostDiffTest
 from acto.result import OracleResults
@@ -190,9 +191,9 @@ class ReproInputModel(DeterministicInputModel):
         return self.seed_input
 
     def generate_test_plan(
-        self, delta_from: str = None, focus_fields: list = None
+        self,
+        focus_fields: Optional[list] = None,
     ) -> dict:
-        _ = delta_from
         _ = focus_fields
         return {}
 
@@ -231,7 +232,6 @@ def reproduce(
     reproduce_dir: str,
     operator_config: str,
     acto_namespace: int,
-    **kwargs,
 ) -> List[OracleResults]:
     """Reproduce the trial folder"""
     os.makedirs(workdir_path, exist_ok=True)
@@ -246,7 +246,7 @@ def reproduce(
     logging.getLogger("sh").setLevel(logging.ERROR)
 
     with open(operator_config, "r", encoding="utf-8") as config_file:
-        config = OperatorConfig(**json.load(config_file))
+        config = OperatorConfig.model_validate(config_file)
     context_cache = os.path.join(
         os.path.dirname(config.seed_custom_resource), "context.json"
     )
@@ -255,11 +255,27 @@ def reproduce(
     )
     apply_testcase_f = apply_repro_testcase
 
+    kubernetes_engine: base.KubernetesEngine
+    if config.kubernetes_engine.self_provided:
+        kubernetes_engine = provided.ProvidedKubernetesEngine(
+            acto_namespace=0,
+            feature_gates=config.kubernetes_engine.feature_gates,
+            num_nodes=config.num_nodes,
+            version=config.kubernetes_version,
+            provided=config.kubernetes_engine.self_provided,
+        )
+    else:
+        kubernetes_engine = kind.Kind(
+            acto_namespace=0,
+            feature_gates=config.kubernetes_engine.feature_gates,
+            num_nodes=config.num_nodes,
+            version=config.kubernetes_version,
+        )
+
     acto = Acto(
         workdir_path=workdir_path,
         operator_config=config,
-        cluster_runtime=kwargs["cluster_runtime"],
-        preload_images_=[],
+        kubernetes_engine=kubernetes_engine,
         context_file=context_cache,
         helper_crd=None,
         num_workers=1,
@@ -272,7 +288,7 @@ def reproduce(
         acto_namespace=acto_namespace,
     )
 
-    errors = acto.run(modes=["normal"])
+    errors = acto.run()
     return [error for error in errors if error is not None]
 
 
@@ -344,6 +360,5 @@ if __name__ == "__main__":
         reproduce_dir=args.reproduce_dir,
         operator_config=args.config,
         acto_namespace=args.acto_namespace,
-        cluster_runtime=args.cluster_runtime,
     )
     end_time = datetime.now()

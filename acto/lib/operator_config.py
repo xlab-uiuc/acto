@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, Optional
 
 import pydantic
 from typing_extensions import Self
@@ -134,12 +134,49 @@ class AnalysisConfig(pydantic.BaseModel, extra="forbid"):
     )
 
 
+class SelfProvidedKubernetesConfig(pydantic.BaseModel, extra="forbid"):
+    """Configuration for self-provided Kubernetes engine"""
+
+    kube_config: str = pydantic.Field(
+        description="Path to the kubeconfig file for the Kubernetes cluster"
+    )
+    kube_context: str = pydantic.Field(
+        description="Context name for the Kubernetes cluster"
+    )
+
+
 class KubernetesEngineConfig(pydantic.BaseModel, extra="forbid"):
     """Configuration for Kubernetes"""
 
+    num_nodes: int = pydantic.Field(
+        description="Number of workers in the Kubernetes cluster", default=4
+    )
+    kubernetes_version: str = pydantic.Field(
+        default="v1.28.0", description="Kubernetes version"
+    )
     feature_gates: dict[str, bool] = pydantic.Field(
         description="Path to the feature gates file", default=None
     )
+    self_provided: Optional[SelfProvidedKubernetesConfig] = pydantic.Field(
+        default=None,
+        description="Configuration for self-provided Kubernetes engine",
+    )
+
+    @pydantic.model_validator(mode="before")
+    @classmethod
+    def check_self_provided(cls, data: Any) -> Any:
+        """Check if the self-provided Kubernetes engine is valid"""
+        if isinstance(data, dict) and "self_provided" in data:
+            if (
+                "num_nodes" in data
+                or "kubernetes_version" in data
+                or "feature_gates" in data
+            ):
+                raise ValueError(
+                    "num_nodes, kubernetes_version, and feature_gates "
+                    + "are not supported in self-provided Kubernetes engine"
+                )
+        return data
 
 
 class OperatorConfig(pydantic.BaseModel, extra="forbid"):

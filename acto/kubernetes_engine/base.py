@@ -6,6 +6,7 @@ from typing import Callable, Optional
 import kubernetes
 
 from acto.constant import CONST
+from acto.lib.operator_config import SelfProvidedKubernetesConfig
 from acto.utils import get_thread_logger
 
 KubernetesEnginePostHookType = Callable[[kubernetes.client.ApiClient], None]
@@ -22,13 +23,17 @@ class KubernetesEngine(ABC):
         feature_gates: Optional[dict[str, bool]] = None,
         num_nodes=1,
         version="",
+        provided: Optional[SelfProvidedKubernetesConfig] = None,
     ) -> None:
         """Constructor for KubernetesEngine
 
         Args:
             acto_namespace: the namespace of the acto
             posthooks: a list of posthooks to be executed after the cluster is created
-            feature_gates: a list of feature gates to be enabled
+            feature_gates: a list of Kubernetes feature gates to be enabled
+            num_nodes: the number of nodes in the cluster
+            version: the version of Kubernetes
+            provided: the configuration for a self-provided Kubernetes engine
         """
 
     @abstractmethod
@@ -91,10 +96,10 @@ class KubernetesEngine(ABC):
                 continue
             break
 
-    def get_node_list(self, name: str):
+    def get_node_list(self, name: str) -> list[str]:
         """Fetch the name of worker nodes inside a cluster
         Args:
-            1. name: name of the cluster name
+            name: name of the cluster name
         """
         _ = get_thread_logger(with_prefix=False)
 

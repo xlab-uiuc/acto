@@ -5,7 +5,7 @@ import operator
 import random
 import re
 import string
-from typing import Any, Sequence, Tuple, TypeAlias, Union
+from typing import Any, Optional, Sequence, Tuple, TypeAlias, Union
 
 import deepdiff.model as deepdiff_model
 import kubernetes
@@ -391,7 +391,7 @@ GENERIC_FIELDS = [
 
 
 def kubernetes_client(
-    kubeconfig: str, context_name: str
+    kubeconfig: str, context_name: Optional[str]
 ) -> kubernetes.client.ApiClient:
     """Create a kubernetes client from kubeconfig and context name"""
     return kubernetes.config.kube_config.new_client_from_config(

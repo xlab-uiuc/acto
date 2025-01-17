@@ -33,7 +33,7 @@ from acto.input.testcase import TestCase
 from acto.input.testplan import TestGroup
 from acto.input.value_with_schema import ValueWithSchema, attach_schema_to_value
 from acto.kubectl_client import KubectlClient
-from acto.kubernetes_engine import base, kind
+from acto.kubernetes_engine import base
 from acto.lib.operator_config import OperatorConfig
 from acto.oracle_handle import OracleHandle
 from acto.result import (
@@ -149,12 +149,20 @@ def check_state_equality(
     prev_pods = prev_system_state["pod"]
 
     for k, v in curr_pods.items():
-        if "owner_reference" in v["metadata"] and v["metadata"]["owner_reference"] is not None and ["owner_references"][0]["kind"] == "Job":
+        if (
+            "owner_reference" in v["metadata"]
+            and v["metadata"]["owner_reference"] is not None
+            and v["metadata"]["owner_references"][0]["kind"] == "Job"
+        ):
             continue
         curr_system_state[k] = v
-    
+
     for k, v in prev_pods.items():
-        if "owner_reference" in v["metadata"] and v["metadata"]["owner_reference"] is not None and ["owner_references"][0]["kind"] == "Job":
+        if (
+            "owner_reference" in v["metadata"]
+            and v["metadata"]["owner_reference"] is not None
+            and v["metadata"]["owner_references"][0]["kind"] == "Job"
+        ):
             continue
         prev_system_state[k] = v
 
@@ -255,7 +263,7 @@ class TrialRunner:
         runner_t: type,
         checker_t: type,
         wait_time: int,
-        custom_on_init: Optional[Callable],
+        custom_on_init: Optional[list[Callable]],
         custom_checker: Optional[type[CheckerInterface]],
         workdir: str,
         cluster: base.KubernetesEngine,
@@ -805,7 +813,7 @@ class Acto:
         self,
         workdir_path: str,
         operator_config: OperatorConfig,
-        cluster_runtime: str,
+        kubernetes_engine: base.KubernetesEngine,
         context_file: str,
         helper_crd: Optional[str],
         num_workers: int,
@@ -833,26 +841,7 @@ class Acto:
 
         deploy = Deploy(operator_config.deploy)
 
-        if cluster_runtime == "KIND":
-            cluster = kind.Kind(
-                acto_namespace=acto_namespace,
-                feature_gates=operator_config.kubernetes_engine.feature_gates,
-                num_nodes=operator_config.num_nodes,
-                version=operator_config.kubernetes_version,
-            )
-        else:
-            logger.warning(
-                "Cluster Runtime %s is not supported, defaulted to use kind",
-                cluster_runtime,
-            )
-            cluster = kind.Kind(
-                acto_namespace=acto_namespace,
-                feature_gates=operator_config.kubernetes_engine.feature_gates,
-                num_nodes=operator_config.num_nodes,
-                version=operator_config.kubernetes_version,
-            )
-
-        self.cluster = cluster
+        self.cluster = kubernetes_engine
         self.deploy = deploy
         self.operator_config = operator_config
         self.crd_name = operator_config.crd_name
@@ -889,7 +878,7 @@ class Acto:
         self.sequence_base = 0
 
         self.custom_oracle: Optional[type[CheckerInterface]] = None
-        self.custom_on_init: Optional[Callable] = None
+        self.custom_on_init: Optional[list[Callable]] = None
         if operator_config.custom_oracle is not None:
             module = importlib.import_module(operator_config.custom_oracle)
             if hasattr(module, "CUSTOM_CHECKER") and issubclass(
