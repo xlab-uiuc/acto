@@ -21,9 +21,7 @@ class OneOfSchema(BaseSchema):
             base_schema = deepcopy(schema)
             del base_schema["oneOf"]
             self.__recursive_update(base_schema, v)
-            self.possibilities.append(
-                extract_schema(self.path + [str(index)], base_schema)
-            )
+            self.possibilities.append(extract_schema(self.path, base_schema))
 
     def __recursive_update(self, left: dict, right: dict):
         """Recursively update left dict with right dict"""
