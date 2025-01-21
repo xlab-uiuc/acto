@@ -2,7 +2,9 @@ import random
 from copy import deepcopy
 from typing import List, Tuple
 
+from .array import ArraySchema
 from .base import BaseSchema, TreeNode
+from .object import ObjectSchema
 
 
 class OneOfSchema(BaseSchema):
@@ -70,3 +72,31 @@ class OneOfSchema(BaseSchema):
             ret += ", "
         ret += "]"
         return ret
+
+    def __getitem__(self, key):
+        if isinstance(key, int):
+            for i in self.possibilities:
+                if isinstance(i, ArraySchema):
+                    return i[key]
+            raise RuntimeError("No array schema found in oneOf")
+        if isinstance(key, str):
+            for i in self.possibilities:
+                if isinstance(i, ObjectSchema):
+                    return i[key]
+            raise RuntimeError("No object schema found in oneOf")
+        raise TypeError("Key must be either int or str")
+
+    def __setitem__(self, key, value):
+        if isinstance(key, int):
+            for i in self.possibilities:
+                if isinstance(i, ArraySchema):
+                    i[key] = value
+                    return
+            raise RuntimeError("No array schema found in oneOf")
+        if isinstance(key, str):
+            for i in self.possibilities:
+                if isinstance(i, ObjectSchema):
+                    i[key] = value
+                    return
+            raise RuntimeError("No object schema found in oneOf")
+        raise TypeError("Key must be either int or str")

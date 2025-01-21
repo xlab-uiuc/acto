@@ -888,7 +888,7 @@ class Acto:
 
         self.sequence_base = 0
 
-        self.custom_oracle: Optional[type[CheckerInterface]] = None
+        self.custom_checker: Optional[type[CheckerInterface]] = None
         self.custom_on_init: Optional[Callable] = None
         if operator_config.custom_oracle is not None:
             module = importlib.import_module(operator_config.custom_oracle)
