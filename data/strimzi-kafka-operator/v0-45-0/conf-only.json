@@ -1,0 +1,31 @@
+{
+    "deploy": {
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/strimzi-kafka-operator/v0-45-0/bundle.yaml",
+                    "operator": true
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/strimzi-kafka-operator/v0-45-0/node-pool.yaml"
+                }
+            }
+        ]
+    },
+    "crd_name": "kafkas.kafka.strimzi.io",
+    "seed_custom_resource": "data/strimzi-kafka-operator/v0-45-0/cr.yaml",
+    "example_dir": "data/strimzi-kafka-operator/v0-45-0/examples",
+    "wait_time": 60,
+    "diff_ignore_fields": [
+        "\\['metadata']\\['annotations']\\['strimzi\\.io\/revision']",
+        "\\['metadata']\\['annotations']\\['strimzi\\.io\/server-cert-hash']",
+        "\\['data']\\['cluster\\.id']",
+        "\\['conditions']\\[.*]\\['message']"
+
+    ],
+    "focus_fields": [
+        ["spec", "kafka", "config"]
+    ]
+}
