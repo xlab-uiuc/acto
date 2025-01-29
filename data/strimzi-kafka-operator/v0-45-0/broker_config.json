@@ -258,7 +258,7 @@
             "type": "integer",
             "enum": [
                 604800000,
-                0,
+                1,
                 -1
             ],
             "description": "The maximum time before a new log segment is rolled out (in milliseconds), If not set, the value in log.roll.hours is used. If set to -1, no time limit is applied."
@@ -871,8 +871,8 @@
         "group.consumer.assignors": {
             "type": "string",
             "enum": [
-                "org.apache.kafka.clients.consumer.RangeAssignor",
-                "org.apache.kafka.clients.consumer.RoundRobinAssignor",
+                "org.apache.kafka.coordinator.group.assignor.RangeAssignor",
+                "org.apache.kafka.coordinator.group.assignor.UniformAssignor",
                 "INVALID"
             ],
             "description": "The consumer group assignor to use for new consumer groups"
@@ -880,8 +880,8 @@
         "group.consumer.heartbeat.interval.ms": {
             "type": "integer",
             "enum": [
-                3000,
-                1000,
+                5000,
+                10000,
                 0
             ],
             "description": "The frequency with which the consumer coordinator checks the liveness of the consumer"
@@ -898,8 +898,8 @@
         "group.consumer.max.session.timeout.ms": {
             "type": "integer",
             "enum": [
-                30000,
-                10000,
+                45000,
+                90000,
                 0
             ],
             "description": "The maximum allowed session timeout for registered consumers"
@@ -934,8 +934,8 @@
         "group.consumer.session.timeout.ms": {
             "type": "integer",
             "enum": [
-                10000,
-                30000,
+                45000,
+                90000,
                 0
             ],
             "description": "The timeout to detect client failures when using the consumer group protocol."
@@ -1015,8 +1015,8 @@
         "group.share.heartbeat.interval.ms": {
             "type": "integer",
             "enum": [
-                3000,
-                1000,
+                5000,
+                10000,
                 0
             ],
             "description": "The heartbeat interval given to the members of a share group."
@@ -1051,8 +1051,8 @@
         "group.share.max.session.timeout.ms": {
             "type": "integer",
             "enum": [
-                30000,
-                10000,
+                45000,
+                90000,
                 0
             ],
             "description": "The maximum session timeout for share group members."
@@ -1087,8 +1087,8 @@
         "group.share.min.session.timeout.ms": {
             "type": "integer",
             "enum": [
-                10000,
-                30000,
+                45000,
+                90000,
                 0
             ],
             "description": "The minimum allowed session timeout for share group members."
@@ -1105,8 +1105,8 @@
         "group.share.record.lock.duration.ms": {
             "type": "integer",
             "enum": [
-                1000,
-                3000,
+                15000,
+                30000,
                 0
             ],
             "description": "The record acquisition lock duration in milliseconds for share groups."
@@ -1433,7 +1433,7 @@
             "type": "integer",
             "enum": [
                 104857600,
-                1048576,
+                209715200,
                 0
             ],
             "description": "The number of queued requests allowed for data-plane, before blocking the network threads"
