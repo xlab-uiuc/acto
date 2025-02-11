@@ -9,10 +9,8 @@ from acto.result import OracleResult
 from acto.snapshot import Snapshot
 from acto.utils.thread_logger import get_thread_logger
 from acto.checker.impl.state_compare import CustomCompareMethods
-import json
 import yaml
 import re
-import tomlkit
 
 
 class KafkaConfigChecker(CheckerInterface):
@@ -34,7 +32,7 @@ class KafkaConfigChecker(CheckerInterface):
             "kafka" in snapshot.input_cr["spec"]
             and "config" in snapshot.input_cr["spec"]["kafka"]
         ):
-            kafka_config = yaml.loads(snapshot.input_cr["spec"]["kafka"]["config"], Loader=yaml.FullLoader)
+            kafka_config = yaml.load(snapshot.input_cr["spec"]["kafka"]["config"], Loader=yaml.FullLoader)
         else:
             return None
         
@@ -44,7 +42,7 @@ class KafkaConfigChecker(CheckerInterface):
             pod_name,
             "acto-namespace",
             [
-                "./kafka-configs.sh",
+                "./bin/kafka-configs.sh",
                 "--describe",
                 "--bootstrap-server",
                 "localhost:9092",
@@ -63,14 +61,19 @@ class KafkaConfigChecker(CheckerInterface):
         lines = p.stdout.split("\n")[1:]
         runtime_config = {}
         for line in lines:
-            config = line.split(" ")[0]
-            [name, value] = config.split("=")
-            runtime_config[name] = value
+            if line.strip() != "":
+                config = line.strip().split(" ")[0]
+                [name, value] = config.split("=")
+                if value == "true" or value == "false":
+                    value = bool(value)
+                elif re.match(r"^\d+$", value) or re.match(r"^\d+\.\d+$", value):
+                    value = float(value)
+                runtime_config[name] = value
         
-        for n, v in kafka_config:
+        for n in kafka_config:
             if not n in runtime_config:
                 return OracleResult(message=f"Kafka config check failed due to missing keys")
-            elif runtime_config[n] != v:
+            elif runtime_config[n] != kafka_config[n]:
                 return OracleResult(message=f"Kafka config check failed due to inconsistent value of the {name}")
 
         return None
