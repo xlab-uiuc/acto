@@ -68,7 +68,7 @@ class KafkaConfigChecker(CheckerInterface):
                     value = True
                 elif value == "false":
                     value = False
-                elif re.match(r"^\d+$", value) or re.match(r"^\d+\.\d+$", value):
+                elif re.match(r"^-?\d+$", value) or re.match(r"^-?\d+\.\d+$", value):
                     value = float(value)
                 runtime_config[name] = value
         
