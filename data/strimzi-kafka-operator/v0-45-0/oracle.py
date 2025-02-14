@@ -64,8 +64,10 @@ class KafkaConfigChecker(CheckerInterface):
             if line.strip() != "":
                 config = line.strip().split(" ")[0]
                 [name, value] = config.split("=")
-                if value == "true" or value == "false":
-                    value = bool(value)
+                if value == "true":
+                    value = True
+                elif value == "false":
+                    value = False
                 elif re.match(r"^\d+$", value) or re.match(r"^\d+\.\d+$", value):
                     value = float(value)
                 runtime_config[name] = value
