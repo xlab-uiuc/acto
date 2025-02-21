@@ -1,8 +1,9 @@
 import math
-from typing import Optional, Self
+from typing import Optional
 
 import kubernetes
 import yaml
+from typing_extensions import Self
 
 from chactos.failures.failure import Failure
 
