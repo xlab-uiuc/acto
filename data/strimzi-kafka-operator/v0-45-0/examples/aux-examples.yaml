@@ -1,0 +1,80 @@
+apiVersion: v1
+data:
+  metrics-config.yml: "lowercaseOutputName: true\nrules:\n# OAuth Metrics\n- pattern:\
+    \ \"strimzi.oauth<type=(.+), context=(.+), kind=(.+), host=\\\"(.+)\\\", path=\\\
+    \"(.+)\\\", (.+)=(.+), (.+)=(.+), (.+)=(.+)><>(count|totalTimeMs):\"\n  name:\
+    \ \"strimzi_oauth_$1_$12\"\n  type: COUNTER\n  labels:\n    context: \"$2\"\n\
+    \    kind: \"$3\"\n    host: \"$4\"\n    path: \"$5\"\n    \"$6\": \"$7\"\n  \
+    \  \"$8\": \"$9\"\n    \"$10\": \"$11\"\n- pattern: \"strimzi.oauth<type=(.+),\
+    \ context=(.+), kind=(.+), host=\\\"(.+)\\\", path=\\\"(.+)\\\", (.+)=(.+), (.+)=(.+)><>(count|totalTimeMs):\"\
+    \n  name: \"strimzi_oauth_$1_$10\"\n  type: COUNTER\n  labels:\n    context: \"\
+    $2\"\n    kind: \"$3\"\n    host: \"$4\"\n    path: \"$5\"\n    \"$6\": \"$7\"\
+    \n    \"$8\": \"$9\"\n- pattern: \"strimzi.oauth<type=(.+), context=(.+), kind=(.+),\
+    \ host=\\\"(.+)\\\", path=\\\"(.+)\\\", (.+)=(.+)><>(count|totalTimeMs):\"\n \
+    \ name: \"strimzi_oauth_$1_$8\"\n  type: COUNTER\n  labels:\n    context: \"$2\"\
+    \n    kind: \"$3\"\n    host: \"$4\"\n    path: \"$5\"\n    \"$6\": \"$7\"\n-\
+    \ pattern: \"strimzi.oauth<type=(.+), context=(.+), kind=(.+), host=\\\"(.+)\\\
+    \", path=\\\"(.+)\\\", (.+)=(.+), (.+)=(.+), (.+)=(.+)><>(.+):\"\n  name: \"strimzi_oauth_$1_$12\"\
+    \n  type: GAUGE\n  labels:\n    context: \"$2\"\n    kind: \"$3\"\n    host: \"\
+    $4\"\n    path: \"$5\"\n    \"$6\": \"$7\"\n    \"$8\": \"$9\"\n    \"$10\": \"\
+    $11\"\n- pattern: \"strimzi.oauth<type=(.+), context=(.+), kind=(.+), host=\\\"\
+    (.+)\\\", path=\\\"(.+)\\\", (.+)=(.+), (.+)=(.+)><>(.+):\"\n  name: \"strimzi_oauth_$1_$10\"\
+    \n  type: GAUGE\n  labels:\n    context: \"$2\"\n    kind: \"$3\"\n    host: \"\
+    $4\"\n    path: \"$5\"\n    \"$6\": \"$7\"\n    \"$8\": \"$9\"\n- pattern: \"\
+    strimzi.oauth<type=(.+), context=(.+), kind=(.+), host=\\\"(.+)\\\", path=\\\"\
+    (.+)\\\", (.+)=(.+)><>(.+):\"\n  name: \"strimzi_oauth_$1_$8\"\n  type: GAUGE\n\
+    \  labels:\n    context: \"$2\"\n    kind: \"$3\"\n    host: \"$4\"\n    path:\
+    \ \"$5\"\n    \"$6\": \"$7\"\n"
+kind: ConfigMap
+metadata:
+  labels:
+    app: strimzi
+  name: oauth-metrics
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: additional-scrape-configs
+stringData:
+  prometheus-additional.yaml: "- job_name: kubernetes-cadvisor\n  honor_labels: true\n\
+    \  scrape_interval: 10s\n  scrape_timeout: 10s\n  metrics_path: /metrics/cadvisor\n\
+    \  scheme: https\n  kubernetes_sd_configs:\n  - role: node\n    namespaces:\n\
+    \      names: []\n  bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token\n\
+    \  tls_config:\n    ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt\n\
+    \    insecure_skip_verify: true\n  relabel_configs:\n  - separator: ;\n    regex:\
+    \ __meta_kubernetes_node_label_(.+)\n    replacement: $1\n    action: labelmap\n\
+    \  - separator: ;\n    regex: (.*)\n    target_label: __address__\n    replacement:\
+    \ kubernetes.default.svc:443\n    action: replace\n  - source_labels: [__meta_kubernetes_node_name]\n\
+    \    separator: ;\n    regex: (.+)\n    target_label: __metrics_path__\n    replacement:\
+    \ /api/v1/nodes/${1}/proxy/metrics/cadvisor\n    action: replace\n  - source_labels:\
+    \ [__meta_kubernetes_node_name]\n    separator: ;\n    regex: (.*)\n    target_label:\
+    \ node_name\n    replacement: $1\n    action: replace\n  - source_labels: [__meta_kubernetes_node_address_InternalIP]\n\
+    \    separator: ;\n    regex: (.*)\n    target_label: node_ip\n    replacement:\
+    \ $1\n    action: replace\n  metric_relabel_configs:\n  - source_labels: [container,\
+    \ __name__]\n    separator: ;\n    regex: POD;container_(network).*\n    target_label:\
+    \ container\n    replacement: $1\n    action: replace\n  - source_labels: [container]\n\
+    \    separator: ;\n    regex: POD\n    replacement: $1\n    action: drop\n  -\
+    \ source_labels: [container]\n    separator: ;\n    regex: ^$\n    replacement:\
+    \ $1\n    action: drop\n  - source_labels: [__name__]\n    separator: ;\n    regex:\
+    \ container_(network_tcp_usage_total|tasks_state|memory_failures_total|network_udp_usage_total)\n\
+    \    replacement: $1\n    action: drop\n\n- job_name: kubernetes-nodes-kubelet\n\
+    \  scrape_interval: 10s\n  scrape_timeout: 10s\n  scheme: https\n  kubernetes_sd_configs:\n\
+    \  - role: node\n    namespaces:\n      names: []\n  bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token\n\
+    \  tls_config:\n    ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt\n\
+    \    insecure_skip_verify: true\n  relabel_configs:\n  - action: labelmap\n  \
+    \  regex: __meta_kubernetes_node_label_(.+)\n  - target_label: __address__\n \
+    \   replacement: kubernetes.default.svc:443\n  - source_labels: [__meta_kubernetes_node_name]\n\
+    \    regex: (.+)\n    target_label: __metrics_path__\n    replacement: /api/v1/nodes/${1}/proxy/metrics\n"
+type: Opaque
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: alertmanager-alertmanager
+stringData:
+  alertmanager.yaml: "global:\n  slack_api_url: https://hooks.slack.com/services/change/me/please\n\
+    route:\n  receiver: slack\nreceivers:\n- name: slack\n  slack_configs:\n  - channel:\
+    \ \"#strimzi-alerts\"\n    title: \"{{ range .Alerts }}{{ .Annotations.summary\
+    \ }}\\n{{ end }}\"\n    text: \"{{ range .Alerts }}{{ .Annotations.description\
+    \ }}\\n{{ end }}\"\n    send_resolved: true\n"
+type: Opaque

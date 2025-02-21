@@ -18,6 +18,7 @@ from acto.schema import (
     OpaqueSchema,
     StringSchema,
 )
+from acto.schema.oneof import OneOfSchema
 from acto.utils.thread_logger import get_thread_logger
 
 
@@ -45,6 +46,25 @@ def resolve_testcases(schema: BaseSchema) -> list[TestCase]:
 
 @test_generator(property_type="AnyOf", priority=Priority.PRIMITIVE)
 def any_of_tests(schema: AnyOfSchema):
+    """Generate testcases for AnyOf type"""
+
+    ret: list[TestCase] = []
+    if schema.enum is not None:
+        for case in schema.enum:
+            ret.append(EnumTestCase(case, primitive=True))
+    else:
+        for sub_schema in schema.possibilities:
+            testcases = resolve_testcases(sub_schema)
+            for testcase in testcases:
+                testcase.add_precondition(
+                    SchemaPrecondition(sub_schema).precondition
+                )
+            ret.extend(testcases)
+    return ret
+
+
+@test_generator(property_type="OneOf", priority=Priority.PRIMITIVE)
+def one_of_tests(schema: OneOfSchema):
     """Generate testcases for AnyOf type"""
 
     ret: list[TestCase] = []

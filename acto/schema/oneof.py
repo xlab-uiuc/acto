@@ -2,7 +2,9 @@ import random
 from copy import deepcopy
 from typing import List, Tuple
 
+from .array import ArraySchema
 from .base import BaseSchema, TreeNode
+from .object import ObjectSchema
 
 
 class OneOfSchema(BaseSchema):
@@ -18,10 +20,20 @@ class OneOfSchema(BaseSchema):
         for index, v in enumerate(schema["oneOf"]):
             base_schema = deepcopy(schema)
             del base_schema["oneOf"]
-            base_schema.update(v)
-            self.possibilities.append(
-                extract_schema(self.path + [str(index)], base_schema)
-            )
+            self.__recursive_update(base_schema, v)
+            self.possibilities.append(extract_schema(self.path, base_schema))
+
+    def __recursive_update(self, left: dict, right: dict):
+        """Recursively update left dict with right dict"""
+        for key, value in right.items():
+            if (
+                key in left
+                and isinstance(left[key], dict)
+                and isinstance(value, dict)
+            ):
+                self.__recursive_update(left[key], value)
+            else:
+                left[key] = value
 
     def get_possibilities(self):
         """Return all possibilities of the anyOf schema"""
@@ -70,3 +82,31 @@ class OneOfSchema(BaseSchema):
             ret += ", "
         ret += "]"
         return ret
+
+    def __getitem__(self, key):
+        if isinstance(key, int):
+            for i in self.possibilities:
+                if isinstance(i, ArraySchema):
+                    return i[key]
+            raise RuntimeError("No array schema found in oneOf")
+        if isinstance(key, str):
+            for i in self.possibilities:
+                if isinstance(i, ObjectSchema):
+                    return i[key]
+            raise RuntimeError("No object schema found in oneOf")
+        raise TypeError("Key must be either int or str")
+
+    def __setitem__(self, key, value):
+        if isinstance(key, int):
+            for i in self.possibilities:
+                if isinstance(i, ArraySchema):
+                    i[key] = value
+                    return
+            raise RuntimeError("No array schema found in oneOf")
+        if isinstance(key, str):
+            for i in self.possibilities:
+                if isinstance(i, ObjectSchema):
+                    i[key] = value
+                    return
+            raise RuntimeError("No object schema found in oneOf")
+        raise TypeError("Key must be either int or str")
