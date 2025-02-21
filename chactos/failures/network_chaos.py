@@ -30,13 +30,17 @@ class OperatorApplicationPartitionFailure(Failure):
                 "name": "operator-application-partition",
             },
             "spec": {
-                "action": "partition",
+                "action": "loss",
                 "mode": "all",
                 "selector": self.operator_selector,
                 "direction": "both",
                 "target": {
                     "mode": "all",
                     "selector": self.app_selector,
+                },
+                "loss": {
+                    "correlation": "50",
+                    "losses": "50",
                 },
             },
         }
