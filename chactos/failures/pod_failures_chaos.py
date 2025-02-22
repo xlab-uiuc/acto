@@ -1,3 +1,4 @@
+import json
 import math
 from typing import Optional
 
@@ -46,7 +47,8 @@ class PodFailure(Failure):
 
         The name is unique by hashing on the tuple of the selector and namespace
         """
-        return f"pod-crash-failure-{hash((self._selector, self._namespace))}"
+        h = hash((json.dumps(self._selector, sort_keys=True), self._namespace))
+        return f"pod-crash-failure-{h}"
 
     @classmethod
     def build_from_api(
