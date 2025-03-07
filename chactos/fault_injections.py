@@ -5,8 +5,7 @@ import queue
 import subprocess
 import threading
 import time
-from math import ceil
-from typing import Optional
+from typing import Optional, Tuple
 
 import kubernetes
 
@@ -30,8 +29,9 @@ from acto.system_state.kubernetes_system_state import KubernetesSystemState
 from acto.trial import Trial
 from acto.utils import acto_timer, thread_logger
 from chactos.failures.failure import Failure
+from chactos.failures.network_chaos import OperatorApplicationPartitionFailure
 from chactos.failures.pod_failures_chaos import PodFailure
-from chactos.fault_injection_config import FaultInjectionConfig
+from chactos.fault_injection_config import FaultInjectionConfig, FaultType
 from chactos.fault_injector import ChaosMeshFaultInjector
 
 
@@ -91,12 +91,12 @@ class ChactosDriver(PostProcessor):
         pod_selector = self._fault_injection_config.application_selector
         pod_selector["namespaces"] = [self.context["namespace"]]
 
-        failures = []
+        failures: list[Tuple[FaultType, float]] = []
 
         # TODO: failing minority pods that fits the app_selector criteria
         logger.info("Adding pod failure to failure list")
 
-        failures.append({"pod-failure": self._pod_failure_ratio})
+        failures.append((FaultType.POD_FAILURE, self._pod_failure_ratio))
 
         logger.debug("Trials: [%s]", self.trials)
         logger.debug("Initializing runner list")
@@ -117,6 +117,7 @@ class ChactosDriver(PostProcessor):
                 deployer=self._deployer,
                 context=self.context,
                 diff_exclude_paths=self._operator_config.diff_ignore_fields,
+                operator_selector=operator_selector,
                 priority_pod_selector=self._fault_injection_config.priority_application_selector,
                 pod_selector=pod_selector,
             )
@@ -312,26 +313,6 @@ def watch_system_events(event_stream, q: multiprocessing.Queue):
             pass
 
 
-def build_label_selector(label_selector: dict) -> str:
-    """Build a label selector from a dict"""
-    return ",".join([f"{key}={value}" for key, value in label_selector.items()])
-
-
-def select_pods(
-    priority_pods: set[str], normal_pods: set[str], number: int
-) -> list[str]:
-    """Select a number of pods from the list of pods"""
-    selected_pods = []
-    for _ in range(number):
-        if len(priority_pods) > 0:
-            pod = priority_pods.pop()
-            normal_pods.discard(pod)
-        else:
-            pod = normal_pods.pop()
-        selected_pods.append(pod)
-    return selected_pods
-
-
 class ChactosTrialWorker:
     """
     The distributed wrapper for running in multi processes
@@ -346,6 +327,7 @@ class ChactosTrialWorker:
         image_archive: str,
         deployer: Deploy,
         context: dict,
+        operator_selector: dict,
         pod_selector: dict,
         priority_pod_selector: Optional[dict] = None,
         diff_exclude_paths: Optional[list[str]] = None,
@@ -358,6 +340,7 @@ class ChactosTrialWorker:
         self._deployer = deployer
         self._context = context
         self._diff_exclude_paths = diff_exclude_paths
+        self._operator_selector = operator_selector
         self._priority_pod_selector = priority_pod_selector
         self._pod_selector = pod_selector
 
@@ -366,6 +349,308 @@ class ChactosTrialWorker:
         return os.path.join(
             self._work_dir, f"{trial_name}-fi-worker-{sequence:02d}"
         )
+
+    def __run_steps_until_error(
+        self,
+        steps: list,
+        trial_name: str,
+        fault_injection_sequence: int,
+        trial: Trial,
+        failure: Tuple[FaultType, float],
+    ):
+        """Run steps until an error occurs or all steps are completed"""
+        logger = thread_logger.get_thread_logger()
+        fault_injection_trial_dir = self.fault_injection_trial_dir(
+            trial_name=trial_name, sequence=fault_injection_sequence
+        )
+        os.makedirs(fault_injection_trial_dir, exist_ok=True)
+
+        # Set up the Kubernetes cluster
+        kubernetes_cluster_name = self._kubernetes_provider.cluster_name(
+            acto_namespace=0, worker_id=self._worker_id
+        )
+        kubernetes_context_name = self._kubernetes_provider.get_context_name(
+            kubernetes_cluster_name
+        )
+        kubernetes_config = os.path.join(
+            os.path.expanduser("~"), ".kube", kubernetes_context_name
+        )
+        self._kubernetes_provider.restart_cluster(
+            kubernetes_cluster_name, kubernetes_config
+        )
+        self._kubernetes_provider.load_images(
+            self._images_archive, kubernetes_cluster_name
+        )
+        kubectl_client = KubectlClient(
+            kubernetes_config, kubernetes_context_name
+        )
+        api_client = kubernetes_client(
+            kubernetes_config, kubernetes_context_name
+        )
+
+        # Set up the operator and dependencies
+        deployed = self._deployer.deploy_with_retry(
+            kubernetes_config,
+            kubernetes_context_name,
+            kubectl_client=kubectl_client,
+            namespace=self._context["namespace"],
+        )
+        if not deployed:
+            logger.error("Failed to deploy the operator")
+            return
+
+        logger.info("Installing chaos mesh")
+        chaosmesh_injector = ChaosMeshFaultInjector()
+        chaosmesh_injector.install_with_retry(
+            kube_config=kubernetes_config,
+            kube_context=kubernetes_context_name,
+        )
+
+        fi_trial_dir = self.fault_injection_trial_dir(
+            trial_name=trial_name, sequence=fault_injection_sequence
+        )
+        runner = Runner(
+            context=self._context,
+            trial_dir=fi_trial_dir,
+            kubeconfig=kubernetes_config,
+            context_name=kubernetes_context_name,
+        )
+        initial_step_key = steps.pop(0)
+        initial_step = trial.steps[initial_step_key]
+        fi_generation = 0
+
+        chactos_snapshot, err = runner.run(
+            input_cr=initial_step.snapshot.input_cr,
+            generation=fi_generation,
+        )
+        if err is not None:
+            logger.debug("Error when applying initial CR: [%s]", err)
+        chactos_snapshot.dump(fi_trial_dir)
+
+        runner.wait_for_system_converge()
+        fi_generation += 1
+
+        logger.debug("Starting fault injection on the rest steps")
+        while steps:
+            step_key = steps[0]
+            step = trial.steps[step_key]
+            failure_type, pod_failure_ratio = failure
+
+            if (
+                step.run_result.is_invalid_input()
+                or step.run_result.oracle_result.is_error()
+            ):
+                steps.pop(0)
+                continue
+
+            failures_to_clean_up: list[Failure] = []
+
+            match failure_type:
+                case FaultType.POD_FAILURE:
+                    pod_failure = PodFailure.build_from_api(
+                        api_client=api_client,
+                        namespace=self._context["namespace"],
+                        pod_selector=self._pod_selector,
+                        failure_ratio=pod_failure_ratio,
+                        priority_pod_selector=self._priority_pod_selector,
+                    )
+                    failures_to_clean_up.append(pod_failure)
+                case FaultType.NETWORK_DELAY:
+                    OperatorApplicationPartitionFailure(
+                        operator_selector=self._operator_selector,
+                        app_selector=self._pod_selector,
+                        namespace=self._context["namespace"],
+                    )
+                case _:
+                    logger.error("Unrecognized type of fault!")
+
+            steady_system_state = runner.collect_system_state()
+
+            try:
+                logger.debug(
+                    "Injecting %s failure before any CR (policy 1)",
+                    failure_type,
+                )
+                pod_failure.apply(kubectl_client)
+            except subprocess.TimeoutExpired:
+                logger.warning("Timeout in applying failure.")
+                logger.warning(
+                    "Current steps: [%s]", sorted(trial.steps.keys())
+                )
+
+            logger.debug("Waiting for system to converge for the first failure")
+            runner.wait_for_system_converge(hard_timeout=180)
+
+            logger.debug("System converged, now lifting failure")
+            pod_failure.cleanup(kubectl_client)
+
+            logger.debug("Waiting for cleanup to converge")
+            runner.wait_for_system_converge()
+            post_fault_system_state = runner.collect_system_state()
+
+            post_fault_oracle_results = OracleResults()
+            diff_result = post_diff_test.compare_system_equality(
+                steady_system_state,
+                post_fault_system_state,
+                additional_exclude_paths=self._diff_exclude_paths,
+            )
+
+            # FIXME: this new dir is for the case if steady state FI gets
+            # overwritten by actual FI if both have oracle
+            post_steady_fault_fi_trial_dir = os.path.join(
+                fi_trial_dir, "post-steady-fault"
+            )
+            os.makedirs(post_steady_fault_fi_trial_dir, exist_ok=True)
+
+            if diff_result:
+                post_fault_oracle_results.differential = DifferentialOracleResult(
+                    message="failed attempt recovering to steady system state - system state diff",
+                    diff=diff_result,
+                    from_step=StepID(
+                        trial=post_steady_fault_fi_trial_dir,
+                        generation=fi_generation,
+                    ),
+                    from_state=steady_system_state,
+                    to_step=StepID(
+                        trial=post_steady_fault_fi_trial_dir,
+                        generation=fi_generation,
+                    ),
+                    to_state=post_fault_system_state,
+                )
+            deprecated_system_state = KubernetesSystemState.from_api_client(
+                api_client=api_client,
+                namespace=self._context["namespace"],
+            )
+
+            health = deprecated_system_state.check_health()
+            if not health.is_healthy():
+                logger.error("System is not healthy %s post fault", health)
+                post_fault_oracle_results.health = OracleResult(
+                    message=str(health)
+                )
+
+            post_fault_run_result = RunResult(
+                testcase={
+                    "original_trial": trial_name,
+                    "original_step": step_key,
+                },
+                step_id=StepID(
+                    trial=post_steady_fault_fi_trial_dir,
+                    generation=fi_generation,
+                ),
+                oracle_result=post_fault_oracle_results,
+                cli_status=check_kubectl_cli(chactos_snapshot),
+                is_revert=False,
+            )
+            post_fault_run_result.dump(post_steady_fault_fi_trial_dir)
+
+            logger.debug(
+                "Fault injection on steady state completed, now onto normal fault injection"
+            )
+
+            try:
+                logger.debug("Injecting %s failure", failure_type)
+                pod_failure.apply(kubectl_client)
+            except subprocess.TimeoutExpired:
+                logger.error("Timeout in applying failure.")
+                logger.error("Current steps: [%s]", sorted(trial.steps.keys()))
+
+            logger.debug("Applying next CR")
+            chactos_snapshot, err = runner.run(
+                input_cr=step.snapshot.input_cr,
+                generation=fi_generation,
+            )
+            if err is not None:
+                logger.debug("Error when applying CR: [%s]", err)
+
+            logger.debug("Waiting for CR to converge")
+            runner.wait_for_system_converge(hard_timeout=180)
+
+            for f in failures_to_clean_up:
+                logger.debug("Cleaning up failure %s", f.name())
+                f.cleanup(kubectl_client)
+
+            logger.debug("Waiting for cleanup to converge")
+            runner.wait_for_system_converge(hard_timeout=180)
+
+            chactos_snapshot.system_state = runner.collect_system_state()
+            chactos_snapshot.dump(fi_trial_dir)
+
+            logger.debug("Acquiring oracle.")
+
+            diff_result = post_diff_test.compare_system_equality(
+                chactos_snapshot.system_state,
+                step.snapshot.system_state,
+                additional_exclude_paths=self._diff_exclude_paths,
+            )
+
+            oracle_results = OracleResults()
+            if diff_result:
+                oracle_results.differential = DifferentialOracleResult(
+                    message="failed attempt recovering to seed state - system state diff",
+                    diff=diff_result,
+                    from_step=StepID(
+                        trial=trial_name, generation=int(step_key)
+                    ),
+                    from_state=step.snapshot.system_state,
+                    to_step=StepID(
+                        trial=fi_trial_dir,
+                        generation=fi_generation,
+                    ),
+                    to_state=chactos_snapshot.system_state,
+                )
+
+            # oracle
+            deprecated_system_state = KubernetesSystemState.from_api_client(
+                api_client=api_client,
+                namespace=self._context["namespace"],
+            )
+
+            health = deprecated_system_state.check_health()
+            if not health.is_healthy():
+                logger.error("System is not healthy %s", health)
+                oracle_results.health = OracleResult(message=str(health))
+
+            # Dump the RunResult to disk
+            run_result = RunResult(
+                testcase={
+                    "original_trial": trial_name,
+                    "original_step": step_key,
+                },
+                step_id=StepID(
+                    trial=trial_name,
+                    generation=fi_generation,
+                ),
+                oracle_result=oracle_results,
+                cli_status=check_kubectl_cli(chactos_snapshot),
+                is_revert=False,
+            )
+            run_result.dump(fi_trial_dir)
+
+            if oracle_results.is_error():
+                logger.error("Oracle failed")
+                break
+
+            fi_generation += 1
+            steps.pop(0)
+
+    def __run_trial(
+        self, trial_name: str, trial: Trial, failure: Tuple[FaultType, float]
+    ):
+        """Run a trial with fault injections"""
+        fi_sequence = 0
+
+        steps = sorted(trial.steps.keys())
+        while steps:
+            self.__run_steps_until_error(
+                steps=steps,
+                trial_name=trial_name,
+                fault_injection_sequence=fi_sequence,
+                trial=trial,
+                failure=failure,
+            )
+
+            fi_sequence += 1
 
     def run(
         self,
@@ -385,377 +670,12 @@ class ChactosTrialWorker:
         while True:
             try:
                 job_details = self._workqueue.get(block=True, timeout=5)
-                trial: Trial = job_details[1]
                 trial_name: str = job_details[0]
-                failure: dict = job_details[2]
+                trial: Trial = job_details[1]
+                failure: Tuple[FaultType, float] = job_details[2]
                 logger.info("Progress [%d]", self._workqueue.qsize())
             except queue.Empty:
                 logger.info("Worker %d finished", self._worker_id)
                 break
 
-            fault_injection_sequence = 0
-
-            steps = sorted(trial.steps.keys())
-            while steps:
-                fault_injection_trial_dir = self.fault_injection_trial_dir(
-                    trial_name=trial_name, sequence=fault_injection_sequence
-                )
-                os.makedirs(fault_injection_trial_dir, exist_ok=True)
-
-                # Set up the Kubernetes cluster
-                kubernetes_cluster_name = (
-                    self._kubernetes_provider.cluster_name(
-                        acto_namespace=0, worker_id=self._worker_id
-                    )
-                )
-                kubernetes_context_name = (
-                    self._kubernetes_provider.get_context_name(
-                        kubernetes_cluster_name
-                    )
-                )
-                kubernetes_config = os.path.join(
-                    os.path.expanduser("~"), ".kube", kubernetes_context_name
-                )
-                self._kubernetes_provider.restart_cluster(
-                    kubernetes_cluster_name, kubernetes_config
-                )
-                self._kubernetes_provider.load_images(
-                    self._images_archive, kubernetes_cluster_name
-                )
-                kubectl_client = KubectlClient(
-                    kubernetes_config, kubernetes_context_name
-                )
-                api_client = kubernetes_client(
-                    kubernetes_config, kubernetes_context_name
-                )
-                core_v1_api = kubernetes.client.CoreV1Api(api_client)
-
-                # Set up the operator and dependencies
-                deployed = self._deployer.deploy_with_retry(
-                    kubernetes_config,
-                    kubernetes_context_name,
-                    kubectl_client=kubectl_client,
-                    namespace=self._context["namespace"],
-                )
-                if not deployed:
-                    logger.error("Failed to deploy the operator")
-                    return
-
-                logger.debug("Installing chaos mesh")
-                # TODO: Sometimes Helm install chaos mesh times out for 300s?
-                chaosmesh_injector = ChaosMeshFaultInjector()
-                chaosmesh_injector.install_with_retry(
-                    kube_config=kubernetes_config,
-                    kube_context=kubernetes_context_name,
-                )
-
-                logger.info("Initializing trial runner")
-                logger.debug("trial name: [%s]", trial_name)
-                fi_trial_dir = self.fault_injection_trial_dir(
-                    trial_name=trial_name, sequence=fault_injection_sequence
-                )
-                logger.debug("trial dir: [%s]", fi_trial_dir)
-
-                runner = Runner(
-                    context=self._context,
-                    trial_dir=fi_trial_dir,
-                    kubeconfig=kubernetes_config,
-                    context_name=kubernetes_context_name,
-                )
-
-                step_key = steps.pop(0)
-                step = trial.steps[step_key]
-
-                logger.debug("Asking runner to run the first input cr")
-                inner_steps_generation = 0
-
-                chactos_snapshot, err = runner.run(
-                    input_cr=step.snapshot.input_cr,
-                    generation=inner_steps_generation,
-                )
-                if err is not None:
-                    logger.debug("Error when applying CR: [%s]", err)
-                chactos_snapshot.dump(fi_trial_dir)
-
-                runner.wait_for_system_converge()
-                inner_steps_generation += 1
-
-                logger.debug("Looping on inner steps")
-                while steps:
-                    step_key = steps[0]
-                    step = trial.steps[step_key]
-                    failure_types = list(failure.keys())[0]
-
-                    if (
-                        step.run_result.is_invalid_input()
-                        or step.run_result.oracle_result.is_error()
-                    ):
-                        steps.pop(0)
-                        continue
-
-                    failures_to_clean_up: list[Failure] = []
-
-                    # We need to dynamically select pods to inject faults
-                    # Selecting pods to inject faults
-                    priority_pod_names = set()
-                    normal_pod_names = set()
-
-                    if self._priority_pod_selector is not None:
-                        # TODO: only support labelSelector right now
-                        priority_label_selector = build_label_selector(
-                            self._priority_pod_selector["labelSelectors"]
-                        )
-                        priority_pods = core_v1_api.list_namespaced_pod(
-                            namespace=self._context["namespace"],
-                            watch=False,
-                            label_selector=priority_label_selector,
-                        ).items
-
-                        for pod in priority_pods:
-                            priority_pod_names.add(pod.metadata.name)
-
-                    normal_selection_label = build_label_selector(
-                        self._pod_selector["labelSelectors"]
-                    )
-                    normal_pods = core_v1_api.list_namespaced_pod(
-                        namespace=self._context["namespace"],
-                        watch=False,
-                        label_selector=normal_selection_label,
-                    ).items
-                    for pod in normal_pods:
-                        normal_pod_names.add(pod.metadata.name)
-                    num_total_pods = len(priority_pod_names | normal_pod_names)
-
-                    match failure_types:
-                        case "pod-failure":
-                            pod_failure_ratio = float(list(failure.values())[0])
-                            logger.debug(
-                                "Injection ratio is %s", pod_failure_ratio
-                            )
-
-                            num_pods_to_fail = ceil(
-                                num_total_pods * pod_failure_ratio
-                            )
-                            selected_pods = select_pods(
-                                priority_pod_names,
-                                normal_pod_names,
-                                num_pods_to_fail,
-                            )
-
-                            logger.debug(
-                                "List of pods to inject: [%s]",
-                                selected_pods,
-                            )
-
-                            # TODO: rename failure index to failure suffix?
-                            pod_failure = PodFailure(
-                                selector={
-                                    "pods": {
-                                        self._context[
-                                            "namespace"
-                                        ]: selected_pods
-                                    },
-                                    "namespaces": [self._context["namespace"]],
-                                },
-                                namespace=self._context["namespace"],
-                                failure_ratio=int(pod_failure_ratio * 100),
-                                failure_index=0,
-                            )
-
-                            failures_to_clean_up.append(pod_failure)
-                        case _:
-                            logger.error("Unrecognized type of fault!")
-
-                    logger.debug(
-                        "Collecting *steady* system state before fault injection"
-                    )
-                    steady_system_state = runner.collect_system_state()
-
-                    try:
-                        logger.debug(
-                            "Injecting %s failure before any CR (policy 1)",
-                            failure_types,
-                        )
-                        pod_failure.apply(kubectl_client)
-                    except subprocess.TimeoutExpired:
-                        logger.warning("Timeout in applying failure.")
-                        logger.warning(
-                            "Current steps: [%s]", sorted(trial.steps.keys())
-                        )
-
-                    logger.debug(
-                        "Waiting for system to converge for the first failure"
-                    )
-                    runner.wait_for_system_converge(hard_timeout=180)
-
-                    logger.debug("System converged, now lifting failure")
-                    pod_failure.cleanup(kubectl_client)
-
-                    logger.debug("Waiting for cleanup to converge")
-                    runner.wait_for_system_converge()
-
-                    logger.debug(
-                        "Collecting *post-fault-injection* system state before fault injection"
-                    )
-                    post_fault_system_state = runner.collect_system_state()
-
-                    post_fault_oracle_results = OracleResults()
-
-                    logger.debug("Diffing steady state and post fault state")
-                    diff_result = post_diff_test.compare_system_equality(
-                        steady_system_state,
-                        post_fault_system_state,
-                        additional_exclude_paths=self._diff_exclude_paths,
-                    )
-
-                    # FIXME: this new dir is for the case if steady state FI gets overwritten by actual FI if both have oracle
-                    post_steady_fault_fi_trial_dir = os.path.join(
-                        fi_trial_dir, "post-steady-fault"
-                    )
-                    os.makedirs(post_steady_fault_fi_trial_dir, exist_ok=True)
-
-                    if diff_result:
-                        post_fault_oracle_results.differential = DifferentialOracleResult(
-                            message="failed attempt recovering to *steady* system state - system state diff",
-                            diff=diff_result,
-                            from_step=StepID(
-                                trial=post_steady_fault_fi_trial_dir,
-                                generation=inner_steps_generation,
-                            ),
-                            from_state=steady_system_state,
-                            to_step=StepID(
-                                trial=post_steady_fault_fi_trial_dir,
-                                generation=inner_steps_generation,
-                            ),
-                            to_state=post_fault_system_state,
-                        )
-                    deprecated_system_state = (
-                        KubernetesSystemState.from_api_client(
-                            api_client=api_client,
-                            namespace=self._context["namespace"],
-                        )
-                    )
-
-                    health = deprecated_system_state.check_health()
-                    if not health.is_healthy():
-                        logger.error(
-                            "System is not healthy %s post fault", health
-                        )
-                        post_fault_oracle_results.health = OracleResult(
-                            message=str(health)
-                        )
-
-                    post_fault_run_result = RunResult(
-                        testcase={
-                            "original_trial": trial_name,
-                            "original_step": step_key,
-                        },
-                        step_id=StepID(
-                            trial=post_steady_fault_fi_trial_dir,
-                            generation=inner_steps_generation,
-                        ),
-                        oracle_result=post_fault_oracle_results,
-                        cli_status=check_kubectl_cli(chactos_snapshot),
-                        is_revert=False,
-                    )
-                    post_fault_run_result.dump(post_steady_fault_fi_trial_dir)
-
-                    logger.debug(
-                        "Fault injection on steady state completed, now onto normal fault injection"
-                    )
-
-                    try:
-                        logger.debug("Injecting %s failure", failure_types)
-                        pod_failure.apply(kubectl_client)
-                    except subprocess.TimeoutExpired:
-                        logger.warning("Timeout in applying failure.")
-                        logger.warning(
-                            "Current steps: [%s]", sorted(trial.steps.keys())
-                        )
-
-                    logger.debug("Applying next CR")
-                    chactos_snapshot, err = runner.run(
-                        input_cr=step.snapshot.input_cr,
-                        generation=inner_steps_generation,
-                    )
-                    if err is not None:
-                        logger.debug("Error when applying CR: [%s]", err)
-
-                    logger.debug("Waiting for CR to converge")
-                    runner.wait_for_system_converge(hard_timeout=180)
-
-                    for f in failures_to_clean_up:
-                        logger.debug("Cleaning up failure %s", f.name())
-                        f.cleanup(kubectl_client)
-
-                    logger.debug("Waiting for cleanup to converge")
-                    runner.wait_for_system_converge(hard_timeout=180)
-
-                    chactos_snapshot.system_state = (
-                        runner.collect_system_state()
-                    )
-                    chactos_snapshot.dump(fi_trial_dir)
-
-                    logger.debug("Acquiring oracle.")
-
-                    diff_result = post_diff_test.compare_system_equality(
-                        chactos_snapshot.system_state,
-                        step.snapshot.system_state,
-                        additional_exclude_paths=self._diff_exclude_paths,
-                    )
-
-                    oracle_results = OracleResults()
-                    if diff_result:
-                        oracle_results.differential = DifferentialOracleResult(
-                            message="failed attempt recovering to seed state - system state diff",
-                            diff=diff_result,
-                            from_step=StepID(
-                                trial=trial_name, generation=int(step_key)
-                            ),
-                            from_state=step.snapshot.system_state,
-                            to_step=StepID(
-                                trial=fi_trial_dir,
-                                generation=inner_steps_generation,
-                            ),
-                            to_state=chactos_snapshot.system_state,
-                        )
-
-                    # oracle
-                    deprecated_system_state = (
-                        KubernetesSystemState.from_api_client(
-                            api_client=api_client,
-                            namespace=self._context["namespace"],
-                        )
-                    )
-
-                    health = deprecated_system_state.check_health()
-                    if not health.is_healthy():
-                        logger.error("System is not healthy %s", health)
-                        oracle_results.health = OracleResult(
-                            message=str(health)
-                        )
-
-                    # Dump the RunResult to disk
-                    run_result = RunResult(
-                        testcase={
-                            "original_trial": trial_name,
-                            "original_step": step_key,
-                        },
-                        step_id=StepID(
-                            trial=trial_name,
-                            generation=int(inner_steps_generation),
-                        ),
-                        oracle_result=oracle_results,
-                        cli_status=check_kubectl_cli(chactos_snapshot),
-                        is_revert=False,
-                    )
-                    run_result.dump(fi_trial_dir)
-
-                    if oracle_results.is_error():
-                        logger.error("Oracle failed")
-                        break
-
-                    inner_steps_generation += 1
-                    steps.pop(0)
-
-                fault_injection_sequence += 1
+            self.__run_trial(trial_name, trial, failure)
