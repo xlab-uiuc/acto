@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: writer
+spec:
+  containers:
+    - name: writer
+      image: docker.io/tylergu1998/tidb-writer:v1
+      imagePullPolicy: IfNotPresent
+      env:
+        - name: TIDB_HOST
+          value: "test-cluster-tidb.acto-namespace.svc.cluster.local"
+        - name: TIDB_PORT
+          value: "4000"
+        - name: TIDB_USER
+          value: "root"
+        - name: TIDB_PASSWORD
+          value: "root"
+        - name: TIDB_DATABASE
+          value: "test"
