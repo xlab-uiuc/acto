@@ -155,9 +155,6 @@ def deploy_mysql(handle: OracleHandle):
         ]
     )
 
-
-def deploy_tidb_writer(handle: OracleHandle):
-    """Deploy the TiDB Writer Pod for Oracle"""
     handle.kubectl_client.kubectl(
         [
             "apply",
@@ -170,4 +167,4 @@ def deploy_tidb_writer(handle: OracleHandle):
 
 
 CUSTOM_CHECKER: type[CheckerInterface] = TiDBConfigChecker
-ON_INIT: list[Callable] = [deploy_mysql, deploy_tidb_writer]
+ON_INIT: Callable = deploy_mysql

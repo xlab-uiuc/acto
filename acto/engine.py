@@ -149,12 +149,20 @@ def check_state_equality(
     prev_pods = prev_system_state["pod"]
 
     for k, v in curr_pods.items():
-        if "owner_reference" in v["metadata"] and v["metadata"]["owner_reference"] is not None and ["owner_references"][0]["kind"] == "Job":
+        if (
+            "owner_reference" in v["metadata"]
+            and v["metadata"]["owner_references"] is not None
+            and v["metadata"]["owner_references"][0]["kind"] == "Job"
+        ):
             continue
         curr_system_state[k] = v
-    
+
     for k, v in prev_pods.items():
-        if "owner_reference" in v["metadata"] and v["metadata"]["owner_reference"] is not None and ["owner_references"][0]["kind"] == "Job":
+        if (
+            "owner_reference" in v["metadata"]
+            and v["metadata"]["owner_references"] is not None
+            and v["metadata"]["owner_references"][0]["kind"] == "Job"
+        ):
             continue
         prev_system_state[k] = v
 
@@ -413,8 +421,7 @@ class TrialRunner:
         )
         # first run the on_init callbacks if any
         if self.custom_on_init is not None:
-            for callback in self.custom_on_init:
-                callback(oracle_handle)
+            self.custom_on_init(oracle_handle)
 
         runner: Runner = self.runner_t(
             self.context,
