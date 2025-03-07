@@ -27,7 +27,7 @@ See [the lists of bugs](bugs.md) found by Acto.
 - [Golang](https://go.dev/doc/install)
 - [k8s Kind cluster](https://kind.sigs.k8s.io/)
     - `go install sigs.k8s.io/kind@v0.20.0`
-- Python >= 3.10 and dependencies (You may need venv if you are running Ubuntu20.04 or below)
+- Python >= 3.12 and dependencies (You may need venv if you are running Ubuntu20.04 or below)
     - `python3 -m pip install -r requirements.txt`
 - [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/)
 
