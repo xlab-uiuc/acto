@@ -24,7 +24,7 @@ class TiDBConfigChecker(CheckerInterface):
     def __init__(self, oracle_handle: OracleHandle, **kwargs):
         super().__init__(**kwargs)
         self.oracle_handle = oracle_handle
-        self._previous_ts: Optional[str] = None
+        self._previous_ts: Optional[datetime.datetime] = None
 
     def __check_config(
         self, generation: int, snapshot: Snapshot, prev_snapshot: Snapshot
@@ -105,15 +105,19 @@ class TiDBConfigChecker(CheckerInterface):
         _, _, _ = generation, snapshot, prev_snapshot
 
         v1 = kubernetes.client.CoreV1Api(self.oracle_handle.k8s_client)
+        now = datetime.datetime.now()
+        since_seconds: Optional[int] = (
+            None
+            if self._previous_ts is None
+            else int((now - self._previous_ts).total_seconds())
+        )
         logs = v1.read_namespaced_pod_log(
             name="writer",
             namespace="acto-namespace",
             container="writer",
-            since_time=self._previous_ts,
+            since_seconds=since_seconds,
         ).split("\n")
-        self._previous_ts = datetime.datetime.now(
-            datetime.timezone.utc
-        ).isoformat()
+        self._previous_ts = now
 
         for line in logs:
             match = re.search(r"TS: \[(.*?)\].*?Success Rate: \[(.*?)\]", line)
