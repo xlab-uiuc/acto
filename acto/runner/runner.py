@@ -38,6 +38,7 @@ class Runner:
         custom_system_state_f: Optional[Callable[..., dict]] = None,
         wait_time: int = 45,
         operator_container_name: Optional[str] = None,
+        custom_runner_hooks: Optional[list[RunnerHookType]] = None,
     ):
         self.namespace = context["namespace"]
         self.crd_metainfo: dict = context["crd"]
@@ -86,12 +87,12 @@ class Runner:
         self.mp_ctx = multiprocessing.get_context("fork")
 
         self._custom_system_state_f = custom_system_state_f
+        self._custom_runner_hooks = custom_runner_hooks
 
     def run(
         self,
         input_cr: dict,
         generation: int,
-        hooks: Optional[list[RunnerHookType]] = None,
     ) -> tuple[snapshot.Snapshot, bool]:
         """Simply run the cmd and dumps system_state, delta, operator log,
         events and input files without checking.
@@ -100,7 +101,6 @@ class Runner:
             Args:
                 input_cr: CR to be applied in the format of dict
                 generation: the generation number of the input file
-                hooks: a list of hooks to be called before applying the CR
 
             Returns:
                 result, err
@@ -108,8 +108,8 @@ class Runner:
         logger = get_thread_logger(with_prefix=True)
 
         # call user-defined hooks
-        if hooks is not None:
-            for hook in hooks:
+        if self._custom_runner_hooks is not None:
+            for hook in self._custom_runner_hooks:
                 hook(self.apiclient)
 
         mutated_filename = snapshot.input_cr_path(self.trial_dir, generation)
@@ -271,12 +271,12 @@ class Runner:
         resources["custom_resource_spec"] = (
             current_cr["test-cluster"]["spec"]
             if "spec" in current_cr["test-cluster"]
-            else None
+            else {}
         )
         resources["custom_resource_status"] = (
             current_cr["test-cluster"]["status"]
             if "status" in current_cr["test-cluster"]
-            else None
+            else {}
         )
 
         return resources
@@ -550,7 +550,8 @@ def group_pods(all_pods: dict) -> tuple[dict, dict, dict]:
     other_pods = {}
     for name, pod in all_pods.items():
         if (
-            "acto/tag" in pod["metadata"]["labels"]
+            pod["metadata"]["labels"] is not None
+            and "acto/tag" in pod["metadata"]["labels"]
             and pod["metadata"]["labels"]["acto/tag"] == "custom-oracle"
         ):
             # skip pods spawned by users' custom oracle
