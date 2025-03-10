@@ -119,6 +119,7 @@ class TiDBConfigChecker(CheckerInterface):
         ).split("\n")
         self._previous_ts = now
 
+        min_avail_rate: Optional[float] = None
         for line in logs:
             match = re.search(r"TS: \[(.*?)\].*?Success Rate: \[(.*?)\]", line)
             if match:
@@ -131,6 +132,14 @@ class TiDBConfigChecker(CheckerInterface):
                     )
             else:
                 continue
+
+        logger = get_thread_logger()
+        if min_avail_rate is not None:
+            logger.info(
+                "TiDB writer lowest availability rate: %f", min_avail_rate
+            )
+        else:
+            logger.error("TiDB writer availability rate not found")
 
         return None
 
