@@ -103,6 +103,7 @@ class TiDBConfigChecker(CheckerInterface):
     ) -> Optional[OracleResult]:
         """Check the TiDB writer availability rate parsing its logs"""
         _, _, _ = generation, snapshot, prev_snapshot
+        logger = get_thread_logger()
 
         v1 = kubernetes.client.CoreV1Api(self.oracle_handle.k8s_client)
         now = datetime.datetime.now()
@@ -131,9 +132,9 @@ class TiDBConfigChecker(CheckerInterface):
                         message="TiDB writer availability rate is below 90%"
                     )
             else:
+                logger.warning("Unable to parse TiDB writer log line: %s", line)
                 continue
 
-        logger = get_thread_logger()
         if min_avail_rate is not None:
             logger.info(
                 "TiDB writer lowest availability rate: %f", min_avail_rate
