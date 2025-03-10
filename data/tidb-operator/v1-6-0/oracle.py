@@ -125,7 +125,12 @@ class TiDBConfigChecker(CheckerInterface):
             match = re.search(r"TS: \[(.*?)\].*?Success Rate: \[(.*?)\]", line)
             if match:
                 _ = match.group(1)
-                success_rate = match.group(2)
+                success_rate = float(match.group(2))
+                min_avail_rate = (
+                    success_rate
+                    if min_avail_rate is None
+                    else min(min_avail_rate, success_rate)
+                )
 
                 if float(success_rate) < 0.9:
                     return OracleResult(
