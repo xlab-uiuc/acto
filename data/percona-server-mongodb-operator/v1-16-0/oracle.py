@@ -186,7 +186,7 @@ def deploy_writer(handle: OracleHandle):
         [
             "apply",
             "-f",
-            "data/mariadb-operator/v0-30-0/writer_pod.yaml",
+            "data/percona-server-mongodb-operator/v1-16-0/writer_pod.yaml",
             "-n",
             handle.namespace,
         ]
