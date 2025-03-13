@@ -879,6 +879,10 @@ class Acto:
         self.checker_type = CheckerSet
         self.tool = os.getenv("IMAGE_TOOL", "docker")
 
+        self.custom_checker: Optional[type[CheckerInterface]] = None
+        self.custom_on_init: Optional[Callable] = None
+        self.custom_runner_hooks: Optional[list[Callable]] = None
+
         self.__learn(
             context_file=context_file,
             helper_crd=helper_crd,
@@ -898,9 +902,6 @@ class Acto:
 
         self.sequence_base = 0
 
-        self.custom_checker: Optional[type[CheckerInterface]] = None
-        self.custom_on_init: Optional[Callable] = None
-        self.custom_runner_hooks: Optional[list[Callable]] = None
         if operator_config.custom_oracle is not None:
             module = importlib.import_module(operator_config.custom_oracle)
             if hasattr(module, "CUSTOM_CHECKER") and issubclass(

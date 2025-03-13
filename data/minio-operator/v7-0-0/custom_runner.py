@@ -1,4 +1,4 @@
-from typing import Self
+from typing_extensions import Self
 
 import kubernetes
 from kubernetes.client.rest import ApiException
@@ -7,6 +7,7 @@ from acto.input.input import CustomPropertySchemaMapping
 from acto.runner.runner import RunnerHookType
 from acto.schema.base import BaseSchema
 from acto.schema.under_specified import UnderSpecifiedSchema
+from acto.utils.thread_logger import get_thread_logger
 
 import json
 
@@ -47,22 +48,22 @@ class MinIOConfigSchema(UnderSpecifiedSchema):
 
 def minio_config_hook(api_client: kubernetes.client.ApiClient) -> None:
     """Custom runner hook for Minio"""
+    logger = get_thread_logger()
+    logger.info("Custom runner hook for Minio")
     print("Custom runner hook for Minio")
 
     # Create Secret based on the global variable
     # NEXT_CONFIG
-    env_exports = 'export MINIO_ROOT_USER="minio"\nexport MINIO_ROOT_PASSWORD="minio123"\nexport MINIO_BROWSER="on"\n'.join(f'export {key}="{value}"\n' for key, value in NEXT_CONFIG.items())
+    env_exports = "export MINIO_ROOT_USER=\"minio\"\nexport MINIO_ROOT_PASSWORD=\"minio123\"\nexport MINIO_BROWSER=\"on\"".join(f'export {key}="{value}"\n' for key, value in NEXT_CONFIG.items())
 
-    secret = {
-        "stringData": {
-            "config.env": env_exports
-        }
-    }
+    secret = { "config.env": env_exports }
     v1_api = kubernetes.client.CoreV1Api(api_client)
     try:
         v1_api.patch_namespaced_secret(name=SECRET_NAME, namespace="minio-operator", body=secret)
+        logger.info(f"Secret '{SECRET_NAME}' patched successfully.")
         print(f"Secret '{SECRET_NAME}' patched successfully.")
     except ApiException as e:
+        logger.info("Exception when calling CoreV1Api->patch_namespaced_resource_quota_status: %s\n" % e)
         print("Exception when calling CoreV1Api->patch_namespaced_resource_quota_status: %s\n" % e)
     
 
