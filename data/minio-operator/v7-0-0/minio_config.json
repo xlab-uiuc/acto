@@ -1,0 +1,178 @@
+{
+    "type": "object",
+    "properties": {
+        "MINIO_ILM_EXPIRY_WORKERS": {
+            "type": "int",
+            "default": 2,
+            "enum": [
+                0,
+                2,
+                100
+            ],
+            "description": "Specifies the number of workers to make available to expire objects configured with ILM rules for expiration. When not set, MinIO defaults to using up to half of the available processing cores available."
+        },
+        "MINIO_SCANNER_SPEED": {
+            "type": "string",
+            "default": "default",
+            "enum": [
+                "fastest",
+                "fast",
+                "default",
+                "slow",
+                "slowest"
+            ],
+            "description": "Manage the maximum wait period for the scanner when balancing MinIO read/write performance to scanner processes."
+        },
+        "MINIO_COMPRESSION_ENABLE": {
+            "type": "string",
+            "default": "off",
+            "enum": [
+                "on",
+                "off",
+                "INVALID"
+            ],
+            "description": "Enabling or disabling data compression does not change existing objects."
+        },
+        "MINIO_COMPRESSION_ALLOW_ENCRYPTION": {
+            "type": "string",
+            "default": "off",
+            "enum": [
+                "on",
+                "off",
+                "INVALID"
+            ],
+            "description": ""
+        },
+        "MINIO_COMPRESSION_EXTENSIONS": {
+            "type": "string",
+            "default": ".txt, .log, .csv, .json, .tar, .xml, .bin",
+            "enum": [
+                ".txt, .log, .csv, .json, .tar, .xml, .bin",
+                "*",
+                "INVALID"
+            ],
+            "description": "Comma-separated list of the file extensions to compress. Setting a new list of file extensions replaces the previously configured list. Defaults to '.txt, .log, .csv, .json, .tar, .xml, .bin'."
+        },
+        "MINIO_COMPRESSION_MIME_TYPES": {
+            "type": "string",
+            "default": "text/*, application/json, application/xml, binary/octet-stream",
+            "enum": [
+                "text/*, application/json, application/xml, binary/octet-stream",
+                "*",
+                "INVALID"
+            ],
+            "description": "Comma-separated list of the MIME types to compress. Setting a new list of types replaces the previously configured list. Defaults to 'text/*, application/json, application/xml, binary/octet-stream'."
+        },
+        "MINIO_API_OBJECT_MAX_VERSIONS": {
+            "type": "int",
+            "default": 100,
+            "enum": [
+                100,
+                1,
+                -1
+            ],
+            "description": "Defines the default maximum versions to allow per object."
+        },
+        "MINIO_ROOT_USER": {
+            "type": "string",
+            "default": "minioadmin",
+            "enum": [
+                "minioadmin",
+                "user1",
+                "INVALID"
+            ],
+            "description": "The access key for the root user."
+        },
+        "MINIO_ROOT_PASSWORD": {
+            "type": "string",
+            "default": "minioadmin",
+            "enum": [
+                "minioadmin",
+                "password1",
+                "INVALID"
+            ],
+            "description": "The secret key for the root user."
+        },
+        "MINIO_API_ROOT_ACCESS": {
+            "type": "string",
+            "default": "on",
+            "enum": [
+                "on",
+                "off",
+                "INVALID"
+            ],
+            "description": "Specify on to enable and off to disable the root user account. Disabling the root service account also disables all service accounts associated with root, excluding those used by site replication. Defaults to on."
+        },
+        "MINIO_STORAGE_CLASS_STANDARD": {
+            "type": "string",
+            "default": "EC:0",
+            "enum": [
+                "EC:0",
+                "EC:1",
+                "EC:4"
+            ],
+            "description": "The parity level for the deployment. MinIO shards objects written with the default STANDARD storage class using this parity value."
+        },
+        "MINIO_STORAGE_CLASS_RRS": {
+            "type": "string",
+            "default": "EC:0",
+            "enum": [
+                "EC:0",
+                "EC:1",
+                "EC:4"
+            ],
+            "description": "The parity level for objects written with the REDUCED storage class."
+        },
+        "MINIO_STORAGE_CLASS_OPTIMIZE": {
+            "type": "string",
+            "default": "",
+            "enum": [
+                "",
+                "capacity",
+                "INVALID"
+            ],
+            "description": "MinIO by default automatically “upgrades” parity for an object if the destination erasure set maintains write quorum but has one or more drives offline. This behavior helps ensure that the given object maintains the same availability as objects written to the healthy erasure set."
+        },
+        "MINIO_BROWSER": {
+            "type": "string",
+            "default": "on",
+            "enum": [
+                "on",
+                "off",
+                "INVALID"
+            ],
+            "description": "Specify off to disable the embedded MinIO Console."
+        },
+        "MINIO_BROWSER_LOGIN_ANIMATION": {
+            "type": "string",
+            "default": "on",
+            "enum": [
+                "on",
+                "off",
+                "INVALID"
+            ],
+            "description": "Specify off to disable the animated login screen for the MinIO Console. Defaults to on."
+        },
+        "MINIO_BROWSER_REDIRECT": {
+            "type": "boolean",
+            "default": "true",
+            "enum": [
+                "true",
+                "false",
+                "INVALID"
+            ],
+            "description": "Specify whether requests from a web browser automatically redirect to the Console address. Defaults to true."
+        },
+        "MINIO_BROWSER_SESSION_DURATION": {
+            "type": "string",
+            "default": "12h",
+            "enum": [
+                "12h",
+                "60s",
+                "INVALID"
+            ],
+            "description": "Specify the duration of a browser session for working with the MinIO Console."
+        }
+
+    }
+  }

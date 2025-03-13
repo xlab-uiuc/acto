@@ -1,0 +1,46 @@
+{
+    "deploy": {
+    	"steps": [
+            {
+                "apply": {
+                    "file": "data/minio-operator/v7-0-0/operator.yaml",
+                    "operator": true
+                }
+            },
+            {
+                "wait": {
+                    "duration": 10
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/minio-operator/v7-0-0/tenant-config.yaml"
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/minio-operator/v7-0-0/storage-user.yaml"
+                }
+            }
+    	]
+    },
+    "crd_name": "tenants.minio.min.io",
+    "seed_custom_resource": "data/minio-operator/v7-0-0/cr.yaml",
+    "kubernetes_version": "v1.31.0",
+    "example_dir": "data/minio-operator/v7-0-0/examples",
+    "num_nodes": 5,
+    "focus_fields": [
+        ["spec", "pools", "name"],
+        ["spec", "pools", "servers"],
+        ["spec", "pools", "volumesPerServer"],
+        ["spec", "image"],
+        ["spec", "mountPath"],
+        ["spec", "subPath"],
+        ["spec", "requestAutoCert"],
+        ["spec", "features"],
+        ["spec", "kes", "replicas"],
+        ["spec", "users"],
+        ["spec", "bucket"],
+        ["spec", "logging"]
+    ]
+}    

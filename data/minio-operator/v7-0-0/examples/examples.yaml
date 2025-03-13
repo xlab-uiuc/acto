@@ -1,0 +1,323 @@
+apiVersion: minio.min.io/v2
+kind: Tenant
+metadata:
+  name: myminio
+spec:
+  log:
+    db:
+      serviceAccountName: tenant-log-db-sa
+  prometheus:
+    serviceAccountName: tenant-prometheus-sa
+---
+apiVersion: minio.min.io/v2
+kind: Tenant
+metadata:
+  name: myminio
+spec:
+  pools:
+  - name: pool-0
+    servers: 1
+    volumeClaimTemplate:
+      metadata:
+        name: data
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 2Gi
+    volumesPerServer: 4
+---
+apiVersion: minio.min.io/v2
+kind: Tenant
+metadata:
+  name: myminio
+spec:
+  externalCertSecret:
+  - name: myminio-tls
+    type: cert-manager.io/v1
+  poolsMetadata:
+    labels:
+      app: minio
+  requestAutoCert: false
+---
+apiVersion: minio.min.io/v2
+kind: Tenant
+metadata:
+  name: myminio
+spec:
+  kes:
+    affinity:
+      nodeAffinity: {}
+      podAffinity: {}
+      podAntiAffinity: {}
+    annotations: {}
+    clientCertSecret: null
+    env: []
+    externalCertSecret: null
+    image: ''
+    imagePullPolicy: IfNotPresent
+    kesSecret:
+      name: kes-configuration
+    keyName: ''
+    labels: {}
+    nodeSelector: {}
+    replicas: 2
+    resources: {}
+    securityContext:
+      fsGroup: 1000
+      runAsGroup: 1000
+      runAsNonRoot: true
+      runAsUser: 1000
+    serviceAccountName: ''
+    tolerations: []
+---
+apiVersion: minio.min.io/v2
+kind: Tenant
+metadata:
+  name: myminio
+spec:
+  pools:
+  - containerSecurityContext: {}
+    name: pool-0
+    securityContext: {}
+    servers: 4
+    volumeClaimTemplate:
+      metadata:
+        name: data
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 2Gi
+    volumesPerServer: 2
+---
+apiVersion: minio.min.io/v2
+kind: Tenant
+metadata:
+  name: myminio
+spec:
+  kes:
+    affinity:
+      nodeAffinity: {}
+      podAffinity: {}
+      podAntiAffinity: {}
+    annotations: {}
+    clientCertSecret: null
+    env: []
+    externalCertSecret: null
+    gcpCredentialSecretName: gcp-default-creds
+    gcpWorkloadIdentityPool: <WORKLOAD_IDENTITY_POOL>
+    image: ''
+    imagePullPolicy: IfNotPresent
+    kesSecret:
+      name: kes-configuration
+    keyName: ''
+    labels: {}
+    nodeSelector: {}
+    replicas: 2
+    resources: {}
+    securityContext:
+      fsGroup: 1000
+      runAsGroup: 1000
+      runAsNonRoot: true
+      runAsUser: 1000
+    serviceAccountName: <SERVICE_ACCOUNT>
+    tolerations: []
+---
+apiVersion: minio.min.io/v2
+kind: Tenant
+metadata:
+  name: myminio
+spec:
+  env:
+  - name: MINIO_IDENTITY_OPENID_CONFIG_URL
+    value: https://your-extenal-idp.com/.well-known/openid-configuration
+  - name: MINIO_IDENTITY_OPENID_CLIENT_ID
+    value: OPENID CLIENT ID
+  - name: MINIO_IDENTITY_OPENID_CLIENT_SECRET
+    value: OPENID CLIENT SECRET
+  - name: MINIO_IDENTITY_OPENID_SCOPES
+    value: openid,profile,email
+  - name: MINIO_IDENTITY_OPENID_CLAIM_NAME
+    value: https://min.io/policy
+---
+apiVersion: minio.min.io/v2
+kind: Tenant
+metadata:
+  name: myminio
+spec:
+  env:
+  - name: MINIO_DOMAIN
+    value: minio.example.com
+  - name: MINIO_BROWSER_REDIRECT_URL
+    value: https://console.example.com
+  - name: MINIO_SERVER_URL
+    value: https://minio.example.com
+  requestAutoCert: false
+---
+apiVersion: minio.min.io/v2
+kind: Tenant
+metadata:
+  name: myminio
+spec:
+  env:
+  - name: MINIO_IDENTITY_LDAP_SERVER_ADDR
+    value: openldap.tenant-external-idp-ldap.svc.cluster.local:389
+  - name: MINIO_IDENTITY_LDAP_LOOKUP_BIND_DN
+    value: cn=admin,dc=min,dc=io
+  - name: MINIO_IDENTITY_LDAP_LOOKUP_BIND_PASSWORD
+    value: admin
+  - name: MINIO_IDENTITY_LDAP_USER_DN_SEARCH_BASE_DN
+    value: dc=min,dc=io
+  - name: MINIO_IDENTITY_LDAP_USER_DN_SEARCH_FILTER
+    value: (uid=%s)
+  - name: MINIO_IDENTITY_LDAP_GROUP_SEARCH_BASE_DN
+    value: ou=swengg,dc=min,dc=io
+  - name: MINIO_IDENTITY_LDAP_GROUP_SEARCH_FILTER
+    value: (&(objectclass=groupOfNames)(member=%d))
+  - name: MINIO_IDENTITY_LDAP_SERVER_INSECURE
+    value: 'on'
+  users:
+  - name: storage-user
+---
+apiVersion: minio.min.io/v2
+kind: Tenant
+metadata:
+  annotations:
+    prometheus.io/path: /minio/v2/metrics/cluster
+    prometheus.io/port: '9000'
+    prometheus.io/scrape: 'true'
+  labels:
+    app: minio
+  name: myminio
+spec:
+  buckets:
+  - name: test-bucket1
+    objectLock: true
+    region: us-east-1
+  - name: test-bucket2
+    objectLock: true
+    region: us-east-1
+  certConfig: {}
+  configuration:
+    name: storage-configuration
+  env: []
+  externalCaCertSecret: []
+  externalCertSecret: []
+  externalClientCertSecrets: []
+  features:
+    bucketDNS: false
+    domains: {}
+  image: quay.io/minio/minio:RELEASE.2024-11-07T00-52-20Z
+  imagePullSecret: {}
+  mountPath: /export
+  podManagementPolicy: Parallel
+  pools:
+  - affinity:
+      nodeAffinity: {}
+      podAffinity: {}
+      podAntiAffinity: {}
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+        - ALL
+      runAsGroup: 1000
+      runAsNonRoot: true
+      runAsUser: 1000
+      seccompProfile:
+        type: RuntimeDefault
+    name: pool-0
+    nodeSelector: {}
+    resources: {}
+    securityContext:
+      fsGroup: 1000
+      fsGroupChangePolicy: OnRootMismatch
+      runAsGroup: 1000
+      runAsNonRoot: true
+      runAsUser: 1000
+    servers: 4
+    tolerations: []
+    topologySpreadConstraints: []
+    volumeClaimTemplate:
+      apiVersion: v1
+      kind: persistentvolumeclaims
+      metadata: {}
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Ti
+        storageClassName: standard
+      status: {}
+    volumesPerServer: 4
+  priorityClassName: ''
+  requestAutoCert: true
+  serviceAccountName: ''
+  serviceMetadata:
+    consoleServiceAnnotations: {}
+    consoleServiceLabels: {}
+    minioServiceAnnotations: {}
+    minioServiceLabels: {}
+  subPath: ''
+  users:
+  - name: storage-user
+---
+apiVersion: minio.min.io/v2
+kind: Tenant
+metadata:
+  name: myminio
+spec:
+  externalCertSecret:
+  - name: tenant-certmanager-tls
+    type: cert-manager.io/v1
+  kes:
+    externalCertSecret:
+      name: tenant-certmanager-2-tls
+      type: cert-manager.io/v1
+    image: minio/kes:2024-11-25T13-44-31Z
+    imagePullPolicy: IfNotPresent
+    kesSecret:
+      name: kes-configuration
+    keyName: my-minio-key
+    replicas: 1
+    resources: {}
+    securityContext:
+      fsGroup: 1000
+      fsGroupChangePolicy: Always
+      runAsGroup: 1000
+      runAsNonRoot: true
+      runAsUser: 1000
+  requestAutoCert: false
+---
+apiVersion: minio.min.io/v2
+kind: Tenant
+metadata:
+  name: myminio
+spec:
+  pools:
+  - containerSecurityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+        - ALL
+      runAsGroup: 1000
+      runAsNonRoot: true
+      runAsUser: 1000
+      seccompProfile:
+        type: RuntimeDefault
+    name: pool-0
+    servers: 4
+    volumeClaimTemplate:
+      metadata:
+        name: data
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 2Gi
+    volumesPerServer: 2
