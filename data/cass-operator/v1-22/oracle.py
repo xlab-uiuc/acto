@@ -176,7 +176,7 @@ class CassandraConfigChecker(CheckerInterface):
 
 def deploy_writer(handle: OracleHandle):
     """Deploy the Writer Pod for Oracle"""
-    handle.kubectl_client.kubectl(
+    p = handle.kubectl_client.kubectl(
         [
             "apply",
             "-f",
@@ -185,6 +185,8 @@ def deploy_writer(handle: OracleHandle):
             handle.namespace,
         ]
     )
+    if p.returncode != 0:
+        raise RuntimeError("Failed to deploy the writer pod", p.stderr)
 
 
 CUSTOM_CHECKER: type[CheckerInterface] = CassandraConfigChecker
