@@ -124,7 +124,7 @@ class CassandraConfigChecker(CheckerInterface):
         )
         logs = v1.read_namespaced_pod_log(
             name="cassandra-writer",
-            namespace="acto-namespace",
+            namespace=self.oracle_handle.namespace,
             container="cassandra-writer",
             since_seconds=since_seconds,
         ).split("\n")
