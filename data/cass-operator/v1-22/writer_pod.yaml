@@ -5,7 +5,7 @@ metadata:
 spec:
   containers:
     - name: cassandra-writer
-      image: docker.io/tylergu1998/cassandra-writer:v1
+      image: ghcr.io/xlab-uiuc/cassandra-writer:v1
       imagePullPolicy: IfNotPresent
       env:
         - name: CASSANDRA_HOST
@@ -21,4 +21,4 @@ spec:
           valueFrom:
             secretKeyRef:
               name: development-superuser
-              key: username
+              key: password
