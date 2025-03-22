@@ -46,7 +46,7 @@ class MinIOConfigChecker(CheckerInterface):
                 "alias",
                 "set",
                 "myminio",
-                "http://localhost:9000",
+                "https://minio.minio-operator.svc.cluster.local",
                 "minio",
                 "minio123"
             ],
@@ -71,7 +71,7 @@ class MinIOConfigChecker(CheckerInterface):
             return OracleResult(message="MinIO config check failed")
 
         lines = p.stdout.split("\n")
-        runtime_config = [config[2:] for config in lines if re.match(r"^\# MINIO_.*$")]
+        runtime_config = [config[2:] for config in lines if re.match(r"^\# MINIO_.*$", config)]
 
         missing_config = []
 
