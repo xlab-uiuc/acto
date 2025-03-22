@@ -46,6 +46,9 @@ class CassandraConfigChecker(CheckerInterface):
         sts_list = self.oracle_handle.get_stateful_sets()
         pod_list = self.oracle_handle.get_pods_in_stateful_set(sts_list[0])
 
+        if len(pod_list) == 0:
+            return None
+
         core_v1 = kubernetes.client.CoreV1Api(self.oracle_handle.k8s_client)
 
         secret = core_v1.read_namespaced_secret(
@@ -124,7 +127,7 @@ class CassandraConfigChecker(CheckerInterface):
         )
         logs = v1.read_namespaced_pod_log(
             name="cassandra-writer",
-            namespace="acto-namespace",
+            namespace=self.oracle_handle.namespace,
             container="cassandra-writer",
             since_seconds=since_seconds,
         ).split("\n")
