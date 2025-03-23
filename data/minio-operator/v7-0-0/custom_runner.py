@@ -51,7 +51,6 @@ class MinIOConfigSchema(UnderSpecifiedSchema):
         return cls(
             original_schema.path, original_schema.raw_schema, config_schema
         )
-        # raise NotImplementedError("Not implemented")
 
 
 def minio_config_hook(api_client: kubernetes.client.ApiClient) -> None:
@@ -61,10 +60,11 @@ def minio_config_hook(api_client: kubernetes.client.ApiClient) -> None:
     print("Custom runner hook for Minio")
 
     # Create Secret based on the global variable
-    # NEXT_CONFIG
+    global NEXT_CONFIG
     env_exports = "export MINIO_ROOT_USER=\"minio\"\nexport MINIO_ROOT_PASSWORD=\"minio123\"\nexport MINIO_BROWSER=\"on\"\n"
     for key, value in NEXT_CONFIG.items():
         env_exports += f"export {key}={value}\n"
+    NEXT_CONFIG = {}
     logger.info(env_exports)
     print(env_exports)
     # secret = { "config.env": base64.b64encode(env_exports.encode("ascii")).decode("ascii") }
