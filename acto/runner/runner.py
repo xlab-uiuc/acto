@@ -16,6 +16,7 @@ from acto.common import kubernetes_client
 from acto.kubectl_client import KubectlClient
 from acto.system_state import kubernetes_system_state
 from acto.utils import acto_timer, get_thread_logger
+from acto.utils.k8s_event_watcher import K8sEventWatcher
 
 RunnerHookType = Callable[[kubernetes.client.ApiClient], None]
 CustomSystemStateHookType = Callable[
@@ -483,7 +484,7 @@ class Runner:
         while True:
             try:
                 event = combined_event_queue.get(timeout=self.wait_time)
-                if event == "timeout":
+                if event in ["timeout", K8sEventWatcher.ABORT]:
                     converge = False
                     break
             except queue.Empty:
@@ -511,9 +512,13 @@ class Runner:
 
     def watch_system_events(self, event_stream, q: multiprocessing.Queue):
         """A process that watches namespaced events"""
-        for _ in event_stream:
+
+        watcher = K8sEventWatcher(q)
+
+        for payload in event_stream:
             try:
                 q.put("event")
+                watcher.observe(payload)
             except (ValueError, AssertionError):
                 pass
 
