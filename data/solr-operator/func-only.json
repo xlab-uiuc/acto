@@ -2,6 +2,15 @@
     "deploy": {
         "steps": [
             {
+                "helm_install": {
+                    "release_name": "solr-operator",
+                    "chart": "solr-operator",
+                    "repo": "https://solr.apache.org/charts",
+                    "version": "0.9.1",
+                    "operator": true,
+                    "operator_deployment_name": "solr-operator",
+                    "operator_container_name": "solr-operator"
+                },
                 "apply": {
                     "file": "data/solr-operator/all-with-dependencies.yaml",
                     "namespace": null
@@ -37,5 +46,5 @@
         ["spec", "additionalLibs"], 
         ["spec", "zookeeperConnectionInfo", "acl"],
         ["spec", "zookeeperConnectionInfo", "readOnlyAcl"]
-    ],
+    ]
 }
