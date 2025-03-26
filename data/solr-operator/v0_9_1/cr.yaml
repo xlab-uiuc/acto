@@ -1,0 +1,47 @@
+apiVersion: solr.apache.org/v1beta1
+kind: SolrCloud
+metadata:
+  name: test-cluster
+spec:
+  customSolrKubeOptions:
+    podOptions:
+      resources:
+        limits:
+          memory: 1G
+        requests:
+          cpu: 65m
+          memory: 156Mi
+  dataStorage:
+    persistent:
+      pvcTemplate:
+        spec:
+          resources:
+            requests:
+              storage: 5Gi
+      reclaimPolicy: Delete
+  replicas: 3
+  solrGCTune: -XX:SurvivorRatio=4 -XX:TargetSurvivorRatio=90 -XX:MaxTenuringThreshold=8
+  solrImage:
+    tag: 8.7.0
+  solrJavaMem: -Xms1g -Xmx3g
+  solrModules:
+  - jaegertracer-configurator
+  - ltr
+  solrOpts: -Dsolr.autoSoftCommit.maxTime=10000
+  zookeeperRef:
+    provided:
+      chroot: /this/will/be/auto/created
+      persistence:
+        spec:
+          resources:
+            requests:
+              storage: 5Gi
+          storageClassName: hostpath
+      replicas: 1
+      zookeeperPodPolicy:
+        resources:
+          limits:
+            memory: 1G
+          requests:
+            cpu: 65m
+            memory: 156Mi

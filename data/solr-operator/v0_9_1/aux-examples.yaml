@@ -1,0 +1,31 @@
+apiVersion: solr.apache.org/v1beta1
+kind: SolrBackup
+metadata:
+  name: main-collection-gcs-backups
+spec:
+  collections:
+  - example
+  repositoryName: main_collection_backup_repository
+  solrCloud: multiple-backup-repos
+---
+apiVersion: solr.apache.org/v1beta1
+kind: SolrPrometheusExporter
+metadata:
+  name: solrprometheusexporter-sample
+spec:
+  image:
+    tag: 8.7.0
+  numThreads: 4
+  solrReference:
+    cloud:
+      name: example
+---
+apiVersion: solr.apache.org/v1beta1
+kind: SolrBackup
+metadata:
+  name: volume-backup
+spec:
+  collections:
+  - example
+  repositoryName: volume_repository_1
+  solrCloud: multiple-backup-repos

@@ -1,0 +1,152 @@
+apiVersion: solr.apache.org/v1beta1
+kind: SolrCloud
+metadata:
+  name: multiple-backup-repos
+spec:
+  backupRepositories:
+  - name: volume_repository_1
+    volume:
+      source:
+        persistentVolumeClaim:
+          claimName: pvc-test-1
+  - gcs:
+      bucket: product_catalog
+      gcsCredentialSecret:
+        key: service-account-key.json
+        name: some-secret-name
+    name: main_collection_backup_repository
+  - name: s3-backup-repo
+    s3:
+      bucket: product-catalog
+      credentials:
+        accessKeyIdSecret:
+          key: access-key-id
+          name: aws-secrets
+        credentialsFileSecret:
+          key: credentials
+          name: aws-credentials
+        secretAccessKeySecret:
+          key: secret-access-key
+          name: aws-secrets
+        sessionTokenSecret:
+          key: session-token
+          name: aws-secrets
+      region: us-west-2
+  - gcs:
+      baseLocation: /logs
+      bucket: log_data
+      gcsCredentialSecret:
+        key: service-account-key.json
+        name: some-secret-name-2
+    name: main_collection_backup_repository_log
+  replicas: 1
+  solrImage:
+    tag: 8.1
+---
+apiVersion: solr.apache.org/v1beta1
+kind: SolrCloud
+metadata:
+  name: example-with-tolerations
+spec:
+  customSolrKubeOptions:
+    podOptions:
+      nodeSelector:
+        beta.kubernetes.io/arch: amd64
+        beta.kubernetes.io/os: linux
+      resources:
+        limits:
+          memory: 1G
+        requests:
+          cpu: 65m
+          memory: 156Mi
+      tolerations:
+      - effect: NoSchedule
+        key: node-restriction.kubernetes.io/workloads
+        operator: Equal
+        value: solrclouds
+  replicas: 1
+  solrImage:
+    tag: 8.7.0
+  zookeeperRef:
+    provided:
+      persistence:
+        spec:
+          resources:
+            requests:
+              storage: 5Gi
+          storageClassName: hostpath
+      replicas: 1
+      zookeeperPodPolicy:
+        nodeSelector:
+          beta.kubernetes.io/arch: amd64
+          beta.kubernetes.io/os: linux
+        resources:
+          limits:
+            memory: 1G
+          requests:
+            cpu: 65m
+            memory: 156Mi
+        tolerations:
+        - effect: NoSchedule
+          key: node-restriction.kubernetes.io/workloads
+          operator: Equal
+          value: zookeeper
+---
+apiVersion: solr.apache.org/v1beta1
+kind: SolrCloud
+metadata:
+  name: example-private-repo-solr-image
+spec:
+  replicas: 3
+  solrImage:
+    imagePullSecret: k8s-docker-registry-secret
+    repository: myprivate-repo.jfrog.io/solr
+    tag: 8.7.0
+---
+apiVersion: solr.apache.org/v1beta1
+kind: SolrCloud
+metadata:
+  name: example
+spec:
+  customSolrKubeOptions:
+    podOptions:
+      resources:
+        limits:
+          memory: 1G
+        requests:
+          cpu: 65m
+          memory: 156Mi
+  dataStorage:
+    persistent:
+      pvcTemplate:
+        spec:
+          resources:
+            requests:
+              storage: 5Gi
+      reclaimPolicy: Delete
+  replicas: 3
+  solrGCTune: -XX:SurvivorRatio=4 -XX:TargetSurvivorRatio=90 -XX:MaxTenuringThreshold=8
+  solrImage:
+    tag: 8.7.0
+  solrJavaMem: -Xms1g -Xmx3g
+  solrModules:
+  - jaegertracer-configurator
+  - ltr
+  solrOpts: -Dsolr.autoSoftCommit.maxTime=10000
+  zookeeperRef:
+    provided:
+      chroot: /this/will/be/auto/created
+      persistence:
+        spec:
+          resources:
+            requests:
+              storage: 5Gi
+          storageClassName: standard
+      replicas: 1
+      zookeeperPodPolicy:
+        resources:
+          limits:
+            memory: 1G
+          requests:
+            cpu: 65m
+            memory: 156Mi
