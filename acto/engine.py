@@ -149,12 +149,20 @@ def check_state_equality(
     prev_pods = prev_system_state["pod"]
 
     for k, v in curr_pods.items():
-        if "owner_reference" in v["metadata"] and v["metadata"]["owner_reference"] is not None and ["owner_references"][0]["kind"] == "Job":
+        if (
+            "owner_reference" in v["metadata"]
+            and v["metadata"]["owner_references"] is not None
+            and v["metadata"]["owner_references"][0]["kind"] == "Job"
+        ):
             continue
         curr_system_state[k] = v
-    
+
     for k, v in prev_pods.items():
-        if "owner_reference" in v["metadata"] and v["metadata"]["owner_reference"] is not None and ["owner_references"][0]["kind"] == "Job":
+        if (
+            "owner_reference" in v["metadata"]
+            and v["metadata"]["owner_references"] is not None
+            and v["metadata"]["owner_references"][0]["kind"] == "Job"
+        ):
             continue
         prev_system_state[k] = v
 
@@ -257,6 +265,7 @@ class TrialRunner:
         wait_time: int,
         custom_on_init: Optional[Callable],
         custom_checker: Optional[type[CheckerInterface]],
+        custom_runner_hooks: Optional[list[Callable]],
         workdir: str,
         cluster: base.KubernetesEngine,
         worker_id: int,
@@ -295,6 +304,7 @@ class TrialRunner:
 
         self.custom_on_init = custom_on_init
         self.custom_checker = custom_checker
+        self.custom_runner_hooks = custom_runner_hooks
         self.dryrun = dryrun
         self.is_reproduce = is_reproduce
 
@@ -413,8 +423,7 @@ class TrialRunner:
         )
         # first run the on_init callbacks if any
         if self.custom_on_init is not None:
-            for callback in self.custom_on_init:
-                callback(oracle_handle)
+            self.custom_on_init(oracle_handle)
 
         runner: Runner = self.runner_t(
             self.context,
@@ -423,6 +432,7 @@ class TrialRunner:
             self.context_name,
             wait_time=self.wait_time,
             operator_container_name=self.deploy.operator_container_name,
+            custom_runner_hooks=self.custom_runner_hooks,
         )
         checker: CheckerSet = self.checker_t(
             self.context,
@@ -869,6 +879,10 @@ class Acto:
         self.checker_type = CheckerSet
         self.tool = os.getenv("IMAGE_TOOL", "docker")
 
+        self.custom_checker: Optional[type[CheckerInterface]] = None
+        self.custom_on_init: Optional[Callable] = None
+        self.custom_runner_hooks: Optional[list[Callable]] = None
+
         self.__learn(
             context_file=context_file,
             helper_crd=helper_crd,
@@ -888,8 +902,6 @@ class Acto:
 
         self.sequence_base = 0
 
-        self.custom_checker: Optional[type[CheckerInterface]] = None
-        self.custom_on_init: Optional[Callable] = None
         if operator_config.custom_oracle is not None:
             module = importlib.import_module(operator_config.custom_oracle)
             if hasattr(module, "CUSTOM_CHECKER") and issubclass(
@@ -898,6 +910,11 @@ class Acto:
                 self.custom_checker = module.CUSTOM_CHECKER
             if hasattr(module, "ON_INIT"):
                 self.custom_on_init = module.ON_INIT
+
+        if operator_config.custom_runner is not None:
+            module = importlib.import_module(operator_config.custom_runner)
+            if hasattr(module, "CUSTOM_RUNNER_HOOKS"):
+                self.custom_runner_hooks = module.CUSTOM_RUNNER_HOOKS
 
         # Generate test cases
         self.test_plan = self.input_model.generate_test_plan(
@@ -1028,6 +1045,7 @@ class Acto:
                 learn_kubeconfig,
                 learn_context_name,
                 operator_container_name=self.deploy.operator_container_name,
+                custom_runner_hooks=self.custom_runner_hooks,
             )
             snapshot, _ = runner.run(input_cr=self.seed, generation=0)
             snapshot.dump(runner.trial_dir)
@@ -1133,6 +1151,7 @@ class Acto:
                 self.operator_config.wait_time,
                 self.custom_on_init,
                 self.custom_checker,
+                self.custom_runner_hooks,
                 self.workdir_path,
                 self.cluster,
                 i,

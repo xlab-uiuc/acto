@@ -1,0 +1,222 @@
+{
+    "type": "object",
+    "properties": {
+        "MINIO_SITE_NAME": {
+            "type": "string",
+            "enum": [
+                "cal-rack0",
+                "sfo-rack-1",
+                "INVALID"
+            ],
+            "description": "name for the site"
+        },
+        "MINIO_SITE_REGION": {
+            "type": "string",
+            "enum": [
+                "us-west-1",
+                "us-east-1",
+                "INVALID"
+            ],
+            "description": "name of the location of the server"
+        },
+        "MINIO_STORAGE_CLASS_STANDARD": {
+            "type": "string",
+            "enum": [
+                "EC:4",
+                "EC:0",
+                "EC:2"
+            ],
+            "description": "set the parity count for default standard storage class"
+        },
+        "MINIO_STORAGE_CLASS_RRS": {
+            "type": "string",
+            "enum": [
+                "EC:4",
+                "EC:0",
+                "EC:2"
+            ],
+            "description": "set the parity count for reduced redundancy storage class"
+        },
+        "MINIO_ETCD_ENDPOINTS*": {
+            "type": "string",
+            "enum": [
+                "http://localhost:2379, http://localhost:9000",
+                "http://localhost:9000",
+                "EC:2"
+            ],
+            "description": "comma separated list of etcd endpoints"
+        },
+        "MINIO_ETCD_PATH_PREFIX": {
+            "type": "string",
+            "enum": [
+                "customer1/",
+                "customer2/",
+                "INVALID"
+            ],
+            "description": "namespace prefix to isolate tenants"
+        },
+        "MINIO_ETCD_COREDNS_PATH": {
+            "type": "string",
+            "enum": [
+                "/skydns",
+                "",
+                "INVALID"
+            ],
+            "description": "shared bucket DNS records"
+        },
+        "MINIO_ETCD_CLIENT_CERT": {
+            "type": "string",
+            "enum": [
+                "test",
+                "",
+                "INVALID"
+            ],
+            "description": "client cert for mTLS authentication"
+        },
+        "MINIO_ETCD_CLIENT_CERT_KEY": {
+            "type": "string",
+            "enum": [
+                "test_key",
+                "",
+                "INVALID"
+            ],
+            "description": "client cert key for mTLS authentication"
+        },
+        "MINIO_API_REQUESTS_MAX": {
+            "type": "string",
+            "enum": [
+                "auto",
+                "1000",
+                "-1"
+            ],
+            "description": "set the maximum number of concurrent requests"
+        },
+        "MINIO_API_CLUSTER_DEADLINE": {
+            "type": "string",
+            "enum": [
+                "10s",
+                "24h",
+                "-1"
+            ],
+            "description": "set the deadline for cluster readiness check"
+        },
+        "MINIO_API_CORS_ALLOW_ORIGIN": {
+            "type": "string",
+            "enum": [
+                "*",
+                "",
+                "INVALID"
+            ],
+            "description": "set comma separated list of origins allowed for CORS requests"
+        },
+        "MINIO_API_REMOTE_TRANSPORT_DEADLINE": {
+            "type": "string",
+            "enum": [
+                "2h",
+                "24h",
+                "-1"
+            ],
+            "description": "set the deadline for API requests on remote transports while proxying between federated instances"
+        },
+        "MINIO_API_LIST_QUORUM": {
+            "type": "string",
+            "enum": [
+                "optimal",
+                "reduced",
+                "auto"
+            ],
+            "description": "set the acceptable quorum expected for list operations"
+        },
+        "MINIO_API_REPLICATION_PRIORITY": {
+            "type": "string",
+            "enum": [
+                "optimal",
+                "reduced",
+                "auto"
+            ],
+            "description": "set replication priority"
+        },
+        "MINIO_API_REPLICATION_MAX_WORKERS": {
+            "type": "string",
+            "enum": [
+                "500",
+                "100",
+                "-1"
+            ],
+            "description": "set the maximum number of replication workers"
+        },
+        "MINIO_API_TRANSITION_WORKERS": {
+            "type": "string",
+            "enum": [
+                "500",
+                "100",
+                "-1"
+            ],
+            "description": "set the number of transition workers"
+        },
+        "MINIO_API_STALE_UPLOADS_EXPIRY": {
+            "type": "string",
+            "enum": [
+                "24h",
+                "2h",
+                "-1"
+            ],
+            "description": "set to expire stale multipart uploads older than this values"
+        },
+        "MINIO_API_STALE_UPLOADS_CLEANUP_INTERVAL": {
+            "type": "string",
+            "enum": [
+                "6h",
+                "2h",
+                "-1"
+            ],
+            "description": "set to change intervals when stale multipart uploads are expired"
+        },
+        "MINIO_API_DELETE_CLEANUP_INTERVAL": {
+            "type": "string",
+            "enum": [
+                "5m",
+                "1m",
+                "-1"
+            ],
+            "description": "set to change intervals when deleted objects are permanently deleted from \".trash\" folder"
+        },
+        "MINIO_API_ODIRECT": {
+            "type": "string",
+            "enum": [
+                "on",
+                "off",
+                "INVALID"
+            ],
+            "description": "set to enable or disable O_DIRECT for writes under special conditions."
+        },
+        "MINIO_API_ROOT_ACCESS": {
+            "type": "string",
+            "enum": [
+                "on",
+                "off",
+                "INVALID"
+            ],
+            "description": "turn 'off' root credential access for all API calls including s3, admin operations"
+        },
+        "MINIO_API_SYNC_EVENTS": {
+            "type": "string",
+            "enum": [
+                "on",
+                "off",
+                "INVALID"
+            ],
+            "description": "set to enable synchronous bucket notifications"
+        },
+        "MINIO_API_OBJECT_MAX_VERSIONS": {
+            "type": "string",
+            "enum": [
+                "9223372036854775806",
+                "1000",
+                "-1"
+            ],
+            "description": "set to enable synchronous bucket notifications"
+        }
+    
+    }
+}

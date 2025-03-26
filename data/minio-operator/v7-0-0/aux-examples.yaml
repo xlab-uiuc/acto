@@ -1,0 +1,986 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+commonAnnotations:
+  operator.min.io/authors: MinIO, Inc.
+  operator.min.io/license: AGPLv3
+  operator.min.io/support: https://subnet.min.io
+kind: Kustomization
+resources:
+- resources/base/namespace.yaml
+- resources/base/service-account.yaml
+- resources/base/cluster-role.yaml
+- resources/base/cluster-role-binding.yaml
+- resources/base/crds/
+- resources/base/service.yaml
+- resources/base/deployment.yaml
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+commonAnnotations:
+  operator.min.io/authors: MinIO, Inc.
+  operator.min.io/license: AGPLv3
+  operator.min.io/support: https://subnet.min.io
+  operator.min.io/version: v7.0.0
+commonLabels:
+  app.kubernetes.io/name: operator
+kind: Kustomization
+resources:
+- base/namespace.yaml
+- base/service-account.yaml
+- base/cluster-role.yaml
+- base/cluster-role-binding.yaml
+- base/crds/
+- base/service.yaml
+- base/deployment.yaml
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: minio-operator-role
+rules:
+- apiGroups:
+  - apiextensions.k8s.io
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - get
+  - update
+- apiGroups:
+  - ''
+  resources:
+  - persistentvolumeclaims
+  verbs:
+  - get
+  - update
+  - list
+- apiGroups:
+  - ''
+  resources:
+  - namespaces
+  - nodes
+  verbs:
+  - get
+  - watch
+  - list
+- apiGroups:
+  - ''
+  resources:
+  - pods
+  - services
+  - events
+  - configmaps
+  verbs:
+  - get
+  - watch
+  - create
+  - list
+  - delete
+  - deletecollection
+  - update
+  - patch
+- apiGroups:
+  - ''
+  resources:
+  - secrets
+  verbs:
+  - get
+  - watch
+  - create
+  - update
+  - list
+  - delete
+  - deletecollection
+- apiGroups:
+  - ''
+  resources:
+  - serviceaccounts
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - roles
+  - rolebindings
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - statefulsets
+  - deployments
+  - deployments/finalizers
+  verbs:
+  - get
+  - create
+  - list
+  - patch
+  - watch
+  - update
+  - delete
+- apiGroups:
+  - batch
+  resources:
+  - jobs
+  verbs:
+  - get
+  - create
+  - list
+  - patch
+  - watch
+  - update
+  - delete
+- apiGroups:
+  - certificates.k8s.io
+  resources:
+  - certificatesigningrequests
+  - certificatesigningrequests/approval
+  - certificatesigningrequests/status
+  verbs:
+  - update
+  - create
+  - get
+  - delete
+  - list
+- apiGroups:
+  - certificates.k8s.io
+  resourceNames:
+  - kubernetes.io/legacy-unknown
+  - kubernetes.io/kube-apiserver-client
+  - kubernetes.io/kubelet-serving
+  - beta.eks.amazonaws.com/app-serving
+  resources:
+  - signers
+  verbs:
+  - approve
+  - sign
+- apiGroups:
+  - authentication.k8s.io
+  resources:
+  - tokenreviews
+  verbs:
+  - create
+- apiGroups:
+  - minio.min.io
+  - sts.min.io
+  - job.min.io
+  resources:
+  - '*'
+  verbs:
+  - '*'
+- apiGroups:
+  - min.io
+  resources:
+  - '*'
+  verbs:
+  - '*'
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - prometheuses
+  verbs:
+  - '*'
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - get
+  - update
+  - create
+- apiGroups:
+  - policy
+  resources:
+  - poddisruptionbudgets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - deletecollection
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- crds/
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/audit-version: latest
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: latest
+    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/warn-version: latest
+  name: minio-operator
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: minio-operator
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: minio-operator-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: minio-operator-role
+subjects:
+- kind: ServiceAccount
+  name: minio-operator
+  namespace: default
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- minio.min.io_tenants.yaml
+- sts.min.io_policybindings.yaml
+---
+$patch: delete
+apiVersion: v1
+kind: Secret
+metadata:
+  name: storage-user
+type: Opaque
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patches:
+- path: delete-namespace.yaml
+- path: delete-storage-user.yaml
+- path: delete-tenant-config.yaml
+resources:
+- ../examples/kustomization/tenant-openshift/
+---
+$patch: delete
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: minio-tenant
+---
+$patch: delete
+apiVersion: v1
+kind: Secret
+metadata:
+  name: storage-configuration
+type: Opaque
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: kes-configuration
+stringData:
+  server-config.yaml: "version: v1\naddress: 0.0.0.0:7373 # The pseudo address 0.0.0.0\
+    \ refers to all network interfaces \nadmin:\n  identity: ${MINIO_KES_IDENTITY}\n\
+    tls:\n  key: /tmp/kes/server.key\n  cert: /tmp/kes/server.crt\ncache:\n  expiry:\n\
+    \    any: 5m0s\n    unused: 20s\nlog:\n  error: \"on\"\n  audit: \"off\"\nkeystore:\n\
+    \  vault:\n    endpoint: http://vault.default.svc.cluster.local:8200\n    prefix:\
+    \ my-minio\n    approle:\n      id: ROLE_ID\n      secret: SECRET_ID"
+type: Opaque
+---
+apiVersion: kind.x-k8s.io/v1alpha4
+kind: Cluster
+nodes:
+- role: control-plane
+- role: worker
+- role: worker
+- role: worker
+- role: worker
+---
+apiVersion: kind.x-k8s.io/v1alpha4
+kind: Cluster
+nodes:
+- image: kindest/node:v1.29.10
+  role: control-plane
+- image: kindest/node:v1.29.10
+  role: worker
+- image: kindest/node:v1.29.10
+  role: worker
+- image: kindest/node:v1.29.10
+  role: worker
+- image: kindest/node:v1.29.10
+  role: worker
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ../../examples/kustomization/tenant-lite
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: ubuntu
+  name: ubuntu-pod
+spec:
+  containers:
+  - command:
+    - sleep
+    - '604800'
+    image: ubuntu
+    imagePullPolicy: IfNotPresent
+    name: ubuntu
+  restartPolicy: Always
+---
+apiVersion: kind.x-k8s.io/v1alpha4
+kind: Cluster
+networking:
+  apiServerAddress: 127.0.0.1
+  apiServerPort: 6443
+nodes:
+- extraPortMappings:
+  - containerPort: 30080
+    hostPort: 30080
+    listenAddress: 127.0.0.1
+    protocol: TCP
+  role: control-plane
+- extraPortMappings:
+  - containerPort: 30081
+    hostPort: 30081
+    listenAddress: 127.0.0.1
+    protocol: TCP
+  role: worker
+- extraPortMappings:
+  - containerPort: 30082
+    hostPort: 30082
+    listenAddress: 127.0.0.1
+    protocol: TCP
+  role: worker
+- extraPortMappings:
+  - containerPort: 30083
+    hostPort: 30083
+    listenAddress: 127.0.0.1
+    protocol: TCP
+  role: worker
+- extraPortMappings:
+  - containerPort: 30084
+    hostPort: 30084
+    listenAddress: 127.0.0.1
+    protocol: TCP
+  role: worker
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: admin-mc
+  name: admin-mc
+spec:
+  containers:
+  - command:
+    - bash
+    - -c
+    - until (mc admin info myminio/ ); do echo 'waiting... for 5secs' && sleep 5;
+      done
+    env:
+    - name: MC_HOST_myminio
+      value: https://minio:minio123@minio.tenant-certmanager.svc.cluster.local
+    image: quay.io/minio/mc
+    name: admin-mc
+    volumeMounts:
+    - mountPath: /root/.mc/certs/CAs/myminio.crt
+      name: certmanager-ca
+      subPath: tls.crt
+  dnsPolicy: ClusterFirst
+  restartPolicy: Never
+  volumes:
+  - name: certmanager-ca
+    secret:
+      items:
+      - key: tls.crt
+        mode: 422
+        path: tls.crt
+      secretName: myminio-tls
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patches:
+- path: deployment.yaml
+resources:
+- ../../../examples/kustomization/operator-certmanager
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patches:
+- path: deployment.yaml
+resources:
+- ../../resources
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+bases:
+- ../../../resources
+kind: Kustomization
+patches:
+- path: deployment.yaml
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ../base
+- nodeport-service.yaml
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patches:
+- path: tenant.yaml
+resources:
+- auditlog-sa.yaml
+- prometheus-sa.yaml
+- minio-sa.yaml
+- ../base
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patches:
+- path: tenant.yaml
+resources:
+- ../base
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patches:
+- path: tenant.yaml
+resources:
+- tenant-certmanager-issuer.yaml
+- tenant-certmanager-ca-certificate.yaml
+- tenant-certmanager-myminio-certificate.yaml
+- ../base
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: tenant-certmanager-issuer
+spec:
+  ca:
+    secretName: tenant-certmanager-ca-tls
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: tenant-certmanager-ca-certificate
+spec:
+  commonName: tenant-certmanager-ca
+  duration: 70128h
+  isCA: true
+  issuerRef:
+    group: cert-manager.io
+    kind: ClusterIssuer
+    name: selfsigned-root
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  secretName: tenant-certmanager-ca-tls
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: tenant-certmanager-cert
+spec:
+  dnsNames:
+  - minio.tenant-certmanager
+  - minio.tenant-certmanager.svc
+  - minio.tenant-certmanager.svc.cluster.local
+  - '*.myminio-hl.tenant-certmanager.svc.cluster.local'
+  - '*.tenant-certmanager.svc.cluster.local'
+  - '*.myminio.tenant-certmanager.svc.cluster.local'
+  issuerRef:
+    name: tenant-certmanager-issuer
+  secretName: myminio-tls
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: selfsigned-root
+spec:
+  selfSigned: {}
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- selfsigned-root-clusterissuer.yaml
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patches:
+- path: tenant.yaml
+resources:
+- ../base
+- kes-configuration-secret.yaml
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: kes-configuration
+stringData:
+  server-config.yaml: "version: v1\naddress: :7373\nadmin:\n  identity: _ # Effectively\
+    \ disabled since no root identity necessary.\ntls:\n  key: /tmp/kes/server.key\
+    \   # Path to the TLS private key\n  cert: /tmp/kes/server.crt # Path to the TLS\
+    \ certificate\n  proxy:\n    identities: []\n    header:\n      cert: X-Tls-Client-Cert\n\
+    policy:\n  my-policy:\n    allow:\n    - /v1/api\n    - /v1/key/create/*\n   \
+    \ - /v1/key/generate/*\n    - /v1/key/decrypt/*\n    - /v1/key/bulk/decrypt/*\n\
+    \    identities:\n    - ${MINIO_KES_IDENTITY}\ncache:\n  expiry:\n    any: 5m0s\n\
+    \    unused: 20s\nlog:\n  error: on\n  audit: off\nkeystore:\n  ## KES configured\
+    \ with fs (File System mode) doesnt work in Kubernetes environments and it's not\
+    \ recommended\n  ## use a real KMS\n  # fs:\n  #   path: \"./keys\" # Path to\
+    \ directory. Keys will be stored as files. Not Recommended for Production.\n \
+    \ vault:\n    endpoint: \"http://vault.default.svc.cluster.local:8200\" # The\
+    \ Vault endpoint\n    namespace: \"\" # An optional Vault namespace. See: https://www.vaultproject.io/docs/enterprise/namespaces/index.html\n\
+    \    prefix: \"my-minio\"    # An optional K/V prefix. The server will store keys\
+    \ under this prefix.\n    approle:    # AppRole credentials. See: https://www.vaultproject.io/docs/auth/approle.html\n\
+    \      id: \"<YOUR APPROLE ID HERE>\"      # Your AppRole Role ID\n      secret:\
+    \ \"<YOUR APPROLE SECRET ID HERE>\"  # Your AppRole Secret ID\n      retry: 15s\
+    \  # Duration until the server tries to re-authenticate after connection loss.\n\
+    \    tls:        # The Vault client TLS configuration for mTLS authentication\
+    \ and certificate verification\n      key: \"\"     # Path to the TLS client private\
+    \ key for mTLS authentication to Vault\n      cert: \"\"    # Path to the TLS\
+    \ client certificate for mTLS authentication to Vault\n      ca: \"\"      # Path\
+    \ to one or multiple PEM root CA certificates\n    status:     # Vault status\
+    \ configuration. The server will periodically reach out to Vault to check its\
+    \ status.\n      ping: 10s   # Duration until the server checks Vault's status\
+    \ again.\n  # aws:\n  #   # The AWS SecretsManager key store. The server will\
+    \ store\n  #   # secret keys at the AWS SecretsManager encrypted with\n  #   #\
+    \ AWS-KMS. See: https://aws.amazon.com/secrets-manager\n  #   secretsmanager:\n\
+    \  #     endpoint: \"\"   # The AWS SecretsManager endpoint      - e.g.: secretsmanager.us-east-2.amazonaws.com\n\
+    \  #     region: \"\"     # The AWS region of the SecretsManager - e.g.: us-east-2\n\
+    \  #     kmskey: \"\"     # The AWS-KMS key ID used to en/decrypt secrets at the\
+    \ SecretsManager. By default (if not set) the default AWS-KMS key will be used.\n\
+    \  #     credentials:   # The AWS credentials for accessing secrets at the AWS\
+    \ SecretsManager.\n  #       accesskey: \"\"  # Your AWS Access Key\n  #     \
+    \  secretkey: \"\"  # Your AWS Secret Key\n  #       token: \"\"      # Your AWS\
+    \ session token (usually optional)\n  # gcp:\n  #   secretmanager:\n  #     #\
+    \ The project ID is a unique, user-assigned ID that can be used by Google APIs.\n\
+    \  #     # The project ID must be a unique string of 6 to 30 lowercase letters,\
+    \ digits, or hyphens.\n  #     # It must start with a letter, and cannot have\
+    \ a trailing hyphen.\n  #     # See: https://cloud.google.com/resource-manager/docs/creating-managing-projects#before_you_begin\n\
+    \  #     project_id: <PROJECT_ID>\n  #     # An optional GCP SecretManager endpoint.\
+    \ If not set, defaults to: secretmanager.googleapis.com:443\n  #     endpoint:\
+    \ \"\"\n  #     # An optional list of GCP OAuth2 scopes. For a list of GCP scopes\
+    \ refer to: https://developers.google.com/identity/protocols/oauth2/scopes\n \
+    \ #     # If not set, the GCP default scopes are used.\n  #     scopes: \n  #\
+    \     - \"https://www.googleapis.com/auth/cloud-platform\"\n  #     # The credentials\
+    \ for your GCP service account. If running inside GCP (app engine) the credentials\n\
+    \  #     # can be empty and will be fetched from the app engine environment automatically.\n\
+    \  #     credentials:\n  #       client_email:   \"\" # The service account email\
+    \                          - e.g. <account>@<project-ID>.iam.gserviceaccount.com\n\
+    \  #       client_id:      \"\" # The service account client ID              \
+    \        - e.g. 113491952745362495489\"\n  #       private_key_id: \"\" # The\
+    \ service account private key                    - e.g. 381514ebd3cf45a64ca8adc561f0ce28fca5ec06\n\
+    \  #       private_key:    \"\"\n  #     ## KES configured with fs (File System\
+    \ mode) doesnt work in Kubernetes environments and it's not recommended"
+type: Opaque
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patches:
+- path: tenant.yaml
+resources:
+- ../base
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patches:
+- path: tenant.yaml
+resources:
+- ../base
+- kes-configuration-secret.yaml
+- gcp-default-creds-secret.yaml
+- kes-service-account.yaml
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: gcp-default-creds
+stringData:
+  config: "{\n  \"type\": \"external_account\",\n  \"audience\": \"identitynamespace:<WORKLOAD_IDENTITY_POOL>:<IDENTITY_PROVIDER>\"\
+    ,\n  \"service_account_impersonation_url\": \"https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/<GSA_NAME>@<GSA_PROJECT_ID>.iam.gserviceaccount.com:generateAccessToken\"\
+    ,\n  \"subject_token_type\": \"urn:ietf:params:oauth:token-type:jwt\",\n  \"token_url\"\
+    : \"https://sts.googleapis.com/v1/token\",\n  \"credential_source\": {\n    \"\
+    file\": \"/var/run/secrets/tokens/gcp-ksa/token\"\n  }\n}\n"
+type: Opaque
+---
+apiVersion: v1
+automountServiceAccountToken: false
+kind: ServiceAccount
+metadata:
+  name: <SERVICE_ACCOUNT>
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: kes-configuration
+stringData:
+  server-config.yaml: "version: v1\naddress: :7373\nadmin:\n  identity: _ # Effectively\
+    \ disabled since no root identity necessary.\ntls:\n  key: /tmp/kes/server.key\
+    \   # Path to the TLS private key\n  cert: /tmp/kes/server.crt # Path to the TLS\
+    \ certificate\n  proxy:\n    identities: []\n    header:\n      cert: X-Tls-Client-Cert\n\
+    policy:\n  my-policy:\n    allow:\n    - /v1/api\n    - /v1/key/create/*\n   \
+    \ - /v1/key/import/*\n    - /v1/key/delete/*\n    - /v1/key/list/*\n    - /v1/key/generate/*\n\
+    \    - /v1/key/decrypt/*\n    - /v1/key/encrypt/*\n    - /v1/key/bulk/decrypt/*\n\
+    \    - /v1/status\n    - /v1/api\n    - /v1/metrics\n    - /v1/log/audit\n   \
+    \ - /v1/log/error\n    identities:\n    - ${MINIO_KES_IDENTITY}\ncache:\n  expiry:\n\
+    \    any: 5m0s\n    unused: 20s\nlog:\n  error: on\n  audit: on\nkeystore:\n \
+    \ gcp:\n    secretmanager:\n      # The project ID is a unique, user-assigned\
+    \ ID that can be used by Google APIs.\n      # The project ID must be a unique\
+    \ string of 6 to 30 lowercase letters, digits, or hyphens.\n      # It must start\
+    \ with a letter, and cannot have a trailing hyphen.\n      # See: https://cloud.google.com/resource-manager/docs/creating-managing-projects#before_you_begin\n\
+    \      project_id: <PROJECT_ID>\"\n      # An optional GCP SecretManager endpoint.\
+    \ If not set, defaults to: secretmanager.googleapis.com:443\n      endpoint: \"\
+    \"\n      # An optional list of GCP OAuth2 scopes. For a list of GCP scopes refer\
+    \ to: https://developers.google.com/identity/protocols/oauth2/scopes\n      #\
+    \ If not set, the GCP default scopes are used.\n      scopes: \n      - \"https://www.googleapis.com/auth/cloud-platform\"\
+    \n      # The credentials for your GCP service account. If running inside GCP\
+    \ (app engine) the credentials\n      # can be empty and will be fetched from\
+    \ the app engine environment automatically.\n      credentials:\n        client_email:\
+    \   \"\" # The service account email                          - e.g. <account>@<project-ID>.iam.gserviceaccount.com\n\
+    \        client_id:      \"\" # The service account client ID                \
+    \      - e.g. 113491952745362495489\"\n        private_key_id: \"\" # The service\
+    \ account private key                    - e.g. 381514ebd3cf45a64ca8adc561f0ce28fca5ec06\n\
+    \        private_key:    \"\"\n      ## KES configured with fs (File System mode)\
+    \ doesnt work in Kubernetes environments and it's not recommended"
+type: Opaque
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- sts-app
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ../../tenant-lite
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+images:
+- name: miniodev/operator-sts-example
+  newTag: aws-sdk-python
+kind: Kustomization
+patches:
+- patch: "- op: replace\n  path: /metadata/name\n  value: sts-client-example-aws-sdk-python-job"
+  target:
+    group: batch
+    kind: Job
+    name: sts-example-job
+    version: v1
+resources:
+- ../../../sts-app
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+images:
+- name: miniodev/operator-sts-example
+  newTag: minio-sdk-go
+kind: Kustomization
+patches:
+- patch: "- op: replace\n  path: /metadata/name\n  value: sts-client-example-minio-sdk-go-job"
+  target:
+    group: batch
+    kind: Job
+    name: sts-example-job
+    version: v1
+resources:
+- ../../../sts-app
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+images:
+- name: miniodev/operator-sts-example
+  newTag: minio-sdk-python
+kind: Kustomization
+patches:
+- patch: "- op: replace\n  path: /metadata/name\n  value: sts-client-example-minio-sdk-python-job"
+  target:
+    group: batch
+    kind: Job
+    name: sts-example-job
+    version: v1
+resources:
+- ../../../sts-app
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+images:
+- name: miniodev/operator-sts-example
+  newTag: minio-sdk-java
+kind: Kustomization
+patches:
+- patch: "- op: replace\n  path: /metadata/name\n  value: sts-client-example-minio-sdk-java-job"
+  target:
+    group: batch
+    kind: Job
+    name: sts-example-job
+    version: v1
+resources:
+- ../../../sts-app
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+images:
+- name: miniodev/operator-sts-example
+  newTag: minio-sdk-dotnet
+kind: Kustomization
+patches:
+- patch: "- op: replace\n  path: /metadata/name\n  value: sts-client-example-minio-sdk-dotnet-job"
+  target:
+    group: batch
+    kind: Job
+    name: sts-example-job
+    version: v1
+resources:
+- ../../../sts-app
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+images:
+- name: miniodev/operator-sts-example
+  newTag: minio-sdk-javascript
+kind: Kustomization
+patches:
+- patch: "- op: replace\n  path: /metadata/name\n  value: sts-client-example-minio-sdk-javascript-job"
+  target:
+    group: batch
+    kind: Job
+    name: sts-example-job
+    version: v1
+resources:
+- ../../../sts-app
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ../../tenant-certmanager
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- policy-binding.yaml
+- sts-client.yaml
+---
+apiVersion: sts.min.io/v1beta1
+kind: PolicyBinding
+metadata:
+  name: binding-1
+spec:
+  application:
+    namespace: sts-client
+    serviceaccount: stsclient-sa
+  policies:
+  - test-bucket-rw
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mc-job-sa
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- mc-job-sa.yaml
+- mc-job-policy-binding.yaml
+- mc-job-setup-bucket.yaml
+---
+apiVersion: sts.min.io/v1beta1
+kind: PolicyBinding
+metadata:
+  name: mc-job-binding
+spec:
+  application:
+    namespace: minio-tenant-1
+    serviceaccount: mc-job-sa
+  policies:
+  - consoleAdmin
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patches:
+- path: operator-deployment.yaml
+resources:
+- ../cert-manager
+- ../../../resources
+- operator-ca-tls-secret.yaml
+- sts-tls-certificate.yaml
+- minio-operator-ca-issuer.yaml
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: minio-operator-ca-certificate
+spec:
+  commonName: operator
+  duration: 70128h
+  isCA: true
+  issuerRef:
+    group: cert-manager.io
+    kind: ClusterIssuer
+    name: selfsigned-root
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  secretName: operator-ca-tls
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: sts-certmanager-cert
+spec:
+  dnsNames:
+  - sts
+  - sts.minio-operator.svc
+  - sts.minio-operator.svc.cluster.local
+  issuerRef:
+    name: minio-operator-ca-issuer
+  secretName: sts-tls
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: minio-operator-ca-issuer
+spec:
+  ca:
+    secretName: operator-ca-tls
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patches:
+- path: tenant.yaml
+resources:
+- ../base
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/proxy-body-size: 5t
+  name: tenant-ingress
+spec:
+  rules:
+  - host: minio.example.com
+    http:
+      paths:
+      - backend:
+          service:
+            name: minio
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
+  - host: console.example.com
+    http:
+      paths:
+      - backend:
+          service:
+            name: myminio-console
+            port:
+              number: 9090
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - minio.example.com
+    - console.example.com
+    secretName: tenant-tls
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patches:
+- path: tenant.yaml
+resources:
+- ingress.yaml
+- ../base
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patches:
+- path: tenant.yaml
+- path: storage-user.yaml
+resources:
+- ../base
+- openldap.yaml
+---
+apiVersion: v1
+data:
+  CONSOLE_ACCESS_KEY: dWlkPWRpbGxvbixvdT1wZW9wbGUsb3U9c3dlbmdnLGRjPW1pbixkYz1pbw==
+  CONSOLE_SECRET_KEY: ''
+kind: Secret
+metadata:
+  name: storage-user
+type: Opaque
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- namespace.yaml
+- tenant-config.yaml
+- storage-user.yaml
+- tenant.yaml
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: storage-configuration
+stringData:
+  config.env: 'export MINIO_ROOT_USER="minio"
+
+    export MINIO_ROOT_PASSWORD="minio123"
+
+    export MINIO_STORAGE_CLASS_STANDARD="EC:2"
+
+    export MINIO_BROWSER="on"'
+type: Opaque
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: minio-tenant
+---
+apiVersion: v1
+data:
+  CONSOLE_ACCESS_KEY: Y29uc29sZQ==
+  CONSOLE_SECRET_KEY: Y29uc29sZTEyMw==
+kind: Secret
+metadata:
+  name: storage-user
+type: Opaque
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patches:
+- path: tenant.yaml
+resources:
+- ../cert-manager
+- myminio-kes-certificate.yaml
+- vault.yaml
+- ../tenant-kes-encryption
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: tenant-certmanager-2-cert
+spec:
+  dnsNames:
+  - minio.tenant-certmanager
+  - minio.tenant-certmanager.svc
+  - '*.tenant-certmanager.svc.cluster.local'
+  - '*.myminio.tenant-certmanager.svc.cluster.local'
+  - '*.myminio-hl.tenant-certmanager.svc.cluster.local'
+  issuerRef:
+    name: tenant-certmanager-issuer
+  secretName: tenant-certmanager-2-tls
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patches:
+- path: tenant.yaml
+resources:
+- ../base

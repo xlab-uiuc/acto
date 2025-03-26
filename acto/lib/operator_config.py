@@ -118,6 +118,7 @@ class DeployConfig(pydantic.BaseModel, extra="forbid"):
 
 class AnalysisConfig(pydantic.BaseModel, extra="forbid"):
     "Configuration for static analysis"
+
     github_link: str = pydantic.Field(
         description="HTTPS URL for cloning the operator repo"
     )
@@ -180,6 +181,11 @@ class OperatorConfig(pydantic.BaseModel, extra="forbid"):
     custom_module: Optional[str] = pydantic.Field(
         default=None,
         description="Path to the custom module, in the Python module path format",
+    )
+    custom_runner: Optional[str] = pydantic.Field(
+        default=None,
+        description="Path to the custom runner"
+        " file, in the Python module path format",
     )
     crd_name: Optional[str] = pydantic.Field(
         default=None,
