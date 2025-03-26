@@ -1,0 +1,41 @@
+{
+    "deploy": {
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/solr-operator/all-with-dependencies.yaml",
+                    "namespace": null
+                }
+            }
+        ]
+    },
+    "crd_name": "tidbclusters.pingcap.com",
+    "seed_custom_resource": "data/tidb-operator/v1-6-0/cr.yaml",
+    "example_dir": "data/tidb-operator/v1-6-0/examples",
+    "wait_time": 120,
+    "custom_module": "data.tidb-operator.v1-6-0.custom_mapping",
+    "diff_ignore_fields": [
+        "\\['tidb\\.pingcap\\.com\\\/cluster\\-id'\\]",
+        "\\['tidb\\.pingcap\\.com\\\/member\\-id'\\]",
+        "\\['tidb\\.pingcap\\.com\\\/store\\-id'\\]",
+        "\\['tidb\\.pingcap\\.com\\\/owner\\-generation'\\]"
+    ],
+    "focus_fields": [
+        ["spec", "solrAddressability", "CommonServicePort"],
+        ["spec", "solrAddressability", "podPort"],
+        ["spec", "solrAddressability", "external", "nodePortOverride"],
+        ["spec", "solrAddressability", "external", "hideNodes"],
+        ["spec", "solrAddressability", "external", "method"],
+        ["spec", "customSolrKubeOptions", "podOptions", "envVars"],
+        ["spec", "backupRepositories"],
+        ["spec", "solrJavaMem"],
+        ["spec", "solrLogLevel"],
+        ["spec", "solrGCTune"],
+        ["spec", "solrOpts"],
+        ["spec", "solrZkOpts"],
+        ["spec", "solrModules"], 
+        ["spec", "additionalLibs"], 
+        ["spec", "zookeeperConnectionInfo", "acl"],
+        ["spec", "zookeeperConnectionInfo", "readOnlyAcl"]
+    ],
+}
