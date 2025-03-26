@@ -1,0 +1,32 @@
+{
+    "deploy": {
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/mongodb_operator_onboarding_task/operator.yaml",
+                    "operator": true
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/mongodb_operator_onboarding_task/rbac.yaml"
+
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/mongodb_operator_onboarding_task/crd.yaml"
+
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/mongodb_operator_onboarding_task/secret.yaml"
+
+                }
+            }
+        ]
+    },
+    "crd_name": null,
+    "seed_custom_resource": "data/mongodb_operator_onboarding_task/cr.yaml"
+}
