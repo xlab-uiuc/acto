@@ -2,6 +2,12 @@
     "deploy": {
         "steps": [
             {
+                "apply": {
+                    "file": "data/solr-operator/all-with-dependencies.yaml",
+                    "namespace": null
+                }
+            },
+            {
                 "helm_install": {
                     "release_name": "solr-operator",
                     "chart": "solr-operator",
@@ -10,25 +16,12 @@
                     "operator": true,
                     "operator_deployment_name": "solr-operator",
                     "operator_container_name": "solr-operator"
-                },
-                "apply": {
-                    "file": "data/solr-operator/all-with-dependencies.yaml",
-                    "namespace": null
                 }
             }
         ]
     },
-    "crd_name": "tidbclusters.pingcap.com",
-    "seed_custom_resource": "data/tidb-operator/v1-6-0/cr.yaml",
-    "example_dir": "data/tidb-operator/v1-6-0/examples",
-    "wait_time": 120,
-    "custom_module": "data.tidb-operator.v1-6-0.custom_mapping",
-    "diff_ignore_fields": [
-        "\\['tidb\\.pingcap\\.com\\\/cluster\\-id'\\]",
-        "\\['tidb\\.pingcap\\.com\\\/member\\-id'\\]",
-        "\\['tidb\\.pingcap\\.com\\\/store\\-id'\\]",
-        "\\['tidb\\.pingcap\\.com\\\/owner\\-generation'\\]"
-    ],
+    "crd_name": "solrclouds.solr.apache.org",
+    "seed_custom_resource": "data/solr-operator/cr.yaml",
     "focus_fields": [
         ["spec", "solrAddressability", "CommonServicePort"],
         ["spec", "solrAddressability", "podPort"],
@@ -42,8 +35,8 @@
         ["spec", "solrGCTune"],
         ["spec", "solrOpts"],
         ["spec", "solrZkOpts"],
-        ["spec", "solrModules"], 
-        ["spec", "additionalLibs"], 
+        ["spec", "solrModules"],
+        ["spec", "additionalLibs"],
         ["spec", "zookeeperConnectionInfo", "acl"],
         ["spec", "zookeeperConnectionInfo", "readOnlyAcl"]
     ]
