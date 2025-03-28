@@ -3,7 +3,6 @@ import re
 from typing import Callable, Optional
 
 import kubernetes
-import yaml
 
 # pylint: disable=import-error
 from acto.checker.checker import CheckerInterface
@@ -36,10 +35,7 @@ class KafkaConfigChecker(CheckerInterface):
             "kafka" in snapshot.input_cr["spec"]
             and "config" in snapshot.input_cr["spec"]["kafka"]
         ):
-            kafka_config = yaml.load(
-                snapshot.input_cr["spec"]["kafka"]["config"],
-                Loader=yaml.FullLoader,
-            )
+            kafka_config = snapshot.input_cr["spec"]["kafka"]["config"]
         else:
             return None
 
