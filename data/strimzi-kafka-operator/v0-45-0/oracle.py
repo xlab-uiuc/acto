@@ -48,7 +48,7 @@ class KafkaConfigChecker(CheckerInterface):
                 "./bin/kafka-configs.sh",
                 "--describe",
                 "--bootstrap-server",
-                "localhost:9091",
+                "localhost:9094",
                 "--entity-type",
                 "brokers",
                 "--entity-name",
