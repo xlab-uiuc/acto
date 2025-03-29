@@ -58,7 +58,7 @@ class KafkaConfigChecker(CheckerInterface):
                 "-c",
                 "bash -c 'echo \"security.protocol=SASL_PLAINTEXT\n"
                 "sasl.mechanism=SCRAM-SHA-512\n"
-                f"\sasl.jaas.config={jaas_config}\" > /tmp/client.properties'",
+                f"sasl.jaas.config={jaas_config}\" > /tmp/client.properties'",
             ],
             capture_output=True,
             text=True,
