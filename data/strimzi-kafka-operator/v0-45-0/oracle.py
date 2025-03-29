@@ -43,12 +43,12 @@ class KafkaConfigChecker(CheckerInterface):
 
         p = self.oracle_handle.kubectl_client.exec(
             pod_name,
-            "acto-namespace",
+            self.oracle_handle.namespace,
             [
                 "./bin/kafka-configs.sh",
                 "--describe",
                 "--bootstrap-server",
-                "localhost:9092",
+                "localhost:9091",
                 "--entity-type",
                 "brokers",
                 "--entity-name",
@@ -59,7 +59,7 @@ class KafkaConfigChecker(CheckerInterface):
             text=True,
         )
         if p.returncode != 0:
-            return OracleResult(message="Kafka config check failed")
+            return OracleResult(message="Failed to get Kafka config for check")
 
         lines = p.stdout.split("\n")[1:]
         runtime_config = {}
