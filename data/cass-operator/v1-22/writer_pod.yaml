@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: cassandra-writer
+  labels:
+    acto/tag: custom-oracle
+spec:
+  containers:
+    - name: cassandra-writer
+      image: ghcr.io/xlab-uiuc/cassandra-writer:v1
+      imagePullPolicy: IfNotPresent
+      env:
+        - name: CASSANDRA_HOST
+          value: "development-test-cluster-service.cass-operator.svc.cluster.local"
+        - name: CASSANDRA_PORT
+          value: "9042"
+        - name: CASSANDRA_USER
+          valueFrom:
+            secretKeyRef:
+              name: development-superuser
+              key: username
+        - name: CASSANDRA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: development-superuser
+              key: password

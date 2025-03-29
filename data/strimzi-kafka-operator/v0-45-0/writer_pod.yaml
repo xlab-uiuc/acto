@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kafka-writer
+spec:
+  containers:
+    - name: kafka-writer
+      image: ghcr.io/xlab-uiuc/kafka-writer:v1
+      imagePullPolicy: Always
+      env:
+        - name: KAFKA_HOST
+          value: "test-cluster-kafka-bootstrap.acto-namespace.svc.cluster.local"
+        - name: KAFKA_PORT
+          value: "9092"
+        - name: KAFKA_USER
+          value: "my-user"
+        - name: KAFKA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: my-user
+              key: password
+        - name: KAFKA_TOPIC
+          value: "my-topic"

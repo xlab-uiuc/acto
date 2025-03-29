@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mongodb-writer
+spec:
+  containers:
+    - name: mongodb-writer
+      image: ghcr.io/xlab-uiuc/mongodb-writer:v1
+      imagePullPolicy: IfNotPresent
+      env:
+        - name: MONGO_HOST
+          value: "test-cluster-mongos.acto-namespace.svc.cluster.local"
+        - name: MONGO_PORT
+          value: "27017"
+        - name: MONGO_USER
+          valueFrom:
+            secretKeyRef:
+              name: internal-test-cluster-users
+              key: MONGODB_DATABASE_ADMIN_USER
+        - name: MONGO_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: internal-test-cluster-users
+              key: MONGODB_DATABASE_ADMIN_PASSWORD

@@ -1,7 +1,7 @@
 apiVersion: psmdb.percona.com/v1
 kind: PerconaServerMongoDB
 metadata:
-  name: my-cluster-name
+  name: test-cluster
 spec:
   crVersion: 1.16.0
   image: percona/percona-server-mongodb:7.0.8-5
@@ -148,7 +148,7 @@ spec:
               storage: 3Gi
 
     mongos:
-      size: 3
+      size: 2
       affinity:
         antiAffinityTopologyKey: "kubernetes.io/hostname"
       podDisruptionBudget:
