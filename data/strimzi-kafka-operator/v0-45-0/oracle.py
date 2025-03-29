@@ -71,6 +71,11 @@ class KafkaConfigChecker(CheckerInterface):
             pod_name,
             self.oracle_handle.namespace,
             [
+                "echo",
+                '"security.protocol=SASL_PLAINTEXT\n'
+                f'sasl.mechanism=SCRAM-SHA-512\n\sasl.jaas.config={jaas_config}"',
+                ">",
+                "/tmp/client.properties;",
                 "./bin/kafka-configs.sh",
                 "--describe",
                 "--bootstrap-server",
