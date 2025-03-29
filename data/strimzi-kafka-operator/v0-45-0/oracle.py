@@ -63,6 +63,9 @@ class KafkaConfigChecker(CheckerInterface):
             capture_output=True,
             text=True,
         )
+        if p.returncode != 0:
+            logger.error("Failed to create client.properties%s", p.stderr)
+            return OracleResult(message="Failed to create client.properties")
 
         p = self.oracle_handle.kubectl_client.exec(
             pod_name,
@@ -84,6 +87,7 @@ class KafkaConfigChecker(CheckerInterface):
             text=True,
         )
         if p.returncode != 0:
+            logger.error("Failed to get Kafka config%s", p.stderr)
             return OracleResult(message="Failed to get Kafka config for check")
 
         lines = p.stdout.split("\n")[1:]
