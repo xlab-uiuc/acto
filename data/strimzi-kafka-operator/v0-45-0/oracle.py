@@ -1,3 +1,4 @@
+import base64
 import datetime
 import re
 from typing import Callable, Optional
@@ -41,9 +42,34 @@ class KafkaConfigChecker(CheckerInterface):
 
         pod_name = "test-cluster-dual-role-0"
 
+        core_v1 = kubernetes.client.CoreV1Api(self.oracle_handle.k8s_client)
+        secret = core_v1.read_namespaced_secret(
+            "admin", self.oracle_handle.namespace
+        ).data
+        jaas_config = base64.b64decode(secret["sasl.jaas.config"]).decode(
+            "utf-8"
+        )
+
         p = self.oracle_handle.kubectl_client.exec(
             pod_name,
-            "acto-namespace",
+            self.oracle_handle.namespace,
+            [
+                "bash",
+                "-c",
+                "bash -c 'echo \"security.protocol=SASL_PLAINTEXT\n"
+                "sasl.mechanism=SCRAM-SHA-512\n"
+                f"sasl.jaas.config={jaas_config}\" > /tmp/client.properties'",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        if p.returncode != 0:
+            logger.error("Failed to create client.properties%s", p.stderr)
+            return OracleResult(message="Failed to create client.properties")
+
+        p = self.oracle_handle.kubectl_client.exec(
+            pod_name,
+            self.oracle_handle.namespace,
             [
                 "./bin/kafka-configs.sh",
                 "--describe",
@@ -54,12 +80,15 @@ class KafkaConfigChecker(CheckerInterface):
                 "--entity-name",
                 "0",
                 "--all",
+                "--command-config",
+                "/tmp/client.properties",
             ],
             capture_output=True,
             text=True,
         )
         if p.returncode != 0:
-            return OracleResult(message="Kafka config check failed")
+            logger.error("Failed to get Kafka config%s", p.stderr)
+            return OracleResult(message="Failed to get Kafka config for check")
 
         lines = p.stdout.split("\n")[1:]
         runtime_config = {}
