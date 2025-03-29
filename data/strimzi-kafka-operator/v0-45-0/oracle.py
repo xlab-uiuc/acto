@@ -1,3 +1,4 @@
+import base64
 import datetime
 import re
 from typing import Callable, Optional
@@ -41,6 +42,28 @@ class KafkaConfigChecker(CheckerInterface):
 
         pod_name = "test-cluster-dual-role-0"
 
+        core_v1 = kubernetes.client.CoreV1Api(self.oracle_handle.k8s_client)
+        secret = core_v1.read_namespaced_secret(
+            "admin", self.oracle_handle.namespace
+        ).data
+        jaas_config = base64.b64decode(secret["sasl.jaas.config"]).decode(
+            "utf-8"
+        )
+
+        p = self.oracle_handle.kubectl_client.exec(
+            pod_name,
+            self.oracle_handle.namespace,
+            [
+                "echo",
+                '"security.protocol=SASL_PLAINTEXT\n'
+                f'sasl.mechanism=SCRAM-SHA-512\n\sasl.jaas.config={jaas_config}"',
+                ">",
+                "/tmp/client.properties",
+            ],
+            capture_output=True,
+            text=True,
+        )
+
         p = self.oracle_handle.kubectl_client.exec(
             pod_name,
             self.oracle_handle.namespace,
@@ -48,12 +71,14 @@ class KafkaConfigChecker(CheckerInterface):
                 "./bin/kafka-configs.sh",
                 "--describe",
                 "--bootstrap-server",
-                "localhost:9094",
+                "localhost:9092",
                 "--entity-type",
                 "brokers",
                 "--entity-name",
                 "0",
                 "--all",
+                "--command-config",
+                "/tmp/client.properties",
             ],
             capture_output=True,
             text=True,
