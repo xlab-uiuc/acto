@@ -1,0 +1,299 @@
+{
+    "properties": {
+      "solr": {
+        "properties": {
+            "coreLoadThreads": {
+                "enum": [
+                    1,
+                    4,
+                    -1
+                ],
+                "type": "integer"
+            },
+            "replayUpdatesThreads": {
+                "enum": [
+                    1,
+                    4,
+                    -1
+                ],
+                "type": "integer"
+            },
+            "indexSearcherExecutorThreads": {
+                "enum": [
+                    0,
+                    -1,
+                    -999
+                ],
+                "type": "integer"
+            },
+            "coreRootDirectory": {
+                "enum": [
+                    "server/solr",
+                    "/",
+                    "INVALID"
+                ],
+                "type": "string"
+            },
+            "managementPath": {
+                "enum": [
+                    "NON_OPERATIONAL"
+                ],
+                "type": "string"
+            },
+            "sharedLib": {
+                "enum": [
+                    "/",
+                    "INVALID"
+                ],
+                "type": "string"
+            },
+            "modules": {
+                "enum": [
+                    "extracting",
+                    "ltr",
+                    "INVALID"
+                ],
+                "type": "string"
+            },
+            "allowPaths": {
+                "enum": [
+                    "/",
+                    "$SOLR_HOME/..",
+                    "INVALID"
+                ],
+                "type": "string"
+            },
+            "allowUrls": {
+                "enum": [
+                    "10.0.0.1:8983/solr",
+                    "http://10.0.0.1:8983/solr",
+                    "INVALID"
+                ],
+                "type": "string"
+            },
+            "hideStackTrace": {
+                "type": "boolean"
+            },
+            "shareSchema": {
+                "type": "boolean"
+            },
+            "configSetBaseDir": {
+                "enum": [
+                    "$SOLR_HOME/configsets",
+                    "",
+                    "INVALID"
+                ],
+                "type": "string"
+            },
+            "hiddenSysProps": {
+                "enum": [
+                    "*",
+                    "password",
+                    "INVALID"
+                ],
+                "type": "string"
+            },
+            "solrcloud": {
+                "properties": {
+                    "distribUpdateConnTimeout": {
+                        "enum": [
+                            6000,
+                            600000,
+                            -1
+                        ],
+                        "type": "integer"
+                    },
+                    "distribUpdateSoTimeout": {
+                        "enum": [
+                            6000,
+                            600000,
+                            -1
+                        ],
+                        "type": "integer"
+                    },
+                    "host": {
+                        "enum": [
+                            "",
+                            "localhost",
+                            "INVALID"
+                        ],
+                        "type": "string"
+                    },
+                    "hostContext": {
+                        "enum": [
+                            "solr",
+                            "",
+                            "INVALID"
+                        ],
+                        "type": "string"
+                    },
+                    "hostPort": {
+                        "enum": [
+                            0,
+                            8000,
+                            -1
+                        ],
+                        "type": "integer"
+                    },
+                    "leaderVoteWait": {
+                        "enum": [
+                            6000,
+                            600000,
+                            -1
+                        ],
+                        "type": "integer"
+                    },
+                    "leaderConflictResolveWait": {
+                        "enum": [
+                            6000,
+                            180000,
+                            -1
+                        ],
+                        "type": "integer"
+                    },
+                    "zkClientTimeout": {
+                        "enum": [
+                            6000,
+                            600000,
+                            -1
+                        ],
+                        "type": "integer"
+                    },
+                    "zkHost": {
+                        "enum": [
+                            "localhost",
+                            "",
+                            "INVALID"
+                        ],
+                        "type": "string"
+                    },
+                    "genericCoreNodeNames": {
+                        "type": "boolean"
+                    },
+                    "distributedClusterStateUpdates": {
+                        "type": "boolean"
+                    },
+                    "minStateByteLenForCompression": {
+                        "enum": [
+                            -1,
+                            102400,
+                            -999
+                        ],
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
+            "logging": {
+                "properties": {
+                    "class": {
+                        "enum": [
+                            "INVALID"
+                        ],
+                        "type": "string"
+                    },
+                    "enabled": {
+                        "type": "boolean"
+                    },
+                    "watcher": {
+                        "properties": {
+                            "size": {
+                                "enum": [
+                                    50,
+                                    100,
+                                    -1
+                                ],
+                                "type": "integer"
+                            },
+                            "threshold": {
+                                "enum": [
+                                    "DEBUG",
+                                    "WARN",
+                                    "INVALID"
+                                ],
+                                "type": "string"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "shardHandlerFactory": {
+                "properties": {
+                    "socketTimeout": {
+                        "enum": [
+                            6000,
+                            600000,
+                            -1
+                        ],
+                        "type": "integer"
+                    },
+                    "connTimeout": {
+                        "enum": [
+                            6000,
+                            600000,
+                            -1
+                        ],
+                        "type": "integer"
+                    },
+                    "urlScheme": {
+                        "enum": [
+                            "solr",
+                            "",
+                            "INVALID"
+                        ],
+                        "type": "string" 
+                    },
+                    "maxConnectionsPerHost": {
+                        "enum": [
+                            100000,
+                            100,
+                            -1
+                        ],
+                        "type": "integer"
+                    },
+                    "corePoolSize": {
+                        "enum": [
+                            0,
+                            4,
+                            -1
+                        ],
+                        "type": "integer"
+                    },
+                    "maximumPoolSize": {
+                        "enum": [
+                            0,
+                            100,
+                            -1
+                        ],
+                        "type": "integer"
+                    },
+                    "maxThreadIdleTime": {
+                        "enum": [
+                            5,
+                            100,
+                            -1
+                        ],
+                        "type": "integer"
+                    },
+                    "sizeOfQueue": {
+                        "enum": [
+                            0,
+                            20,
+                            -1
+                        ],
+                        "type": "integer"
+                    },
+                    "fairnessPolicy": {
+                        "type": "boolean"
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "type": "object"
+      }
+    },
+    "type": "object"
+  }
