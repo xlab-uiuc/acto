@@ -150,3 +150,54 @@ spec:
           requests:
             cpu: 65m
             memory: 156Mi
+---
+apiVersion: solr.apache.org/v1beta1
+kind: SolrCloud
+metadata:
+  name: test-cluster
+  labels:
+    helm.sh/chart: solr-0.9.1
+    app.kubernetes.io/name: solr
+    app.kubernetes.io/instance: test-cluster
+    app.kubernetes.io/version: "8.11.1"
+spec:
+  solrImage:
+    repository: solr
+    tag: "8.11"
+  solrJavaMem: "-Xms300m -Xmx300m"
+  solrAddressability:
+    podPort: 8983
+    external:
+      domainName: ing.local.domain
+      method: Ingress
+      useExternalAddress: true
+  updateStrategy:
+    method: Managed
+  availability:
+    podDisruptionBudget:
+      enabled: true
+      method: ClusterWide
+  scaling:
+    vacatePodsOnScaleDown: true
+    populatePodsOnScaleUp: true
+  dataStorage:
+    ephemeral:
+      emptyDir:
+        sizeLimit: "20Gi"
+  customSolrKubeOptions:
+    ingressOptions:
+      ingressClassName: nginx
+  additionalLibs: 
+  - "/ext/lib2"
+  - "/ext/lib1"
+  solrZkOpts: "-Dsolr.zk.opts=this"
+  solrLogLevel: "DEBUG"
+    
+  zookeeperRef:
+    provided:
+      chroot: "/"
+      replicas: 3
+      maxUnavailableReplicas: 1
+---
+spec:
+  solrLogLevel: "INFO"

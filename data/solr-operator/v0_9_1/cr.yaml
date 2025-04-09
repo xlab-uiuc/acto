@@ -1,47 +1,60 @@
+---
+# Source: solr/templates/solrcloud.yaml
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 apiVersion: solr.apache.org/v1beta1
 kind: SolrCloud
 metadata:
   name: test-cluster
+  labels:
+    helm.sh/chart: solr-0.9.1
+    app.kubernetes.io/name: solr
+    app.kubernetes.io/instance: test-cluster
+    app.kubernetes.io/version: "8.11.1"
 spec:
-  customSolrKubeOptions:
-    podOptions:
-      resources:
-        limits:
-          memory: 1G
-        requests:
-          cpu: 65m
-          memory: 156Mi
-  dataStorage:
-    persistent:
-      pvcTemplate:
-        spec:
-          resources:
-            requests:
-              storage: 5Gi
-      reclaimPolicy: Delete
-  replicas: 3
-  solrGCTune: -XX:SurvivorRatio=4 -XX:TargetSurvivorRatio=90 -XX:MaxTenuringThreshold=8
   solrImage:
-    tag: 8.7.0
-  solrJavaMem: -Xms1g -Xmx3g
-  solrModules:
-  - jaegertracer-configurator
-  - ltr
-  solrOpts: -Dsolr.autoSoftCommit.maxTime=10000
+    repository: solr
+    tag: "8.11"
+  solrJavaMem: "-Xms300m -Xmx300m"
+  solrAddressability:
+    podPort: 8983
+    external:
+      domainName: ing.local.domain
+      method: Ingress
+      useExternalAddress: true
+  updateStrategy:
+    method: Managed
+  availability:
+    podDisruptionBudget:
+      enabled: true
+      method: ClusterWide
+  scaling:
+    vacatePodsOnScaleDown: true
+    populatePodsOnScaleUp: true
+  dataStorage:
+    ephemeral:
+      emptyDir:
+        sizeLimit: "20Gi"
+  customSolrKubeOptions:
+    ingressOptions:
+      ingressClassName: nginx
+      
+    
   zookeeperRef:
     provided:
-      chroot: /this/will/be/auto/created
-      persistence:
-        spec:
-          resources:
-            requests:
-              storage: 5Gi
-          storageClassName: hostpath
-      replicas: 1
-      zookeeperPodPolicy:
-        resources:
-          limits:
-            memory: 1G
-          requests:
-            cpu: 65m
-            memory: 156Mi
+      chroot: "/"
+      replicas: 3
+      maxUnavailableReplicas: 1
