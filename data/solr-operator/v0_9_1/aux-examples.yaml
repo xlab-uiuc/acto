@@ -1,3 +1,438 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: solrbackup-editor-role
+rules:
+- apiGroups:
+  - solr.apache.org
+  resources:
+  - solrbackups
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - solr.apache.org
+  resources:
+  - solrbackups/status
+  verbs:
+  - get
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    control-plane: solr-operator
+  name: solr-operator-metrics-service
+spec:
+  ports:
+  - name: https
+    port: 8443
+    targetPort: https
+  selector:
+    control-plane: solr-operator
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: solr-operator-leader-election-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: solr-operator-leader-election-role
+subjects:
+- kind: ServiceAccount
+  name: solr-operator
+  namespace: solr-operator
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: solr-operator-role
+rules:
+- apiGroups:
+  - ''
+  resources:
+  - configmaps
+  - secrets
+  - services
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ''
+  resources:
+  - configmaps/status
+  - services/status
+  verbs:
+  - get
+- apiGroups:
+  - ''
+  resources:
+  - persistentvolumeclaims
+  - pods
+  verbs:
+  - delete
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ''
+  resources:
+  - pods/exec
+  verbs:
+  - create
+- apiGroups:
+  - ''
+  resources:
+  - pods/status
+  verbs:
+  - get
+  - patch
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  - statefulsets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - deployments/status
+  - statefulsets/status
+  verbs:
+  - get
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - ingresses
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - ingresses/status
+  verbs:
+  - get
+- apiGroups:
+  - policy
+  resources:
+  - poddisruptionbudgets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - solr.apache.org
+  resources:
+  - solrbackups
+  - solrclouds
+  - solrprometheusexporters
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - solr.apache.org
+  resources:
+  - solrbackups/finalizers
+  - solrclouds/finalizers
+  - solrprometheusexporters/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - solr.apache.org
+  resources:
+  - solrbackups/status
+  - solrclouds/status
+  - solrprometheusexporters/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - zookeeper.pravega.io
+  resources:
+  - zookeeperclusters
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - zookeeper.pravega.io
+  resources:
+  - zookeeperclusters/status
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: solr-operator-leader-election-role
+rules:
+- apiGroups:
+  - ''
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ''
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: solrcloud-viewer-role
+rules:
+- apiGroups:
+  - solr.apache.org
+  resources:
+  - solrclouds
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - solr.apache.org
+  resources:
+  - solrclouds/status
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: solrprometheusexporter-editor-role
+rules:
+- apiGroups:
+  - solr.apache.org
+  resources:
+  - solrprometheusexporters
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - solr.apache.org
+  resources:
+  - solrprometheusexporters/status
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: solr-operator-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: solr-operator-role
+subjects:
+- kind: ServiceAccount
+  name: solr-operator
+  namespace: solr-operator
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: solr-operator
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: solr-operator-proxy-role
+rules:
+- apiGroups:
+  - authentication.k8s.io
+  resources:
+  - tokenreviews
+  verbs:
+  - create
+- apiGroups:
+  - authorization.k8s.io
+  resources:
+  - subjectaccessreviews
+  verbs:
+  - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: solrprometheusexporter-viewer-role
+rules:
+- apiGroups:
+  - solr.apache.org
+  resources:
+  - solrprometheusexporters
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - solr.apache.org
+  resources:
+  - solrprometheusexporters/status
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: solrcloud-editor-role
+rules:
+- apiGroups:
+  - solr.apache.org
+  resources:
+  - solrclouds
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - solr.apache.org
+  resources:
+  - solrclouds/status
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: solrbackup-viewer-role
+rules:
+- apiGroups:
+  - solr.apache.org
+  resources:
+  - solrbackups
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - solr.apache.org
+  resources:
+  - solrbackups/status
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: solr-operator-metrics-reader
+rules:
+- nonResourceURLs:
+  - /metrics
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: solr-operator-proxy-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: solr-operator-proxy-role
+subjects:
+- kind: ServiceAccount
+  name: solr-operator
+  namespace: solr-operator
+---
+apiVersion: controller-runtime.sigs.k8s.io/v1alpha1
+health:
+  healthProbeBindAddress: :8081
+kind: SolrOperatorConfig
+leaderElection:
+  leaderElect: true
+  resourceName: 88488bdc.solr.apache.org
+metrics:
+  bindAddress: 127.0.0.1:8080
+webhook:
+  port: 9443
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    control-plane: solr-operator
+  name: solr-operator-metrics-monitor
+spec:
+  endpoints:
+  - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+    path: /metrics
+    port: https
+    scheme: https
+    tlsConfig:
+      insecureSkipVerify: true
+  selector:
+    matchLabels:
+      control-plane: solr-operator
+---
 apiVersion: solr.apache.org/v1beta1
 kind: SolrBackup
 metadata:
@@ -14,7 +449,7 @@ metadata:
   name: solrprometheusexporter-sample
 spec:
   image:
-    tag: 8.7.0
+    tag: '8.11'
   numThreads: 4
   solrReference:
     cloud:
@@ -29,3 +464,19 @@ spec:
   - example
   repositoryName: volume_repository_1
   solrCloud: multiple-backup-repos
+---
+apiVersion: kind.x-k8s.io/v1alpha4
+kind: Cluster
+nodes:
+- extraMounts:
+  - containerPath: /tmp/backup
+    hostPath: /tmp/backup
+  role: control-plane
+- extraMounts:
+  - containerPath: /tmp/backup
+    hostPath: /tmp/backup
+  role: worker
+- extraMounts:
+  - containerPath: /tmp/backup
+    hostPath: /tmp/backup
+  role: worker
