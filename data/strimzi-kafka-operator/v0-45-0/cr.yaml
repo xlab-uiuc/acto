@@ -10,10 +10,16 @@ spec:
     version: 3.9.0
     metadataVersion: 3.9-IV0
     listeners:
+      - name: config
+        port: 9094
+        type: internal
+        tls: false
       - name: plain
         port: 9092
         type: internal
         tls: false
+        authentication:
+          type: scram-sha-512
       - name: tls
         port: 9093
         type: internal
@@ -24,6 +30,10 @@ spec:
       transaction.state.log.min.isr: 2
       default.replication.factor: 3
       min.insync.replicas: 2
+    authorization:
+      type: simple
+      superUsers:
+        - admin
   entityOperator:
     topicOperator: {}
     userOperator: {}

@@ -31,7 +31,7 @@ class MinIOConfigChecker(CheckerInterface):
         if (
             "storage-configuration" in snapshot.system_state["secret"]
         ):
-            minio_config = snapshot.system_state["secret"]["data"]["config.env"].strip().split("\n")
+            minio_config = snapshot.system_state["secret"]["storage-configuration"]["data"]["config.env"].strip().split("\n")
         else:
             return OracleResult(message=f"Missing the Secret that contains the configuration")
         

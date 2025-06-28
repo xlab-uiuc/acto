@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mariadb-writer
+  labels:
+    app: mariadb-writer
+    acto/tag: custom-oracle
+spec:
+  containers:
+    - name: mariadb-writer
+      image: ghcr.io/xlab-uiuc/mariadb-writer:v1
+      imagePullPolicy: IfNotPresent
+      env:
+        - name: MARIADB_HOST
+          value: "test-cluster-primary.acto-namespace.svc.cluster.local"
+        - name: MARIADB_PORT
+          value: "3306"
+        - name: MARIADB_USER
+          value: "root"
+        - name: MARIADB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mariadb
+              key: root-password
+        - name: MARIADB_DATABASE
+          value: "mariadb"
