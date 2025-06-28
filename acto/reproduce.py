@@ -15,10 +15,12 @@ import yaml
 from acto import DEFAULT_KUBERNETES_VERSION
 from acto.engine import Acto
 from acto.input import k8s_schemas, property_attribute
+from acto.input.constraint import XorCondition
 from acto.input.input import (
     CustomKubernetesMapping,
     CustomPropertySchemaMapping,
     DeterministicInputModel,
+    InputMetadata,
 )
 from acto.input.testcase import TestCase
 from acto.input.testplan import TestGroup
@@ -34,11 +36,13 @@ from acto.utils import get_thread_logger
 
 def apply_repro_testcase(
     value_with_schema: ValueWithSchema,
-    _: list,
+    path: list[str],
     testcase: TestCase,
-    __: bool = False,
+    setup: bool = False,
+    constraints: Optional[list[XorCondition]] = None,
 ) -> jsonpatch.JsonPatch:
     """apply_testcase function for reproducing"""
+    _, _, _ = path, setup, constraints
     logger = get_thread_logger(with_prefix=True)
     next_cr = testcase.mutator(None)  # next cr in yaml format
 
@@ -111,6 +115,8 @@ class ReproInputModel(DeterministicInputModel):
         logger.info("%d steps for reproducing", len(self.testcases))
         self.num_total_cases = len(cr_list) - 1
         self.num_workers = 1
+
+        self.metadata = InputMetadata()
 
         override_matches: Optional[list[tuple[BaseSchema, str]]] = None
         if custom_module_path is not None:
