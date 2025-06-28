@@ -7,7 +7,7 @@ import os
 from datetime import datetime
 from functools import partial
 from glob import glob
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import jsonpatch
 import yaml
@@ -15,7 +15,13 @@ import yaml
 from acto import DEFAULT_KUBERNETES_VERSION
 from acto.engine import Acto
 from acto.input import k8s_schemas, property_attribute
-from acto.input.input import CustomKubernetesMapping, DeterministicInputModel
+from acto.input.constraint import XorCondition
+from acto.input.input import (
+    CustomKubernetesMapping,
+    CustomPropertySchemaMapping,
+    DeterministicInputModel,
+    InputMetadata,
+)
 from acto.input.testcase import TestCase
 from acto.input.testplan import TestGroup
 from acto.input.value_with_schema import ValueWithSchema
@@ -23,17 +29,20 @@ from acto.lib.operator_config import OperatorConfig
 from acto.post_process.post_diff_test import PostDiffTest
 from acto.result import OracleResults
 from acto.schema.base import BaseSchema
+from acto.schema.opaque import OpaqueSchema
 from acto.schema.schema import extract_schema
 from acto.utils import get_thread_logger
 
 
 def apply_repro_testcase(
     value_with_schema: ValueWithSchema,
-    _: list,
+    path: list[str],
     testcase: TestCase,
-    __: bool = False,
+    setup: bool = False,
+    constraints: Optional[list[XorCondition]] = None,
 ) -> jsonpatch.JsonPatch:
     """apply_testcase function for reproducing"""
+    _, _, _ = path, setup, constraints
     logger = get_thread_logger(with_prefix=True)
     next_cr = testcase.mutator(None)  # next cr in yaml format
 
@@ -106,7 +115,8 @@ class ReproInputModel(DeterministicInputModel):
         logger.info("%d steps for reproducing", len(self.testcases))
         self.num_total_cases = len(cr_list) - 1
         self.num_workers = 1
-        self.metadata = {}
+
+        self.metadata = InputMetadata()
 
         override_matches: Optional[list[tuple[BaseSchema, str]]] = None
         if custom_module_path is not None:
@@ -139,6 +149,43 @@ class ReproInputModel(DeterministicInputModel):
                             raise TypeError(
                                 "Expected CustomKubernetesMapping in KUBERNETES_TYPE_MAPPING, "
                                 f"but got {type(custom_mapping)}"
+                            )
+
+            if hasattr(custom_module, "CUSTOM_PROPERTY_SCHEMA_MAPPING"):
+                custom_property_schema_mapping = (
+                    custom_module.CUSTOM_PROPERTY_SCHEMA_MAPPING
+                )
+                if isinstance(custom_property_schema_mapping, list):
+                    for custom_mapping in custom_property_schema_mapping:
+                        if isinstance(
+                            custom_mapping, CustomPropertySchemaMapping
+                        ):
+                            try:
+                                schema = self.get_schema_by_path(
+                                    custom_mapping.schema_path
+                                )
+                            except KeyError:
+                                logger.warning(
+                                    "Specified schema path does not exist: %s, using opaque schema",
+                                    custom_mapping.schema_path,
+                                )
+                                schema = OpaqueSchema(
+                                    custom_mapping.schema_path, {}
+                                )
+                            self.set_schema_by_path(
+                                custom_mapping.schema_path,
+                                custom_mapping.custom_schema.from_original_schema(
+                                    schema
+                                ),
+                            )
+                            logger.info(
+                                "Applying custom schema to property %s",
+                                custom_mapping.schema_path,
+                            )
+                        else:
+                            raise TypeError(
+                                "Expected CustomPropertySchemaMapping in "
+                                f"CUSTOM_PROPERTY_SCHEMA_MAPPING, but got {type(custom_mapping)}"
                             )
 
         # Do the matching from CRD to Kubernetes schemas
@@ -190,13 +237,15 @@ class ReproInputModel(DeterministicInputModel):
         return self.seed_input
 
     def generate_test_plan(
-        self, delta_from: str = None, focus_fields: list = None
+        self,
+        focus_fields: Optional[list] = None,
     ) -> dict:
-        _ = delta_from
         _ = focus_fields
         return {}
 
-    def next_test(self) -> list:
+    def next_test(
+        self,
+    ) -> Optional[list[Tuple[TestGroup, tuple[str, TestCase]]]]:
         """
         Returns:
             - a list of tuples, containing
@@ -204,7 +253,7 @@ class ReproInputModel(DeterministicInputModel):
         """
         test = self.testcases.pop(0)
         return [
-            (TestGroup([test]), ('["spec"]', test))
+            (TestGroup([('["spec"]', test)]), ('["spec"]', test))
         ]  # return the first test case
 
     def apply_k8s_schema(self, k8s_field):
@@ -259,7 +308,6 @@ def reproduce(
         workdir_path=workdir_path,
         operator_config=config,
         cluster_runtime=kwargs["cluster_runtime"],
-        preload_images_=[],
         context_file=context_cache,
         helper_crd=None,
         num_workers=1,
@@ -272,7 +320,7 @@ def reproduce(
         acto_namespace=acto_namespace,
     )
 
-    errors = acto.run(modes=["normal"])
+    errors = acto.run()
     return [error for error in errors if error is not None]
 
 
@@ -336,14 +384,10 @@ if __name__ == "__main__":
     parser.add_argument("--context", dest="context", help="Cached context data")
     args = parser.parse_args()
 
-    workdir_path_ = f"testrun-{datetime.now().strftime('%Y-%m-%d-%H-%M')}"
-
-    start_time = datetime.now()
     reproduce(
-        workdir_path=workdir_path_,
+        workdir_path=f"testrun-{datetime.now().strftime('%Y-%m-%d-%H-%M')}",
         reproduce_dir=args.reproduce_dir,
         operator_config=args.config,
         acto_namespace=args.acto_namespace,
         cluster_runtime=args.cluster_runtime,
     )
-    end_time = datetime.now()

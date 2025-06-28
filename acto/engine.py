@@ -57,9 +57,21 @@ from ssa.analysis import analyze
 RECOVERY_SNAPSHOT = -2  # the immediate snapshot before the error
 
 
+ApplyTestCaseFunctionType = Callable[
+    [
+        ValueWithSchema,
+        list[str],
+        TestCase,
+        bool,
+        Optional[list[XorCondition]],
+    ],
+    jsonpatch.JsonPatch,
+]
+
+
 def apply_testcase(
     value_with_schema: ValueWithSchema,
-    path: list,
+    path: list[str],
     testcase: TestCase,
     setup: bool = False,
     constraints: Optional[list[XorCondition]] = None,
@@ -824,7 +836,7 @@ class Acto:
         analysis_only: bool,
         is_reproduce: bool,
         input_model: type[DeterministicInputModel],
-        apply_testcase_f: Callable,
+        apply_testcase_f: ApplyTestCaseFunctionType,
         mount: Optional[list] = None,
         focus_fields: Optional[list] = None,
         acto_namespace: int = 0,
