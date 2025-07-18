@@ -1,0 +1,21 @@
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: MariaDB
+metadata:
+  name: mariadb-min
+spec:
+  rootEmptyPassword: true
+  storage:
+    size: 1Gi
+    storageClassName: standard
+    resizeInUseVolumes: true
+    waitForVolumeResize: true
+  galera:
+    enabled: false
+  replication:
+    enabled: true
+  replicas: 3
+  maxScale:
+    connection:
+      port: 3306
+      secretName: mxs-galera-conn
+    enabled: true

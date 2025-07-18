@@ -1,0 +1,37 @@
+apiVersion: cassandra.datastax.com/v1beta1
+kind: CassandraDatacenter
+metadata:
+  name: test-cluster
+spec:
+  clusterName: development
+  config:
+    cassandra-yaml:
+      authenticator: PasswordAuthenticator
+      authorizer: CassandraAuthorizer
+      num_tokens: 16
+      role_manager: CassandraRoleManager
+    jvm-server-options:
+      initial_heap_size: 1G
+      max_heap_size: 1G
+  configSecret: test-config
+  managementApiAuth:
+    insecure: {}
+  racks:
+  - name: rack1
+  - name: rack2
+  - name: rack3
+  resources:
+    requests:
+      cpu: 1000m
+      memory: 2Gi
+  serverType: cassandra
+  serverVersion: 4.1.2
+  size: 3
+  storageConfig:
+    cassandraDataVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 10Gi
+      storageClassName: standard

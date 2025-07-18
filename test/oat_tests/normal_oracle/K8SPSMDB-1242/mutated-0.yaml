@@ -1,0 +1,25 @@
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: my-cluster
+spec:
+  crVersion: 1.17.0
+  image: percona/percona-server-mongodb:7.0.8-5
+  imagePullPolicy: Always
+  allowUnsafeConfigurations: false
+  replsets:
+  - name: rs0
+    configuration: |
+      security:
+        enableEncryption: true
+    affinity:
+      antiAffinityTopologyKey: none
+    arbiter:
+      enabled: false
+      size: 1
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 10Gi
+    size: 3
