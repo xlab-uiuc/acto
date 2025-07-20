@@ -2,13 +2,20 @@ import argparse
 import multiprocessing
 import os
 import queue
+import sys
+import threading
 from datetime import datetime
 from test import oat_ae_utils
 from typing import Tuple
 
 from tabulate import tabulate
 
-from acto.reproduce import reproduce, reproduce_postdiff
+from acto.reproduce import (
+    reproduce,
+    reproduce_fault_injection,
+    reproduce_postdiff,
+)
+from acto.utils import error_handler
 
 failed_reproductions = {}
 
@@ -66,6 +73,17 @@ class ReproWorker:
                         retry = True
                         print(f"Bug {bug_id} not reproduced!")
                         failed_reproductions[bug_id] = True
+                elif bug_config.fault:
+                    if reproduce_fault_injection(
+                        work_dir,
+                        operator_config,
+                        oat_ae_utils.OperatorToFIConfigMapping[operator],
+                    ):
+                        reproduced = True
+                    else:
+                        retry = True
+                        print(f"Bug {bug_id} not reproduced!")
+                        failed_reproductions[bug_id] = True
 
                 last_error = normal_run_result[-1]
                 if last_error is not None and last_error.is_error():
@@ -85,6 +103,10 @@ class ReproWorker:
 
 def main() -> None:
     """Main function"""
+    # Register custom exception hook
+    sys.excepthook = error_handler.handle_excepthook
+    threading.excepthook = error_handler.thread_excepthook
+
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--num-workers", "-n", dest="num_workers", type=int, default=1

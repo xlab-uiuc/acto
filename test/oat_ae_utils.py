@@ -83,6 +83,15 @@ OperatorToConfigMapping: dict[OperatorPrettyName, str] = {
     OperatorPrettyName.TIDB_OPERATOR: "data/tidb-operator/v1-6-0/func-only.json",
 }
 
+OperatorToFIConfigMapping: dict[OperatorPrettyName, str] = {
+    OperatorPrettyName.CASS_OPERATOR: "chactos/cass-operator.json",
+    OperatorPrettyName.KAFKA_OPERATOR: "chactos/strimzi-kafka-operator.json",
+    OperatorPrettyName.MARIADB_OPERATOR: "chactos/mariadb-operator.json",
+    OperatorPrettyName.MINIO_OPERATOR: "chactos/minio-operator.json",
+    OperatorPrettyName.MONGODB_OPERATOR: "chactos/percona-mongodb-operator.json",
+    OperatorPrettyName.TIDB_OPERATOR: "chactos/tidb-operator.json",
+}
+
 
 ALL_BUGS: dict[OperatorPrettyName, dict[str, OatBugConfig]] = {
     OperatorPrettyName.CASS_OPERATOR: {

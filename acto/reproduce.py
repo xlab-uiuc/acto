@@ -32,6 +32,8 @@ from acto.schema.base import BaseSchema
 from acto.schema.opaque import OpaqueSchema
 from acto.schema.schema import extract_schema
 from acto.utils import get_thread_logger
+from chactos.fault_injection_config import FaultInjectionConfig
+from chactos.fault_injections import ChactosDriver
 
 
 def apply_repro_testcase(
@@ -352,6 +354,33 @@ def reproduce_postdiff(
         len(glob(os.path.join(post_diff_test_dir, "compare-results-*.json")))
         > 0
     )
+
+
+def reproduce_fault_injection(
+    workdir_path: str,
+    operator_config_path: str,
+    fault_injection_config_path: str,
+) -> bool:
+    """Reproduce the trial folder with fault injection"""
+    with open(operator_config_path, "r", encoding="utf-8") as config_file:
+        config = OperatorConfig.model_validate(json.load(config_file))
+    with open(
+        fault_injection_config_path, "r", encoding="utf-8"
+    ) as fi_config_file:
+        fault_injection_config = FaultInjectionConfig.model_validate(
+            json.load(fi_config_file)
+        )
+    fi_test_dir = os.path.join(workdir_path, "fi_test")
+
+    ChactosDriver(
+        testrun_dir=workdir_path,
+        work_dir=fi_test_dir,
+        operator_config=config,
+        fault_injection_config=fault_injection_config,
+        num_workers=1,
+    ).run()
+
+    return True
 
 
 if __name__ == "__main__":
