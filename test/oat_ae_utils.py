@@ -73,6 +73,17 @@ operator_pretty_name_mapping: Dict[str, OperatorPrettyName] = {
 }
 
 
+OperatorToConfigMapping: dict[OperatorPrettyName, str] = {
+    OperatorPrettyName.CASS_OPERATOR: "data/cass-operator/v1-22/func-only.json",
+    OperatorPrettyName.KAFKA_OPERATOR: "data/strimzi-kafka-operator/v0-45-0/func-only.json",
+    OperatorPrettyName.MARIADB_OPERATOR: "data/mariadb-operator/v0-30-0/func-only.json",
+    OperatorPrettyName.MINIO_OPERATOR: "data/minio-operator/v7-0-0/func-only.json",
+    OperatorPrettyName.MONGODB_OPERATOR: "data/percona-server-mongodb-operator/"
+    "v1-16-0/func-only.json",
+    OperatorPrettyName.TIDB_OPERATOR: "data/tidb-operator/v1-6-0/func-only.json",
+}
+
+
 ALL_BUGS: dict[OperatorPrettyName, dict[str, OatBugConfig]] = {
     OperatorPrettyName.CASS_OPERATOR: {
         "cassop-103": OatBugConfig(
