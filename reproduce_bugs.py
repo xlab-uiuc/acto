@@ -1,0 +1,262 @@
+import argparse
+import multiprocessing
+import os
+import queue
+from datetime import datetime
+from test import oat_ae_utils
+from typing import Tuple
+
+from tabulate import tabulate
+
+from acto.reproduce import reproduce, reproduce_postdiff
+
+failed_reproductions = {}
+
+
+class ReproWorker:
+    """Worker for reproducing bugs"""
+
+    def __init__(
+        self,
+        repro_result_dir: str,
+        workqueue: multiprocessing.Queue,
+        acto_namespace: int,
+    ) -> None:
+        self._repro_result_dir = repro_result_dir
+        self._workqueue = workqueue
+        self._acto_namespace = acto_namespace
+
+    def run(self, reproduce_results: dict):
+        """Run the reproduction worker"""
+        while True:
+            try:
+                bug_tuple: tuple[
+                    oat_ae_utils.OperatorPrettyName,
+                    str,
+                    oat_ae_utils.OatBugConfig,
+                ] = self._workqueue.get(block=True, timeout=5)
+            except queue.Empty:
+                break
+
+            retry = False
+            for i in range(1):
+                retry = False
+                operator, bug_id, bug_config = bug_tuple
+                repro_dir = bug_config.path
+                work_dir = f"{self._repro_result_dir}/testrun-{bug_id}"
+                operator_config = f"data/{operator}/config.json"
+
+                reproduced: bool = False
+                normal_run_result = reproduce(
+                    work_dir,
+                    repro_dir,
+                    operator_config,
+                    cluster_runtime="KIND",
+                    acto_namespace=self._acto_namespace,
+                )
+                if bug_config.difftest:
+                    if reproduce_postdiff(
+                        work_dir,
+                        operator_config,
+                        cluster_runtime="KIND",
+                        acto_namespace=self._acto_namespace,
+                    ):
+                        reproduced = True
+                    else:
+                        retry = True
+                        print(f"Bug {bug_id} not reproduced!")
+                        failed_reproductions[bug_id] = True
+
+                last_error = normal_run_result[-1]
+                if last_error is not None and last_error.is_error():
+                    reproduced = True
+
+                # check if reproduced for table 5, and write results
+                if reproduced and not retry:
+                    print(f"Bug {bug_id} reproduced!")
+                    print(f"Bug category: {bug_config.category}")
+                    reproduce_results[operator][bug_config.category] += 1
+                    break
+                if i < 2:
+                    print(f"Bug {bug_id} not reproduced! Trying ({i+1}/3)")
+                else:
+                    failed_reproductions[bug_id] = True
+
+
+def main() -> None:
+    """Main function"""
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--num-workers", "-n", dest="num_workers", type=int, default=1
+    )
+    parser.add_argument(
+        "--bug-id", dest="bug_id", type=str, required=False, default=None
+    )
+    args = parser.parse_args()
+
+    produce_table = True
+
+    bug_id_map: dict[
+        str, Tuple[oat_ae_utils.OperatorPrettyName, oat_ae_utils.OatBugConfig]
+    ] = {}
+    for operator, bugs in oat_ae_utils.ALL_BUGS.items():
+        for bug_id, bug_config in bugs.items():
+            bug_id_map[bug_id] = (operator, bug_config)
+            # check if path exists
+            if not os.path.exists(bug_config.path):
+                print(
+                    f"Path {bug_config.path} for bug {bug_id} does not exist! Skipping."
+                )
+                continue
+
+    arg_bug_id = args.bug_id
+    if arg_bug_id is not None and isinstance(arg_bug_id, str):
+        (operator, bug_config) = bug_id_map[arg_bug_id]
+        print(f"Reproducing bug {arg_bug_id} in {operator}!")
+        to_reproduce = {operator: {arg_bug_id: bug_config}}
+        produce_table = False
+    else:
+        print("Reproducing all bugs!")
+        to_reproduce = oat_ae_utils.ALL_BUGS
+
+    manager = multiprocessing.Manager()
+    reproduce_results = manager.dict()
+
+    total_reproduced = 0
+    repro_result_dir = os.path.join(
+        os.getcwd(),
+        f"repro_results-{datetime.now().strftime('%Y-%m-%d-%H-%M')}",
+    )
+
+    workqueue: multiprocessing.Queue = multiprocessing.Queue()
+
+    for operator, bugs in to_reproduce.items():
+        reproduce_results[operator] = manager.dict()
+        reproduce_results[operator][
+            oat_ae_utils.BugCategory.OPERATION_SEMANTICS
+        ] = 0
+        reproduce_results[operator][
+            oat_ae_utils.BugCategory.STATE_OBSERVABILITY
+        ] = 0
+        reproduce_results[operator][
+            oat_ae_utils.BugCategory.VERSION_COMPATIBILITY
+        ] = 0
+        reproduce_results[operator][oat_ae_utils.BugCategory.ERROR_HANDLING] = 0
+        reproduce_results[operator][oat_ae_utils.BugCategory.BY_PRODUCT] = 0
+
+        for bug_id, bug_config in bugs.items():
+            workqueue.put((operator, bug_id, bug_config))
+
+    workers: list[ReproWorker] = []
+    for i in range(args.num_workers):
+        worker = ReproWorker(repro_result_dir, workqueue, i)
+        workers.append(worker)
+
+    processes = []
+    for worker in workers:
+        p = multiprocessing.Process(
+            target=worker.run, args=(reproduce_results,)
+        )
+        p.start()
+        processes.append(p)
+
+    for p in processes:
+        p.join()
+
+    if produce_table:
+        print("Reproduction results:")
+        # aggregate results from each worker
+        for operator, results in reproduce_results.items():
+            for _, count in results.items():
+                total_reproduced += count
+
+        table5 = []
+        for operator, reproduce_result in reproduce_results.items():
+            table5.append(
+                [
+                    operator,
+                    reproduce_result[
+                        oat_ae_utils.BugCategory.OPERATION_SEMANTICS
+                    ],
+                    reproduce_result[
+                        oat_ae_utils.BugCategory.STATE_OBSERVABILITY
+                    ],
+                    reproduce_result[
+                        oat_ae_utils.BugCategory.VERSION_COMPATIBILITY
+                    ],
+                    reproduce_result[oat_ae_utils.BugCategory.ERROR_HANDLING],
+                    reproduce_result[oat_ae_utils.BugCategory.BY_PRODUCT],
+                    sum(reproduce_result.values()),
+                ]
+            )
+
+        table5 = sorted(table5, key=lambda x: x[0])
+
+        table5.append(
+            [
+                "Total",
+                sum(
+                    reproduce_result[
+                        oat_ae_utils.BugCategory.OPERATION_SEMANTICS
+                    ]
+                    for reproduce_result in reproduce_results.values()
+                ),
+                sum(
+                    reproduce_result[
+                        oat_ae_utils.BugCategory.STATE_OBSERVABILITY
+                    ]
+                    for reproduce_result in reproduce_results.values()
+                ),
+                sum(
+                    reproduce_result[
+                        oat_ae_utils.BugCategory.VERSION_COMPATIBILITY
+                    ]
+                    for reproduce_result in reproduce_results.values()
+                ),
+                sum(
+                    reproduce_result[oat_ae_utils.BugCategory.ERROR_HANDLING]
+                    for reproduce_result in reproduce_results.values()
+                ),
+                sum(
+                    reproduce_result[oat_ae_utils.BugCategory.BY_PRODUCT]
+                    for reproduce_result in reproduce_results.values()
+                ),
+                total_reproduced,
+            ]
+        )
+
+        print(
+            tabulate(
+                table5,
+                headers=[
+                    "Operator",
+                    oat_ae_utils.BugCategory.OPERATION_SEMANTICS,
+                    oat_ae_utils.BugCategory.STATE_OBSERVABILITY,
+                    oat_ae_utils.BugCategory.VERSION_COMPATIBILITY,
+                    oat_ae_utils.BugCategory.ERROR_HANDLING,
+                    oat_ae_utils.BugCategory.BY_PRODUCT,
+                    "Total",
+                ],
+            )
+        )
+        with open("table5.txt", "w", encoding="utf-8") as table5_f:
+            table5_f.write(
+                tabulate(
+                    table5,
+                    headers=[
+                        "Operator",
+                        oat_ae_utils.BugCategory.OPERATION_SEMANTICS,
+                        oat_ae_utils.BugCategory.STATE_OBSERVABILITY,
+                        oat_ae_utils.BugCategory.VERSION_COMPATIBILITY,
+                        oat_ae_utils.BugCategory.ERROR_HANDLING,
+                        oat_ae_utils.BugCategory.BY_PRODUCT,
+                        "Total",
+                    ],
+                )
+            )
+
+        print(f"Total reproduced: {total_reproduced}")
+
+
+if __name__ == "__main__":
+    main()
