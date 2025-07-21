@@ -1,7 +1,7 @@
 apiVersion: psmdb.percona.com/v1
 kind: PerconaServerMongoDB
 metadata:
-  name: minimal-cluster
+  name: test-cluster
   finalizers:
     - percona.com/delete-psmdb-pods-in-order
 spec:
@@ -19,7 +19,7 @@ spec:
   replsets:
 
   - name: rs0
-    size: 7
+    size: 5
     volumeSpec:
       persistentVolumeClaim:
         resources:

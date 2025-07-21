@@ -371,6 +371,7 @@ def reproduce_fault_injection(
             json.load(fi_config_file)
         )
     fi_test_dir = os.path.join(workdir_path, "fi_test")
+    os.makedirs(fi_test_dir, exist_ok=True)
 
     ChactosDriver(
         testrun_dir=workdir_path,
