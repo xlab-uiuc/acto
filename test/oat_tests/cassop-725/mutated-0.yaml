@@ -4,31 +4,24 @@ metadata:
   name: test-cluster
 spec:
   clusterName: development
-  config:
-    cassandra-yaml:
-      authenticator: PasswordAuthenticator
-      authorizer: CassandraAuthorizer
-      num_tokens: 16
-      role_manager: CassandraRoleManager
-      transfer_hints_on_decommission: false
+  serverType: cassandra
+  serverVersion: "4.1.2"
   managementApiAuth:
     insecure: {}
-  racks:
-  - name: rack1
-  - name: rack2
-  - name: rack3
-  resources:
-    requests:
-      cpu: 1000m
-      memory: 2Gi
-  serverType: cassandra
-  serverVersion: 5.0.2
   size: 3
   storageConfig:
     cassandraDataVolumeClaimSpec:
+      storageClassName: standard
       accessModes:
-      - ReadWriteOnce
+        - ReadWriteOnce
       resources:
         requests:
           storage: 10Gi
-      storageClassName: standard
+  racks:
+    - name: rack1
+  config:
+    cassandra-yaml:
+      num_tokens: 16
+      authenticator: PasswordAuthenticator
+      authorizer: CassandraAuthorizer
+      role_manager: CassandraRoleManager
