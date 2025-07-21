@@ -2,22 +2,15 @@ apiVersion: psmdb.percona.com/v1
 kind: PerconaServerMongoDB
 metadata:
   name: test-cluster
-  finalizers:
-    - percona.com/delete-psmdb-pods-in-order
 spec:
-  crVersion: 1.17.0
-  image: perconalab/percona-server-mongodb-operator:main-mongod7.0
-  unsafeFlags:
-    replsetSize: true
-    mongosSize: true
+  crVersion: 1.16.0
+  image: percona/percona-server-mongodb:7.0.8-5
   upgradeOptions:
     apply: disabled
     schedule: "0 2 * * *"
-  secrets: // wrong here
-    users: non-existent-secrets
-    encryptionKey:non-existent-mongodb-encryption-key
+  secrets:
+    users: test-cluster
   replsets:
-
   - name: rs0
     size: 3
     volumeSpec:
@@ -25,10 +18,22 @@ spec:
         resources:
           requests:
             storage: 3Gi
-
+    storage:
+      engine: inMemory
+      wiredTiger:
+        engineConfig:
+          cacheSizeRatio: 0.5
+          directoryForIndexes: false
+          journalCompressor: snappy
+        collectionConfig:
+          blockCompressor: snappy
+        indexConfig:
+          prefixCompression: true
+      inMemory:
+        engineConfig:
+            inMemorySizeRatio: 0.5
   sharding:
     enabled: true
-
     configsvrReplSet:
       size: 3
       volumeSpec:
@@ -36,6 +41,5 @@ spec:
           resources:
             requests:
               storage: 3Gi
-
     mongos:
       size: 3
