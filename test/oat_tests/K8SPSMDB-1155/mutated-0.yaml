@@ -2,35 +2,37 @@ apiVersion: psmdb.percona.com/v1
 kind: PerconaServerMongoDB
 metadata:
   name: test-cluster
-  finalizers:
-    - percona.com/delete-psmdb-pods-in-order
-    - percona.com/delete-psmdb-pvc
 spec:
-  clusterServiceDNSSuffix: svc.cluster.local
-  clusterServiceDNSMode: "Internal"
-  pause: true
-  unmanaged: false
-  crVersion: 1.17.0
-  image: perconalab/percona-server-mongodb-operator:main-mongod7.0
-  imagePullPolicy: Always
-  initImage: perconalab/percona-server-mongodb-operator:main
-  initContainerSecurityContext: {}
-  updateStrategy: SmartUpdate
+  crVersion: 1.16.0
+  image: percona/percona-server-mongodb:7.0.8-5
   upgradeOptions:
-    versionServiceEndpoint: <https://check.percona.com>
     apply: disabled
     schedule: "0 2 * * *"
-    setFCV: false
   secrets:
-    users: my-cluster-name-secrets
+    users: test-cluster
   replsets:
   - name: rs0
     size: 3
-    runtimeClassName: non-existent runtime_class
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 3Gi
+  - name: rs1
+    size: 3
     volumeSpec:
       persistentVolumeClaim:
         resources:
           requests:
             storage: 3Gi
   sharding:
-    enabled: false
+    enabled: true
+    configsvrReplSet:
+      size: 3
+      volumeSpec:
+        persistentVolumeClaim:
+          resources:
+            requests:
+              storage: 3Gi
+    mongos:
+      size: 3

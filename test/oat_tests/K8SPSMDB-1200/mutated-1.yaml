@@ -3,21 +3,9 @@ kind: PerconaServerMongoDB
 metadata:
   name: test-cluster
 spec:
-  backup:
-    enabled: true
-    image: percona/percona-backup-mongodb:2.4.1
-    pitr:
-      compressionLevel: 6
-      compressionType: gzip
-      enabled: false
-      oplogOnly: false
-  crVersion: 1.17.0
+  crVersion: 1.16.2
   image: percona/percona-server-mongodb:7.0.8-5
   imagePullPolicy: IfNotPresent
-  pmm:
-    enabled: false
-    image: percona/pmm-client:2.41.2
-    serverHost: monitoring-service
   replsets:
   - affinity:
       antiAffinityTopologyKey: kubernetes.io/hostname
