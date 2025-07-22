@@ -1,0 +1,39 @@
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: test-cluster
+spec:
+  configUpdateStrategy: RollingUpdate
+  enableDynamicConfiguration: true
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    config: "[dashboard]\n  internal-proxy = true\n"
+    maxFailoverCount: 0
+    mountClusterClientSecret: true
+    replicas: 3
+    requests:
+      storage: 10Gi
+  pvReclaimPolicy: Retain
+  tidb:
+    baseImage: pingcap/tidb
+    maxFailoverCount: 0
+    replicas: 3
+    service:
+      externalTrafficPolicy: Local
+      type: NodePort
+  tikv:
+    baseImage: pingcap/tikv
+    config: |
+      [raftdb]
+        max-open-files = 256
+      [rocksdb]
+        max-open-files = 128
+    maxFailoverCount: 0
+    mountClusterClientSecret: true
+    replicas: 3
+    requests:
+      storage: 100Gi
+  timezone: UTC
+  version: v8.1.0
