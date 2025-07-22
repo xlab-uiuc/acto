@@ -6,7 +6,6 @@ import itertools
 import json
 import logging
 import multiprocessing
-import multiprocessing.queues
 import os
 import queue
 import re
@@ -211,6 +210,8 @@ def compare_system_equality(
         r".*\['image_id'\]",
         r".*\['restart_count'\]",
         r".*\['status'\]\['container_statuses'\]\[.*\]\['last_state'\]",
+        r".*\['status'\]\['current_revision'\]",
+        r".*\['status'\]\['update_revision'\]",
     ]
 
     if additional_exclude_paths is not None:
