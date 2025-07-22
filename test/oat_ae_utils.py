@@ -63,6 +63,7 @@ class OperatorPrettyName(str, Enum):
 
     CASS_OPERATOR = "CassOp"
     KAFKA_OPERATOR = "KafkaOp"
+    KAFKA_OPERATOR_ZK = "KafkaOpZK"
     MARIADB_OPERATOR = "MariaDBOp"
     MINIO_OPERATOR = "MinIOOp"
     MONGODB_OPERATOR = "MongoOp"
@@ -73,6 +74,7 @@ class OperatorPrettyName(str, Enum):
 operator_pretty_name_mapping: Dict[str, OperatorPrettyName] = {
     "cass-operator": OperatorPrettyName.CASS_OPERATOR,
     "kafka-operator": OperatorPrettyName.KAFKA_OPERATOR,
+    "kafka-operator-zk": OperatorPrettyName.KAFKA_OPERATOR_ZK,
     "mariadb-operator": OperatorPrettyName.MARIADB_OPERATOR,
     "minio-operator": OperatorPrettyName.MINIO_OPERATOR,
     "mongodb-operator": OperatorPrettyName.MONGODB_OPERATOR,
@@ -83,6 +85,7 @@ operator_pretty_name_mapping: Dict[str, OperatorPrettyName] = {
 OperatorToConfigMapping: dict[OperatorPrettyName, str] = {
     OperatorPrettyName.CASS_OPERATOR: "data/cass-operator/v1-22/func-only.json",
     OperatorPrettyName.KAFKA_OPERATOR: "data/strimzi-kafka-operator/v0-45-0/func-only.json",
+    OperatorPrettyName.KAFKA_OPERATOR_ZK: "data/strimzi-kafka-operator/v0-45-0/func-only-zk.json",
     OperatorPrettyName.MARIADB_OPERATOR: "data/mariadb-operator/v0-30-0/func-only.json",
     OperatorPrettyName.MINIO_OPERATOR: "data/minio-operator/v7-0-0/func-only.json",
     OperatorPrettyName.MONGODB_OPERATOR: "data/percona-server-mongodb-operator/"
@@ -92,7 +95,8 @@ OperatorToConfigMapping: dict[OperatorPrettyName, str] = {
 
 OperatorToFIConfigMapping: dict[OperatorPrettyName, str] = {
     OperatorPrettyName.CASS_OPERATOR: "chactos/cass-operator.json",
-    OperatorPrettyName.KAFKA_OPERATOR: "chactos/strimzi-kafka-operator.json",
+    OperatorPrettyName.KAFKA_OPERATOR: "chactos/strimzi-kafka-operator-zk.json",
+    OperatorPrettyName.KAFKA_OPERATOR_ZK: "chactos/strimzi-kafka-operator-zk.json",
     OperatorPrettyName.MARIADB_OPERATOR: "chactos/mariadb-operator.json",
     OperatorPrettyName.MINIO_OPERATOR: "chactos/minio-operator.json",
     OperatorPrettyName.MONGODB_OPERATOR: "chactos/percona-mongodb-operator.json",
@@ -146,11 +150,11 @@ ALL_BUGS: dict[OperatorPrettyName, dict[str, OatBugConfig]] = {
         ),
     },
     OperatorPrettyName.KAFKA_OPERATOR: {
-        "kafkaop-10231": OatBugConfig(
-            category=BugCategory.OPERATION_SEMANTICS,
-            path="test/oat_tests/kafkaop-10231",
-            difftest=True,
-        ),
+        # "kafkaop-10231": OatBugConfig(
+        #     category=BugCategory.OPERATION_SEMANTICS,
+        #     path="test/oat_tests/kafkaop-10231",
+        #     fault=True,
+        # ),
         "kafkaop-11084": OatBugConfig(
             category=BugCategory.STATE_OBSERVABILITY,
             path="test/oat_tests/kafkaop-11084",
@@ -158,6 +162,13 @@ ALL_BUGS: dict[OperatorPrettyName, dict[str, OatBugConfig]] = {
         "kafkaop-11085": OatBugConfig(
             category=BugCategory.OPERATION_SEMANTICS,
             path="test/oat_tests/kafkaop-11085",
+        ),
+    },
+    OperatorPrettyName.KAFKA_OPERATOR_ZK: {
+        "kafkaop-10231": OatBugConfig(
+            category=BugCategory.OPERATION_SEMANTICS,
+            path="test/oat_tests/kafkaop-10231",
+            fault=True,
         ),
     },
     OperatorPrettyName.MARIADB_OPERATOR: {

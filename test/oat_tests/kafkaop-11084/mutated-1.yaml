@@ -10,6 +10,10 @@ spec:
     topicOperator: {}
     userOperator: {}
   kafka:
+    authorization:
+      superUsers:
+      - admin
+      type: simple
     config:
       controller.quorum.fetch.timeout.ms: -1
       default.replication.factor: 3
@@ -18,7 +22,13 @@ spec:
       transaction.state.log.min.isr: 2
       transaction.state.log.replication.factor: 3
     listeners:
-    - name: plain
+    - name: config
+      port: 9094
+      tls: false
+      type: internal
+    - authentication:
+        type: scram-sha-512
+      name: plain
       port: 9092
       tls: false
       type: internal
