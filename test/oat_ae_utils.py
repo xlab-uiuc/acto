@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Dict
+from typing import Dict, Optional
 
 
 class BugCategory(str, Enum):
@@ -24,11 +24,13 @@ class OatBugConfig:
         path: str,
         difftest: bool = False,
         fault: bool = False,
+        secrets: Optional[list[str]] = None,
     ) -> None:
         self._category = category
         self._path = path
         self._difftest = difftest
         self._fault = fault
+        self._secrets = secrets
 
     @property
     def category(self) -> BugCategory:
@@ -49,6 +51,11 @@ class OatBugConfig:
     def fault(self) -> bool:
         """If the bug requires a fault injection to reproduce"""
         return self._fault
+
+    @property
+    def secrets(self) -> Optional[list[str]]:
+        """The list of secrets associated with the bug"""
+        return self._secrets
 
 
 class OperatorPrettyName(str, Enum):

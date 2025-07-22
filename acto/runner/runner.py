@@ -17,7 +17,7 @@ from acto.kubectl_client import KubectlClient
 from acto.system_state import kubernetes_system_state
 from acto.utils import acto_timer, get_thread_logger
 
-RunnerHookType = Callable[[kubernetes.client.ApiClient], None]
+RunnerHookType = Callable[[kubernetes.client.ApiClient, KubectlClient], None]
 CustomSystemStateHookType = Callable[
     [kubernetes.client.ApiClient, str, int], dict
 ]
@@ -110,7 +110,7 @@ class Runner:
         # call user-defined hooks
         if self._custom_runner_hooks is not None:
             for hook in self._custom_runner_hooks:
-                hook(self.apiclient)
+                hook(self.apiclient, self.kubectl_client)
 
         mutated_filename = snapshot.input_cr_path(self.trial_dir, generation)
         with open(mutated_filename, "w", encoding="utf-8") as mutated_cr_file:

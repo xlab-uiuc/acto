@@ -60,6 +60,7 @@ class ReproWorker:
                     operator_config,
                     cluster_runtime="KIND",
                     acto_namespace=self._acto_namespace,
+                    secret_config=bug_config.secrets,
                 )
                 if bug_config.difftest:
                     if reproduce_postdiff(

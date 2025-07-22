@@ -27,7 +27,7 @@ from acto.input.testplan import TestGroup
 from acto.input.value_with_schema import ValueWithSchema
 from acto.lib.operator_config import OperatorConfig
 from acto.post_process.post_diff_test import PostDiffTest
-from acto.result import OracleResults
+from acto.result import OracleResults, RunResult
 from acto.schema.base import BaseSchema
 from acto.schema.opaque import OpaqueSchema
 from acto.schema.schema import extract_schema
@@ -282,6 +282,7 @@ def reproduce(
     reproduce_dir: str,
     operator_config: str,
     acto_namespace: int,
+    secret_config: Optional[list[str]] = None,
     **kwargs,
 ) -> List[OracleResults]:
     """Reproduce the trial folder"""
@@ -321,6 +322,11 @@ def reproduce(
         apply_testcase_f=apply_testcase_f,
         acto_namespace=acto_namespace,
     )
+
+    if secret_config is not None:
+        module = importlib.import_module("test.secret_apply_runner")
+        module.SECRET_PATHS.extend(secret_config)
+        acto.custom_runner_hooks = module.CUSTOM_RUNNER_HOOKS
 
     errors = acto.run()
     return [error for error in errors if error is not None]
@@ -381,7 +387,16 @@ def reproduce_fault_injection(
         num_workers=1,
     ).run()
 
-    return True
+    runtime_results = glob(
+        os.path.join(fi_test_dir, "**", "runtime-result-*.json")
+    )
+    for runtime_result in runtime_results:
+        with open(runtime_result, "r", encoding="utf-8") as file:
+            run_result = RunResult.model_validate(json.load(file))
+            if run_result.oracle_result.is_error():
+                return True
+
+    return False
 
 
 if __name__ == "__main__":
