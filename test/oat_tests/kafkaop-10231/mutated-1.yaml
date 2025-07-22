@@ -1,18 +1,20 @@
 apiVersion: kafka.strimzi.io/v1beta2
 kind: Kafka
 metadata:
-  annotations:
-    strimzi.io/node-pools: enabled
   name: test-cluster
 spec:
   entityOperator:
     topicOperator: {}
     userOperator: {}
   kafka:
-    authorization:
-      superUsers:
-      - admin
-      type: simple
+    replicas: 3
+    storage:
+      type: jbod
+      volumes:
+      - deleteClaim: false
+        id: 0
+        size: 100Gi
+        type: persistent-claim
     config:
       default.replication.factor: 3
       min.insync.replicas: 2
