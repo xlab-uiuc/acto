@@ -388,7 +388,7 @@ def reproduce_fault_injection(
     ).run()
 
     runtime_results = glob(
-        os.path.join(fi_test_dir, "**", "runtime-result-*.json")
+        os.path.join(fi_test_dir, "**", "generation-*-runtime.json")
     )
     for runtime_result in runtime_results:
         with open(runtime_result, "r", encoding="utf-8") as file:
