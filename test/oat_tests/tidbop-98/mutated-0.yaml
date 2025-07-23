@@ -16,13 +16,9 @@ spec:
     requests:
       storage: 10Gi
   pvReclaimPolicy: Retain
-  ticdc:
-    baseImage: pingcap/ticdc
-    replicas: 3
   tidb:
     baseImage: pingcap/tidb
-    config: "[performance]\n  tcp-keep-alive = true\ngraceful-wait-before-shutdown\
-      \ = 30\n"
+    config: "[performance]\n  tcp-keep-alive = true\n"
     initializer:
       createPassword: true
     maxFailoverCount: 0
@@ -30,13 +26,6 @@ spec:
     service:
       externalTrafficPolicy: Local
       type: NodePort
-  tiflash:
-    baseImage: pingcap/tiflash
-    replicas: 3
-    storageClaims:
-    - resources:
-        requests:
-          storage: 10Gi
   tikv:
     baseImage: pingcap/tikv
     config: 'log-level = "info"
