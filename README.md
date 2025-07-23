@@ -1,77 +1,187 @@
-# Acto: Push-Button End-to-End Testing of Kubernetes Operators and Controllers
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Regression Test](https://github.com/xlab-uiuc/acto/actions/workflows/unittest.yaml/badge.svg)](https://github.com/xlab-uiuc/acto/actions/workflows/unittest.yaml)
-[![End-to-End Test](https://github.com/xlab-uiuc/acto/actions/workflows/e2e-test.yml/badge.svg)](https://github.com/xlab-uiuc/acto/actions/workflows/e2e-test.yml)
-[![Bug Reproduction](https://github.com/xlab-uiuc/acto/actions/workflows/all_bug_reproduction.yaml/badge.svg)](https://github.com/xlab-uiuc/acto/actions/workflows/all_bug_reproduction.yaml)
+# Artifact Evaluation for "Who Watches the Watchers? On the Reliability of Softwarizing Cloud Application Management" ([NSDI'26 Spring AE]())
 
-## Overview
+# 1. Artifact Goals
 
-Acto is a fully automatic end-to-end testing tool for Kubernetes operators/controllers.
+This artifact will reproduce all the quantitative findings and tables in the operator
+  failure study and the OAT tool's evaluation result (Table 7).
 
-Acto implements a state-centric approach to test the target operator together with the managed system.
-It continuously instructs the operator to reconcile the system to different states and checks if the system reaches those desired states.
-Acto models operations as state transitions and systematically realizes state-transition sequences to exercise supported operations in different scenarios.
-Acto's automated oracles check if a system’s state is as desired.
+This artifact includes (1) the dataset of 412 failure cases of 13 popular
+  Kubernetes operators with instructions to reproduce the findings and tables,
+  (2) reproduction instructions for the 86 bugs found by OAT.
 
-Acto is fully automatic.
-It only needs the operator’s deployment script as the input.
-Testing is done in a local Kubernetes environment supported by different backends: Kind, Minikube, and K3d.
-Details on Acto usage are [here](docs/port.md).
 
-Acto has been applied to 11 popular Kuberentes, where it found 50+ new bugs
-(many are confirmed and 28 are fixed).
-See [the lists of bugs](bugs.md) found by Acto.
+The entire artifact process can take around XXX hours if run with a concurrency of 8 workers (e.g., using the CloudLab machine we suggest); it will take about 17 hours if running sequentially (with no concurrent worker).
 
-## Prerequisites
-- [Docker](https://docs.docker.com/engine/install/)
-- [Golang](https://go.dev/doc/install)
-- [k8s Kind cluster](https://kind.sigs.k8s.io/)
-    - `go install sigs.k8s.io/kind@v0.20.0`
-- Python >= 3.12 and dependencies (You may need venv if you are running Ubuntu20.04 or below)
-    - `python3 -m pip install -r requirements.txt`
-- [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/)
+If you have any questions, please contact us via email or HotCRP.
 
-[optional]
-- [Helm](https://helm.sh/docs/intro/install/)
-- Development environment
-  - `python3 -m pip install -r requirements-dev.txt`
+# 2. Prerequisites
 
-## Getting started
+## Setting up [CloudLab](https://www.cloudlab.us/) machines
 
-Users need to port the operator before testing it with Acto.
-We list the detailed steps of using Acto [here](docs/port.md).
-We are actively working on simplifying the process to make it more user-friendly.
+If you are a first timer of CloudLab, we encourage you to read the CloudLab doc for an overview of how Artifact Evaluation is generally conducted on CloudLab.
 
-## Demo
-To show Acto's bug-finding capability, we reproduce one of the previous bugs Acto found automatically.
+[CloudLab For Artifact Evaluation](https://docs.cloudlab.us/repeatable-research.html#%28part._aec-members%29)
 
-First, run `make` to build Acto's shared objects:
+If you do not already have a CloudLab account, please apply for one following this [link](https://www.cloudlab.us/signup.php),
+  and ask the SOSP AEC chair to add you to the SOSP AEC project. Please let us know if you have trouble accessing cloudlab, we can help set up the experiment and give you access.
+
+We recommend you to use the machine type, [c6420](https://www.cloudlab.us/instantiate.php?project=Sieve-Acto&profile=acto-cloudlab&refspec=refs/heads/main) (CloudLab profile), which was used by the evaluation. Note that the machine may not be available all the time. You would need to submit a resource reservation to guarantee the availability of the resource.
+You can also use the alternative machine type via our profile, [c8220](https://www.cloudlab.us/p/Sieve-Acto/acto-cloudlab?refspec=refs/heads/c8220). The c8220 machine is available most of the time, but has less memory than c6420.
+
+Note that our results in the evaluation are all produced using the [c6420](https://www.cloudlab.us/instantiate.php?project=Sieve-Acto&profile=acto-cloudlab&refspec=refs/heads/main) profile.
+
+Below, we provide three ways to set up the environment:
+1. [Set up environment on CloudLab c6420 using the profile (recommended)](#setting-up-environment-for-cloudlab-machine-c6420-using-the-profile-recommended)
+2. [Set up environment on CloudLab c8220 using the profile](#setting-up-environment-for-cloudlab-machine-c8220-using-the-profile)
+3. [Set up environment on a local machine](#setting-up-local-environment-skip-this-if-using-the-cloudlab-profile)
+
+## Reserve nodes with preferred hardware type
+
+To reserve machines, click the “Reserve Nodes” tab from the dropdown menu from the “Experiments” tab at top left corner. Select “CloudLab Clemson” for the cluster, “c6420” as the hardware, and “1” for the number of nodes. Specify the desired time frame for the reservation, and click “Check”. The website will check if your reservation can be satisfied and then you can submit the request. The request will be reviewed by CloudLab staff and approved typically on the next business day.
+
+[Resource Reservation](http://docs.cloudlab.us/reservations.html)
+
+Note: Reservation does not automatically start the experiment.
+
+## Setting up environment for CloudLab machine c6420 using the profile (recommended)
+
+We provide CloudLab profile to automatically select the c6420 as the machine type and set up
+  all the environment.
+
+To use the profile, follow the [link](https://www.cloudlab.us/instantiate.php?project=Sieve-Acto&profile=acto-cloudlab&refspec=refs/heads/main)
+and keep hitting `next` to create the experiment.
+You should see that CloudLab starts to provision the machine and our profile will run a StartUp
+  script to set the environment up.
+
+The start up would take around 15 minutes.
+Please patiently wait for "Status" to become `Ready` and "Startup" to become `Finished`.
+After that, Acto is installed at the `workdir/acto` directory under your `$HOME` directory.
+
+Access the machine using `ssh` or through the `shell` provided by the CloudLab Web UI.
+Please proceed to the [Kick-the-tire Instructions](#3-kick-the-tire-instructions-10-minutes) to validate.
+
+### Seeing `Exited (2)` in the "Startup" column?
+
+<details><summary>Click to show details</summary>
+
+There could sometimes be transient network issues within the CloudLab cluster, which prevent e.g. `pip install` in the startup scripts from functioning as expected.
+
+To circumvent the problem, either
+
+1. Recreate the experiment using the same profile, or
+2. SSH into the machine and manually rerun the startup:
+
+    ```sh
+    sudo su - geniuser
+    bash /local/repository/scripts/cloudlab_startup_run_by_geniuser.sh
+    exit
+    ```
+
+</details>
+
+
+### Seeing error message from CloudLab `No available physical nodes of type c6420 found (1 requested)`?
+<details><summary>Click to show details</summary>
+
+This means that currently there is no c6420 machines available for experiments.
+Please check the [Reserve nodes with preferred hardware](#reserve-nodes-with-preferred-hardware-type) section or check back later.
+
+</details>
+
+## Setting up environment for CloudLab machine c8220 using the profile
+
+We provide CloudLab profile to automatically select the c8220 as the machine type and set up
+  all the environment, in case the c6420 machine is not available at the time of starting experiment,
+  or reviewers do not have enough time to make a resource reservation.
+
+To use the profile, follow the [link](https://www.cloudlab.us/p/Sieve-Acto/acto-cloudlab?refspec=refs/heads/c8220)
+and keep hitting `next` to create the experiment.
+You should see that CloudLab starts to provision the machine and our profile will run a StartUp
+  script to set the environment up.
+
+The startup would take around 20 minutes.
+Please patiently wait for "Status" to become `Ready` and "Startup" to become `Finished`.
+After that, Acto is installed at the `workdir/acto` directory under your `$HOME` directory.
+
+Access the machine using `ssh` or through the `shell` provided by the CloudLab Web UI.
+Please proceed to the [Kick-the-tire Instructions](#3-kick-the-tire-instructions-10-minutes) to validate.
+
+
+## Setting up local environment (skip this if using the CloudLab profile)
+<details><summary>Click to show details</summary>
+
+* A Linux system with Docker support
+* Python 3.12 or newer
+* Install `pip3` by running `sudo apt install python3-pip`
+* Install [Golang](https://go.dev/doc/install)
+* Clone the repo recursively by running `git clone --recursive --branch nsdi26-ae https://github.com/xlab-uiuc/acto.git`
+* Install Python dependencies by running `pip3 install -r requirements-dev.txt` in the project
+* Install `Kind` by running `go install sigs.k8s.io/kind@v0.21.0`
+* Install `Kubectl` by running `curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"` and `sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl`
+* Configure inotify limits (need to rerun after reboot)
+  * `sudo sysctl fs.inotify.max_user_instances=1024`
+  * `sudo sysctl fs.inotify.max_user_watches=1048576`
+
+</details>
+
+# 3. Kick-the-tire Instructions (10 minutes)
+
+We prepared a simple example – reproducing a bug found by OAT – to help check obvious setup problems.
+
+First, build the dependent modules:
+
 ```sh
+cd ~/workdir/acto/
 make
 ```
 
-To reproduce the bug, run the following command:
+Then, reproduce the MariaDBOp-863 bug by running:
+
 ```sh
-python3 -m acto.reproduce --reproduce-dir test/e2e_tests/test_data/cassop-330/trial-demo --config data/cass-operator/config.json
+python3 reproduce_bugs.py --bug-id mariadbop-863
 ```
-The files in the `test/cassop-330/trial-demo` directory are the sequence of CRs required to trigger
-  this bug.
-They are just a small subset of CRs generated by Acto automatically.
 
-Acto first spins up a local Kubernetes cluster using Kind and deploys the cass-operator.
-It then deploys CassandraDatacenter using the initial CR and
-  generates a transition to insert a key-value pair to CassandraDatacenter's property
-  `spec.additionalServiceConfig.seedService.additionalLabels`.
-This transition triggered the cass-operator to add the key-value pair to `metadata.labels` of
-  the corresponding SeedService resource.
-For the next step, Acto deletes the key-value pair.
-Due to a bug in cass-operator, the deleted key-value pair
-  is not removed from the SeedService resource in Kubernetes.
-Acto automatically detects this bug based on the inconsistency between the CR and the system resources.
+Expected results:
 
-## Contributing
-Thank you for your interest in Acto!
-We welcome all feedback and contributions.
-If you wish to file a bug or enhancement proposal or have other questions,
-  please use the Github [Issue](https://github.com/xlab-uiuc/acto/issues/new).
-If you'd like to contribute code, please open a Pull Request.
+```text
+Reproducing bug mariadbop-863 in MariaDBOp!
+Preparing required images...
+Deleting cluster "acto-0-cluster-0" ...
+Deleted nodes: ["acto-0-cluster-0-worker2" "acto-0-cluster-0-worker4" "acto-0-cluster-0-worker5" "acto-0-cluster-0-worker3" "acto-0-cluster-0-worker" "acto-0-cluster-0-control-plane"]
+Creating a Kind cluster...
+Creating cluster "acto-0-cluster-0" ...
+...
+
+Deploying operator...
+Operator deployed
+pod/mariadb-writer created
+Bug mariadbop-863 reproduced!
+Bug category: Operation Semantics
+```
+
+
+# 4. Operator Failure Study
+
+You can view the tables and findings reproduced using Jupyter notebooks here: [https://github.com/xlab-uiuc/acto/blob/nsdi26-ae/study.ipynb](https://github.com/xlab-uiuc/acto/blob/nsdi26-ae/study.ipynb)
+
+**Operator Failure Dataset:** https://github.com/xlab-uiuc/acto/blob/nsdi26-ae/nsdi26ae.csv
+
+# 5. Evaluation Instructions for OAT (2+ hours)
+
+To reproduce the 86 bugs in Table 5, please execute the tests by running:
+
+```sh
+cd ~/workdir/acto/
+make
+python3 reproduce_bugs.py -n <NUM_WORKERS>
+```
+
+Using the c6420 profile we recommend, run the tests with 16 workers `-n 8` and it will take about XX minutes to finish.
+
+Using the c8220 profile we recommend, run the tests with 8 workers `-n 4` and it will take about XX hours to finish.
+
+We suggest starting this long-running experiment in a tmux or screen session.
+
+**Caution**: running too many workers at the same time may overload your machine, and Kind would fail to bootstrap Kubernetes clusters. If you are not running the experiment using our recommended CloudLab profile, please default the number of workers to `1`. Running this step sequentially takes approximately 17 hours.
+
+<details><summary>What does the reproduce script do?</summary>For each bug, the reproduction code runs OAT with tests needed to reproduce the bug. It checks if every bug is reproducible and outputs Table 5. </details>
