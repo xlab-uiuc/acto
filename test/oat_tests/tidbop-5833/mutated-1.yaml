@@ -9,13 +9,16 @@ spec:
     image: alpine:3.16.0
   pd:
     baseImage: pingcap/pd
-    # config: "[dashboard]\n  internal-proxy = true\n"
+    config: "[dashboard]\n  internal-proxy = true\n"
     maxFailoverCount: 0
     mountClusterClientSecret: true
     replicas: 3
     requests:
       storage: 10Gi
   pvReclaimPolicy: Retain
+  ticdc:
+    baseImage: pingcap/ticdc
+    replicas: 3
   tidb:
     baseImage: pingcap/tidb
     config: "[performance]\n  tcp-keep-alive = true\ngraceful-wait-before-shutdown\
@@ -25,32 +28,27 @@ spec:
     service:
       externalTrafficPolicy: Local
       type: NodePort
+  tiflash:
+    baseImage: pingcap/tiflash
+    replicas: 3
+    storageClaims:
+    - resources:
+        requests:
+          storage: 10Gi
   tikv:
     baseImage: pingcap/tikv
-    config: |
-      [raftdb]
-        max-open-files = 256
-      [rocksdb]
-        max-open-files = 128
+    config: 'log-level = "info"
+
+      '
     maxFailoverCount: 0
     mountClusterClientSecret: true
     replicas: 3
     requests:
       storage: 100Gi
-  tiflash:
-    baseImage: pingcap/tiflash
-    version: "v8.1.0"
-    replicas: 3
-    config:
-      config: |
-        [logger]
-          log = "/data0/logs/somelog"
-      proxy: |
-        [security]
-          cert-allowed-cn = ["CNNAME"]
-    storageClaims:
-      - resources:
-          requests:
-            storage: 10Gi
+    scalePolicy:
+      scaleOutParallelism: 5
   timezone: UTC
+  tiproxy:
+    replicas: 5
+    sslEnableTiDB: true
   version: v8.1.0

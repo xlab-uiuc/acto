@@ -1,7 +1,7 @@
 apiVersion: pingcap.com/v1alpha1
 kind: TidbCluster
 metadata:
-  name: basic
+  name: test-cluster
 spec:
   version: v8.1.0
   timezone: UTC
@@ -47,4 +47,5 @@ spec:
     replicas: 1
     service:
       type: ClusterIP
-    config: {}
+    config: "[performance]\n  tcp-keep-alive = true\ngraceful-wait-before-shutdown\
+      \ = 30\n"

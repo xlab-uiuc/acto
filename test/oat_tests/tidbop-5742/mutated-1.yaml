@@ -39,15 +39,14 @@ spec:
       storage: 100Gi
   tiflash:
     baseImage: pingcap/tiflash
-    version: "v8.1.0"
-    replicas: 3
     config:
-      config: |
-        [logger]
-          log = "/data0/logs/somelog"
-      proxy: |
-        [security]
-          cert-allowed-cn = ["CNNAME"]
+      config: "[logger]\n  log = \"/data0/logs/somelog\"\n"
+      proxy: "[security]\n  cert-allowed-cn = [\"CNNAME\"]\n"
+    replicas: 3
+    storageClaims:
+    - resources:
+        requests:
+          storage: 10Gi
     storageClaims:
       - resources:
           requests:

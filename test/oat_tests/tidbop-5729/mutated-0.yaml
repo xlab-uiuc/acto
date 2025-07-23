@@ -1,85 +1,46 @@
-apiVersion: k8s.mariadb.com/v1alpha1
-kind: MariaDB
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
 metadata:
   name: test-cluster
 spec:
-  connection:
-    healthCheck:
-      interval: 10s
-      retryInterval: 3s
-    params:
-      parseTime: 'true'
-    secretName: connection-mariadb
-    secretTemplate:
-      key: dsn
-  database: mariadb
-  env:
-  - name: TZ
-    value: SYSTEM
-  galera:
-    enabled: true
-  livenessProbe:
-    exec:
-      command:
-      - bash
-      - -c
-      - mariadb -u root -p"${MARIADB_ROOT_PASSWORD}" -e "SELECT 1;"
-    initialDelaySeconds: 20
-    periodSeconds: 5
-    timeoutSeconds: 5
-  metrics:
-    enabled: true
-  myCnf: '[mariadb]
-
-    bind_address=*
-
-    default_storage_engine=InnoDB
-
-    binlog_format=row
-
-    innodb_autoinc_lock_mode=2
-
-    innodb_buffer_pool_size=1024Mi
-
-    max_allowed_packet=256Mi
-
-    '
-  passwordSecretKeyRef:
-    key: password
-    name: mariadb
-  podDisruptionBudget:
-    maxUnavailable: 50%
-  port: 3306
-  readinessProbe:
-    exec:
-      command:
-      - bash
-      - -c
-      - mariadb -u root -p"${MARIADB_ROOT_PASSWORD}" -e "SELECT 1;"
-    initialDelaySeconds: 20
-    periodSeconds: 5
-    timeoutSeconds: 5
-  replicas: 3
-  resources:
-    limits:
-      memory: 1Gi
+  version: v8.1.0
+  timezone: UTC
+  pvReclaimPolicy: Retain
+  enableDynamicConfiguration: true
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    maxFailoverCount: 0
+    replicas: 1
     requests:
-      cpu: 100m
-      memory: 128Mi
-  rootPasswordSecretKeyRef:
-    key: root-password
-    name: mariadb
-  securityContext:
-    allowPrivilegeEscalation: false
-  service:
-    type: ClusterIP
-  storage:
-    resizeInUseVolumes: true
-    size: 1Gi
-    storageClassName: standard
-    waitForVolumeResize: true
-  suspend: false
-  timeZone: UTC
-  updateStrategy:
-    type: ReplicasFirstPrimaryLast
-  username: mariadb
+      storage: "1Gi"
+    config: {}
+  tikv:
+    baseImage: pingcap/tikv
+    maxFailoverCount: 0
+    evictLeaderTimeout: 1m
+    replicas: 1
+    requests:
+      storage: "1Gi"
+    config:
+      storage:
+        # In basic examples, we set this to avoid using too much storage.
+        reserve-space: "0MB"
+        engine: "raft-kv"
+      rocksdb:
+        # In basic examples, we set this to avoid the following error in some Kubernetes clusters:
+        # "the maximum number of open file descriptors is too small, got 1024, expect greater or equal to 82920"
+        max-open-files: 256
+      raftdb:
+        max-open-files: 256
+  tidb:
+    baseImage: pingcap/tidb
+    maxFailoverCount: 0
+    replicas: 1
+    service:
+      type: ClusterIP
+    config: "[performance]\n  tcp-keep-alive = true\ngraceful-wait-before-shutdown\
+      \ = 30\n"

@@ -9,7 +9,7 @@ spec:
     image: alpine:3.16.0
   pd:
     baseImage: pingcap/pd
-    config: "[dashboard]\n  internal-proxy = true\n"
+    # config: "[dashboard]\n  internal-proxy = true\n"
     maxFailoverCount: 0
     mountClusterClientSecret: true
     replicas: 3
@@ -18,11 +18,8 @@ spec:
   pvReclaimPolicy: Retain
   tidb:
     baseImage: pingcap/tidb
-    config: '
-      [performance]
-
-      tcp-keep-alive = true
-      '
+    config: "[performance]\n  tcp-keep-alive = true\ngraceful-wait-before-shutdown\
+      \ = 30\n"
     maxFailoverCount: 0
     replicas: 3
     service:
@@ -30,13 +27,29 @@ spec:
       type: NodePort
   tikv:
     baseImage: pingcap/tikv
-    config: 'log-level = "info"
-
-      '
+    config: |
+      [raftdb]
+        max-open-files = 256
+      [rocksdb]
+        max-open-files = 128
     maxFailoverCount: 0
     mountClusterClientSecret: true
     replicas: 3
     requests:
       storage: 100Gi
+  tiflash:
+    baseImage: pingcap/tiflash
+    config:
+      config: "[logger]\n  log = \"/data0/logs/somelog\"\n"
+      proxy: "[security]\n  cert-allowed-cn = \"CNNAME\"\n"
+    replicas: 3
+    storageClaims:
+    - resources:
+        requests:
+          storage: 10Gi
+    storageClaims:
+      - resources:
+          requests:
+            storage: 10Gi
   timezone: UTC
   version: v8.1.0
