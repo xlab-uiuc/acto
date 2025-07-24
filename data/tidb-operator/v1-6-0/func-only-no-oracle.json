@@ -1,0 +1,111 @@
+{
+    "deploy": {
+        "steps": [
+            {
+                "apply": {
+                    "file": "https://github.com/cert-manager/cert-manager/releases/download/v1.15.3/cert-manager.yaml",
+                    "namespace": null
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/tidb-operator/v1-6-0/crd.yaml",
+                    "namespace": null
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/tidb-operator/v1-6-0/manifest.yaml",
+                    "operator": true
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/tidb-operator/v1-6-0/tidb-certs.yaml",
+                    "namespace": null
+                }
+            }
+        ]
+    },
+    "crd_name": "tidbclusters.pingcap.com",
+    "seed_custom_resource": "data/tidb-operator/v1-6-0/cr.yaml",
+    "example_dir": "data/tidb-operator/v1-6-0/examples",
+    "wait_time": 120,
+    "custom_module": "data.tidb-operator.v1-6-0.custom_mapping",
+    "diff_ignore_fields": [
+        "\\['tidb\\.pingcap\\.com\\\/cluster\\-id'\\]",
+        "\\['tidb\\.pingcap\\.com\\\/member\\-id'\\]",
+        "\\['tidb\\.pingcap\\.com\\\/store\\-id'\\]",
+        "\\['tidb\\.pingcap\\.com\\\/owner\\-generation'\\]"
+    ],
+    "focus_fields": [
+        ["spec", "pd", "replicas"],
+        ["spec", "pd", "config"],
+        ["spec", "pd", "tlsClientSecretName"],
+        ["spec", "pd", "mountClusterClientSecret"],
+        ["spec", "pd", "hostNetwork"],
+        ["spec", "pd", "startUpScriptVersion"],
+        ["spec", "pd", "enableDashboardInternalProxy"],
+        ["spec", "pdms", "ITEM", "name"],
+        ["spec", "pdms", "ITEM", "replicas"],
+        ["spec", "pdms", "ITEM", "config"],
+        ["spec", "pdms", "ITEM", "mountClusterClientSecret"],
+        ["spec", "pdms", "ITEM", "startUpScriptVersion"],
+        ["spec", "pdms", "ITEM", "hostNetwork"],
+        ["spec", "tidb", "replicas"],
+        ["spec", "tidb", "binlogEnabled"],
+        ["spec", "tidb", "tlsClient", "enabled"],
+        ["spec", "tidb", "tokenBasedAuthEnabled"],
+        ["spec", "tidb", "plugins"],
+        ["spec", "tidb", "initializer", "createPassword"],
+        ["spec", "tidb", "bootstrapSQLConfigMapName"],
+        ["spec", "tidb", "bootstrapSQLConfigMapName"],
+        ["spec", "tidb", "customizedStartupProbe"],
+        ["spec", "tidb", "arguments"],
+        ["spec", "tidb", "configUpdateStrategy"],
+        ["spec", "tidb", "scalePolicy"],
+        ["spec", "tikv", "replicas"],
+        ["spec", "tikv", "config"],
+        ["spec", "tikv", "recoverFailover"],
+        ["spec", "tikv", "mountClusterClientSecret"],
+        ["spec", "tikv", "enableNamedStatusPort"],
+        ["spec", "tikv", "configUpdateStrategy"],
+        ["spec", "tikv", "hostNetwork"],
+        ["spec", "tikv", "limits"],
+        ["spec", "tikv", "storeLabels"],
+        ["spec", "tikv", "scalePolicy"],
+        ["spec", "tiflash", "replicas"],
+        ["spec", "tiflash", "limits"],
+        ["spec", "tiflash", "config"],
+        ["spec", "tiflash", "recoverFailover"],
+        ["spec", "tiflash", "scalePolicy"],
+        ["spec", "tiflash", "hostNetwork"],
+        ["spec", "tiflash", "configUpdateStrategy"],
+        ["spec", "ticdc", "replicas"],
+        ["spec", "ticdc", "tlsClientSecretNames"],
+        ["spec", "ticdc", "config"],
+        ["spec", "tiproxy", "replicas"],
+        ["spec", "tiproxy", "sslEnableTiDB"],
+        ["spec", "tiproxy", "tlsClientSecretName"],
+        ["spec", "tiproxy", "config"],
+        ["spec", "pump", "replicas"],
+        ["spec", "pump", "config"],
+        ["spec", "pump", "setTimeZone"],
+        ["spec", "pump", "hostNetwork"],
+        ["spec", "pause"],
+        ["spec", "version"],
+        ["spec", "configUpdateStrategy"],
+        ["spec", "enablePVReclaim"],
+        ["spec", "tlsCluster"],
+        ["spec", "timezone"],
+        ["spec", "hostNetwork"],
+        ["spec", "enableDynamicConfiguration"],
+        ["spec", "clusterDomain"],
+        ["spec", "acrossK8s"],
+        ["spec", "cluster"],
+        ["spec", "pdAddresses"],
+        ["spec", "startScriptVersion"],
+        ["spec", "suspendAction"],
+        ["spec", "startScriptV2FeatureFlags"]
+    ]
+}

@@ -68,6 +68,7 @@ class OperatorPrettyName(str, Enum):
     MINIO_OPERATOR = "MinIOOp"
     MONGODB_OPERATOR = "MongoOp"
     TIDB_OPERATOR = "TiDBOp"
+    TIDB_OPERATOR_NO_ORACLE = "TiDBOpNoOracle"
 
 
 # Mapping from operator name to pretty name
@@ -79,6 +80,7 @@ operator_pretty_name_mapping: Dict[str, OperatorPrettyName] = {
     "minio-operator": OperatorPrettyName.MINIO_OPERATOR,
     "mongodb-operator": OperatorPrettyName.MONGODB_OPERATOR,
     "tidb-operator": OperatorPrettyName.TIDB_OPERATOR,
+    "tidb-operator-no-oracle": OperatorPrettyName.TIDB_OPERATOR_NO_ORACLE,
 }
 
 
@@ -91,6 +93,7 @@ OperatorToConfigMapping: dict[OperatorPrettyName, str] = {
     OperatorPrettyName.MONGODB_OPERATOR: "data/percona-server-mongodb-operator/"
     "v1-16-0/func-only.json",
     OperatorPrettyName.TIDB_OPERATOR: "data/tidb-operator/v1-6-0/func-only.json",
+    OperatorPrettyName.TIDB_OPERATOR_NO_ORACLE: "data/tidb-operator/v1-6-0/func-only-no-oracle.json",
 }
 
 OperatorToFIConfigMapping: dict[OperatorPrettyName, str] = {
@@ -101,6 +104,7 @@ OperatorToFIConfigMapping: dict[OperatorPrettyName, str] = {
     OperatorPrettyName.MINIO_OPERATOR: "chactos/minio-operator.json",
     OperatorPrettyName.MONGODB_OPERATOR: "chactos/percona-mongodb-operator.json",
     OperatorPrettyName.TIDB_OPERATOR: "chactos/tidb-operator.json",
+    OperatorPrettyName.TIDB_OPERATOR_NO_ORACLE: "chactos/tidb-operator.json",
 }
 
 
@@ -411,14 +415,15 @@ ALL_BUGS: dict[OperatorPrettyName, dict[str, OatBugConfig]] = {
         ),
     },
     OperatorPrettyName.TIDB_OPERATOR: {
-        "tidbop-98": OatBugConfig(
-            category=BugCategory.BY_PRODUCT,
-            path="test/oat_tests/tidbop-98",
-            difftest=True,
-        ),
+        # "tidbop-98": OatBugConfig(
+        #     category=BugCategory.BY_PRODUCT,
+        #     path="test/oat_tests/tidbop-98",
+        #     difftest=True,
+        # ),
         "tidbop-5728": OatBugConfig(
             category=BugCategory.OPERATION_SEMANTICS,
             path="test/oat_tests/tidbop-5728",
+            difftest=True,
         ),
         "tidbop-5729": OatBugConfig(
             category=BugCategory.OPERATION_SEMANTICS,
@@ -427,7 +432,6 @@ ALL_BUGS: dict[OperatorPrettyName, dict[str, OatBugConfig]] = {
         "tidbop-5739": OatBugConfig(
             category=BugCategory.BY_PRODUCT,
             path="test/oat_tests/tidbop-5739",
-            difftest=True,
         ),
         "tidbop-5741": OatBugConfig(
             category=BugCategory.BY_PRODUCT,
@@ -449,6 +453,7 @@ ALL_BUGS: dict[OperatorPrettyName, dict[str, OatBugConfig]] = {
         "tidbop-5835": OatBugConfig(
             category=BugCategory.BY_PRODUCT,
             path="test/oat_tests/tidbop-5835",
+            difftest=True,
         ),
         "tidbop-6013": OatBugConfig(
             category=BugCategory.STATE_OBSERVABILITY,
@@ -487,4 +492,11 @@ ALL_BUGS: dict[OperatorPrettyName, dict[str, OatBugConfig]] = {
             path="test/oat_tests/tidb-56643",
         ),
     },
+    OperatorPrettyName.TIDB_OPERATOR_NO_ORACLE: {
+        "tidbop-98": OatBugConfig(
+            category=BugCategory.BY_PRODUCT,
+            path="test/oat_tests/tidbop-98",
+            difftest=True,
+        ),
+    }
 }
