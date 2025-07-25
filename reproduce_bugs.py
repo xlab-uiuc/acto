@@ -53,6 +53,16 @@ class ReproWorker:
                 work_dir = f"{self._repro_result_dir}/testrun-{bug_id}"
                 operator_config = oat_ae_utils.OperatorToConfigMapping[operator]
 
+                if bug_id == "K8SPSMDB-1333":
+                    # K8SPSMDB-1333 is a problem that happens every time when
+                    # deploying the MongoDB cluster. We intentionally skip it
+                    # for other runs so that we can detect other bugs.
+                    # The special config does not skip this bug.
+                    operator_config = (
+                        "data/percona-server-mongodb-operator/"
+                        + "v1-16-0/func-only-1333.json"
+                    )
+
                 reproduced: bool = False
                 normal_run_result = reproduce(
                     work_dir,
