@@ -7,6 +7,7 @@ import os
 from datetime import datetime
 from functools import partial
 from glob import glob
+from pathlib import Path
 from typing import List, Optional, Tuple
 
 import jsonpatch
@@ -387,9 +388,7 @@ def reproduce_fault_injection(
         num_workers=1,
     ).run()
 
-    runtime_results = glob(
-        os.path.join(fi_test_dir, "**", "generation-*-runtime.json")
-    )
+    runtime_results = Path(fi_test_dir).rglob("generation-*-runtime.json.json")
     for runtime_result in runtime_results:
         with open(runtime_result, "r", encoding="utf-8") as file:
             run_result = RunResult.model_validate(json.load(file))
