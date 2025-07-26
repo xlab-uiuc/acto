@@ -216,6 +216,7 @@ ALL_BUGS: dict[OperatorPrettyName, dict[str, OatBugConfig]] = {
         "mariadbop-1022": OatBugConfig(
             category=BugCategory.OPERATION_SEMANTICS,
             path="test/oat_tests/mariadbop-1022",
+            difftest=True,
         ),
         "mariadbop-1023": OatBugConfig(
             category=BugCategory.ERROR_HANDLING,
