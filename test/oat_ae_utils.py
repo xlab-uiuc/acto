@@ -93,7 +93,8 @@ OperatorToConfigMapping: dict[OperatorPrettyName, str] = {
     OperatorPrettyName.MONGODB_OPERATOR: "data/percona-server-mongodb-operator/"
     "v1-16-0/func-only.json",
     OperatorPrettyName.TIDB_OPERATOR: "data/tidb-operator/v1-6-0/func-only.json",
-    OperatorPrettyName.TIDB_OPERATOR_NO_ORACLE: "data/tidb-operator/v1-6-0/func-only-no-oracle.json",
+    OperatorPrettyName.TIDB_OPERATOR_NO_ORACLE: "data/tidb-operator/v1-6-0/"
+    + "func-only-no-oracle.json",
 }
 
 OperatorToFIConfigMapping: dict[OperatorPrettyName, str] = {
@@ -183,6 +184,7 @@ ALL_BUGS: dict[OperatorPrettyName, dict[str, OatBugConfig]] = {
         "mariadbop-864": OatBugConfig(
             category=BugCategory.OPERATION_SEMANTICS,
             path="test/oat_tests/mariadbop-864",
+            difftest=True,
         ),
         "mariadbop-866": OatBugConfig(
             category=BugCategory.OPERATION_SEMANTICS,
@@ -499,5 +501,5 @@ ALL_BUGS: dict[OperatorPrettyName, dict[str, OatBugConfig]] = {
             path="test/oat_tests/tidbop-98",
             difftest=True,
         ),
-    }
+    },
 }
