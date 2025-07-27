@@ -299,11 +299,13 @@ ALL_BUGS: dict[OperatorPrettyName, dict[str, OatBugConfig]] = {
         "minioop-1100": OatBugConfig(
             category=BugCategory.BY_PRODUCT,
             path="test/oat_tests/minioop-1100",
+            difftest=True,
         ),
         "minioop-2392": OatBugConfig(
             category=BugCategory.OPERATION_SEMANTICS,
             path="test/oat_tests/minioop-2392",
-            secrets="test/oat_tests/minioop-2392/secrets.yaml",
+            secrets=["test/oat_tests/minioop-2392/secret-0.yaml",
+                     "test/oat_tests/minioop-2392/secret-1.yaml"],
         ),
     },
     OperatorPrettyName.MONGODB_OPERATOR: {
@@ -431,6 +433,7 @@ ALL_BUGS: dict[OperatorPrettyName, dict[str, OatBugConfig]] = {
         "tidbop-5729": OatBugConfig(
             category=BugCategory.OPERATION_SEMANTICS,
             path="test/oat_tests/tidbop-5729",
+            difftest=True,
         ),
         "tidbop-5739": OatBugConfig(
             category=BugCategory.BY_PRODUCT,

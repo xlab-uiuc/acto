@@ -569,7 +569,7 @@ class K8sSchemaMatcher:
             if not isinstance(kubernetes_schema, KubernetesObjectSchema):
                 # Avoid Opaque schemas for Kubernetes named schemas
                 continue
-            if kubernetes_schema.match(schema):
+            if len(kubernetes_schema.properties) >= 2 and kubernetes_schema.match(schema):
                 matched_schemas.append((schema, kubernetes_schema))
         if matched_schemas:
             idx = self._rank_matched_k8s_schemas(schema, matched_schemas)
