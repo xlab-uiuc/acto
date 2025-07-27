@@ -1,0 +1,40 @@
+{
+    "type": "object",
+    "properties": {
+        "storage": {
+            "type": "object",
+            "properties": {
+                "engine": {
+                    "type": "string",
+                    "default": "info",
+                    "description": "Storage engine to use for TiKV. Options are 'raft-kv', 'raft-kv2', or 'partitioned-raft-kv'."
+                },
+                "reserve-space": {
+                    "type": "string",
+                    "default": "0",
+                    "description": "Reserved space for the storage engine, in bytes. Set to 0 to disable."
+                }
+            }
+        },
+        "rocksdb": {
+            "type": "object",
+            "properties": {
+                "max-open-files": {
+                    "type": "integer",
+                    "default": 1000,
+                    "description": "Maximum number of open files."
+                }
+            }
+        },
+        "raftdb": {
+            "type": "object",
+            "properties": {
+                "max-open-files": {
+                    "type": "integer",
+                    "default": 1000,
+                    "description": "Maximum number of open files for the Raft DB."
+                }
+            }
+        }
+    }
+}
