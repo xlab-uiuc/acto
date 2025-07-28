@@ -136,6 +136,11 @@ class InputModel(abc.ABC):
         """
         raise NotImplementedError
 
+    @abc.abstractmethod
+    def clear_test_plan(self):
+        """Clear the test plan"""
+        raise NotImplementedError
+
 
 class DeterministicInputModel(InputModel):
     """A concrete input model that generates input deterministically"""
@@ -661,3 +666,7 @@ class DeterministicInputModel(InputModel):
                     "Setting default value for %s to %s", path, decoded_value
                 )
                 self.get_schema_by_path(path).set_default(value)
+
+    def clear_test_plan(self):
+        """Clear the test plan"""
+        self.thread_vars.test_plan = DeterministicTestPlan()

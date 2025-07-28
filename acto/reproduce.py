@@ -262,6 +262,10 @@ class ReproInputModel(DeterministicInputModel):
     def apply_k8s_schema(self, k8s_field):
         """Override"""
 
+    def clear_test_plan(self):
+        """Clear the test plan"""
+        self.testcases = []
+
 
 def repro_precondition(_):
     """Precondition for reproducing"""

@@ -167,7 +167,7 @@ You can view the tables and findings reproduced using Jupyter notebooks here: [h
 
 **Operator Failure Dataset:** https://github.com/xlab-uiuc/acto/blob/nsdi26-ae/nsdi26ae.csv
 
-# 4.2 OAT Evaluation Instructions (2+ hours)
+## 4.2 OAT Evaluation Instructions (2+ hours)
 
 To reproduce the 86 bugs in Table 5, please execute the tests by running:
 

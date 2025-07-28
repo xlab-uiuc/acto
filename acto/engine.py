@@ -608,6 +608,13 @@ class TrialRunner:
                 generation,
             )
             if run_result.oracle_result.is_error():
+                # fails the initial input, abort
+                if generation == 0:
+                    logger.error("Error result in initial step")
+                    trial_err = run_result.oracle_result
+                    self.input_model.clear_test_plan()
+                    break
+
                 # before return, run the recovery test case
                 logger.info("Error result, running recovery")
                 run_result.oracle_result.differential = self.run_recovery(
