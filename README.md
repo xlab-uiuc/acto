@@ -3,11 +3,12 @@
 # 1. Artifact Goals
 
 This artifact will reproduce all the quantitative findings and tables in the operator
-  failure study and the OAT tool's evaluation result (Table 7).
+  failure study and the OAT tool's evaluation result.
 
-This artifact includes (1) the dataset of 412 failure cases of 13 popular
-  Kubernetes operators with instructions to reproduce the findings and tables and
-  (2) reproduction instructions for the 86 bugs found by OAT.
+This artifact includes:
+1. the dataset of 412 failure cases of 13 popular
+  Kubernetes operators with instructions to reproduce the findings (Finding 1-4) and tables (Table 3-5, Figure 3),
+2. reproduction instructions for the 86 bugs (Table 7) found by OAT.
 
 
 The entire artifact process can take around XXX hours if run with a concurrency of 8 workers (e.g., using the CloudLab machine we suggest); it will take about 17 hours if running sequentially (with no concurrent worker).
