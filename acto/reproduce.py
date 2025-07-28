@@ -334,6 +334,12 @@ def reproduce(
         acto.custom_runner_hooks = module.CUSTOM_RUNNER_HOOKS
 
     errors = acto.run()
+
+    # remove the images.tar file
+    images_tar = os.path.join(workdir_path, "images.tar")
+    if os.path.exists(images_tar):
+        os.remove(images_tar)
+
     return [error for error in errors if error is not None]
 
 
@@ -360,6 +366,11 @@ def reproduce_postdiff(
     )
     p.post_process(post_diff_test_dir, num_workers=1)
     p.check(post_diff_test_dir, num_workers=1)
+
+    # remove the images.tar file
+    images_tar = os.path.join(post_diff_test_dir, "images.tar")
+    if os.path.exists(images_tar):
+        os.remove(images_tar)
 
     return (
         len(glob(os.path.join(post_diff_test_dir, "compare-results-*.json")))
@@ -391,6 +402,11 @@ def reproduce_fault_injection(
         fault_injection_config=fault_injection_config,
         num_workers=1,
     ).run()
+
+    # remove the images.tar file
+    images_tar = os.path.join(fi_test_dir, "images.tar")
+    if os.path.exists(images_tar):
+        os.remove(images_tar)
 
     runtime_results = Path(fi_test_dir).rglob("generation-*-runtime.json.json")
     for runtime_result in runtime_results:
