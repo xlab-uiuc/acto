@@ -1,4 +1,4 @@
-# Artifact Evaluation for "Who Watches the Watchers? On the Reliability of Softwarizing Cloud Application Management" ([NSDI'26 Spring AE]())
+# Artifact Evaluation for "Who Watches the Watchers? On the Reliability of Softwarizing Cloud Application Management" ([NSDI'26 Spring AE #14]())
 
 # 1. Artifact Goals
 
@@ -6,7 +6,7 @@ This artifact will reproduce all the quantitative findings and tables in the ope
   failure study and the OAT tool's evaluation result (Table 7).
 
 This artifact includes (1) the dataset of 412 failure cases of 13 popular
-  Kubernetes operators with instructions to reproduce the findings and tables,
+  Kubernetes operators with instructions to reproduce the findings and tables and
   (2) reproduction instructions for the 86 bugs found by OAT.
 
 
@@ -14,7 +14,7 @@ The entire artifact process can take around XXX hours if run with a concurrency 
 
 If you have any questions, please contact us via email or HotCRP.
 
-# 2. Prerequisites
+# 2. Prerequisites for OAT
 
 ## Setting up [CloudLab](https://www.cloudlab.us/) machines
 
@@ -124,7 +124,7 @@ Please proceed to the [Kick-the-tire Instructions](#3-kick-the-tire-instructions
 
 </details>
 
-# 3. Kick-the-tire Instructions (10 minutes)
+# 3. Kick-the-tire Instructions for OAT (10 minutes)
 
 We prepared a simple example – reproducing a bug found by OAT – to help check obvious setup problems.
 
@@ -159,14 +159,15 @@ Bug mariadbop-863 reproduced!
 Bug category: Operation Semantics
 ```
 
+# 4. Full Evaluation Instructions
 
-# 4. Operator Failure Study
+## 4.1 Operator Failure Study
 
 You can view the tables and findings reproduced using Jupyter notebooks here: [https://github.com/xlab-uiuc/acto/blob/nsdi26-ae/study.ipynb](https://github.com/xlab-uiuc/acto/blob/nsdi26-ae/study.ipynb)
 
 **Operator Failure Dataset:** https://github.com/xlab-uiuc/acto/blob/nsdi26-ae/nsdi26ae.csv
 
-# 5. Evaluation Instructions for OAT (2+ hours)
+# 4.2 OAT Evaluation Instructions (2+ hours)
 
 To reproduce the 86 bugs in Table 5, please execute the tests by running:
 
@@ -182,6 +183,6 @@ Using the c8220 profile we recommend, run the tests with 8 workers `-n 4` and it
 
 We suggest starting this long-running experiment in a tmux or screen session.
 
-**Caution**: running too many workers at the same time may overload your machine, and Kind would fail to bootstrap Kubernetes clusters. If you are not running the experiment using our recommended CloudLab profile, please default the number of workers to `1`. Running this step sequentially takes approximately 17 hours.
+**Caution**: running too many workers at the same time may overload your machine, and Kind would fail to bootstrap Kubernetes clusters. If you are not running the experiment using our recommended CloudLab profile, please default the number of workers to `1`. Running this step sequentially takes approximately 24 hours.
 
 <details><summary>What does the reproduce script do?</summary>For each bug, the reproduction code runs OAT with tests needed to reproduce the bug. It checks if every bug is reproducible and outputs Table 5. </details>
