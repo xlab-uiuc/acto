@@ -609,7 +609,7 @@ class TrialRunner:
             )
             if run_result.oracle_result.is_error():
                 # fails the initial input, abort
-                if generation == 0:
+                if generation == 1:
                     logger.error("Error result in initial step")
                     trial_err = run_result.oracle_result
                     self.input_model.clear_test_plan()
