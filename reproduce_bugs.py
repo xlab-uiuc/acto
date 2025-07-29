@@ -17,7 +17,7 @@ from acto.reproduce import (
 )
 from acto.utils import error_handler
 
-failed_reproductions = {}
+failed_reproductions: dict[str, bool] = {}
 
 
 class ReproWorker:
@@ -46,7 +46,7 @@ class ReproWorker:
                 break
 
             retry = False
-            for i in range(1):
+            for i in range(3):
                 retry = False
                 operator, bug_id, bug_config = bug_tuple
                 repro_dir = bug_config.path
@@ -83,7 +83,6 @@ class ReproWorker:
                     else:
                         retry = True
                         print(f"Bug {bug_id} not reproduced!")
-                        failed_reproductions[bug_id] = True
                 elif bug_config.fault:
                     if reproduce_fault_injection(
                         work_dir,
@@ -94,7 +93,6 @@ class ReproWorker:
                     else:
                         retry = True
                         print(f"Bug {bug_id} not reproduced!")
-                        failed_reproductions[bug_id] = True
 
                 last_error = normal_run_result[-1]
                 if last_error is not None and last_error.is_error():
@@ -106,9 +104,11 @@ class ReproWorker:
                     print(f"Bug category: {bug_config.category}")
                     reproduce_results[operator][bug_config.category] += 1
                     break
+
                 if i < 2:
                     print(f"Bug {bug_id} not reproduced! Trying ({i+1}/3)")
                 else:
+                    print(f"Bug {bug_id} not reproduced after 3 attempts.")
                     failed_reproductions[bug_id] = True
 
 
@@ -289,6 +289,11 @@ def main() -> None:
             )
 
         print(f"Total reproduced: {total_reproduced}")
+        print(f"Failed reproductions: {len(failed_reproductions)}")
+        if len(failed_reproductions) > 0:
+            print("Failed reproductions:")
+            for bug_id in failed_reproductions:
+                print(f"  - {bug_id}")
 
 
 if __name__ == "__main__":
