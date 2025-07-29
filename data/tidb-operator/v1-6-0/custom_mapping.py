@@ -64,7 +64,7 @@ class TiKVConfigSchema(UnderSpecifiedSchema):
     @classmethod
     def from_original_schema(cls, original_schema: BaseSchema) -> Self:
         with open(
-            "data/tidb-operator/v1-6-0/tikv_config.json",
+            "data/tidb-operator/v1-6-0/tikv-config.json",
             "r",
             encoding="utf-8",
         ) as file:
@@ -81,5 +81,5 @@ CUSTOM_PROPERTY_SCHEMA_MAPPING = [
     ),
     CustomPropertySchemaMapping(
         schema_path=["spec", "tikv", "config"], custom_schema=TiKVConfigSchema
-    )
+    ),
 ]
