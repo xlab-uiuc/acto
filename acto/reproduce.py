@@ -408,7 +408,7 @@ def reproduce_fault_injection(
     if os.path.exists(images_tar):
         os.remove(images_tar)
 
-    runtime_results = Path(fi_test_dir).rglob("generation-*-runtime.json.json")
+    runtime_results = Path(fi_test_dir).rglob("generation-*-runtime.json")
     for runtime_result in runtime_results:
         with open(runtime_result, "r", encoding="utf-8") as file:
             run_result = RunResult.model_validate(json.load(file))
