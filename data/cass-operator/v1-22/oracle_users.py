@@ -85,6 +85,7 @@ class CassandraConfigChecker(CheckerInterface):
             if line.strip():
                 system_users.append(line.split("|")[0].strip())
 
+        current_users_names = []
         for user in current_users:
             secret = core_v1.read_namespaced_secret(
                 user["secretName"], self.oracle_handle.namespace
@@ -94,11 +95,14 @@ class CassandraConfigChecker(CheckerInterface):
                     message=f"Secret {user['secretName']} not found or missing username/password"
                 )
             username = base64.b64decode(secret["username"]).decode("utf-8")
+            current_users_names.append(username)
 
             if username not in system_users:
                 return OracleResult(
                     message=f"User {username} is missing in Cassandra config"
                 )
+        logger.info("Current Cassandra users: %s", current_users_names)
+        
         for user in prev_users:
             secret = core_v1.read_namespaced_secret(
                 user["secretName"], self.oracle_handle.namespace
@@ -108,7 +112,7 @@ class CassandraConfigChecker(CheckerInterface):
                     message=f"Secret {user['secretName']} not found or missing username/password"
                 )
             username = base64.b64decode(secret["username"]).decode("utf-8")
-            if user["secretName"] not in current_users and user["secretName"] in system_users:
+            if username not in current_users_names and username in system_users:
                 return OracleResult(
                     message=f"User {user} should be removed from Cassandra config"
                 )
