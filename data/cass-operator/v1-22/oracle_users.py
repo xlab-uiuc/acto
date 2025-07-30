@@ -67,29 +67,48 @@ class CassandraConfigChecker(CheckerInterface):
                 "-p",
                 password,
                 "-e",
-                "SELECT role FROM system_auth.roles;",
+                "LIST USERS;",
             ],
             capture_output=True,
             text=True,
         )
         if p.returncode != 0:
             return OracleResult(message="Cassandra users check failed")
+        
+        logger.info("Cassandra users check output: %s", p.stdout)
 
         cass_output = p.stdout.split("\n")
-        lines = cass_output[3:-3]
+        lines = cass_output[3:-2]
 
         system_users = []
         for line in lines:
             if line.strip():
-                system_users.append(line.strip())
+                system_users.append(line.split("|")[0].strip())
 
         for user in current_users:
-            if user not in system_users:
+            secret = core_v1.read_namespaced_secret(
+                user["secretName"], self.oracle_handle.namespace
+            ).data
+            if not secret or "username" not in secret or "password" not in secret:
                 return OracleResult(
-                    message=f"User {user} is missing in Cassandra config"
+                    message=f"Secret {user['secretName']} not found or missing username/password"
+                )
+            username = base64.b64decode(secret["username"]).decode("utf-8")
+
+            if username not in system_users:
+                return OracleResult(
+                    message=f"User {username} is missing in Cassandra config"
                 )
         for user in prev_users:
-            if user not in current_users and user in system_users:
+            secret = core_v1.read_namespaced_secret(
+                user["secretName"], self.oracle_handle.namespace
+            ).data
+            if not secret or "username" not in secret or "password" not in secret:
+                return OracleResult(
+                    message=f"Secret {user['secretName']} not found or missing username/password"
+                )
+            username = base64.b64decode(secret["username"]).decode("utf-8")
+            if user["secretName"] not in current_users and user["secretName"] in system_users:
                 return OracleResult(
                     message=f"User {user} should be removed from Cassandra config"
                 )
