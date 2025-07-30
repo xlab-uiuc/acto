@@ -62,6 +62,7 @@ class OperatorPrettyName(str, Enum):
     """Pretty names for operators in the Oat NSDI 26 paper"""
 
     CASS_OPERATOR = "CassOp"
+    CASS_OPERATOR_USERS = "CassOpUsers"
     KAFKA_OPERATOR = "KafkaOp"
     KAFKA_OPERATOR_ZK = "KafkaOpZK"
     MARIADB_OPERATOR = "MariaDBOp"
@@ -75,6 +76,7 @@ class OperatorPrettyName(str, Enum):
 # Mapping from operator name to pretty name
 operator_pretty_name_mapping: Dict[str, OperatorPrettyName] = {
     "cass-operator": OperatorPrettyName.CASS_OPERATOR,
+    "cass-operator-users": OperatorPrettyName.CASS_OPERATOR_USERS,
     "kafka-operator": OperatorPrettyName.KAFKA_OPERATOR,
     "kafka-operator-zk": OperatorPrettyName.KAFKA_OPERATOR_ZK,
     "mariadb-operator": OperatorPrettyName.MARIADB_OPERATOR,
@@ -88,6 +90,7 @@ operator_pretty_name_mapping: Dict[str, OperatorPrettyName] = {
 
 OperatorToConfigMapping: dict[OperatorPrettyName, str] = {
     OperatorPrettyName.CASS_OPERATOR: "data/cass-operator/v1-22/func-only.json",
+    OperatorPrettyName.CASS_OPERATOR_USERS: "data/cass-operator/v1-22/func-only-users.json",
     OperatorPrettyName.KAFKA_OPERATOR: "data/strimzi-kafka-operator/v0-45-0/func-only.json",
     OperatorPrettyName.KAFKA_OPERATOR_ZK: "data/strimzi-kafka-operator/v0-45-0/func-only-zk.json",
     OperatorPrettyName.MARIADB_OPERATOR: "data/mariadb-operator/v0-30-0/func-only.json",
@@ -102,6 +105,7 @@ OperatorToConfigMapping: dict[OperatorPrettyName, str] = {
 
 OperatorToFIConfigMapping: dict[OperatorPrettyName, str] = {
     OperatorPrettyName.CASS_OPERATOR: "chactos/cass-operator.json",
+    OperatorPrettyName.CASS_OPERATOR_USERS: "chactos/cass-operator.json",
     OperatorPrettyName.KAFKA_OPERATOR: "chactos/strimzi-kafka-operator-zk.json",
     OperatorPrettyName.KAFKA_OPERATOR_ZK: "chactos/strimzi-kafka-operator-zk.json",
     OperatorPrettyName.MARIADB_OPERATOR: "chactos/mariadb-operator.json",
@@ -123,11 +127,6 @@ ALL_BUGS: dict[OperatorPrettyName, dict[str, OatBugConfig]] = {
         "cassop-532": OatBugConfig(
             category=BugCategory.BY_PRODUCT,
             path="test/oat_tests/cassop-532",
-        ),
-        "cassop-694": OatBugConfig(
-            category=BugCategory.OPERATION_SEMANTICS,
-            path="test/oat_tests/cassop-694",
-            difftest=True,
         ),
         "cassop-695": OatBugConfig(
             category=BugCategory.OPERATION_SEMANTICS,
@@ -156,6 +155,12 @@ ALL_BUGS: dict[OperatorPrettyName, dict[str, OatBugConfig]] = {
         "k8ssandra-client-80-2": OatBugConfig(
             category=BugCategory.OPERATION_SEMANTICS,
             path="test/oat_tests/k8ssandra-client-80-2",
+        ),
+    },
+    OperatorPrettyName.CASS_OPERATOR_USERS: {
+        "cassop-694": OatBugConfig(
+            category=BugCategory.OPERATION_SEMANTICS,
+            path="test/oat_tests/cassop-694",
         ),
     },
     OperatorPrettyName.KAFKA_OPERATOR: {
