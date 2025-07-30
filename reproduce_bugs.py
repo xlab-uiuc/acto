@@ -99,17 +99,18 @@ class ReproWorker:
                     reproduced = True
 
                 # check if reproduced for table 5, and write results
-                if reproduced and not retry:
+                if reproduced:
                     print(f"Bug {bug_id} reproduced!")
                     print(f"Bug category: {bug_config.category}")
                     reproduce_results[operator][bug_config.category] += 1
                     break
 
-                if i < 2:
+                if i < 3 and retry:
                     print(f"Bug {bug_id} not reproduced! Trying ({i+1}/3)")
                 else:
                     print(f"Bug {bug_id} not reproduced after 3 attempts.")
                     failed_reproductions[bug_id] = True
+                    break
 
 
 def main() -> None:
