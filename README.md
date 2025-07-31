@@ -2,7 +2,7 @@
 
 ## 1. Artifact Goals
 
-This artifact reproduces 
+This artifact reproduces
   (1) all the quantitative findings and tables in the research paper
   and (2) the Oat tool's evaluation results.
 
@@ -13,9 +13,9 @@ This artifact includes:
 3. Reproduction instructions for the 86 bugs (Table 7) found by Oat.
 
 
-The entire AE can take XXX hours 
-  if run with a concurrency of 8 workers (using the CloudLab machine we suggest); 
-  it will take about 17 hours if running sequentially (with no concurrent worker).
+The entire AE can take 8 hours
+  if run with a concurrency of 6 workers (using the CloudLab machine we suggest);
+  it will take about 48 hours if running sequentially (with no concurrent worker).
 
 If you have any questions, please contact us via email or HotCRP.
 
@@ -28,7 +28,7 @@ If you are a first timer of CloudLab, we encourage you to read the CloudLab docs
 [CloudLab For Artifact Evaluation](https://docs.cloudlab.us/repeatable-research.html#%28part._aec-members%29)
 
 If you do not have a CloudLab account, please apply for one following this [link](https://www.cloudlab.us/signup.php),
-  and ask the NSDI AEC chair to add you to the NSDI AEC project. 
+  and ask the NSDI AEC chair to add you to the NSDI AEC project.
 Please let us know if you have trouble accessing CloudLab, we can help set up the experiment and give you access.
 
 We recommend you to use the machine type, [c6420](https://www.cloudlab.us/instantiate.php?project=Sieve-Acto&profile=acto-cloudlab&refspec=refs/heads/main) (CloudLab profile), which we used in our own evaluation. Note that the machine may not be available all the time. You would need to submit a resource reservation to guarantee the availability of the resource.
@@ -43,10 +43,10 @@ Below, we provide three ways to set up the environment:
 
 ### Reserve Nodes with Preferred Hardware Type
 
-To reserve machines, click the "Reserve Nodes" tab from the dropdown menu from the "Experiments" tab at top left corner. 
-Select "CloudLab Clemson" for the cluster, "c6420" as the hardware, and "1" for the number of nodes. 
-Specify the desired time frame for the reservation, and click "Check". 
-The website will check if your reservation can be satisfied and then you can submit the request. 
+To reserve machines, click the "Reserve Nodes" tab from the dropdown menu from the "Experiments" tab at top left corner.
+Select "CloudLab Clemson" for the cluster, "c6420" as the hardware, and "1" for the number of nodes.
+Specify the desired time frame for the reservation, and click "Check".
+The website will check if your reservation can be satisfied and then you can submit the request.
 The request will be reviewed by CloudLab staff and approved typically on the next business day.
 
 [Resource Reservation](http://docs.cloudlab.us/reservations.html)
@@ -133,9 +133,9 @@ Please proceed to the [Kick-the-tire Instructions](#3-kick-the-tire-instructions
 
 </details>
 
-## 3. Kick-the-tire Instructions for Oat (10 minutes)
+## 3. Kick-the-tire Instructions for Oat (20 minutes)
 
-We prepared a simple example – reproducing a bug found by OAT – to help check obvious setup problems.
+We prepared a simple example – reproducing a bug found by Oat – to help check obvious setup problems.
 
 First, build the dependent modules:
 
@@ -176,7 +176,7 @@ You can view the tables and findings reproduced using Jupyter notebooks here: [h
 
 **Operator Failure Dataset:** https://github.com/xlab-uiuc/acto/blob/nsdi26-ae/nsdi26ae.csv
 
-### 4.2 Oat Evaluation Instructions (2+ hours)
+### 4.2 Oat Evaluation Instructions (8+ hours)
 
 To reproduce the 86 bugs in Table 5, please execute the tests by running:
 
@@ -186,12 +186,12 @@ make
 python3 reproduce_bugs.py -n <NUM_WORKERS>
 ```
 
-Using the c6420 profile we recommend, run the tests with 16 workers `-n 8` and it will take about XX minutes to finish.
+Using the c6420 profile we recommend, run the tests with 6 workers `-n 6` and it will take about XX minutes to finish.
 
-Using the c8220 profile we recommend, run the tests with 8 workers `-n 4` and it will take about XX hours to finish.
+Using the c8220 profile we recommend, run the tests with 4 workers `-n 4` and it will take about 12 hours to finish.
 
 We suggest starting this long-running experiment in a tmux or screen session.
 
-**Caution**: Running too many workers at the same time may overload your machine, and Kind would fail to bootstrap Kubernetes clusters. If you are not running the experiment using our recommended CloudLab profile, please default the number of workers to `1`. Running this step sequentially takes approximately 24 hours.
+**Caution**: Running too many workers at the same time may overload your machine, and Kind would fail to bootstrap Kubernetes clusters. If you are not running the experiment using our recommended CloudLab profile, please default the number of workers to `1`. Running this step sequentially takes approximately 48 hours.
 
-<details><summary>What does the reproduce script do?</summary>For each bug, the reproduction code runs OAT with tests needed to reproduce the bug. It checks if every bug is reproducible and outputs Table 5. </details>
+<details><summary>What does the reproduce script do?</summary>For each bug, the reproduction code runs Oat with tests needed to reproduce the bug. It checks if every bug is reproducible and outputs Table 5. </details>
