@@ -62,6 +62,22 @@ class ReproWorker:
                         "data/percona-server-mongodb-operator/"
                         + "v1-16-0/func-only-1333.json"
                     )
+                elif bug_id == "tidbop-98":
+                    operator_config = (
+                        "data/tidb-operator/v1-6-0/func-only-no-oracle.json"
+                    )
+                elif bug_id == "tidbop-5729":
+                    operator_config = (
+                        "data/tidb-operator/v1-6-0/func-only-tikv.json"
+                    )
+                elif bug_id == "kafkaop-10231":
+                    operator_config = (
+                        "data/strimzi-kafka-operator/v0-45-0/func-only-zk.json"
+                    )
+                elif bug_id == "cassop-694":
+                    operator_config = (
+                        "data/cass-operator/v1-22/func-only-users.json"
+                    )
 
                 reproduced: bool = False
                 normal_run_result = reproduce(
@@ -110,7 +126,6 @@ class ReproWorker:
                 else:
                     print(f"Bug {bug_id} not reproduced after 3 attempts.")
                     failed_reproductions[bug_id] = True
-                    break
 
 
 def main() -> None:
