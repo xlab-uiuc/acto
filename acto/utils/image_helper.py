@@ -1,8 +1,12 @@
 import os
 import subprocess
 
+from filelock import FileLock
+
 
 class ImageHelper:
+    """Helper class for managing Docker images, including pulling and archiving them."""
+
     image_archive_prefix = os.path.join(os.getcwd(), ".acto_images")
     image_tool = os.getenv("IMAGE_TOOL", "docker")
 
@@ -25,21 +29,23 @@ class ImageHelper:
             ImageHelper.image_archive_prefix, archive_name
         )
 
-        if os.path.exists(archive_path):
-            return archive_path
+        lock = FileLock(f"{archive_path}.lock")
+        with lock:
+            if os.path.exists(archive_path):
+                return archive_path
 
-        for image in images:
+            for image in images:
+                subprocess.run(
+                    [ImageHelper.image_tool, "pull", image],
+                    stdout=subprocess.DEVNULL,
+                    check=True,
+                )
+            os.makedirs(ImageHelper.image_archive_prefix, exist_ok=True)
             subprocess.run(
-                [ImageHelper.image_tool, "pull", image],
+                [ImageHelper.image_tool, "image", "save", "-o", archive_path]
+                + list(images),
                 stdout=subprocess.DEVNULL,
                 check=True,
             )
-        os.makedirs(ImageHelper.image_archive_prefix, exist_ok=True)
-        subprocess.run(
-            [ImageHelper.image_tool, "image", "save", "-o", archive_path]
-            + list(images),
-            stdout=subprocess.DEVNULL,
-            check=True,
-        )
 
         return archive_path
