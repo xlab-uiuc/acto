@@ -15,7 +15,7 @@ This artifact includes:
 
 The entire AE can take 8 hours
   if run with a concurrency of 6 workers (using the CloudLab machine we suggest);
-  it will take about 48 hours if running sequentially (with no concurrent worker).
+  it will take about 34 hours if running sequentially (with no concurrent worker).
 
 If you have any questions, please contact us via email or HotCRP.
 
@@ -186,12 +186,12 @@ make
 python3 reproduce_bugs.py -n <NUM_WORKERS>
 ```
 
-Using the c6420 profile we recommend, run the tests with 6 workers `-n 6` and it will take about XX minutes to finish.
+Using the c6420 profile we recommend, run the tests with 6 workers `-n 6` and it will take about 8 hours to finish.
 
 Using the c8220 profile we recommend, run the tests with 4 workers `-n 4` and it will take about 12 hours to finish.
 
 We suggest starting this long-running experiment in a tmux or screen session.
 
-**Caution**: Running too many workers at the same time may overload your machine, and Kind would fail to bootstrap Kubernetes clusters. If you are not running the experiment using our recommended CloudLab profile, please default the number of workers to `1`. Running this step sequentially takes approximately 48 hours.
+**Caution**: Running too many workers at the same time may overload your machine, and Kind would fail to bootstrap Kubernetes clusters. If you are not running the experiment using our recommended CloudLab profile, please default the number of workers to `1`. Running this step sequentially takes approximately 34 hours.
 
 <details><summary>What does the reproduce script do?</summary>For each bug, the reproduction code runs Oat with tests needed to reproduce the bug. It checks if every bug is reproducible and outputs Table 5. </details>
