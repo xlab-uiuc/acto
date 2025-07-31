@@ -1,4 +1,4 @@
-# Artifact Evaluation (AE) for Research Paper -- "Who Watches the Watchers? On the Reliability of Softwarizing Cloud Application Management" ([NSDI'26 Spring AE #14]())
+# Artifact Evaluation (AE) for Research Paper -- "Who Watches the Watchers? On the Reliability of Softwarizing Cloud Application Management" ([NSDI'26 Spring AE #14](https://nsdi26springae.usenix.hotcrp.com/paper/14))
 
 ## 1. Artifact Goals
 
