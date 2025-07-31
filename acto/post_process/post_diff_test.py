@@ -6,7 +6,6 @@ import multiprocessing
 import os
 import queue
 import re
-import subprocess
 import sys
 import threading
 import time
@@ -40,6 +39,7 @@ from acto.utils import (
     handle_excepthook,
     thread_excepthook,
 )
+from acto.utils.image_helper import ImageHelper
 
 from .post_process import PostProcessor, Step
 
@@ -321,6 +321,9 @@ class AdditionalRunner:
             os.path.expanduser("~"), ".kube", self._context_name
         )
         self._generation = 0
+        self._images_archive = ImageHelper.prepare_image_archive(
+            self._context["preload_images"],
+        )
 
     def run_cr(self, cr, trial, gen):
         self._cluster.restart_cluster(
@@ -379,7 +382,9 @@ class DeployRunner:
         self._kubeconfig = os.path.join(
             os.path.expanduser("~"), ".kube", self._context_name
         )
-        self._images_archive = os.path.join(workdir, "images.tar")
+        self._images_archive = ImageHelper.prepare_image_archive(
+            self._context["preload_images"],
+        )
 
     def run(self):
         logger = get_thread_logger(with_prefix=True)
@@ -519,15 +524,9 @@ class PostDiffTest(PostProcessor):
             DeployMethod.YAML, self.config.deploy.file, self.config.deploy.init
         ).new()
         # Build an archive to be preloaded
-        images_archive = os.path.join(workdir, "images.tar")
-        if len(self.context["preload_images"]) > 0:
-            # first make sure images are present locally
-            for image in self.context["preload_images"]:
-                subprocess.run(["docker", "pull", image])
-            subprocess.run(
-                ["docker", "image", "save", "-o", images_archive]
-                + list(self.context["preload_images"])
-            )
+        ImageHelper.prepare_image_archive(
+            self.context["preload_images"],
+        )
 
         workqueue = multiprocessing.Queue()
         for unique_input_group in self.unique_inputs.values():
