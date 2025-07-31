@@ -8,7 +8,6 @@ import multiprocessing
 import os
 import queue
 import re
-import subprocess
 import sys
 import threading
 import time
@@ -32,6 +31,7 @@ from acto.runner.runner import Runner
 from acto.serialization import ActoEncoder
 from acto.trial import Step
 from acto.utils.error_handler import handle_excepthook, thread_excepthook
+from acto.utils.image_helper import ImageHelper
 
 
 def get_crash_config_map(
@@ -272,15 +272,9 @@ class SimpleCrashTest(PostDiffTest):
         deploy = Deploy(self.config.deploy)
 
         # Build an archive to be preloaded
-        images_archive = os.path.join(workdir, "images.tar")
-        if len(self.context["preload_images"]) > 0:
-            # first make sure images are present locally
-            for image in self.context["preload_images"]:
-                subprocess.run(["docker", "pull", image])
-            subprocess.run(
-                ["docker", "image", "save", "-o", images_archive]
-                + list(self.context["preload_images"])
-            )
+        ImageHelper.prepare_image_archive(
+            self._context["preload_images"],
+        )
 
         ################## Operation sequence crash test ######################
         num_ops = 0
