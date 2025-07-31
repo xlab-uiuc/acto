@@ -50,6 +50,7 @@ from acto.runner import Runner
 from acto.serialization import ActoEncoder, ContextEncoder
 from acto.snapshot import Snapshot
 from acto.utils import delete_operator_pod, process_crd
+from acto.utils.image_helper import ImageHelper
 from acto.utils.preprocess import get_existing_images
 from acto.utils.thread_logger import get_thread_logger, set_thread_logger_prefix
 from ssa.analysis import analyze
@@ -293,7 +294,9 @@ class TrialRunner:
         self.workdir = workdir
         self.base_workdir = workdir
         self.cluster = cluster
-        self.images_archive = os.path.join(workdir, "images.tar")
+        self.images_archive = ImageHelper.prepare_image_archive(
+            self.context["preload_images"],
+        )
         self.worker_id = worker_id
         self.sequence_base = sequence_base  # trial number to start with
         self.context_name = cluster.get_context_name(
@@ -880,7 +883,6 @@ class Acto:
         self.crd_name = operator_config.crd_name
         self.crd_version = operator_config.crd_version
         self.workdir_path = workdir_path
-        self.images_archive = os.path.join(workdir_path, "images.tar")
         self.num_workers = num_workers
         self.dryrun = dryrun
         self.is_reproduce = is_reproduce
@@ -1135,18 +1137,8 @@ class Acto:
         if len(self.context["preload_images"]) > 0:
             logger.info("Creating preload images archive")
             print_event("Preparing required images...")
-            # first make sure images are present locally
-            for image in self.context["preload_images"]:
-                subprocess.run(
-                    [self.tool, "pull", image],
-                    stdout=subprocess.DEVNULL,
-                    check=True,
-                )
-            subprocess.run(
-                [self.tool, "image", "save", "-o", self.images_archive]
-                + list(self.context["preload_images"]),
-                stdout=subprocess.DEVNULL,
-                check=True,
+            ImageHelper.prepare_image_archive(
+                self.context["preload_images"],
             )
 
         start_time = time.time()
