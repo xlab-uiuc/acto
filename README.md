@@ -31,10 +31,10 @@ If you do not have a CloudLab account, please apply for one following this [link
   and ask the NSDI AEC chair to add you to the NSDI AEC project.
 Please let us know if you have trouble accessing CloudLab, we can help set up the experiment and give you access.
 
-We recommend you to use the machine type, [c6420](https://www.cloudlab.us/instantiate.php?project=Sieve-Acto&profile=acto-cloudlab&refspec=refs/heads/main) (CloudLab profile), which we used in our own evaluation. Note that the machine may not be available all the time. You would need to submit a resource reservation to guarantee the availability of the resource.
-You can also use the alternative machine type via our profile, [c8220](https://www.cloudlab.us/p/Sieve-Acto/acto-cloudlab?refspec=refs/heads/c8220). The c8220 machine is available most of the time, but has less memory than c6420.
+We recommend you to use the machine type, [c6420](https://www.cloudlab.us/instantiate.php?profile=dd5da1fd-6e3d-11f0-bc80-e4434b2381fc&refspec=refs/heads/main) (CloudLab profile), which we used in our own evaluation. Note that the machine may not be available all the time. You would need to submit a resource reservation to guarantee the availability of the resource.
+You can also use the alternative machine type via our profile, [c8220](https://www.cloudlab.us/instantiate.php?profile=dd5da1fd-6e3d-11f0-bc80-e4434b2381fc&refspec=refs/heads/c8220). The c8220 machine is available most of the time, but has less memory than c6420.
 
-Note that our results in the evaluation are all produced using the [c6420](https://www.cloudlab.us/instantiate.php?project=Sieve-Acto&profile=acto-cloudlab&refspec=refs/heads/main) profile.
+Note that our results in the evaluation are all produced using the [c6420](https://www.cloudlab.us/instantiate.php?profile=dd5da1fd-6e3d-11f0-bc80-e4434b2381fc&refspec=refs/heads/main) profile.
 
 Below, we provide three ways to set up the environment:
 1. [Set up environment on CloudLab c6420 using the profile (recommended)](#setting-up-environment-for-cloudlab-machine-c6420-using-the-profile-recommended)
@@ -58,7 +58,7 @@ Note: Reservation does not automatically start the experiment.
 We provide the CloudLab profile to automatically select the c6420 as the machine type and set up
   all the environment.
 
-To use the profile, follow the [link](https://www.cloudlab.us/instantiate.php?project=Sieve-Acto&profile=acto-cloudlab&refspec=refs/heads/main)
+To use the profile, follow the [link](https://www.cloudlab.us/instantiate.php?profile=dd5da1fd-6e3d-11f0-bc80-e4434b2381fc&refspec=refs/heads/main)
 and keep hitting `next` to create the experiment.
 You should see that CloudLab starts to provision the machine and our profile will run a StartUp
   script to set the environment up.
@@ -104,7 +104,7 @@ We provide CloudLab profile to automatically select the c8220 as the machine typ
   all the environment, in case the c6420 machine is not available at the time of starting experiment,
   or reviewers do not have enough time to make a resource reservation.
 
-To use the profile, follow the [link](https://www.cloudlab.us/p/Sieve-Acto/acto-cloudlab?refspec=refs/heads/c8220)
+To use the profile, follow the [link](https://www.cloudlab.us/instantiate.php?profile=dd5da1fd-6e3d-11f0-bc80-e4434b2381fc&refspec=refs/heads/c8220)
 and keep hitting `next` to create the experiment.
 You should see that CloudLab starts to provision the machine and our profile will run a StartUp
   script to set the environment up.
