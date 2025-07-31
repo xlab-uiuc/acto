@@ -156,9 +156,9 @@ class MariaDBConfigChecker(CheckerInterface):
                     else min(min_avail_rate, success_rate)
                 )
 
-                if float(success_rate) < 0.9:
+                if float(success_rate) <= 0.95:
                     return OracleResult(
-                        message="MariaDB writer availability rate is below 90%"
+                        message="MariaDB writer availability rate is below 95%"
                     )
             else:
                 logger.warning(
