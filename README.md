@@ -195,3 +195,16 @@ We suggest starting this long-running experiment in a tmux or screen session.
 **Caution**: Running too many workers at the same time may overload your machine, and Kind would fail to bootstrap Kubernetes clusters. If you are not running the experiment using our recommended CloudLab profile, please default the number of workers to `1`. Running this step sequentially takes approximately 34 hours.
 
 <details><summary>What does the reproduce script do?</summary>For each bug, the reproduction code runs Oat with tests needed to reproduce the bug. It checks if every bug is reproducible and outputs Table 5. </details>
+
+The `table5.txt` should look like below:
+```text
+Operator          Operation Semantics    State Observability    Version Compatibility    Error Handling    By Product    Total
+--------------  ---------------------  ---------------------  -----------------------  ----------------  ------------  -------
+CassOp                              7                      0                        1                 0             2       10
+KafkaOp                             2                      1                        0                 0             0        3
+MariaDBOp                           9                      1                        0                 1            16       27
+MinIOOp                             1                      0                        0                 0             1        2
+MongoOp                            18                      2                        1                 3             2       26
+TiDBOp                              9                      2                        1                 0             6       18
+Total                              46                      6                        3                 4            27       86
+```
