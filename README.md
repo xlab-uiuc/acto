@@ -37,8 +37,8 @@ You can also use the alternative machine type via our profile, [c8220](https://w
 Note that our results in the evaluation are all produced using the [c6420](https://www.cloudlab.us/instantiate.php?profile=dd5da1fd-6e3d-11f0-bc80-e4434b2381fc&refspec=refs/heads/main) profile.
 
 Below, we provide three ways to set up the environment:
-1. [Set up environment on CloudLab c6420 using the profile (recommended)](#setting-up-environment-for-cloudlab-machine-c6420-using-the-profile-recommended)
-2. [Set up environment on CloudLab c8220 using the profile](#setting-up-environment-for-cloudlab-machine-c8220-using-the-profile)
+1. [Set up environment on CloudLab c6420 using the profile (recommended)](#setting-up-the-environment-for-cloudlab-machine-c6420-using-the-profile-recommended)
+2. [Set up environment on CloudLab c8220 using the profile](#setting-up-the-environment-for-cloudlab-machine-c8220-using-the-profile)
 3. [Set up environment on a local machine](#setting-up-local-environment-skip-this-if-using-the-cloudlab-profile)
 
 ### Reserve Nodes with Preferred Hardware Type
@@ -114,7 +114,7 @@ Please patiently wait for "Status" to become `Ready` and "Startup" to become `Fi
 After that, Acto is installed at the `workdir/acto` directory under your `$HOME` directory.
 
 Access the machine using `ssh` or through the `shell` provided by the CloudLab Web UI.
-Please proceed to the [Kick-the-tire Instructions](#3-kick-the-tire-instructions-10-minutes) to validate.
+Please proceed to the [Kick-the-tire Instructions](#3-kick-the-tire-instructions-for-oat-20-minutes) to validate.
 
 ### Setting up the Local Environment (Skip this if Using the CloudLab Profile)
 <details><summary>Click to show details</summary>
