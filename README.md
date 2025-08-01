@@ -178,7 +178,7 @@ You can view the tables and findings reproduced using Jupyter notebooks here: [h
 
 ### 4.2 Oat Evaluation Instructions (8+ hours)
 
-To reproduce the 86 bugs in Table 5, please execute the tests by running:
+To reproduce the 86 bugs in Table 7, please execute the tests by running:
 
 ```sh
 cd ~/workdir/acto/
@@ -194,9 +194,9 @@ We suggest starting this long-running experiment in a tmux or screen session.
 
 **Caution**: Running too many workers at the same time may overload your machine, and Kind would fail to bootstrap Kubernetes clusters. If you are not running the experiment using our recommended CloudLab profile, please default the number of workers to `1`. Running this step sequentially takes approximately 34 hours.
 
-<details><summary>What does the reproduce script do?</summary>For each bug, the reproduction code runs Oat with tests needed to reproduce the bug. It checks if every bug is reproducible and outputs Table 5. </details>
+<details><summary>What does the reproduce script do?</summary>For each bug, the reproduction code runs Oat with tests needed to reproduce the bug. It checks if every bug is reproducible and outputs Table 7. </details>
 
-The `table5.txt` should look like below:
+The `table7.txt` should look like below:
 ```text
 Operator          Operation Semantics    State Observability    Version Compatibility    Error Handling    By Product    Total
 --------------  ---------------------  ---------------------  -----------------------  ----------------  ------------  -------
