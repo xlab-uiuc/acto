@@ -43,9 +43,7 @@ class ReproWorker:
             except queue.Empty:
                 break
 
-            retry = False
             for i in range(3):
-                retry = False
                 operator, bug_id, bug_config = bug_tuple
                 repro_dir = bug_config.path
                 work_dir = f"{self._repro_result_dir}/testrun-{bug_id}"
@@ -95,7 +93,6 @@ class ReproWorker:
                     ):
                         reproduced = True
                     else:
-                        retry = True
                         print(f"Bug {bug_id} not reproduced!")
                 elif bug_config.fault:
                     if reproduce_fault_injection(
@@ -105,7 +102,6 @@ class ReproWorker:
                     ):
                         reproduced = True
                     else:
-                        retry = True
                         print(f"Bug {bug_id} not reproduced!")
 
                 last_error = normal_run_result[-1]
@@ -119,7 +115,7 @@ class ReproWorker:
                     reproduce_results[operator][bug_config.category] += 1
                     break
 
-                if i < 3 and retry:
+                if i < 3:
                     print(f"Bug {bug_id} not reproduced! Trying ({i+1}/3)")
                 else:
                     print(f"Bug {bug_id} not reproduced after 3 attempts.")
