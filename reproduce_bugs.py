@@ -17,8 +17,6 @@ from acto.reproduce import (
 )
 from acto.utils import error_handler
 
-failed_reproductions: dict[str, bool] = {}
-
 
 class ReproWorker:
     """Worker for reproducing bugs"""
@@ -33,7 +31,7 @@ class ReproWorker:
         self._workqueue = workqueue
         self._acto_namespace = acto_namespace
 
-    def run(self, reproduce_results: dict):
+    def run(self, reproduce_results: dict, failed_reproductions: dict) -> None:
         """Run the reproduction worker"""
         while True:
             try:
@@ -170,6 +168,7 @@ def main() -> None:
 
     manager = multiprocessing.Manager()
     reproduce_results = manager.dict()
+    failed_reproductions = manager.dict()
 
     total_reproduced = 0
     repro_result_dir = os.path.join(
@@ -204,7 +203,11 @@ def main() -> None:
     processes = []
     for worker in workers:
         p = multiprocessing.Process(
-            target=worker.run, args=(reproduce_results,)
+            target=worker.run,
+            args=(
+                reproduce_results,
+                failed_reproductions,
+            ),
         )
         p.start()
         processes.append(p)
