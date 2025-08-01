@@ -219,9 +219,9 @@ def main() -> None:
             for _, count in results.items():
                 total_reproduced += count
 
-        table5 = []
+        table7 = []
         for operator, reproduce_result in reproduce_results.items():
-            table5.append(
+            table7.append(
                 [
                     operator,
                     reproduce_result[
@@ -239,9 +239,9 @@ def main() -> None:
                 ]
             )
 
-        table5 = sorted(table5, key=lambda x: x[0])
+        table7 = sorted(table7, key=lambda x: x[0])
 
-        table5.append(
+        table7.append(
             [
                 "Total",
                 sum(
@@ -276,7 +276,7 @@ def main() -> None:
 
         print(
             tabulate(
-                table5,
+                table7,
                 headers=[
                     "Operator",
                     oat_ae_utils.BugCategory.OPERATION_SEMANTICS,
@@ -288,10 +288,10 @@ def main() -> None:
                 ],
             )
         )
-        with open("table5.txt", "w", encoding="utf-8") as table5_f:
-            table5_f.write(
+        with open("table7.txt", "w", encoding="utf-8") as table7_f:
+            table7_f.write(
                 tabulate(
-                    table5,
+                    table7,
                     headers=[
                         "Operator",
                         oat_ae_utils.BugCategory.OPERATION_SEMANTICS,
