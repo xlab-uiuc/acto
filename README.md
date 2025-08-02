@@ -13,8 +13,8 @@ This artifact includes:
 3. Reproduction instructions for the 86 bugs (Table 7) found by Oat.
 
 
-The entire AE can take 8 hours
-  if run with a concurrency of 6 workers (using the CloudLab machine we suggest);
+The entire AE can take 12 hours
+  if run with a concurrency of 4 workers (using the CloudLab machine we suggest);
   it will take about 34 hours if running sequentially (with no concurrent worker).
 
 If you have any questions, please contact us via email or HotCRP.
@@ -120,7 +120,7 @@ Please proceed to the [Kick-the-tire Instructions](#3-kick-the-tire-instructions
 <details><summary>Click to show details</summary>
 
 * A Linux system with Docker support
-* Python 3.12 or newer
+* Python 3.10 or newer
 * Install `pip3` by running `sudo apt install python3-pip`
 * Install [Golang](https://go.dev/doc/install)
 * Clone the repo recursively by running `git clone --recursive --branch nsdi26-ae https://github.com/xlab-uiuc/acto.git`
@@ -176,7 +176,7 @@ You can view the tables and findings reproduced using Jupyter notebooks here: [h
 
 **Operator Failure Dataset:** https://github.com/xlab-uiuc/acto/blob/nsdi26-ae/nsdi26ae.csv
 
-### 4.2 Oat Evaluation Instructions (8+ hours)
+### 4.2 Oat Evaluation Instructions (12+ hours)
 
 To reproduce the 86 bugs in Table 7, please execute the tests by running:
 
@@ -186,9 +186,7 @@ make
 python3 reproduce_bugs.py -n <NUM_WORKERS>
 ```
 
-Using the c6420 profile we recommend, run the tests with 6 workers `-n 6` and it will take about 8 hours to finish.
-
-Using the c8220 profile we recommend, run the tests with 4 workers `-n 4` and it will take about 12 hours to finish.
+Using the c6420 or the c8220 profile we recommend, run the tests with 4 workers `-n 4` and it will take about 12 hours to finish.
 
 We suggest starting this long-running experiment in a tmux or screen session.
 
