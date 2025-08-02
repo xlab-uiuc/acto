@@ -115,11 +115,10 @@ class ReproWorker:
                     reproduce_results[operator][bug_config.category] += 1
                     break
 
-                if i < 3:
-                    print(f"Bug {bug_id} not reproduced! Trying ({i+1}/3)")
-                else:
-                    print(f"Bug {bug_id} not reproduced after 3 attempts.")
-                    failed_reproductions[bug_id] = True
+                print(f"Bug {bug_id} not reproduced! Trying ({i+1}/3)")
+            else:
+                print(f"Bug {bug_id} not reproduced after 3 attempts.")
+                failed_reproductions[bug_id] = True
 
 
 def main() -> None:
