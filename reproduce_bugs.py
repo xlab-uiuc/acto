@@ -76,33 +76,37 @@ class ReproWorker:
                     )
 
                 reproduced: bool = False
-                normal_run_result = reproduce(
-                    work_dir,
-                    repro_dir,
-                    operator_config,
-                    cluster_runtime="KIND",
-                    acto_namespace=self._acto_namespace,
-                    secret_config=bug_config.secrets,
-                )
-                if bug_config.difftest:
-                    if reproduce_postdiff(
+
+                try:
+                    normal_run_result = reproduce(
                         work_dir,
+                        repro_dir,
                         operator_config,
                         cluster_runtime="KIND",
                         acto_namespace=self._acto_namespace,
-                    ):
-                        reproduced = True
-                    else:
-                        print(f"Bug {bug_id} not reproduced!")
-                elif bug_config.fault:
-                    if reproduce_fault_injection(
-                        work_dir,
-                        operator_config,
-                        oat_ae_utils.OperatorToFIConfigMapping[operator],
-                    ):
-                        reproduced = True
-                    else:
-                        print(f"Bug {bug_id} not reproduced!")
+                        secret_config=bug_config.secrets,
+                    )
+                    if bug_config.difftest:
+                        if reproduce_postdiff(
+                            work_dir,
+                            operator_config,
+                            cluster_runtime="KIND",
+                            acto_namespace=self._acto_namespace,
+                        ):
+                            reproduced = True
+                        else:
+                            print(f"Bug {bug_id} not reproduced!")
+                    elif bug_config.fault:
+                        if reproduce_fault_injection(
+                            work_dir,
+                            operator_config,
+                            oat_ae_utils.OperatorToFIConfigMapping[operator],
+                        ):
+                            reproduced = True
+                        else:
+                            print(f"Bug {bug_id} not reproduced!")
+                except Exception as e:  # pylint: disable=broad-except
+                    print(f"Error reproducing bug {bug_id}: {e}")
 
                 last_error = normal_run_result[-1]
                 if last_error is not None and last_error.is_error():
