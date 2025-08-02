@@ -94,8 +94,6 @@ class ReproWorker:
                             acto_namespace=self._acto_namespace,
                         ):
                             reproduced = True
-                        else:
-                            print(f"Bug {bug_id} not reproduced!")
                     elif bug_config.fault:
                         if reproduce_fault_injection(
                             work_dir,
@@ -103,8 +101,6 @@ class ReproWorker:
                             oat_ae_utils.OperatorToFIConfigMapping[operator],
                         ):
                             reproduced = True
-                        else:
-                            print(f"Bug {bug_id} not reproduced!")
                 except Exception as e:  # pylint: disable=broad-except
                     print(f"Error reproducing bug {bug_id}: {e}")
 
