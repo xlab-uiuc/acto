@@ -101,12 +101,14 @@ class ReproWorker:
                             oat_ae_utils.OperatorToFIConfigMapping[operator],
                         ):
                             reproduced = True
+
+                    last_error = (
+                        normal_run_result[-1] if normal_run_result else None
+                    )
+                    if last_error is not None and last_error.is_error():
+                        reproduced = True
                 except Exception as e:  # pylint: disable=broad-except
                     print(f"Error reproducing bug {bug_id}: {e}")
-
-                last_error = normal_run_result[-1]
-                if last_error is not None and last_error.is_error():
-                    reproduced = True
 
                 # check if reproduced for table 5, and write results
                 if reproduced:
