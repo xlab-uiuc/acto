@@ -212,6 +212,22 @@ def main() -> None:
     for p in processes:
         p.join()
 
+    if len(failed_reproductions) > 0:
+        for bug_id in failed_reproductions:
+            print(f"Retrying on bug {bug_id}.")
+            (operator, bug_config) = bug_id_map[bug_id]
+            workqueue.put((operator, bug_id, bug_config))
+        failed_reproductions.clear()
+        retry_worker = ReproWorker(
+            repro_result_dir, workqueue, args.num_workers
+        )
+        p = multiprocessing.Process(
+            target=retry_worker.run,
+            args=(reproduce_results, failed_reproductions),
+        )
+        p.start()
+        p.join()
+
     if produce_table:
         print("Reproduction results:")
         # aggregate results from each worker
