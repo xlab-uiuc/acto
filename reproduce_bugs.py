@@ -50,8 +50,12 @@ class ReproWorker:
                 )
                 break
 
+            operator, bug_id, bug_config = bug_tuple
+            print(
+                f"Reproducing bug {bug_id} in {operator} for worker {self._acto_namespace}!"
+            )
+
             for i in range(3):
-                operator, bug_id, bug_config = bug_tuple
                 repro_dir = bug_config.path
                 work_dir = f"{self._repro_result_dir}/testrun-{bug_id}"
                 operator_config = oat_ae_utils.OperatorToConfigMapping[operator]
