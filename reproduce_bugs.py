@@ -45,6 +45,9 @@ class ReproWorker:
                     oat_ae_utils.OatBugConfig,
                 ] = self._workqueue.pop(0)
             except IndexError:
+                print(
+                    f"No more bugs to reproduce for worker {self._acto_namespace}."
+                )
                 break
 
             for i in range(3):
@@ -103,6 +106,7 @@ class ReproWorker:
                             work_dir,
                             operator_config,
                             oat_ae_utils.OperatorToFIConfigMapping[operator],
+                            acto_namespace=self._acto_namespace,
                         ):
                             reproduced = True
 

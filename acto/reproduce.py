@@ -382,6 +382,7 @@ def reproduce_fault_injection(
     workdir_path: str,
     operator_config_path: str,
     fault_injection_config_path: str,
+    acto_namespace: int = 0,
 ) -> bool:
     """Reproduce the trial folder with fault injection"""
     with open(operator_config_path, "r", encoding="utf-8") as config_file:
@@ -401,6 +402,7 @@ def reproduce_fault_injection(
         operator_config=config,
         fault_injection_config=fault_injection_config,
         num_workers=1,
+        acto_namespace=acto_namespace,
     ).run()
 
     # remove the images.tar file

@@ -1,5 +1,4 @@
 import multiprocessing
-import multiprocessing.queues
 import os
 import queue
 import subprocess
@@ -45,6 +44,7 @@ class ChactosDriver(PostProcessor):
         operator_config: OperatorConfig,
         fault_injection_config: FaultInjectionConfig,
         num_workers: int,
+        acto_namespace: int = 0,
     ):
         super().__init__(testrun_dir=testrun_dir, config=operator_config)
         self._operator_config = operator_config
@@ -55,7 +55,7 @@ class ChactosDriver(PostProcessor):
         self._pod_failure_ratio = fault_injection_config.pod_failure_ratio
 
         self.kubernetes_provider = kind.Kind(
-            acto_namespace=0,
+            acto_namespace=acto_namespace,
             feature_gates=operator_config.kubernetes_engine.feature_gates,
             num_nodes=operator_config.num_nodes,
             version=operator_config.kubernetes_version,
