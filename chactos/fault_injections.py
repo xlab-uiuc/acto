@@ -177,20 +177,34 @@ def wait_for_converge(api_client, namespace, wait_time=60, hard_timeout=600):
         except queue.Empty:
             ready = True
             app_v1_api = kubernetes.client.AppsV1Api(api_client)
-            statefulsets = [
-                i.to_dict()
-                for i in app_v1_api.list_namespaced_stateful_set(
-                    namespace
-                ).items
-            ]
-            deployments = [
-                i.to_dict()
-                for i in app_v1_api.list_namespaced_deployment(namespace).items
-            ]
-            daemonsets = [
-                i.to_dict()
-                for i in app_v1_api.list_namespaced_daemon_set(namespace).items
-            ]
+
+            try:
+                statefulsets = [
+                    i.to_dict()
+                    for i in app_v1_api.list_namespaced_stateful_set(
+                        namespace
+                    ).items
+                ]
+                deployments = [
+                    i.to_dict()
+                    for i in app_v1_api.list_namespaced_deployment(
+                        namespace
+                    ).items
+                ]
+                daemonsets = [
+                    i.to_dict()
+                    for i in app_v1_api.list_namespaced_daemon_set(
+                        namespace
+                    ).items
+                ]
+            except Exception as e:  # pylint: disable=broad-except
+                # if there is an error, we assume the system is not ready
+                logger.error(
+                    "Failed to list statefulsets, deployments, or daemonsets: %s",
+                    e,
+                )
+                converge = False
+                break
 
             for sfs in statefulsets:
                 if (
@@ -287,8 +301,13 @@ def wait_for_converge(api_client, namespace, wait_time=60, hard_timeout=600):
                 # else, keep waiting until ready or hard timeout
                 break
 
-    event_stream.close()
     timer_hard_timeout.cancel()
+    combined_event_queue.close()
+    try:
+        combined_event_queue.get()
+    except queue.Empty:
+        pass
+    event_stream.close()
     watch_process.terminate()
 
     time_elapsed = time.strftime(

@@ -487,15 +487,29 @@ class Runner:
                     converge = False
                     break
             except queue.Empty:
-                health = kubernetes_system_state.KubernetesSystemState.from_api_client(
-                    self.apiclient, self.namespace
-                ).check_health()
+                try:
+                    health = kubernetes_system_state.KubernetesSystemState.from_api_client(
+                        self.apiclient, self.namespace
+                    ).check_health()
+                except Exception as e:  # pylint: disable=broad-except
+                    logger.error(
+                        "Failed to check system health: %s", e, exc_info=e
+                    )
+                    converge = False
+                    break
+
                 if health.is_healthy():
                     break
 
-        event_stream.close()
         timer_hard_timeout.cancel()
-        watch_process.terminate()
+        # Clear the queue and close the event stream
+        combined_event_queue.close()
+        try:
+            combined_event_queue.get(timeout=1)
+        except queue.Empty:
+            pass
+        event_stream.close()
+        watch_process.kill()
 
         time_elapsed = time.strftime(
             "%H:%M:%S", time.gmtime(time.time() - start_timestamp)
