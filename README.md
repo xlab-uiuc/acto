@@ -206,3 +206,9 @@ MongoOp                            18                      2                    
 TiDBOp                              9                      2                        1                 0             6       18
 Total                              46                      6                        3                 4            27       86
 ```
+
+Some bugs could fail to be reproduced due to the machine being overloaded,
+  you can retry reproducing a specific bug by its bug ID:
+```sh
+python3 reproduce_bugs.py --bug-id <BUG_ID>
+```
