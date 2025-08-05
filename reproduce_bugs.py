@@ -1,7 +1,5 @@
 import argparse
-import multiprocessing
 import os
-import queue
 import sys
 import threading
 from datetime import datetime
@@ -24,7 +22,13 @@ class ReproWorker:
     def __init__(
         self,
         repro_result_dir: str,
-        workqueue: multiprocessing.Queue,
+        workqueue: list[
+            tuple[
+                oat_ae_utils.OperatorPrettyName,
+                str,
+                oat_ae_utils.OatBugConfig,
+            ]
+        ],
         acto_namespace: int,
     ) -> None:
         self._repro_result_dir = repro_result_dir
@@ -39,8 +43,8 @@ class ReproWorker:
                     oat_ae_utils.OperatorPrettyName,
                     str,
                     oat_ae_utils.OatBugConfig,
-                ] = self._workqueue.get(block=True, timeout=5)
-            except queue.Empty:
+                ] = self._workqueue.pop(0)
+            except IndexError:
                 break
 
             for i in range(3):
@@ -163,9 +167,10 @@ def main() -> None:
         print("Reproducing all bugs!")
         to_reproduce = oat_ae_utils.ALL_BUGS
 
-    manager = multiprocessing.Manager()
-    reproduce_results = manager.dict()
-    failed_reproductions = manager.dict()
+    reproduce_results: dict[
+        oat_ae_utils.OperatorPrettyName, dict[oat_ae_utils.BugCategory, int]
+    ] = {}
+    failed_reproductions: dict[str, bool] = {}
 
     total_reproduced = 0
     repro_result_dir = os.path.join(
@@ -173,10 +178,10 @@ def main() -> None:
         f"repro_results-{datetime.now().strftime('%Y-%m-%d-%H-%M')}",
     )
 
-    workqueue: multiprocessing.Queue = multiprocessing.Queue()
+    workqueue = []
 
     for operator, bugs in to_reproduce.items():
-        reproduce_results[operator] = manager.dict()
+        reproduce_results[operator] = {}
         reproduce_results[operator][
             oat_ae_utils.BugCategory.OPERATION_SEMANTICS
         ] = 0
@@ -190,43 +195,43 @@ def main() -> None:
         reproduce_results[operator][oat_ae_utils.BugCategory.BY_PRODUCT] = 0
 
         for bug_id, bug_config in bugs.items():
-            workqueue.put((operator, bug_id, bug_config))
+            workqueue.append((operator, bug_id, bug_config))
 
     workers: list[ReproWorker] = []
     for i in range(args.num_workers):
         worker = ReproWorker(repro_result_dir, workqueue, i)
         workers.append(worker)
 
-    processes = []
+    threads = []
     for worker in workers:
-        p = multiprocessing.Process(
+        t = threading.Thread(
             target=worker.run,
             args=(
                 reproduce_results,
                 failed_reproductions,
             ),
         )
-        p.start()
-        processes.append(p)
+        t.start()
+        threads.append(t)
 
-    for p in processes:
-        p.join()
+    for t in threads:
+        t.join()
 
     if len(failed_reproductions) > 0:
         for bug_id in failed_reproductions:
             print(f"Retrying on bug {bug_id}.")
             (operator, bug_config) = bug_id_map[bug_id]
-            workqueue.put((operator, bug_id, bug_config))
+            workqueue.append((operator, bug_id, bug_config))
         failed_reproductions.clear()
         retry_worker = ReproWorker(
             repro_result_dir, workqueue, args.num_workers
         )
-        p = multiprocessing.Process(
+        t = threading.Thread(
             target=retry_worker.run,
             args=(reproduce_results, failed_reproductions),
         )
-        p.start()
-        p.join()
+        t.start()
+        t.join()
 
     if produce_table:
         print("Reproduction results:")
