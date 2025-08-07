@@ -308,7 +308,7 @@ def wait_for_converge(api_client, namespace, wait_time=60, hard_timeout=600):
     except queue.Empty:
         pass
     event_stream.close()
-    watch_process.join()
+    watch_process.join(timeout=30)
 
     time_elapsed = time.strftime(
         "%H:%M:%S", time.gmtime(time.time() - start_timestamp)
