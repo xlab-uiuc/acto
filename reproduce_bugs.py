@@ -1,5 +1,6 @@
 import argparse
 import os
+import subprocess
 import sys
 import threading
 from datetime import datetime
@@ -152,6 +153,11 @@ def main() -> None:
 
     produce_table = True
 
+    subprocess.run(
+        ["bash", "scripts/teardown.sh"],
+        check=False,
+    )
+
     bug_id_map: dict[
         str, Tuple[oat_ae_utils.OperatorPrettyName, oat_ae_utils.OatBugConfig]
     ] = {}
@@ -224,6 +230,11 @@ def main() -> None:
 
     for t in threads:
         t.join()
+
+    subprocess.run(
+        ["bash", "scripts/teardown.sh"],
+        check=False,
+    )
 
     if len(failed_reproductions) > 0:
         for bug_id in failed_reproductions:

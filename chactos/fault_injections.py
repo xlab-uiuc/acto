@@ -155,7 +155,8 @@ def wait_for_converge(api_client, namespace, wait_time=60, hard_timeout=600):
         namespace, _preload_content=False, watch=True
     )
 
-    combined_event_queue = multiprocessing.Queue(maxsize=0)
+    manager = multiprocessing.Manager()
+    combined_event_queue = manager.Queue(maxsize=0)
     timer_hard_timeout = acto_timer.ActoTimer(
         hard_timeout, combined_event_queue, "timeout"
     )
@@ -302,13 +303,12 @@ def wait_for_converge(api_client, namespace, wait_time=60, hard_timeout=600):
                 break
 
     timer_hard_timeout.cancel()
-    combined_event_queue.close()
     try:
         combined_event_queue.get()
     except queue.Empty:
         pass
     event_stream.close()
-    watch_process.terminate()
+    watch_process.join()
 
     time_elapsed = time.strftime(
         "%H:%M:%S", time.gmtime(time.time() - start_timestamp)
@@ -325,11 +325,14 @@ def wait_for_converge(api_client, namespace, wait_time=60, hard_timeout=600):
 
 def watch_system_events(event_stream, q: multiprocessing.Queue):
     """A process that watches namespaced events"""
-    for _ in event_stream:
-        try:
-            q.put("event")
-        except (ValueError, AssertionError):
-            pass
+    try:
+        for _ in event_stream:
+            try:
+                q.put("event")
+            except (ValueError, AssertionError):
+                pass
+    except Exception as _:  # pylint: disable=broad-except
+        return
 
 
 class ChactosTrialWorker:

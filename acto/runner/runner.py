@@ -467,7 +467,8 @@ class Runner:
             self.namespace, _preload_content=False, watch=True
         )
 
-        combined_event_queue = self.mp_ctx.Queue(maxsize=0)
+        manager = self.mp_ctx.Manager()
+        combined_event_queue = manager.Queue(maxsize=0)
         timer_hard_timeout = acto_timer.ActoTimer(
             hard_timeout, combined_event_queue, "timeout"
         )
@@ -502,14 +503,8 @@ class Runner:
                     break
 
         timer_hard_timeout.cancel()
-        # Clear the queue and close the event stream
-        combined_event_queue.close()
-        try:
-            combined_event_queue.get(timeout=1)
-        except queue.Empty:
-            pass
         event_stream.close()
-        watch_process.kill()
+        watch_process.join()
 
         time_elapsed = time.strftime(
             "%H:%M:%S", time.gmtime(time.time() - start_timestamp)
@@ -525,11 +520,14 @@ class Runner:
 
     def watch_system_events(self, event_stream, q: multiprocessing.Queue):
         """A process that watches namespaced events"""
-        for _ in event_stream:
-            try:
-                q.put("event")
-            except (ValueError, AssertionError):
-                pass
+        try:
+            for _ in event_stream:
+                try:
+                    q.put("event")
+                except (ValueError, AssertionError):
+                    pass
+        except Exception as _:  # pylint: disable=broad-except
+            return
 
 
 def decode_secret_data(secrets: dict) -> dict:
