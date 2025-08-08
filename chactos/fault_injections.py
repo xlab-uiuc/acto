@@ -81,6 +81,7 @@ class ChactosDriver(PostProcessor):
             )
 
         self._deployer = Deploy(operator_config.deploy)
+        self._acto_namespace = acto_namespace
 
     def run(self) -> None:
         """Run the fault injection exp"""
@@ -120,6 +121,7 @@ class ChactosDriver(PostProcessor):
                 operator_selector=operator_selector,
                 priority_pod_selector=self._fault_injection_config.priority_application_selector,
                 pod_selector=pod_selector,
+                acto_namespace=self._acto_namespace,
             )
             workers.append(worker)
 
@@ -353,6 +355,7 @@ class ChactosTrialWorker:
         pod_selector: dict,
         priority_pod_selector: Optional[dict] = None,
         diff_exclude_paths: Optional[list[str]] = None,
+        acto_namespace: int = 0,
     ):
         self._worker_id = worker_id
         self._workqueue = workqueue
@@ -365,6 +368,7 @@ class ChactosTrialWorker:
         self._operator_selector = operator_selector
         self._priority_pod_selector = priority_pod_selector
         self._pod_selector = pod_selector
+        self._acto_namespace = acto_namespace
 
     def fault_injection_trial_dir(self, trial_name: str, sequence: int):
         """Return the fault injection trial directory"""
@@ -389,7 +393,7 @@ class ChactosTrialWorker:
 
         # Set up the Kubernetes cluster
         kubernetes_cluster_name = self._kubernetes_provider.cluster_name(
-            acto_namespace=0, worker_id=self._worker_id
+            acto_namespace=self._acto_namespace, worker_id=self._worker_id
         )
         kubernetes_context_name = self._kubernetes_provider.get_context_name(
             kubernetes_cluster_name
