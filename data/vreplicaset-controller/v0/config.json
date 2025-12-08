@@ -1,0 +1,25 @@
+{
+    "deploy": {
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/vreplicaset-controller/v0/crd.yaml"
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/vreplicaset-controller/v0/rbac.yaml"
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/vreplicaset-controller/v0/deploy_remote.yaml",
+                    "operator": true
+                }
+            }
+        ]
+    },
+    "crd_name": "vreplicasets.anvil.dev",
+    "seed_custom_resource": "data/vreplicaset-controller/v0/vreplicaset.yaml",
+    "wait_time": 60
+}
