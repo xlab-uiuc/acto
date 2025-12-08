@@ -11,7 +11,7 @@
 | acto/checker/checker.py                                       |       10 |        1 |     90% |        20 |
 | acto/checker/checker\_set.py                                  |       48 |       12 |     75% |59-60, 98-109 |
 | acto/checker/impl/\_\_init\_\_.py                             |        0 |        0 |    100% |           |
-| acto/checker/impl/consistency.py                              |      225 |       49 |     78% |74, 86-87, 95-133, 145-146, 180, 195-200, 358, 391, 441, 444-462, 471-488 |
+| acto/checker/impl/consistency.py                              |      225 |       50 |     78% |74, 86-87, 95-133, 145-146, 180, 195-200, 234, 358, 391, 441, 444-462, 471-488 |
 | acto/checker/impl/crash.py                                    |       31 |        3 |     90% |16, 21, 47 |
 | acto/checker/impl/health.py                                   |       54 |        6 |     89% |20, 51, 84-90, 105, 132 |
 | acto/checker/impl/operator\_log.py                            |       23 |        0 |    100% |           |
@@ -27,15 +27,15 @@
 | acto/cli/\_\_init\_\_.py                                      |        0 |        0 |    100% |           |
 | acto/cli/collect\_system\_state.py                            |       21 |       21 |      0% |      1-58 |
 | acto/cli/schema\_match.py                                     |       42 |       42 |      0% |      1-90 |
-| acto/common.py                                                |      177 |       30 |     83% |54-55, 87, 119-122, 173, 232-235, 279-286, 288-293, 300-303, 326-337 |
+| acto/common.py                                                |      176 |       30 |     83% |54-55, 87, 119-122, 173, 232-235, 279-286, 288-293, 300-303, 326-337 |
 | acto/constant.py                                              |        6 |        0 |    100% |           |
 | acto/deploy.py                                                |      113 |       73 |     35% |21-43, 60-61, 72-75, 83-84, 86-89, 94, 104-184, 195-201, 205, 210 |
 | acto/engine.py                                                |      485 |      371 |     24% |91-98, 117-120, 142-262, 292-330, 338-412, 429-630, 645-700, 713-752, 758-787, 793-801, 805-820, 852-854, 866-870, 918-924, 927-929, 956-1122, 1132-1212 |
 | acto/exception.py                                             |        2 |        2 |      0% |       1-2 |
 | acto/input/\_\_init\_\_.py                                    |        0 |        0 |    100% |           |
-| acto/input/constraint.py                                      |       22 |       14 |     36% |     19-32 |
+| acto/input/constraint.py                                      |       19 |       14 |     26% |     19-32 |
 | acto/input/get\_matched\_schemas.py                           |       54 |       22 |     59% |12, 47-51, 55-74 |
-| acto/input/input.py                                           |      305 |       71 |     77% |75, 83, 88, 93, 98, 103, 108, 113, 118, 123, 137, 156, 194, 225-226, 235, 241-272, 317, 359-365, 545, 553-566, 574, 581, 585, 591, 595-615, 635, 637, 645-663 |
+| acto/input/input.py                                           |      301 |       71 |     76% |75, 83, 88, 93, 98, 103, 108, 113, 118, 123, 137, 156, 194, 225-226, 235, 241-272, 317, 359-365, 545, 553-566, 574, 581, 585, 591, 595-615, 635, 637, 645-663 |
 | acto/input/k8s\_schemas.py                                    |      348 |       65 |     81% |63, 66, 69, 84, 115-117, 151, 164, 174, 177, 180, 200, 204, 232, 241, 252, 255, 258, 268, 288, 396, 398, 400, 406, 410, 414-417, 426-427, 435, 439-441, 445, 472, 482, 509, 626, 635-638, 659-674, 678, 687-730 |
 | acto/input/known\_schemas/\_\_init\_\_.py                     |       10 |        0 |    100% |           |
 | acto/input/known\_schemas/base.py                             |       53 |       14 |     74% |17-18, 24, 28, 37, 46-47, 56-57, 66, 75, 84-85, 93 |
@@ -48,13 +48,13 @@
 | acto/input/known\_schemas/service\_schemas.py                 |      178 |       86 |     52% |13, 16, 19, 25-30, 33, 36, 42, 45-48, 51, 54, 64-67, 70-73, 76, 79, 85, 88-91, 94, 101-102, 105-108, 111, 114, 120-121, 124, 127, 135-136, 139, 142, 168-171, 175, 179-181, 184, 192-195, 199, 205, 208, 214, 217, 220, 228-231, 235, 244-246, 249, 257-258, 261, 264, 277-280, 284, 288-290, 293 |
 | acto/input/known\_schemas/statefulset\_schemas.py             |      186 |       92 |     51% |15-18, 21, 31-36, 42, 49-53, 56-58, 61-63, 66-70, 73-75, 78-80, 83, 90-93, 99-102, 105, 116-119, 123, 129, 132, 142-145, 149, 153-155, 158, 164, 167-170, 173, 176, 186-187, 190-193, 196-201, 204, 207, 218-221, 225, 231, 234, 250-253, 257, 262-263, 266, 274-277, 281, 287, 290 |
 | acto/input/known\_schemas/storage\_schemas.py                 |      179 |       77 |     57% |13, 16, 25-30, 33, 36, 42, 48-53, 59, 67-70, 74, 79-80, 83, 89, 92-95, 98, 104-105, 108-111, 114-116, 122, 130-131, 135, 140, 145-148, 154-155, 158, 164, 181-184, 188, 197, 203-205, 211, 214, 228-231, 235, 244, 250-252, 258, 266-269, 273, 278, 282 |
-| acto/input/kubernetes\_property.py                            |       26 |       26 |      0% |      1-92 |
+| acto/input/kubernetes\_property.py                            |       24 |       24 |      0% |      1-92 |
 | acto/input/property\_attribute.py                             |       10 |        0 |    100% |           |
 | acto/input/test\_generators/\_\_init\_\_.py                   |       10 |        0 |    100% |           |
 | acto/input/test\_generators/configuration.py                  |       40 |       30 |     25% |     19-93 |
 | acto/input/test\_generators/cron\_job.py                      |       13 |        6 |     54% |10-25, 31-46 |
 | acto/input/test\_generators/deployment.py                     |        8 |        3 |     62% |     12-27 |
-| acto/input/test\_generators/generator.py                      |       97 |        7 |     93% |109, 273-275, 279-281 |
+| acto/input/test\_generators/generator.py                      |       91 |        7 |     92% |109, 273-275, 279-281 |
 | acto/input/test\_generators/pod.py                            |      107 |        4 |     96% |311-318, 355-363 |
 | acto/input/test\_generators/primitive.py                      |      303 |       98 |     68% |28, 30, 32, 38, 40, 44, 53-54, 70-82, 107, 111-112, 122, 128, 130, 134-135, 144, 150, 153, 156, 173, 187-188, 229, 233, 236, 239, 243, 250, 256, 267-273, 287-288, 463-468, 471-476, 479, 482-487, 490-493, 496, 502, 508, 530-531, 569, 572, 575, 592, 609-610, 642-667, 689-704, 713, 716, 719, 737 |
 | acto/input/test\_generators/resource.py                       |       20 |        3 |     85% |     63-78 |
@@ -78,7 +78,7 @@
 | acto/kubernetes\_engine/minikube.py                           |      161 |      144 |     11% |26-32, 36-37, 41, 50-227, 230-244, 247-263, 270-281 |
 | acto/lib/\_\_init\_\_.py                                      |        0 |        0 |    100% |           |
 | acto/lib/dict.py                                              |       13 |        0 |    100% |           |
-| acto/lib/operator\_config.py                                  |       65 |        7 |     89% |80-89, 213-217 |
+| acto/lib/operator\_config.py                                  |       64 |        7 |     89% |80-89, 213-217 |
 | acto/lib/test\_dict.py                                        |       15 |        0 |    100% |           |
 | acto/lib/test\_operator\_config.py                            |        9 |        0 |    100% |           |
 | acto/monkey\_patch/\_\_init\_\_.py                            |        0 |        0 |    100% |           |
@@ -89,13 +89,13 @@
 | acto/post\_process/\_\_init\_\_.py                            |        0 |        0 |    100% |           |
 | acto/post\_process/collect\_test\_result.py                   |       47 |       47 |      0% |     1-125 |
 | acto/post\_process/post\_chain\_inputs.py                     |       41 |       41 |      0% |      1-65 |
-| acto/post\_process/post\_diff\_test.py                        |      491 |      285 |     42% |75-76, 81, 99-100, 145-148, 244, 255, 259, 264-273, 278-293, 308, 318, 320, 322-326, 332-359, 374-387, 391-429, 445-458, 462-549, 586-587, 622, 642-652, 685, 694-739, 743-791, 797-858, 875, 880, 885, 889, 898-899, 901-949, 1000-1021, 1030-1042, 1047-1080, 1084 |
+| acto/post\_process/post\_diff\_test.py                        |      487 |      285 |     41% |75-76, 81, 99-100, 145-148, 244, 255, 259, 264-273, 278-293, 308, 318, 320, 322-326, 332-359, 374-387, 391-429, 445-458, 462-549, 586-587, 622, 642-652, 685, 694-739, 743-791, 797-858, 875, 880, 885, 889, 898-899, 901-949, 1000-1021, 1030-1042, 1047-1080, 1084 |
 | acto/post\_process/post\_diff\_test\_test.py                  |       20 |        1 |     95% |       105 |
 | acto/post\_process/post\_process.py                           |       33 |        7 |     79% |33-36, 43, 47, 57 |
 | acto/post\_process/simple\_crash\_test.py                     |      162 |      126 |     22% |40-52, 61-74, 88-111, 129-143, 151-204, 233-246, 251-346, 350-387 |
 | acto/post\_process/test\_post\_process.py                     |       28 |        1 |     96% |        75 |
 | acto/reproduce.py                                             |      161 |      161 |      0% |     1-387 |
-| acto/result.py                                                |      102 |       14 |     86% |57, 78, 81, 156-158, 188-189, 214, 229, 233-238, 264-265 |
+| acto/result.py                                                |       93 |       14 |     85% |57, 78, 81, 156-158, 188-189, 214, 229, 233-238, 264-265 |
 | acto/result\_test.py                                          |        8 |        0 |    100% |           |
 | acto/runner/\_\_init\_\_.py                                   |        1 |        0 |    100% |           |
 | acto/runner/fault\_injection\_runner.py                       |       22 |       22 |      0% |      3-58 |
@@ -109,39 +109,39 @@
 | acto/schema/get\_total\_number\_schemas\_test.py              |        7 |        0 |    100% |           |
 | acto/schema/integer.py                                        |       38 |       10 |     74% |18, 24-26, 36, 44-49, 51, 67 |
 | acto/schema/number.py                                         |       41 |       18 |     56% |49, 55-57, 60, 63-68, 73, 76, 80-87, 90 |
-| acto/schema/object.py                                         |      153 |       44 |     71% |50, 52, 57, 72-81, 83-92, 102-117, 143, 148, 172, 179-184, 188-192, 201-205, 222, 246 |
+| acto/schema/object.py                                         |      153 |       45 |     71% |50, 52, 57, 72-81, 83-92, 102-117, 143, 148, 172, 179-184, 188-192, 201-205, 218, 222, 246 |
 | acto/schema/oneof.py                                          |       81 |       61 |     25% |16-24, 28-36, 40, 43-45, 50-58, 61, 64, 67-69, 72, 75-76, 79-84, 87-97, 100-112 |
 | acto/schema/opaque.py                                         |       29 |       15 |     48% |18, 21, 24-33, 36, 39, 42, 45 |
 | acto/schema/schema.py                                         |       41 |        7 |     83% |23, 27, 33-36, 51 |
 | acto/schema/string.py                                         |       54 |       15 |     72% |37, 43-45, 57-62, 67, 80-85, 88-92, 103 |
 | acto/schema/under\_specified.py                               |       37 |       12 |     68% |14-16, 34, 39, 42, 49, 52, 55, 58, 63, 68 |
 | acto/serialization.py                                         |       52 |       23 |     56% |16-19, 34, 36, 38, 40, 42, 45, 52-58, 65-71 |
-| acto/snapshot.py                                              |       66 |       14 |     79% |83, 98-128, 144-149 |
+| acto/snapshot.py                                              |       64 |       14 |     78% |83, 98-128, 144-149 |
 | acto/system\_state/\_\_init\_\_.py                            |        0 |        0 |    100% |           |
-| acto/system\_state/cluster\_role.py                           |       16 |        1 |     94% |        30 |
-| acto/system\_state/cluster\_role\_binding.py                  |       17 |        1 |     94% |        31 |
-| acto/system\_state/config\_map.py                             |       16 |        1 |     94% |        31 |
-| acto/system\_state/cron\_job.py                               |       16 |        1 |     94% |        31 |
-| acto/system\_state/daemon\_set.py                             |       25 |       10 |     60% |     35-64 |
-| acto/system\_state/deployment.py                              |       31 |       16 |     48% |     35-70 |
-| acto/system\_state/endpoints.py                               |       16 |        1 |     94% |        31 |
-| acto/system\_state/ingress.py                                 |       16 |        1 |     94% |        37 |
-| acto/system\_state/job.py                                     |       16 |        1 |     94% |        31 |
-| acto/system\_state/kubernetes\_object.py                      |      109 |       40 |     63% |70-126, 140, 144, 160, 165, 177, 181, 190, 193, 205, 214, 217, 229 |
-| acto/system\_state/kubernetes\_system\_state.py               |      105 |       17 |     84% |72, 84-97, 188, 227 |
-| acto/system\_state/network\_policy.py                         |       16 |        1 |     94% |        33 |
-| acto/system\_state/persistent\_volume.py                      |       16 |        1 |     94% |        28 |
-| acto/system\_state/persistent\_volume\_claim.py               |       16 |        1 |     94% |        33 |
-| acto/system\_state/pod.py                                     |       29 |       14 |     52% |     35-60 |
-| acto/system\_state/replica\_set.py                            |       27 |       12 |     56% |     35-58 |
-| acto/system\_state/role.py                                    |       16 |        1 |     94% |        33 |
-| acto/system\_state/role\_binding.py                           |       16 |        1 |     94% |        33 |
-| acto/system\_state/secret.py                                  |       16 |        1 |     94% |        31 |
-| acto/system\_state/service.py                                 |       16 |        1 |     94% |        36 |
-| acto/system\_state/service\_account.py                        |       16 |        1 |     94% |        33 |
-| acto/system\_state/stateful\_set.py                           |       29 |       14 |     52% |     38-76 |
-| acto/system\_state/storage\_class.py                          |       16 |        1 |     94% |        28 |
-| acto/trial.py                                                 |       26 |        2 |     92% |     38-39 |
+| acto/system\_state/cluster\_role.py                           |       15 |        1 |     93% |        30 |
+| acto/system\_state/cluster\_role\_binding.py                  |       16 |        1 |     94% |        31 |
+| acto/system\_state/config\_map.py                             |       15 |        1 |     93% |        31 |
+| acto/system\_state/cron\_job.py                               |       15 |        1 |     93% |        31 |
+| acto/system\_state/daemon\_set.py                             |       24 |       10 |     58% |     35-64 |
+| acto/system\_state/deployment.py                              |       30 |       16 |     47% |     35-70 |
+| acto/system\_state/endpoints.py                               |       15 |        1 |     93% |        31 |
+| acto/system\_state/ingress.py                                 |       15 |        1 |     93% |        37 |
+| acto/system\_state/job.py                                     |       15 |        1 |     93% |        31 |
+| acto/system\_state/kubernetes\_object.py                      |      102 |       40 |     61% |70-126, 140, 144, 160, 165, 177, 181, 190, 193, 205, 214, 217, 229 |
+| acto/system\_state/kubernetes\_system\_state.py               |       57 |       17 |     70% |72, 84-97, 188, 227 |
+| acto/system\_state/network\_policy.py                         |       15 |        1 |     93% |        33 |
+| acto/system\_state/persistent\_volume.py                      |       15 |        1 |     93% |        28 |
+| acto/system\_state/persistent\_volume\_claim.py               |       15 |        1 |     93% |        33 |
+| acto/system\_state/pod.py                                     |       28 |       14 |     50% |     35-60 |
+| acto/system\_state/replica\_set.py                            |       26 |       12 |     54% |     35-58 |
+| acto/system\_state/role.py                                    |       15 |        1 |     93% |        33 |
+| acto/system\_state/role\_binding.py                           |       15 |        1 |     93% |        33 |
+| acto/system\_state/secret.py                                  |       15 |        1 |     93% |        31 |
+| acto/system\_state/service.py                                 |       15 |        1 |     93% |        36 |
+| acto/system\_state/service\_account.py                        |       15 |        1 |     93% |        33 |
+| acto/system\_state/stateful\_set.py                           |       28 |       14 |     50% |     38-76 |
+| acto/system\_state/storage\_class.py                          |       15 |        1 |     93% |        28 |
+| acto/trial.py                                                 |       23 |        2 |     91% |     38-39 |
 | acto/utils/\_\_init\_\_.py                                    |       13 |        1 |     92% |        11 |
 | acto/utils/acto\_timer.py                                     |       31 |       22 |     29% |10-15, 19, 22-33, 38-40, 44-47 |
 | acto/utils/error\_handler.py                                  |       43 |       33 |     23% |15-35, 43-58, 63-82 |
@@ -149,7 +149,7 @@
 | acto/utils/preprocess.py                                      |       71 |       59 |     17% |17-39, 62-132, 137-171 |
 | acto/utils/process\_with\_except.py                           |        9 |        9 |      0% |      1-13 |
 | acto/utils/thread\_logger.py                                  |       17 |        5 |     71% |11-13, 24, 37 |
-|                                                     **TOTAL** | **10141** | **4571** | **55%** |           |
+|                                                     **TOTAL** | **10030** | **4571** | **54%** |           |
 
 
 ## Setup coverage badge
