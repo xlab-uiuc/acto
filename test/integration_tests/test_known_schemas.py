@@ -25,6 +25,7 @@ class TestSchema(unittest.TestCase):
         cls.schema_matcher_1_20 = K8sSchemaMatcher.from_version("v1.20.0")
         cls.schema_matcher_1_21 = K8sSchemaMatcher.from_version("v1.21.0")
         cls.schema_matcher_1_23 = K8sSchemaMatcher.from_version("v1.23.0")
+        cls.schema_matcher_1_30 = K8sSchemaMatcher.from_version("v1.30.0")
 
     def assert_exists(
         self,
@@ -637,6 +638,28 @@ class TestSchema(unittest.TestCase):
             )
 
             self.schema_matcher.find_all_matched_schemas(spec_schema)
+
+    def test_rust_schema_match(self):
+        with open(
+            os.path.join(test_data_dir, "vreplicaset_crd.yaml"),
+            "r",
+            encoding="utf-8",
+        ) as crd_yaml:
+            crd = yaml.load(crd_yaml, Loader=yaml.FullLoader)
+            spec_schema = ObjectSchema(
+                ["root"],
+                crd["spec"]["versions"][0]["schema"]["openAPIV3Schema"][
+                    "properties"
+                ]["spec"],
+            )
+
+            template_schema = spec_schema.properties["template"]
+
+            self.assertTrue(
+                self.schema_matcher_1_30.k8s_models[
+                    "io.k8s.api.core.v1.PodTemplateSpec"
+                ].match(template_schema)
+            )
 
 
 if __name__ == "__main__":
