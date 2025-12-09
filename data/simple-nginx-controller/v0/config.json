@@ -1,0 +1,25 @@
+{
+    "deploy": {
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/simple-nginx-controller/v0/crd.yaml"
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/simple-nginx-controller/v0/rbac.yaml"
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/simple-nginx-controller/v0/deployment.yaml",
+                    "operator": true
+                }
+            }
+        ]
+    },
+    "crd_name": "nginxapplications.nginx.example.com",
+    "seed_custom_resource": "data/simple-nginx-controller/v0/nginx-app.yaml",
+    "wait_time": 60
+}

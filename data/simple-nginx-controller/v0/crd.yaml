@@ -1,0 +1,79 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: nginxapplications.nginx.example.com
+spec:
+  group: nginx.example.com
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required:
+                - replicas
+              properties:
+                replicas:
+                  type: integer
+                  minimum: 1
+                  maximum: 100
+                  description: Number of nginx replicas
+                image:
+                  type: string
+                  default: "nginx:latest"
+                  description: Nginx container image
+                nginxConfig:
+                  type: string
+                  description: Custom nginx configuration
+            status:
+              type: object
+              properties:
+                phase:
+                  type: string
+                  description: "Current phase: Pending, Reconciling, Stable, or Deleted"
+                availableReplicas:
+                  type: integer
+                  description: Number of available replicas
+                conditions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      status:
+                        type: string
+                      lastTransitionTime:
+                        type: string
+                        format: date-time
+                      reason:
+                        type: string
+                      message:
+                        type: string
+      subresources:
+        status: {}
+      additionalPrinterColumns:
+        - name: Replicas
+          type: integer
+          jsonPath: .spec.replicas
+        - name: Available
+          type: integer
+          jsonPath: .status.availableReplicas
+        - name: Phase
+          type: string
+          jsonPath: .status.phase
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp
+  scope: Namespaced
+  names:
+    plural: nginxapplications
+    singular: nginxapplication
+    kind: NginxApplication
+    shortNames:
+      - nginx
+      - nginxapp
