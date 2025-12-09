@@ -131,6 +131,11 @@ class KubernetesStringSchema(KubernetesSchema):
             return any(
                 self.match(sub_schema) for sub_schema in schema.possibilities
             )
+        elif (
+            "format" in self.schema_spec
+            and self.schema_spec["format"] == "int-or-string"
+        ):
+            return isinstance(schema, (StringSchema, IntegerSchema))
         else:
             return isinstance(schema, StringSchema)
 

@@ -25,6 +25,14 @@ def extract_schema(path: list, schema: dict) -> BaseSchema:
     if "type" not in schema:
         if "properties" in schema:
             return ObjectSchema(path, schema)
+        elif (
+            "x-kubernetes-int-or-string" in schema
+            and schema["x-kubernetes-int-or-string"]
+        ):
+            # Special case for Kubernetes int-or-string type
+            # Treated with integer semantics
+            # The K8s schema matcher also specifically handles this case
+            return IntegerSchema(path, schema)
         else:
             logger.warning("No type found in schema: %s", str(schema))
             return OpaqueSchema(path, schema)
