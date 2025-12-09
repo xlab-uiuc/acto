@@ -41,11 +41,14 @@ class MetricsApiWatcher:
         while True:
             if self._stop:
                 break
-            stats = custom_api.list_cluster_custom_object(
-                group="metrics.k8s.io",
-                version="v1beta1",
-                plural="pods",
-            )
+            try:
+                stats = custom_api.list_cluster_custom_object(
+                    group="metrics.k8s.io",
+                    version="v1beta1",
+                    plural="pods",
+                )
+            except Exception:
+                break
             pod_metrics = {}
             for pod in stats["items"]:
                 pod_name = pod["metadata"]["name"]
