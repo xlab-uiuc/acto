@@ -1,0 +1,31 @@
+{
+    "deploy": {
+        "steps": [
+            {
+                "apply": {
+                    "file": "data/vreplicaset-controller/v0/crd.yaml"
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/vdeployment-controller/v0/crd.yaml"
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/vdeployment-controller/v0/rbac.yaml"
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/vdeployment-controller/v0/deploy_remote.yaml",
+                    "operator": true
+                }
+            }
+        ]
+    },
+    "crd_name": "vdeployments.anvil.dev",
+    "seed_custom_resource": "data/vdeployment-controller/v0/vdeployment.yaml",
+    "kubernetes_version": "v1.30.0",
+    "wait_time": 60
+}
