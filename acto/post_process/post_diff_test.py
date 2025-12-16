@@ -306,6 +306,7 @@ class AdditionalRunner:
         cluster: base.KubernetesEngine,
         worker_id,
         acto_namespace: int,
+        images_archive: Optional[str] = None,
     ):
 
         self._context = context
@@ -321,9 +322,13 @@ class AdditionalRunner:
             os.path.expanduser("~"), ".kube", self._context_name
         )
         self._generation = 0
-        self._images_archive = ImageHelper.prepare_image_archive(
-            self._context["preload_images"],
-        )
+
+        if images_archive is None:
+            self._images_archive = ImageHelper.prepare_image_archive(
+                self._context["preload_images"],
+            )
+        else:
+            self._images_archive = images_archive
 
     def run_cr(self, cr, trial, gen):
         self._cluster.restart_cluster(
@@ -368,6 +373,7 @@ class DeployRunner:
         cluster: base.KubernetesEngine,
         worker_id,
         acto_namespace: int,
+        images_archive: Optional[str] = None,
     ):
         self._workqueue = workqueue
         self._context = context
@@ -382,9 +388,13 @@ class DeployRunner:
         self._kubeconfig = os.path.join(
             os.path.expanduser("~"), ".kube", self._context_name
         )
-        self._images_archive = ImageHelper.prepare_image_archive(
-            self._context["preload_images"],
-        )
+
+        if images_archive is None:
+            self._images_archive = ImageHelper.prepare_image_archive(
+                self._context["preload_images"],
+            )
+        else:
+            self._images_archive = images_archive
 
     def run(self):
         logger = get_thread_logger(with_prefix=True)
@@ -467,10 +477,18 @@ class PostDiffTest(PostProcessor):
         config: OperatorConfig,
         ignore_invalid: bool = False,
         acto_namespace: int = 0,
+        images_archive: Optional[str] = None,
     ):
         self.acto_namespace = acto_namespace
         super().__init__(testrun_dir, config)
         logger = get_thread_logger(with_prefix=True)
+
+        if images_archive is None:
+            self.images_archive = ImageHelper.prepare_image_archive(
+                self.context["preload_images"],
+            )
+        else:
+            self.images_archive = images_archive
 
         self.all_inputs = []
         for trial, steps in self.trial_to_steps.items():
@@ -542,6 +560,7 @@ class PostDiffTest(PostProcessor):
                 cluster,
                 i,
                 self.acto_namespace,
+                self.images_archive,
             )
             runners.append(runner)
 
@@ -598,6 +617,7 @@ class PostDiffTest(PostProcessor):
             cluster=cluster,
             worker_id=worker_id,
             acto_namespace=self.acto_namespace,
+            images_archive=self.images_archive,
         )
 
         while True:

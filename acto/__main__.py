@@ -87,6 +87,12 @@ parser.add_argument(
     action="store_true",
     help="Only generate test cases without executing them",
 )
+parser.add_argument(
+    "--images-archive",
+    dest="images_archive",
+    type=str,
+    help="Prebuilt images archive to preload into the cluster",
+)
 parser.add_argument("--checkonly", action="store_true")
 
 args = parser.parse_args()
@@ -173,6 +179,7 @@ acto = Acto(
     apply_testcase_f=apply_testcase_f,
     delta_from=args.delta_from,
     focus_fields=config.focus_fields,
+    images_archive=args.images_archive,
 )
 generation_time = datetime.now()
 logger.info("Acto initialization finished in %s", generation_time - start_time)
@@ -186,7 +193,11 @@ logger.info("Start post processing steps")
 
 # Post processing
 post_diff_test_dir = os.path.join(args.workdir_path, "post_diff_test")
-p = PostDiffTest(testrun_dir=args.workdir_path, config=config)
+p = PostDiffTest(
+    testrun_dir=args.workdir_path,
+    config=config,
+    images_archive=args.images_archive,
+)
 if not args.checkonly:
     p.post_process(post_diff_test_dir, num_workers=args.num_workers)
 p.check(post_diff_test_dir, num_workers=args.num_workers)
