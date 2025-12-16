@@ -1,5 +1,4 @@
 import multiprocessing
-import multiprocessing.queues
 import os
 import queue
 import subprocess
@@ -8,8 +7,9 @@ import time
 from typing import Optional, Tuple
 
 import kubernetes
+from utils.image_helper import ImageHelper
 
-from acto.common import kubernetes_client, print_event
+from acto.common import kubernetes_client
 from acto.deploy import Deploy
 from acto.kubectl_client.kubectl import KubectlClient
 from acto.kubernetes_engine import kind
@@ -45,6 +45,7 @@ class ChactosDriver(PostProcessor):
         operator_config: OperatorConfig,
         fault_injection_config: FaultInjectionConfig,
         num_workers: int,
+        images_archive: Optional[str] = None,
     ):
         super().__init__(testrun_dir=testrun_dir, config=operator_config)
         self._operator_config = operator_config
@@ -62,23 +63,12 @@ class ChactosDriver(PostProcessor):
         )
 
         # Build an archive to be preloaded
-        container_tool = os.getenv("IMAGE_TOOL", "docker")
-        self._images_archive = os.path.join(work_dir, "images.tar")
-        if len(self.context["preload_images"]) > 0:
-            print_event("Preparing required images...")
-            # first make sure images are present locally
-            for image in self.context["preload_images"]:
-                subprocess.run(
-                    [container_tool, "pull", image],
-                    stdout=subprocess.DEVNULL,
-                    check=True,
-                )
-            subprocess.run(
-                [container_tool, "image", "save", "-o", self._images_archive]
-                + list(self.context["preload_images"]),
-                stdout=subprocess.DEVNULL,
-                check=True,
+        if images_archive is None:
+            self._images_archive = ImageHelper.prepare_image_archive(
+                self._context["preload_images"],
             )
+        else:
+            self._images_archive = images_archive
 
         self._deployer = Deploy(operator_config.deploy)
 

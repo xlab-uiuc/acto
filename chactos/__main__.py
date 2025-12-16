@@ -49,6 +49,12 @@ parser.add_argument(
     default=1,
     help="Number of concurrent workers to run Chactos with",
 )
+parser.add_argument(
+    "--images-archive",
+    dest="images_archive",
+    type=str,
+    help="Prebuilt images archive to preload into the cluster",
+)
 args = parser.parse_args()
 
 os.makedirs(args.workdir_path, exist_ok=True)
@@ -84,5 +90,6 @@ driver = ChactosDriver(
     operator_config=operator_config,
     fault_injection_config=fi_config,
     num_workers=args.num_workers,
+    images_archive=args.images_archive,
 )
 driver.run()

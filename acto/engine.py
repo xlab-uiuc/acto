@@ -289,14 +289,20 @@ class TrialRunner:
         acto_namespace: int,
         additional_exclude_paths: Optional[list[str]] = None,
         constraints: Optional[list[XorCondition]] = None,
+        images_archive: Optional[str] = None,
     ) -> None:
         self.context = context
         self.workdir = workdir
         self.base_workdir = workdir
         self.cluster = cluster
-        self.images_archive = ImageHelper.prepare_image_archive(
-            self.context["preload_images"],
-        )
+
+        if images_archive is None:
+            self.images_archive = ImageHelper.prepare_image_archive(
+                self.context["preload_images"],
+            )
+        else:
+            self.images_archive = images_archive
+
         self.worker_id = worker_id
         self.sequence_base = sequence_base  # trial number to start with
         self.context_name = cluster.get_context_name(
@@ -843,6 +849,7 @@ class Acto:
         mount: Optional[list] = None,
         focus_fields: Optional[list] = None,
         acto_namespace: int = 0,
+        images_archive: Optional[str] = None,
     ) -> None:
         logger = get_thread_logger(with_prefix=False)
 
@@ -888,6 +895,11 @@ class Acto:
         self.is_reproduce = is_reproduce
         self.apply_testcase_f = apply_testcase_f
         self.acto_namespace = acto_namespace
+        self.images_archive = images_archive
+
+        if images_archive is not None:
+            # early check if the archive exists
+            assert os.path.exists(images_archive)
 
         self.runner_type = Runner
         self.checker_type = CheckerSet
@@ -1134,7 +1146,9 @@ class Acto:
         logger = get_thread_logger(with_prefix=True)
 
         # Build an archive to be preloaded
-        if len(self.context["preload_images"]) > 0:
+        if self.images_archive is not None:
+            print_event("Using existing image archive...")
+        elif len(self.context["preload_images"]) > 0:
             logger.info("Creating preload images archive")
             print_event("Preparing required images...")
             ImageHelper.prepare_image_archive(
@@ -1166,6 +1180,7 @@ class Acto:
                 self.acto_namespace,
                 self.operator_config.diff_ignore_fields,
                 constraints=self.operator_config.constraints,
+                images_archive=self.images_archive,
             )
             runners.append(runner)
 
