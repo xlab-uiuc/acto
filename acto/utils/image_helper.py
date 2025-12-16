@@ -11,7 +11,7 @@ class ImageHelper:
     image_tool = os.getenv("IMAGE_TOOL", "docker")
 
     @staticmethod
-    def prepare_image_archive(images: list[str]) -> str:
+    def prepare_image_archive(images: list) -> str:
         """
         Prepare an archive of images for testing.
 
@@ -25,9 +25,7 @@ class ImageHelper:
         digest = hash("".join(sorted(images)))
 
         archive_name = f"{digest}.tar"
-        archive_path = os.path.join(
-            ImageHelper.image_archive_prefix, archive_name
-        )
+        archive_path = os.path.join(ImageHelper.image_archive_prefix, archive_name)
 
         lock = FileLock(f"{archive_path}.lock")
         with lock:
