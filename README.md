@@ -1,4 +1,4 @@
-# Artifact Evaluation (AE) for Research Paper -- "Who Watches the Watchers? On the Reliability of Softwarizing Cloud Application Management" ([NSDI'26 Spring AE #14](https://nsdi26springae.usenix.hotcrp.com/paper/14))
+# Artifact Evaluation (AE) for Paper -- "An Empirical Study of Failures in Softwarized Cloud Application Management"
 
 ## 1. Artifact Goals
 
@@ -27,8 +27,7 @@ If you are a first timer of CloudLab, we encourage you to read the CloudLab docs
 
 [CloudLab For Artifact Evaluation](https://docs.cloudlab.us/repeatable-research.html#%28part._aec-members%29)
 
-If you do not have a CloudLab account, please apply for one following this [link](https://www.cloudlab.us/signup.php),
-  and ask the NSDI AEC chair to add you to the NSDI AEC project.
+If you do not have a CloudLab account, please apply for one following this [link](https://www.cloudlab.us/signup.php).
 Please let us know if you have trouble accessing CloudLab, we can help set up the experiment and give you access.
 
 We recommend you to use the machine type, [c6420](https://www.cloudlab.us/instantiate.php?profile=dd5da1fd-6e3d-11f0-bc80-e4434b2381fc&refspec=refs/heads/main) (CloudLab profile), which we used in our own evaluation. Note that the machine may not be available all the time. You would need to submit a resource reservation to guarantee the availability of the resource.
@@ -123,7 +122,7 @@ Please proceed to the [Kick-the-tire Instructions](#3-kick-the-tire-instructions
 * Python 3.10 or newer
 * Install `pip3` by running `sudo apt install python3-pip`
 * Install [Golang](https://go.dev/doc/install)
-* Clone the repo recursively by running `git clone --recursive --branch nsdi26-ae https://github.com/xlab-uiuc/acto.git`
+* Clone the repo recursively by running `git clone --recursive --branch tocs-ae https://github.com/xlab-uiuc/acto.git`
 * Install Python dependencies by running `pip3 install -r requirements-dev.txt` in the project
 * Install `Kind` by running `go install sigs.k8s.io/kind@v0.21.0`
 * Install `Kubectl` by running `curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"` and `sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl`
@@ -172,9 +171,9 @@ Bug category: Operation Semantics
 
 ### 4.1 Operator Failure Study
 
-You can view the tables and findings reproduced using Jupyter notebooks here: [https://github.com/xlab-uiuc/acto/blob/nsdi26-ae/study.ipynb](https://github.com/xlab-uiuc/acto/blob/nsdi26-ae/study.ipynb)
+You can view the tables and findings reproduced using Jupyter notebooks here: [https://github.com/xlab-uiuc/acto/blob/tocs-ae/study.ipynb](https://github.com/xlab-uiuc/acto/blob/tocs-ae/study.ipynb)
 
-**Operator Failure Dataset:** https://github.com/xlab-uiuc/acto/blob/nsdi26-ae/nsdi26ae.csv
+**Operator Failure Dataset:** https://github.com/xlab-uiuc/acto/blob/tocs-ae/tocs26ae.csv
 
 ### 4.2 Oat Evaluation Instructions (12+ hours)
 
