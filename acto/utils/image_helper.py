@@ -1,4 +1,4 @@
-import base64
+import hashlib
 import os
 import subprocess
 
@@ -23,7 +23,7 @@ class ImageHelper:
             str: Path to the created archive.
         """
 
-        filename = base64.urlsafe_b64encode("".join(sorted(images)).encode()).decode()
+        filename = hashlib.sha256("".join(sorted(images)).encode("utf-8")).hexdigest()
 
         archive_name = f"{filename}.tar"
         archive_path = os.path.join(ImageHelper.image_archive_prefix, archive_name)
