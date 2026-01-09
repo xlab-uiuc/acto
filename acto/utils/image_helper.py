@@ -1,3 +1,4 @@
+import base64
 import os
 import subprocess
 
@@ -22,9 +23,9 @@ class ImageHelper:
             str: Path to the created archive.
         """
 
-        digest = hash("".join(sorted(images)))
+        filename = base64.urlsafe_b64encode("".join(sorted(images)).encode()).decode()
 
-        archive_name = f"{digest}.tar"
+        archive_name = f"{filename}.tar"
         archive_path = os.path.join(ImageHelper.image_archive_prefix, archive_name)
 
         lock = FileLock(f"{archive_path}.lock")
