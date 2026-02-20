@@ -35,14 +35,30 @@ class ImageHelper:
                 return archive_path
 
             for image in images:
+                # https://github.com/kubernetes-sigs/kind/issues/3795
                 subprocess.run(
-                    [ImageHelper.image_tool, "pull", image],
+                    [
+                        ImageHelper.image_tool,
+                        "pull",
+                        "--platform",
+                        "linux/amd64",
+                        image,
+                    ],
                     stdout=subprocess.DEVNULL,
                     check=True,
                 )
             os.makedirs(ImageHelper.image_archive_prefix, exist_ok=True)
+            # https://github.com/kubernetes-sigs/kind/issues/3795
             subprocess.run(
-                [ImageHelper.image_tool, "image", "save", "-o", archive_path]
+                [
+                    ImageHelper.image_tool,
+                    "image",
+                    "save",
+                    "--platform",
+                    "linux/amd64",
+                    "-o",
+                    archive_path,
+                ]
                 + list(images),
                 stdout=subprocess.DEVNULL,
                 check=True,
