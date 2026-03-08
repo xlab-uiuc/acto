@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: busybox-deployment
+spec:
+  selector:
+    matchLabels:
+      app: busybox
+  replicas: 5         #unsatisfiable affinity rule when we have only 3 worker nodes
+  template:
+    metadata:
+      labels:
+        app: busybox
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - busybox
+            topologyKey: kubernetes.io/hostname
+      containers:
+      - name: busybox
+        image: busybox
+        command:
+          - "sh"
+          - "-c"
+          - "while true; do sleep 3600; done"
+      
+        
