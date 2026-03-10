@@ -1,6 +1,8 @@
+import copy
 import datetime
 from typing import Optional
 
+import deepdiff
 import kubernetes
 
 # pylint: disable=import-error
@@ -86,30 +88,40 @@ class VDeploymentChecker(CheckerInterface):
 
         vd_selector = vd_spec.get("selector")
         vrs_selector = vrs_spec.get("selector")
-        if vd_selector is not None and vrs_selector != vd_selector:
-            return OracleResult(
-                message=(
-                    f"VReplicaSet selector mismatch: expected {vd_selector}, "
-                    f"got {vrs_selector}"
-                )
+        if vd_selector is not None and vrs_selector is not None:
+            # VReplicaSet injects pod-template-hash into matchLabels; strip it before comparing.
+            vrs_selector_cmp = copy.deepcopy(vrs_selector)
+            vrs_selector_cmp.get("matchLabels", {}).pop(
+                "pod-template-hash", None
             )
+            diff = deepdiff.DeepDiff(vd_selector, vrs_selector_cmp)
+            if diff:
+                return OracleResult(
+                    message=f"VReplicaSet selector mismatch: {diff}"
+                )
 
         vd_template = vd_spec.get("template")
         vrs_template = vrs_spec.get("template")
-        if vd_template is not None and vrs_template != vd_template:
-            return OracleResult(
-                message=(
-                    f"VReplicaSet template mismatch: expected {vd_template}, "
-                    f"got {vrs_template}"
-                )
+        if vd_template is not None and vrs_template is not None:
+            # VReplicaSet injects pod-template-hash into template.metadata.labels; strip it.
+            vrs_template_cmp = copy.deepcopy(vrs_template)
+            (
+                vrs_template_cmp.get("metadata", {})
+                .get("labels", {})
+                .pop("pod-template-hash", None)
             )
+            diff = deepdiff.DeepDiff(vd_template, vrs_template_cmp)
+            if diff:
+                return OracleResult(
+                    message=f"VReplicaSet template mismatch: {diff}"
+                )
 
         return None
 
     def __check_health(
         self, generation: int, snapshot: Snapshot, prev_snapshot: Snapshot
     ) -> Optional[OracleResult]:
-        """Check that the VReplicaSet's pods are ready using the snapshot system state."""
+        """Check that the VReplicaSet's pods are ready and have a consistent pod-template-hash."""
         _, _ = generation, prev_snapshot
         logger = get_thread_logger()
 
@@ -128,15 +140,41 @@ class VDeploymentChecker(CheckerInterface):
                 message=f"No pods found for VDeployment {vd_name!r} in deployment_pods"
             )
 
-        ready_count = sum(
-            1
-            for pod in pods
-            if pod.get("status", {}).get("conditions")
-            and any(
+        # Get the expected pod-template-hash from the owning VReplicaSet.
+        vrs_list = self.__get_owned_vreplicasets(vd_name)
+        expected_hash: Optional[str] = None
+        if vrs_list:
+            vrs = vrs_list[-1]
+            expected_hash = (
+                vrs.get("spec", {})
+                .get("selector", {})
+                .get("matchLabels", {})
+                .get("pod-template-hash")
+            )
+
+        ready_count = 0
+        for pod in pods:
+            # Check pod-template-hash consistency.
+            if expected_hash is not None:
+                pod_hash = (
+                    pod.get("metadata", {})
+                    .get("labels", {})
+                    .get("pod-template-hash")
+                )
+                if pod_hash != expected_hash:
+                    return OracleResult(
+                        message=(
+                            f"Pod {pod['metadata']['name']!r} has pod-template-hash "
+                            f"{pod_hash!r}, expected {expected_hash!r} from VReplicaSet"
+                        )
+                    )
+
+            # Check readiness.
+            if pod.get("status", {}).get("conditions") and any(
                 c.get("type") == "Ready" and c.get("status") == "True"
                 for c in pod["status"]["conditions"]
-            )
-        )
+            ):
+                ready_count += 1
 
         logger.info(
             "VReplicaSet health: %d/%d pods ready",
