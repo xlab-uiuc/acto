@@ -562,6 +562,7 @@ def group_pods(all_pods: dict) -> tuple[dict, dict, dict]:
             if (
                 owner_reference["kind"] == "ReplicaSet"
                 or owner_reference["kind"] == "Deployment"
+                or owner_reference["kind"] == "VReplicaSet"
             ):
                 owner_name = owner_reference["name"]
                 if owner_reference["kind"] == "ReplicaSet" or (
