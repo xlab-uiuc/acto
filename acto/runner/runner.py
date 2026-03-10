@@ -564,7 +564,9 @@ def group_pods(all_pods: dict) -> tuple[dict, dict, dict]:
                 or owner_reference["kind"] == "Deployment"
             ):
                 owner_name = owner_reference["name"]
-                if owner_reference["kind"] == "ReplicaSet":
+                if owner_reference["kind"] == "ReplicaSet" or (
+                    owner_reference["kind"] == "VReplicaSet"
+                ):
                     # chop off the suffix of the ReplicaSet name
                     # to get the deployment name
                     owner_name = "-".join(owner_name.split("-")[:-1])
