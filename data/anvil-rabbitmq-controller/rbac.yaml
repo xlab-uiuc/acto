@@ -78,17 +78,10 @@ subjects:
     namespace: rabbitmq
 ---
 apiVersion: v1
-kind: Namespace
-metadata:
-  labels:
-    app.kubernetes.io/name: vstatefulset
-  name: vstatefulset
----
-apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: vstatefulset-controller
-  namespace: vstatefulset
+  namespace: rabbitmq
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -130,4 +123,4 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: vstatefulset-controller
-    namespace: vstatefulset
+    namespace: rabbitmq
