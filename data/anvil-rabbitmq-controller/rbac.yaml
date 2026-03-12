@@ -42,10 +42,9 @@ rules:
   - apiGroups:
       - apps
     resources:
-      - deployments
-      - daemonsets
-      - replicasets
-      - statefulsets
+      - vdeployments
+      - vreplicasets
+      - vstatefulsets
     verbs:
       - "*"
   - apiGroups:
@@ -75,52 +74,4 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: rabbitmq-controller
-    namespace: rabbitmq
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: vstatefulset-controller
-  namespace: rabbitmq
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  labels:
-    app.kubernetes.io/name: vstatefulset-controller
-  name: vstatefulset-controller-role
-rules:
-  - apiGroups:
-      - anvil.dev
-    resources:
-      - "*"
-    verbs:
-      - "*"
-  - apiGroups:
-      - ""
-    resources:
-      - pods
-      - services
-      - endpoints
-      - persistentvolumeclaims
-      - events
-      - configmaps
-      - secrets
-      - serviceaccounts
-    verbs:
-      - "*"
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  labels:
-    app.kubernetes.io/name: vstatefulset-controller
-  name: vstatefulset-controller-rolebinding
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: vstatefulset-controller-role
-subjects:
-  - kind: ServiceAccount
-    name: vstatefulset-controller
     namespace: rabbitmq
