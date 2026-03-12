@@ -52,6 +52,35 @@ class VDeploymentChecker(CheckerInterface):
                     break
         return owned
 
+    def __get_current_vreplicaset(
+        self, vdeployment_name: str
+    ) -> Optional[dict]:
+        """Return the VReplicaSet.
+
+        The controller stamps each VReplicaSet with the VDeployment's resourceVersion
+        as the pod-template-hash, so this uniquely identifies the current revision.
+        """
+        custom_api = kubernetes.client.CustomObjectsApi(
+            self.oracle_handle.k8s_client
+        )
+        vd = custom_api.get_namespaced_custom_object(
+            group=VREPLICASET_GROUP,
+            version=VREPLICASET_VERSION,
+            namespace=self.oracle_handle.namespace,
+            plural="vdeployments",
+            name=vdeployment_name,
+        )
+        resource_version = vd.get("metadata", {}).get("resourceVersion")
+        for vrs in self.__get_owned_vreplicasets(vdeployment_name):
+            vrs_hash = (
+                vrs.get("metadata", {})
+                .get("labels", {})
+                .get("pod-template-hash")
+            )
+            if vrs_hash == resource_version:
+                return vrs
+        return None
+
     def __check_spec(
         self, generation: int, snapshot: Snapshot, prev_snapshot: Snapshot
     ) -> Optional[OracleResult]:
@@ -63,17 +92,14 @@ class VDeploymentChecker(CheckerInterface):
         vd_name = input_cr.get("metadata", {}).get("name", "")
         vd_spec = input_cr.get("spec", {})
 
-        vrs_list = self.__get_owned_vreplicasets(vd_name)
-        if not vrs_list:
+        vrs = self.__get_current_vreplicaset(vd_name)
+        if vrs is None:
             logger.error(
-                "No VReplicaSet found owned by VDeployment %s", vd_name
+                "No current VReplicaSet found for VDeployment %s", vd_name
             )
             return OracleResult(
-                message=f"No VReplicaSet found owned by VDeployment {vd_name!r}"
+                message=f"No current VReplicaSet found for VDeployment {vd_name!r}"
             )
-
-        # Use the most recently created VReplicaSet (current revision)
-        vrs = vrs_list[-1]
         vrs_spec = vrs.get("spec", {})
 
         desired_replicas = vd_spec.get("replicas")
@@ -140,11 +166,10 @@ class VDeploymentChecker(CheckerInterface):
                 message=f"No pods found for VDeployment {vd_name!r} in deployment_pods"
             )
 
-        # Get the expected pod-template-hash from the owning VReplicaSet.
-        vrs_list = self.__get_owned_vreplicasets(vd_name)
+        # Get the expected pod-template-hash from the current VReplicaSet.
         expected_hash: Optional[str] = None
-        if vrs_list:
-            vrs = vrs_list[-1]
+        vrs = self.__get_current_vreplicaset(vd_name)
+        if vrs is not None:
             expected_hash = (
                 vrs.get("spec", {})
                 .get("selector", {})
