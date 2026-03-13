@@ -38,6 +38,9 @@ class MetricsApiWatcher:
         stats_buf: List[dict] = []
         custom_api = kubernetes.client.CustomObjectsApi(apiclient)
 
+        if operator_name is None:
+            operator_name = "kube-controller-manager-anvil-control-plane"
+
         while True:
             if self._stop:
                 break
