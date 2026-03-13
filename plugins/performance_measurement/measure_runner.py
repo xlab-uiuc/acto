@@ -289,8 +289,9 @@ class MeasurementRunner(Runner):
                 )
                 if condition_1 is None:
                     vrs_hash = (
-                        vrs_obj.get("metadata", {})
-                        .get("labels", {})
+                        vrs_obj.get("spec", {})
+                        .get("selector", {})
+                        .get("matchLabels", {})
                         .get("pod-template-hash")
                     )
                     if vrs_hash == vd_resource_version:
@@ -324,8 +325,9 @@ class MeasurementRunner(Runner):
             )
             for vrs in vrs_list.get("items", []):
                 vrs_hash = (
-                    vrs.get("metadata", {})
-                    .get("labels", {})
+                    vrs.get("spec", {})
+                    .get("selector", {})
+                    .get("matchLabels", {})
                     .get("pod-template-hash")
                 )
                 if vrs_hash == vd_resource_version:
