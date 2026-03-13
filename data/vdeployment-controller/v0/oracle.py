@@ -52,54 +52,39 @@ class VDeploymentChecker(CheckerInterface):
                     break
         return owned
 
-    def __get_current_vreplicaset(
-        self, vdeployment_name: str
+    def __find_matching_vreplicaset(
+        self, vdeployment_name: str, desired_template: dict
     ) -> Optional[dict]:
-        """Return the VReplicaSet.
+        """Find the owned VReplicaSet whose pod template matches the desired template.
 
-        The controller stamps each VReplicaSet with the VDeployment's resourceVersion
-        as the pod-template-hash, so this uniquely identifies the current revision.
+        Strips the injected pod-template-hash label before comparing so that
+        controller-injected labels do not cause false mismatches.  Returns None
+        if no matching VRS exists, which means the spec is not yet reconciled.
         """
-        custom_api = kubernetes.client.CustomObjectsApi(
-            self.oracle_handle.k8s_client
-        )
-        vd = custom_api.get_namespaced_custom_object(
-            group=VREPLICASET_GROUP,
-            version=VREPLICASET_VERSION,
-            namespace=self.oracle_handle.namespace,
-            plural="vdeployments",
-            name=vdeployment_name,
-        )
-        resource_version = vd.get("metadata", {}).get("resourceVersion")
         for vrs in self.__get_owned_vreplicasets(vdeployment_name):
-            vrs_hash = (
-                vrs.get("metadata", {})
-                .get("labels", {})
-                .get("pod-template-hash")
+            vrs_template = copy.deepcopy(
+                vrs.get("spec", {}).get("template", {})
             )
-            if vrs_hash == resource_version:
+            vrs_template.get("metadata", {}).get("labels", {}).pop(
+                "pod-template-hash", None
+            )
+            if not deepdiff.DeepDiff(
+                desired_template, vrs_template, ignore_order=True
+            ):
                 return vrs
         return None
 
     def __check_spec(
-        self, generation: int, snapshot: Snapshot, prev_snapshot: Snapshot
+        self,
+        generation: int,
+        snapshot: Snapshot,
+        prev_snapshot: Snapshot,
+        vrs: dict,
     ) -> Optional[OracleResult]:
         """Check that the VReplicaSet spec matches the VDeployment spec."""
         _, _ = generation, prev_snapshot
-        logger = get_thread_logger()
 
-        input_cr = snapshot.input_cr
-        vd_name = input_cr.get("metadata", {}).get("name", "")
-        vd_spec = input_cr.get("spec", {})
-
-        vrs = self.__get_current_vreplicaset(vd_name)
-        if vrs is None:
-            logger.error(
-                "No current VReplicaSet found for VDeployment %s", vd_name
-            )
-            return OracleResult(
-                message=f"No current VReplicaSet found for VDeployment {vd_name!r}"
-            )
+        vd_spec = snapshot.input_cr.get("spec", {})
         vrs_spec = vrs.get("spec", {})
 
         desired_replicas = vd_spec.get("replicas")
@@ -115,7 +100,6 @@ class VDeploymentChecker(CheckerInterface):
         vd_selector = vd_spec.get("selector")
         vrs_selector = vrs_spec.get("selector")
         if vd_selector is not None and vrs_selector is not None:
-            # VReplicaSet injects pod-template-hash into matchLabels; strip it before comparing.
             vrs_selector_cmp = copy.deepcopy(vrs_selector)
             vrs_selector_cmp.get("matchLabels", {}).pop(
                 "pod-template-hash", None
@@ -126,28 +110,16 @@ class VDeploymentChecker(CheckerInterface):
                     message=f"VReplicaSet selector mismatch: {diff}"
                 )
 
-        vd_template = vd_spec.get("template")
-        vrs_template = vrs_spec.get("template")
-        if vd_template is not None and vrs_template is not None:
-            # VReplicaSet injects pod-template-hash into template.metadata.labels; strip it.
-            vrs_template_cmp = copy.deepcopy(vrs_template)
-            (
-                vrs_template_cmp.get("metadata", {})
-                .get("labels", {})
-                .pop("pod-template-hash", None)
-            )
-            diff = deepdiff.DeepDiff(vd_template, vrs_template_cmp)
-            if diff:
-                return OracleResult(
-                    message=f"VReplicaSet template mismatch: {diff}"
-                )
-
         return None
 
     def __check_health(
-        self, generation: int, snapshot: Snapshot, prev_snapshot: Snapshot
+        self,
+        generation: int,
+        snapshot: Snapshot,
+        prev_snapshot: Snapshot,
+        vrs: dict,
     ) -> Optional[OracleResult]:
-        """Check that the VReplicaSet's pods are ready and have a consistent pod-template-hash."""
+        """Check that the VReplicaSet's pods are ready."""
         _, _ = generation, prev_snapshot
         logger = get_thread_logger()
 
@@ -166,35 +138,8 @@ class VDeploymentChecker(CheckerInterface):
                 message=f"No pods found for VDeployment {vd_name!r} in deployment_pods"
             )
 
-        # Get the expected pod-template-hash from the current VReplicaSet.
-        expected_hash: Optional[str] = None
-        vrs = self.__get_current_vreplicaset(vd_name)
-        if vrs is not None:
-            expected_hash = (
-                vrs.get("spec", {})
-                .get("selector", {})
-                .get("matchLabels", {})
-                .get("pod-template-hash")
-            )
-
         ready_count = 0
         for pod in pods:
-            # Check pod-template-hash consistency.
-            if expected_hash is not None:
-                pod_hash = (
-                    pod.get("metadata", {})
-                    .get("labels", {})
-                    .get("pod-template-hash")
-                )
-                if pod_hash != expected_hash:
-                    return OracleResult(
-                        message=(
-                            f"Pod {pod['metadata']['name']!r} has pod-template-hash "
-                            f"{pod_hash!r}, expected {expected_hash!r} from VReplicaSet"
-                        )
-                    )
-
-            # Check readiness.
             if pod.get("status", {}).get("conditions") and any(
                 c.get("type") == "Ready" and c.get("status") == "True"
                 for c in pod["status"]["conditions"]
@@ -202,9 +147,7 @@ class VDeploymentChecker(CheckerInterface):
                 ready_count += 1
 
         logger.info(
-            "VReplicaSet health: %d/%d pods ready",
-            ready_count,
-            desired_replicas,
+            "VReplicaSet health: %d/%d pods ready", ready_count, desired_replicas
         )
 
         if ready_count < desired_replicas:
@@ -224,9 +167,22 @@ class VDeploymentChecker(CheckerInterface):
         logger = get_thread_logger()
         logger.info("Checking VDeployment config")
 
-        if result := self.__check_spec(generation, snapshot, prev_snapshot):
+        input_cr = snapshot.input_cr
+        vd_name = input_cr.get("metadata", {}).get("name", "")
+        desired_template = input_cr.get("spec", {}).get("template", {})
+
+        vrs = self.__find_matching_vreplicaset(vd_name, desired_template)
+        if vrs is None:
+            return OracleResult(
+                message=(
+                    f"No VReplicaSet with matching pod template found for "
+                    f"VDeployment {vd_name!r} — spec is not reconciled"
+                )
+            )
+
+        if result := self.__check_spec(generation, snapshot, prev_snapshot, vrs):
             return result
-        if result := self.__check_health(generation, snapshot, prev_snapshot):
+        if result := self.__check_health(generation, snapshot, prev_snapshot, vrs):
             return result
         return None
 
