@@ -258,6 +258,14 @@ class MeasurementRunner(Runner):
         self, input: dict, generation: int, vdeployment_name: str
     ) -> tuple[Optional[float], Optional[float]]:
         logger = get_thread_logger(with_prefix=True)
+
+        event_list = MeasurementRunner.wait_for_vdeployment_converge(
+            input=input,
+            apiclient=self.apiclient,
+            namespace=self.namespace,
+            vdeployment_name=vdeployment_name,
+        )
+
         custom_api = kubernetes.client.CustomObjectsApi(self.apiclient)
         vd = custom_api.get_namespaced_custom_object(
             group="anvil.dev",
@@ -268,12 +276,6 @@ class MeasurementRunner(Runner):
         )
         vd_resource_version = vd.get("metadata", {}).get("resourceVersion")
 
-        event_list = MeasurementRunner.wait_for_vdeployment_converge(
-            input=input,
-            apiclient=self.apiclient,
-            namespace=self.namespace,
-            vdeployment_name=vdeployment_name,
-        )
         desired_replicas = input["spec"].get("replicas", 1)
         condition_1 = None
         condition_2 = None
@@ -309,6 +311,61 @@ class MeasurementRunner(Runner):
                     ready_pods.pop(pod_name, None)
                 if len(ready_pods) >= desired_replicas:
                     condition_2 = max(ready_pods.values())
+
+        # Race condition fallback: the VRS may have been created before the
+        # watch started, so no ADDED event was observed.  Look it up directly
+        # and use its creationTimestamp as condition_1.
+        if condition_1 is None:
+            vrs_list = custom_api.list_namespaced_custom_object(
+                group="anvil.dev",
+                version="v1",
+                namespace=self.namespace,
+                plural="vreplicasets",
+            )
+            for vrs in vrs_list.get("items", []):
+                vrs_hash = (
+                    vrs.get("metadata", {})
+                    .get("labels", {})
+                    .get("pod-template-hash")
+                )
+                if vrs_hash == vd_resource_version:
+                    creation_ts = vrs.get("metadata", {}).get(
+                        "creationTimestamp"
+                    )
+                    if creation_ts is not None:
+                        condition_1 = datetime.fromisoformat(
+                            creation_ts
+                        ).timestamp()
+                        logger.info(
+                            f"VReplicaSet with hash {vd_resource_version} "
+                            f"found via direct lookup (created before watch "
+                            f"started), condition_1={condition_1}"
+                        )
+                    break
+
+        # Condition_2 fallback: if no pod events captured the ready transition,
+        # query pods with the matching hash and use the latest Ready
+        # lastTransitionTime.
+        if condition_2 is None and vd_resource_version is not None:
+            core_v1 = kubernetes.client.CoreV1Api(self.apiclient)
+            pods = core_v1.list_namespaced_pod(
+                self.namespace,
+                label_selector=f"pod-template-hash={vd_resource_version}",
+            )
+            ready_times = []
+            for pod in pods.items:
+                for cond in pod.status.conditions or []:
+                    if cond.type == "Ready" and cond.status == "True":
+                        ready_times.append(
+                            cond.last_transition_time.timestamp()
+                        )
+                        break
+            if len(ready_times) >= desired_replicas:
+                condition_2 = max(ready_times)
+                logger.info(
+                    f"condition_2 set via pod Ready lastTransitionTime fallback:"
+                    f" {condition_2}"
+                )
 
         with open(
             "%s/vrs-events-%03d.json" % (self.trial_dir, generation), "w"
@@ -376,6 +433,73 @@ class MeasurementRunner(Runner):
                     ready_pods.pop(pod_name, None)
                 if len(ready_pods) >= desired_replicas:
                     condition_2 = max(ready_pods.values())
+
+        # Race condition fallback: the RS may have been created before the
+        # watch started.  Look it up directly and use its creationTimestamp.
+        if condition_1 is None and deployment_revision is not None:
+            rs_list = apps_v1.list_namespaced_replica_set(self.namespace)
+            for rs in rs_list.items:
+                rs_revision = (rs.metadata.annotations or {}).get(
+                    "deployment.kubernetes.io/revision"
+                )
+                is_owned = any(
+                    ref.kind == "Deployment" and ref.name == deployment_name
+                    for ref in (rs.metadata.owner_references or [])
+                )
+                if rs_revision == deployment_revision and is_owned:
+                    creation_ts = rs.metadata.creation_timestamp
+                    if creation_ts is not None:
+                        condition_1 = creation_ts.timestamp()
+                        logger.info(
+                            f"ReplicaSet with revision {deployment_revision} "
+                            f"found via direct lookup (created before watch "
+                            f"started), condition_1={condition_1}"
+                        )
+                    break
+
+        # Condition_2 fallback: if no pod events captured the ready transition,
+        # find the current RS by revision, get its pod-template-hash, then use
+        # the latest Ready lastTransitionTime across its pods.
+        if condition_2 is None and deployment_revision is not None:
+            rs_list = apps_v1.list_namespaced_replica_set(self.namespace)
+            current_rs = next(
+                (
+                    rs
+                    for rs in rs_list.items
+                    if (rs.metadata.annotations or {}).get(
+                        "deployment.kubernetes.io/revision"
+                    )
+                    == deployment_revision
+                    and any(
+                        ref.kind == "Deployment" and ref.name == deployment_name
+                        for ref in (rs.metadata.owner_references or [])
+                    )
+                ),
+                None,
+            )
+            if current_rs is not None:
+                rs_hash = (current_rs.metadata.labels or {}).get(
+                    "pod-template-hash"
+                )
+                core_v1 = kubernetes.client.CoreV1Api(self.apiclient)
+                pods = core_v1.list_namespaced_pod(
+                    self.namespace,
+                    label_selector=f"pod-template-hash={rs_hash}",
+                )
+                ready_times = []
+                for pod in pods.items:
+                    for cond in pod.status.conditions or []:
+                        if cond.type == "Ready" and cond.status == "True":
+                            ready_times.append(
+                                cond.last_transition_time.timestamp()
+                            )
+                            break
+                if len(ready_times) >= desired_replicas:
+                    condition_2 = max(ready_times)
+                    logger.info(
+                        f"condition_2 set via pod Ready lastTransitionTime"
+                        f" fallback: {condition_2}"
+                    )
 
         with open(
             "%s/rs-events-%03d.json" % (self.trial_dir, generation), "w"
