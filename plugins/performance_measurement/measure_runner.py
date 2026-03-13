@@ -1,5 +1,6 @@
 """Runner for performance measurement"""
 
+import copy
 import hashlib
 import json
 import logging
@@ -11,6 +12,7 @@ from functools import partial
 from multiprocessing import Process, Queue
 from typing import Callable, Optional
 
+import deepdiff
 import jsonpatch
 import kubernetes
 import kubernetes.client.models as k8s_models
@@ -258,6 +260,7 @@ class MeasurementRunner(Runner):
         self, input: dict, generation: int, vdeployment_name: str
     ) -> tuple[Optional[float], Optional[float]]:
         logger = get_thread_logger(with_prefix=True)
+        custom_api = kubernetes.client.CustomObjectsApi(self.apiclient)
 
         event_list = MeasurementRunner.wait_for_vdeployment_converge(
             input=input,
@@ -266,16 +269,7 @@ class MeasurementRunner(Runner):
             vdeployment_name=vdeployment_name,
         )
 
-        custom_api = kubernetes.client.CustomObjectsApi(self.apiclient)
-        vd = custom_api.get_namespaced_custom_object(
-            group="anvil.dev",
-            version="v1",
-            namespace=self.namespace,
-            plural="vdeployments",
-            name=vdeployment_name,
-        )
-        vd_resource_version = vd.get("metadata", {}).get("resourceVersion")
-
+        desired_template = input["spec"].get("template", {})
         desired_replicas = input["spec"].get("replicas", 1)
         condition_1 = None
         condition_2 = None
@@ -288,13 +282,15 @@ class MeasurementRunner(Runner):
                     f"{datetime.fromtimestamp(timestamp)}"
                 )
                 if condition_1 is None:
-                    vrs_hash = (
-                        vrs_obj.get("spec", {})
-                        .get("selector", {})
-                        .get("matchLabels", {})
-                        .get("pod-template-hash")
+                    vrs_template = copy.deepcopy(
+                        vrs_obj.get("spec", {}).get("template", {})
                     )
-                    if vrs_hash == vd_resource_version:
+                    vrs_template.get("metadata", {}).get("labels", {}).pop(
+                        "pod-template-hash", None
+                    )
+                    if not deepdiff.DeepDiff(
+                        desired_template, vrs_template, ignore_order=True
+                    ):
                         condition_1 = timestamp
             elif (
                 tag == "pod" and condition_1 is not None and condition_2 is None
@@ -313,10 +309,11 @@ class MeasurementRunner(Runner):
                 if len(ready_pods) >= desired_replicas:
                     condition_2 = max(ready_pods.values())
 
-        # Race condition fallback: the VRS may have been created before the
-        # watch started, so no ADDED event was observed.  Look it up directly
-        # and use its creationTimestamp as condition_1.
-        if condition_1 is None:
+        # Race condition fallback: the matching VRS may have been created before
+        # the watch started.  Find it by comparing the pod template directly and
+        # use its creationTimestamp as condition_1.
+        matching_vrs = None
+        if condition_1 is None or condition_2 is None:
             vrs_list = custom_api.list_namespaced_custom_object(
                 group="anvil.dev",
                 version="v1",
@@ -324,40 +321,43 @@ class MeasurementRunner(Runner):
                 plural="vreplicasets",
             )
             for vrs in vrs_list.get("items", []):
-                vrs_hash = (
-                    vrs.get("spec", {})
-                    .get("selector", {})
-                    .get("matchLabels", {})
-                    .get("pod-template-hash")
+                vrs_template = copy.deepcopy(
+                    vrs.get("spec", {}).get("template", {})
                 )
-                if vrs_hash == vd_resource_version:
-                    creation_ts = vrs.get("metadata", {}).get(
-                        "creationTimestamp"
-                    )
-                    if creation_ts is not None:
-                        condition_1 = datetime.fromisoformat(
-                            creation_ts
-                        ).timestamp()
-                        logger.info(
-                            f"VReplicaSet with hash {vd_resource_version} "
-                            f"found via direct lookup (created before watch "
-                            f"started), condition_1={condition_1}"
-                        )
+                vrs_template.get("metadata", {}).get("labels", {}).pop(
+                    "pod-template-hash", None
+                )
+                if not deepdiff.DeepDiff(
+                    desired_template, vrs_template, ignore_order=True
+                ):
+                    matching_vrs = vrs
                     break
-                else:
-                    logger.info(
-                        f"Skipping VReplicaSet with hash {vrs_hash} "
-                        f"when looking for hash {vd_resource_version}"
-                    )
 
-        # Condition_2 fallback: if no pod events captured the ready transition,
-        # query pods with the matching hash and use the latest Ready
-        # lastTransitionTime.
-        if condition_2 is None and vd_resource_version is not None:
+        if condition_1 is None and matching_vrs is not None:
+            creation_ts = matching_vrs.get("metadata", {}).get(
+                "creationTimestamp"
+            )
+            if creation_ts is not None:
+                condition_1 = datetime.fromisoformat(creation_ts).timestamp()
+                logger.info(
+                    f"condition_1 set via direct VRS lookup (created before "
+                    f"watch started): {condition_1}"
+                )
+
+        # Condition_2 fallback: use pod Ready lastTransitionTime for the VRS's
+        # own pods (identified via its selector labels).
+        if condition_2 is None and matching_vrs is not None:
+            match_labels = (
+                matching_vrs.get("spec", {})
+                .get("selector", {})
+                .get("matchLabels", {})
+            )
+            label_selector = ",".join(
+                f"{k}={v}" for k, v in match_labels.items()
+            )
             core_v1 = kubernetes.client.CoreV1Api(self.apiclient)
             pods = core_v1.list_namespaced_pod(
-                self.namespace,
-                label_selector=f"pod-template-hash={vd_resource_version}",
+                self.namespace, label_selector=label_selector
             )
             ready_times = []
             for pod in pods.items:
@@ -370,8 +370,8 @@ class MeasurementRunner(Runner):
             if len(ready_times) >= desired_replicas:
                 condition_2 = max(ready_times)
                 logger.info(
-                    f"condition_2 set via pod Ready lastTransitionTime fallback:"
-                    f" {condition_2}"
+                    f"condition_2 set via pod Ready lastTransitionTime "
+                    f"fallback: {condition_2}"
                 )
 
         with open(
