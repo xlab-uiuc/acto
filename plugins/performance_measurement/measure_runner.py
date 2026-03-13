@@ -276,25 +276,14 @@ class MeasurementRunner(Runner):
         ready_pods: dict[str, float] = {}
         for tag, event, timestamp in event_list:
             if tag == "vrs":
-                vrs_obj = event["object"]
                 logger.info(
                     f"{event['type']} VReplicaSet at {timestamp} - "
                     f"{datetime.fromtimestamp(timestamp)}"
                 )
-                if condition_1 is None:
-                    vrs_template = copy.deepcopy(
-                        vrs_obj.get("spec", {}).get("template", {})
-                    )
-                    vrs_template.get("metadata", {}).get("labels", {}).pop(
-                        "pod-template-hash", None
-                    )
-                    if not deepdiff.DeepDiff(
-                        desired_template, vrs_template, ignore_order=True
-                    ):
-                        condition_1 = timestamp
-            elif (
-                tag == "pod" and condition_1 is not None and condition_2 is None
-            ):
+                # condition_1 is the latest timestamp any VRS was touched,
+                # regardless of event type or which VRS it was.
+                condition_1 = timestamp
+            elif tag == "pod" and condition_2 is None:
                 pod_dict = event["object"].to_dict()
                 pod_name = pod_dict["metadata"]["name"]
                 pod_status = pod_dict.get("status", {})
