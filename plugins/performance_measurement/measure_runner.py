@@ -344,6 +344,11 @@ class MeasurementRunner(Runner):
                             f"started), condition_1={condition_1}"
                         )
                     break
+                else:
+                    logger.info(
+                        f"Skipping VReplicaSet with hash {vrs_hash} "
+                        f"when looking for hash {vd_resource_version}"
+                    )
 
         # Condition_2 fallback: if no pod events captured the ready transition,
         # query pods with the matching hash and use the latest Ready
