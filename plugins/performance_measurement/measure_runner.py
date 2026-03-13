@@ -962,11 +962,11 @@ class MeasurementRunner(Runner):
         try:
             for object in event_stream:
                 try:
-                    logging.info(f"event type: {object['type']}")
+                    logging.info(f"event type: {object['type']}, tag: {tag}")
                     ts = time.time()
                     queue.put((tag, object, ts))
-                except (ValueError, AssertionError):
-                    pass
+                except (ValueError, AssertionError) as e:
+                    logging.info("failed to process event due to %s", str(e))
         except SSLError:
             pass
 
