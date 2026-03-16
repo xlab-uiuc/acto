@@ -356,7 +356,9 @@ class MeasurementRunner(Runner):
                             cond.last_transition_time.timestamp()
                         )
                         break
-            if len(ready_times) >= desired_replicas:
+            if len(ready_times) == 0 and desired_replicas == 0:
+                condition_2 = condition_1
+            elif len(ready_times) >= desired_replicas:
                 condition_2 = max(ready_times)
                 logger.info(
                     f"condition_2 set via pod Ready lastTransitionTime "
@@ -490,7 +492,9 @@ class MeasurementRunner(Runner):
                                 cond.last_transition_time.timestamp()
                             )
                             break
-                if len(ready_times) >= desired_replicas:
+                if len(ready_times) == 0 and desired_replicas == 0:
+                    condition_2 = condition_1
+                elif len(ready_times) >= desired_replicas:
                     condition_2 = max(ready_times)
                     logger.info(
                         f"condition_2 set via pod Ready lastTransitionTime"
