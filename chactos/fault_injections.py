@@ -7,7 +7,6 @@ import time
 from typing import Optional, Tuple
 
 import kubernetes
-from utils.image_helper import ImageHelper
 
 from acto.common import kubernetes_client
 from acto.deploy import Deploy
@@ -28,6 +27,7 @@ from acto.runner.runner import Runner
 from acto.system_state.kubernetes_system_state import KubernetesSystemState
 from acto.trial import Trial
 from acto.utils import acto_timer, thread_logger
+from acto.utils.image_helper import ImageHelper
 from chactos.failures.failure import Failure
 from chactos.failures.network_chaos import OperatorApplicationPartitionFailure
 from chactos.failures.pod_failures_chaos import PodFailure
