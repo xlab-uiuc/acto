@@ -384,6 +384,14 @@ class MeasurementRunner(Runner):
         self, input: dict, generation: int, deployment_name: str
     ) -> tuple[Optional[float], Optional[float]]:
         logger = get_thread_logger(with_prefix=True)
+
+        event_list = MeasurementRunner.wait_for_deployment_converge(
+            input=input,
+            apiclient=self.apiclient,
+            namespace=self.namespace,
+            deployment_name=deployment_name,
+        )
+
         apps_v1 = kubernetes.client.AppsV1Api(self.apiclient)
         deployment = apps_v1.read_namespaced_deployment(
             name=deployment_name, namespace=self.namespace
@@ -392,12 +400,6 @@ class MeasurementRunner(Runner):
             "deployment.kubernetes.io/revision"
         )
 
-        event_list = MeasurementRunner.wait_for_deployment_converge(
-            input=input,
-            apiclient=self.apiclient,
-            namespace=self.namespace,
-            deployment_name=deployment_name,
-        )
         desired_replicas = input["spec"].get("replicas", 1)
         condition_1 = None
         condition_2 = None
