@@ -42,6 +42,7 @@ class MeasurementResult:
     start_ts: float
     condition_1_ts: float
     condition_2_ts: float
+    condition_3_ts: Optional[float] = None
 
 
 def check_annotations(
@@ -229,12 +230,13 @@ class MeasurementRunner(Runner):
 
         start_time = time.time()
 
+        condition_3 = None
         if vdeployment_name_f:
-            condition_1, condition_2 = self._measure_vdeployment(
+            condition_1, condition_2, condition_3 = self._measure_vdeployment(
                 input, generation, vdeployment_name_f(input)
             )
         elif deployment_name_f:
-            condition_1, condition_2 = self._measure_deployment(
+            condition_1, condition_2, condition_3 = self._measure_deployment(
                 input, generation, deployment_name_f(input)
             )
         else:
@@ -251,14 +253,18 @@ class MeasurementRunner(Runner):
         duration_2 = condition_2 - start_time
         logging.info("Condition 2 took %f seconds" % duration_2)
 
+        if condition_3 is not None:
+            duration_3 = condition_3 - start_time
+            logging.info("Condition 3 took %f seconds" % duration_3)
+
         if self.crd_metainfo:
             self.collect_system_state()
 
-        return MeasurementResult(start_time, condition_1, condition_2)
+        return MeasurementResult(start_time, condition_1, condition_2, condition_3)
 
     def _measure_vdeployment(
         self, input: dict, generation: int, vdeployment_name: str
-    ) -> tuple[Optional[float], Optional[float]]:
+    ) -> tuple[Optional[float], Optional[float], Optional[float]]:
         logger = get_thread_logger(with_prefix=True)
         custom_api = kubernetes.client.CustomObjectsApi(self.apiclient)
 
@@ -273,7 +279,7 @@ class MeasurementRunner(Runner):
         desired_replicas = input["spec"].get("replicas", 1)
         condition_1 = None
         condition_2 = None
-        ready_pods: dict[str, float] = {}
+        condition_3 = None
         for tag, event, timestamp in event_list:
             if tag == "vrs":
                 logger.info(
@@ -283,26 +289,20 @@ class MeasurementRunner(Runner):
                 # condition_1 is the latest timestamp any VRS was touched,
                 # regardless of event type or which VRS it was.
                 condition_1 = timestamp
-            elif tag == "pod" and condition_2 is None:
-                pod_dict = event["object"].to_dict()
-                pod_name = pod_dict["metadata"]["name"]
-                pod_status = pod_dict.get("status", {})
-                is_ready = pod_status.get("phase") == "Running" and all(
-                    cs.get("ready", False)
-                    for cs in pod_status.get("container_statuses") or []
-                )
-                if is_ready:
-                    ready_pods[pod_name] = timestamp
-                else:
-                    ready_pods.pop(pod_name, None)
-                if len(ready_pods) >= desired_replicas:
-                    condition_2 = max(ready_pods.values())
+            elif tag == "pod":
+                event_type = event["type"]
+                if event_type == "MODIFIED":
+                    # condition_2 is the latest timestamp any pod was updated
+                    condition_2 = timestamp
+                elif event_type in ("ADDED", "DELETED"):
+                    # condition_3 is the latest timestamp any pod was created or deleted
+                    condition_3 = timestamp
 
         # Race condition fallback: the matching VRS may have been created before
         # the watch started.  Find it by comparing the pod template directly and
         # use its creationTimestamp as condition_1.
         matching_vrs = None
-        if condition_1 is None or condition_2 is None:
+        if condition_1 is None or condition_2 is None or condition_3 is None:
             vrs_list = custom_api.list_namespaced_custom_object(
                 group="anvil.dev",
                 version="v1",
@@ -335,7 +335,8 @@ class MeasurementRunner(Runner):
 
         # Condition_2 fallback: use pod Ready lastTransitionTime for the VRS's
         # own pods (identified via its selector labels).
-        if condition_2 is None and matching_vrs is not None:
+        # Condition_3 fallback: use pod creationTimestamp.
+        if (condition_2 is None or condition_3 is None) and matching_vrs is not None:
             match_labels = (
                 matching_vrs.get("spec", {})
                 .get("selector", {})
@@ -349,20 +350,32 @@ class MeasurementRunner(Runner):
                 self.namespace, label_selector=label_selector
             )
             ready_times = []
+            creation_times = []
             for pod in pods.items:
+                if pod.metadata.creation_timestamp is not None:
+                    creation_times.append(
+                        pod.metadata.creation_timestamp.timestamp()
+                    )
                 for cond in pod.status.conditions or []:
                     if cond.type == "Ready" and cond.status == "True":
                         ready_times.append(
                             cond.last_transition_time.timestamp()
                         )
                         break
-            if len(ready_times) == 0 and desired_replicas == 0:
-                condition_2 = condition_1
-            elif len(ready_times) >= desired_replicas:
-                condition_2 = max(ready_times)
+            if condition_2 is None:
+                if len(ready_times) == 0 and desired_replicas == 0:
+                    condition_2 = condition_1
+                elif len(ready_times) >= desired_replicas:
+                    condition_2 = max(ready_times)
+                    logger.info(
+                        f"condition_2 set via pod Ready lastTransitionTime "
+                        f"fallback: {condition_2}"
+                    )
+            if condition_3 is None and creation_times:
+                condition_3 = max(creation_times)
                 logger.info(
-                    f"condition_2 set via pod Ready lastTransitionTime "
-                    f"fallback: {condition_2}"
+                    f"condition_3 set via pod creationTimestamp fallback: "
+                    f"{condition_3}"
                 )
 
         with open(
@@ -378,11 +391,11 @@ class MeasurementRunner(Runner):
                 cls=ActoEncoder,
                 indent=4,
             )
-        return condition_1, condition_2
+        return condition_1, condition_2, condition_3
 
     def _measure_deployment(
         self, input: dict, generation: int, deployment_name: str
-    ) -> tuple[Optional[float], Optional[float]]:
+    ) -> tuple[Optional[float], Optional[float], Optional[float]]:
         logger = get_thread_logger(with_prefix=True)
 
         event_list = MeasurementRunner.wait_for_deployment_converge(
@@ -403,40 +416,44 @@ class MeasurementRunner(Runner):
         desired_replicas = input["spec"].get("replicas", 1)
         condition_1 = None
         condition_2 = None
-        ready_pods: dict[str, float] = {}
+        condition_3 = None
+        rs_prev_specs: dict[str, dict] = {}
         for tag, event, timestamp in event_list:
             if tag == "rs":
                 rs_obj = event["object"]
+                rs_name = rs_obj.metadata.name
+                event_type = event["type"]
                 logger.info(
-                    f"{event['type']} ReplicaSet at {timestamp} - "
+                    f"{event_type} ReplicaSet {rs_name} at {timestamp} - "
                     f"{datetime.fromtimestamp(timestamp)}"
                 )
-                if condition_1 is None:
-                    rs_revision = (rs_obj.metadata.annotations or {}).get(
-                        "deployment.kubernetes.io/revision"
-                    )
-                    if rs_revision == deployment_revision:
+                if event_type == "ADDED":
+                    # New RS created — spec is being set for the first time
+                    condition_1 = timestamp
+                    rs_prev_specs[rs_name] = rs_obj.to_dict().get("spec", {})
+                elif event_type == "MODIFIED":
+                    current_spec = rs_obj.to_dict().get("spec", {})
+                    prev_spec = rs_prev_specs.get(rs_name)
+                    if prev_spec != current_spec:
                         condition_1 = timestamp
-            elif (
-                tag == "pod" and condition_1 is not None and condition_2 is None
-            ):
-                pod_dict = event["object"].to_dict()
-                pod_name = pod_dict["metadata"]["name"]
-                pod_status = pod_dict.get("status", {})
-                is_ready = pod_status.get("phase") == "Running" and all(
-                    cs.get("ready", False)
-                    for cs in pod_status.get("container_statuses") or []
-                )
-                if is_ready:
-                    ready_pods[pod_name] = timestamp
-                else:
-                    ready_pods.pop(pod_name, None)
-                if len(ready_pods) >= desired_replicas:
-                    condition_2 = max(ready_pods.values())
+                    rs_prev_specs[rs_name] = current_spec
+                elif event_type == "DELETED":
+                    rs_prev_specs.pop(rs_name, None)
+            elif tag == "pod":
+                event_type = event["type"]
+                if event_type == "MODIFIED":
+                    # condition_2 is the latest timestamp any pod was updated
+                    condition_2 = timestamp
+                elif event_type in ("ADDED", "DELETED"):
+                    # condition_3 is the latest timestamp any pod was created or deleted
+                    condition_3 = timestamp
 
         # Race condition fallback: the RS may have been created before the
         # watch started.  Look it up directly and use its creationTimestamp.
-        if condition_1 is None and deployment_revision is not None:
+        current_rs = None
+        if (
+            condition_1 is None or condition_2 is None or condition_3 is None
+        ) and deployment_revision is not None:
             rs_list = apps_v1.list_namespaced_replica_set(self.namespace)
             for rs in rs_list.items:
                 rs_revision = (rs.metadata.annotations or {}).get(
@@ -447,53 +464,44 @@ class MeasurementRunner(Runner):
                     for ref in (rs.metadata.owner_references or [])
                 )
                 if rs_revision == deployment_revision and is_owned:
-                    creation_ts = rs.metadata.creation_timestamp
-                    if creation_ts is not None:
-                        condition_1 = creation_ts.timestamp()
-                        logger.info(
-                            f"ReplicaSet with revision {deployment_revision} "
-                            f"found via direct lookup (created before watch "
-                            f"started), condition_1={condition_1}"
-                        )
+                    current_rs = rs
                     break
 
-        # Condition_2 fallback: if no pod events captured the ready transition,
-        # find the current RS by revision, get its pod-template-hash, then use
-        # the latest Ready lastTransitionTime across its pods.
-        if condition_2 is None and deployment_revision is not None:
-            rs_list = apps_v1.list_namespaced_replica_set(self.namespace)
-            current_rs = next(
-                (
-                    rs
-                    for rs in rs_list.items
-                    if (rs.metadata.annotations or {}).get(
-                        "deployment.kubernetes.io/revision"
-                    )
-                    == deployment_revision
-                    and any(
-                        ref.kind == "Deployment" and ref.name == deployment_name
-                        for ref in (rs.metadata.owner_references or [])
-                    )
-                ),
-                None,
+        if condition_1 is None and current_rs is not None:
+            creation_ts = current_rs.metadata.creation_timestamp
+            if creation_ts is not None:
+                condition_1 = creation_ts.timestamp()
+                logger.info(
+                    f"ReplicaSet with revision {deployment_revision} "
+                    f"found via direct lookup (created before watch "
+                    f"started), condition_1={condition_1}"
+                )
+
+        # Condition_2 fallback: use pod Ready lastTransitionTime.
+        # Condition_3 fallback: use pod creationTimestamp.
+        if (condition_2 is None or condition_3 is None) and current_rs is not None:
+            rs_hash = (current_rs.metadata.labels or {}).get(
+                "pod-template-hash"
             )
-            if current_rs is not None:
-                rs_hash = (current_rs.metadata.labels or {}).get(
-                    "pod-template-hash"
-                )
-                core_v1 = kubernetes.client.CoreV1Api(self.apiclient)
-                pods = core_v1.list_namespaced_pod(
-                    self.namespace,
-                    label_selector=f"pod-template-hash={rs_hash}",
-                )
-                ready_times = []
-                for pod in pods.items:
-                    for cond in pod.status.conditions or []:
-                        if cond.type == "Ready" and cond.status == "True":
-                            ready_times.append(
-                                cond.last_transition_time.timestamp()
-                            )
-                            break
+            core_v1 = kubernetes.client.CoreV1Api(self.apiclient)
+            pods = core_v1.list_namespaced_pod(
+                self.namespace,
+                label_selector=f"pod-template-hash={rs_hash}",
+            )
+            ready_times = []
+            creation_times = []
+            for pod in pods.items:
+                if pod.metadata.creation_timestamp is not None:
+                    creation_times.append(
+                        pod.metadata.creation_timestamp.timestamp()
+                    )
+                for cond in pod.status.conditions or []:
+                    if cond.type == "Ready" and cond.status == "True":
+                        ready_times.append(
+                            cond.last_transition_time.timestamp()
+                        )
+                        break
+            if condition_2 is None:
                 if len(ready_times) == 0 and desired_replicas == 0:
                     condition_2 = condition_1
                 elif len(ready_times) >= desired_replicas:
@@ -502,6 +510,12 @@ class MeasurementRunner(Runner):
                         f"condition_2 set via pod Ready lastTransitionTime"
                         f" fallback: {condition_2}"
                     )
+            if condition_3 is None and creation_times:
+                condition_3 = max(creation_times)
+                logger.info(
+                    f"condition_3 set via pod creationTimestamp fallback: "
+                    f"{condition_3}"
+                )
 
         with open(
             "%s/rs-events-%03d.json" % (self.trial_dir, generation), "w"
@@ -516,7 +530,7 @@ class MeasurementRunner(Runner):
                 cls=ActoEncoder,
                 indent=4,
             )
-        return condition_1, condition_2
+        return condition_1, condition_2, condition_3
 
     def _measure_sts_or_ds(
         self,
