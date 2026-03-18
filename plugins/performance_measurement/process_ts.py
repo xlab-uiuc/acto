@@ -12,7 +12,6 @@ import numpy as np
 import pandas as pd
 import tabulate
 from matplotlib import pyplot as plt
-from scipy import stats
 
 ineffective_files = set()
 
@@ -25,6 +24,10 @@ anvil_table = [
         "Reference (unverified) Max",
     ],
 ]
+
+
+def geometric_mean(series: pd.Series) -> float:
+    return np.exp(np.log(series).mean())
 
 
 def process_ts(files: List[str]) -> pd.DataFrame:
@@ -387,6 +390,7 @@ def plot_metrics_server_data(
     ax.set_xlabel("time")
     ax.set_ylabel("CPU usage (cores)")
     ax.set_title("Etcd CPU usage")
+    ax.set_ylim(bottom=0)
     fig.savefig(os.path.join(output_dir, "metrics_server_etcd_cpu_usage.png"))
     plt.close(fig)
     print(
@@ -411,6 +415,7 @@ def plot_metrics_server_data(
     ax.set_xlabel("time")
     ax.set_ylabel("memory usage (bytes)")
     ax.set_title("Etcd memory usage")
+    ax.set_ylim(bottom=0)
     fig.savefig(
         os.path.join(output_dir, "metrics_server_etcd_memory_usage.png")
     )
@@ -437,6 +442,7 @@ def plot_metrics_server_data(
     ax.set_xlabel("time")
     ax.set_ylabel("CPU usage (cores)")
     ax.set_title("Operator CPU usage")
+    ax.set_ylim(bottom=0)
     fig.savefig(os.path.join(output_dir, "operator_cpu_usage.png"))
     plt.close(fig)
     print(
@@ -461,6 +467,7 @@ def plot_metrics_server_data(
     ax.set_xlabel("time")
     ax.set_ylabel("memory usage (bytes)")
     ax.set_title("Operator memory usage")
+    ax.set_ylim(bottom=0)
     fig.savefig(os.path.join(output_dir, "operator_memory_usage.png"))
     plt.close(fig)
     print(
@@ -478,6 +485,7 @@ def plot_etcd_resource_utilization(etcd_df: pd.DataFrame, output_dir: str):
     ax.set_xlabel("time")
     ax.set_ylabel("CPU usage (cores)")
     ax.set_title("etcd CPU usage")
+    ax.set_ylim(bottom=0)
     fig.savefig(os.path.join(output_dir, "etcd_cpu_usage.png"))
     plt.close(fig)
 
@@ -489,6 +497,7 @@ def plot_etcd_resource_utilization(etcd_df: pd.DataFrame, output_dir: str):
     ax.set_xlabel("time")
     ax.set_ylabel("memory usage (bytes)")
     ax.set_title("etcd memory usage")
+    ax.set_ylim(bottom=0)
     fig.savefig(os.path.join(output_dir, "etcd_memory_usage.png"))
     plt.close(fig)
 
@@ -507,6 +516,7 @@ def plot_resource_utilization(
     ax.set_xlabel("time")
     ax.set_ylabel("CPU utilization (%)")
     ax.set_title("Control plane node CPU utilization")
+    ax.set_ylim(bottom=0)
     fig.savefig(os.path.join(output_dir, "cpu_utilization.png"))
     plt.close(fig)
 
@@ -525,6 +535,7 @@ def plot_resource_utilization(
     ax.set_xlabel("time")
     ax.set_ylabel("Memory")
     ax.set_title("Control plane node memory utilization")
+    ax.set_ylim(bottom=0)
     fig.savefig(os.path.join(output_dir, "memory_utilization.png"))
     plt.close(fig)
 
@@ -541,6 +552,7 @@ def plot_resource_utilization(
     ax.set_xlabel("time")
     ax.set_ylabel("Blkio read (bytes)")
     ax.set_title("Control plane blockio read (cumulative)")
+    ax.set_ylim(bottom=0)
     fig.savefig(os.path.join(output_dir, "blkio_read_utilization.png"))
     plt.close(fig)
 
@@ -559,6 +571,7 @@ def plot_resource_utilization(
     ax.set_xlabel("time")
     ax.set_ylabel("Blkio write (bytes)")
     ax.set_title("Control plane blockio write (cumulative)")
+    ax.set_ylim(bottom=0)
     fig.savefig(os.path.join(output_dir, "blkio_write_utilization.png"))
     plt.close(fig)
 
@@ -577,6 +590,7 @@ def plot_resource_utilization(
     ax.set_xlabel("time")
     ax.set_ylabel("Network read (bytes)")
     ax.set_title("Control plane network read (cumulative)")
+    ax.set_ylim(bottom=0)
     fig.savefig(os.path.join(output_dir, "network_read_utilization.png"))
     plt.close(fig)
 
@@ -595,6 +609,7 @@ def plot_resource_utilization(
     ax.set_xlabel("time")
     ax.set_ylabel("Network write (bytes)")
     ax.set_title("Control plane network write (cumulative)")
+    ax.set_ylim(bottom=0)
     fig.savefig(os.path.join(output_dir, "network_write_utilization.png"))
     plt.close(fig)
 
@@ -724,6 +739,7 @@ def plot_cadvisor_cpu_stats(
     ax.set_xlabel("time")
     ax.set_ylabel("CPU time per second")
     ax.set_title(f"{container_name} CPU Time per second")
+    ax.set_ylim(bottom=0)
     fig.savefig(
         os.path.join(output_dir, f"{container_name}_cpu_utilization.png")
     )
@@ -757,6 +773,7 @@ def plot_cadvisor_memory_stats(
     ax.set_xlabel("time")
     ax.set_ylabel("Memory consumption (bytes)")
     ax.set_title(f"{container_name} memory consumption")
+    ax.set_ylim(bottom=0)
     fig.savefig(
         os.path.join(output_dir, f"{container_name}_memory_consumption.png")
     )
@@ -823,6 +840,7 @@ def plot_cadvisor_disk_write_stats(
     ax.set_xlabel("time")
     ax.set_ylabel("Block write per second")
     ax.set_title(f"{container_name} block write")
+    ax.set_ylim(bottom=0)
     fig.savefig(os.path.join(output_dir, f"{container_name}_blk_write.png"))
     plt.close(fig)
 
@@ -887,6 +905,7 @@ def plot_cadvisor_disk_read_stats(
     ax.set_xlabel("time")
     ax.set_ylabel("Block read per second")
     ax.set_title(f"{container_name} block read")
+    ax.set_ylim(bottom=0)
     fig.savefig(os.path.join(output_dir, f"{container_name}_blk_read.png"))
     plt.close(fig)
 
@@ -951,6 +970,7 @@ def plot_cadvisor_network_read_stats(
     ax.set_xlabel("time")
     ax.set_ylabel("Network read per second")
     ax.set_title(f"{container_name} network read")
+    ax.set_ylim(bottom=0)
     fig.savefig(os.path.join(output_dir, f"{container_name}_network_read.png"))
     plt.close(fig)
 
@@ -1015,6 +1035,7 @@ def plot_cadvisor_network_write_stats(
     ax.set_xlabel("time")
     ax.set_ylabel("Network write per second")
     ax.set_title(f"{container_name} network write")
+    ax.set_ylim(bottom=0)
     fig.savefig(os.path.join(output_dir, f"{container_name}_network_write.png"))
     plt.close(fig)
 
@@ -1064,10 +1085,10 @@ def process_latency(
     operation_sequence_table.append(
         [
             "geomean",
-            f"{stats.gmean(merged_normal_df['anvil_condition_1_duration']):05.3f}",
-            f"{stats.gmean(merged_normal_df['reference_condition_1_duration']):05.3f}",
-            f"{stats.gmean(merged_normal_df['anvil_condition_2_duration']):05.3f}",
-            f"{stats.gmean(merged_normal_df['reference_condition_2_duration']):05.3f}",
+            f"{geometric_mean(merged_normal_df['anvil_condition_1_duration']):05.3f}",
+            f"{geometric_mean(merged_normal_df['reference_condition_1_duration']):05.3f}",
+            f"{geometric_mean(merged_normal_df['anvil_condition_2_duration']):05.3f}",
+            f"{geometric_mean(merged_normal_df['reference_condition_2_duration']):05.3f}",
         ]
     )
     operation_sequence_table.append(
@@ -1105,10 +1126,10 @@ def process_latency(
     single_operation_table.append(
         [
             "geomean",
-            f"{stats.gmean(merged_single_operation_df['anvil_condition_1_duration']):05.3f}",
-            f"{stats.gmean(merged_single_operation_df['reference_condition_1_duration']):05.3f}",
-            f"{stats.gmean(merged_single_operation_df['anvil_condition_2_duration']):05.3f}",
-            f"{stats.gmean(merged_single_operation_df['reference_condition_2_duration']):05.3f}",
+            f"{geometric_mean(merged_single_operation_df['anvil_condition_1_duration']):05.3f}",
+            f"{geometric_mean(merged_single_operation_df['reference_condition_1_duration']):05.3f}",
+            f"{geometric_mean(merged_single_operation_df['anvil_condition_2_duration']):05.3f}",
+            f"{geometric_mean(merged_single_operation_df['reference_condition_2_duration']):05.3f}",
         ]
     )
     single_operation_table.append(
@@ -1173,15 +1194,15 @@ def process_latency(
             f"{reference_condition_2_merged.mean():05.3f}",
         ]
     )
-    merged_table.append(
-        [
-            "geomean",
-            f"{stats.gmean(anvil_condition_1_merged):05.3f}",
-            f"{stats.gmean(reference_condition_1_merged):05.3f}",
-            f"{stats.gmean(anvil_condition_2_merged):05.3f}",
-            f"{stats.gmean(reference_condition_2_merged):05.3f}",
-        ]
-    )
+    # merged_table.append(
+    #     [
+    #         "geomean",
+    #         f"{geometric_mean(anvil_condition_1_merged):05.3f}",
+    #         f"{geometric_mean(reference_condition_1_merged):05.3f}",
+    #         f"{geometric_mean(anvil_condition_2_merged):05.3f}",
+    #         f"{geometric_mean(reference_condition_2_merged):05.3f}",
+    #     ]
+    # )
     merged_table.append(
         [
             "min",
@@ -1276,6 +1297,7 @@ def plot_latency(
     ax.set_xlabel("Time (s)")
     ax.set_ylabel("CDF")
     ax.set_title("CDF of time for condition 1")
+    ax.set_ylim(bottom=0)
     fig.legend()
     fig.savefig(f"{output_dir}/latency-1.png")
 
@@ -1288,6 +1310,7 @@ def plot_latency(
     ax.set_xlabel("Time (s)")
     ax.set_ylabel("CDF")
     ax.set_title("CDF of time for condition 2")
+    ax.set_ylim(bottom=0)
     fig.legend()
     fig.savefig(f"{output_dir}/latency-2.png")
 
@@ -1315,13 +1338,13 @@ def process_testrun(testrun_dir: str):
     anvil_normal_cadvisor_stats_df = process_cadvisor(
         anvil_normal_cadvisor_stats_files
     )
-    anvil_single_operation_cadvisor_stats_df = process_cadvisor(
+    anvil_normal_cadvisor_stats_df = process_cadvisor(
         anvil_single_operation_cadvisor_stats_files
     )
     anvil_normal_pods_stats_dfs = process_pod_stats(
         anvil_normal_pods_stats_files
     )
-    anvil_single_operation_pods_stats_dfs = process_pod_stats(
+    anvil_normal_pods_stats_dfs = process_pod_stats(
         anvil_single_operation_pods_stats_files
     )
 
@@ -1347,13 +1370,13 @@ def process_testrun(testrun_dir: str):
     reference_normal_cadvisor_stats_df = process_cadvisor(
         reference_normal_cadvisor_stats_files
     )
-    reference_single_operation_cadvisor_stats_df = process_cadvisor(
+    reference_normal_cadvisor_stats_df = process_cadvisor(
         reference_single_operation_cadvisor_stats_files
     )
     reference_normal_pods_stats_dfs = process_pod_stats(
         reference_normal_pods_stats_files
     )
-    reference_single_operation_pods_stats_dfs = process_pod_stats(
+    reference_normal_pods_stats_dfs = process_pod_stats(
         reference_single_operation_pods_stats_files
     )
 
@@ -1419,6 +1442,13 @@ def process_testrun(testrun_dir: str):
 
 
 def main():
+    if os.path.exists("testrun-vdeployment-performance-second"):
+        process_testrun("testrun-vdeployment-performance-second")
+        print()
+        print()
+    else:
+        print("testrun-vdeployment-performance-second does not exist")
+
     if os.path.exists("testrun-anvil-zk-performance"):
         process_testrun("testrun-anvil-zk-performance")
         print()
