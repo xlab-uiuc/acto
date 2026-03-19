@@ -28,8 +28,21 @@
     "seed_custom_resource": "data/anvil-rabbitmq-controller/cr.yaml",
     "kubernetes_version": "v1.30.0",
     "wait_time": 120,
+    "example_dir": "data/anvil-rabbitmq-controller/examples",
+    "custom_oracle": "data.anvil-rabbitmq-controller.oracle",
     "diff_ignore_fields": [
         "\\[\\'metadata\\'\\]\\[\\'annotations\\'\\]\\[\\'config\\'\\]",
         "\\['metadata'\\]\\['annotations'\\]\\['anvil\\.dev\\\/lastRestartAt'\\]"
+    ],
+    "focus_fields": [
+        ["spec", "affinity"],
+        ["spec", "annotations"],
+        ["spec", "replicas"],
+        ["spec", "image"],
+        ["spec", "labels"],
+        ["spec", "rabbitmqConfig"],
+        ["spec", "template"],
+        ["spec", "resources"],
+        ["spec", "tolerations"]
     ]
 }

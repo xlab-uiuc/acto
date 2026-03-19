@@ -407,19 +407,19 @@ def container_tests(schema: ObjectSchema) -> list[TestCase]:
     return [invalid_test]
 
 
-@test_generator(property_name="name", priority=Priority.SEMANTIC)
-def invalid_name_tests(schema: StringSchema) -> list[TestCase]:
-    """Test generator for invalid name"""
-    # TODO: inherit basic tests
-    invalid_test = TestCase(
-        name="invalid-name",
-        precondition=lambda x: True,
-        mutator=lambda x: "INVALID_NAME",
-        setup=lambda x: None,
-        invalid=True,
-        semantic=True,
-    )
-    return [invalid_test]
+# @test_generator(property_name="name", priority=Priority.SEMANTIC)
+# def invalid_name_tests(schema: StringSchema) -> list[TestCase]:
+#     """Test generator for invalid name"""
+#     # TODO: inherit basic tests
+#     invalid_test = TestCase(
+#         name="invalid-name",
+#         precondition=lambda x: True,
+#         mutator=lambda x: "INVALID_NAME",
+#         setup=lambda x: None,
+#         invalid=True,
+#         semantic=True,
+#     )
+#     return [invalid_test]
 
 
 class PreemptionPolicyValues(enum.Enum):

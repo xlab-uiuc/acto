@@ -1,0 +1,95 @@
+apiVersion: anvil.dev/v1
+kind: RabbitmqCluster
+metadata:
+  name: test-cluster
+  namespace: rabbitmq
+spec:
+  replicas: 3
+  image: ghcr.io/xlab-uiuc/rabbitmq:3.11.10-management
+  template:
+    spec:
+      initContainers:
+        - name: init-setup
+          image: busybox:1.36
+          command: ["sh", "-c", "echo 'Initializing...' && sleep 2 && echo 'Done'"]
+  rabbitmq:
+    additionalPlugins:
+    - rabbitmq_message_timestamp
+    - rabbitmq_federation
+    - rabbitmq_federation_management
+    envConfig: 'PLUGINS_DIR=/opt/rabbitmq/plugins:/opt/rabbitmq/community-plugins
+
+      '
+  persistence:
+    storage: 10Gi
+    storageClassName:
+  tolerations:
+    - key: "node-role.kubernetes.io/master"
+      operator: "Exists"
+      effect: "NoSchedule"
+    - key: "dedicated"
+      operator: "Equal"
+      value: "gpu"
+      effect: "NoSchedule"
+---
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: multiple-disks
+spec:
+  override:
+    statefulSet:
+      spec:
+        template:
+          spec:
+            containers:
+            - name: rabbitmq
+              volumeMounts:
+              - mountPath: /var/lib/rabbitmq/quorum-segments
+                name: quorum-segments
+              - mountPath: /var/lib/rabbitmq/quorum-wal
+                name: quorum-wal
+        volumeClaimTemplates:
+        - apiVersion: v1
+          kind: PersistentVolumeClaim
+          metadata:
+            name: persistence
+            namespace: default
+          spec:
+            accessModes:
+            - ReadWriteOnce
+            resources:
+              requests:
+                storage: 10Gi
+            volumeMode: Filesystem
+        - apiVersion: v1
+          kind: PersistentVolumeClaim
+          metadata:
+            name: quorum-wal
+            namespace: default
+          spec:
+            accessModes:
+            - ReadWriteOnce
+            resources:
+              requests:
+                storage: 10Gi
+            volumeMode: Filesystem
+        - apiVersion: v1
+          kind: PersistentVolumeClaim
+          metadata:
+            name: quorum-segments
+            namespace: default
+          spec:
+            accessModes:
+            - ReadWriteOnce
+            resources:
+              requests:
+                storage: 10Gi
+            volumeMode: Filesystem
+  rabbitmq:
+    advancedConfig: "[\n    {ra, [\n        {wal_data_dir, '/var/lib/rabbitmq/quorum-wal'}\n\
+      \    ]}\n].\n"
+    envConfig: 'RABBITMQ_QUORUM_DIR=/var/lib/rabbitmq/quorum-segments
+
+      '
+  replicas: 1
