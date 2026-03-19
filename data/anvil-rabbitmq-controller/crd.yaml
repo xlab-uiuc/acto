@@ -578,6 +578,9 @@ spec:
                     type: string
                 type: object
               replicas:
+                x-kubernetes-validations:
+                  - rule: "self >= 0 && self >= oldSelf"
+                    message: replicas should be non-negative and scaling down is not supported
                 format: int32
                 type: integer
               resources:
