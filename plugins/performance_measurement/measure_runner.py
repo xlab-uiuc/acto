@@ -1311,7 +1311,6 @@ class MeasurementRunner(Runner):
             version="v1",
             namespace=namespace,
             plural="vstatefulsets",
-            field_selector=f"metadata.name={vstatefulset_name}",
         )
         pod_stream = watch_pods.stream(
             func=core_v1_api.list_namespaced_pod,
