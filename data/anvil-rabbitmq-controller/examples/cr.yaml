@@ -12,7 +12,10 @@ spec:
         - name: init-setup
           image: busybox:1.36
           command: ["sh", "-c", "echo 'Initializing...' && sleep 2 && echo 'Done'"]
-  rabbitmq:
+  rabbitmqConfig:
+    additionalConfig: 'default_user=guest
+
+      default_pass=guest'
     additionalPlugins:
     - rabbitmq_message_timestamp
     - rabbitmq_federation
@@ -37,56 +40,22 @@ kind: RabbitmqCluster
 metadata:
   name: multiple-disks
 spec:
-  override:
-    statefulSet:
-      spec:
-        template:
-          spec:
-            containers:
-            - name: rabbitmq
-              volumeMounts:
-              - mountPath: /var/lib/rabbitmq/quorum-segments
-                name: quorum-segments
-              - mountPath: /var/lib/rabbitmq/quorum-wal
-                name: quorum-wal
-        volumeClaimTemplates:
-        - apiVersion: v1
-          kind: PersistentVolumeClaim
-          metadata:
-            name: persistence
-            namespace: default
-          spec:
-            accessModes:
-            - ReadWriteOnce
-            resources:
-              requests:
-                storage: 10Gi
-            volumeMode: Filesystem
-        - apiVersion: v1
-          kind: PersistentVolumeClaim
-          metadata:
-            name: quorum-wal
-            namespace: default
-          spec:
-            accessModes:
-            - ReadWriteOnce
-            resources:
-              requests:
-                storage: 10Gi
-            volumeMode: Filesystem
-        - apiVersion: v1
-          kind: PersistentVolumeClaim
-          metadata:
-            name: quorum-segments
-            namespace: default
-          spec:
-            accessModes:
-            - ReadWriteOnce
-            resources:
-              requests:
-                storage: 10Gi
-            volumeMode: Filesystem
-  rabbitmq:
+  rabbitmqConfig:
+    additionalConfig: 'log.console = true
+
+      log.console.level = debug
+
+      log.console.formatter = json
+
+      log.console.formatter.json.field_map = verbosity:v time msg domain file line
+      pid level:-
+
+      log.console.formatter.json.verbosity_map = debug:7 info:6 notice:5 warning:4
+      error:3 critical:2 alert:1 emergency:0
+
+      log.console.formatter.time_format = epoch_usecs
+
+      '
     advancedConfig: "[\n    {ra, [\n        {wal_data_dir, '/var/lib/rabbitmq/quorum-wal'}\n\
       \    ]}\n].\n"
     envConfig: 'RABBITMQ_QUORUM_DIR=/var/lib/rabbitmq/quorum-segments
