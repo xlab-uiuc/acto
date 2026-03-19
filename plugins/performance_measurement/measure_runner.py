@@ -193,6 +193,7 @@ class MeasurementRunner(Runner):
         generation: int,
         vdeployment_name_f: Optional[Callable[[dict], str]] = None,
         deployment_name_f: Optional[Callable[[dict], str]] = None,
+        vstatefulset_name_f: Optional[Callable[[dict], str]] = None,
     ) -> Optional[MeasurementResult]:
         """
         Run the input CRD and check if the condition is satisfied
@@ -231,7 +232,11 @@ class MeasurementRunner(Runner):
         start_time = time.time()
 
         condition_3 = None
-        if vdeployment_name_f:
+        if vstatefulset_name_f:
+            condition_1, condition_2, condition_3 = self._measure_vstatefulset(
+                input, generation, vstatefulset_name_f(input)
+            )
+        elif vdeployment_name_f:
             condition_1, condition_2, condition_3 = self._measure_vdeployment(
                 input, generation, vdeployment_name_f(input)
             )
@@ -386,6 +391,60 @@ class MeasurementRunner(Runner):
                     {"ts": ts, "vrs": event["object"]}
                     for tag, event, ts in event_list
                     if tag == "vrs"
+                ],
+                f,
+                cls=ActoEncoder,
+                indent=4,
+            )
+        return condition_1, condition_2, condition_3
+
+    def _measure_vstatefulset(
+        self, input: dict, generation: int, vstatefulset_name: str
+    ) -> tuple[Optional[float], Optional[float], Optional[float]]:
+        logger = get_thread_logger(with_prefix=True)
+
+        event_list = MeasurementRunner.wait_for_vstatefulset_converge(
+            input=input,
+            apiclient=self.apiclient,
+            namespace=self.namespace,
+            vstatefulset_name=vstatefulset_name,
+        )
+
+        condition_1 = None
+        condition_2 = None
+        condition_3 = None
+        vsts_prev_spec: Optional[dict] = None
+        for tag, event, timestamp in event_list:
+            if tag == "vsts":
+                event_type = event["type"]
+                obj = event["object"]
+                logger.info(
+                    f"{event_type} VStatefulSet {obj.get('metadata', {}).get('name')} "
+                    f"at {timestamp} - {datetime.fromtimestamp(timestamp)}"
+                )
+                current_spec = obj.get("spec", {})
+                if event_type == "ADDED":
+                    condition_1 = timestamp
+                    vsts_prev_spec = current_spec
+                elif event_type == "MODIFIED":
+                    if vsts_prev_spec != current_spec:
+                        condition_1 = timestamp
+                    vsts_prev_spec = current_spec
+            elif tag == "pod":
+                event_type = event["type"]
+                if event_type == "MODIFIED":
+                    condition_2 = timestamp
+                elif event_type in ("ADDED", "DELETED"):
+                    condition_3 = timestamp
+
+        with open(
+            "%s/vsts-events-%03d.json" % (self.trial_dir, generation), "w"
+        ) as f:
+            json.dump(
+                [
+                    {"ts": ts, "vstatefulset": event["object"]}
+                    for tag, event, ts in event_list
+                    if tag == "vsts"
                 ],
                 f,
                 cls=ActoEncoder,
@@ -1226,6 +1285,75 @@ class MeasurementRunner(Runner):
         return updates
 
     @staticmethod
+    def wait_for_vstatefulset_converge(
+        input: dict,
+        apiclient: kubernetes.client.ApiClient,
+        namespace: str,
+        vstatefulset_name: str,
+    ) -> list:
+        """Watch VStatefulSet and pod events until pods are ready.
+
+        Returns a list of (tag, event, timestamp) tuples where tag is "vsts"
+        for VStatefulSet events and "pod" for pod events.  Only the VStatefulSet
+        with the given name is included.
+        """
+        custom_api = kubernetes.client.CustomObjectsApi(apiclient)
+        core_v1_api = kubernetes.client.CoreV1Api(apiclient)
+        watch_vsts = kubernetes.watch.Watch()
+        watch_pods = kubernetes.watch.Watch()
+
+        updates: list = []
+        updates_queue: Queue = Queue(maxsize=0)
+
+        vsts_stream = watch_vsts.stream(
+            func=custom_api.list_namespaced_custom_object,
+            group="anvil.dev",
+            version="v1",
+            namespace=namespace,
+            plural="vstatefulsets",
+            field_selector=f"metadata.name={vstatefulset_name}",
+        )
+        pod_stream = watch_pods.stream(
+            func=core_v1_api.list_namespaced_pod,
+            namespace=namespace,
+        )
+
+        timer_hard_timeout = acto_timer.ActoTimer(900, updates_queue, "timeout")
+        vsts_watch_process = Process(
+            target=MeasurementRunner.watch_system_events_tagged,
+            args=(vsts_stream, updates_queue, "vsts"),
+        )
+        pod_watch_process = Process(
+            target=MeasurementRunner.watch_system_events_tagged,
+            args=(pod_stream, updates_queue, "pod"),
+        )
+
+        timer_hard_timeout.start()
+        vsts_watch_process.start()
+        pod_watch_process.start()
+
+        while True:
+            try:
+                item = updates_queue.get(timeout=120)
+                if isinstance(item, str) and item == "timeout":
+                    break
+                updates.append(item)
+            except queue.Empty:
+                if check_pods_ready(input, apiclient, namespace):
+                    break
+                else:
+                    logging.info("pods not ready")
+                    continue
+
+        vsts_stream.close()
+        pod_stream.close()
+        timer_hard_timeout.cancel()
+        vsts_watch_process.terminate()
+        pod_watch_process.terminate()
+
+        return updates
+
+    @staticmethod
     def wait_for_deployment_converge(
         input: dict,
         apiclient: kubernetes.client.ApiClient,
@@ -1302,6 +1430,10 @@ class MeasurementRunner(Runner):
     @staticmethod
     def rabbitmq_sts_name(input: dict):
         return f"{input['metadata']['name']}-server"
+
+    @staticmethod
+    def rabbitmq_vsts_name(input: dict):
+        return f"vstatefulset-{input['metadata']['name']}-server"
 
     @staticmethod
     def vdeployment_name(input: dict):

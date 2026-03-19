@@ -67,6 +67,7 @@ def test_normal(
     sample_rate: float,
     vdeployment_name_f: Optional[Callable[[dict], str]] = None,
     deployment_name_f: Optional[Callable[[dict], str]] = None,
+    vstatefulset_name_f: Optional[Callable[[dict], str]] = None,
 ):
     """Run the normal test"""
 
@@ -154,6 +155,7 @@ def test_normal(
                 gen,
                 vdeployment_name_f=vdeployment_name_f,
                 deployment_name_f=deployment_name_f,
+                vstatefulset_name_f=vstatefulset_name_f,
             )
             if measurement_result is not None:
                 measurement_result_file = (
@@ -222,6 +224,7 @@ def test_normal(
                 gen,
                 vdeployment_name_f=vdeployment_name_f,
                 deployment_name_f=deployment_name_f,
+                vstatefulset_name_f=vstatefulset_name_f,
             )
             if measurement_result is not None:
                 measurement_result_file = f"{single_operation_trial_dir}/measurement_result_{gen:03d}.json"
@@ -252,9 +255,11 @@ def main(args):
     daemonset_name_f = None
     anvil_vdeployment_name_f = None
     reference_deployment_name_f = None
+    anvil_vstatefulset_name_f = None
     if args.project == "rabbitmq-operator":
         input_generator = RabbitMQInputGenerator
         sts_name_f = MeasurementRunner.rabbitmq_sts_name
+        anvil_vstatefulset_name_f = MeasurementRunner.rabbitmq_vsts_name
     elif args.project in ("vdeployment-controller", "deployment-controller"):
         input_generator = VDeploymentInputGenerator
         anvil_vdeployment_name_f = MeasurementRunner.vdeployment_name
@@ -284,6 +289,7 @@ def main(args):
             modes=args.modes,
             sample_rate=args.sample,
             vdeployment_name_f=anvil_vdeployment_name_f,
+            vstatefulset_name_f=anvil_vstatefulset_name_f,
         )
 
     # Run the reference performance test
