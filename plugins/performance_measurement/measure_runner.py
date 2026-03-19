@@ -240,7 +240,7 @@ class MeasurementRunner(Runner):
                 input, generation, deployment_name_f(input)
             )
         else:
-            condition_1, condition_2 = self._measure_sts_or_ds(
+            condition_1, condition_2, condition_3 = self._measure_sts_or_ds(
                 input,
                 generation,
                 sts_name_f,
@@ -538,7 +538,7 @@ class MeasurementRunner(Runner):
         generation: int,
         sts_name_f: Optional[Callable[[dict], str]],
         daemon_set_name_f: Optional[Callable[[dict], str]],
-    ) -> tuple[Optional[float], Optional[float]]:
+    ) -> tuple[Optional[float], Optional[float], Optional[float]]:
         logger = get_thread_logger(with_prefix=True)
         acto_dumps = partial(json.dumps, cls=ActoEncoder)
         sts_name = sts_name_f(input) if sts_name_f else None
@@ -555,20 +555,34 @@ class MeasurementRunner(Runner):
         )
         condition_1 = None
         condition_2 = None
+        condition_3 = None
+
+        # Separate workload events from pod events
+        workload_tag = "sts" if sts_name_f else "ds"
+        workload_events = [
+            (event, ts)
+            for tag, event, ts in event_list
+            if tag == workload_tag
+        ]
+        for tag, event, timestamp in event_list:
+            if tag == "pod":
+                event_type = event["type"]
+                if event_type in ("ADDED", "DELETED"):
+                    condition_3 = timestamp
 
         if sts_name_f:
-            if len(event_list) == 1:
-                condition_1 = condition_2 = event_list[-1][1]
+            if len(workload_events) == 1:
+                condition_1 = condition_2 = workload_events[-1][1]
             else:
-                last_revision = event_list[-1][0][
+                last_revision = workload_events[-1][0][
                     "object"
                 ].status.update_revision
-                last_spec = event_list[-1][0]["object"].to_dict()["spec"]
+                last_spec = workload_events[-1][0]["object"].to_dict()["spec"]
                 last_spec_hash = hashlib.sha256(
                     json.dumps(last_spec, sort_keys=True).encode()
                 ).hexdigest()
                 prev_spec = None
-                for event, timestamp in event_list:
+                for event, timestamp in workload_events:
                     obj_dict = event["object"].to_dict()
                     logger.info(
                         f"{event['type']} {event['object'].metadata.name} at "
@@ -598,15 +612,15 @@ class MeasurementRunner(Runner):
                             condition_2 = timestamp
                             break
         elif daemon_set_name_f:
-            if len(event_list) == 1:
-                condition_1 = condition_2 = event_list[-1][1]
+            if len(workload_events) == 1:
+                condition_1 = condition_2 = workload_events[-1][1]
             else:
-                last_spec = event_list[-1][0]["object"].to_dict()["spec"]
+                last_spec = workload_events[-1][0]["object"].to_dict()["spec"]
                 last_spec_hash = hashlib.sha256(
                     json.dumps(last_spec, sort_keys=True).encode()
                 ).hexdigest()
                 prev_obj = None
-                for ds_event, timestamp in event_list:
+                for ds_event, timestamp in workload_events:
                     obj_dict = ds_event["object"].to_dict()
                     logger.info(
                         f"{ds_event['type']} {obj_dict['metadata']['name']} at "
@@ -657,14 +671,15 @@ class MeasurementRunner(Runner):
         ) as f:
             json.dump(
                 [
-                    {"ts": ts, "statefulset": sts["object"].to_dict()}
-                    for sts, ts in event_list
+                    {"ts": ts, "statefulset": event["object"].to_dict()}
+                    for tag, event, ts in event_list
+                    if tag == workload_tag
                 ],
                 f,
                 cls=ActoEncoder,
                 indent=4,
             )
-        return condition_1, condition_2
+        return condition_1, condition_2, condition_3
 
     @staticmethod
     def wait_for_reference_rabbitmq_spec(
@@ -1029,46 +1044,61 @@ class MeasurementRunner(Runner):
         sts_name: str = None,
         daemon_set_name: str = None,
     ) -> list:
-        appV1Api = kubernetes.client.AppsV1Api(apiclient)
-        watch = kubernetes.watch.Watch()
+        """Watch StatefulSet/DaemonSet and pod events until pods are ready.
 
-        statefulset_updates = []
-        statefulset_updates_queue = Queue(maxsize=0)
+        Returns a list of (tag, event, timestamp) tuples where tag is "sts"
+        or "ds" for the workload events and "pod" for pod events.
+        """
+        appV1Api = kubernetes.client.AppsV1Api(apiclient)
+        core_v1_api = kubernetes.client.CoreV1Api(apiclient)
+        watch_workload = kubernetes.watch.Watch()
+        watch_pods = kubernetes.watch.Watch()
+
+        updates: list = []
+        updates_queue: Queue = Queue(maxsize=0)
 
         if sts_name is not None:
-            stream = watch.stream(
+            workload_tag = "sts"
+            workload_stream = watch_workload.stream(
                 func=appV1Api.list_namespaced_stateful_set,
                 namespace=namespace,
                 field_selector="metadata.name=%s" % sts_name,
             )
         elif daemon_set_name is not None:
-            stream = watch.stream(
+            workload_tag = "ds"
+            workload_stream = watch_workload.stream(
                 func=appV1Api.list_namespaced_daemon_set,
                 namespace=namespace,
                 field_selector="metadata.name=%s" % daemon_set_name,
             )
 
-        timer_hard_timeout = acto_timer.ActoTimer(
-            900, statefulset_updates_queue, "timeout"
+        pod_stream = watch_pods.stream(
+            func=core_v1_api.list_namespaced_pod,
+            namespace=namespace,
         )
-        watch_process = Process(
-            target=MeasurementRunner.watch_system_events,
-            args=(stream, statefulset_updates_queue),
+
+        timer_hard_timeout = acto_timer.ActoTimer(
+            900, updates_queue, "timeout"
+        )
+        workload_watch_process = Process(
+            target=MeasurementRunner.watch_system_events_tagged,
+            args=(workload_stream, updates_queue, workload_tag),
+        )
+        pod_watch_process = Process(
+            target=MeasurementRunner.watch_system_events_tagged,
+            args=(pod_stream, updates_queue, "pod"),
         )
 
         timer_hard_timeout.start()
-        watch_process.start()
+        workload_watch_process.start()
+        pod_watch_process.start()
 
         while True:
             try:
-                statefulset_event = statefulset_updates_queue.get(timeout=120)
-                if (
-                    isinstance(statefulset_event, str)
-                    and statefulset_event == "timeout"
-                ):
+                item = updates_queue.get(timeout=120)
+                if isinstance(item, str) and item == "timeout":
                     break
-                else:
-                    statefulset_updates.append(statefulset_event)
+                updates.append(item)
             except queue.Empty:
                 if check_pods_ready(input, apiclient, namespace):
                     break
@@ -1076,11 +1106,13 @@ class MeasurementRunner(Runner):
                     logging.info("pods not ready")
                     continue
 
-        stream.close()
+        workload_stream.close()
+        pod_stream.close()
         timer_hard_timeout.cancel()
-        watch_process.terminate()
+        workload_watch_process.terminate()
+        pod_watch_process.terminate()
 
-        return statefulset_updates
+        return updates
 
     @staticmethod
     def watch_system_events(event_stream, queue: Queue):
