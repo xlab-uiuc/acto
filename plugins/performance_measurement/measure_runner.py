@@ -255,6 +255,8 @@ class MeasurementRunner(Runner):
         duration_1 = condition_1 - start_time
         logging.info("Condition 1 took %f seconds" % duration_1)
 
+        if condition_2 is None:
+            condition_2 = -999.
         duration_2 = condition_2 - start_time
         logging.info("Condition 2 took %f seconds" % duration_2)
 
