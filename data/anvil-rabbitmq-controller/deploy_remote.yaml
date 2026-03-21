@@ -1,3 +1,81 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    app.kubernetes.io/name: rabbitmq
+  name: rabbitmq
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/name: rabbitmq-controller
+  name: rabbitmq-controller
+  namespace: rabbitmq
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: rabbitmq-controller
+  name: rabbitmq-controller-role
+rules:
+  - apiGroups:
+      - anvil.dev
+    resources:
+      - "*"
+    verbs:
+      - "*"
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - services
+      - endpoints
+      - persistentvolumeclaims
+      - events
+      - configmaps
+      - secrets
+      - serviceaccounts
+    verbs:
+      - "*"
+  - apiGroups:
+      - apps
+    resources:
+      - vdeployments
+      - vreplicasets
+      - vstatefulsets
+    verbs:
+      - "*"
+  - apiGroups:
+      - policy
+    resources:
+      - poddisruptionbudgets
+    verbs:
+      - "*"
+  - apiGroups:
+      - rbac.authorization.k8s.io
+    resources:
+      - rolebindings
+      - roles
+    verbs:
+      - "*"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/name: rabbitmq-controller
+  name: rabbitmq-controller-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: rabbitmq-controller-role
+subjects:
+  - kind: ServiceAccount
+    name: rabbitmq-controller
+    namespace: rabbitmq
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -16,7 +94,7 @@ spec:
         app.kubernetes.io/name: rabbitmq-controller
     spec:
       containers:
-        - image: ghcr.io/anvil-verifier/anvil/rabbitmq-controller:eeb2672ddd1866764cbccb558fc0dffdce472ebc
+        - image: ghcr.io/anvil-verifier/anvil/rabbitmq-controller:1ab60874f7e9cf87bfa2e96129fd6db9c1e2c8a7
           name: controller
       serviceAccountName: rabbitmq-controller
 ---
@@ -38,6 +116,6 @@ spec:
         app.kubernetes.io/name: vstatefulset-controller
     spec:
       containers:
-        - image: ghcr.io/anvil-verifier/anvil/vstatefulset-controller:eeb2672ddd1866764cbccb558fc0dffdce472ebc
+        - image: ghcr.io/anvil-verifier/anvil/vstatefulset-controller:1ab60874f7e9cf87bfa2e96129fd6db9c1e2c8a7
           name: controller
       serviceAccountName: rabbitmq-controller
