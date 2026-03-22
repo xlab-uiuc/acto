@@ -289,21 +289,48 @@ class MeasurementRunner(Runner):
         condition_3 = None
         for tag, event, timestamp in event_list:
             if tag == "vrs":
+                event_type = event["type"]
+                vrs_obj = event["object"]
+                # Use creationTimestamp from the object for ADDED events to avoid
+                # races between the VRS and pod watch subprocesses (both use
+                # time.time() which can be ordered arbitrarily at queue delivery).
+                ts = timestamp
+                if event_type == "ADDED":
+                    creation_ts_str = vrs_obj.get("metadata", {}).get(
+                        "creationTimestamp"
+                    )
+                    if creation_ts_str:
+                        ts = datetime.fromisoformat(creation_ts_str).timestamp()
                 logger.info(
-                    f"{event['type']} VReplicaSet at {timestamp} - "
-                    f"{datetime.fromtimestamp(timestamp)}"
+                    f"{event_type} VReplicaSet at {ts} - "
+                    f"{datetime.fromtimestamp(ts)}"
                 )
                 # condition_1 is the latest timestamp any VRS was touched,
                 # regardless of event type or which VRS it was.
-                condition_1 = timestamp
+                condition_1 = ts
             elif tag == "pod":
                 event_type = event["type"]
+                pod_obj = event["object"]
                 if event_type == "MODIFIED":
-                    # condition_2 is the latest timestamp any pod was updated
-                    condition_2 = timestamp
+                    # Use Ready lastTransitionTime for condition_2 to reflect
+                    # when the pod actually became ready in the cluster.
+                    ts = timestamp
+                    for cond in pod_obj.status.conditions or []:
+                        if cond.type == "Ready" and cond.status == "True":
+                            if cond.last_transition_time is not None:
+                                ts = cond.last_transition_time.timestamp()
+                            break
+                    condition_2 = ts
                 elif event_type in ("ADDED", "DELETED"):
-                    # condition_3 is the latest timestamp any pod was created or deleted
-                    condition_3 = timestamp
+                    # Use pod creationTimestamp for condition_3 to avoid the
+                    # subprocess race with the VRS watch.
+                    ts = timestamp
+                    if (
+                        event_type == "ADDED"
+                        and pod_obj.metadata.creation_timestamp is not None
+                    ):
+                        ts = pod_obj.metadata.creation_timestamp.timestamp()
+                    condition_3 = ts
 
         # Race condition fallback: the matching VRS may have been created before
         # the watch started.  Find it by comparing the pod template directly and
@@ -420,24 +447,50 @@ class MeasurementRunner(Runner):
             if tag == "vsts":
                 event_type = event["type"]
                 obj = event["object"]
+                current_spec = obj.get("spec", {})
+                # Use creationTimestamp from the object for ADDED events to avoid
+                # races between the VStatefulSet and pod watch subprocesses.
+                ts = timestamp
+                if event_type == "ADDED":
+                    creation_ts_str = obj.get("metadata", {}).get(
+                        "creationTimestamp"
+                    )
+                    if creation_ts_str:
+                        ts = datetime.fromisoformat(creation_ts_str).timestamp()
                 logger.info(
                     f"{event_type} VStatefulSet {obj.get('metadata', {}).get('name')} "
-                    f"at {timestamp} - {datetime.fromtimestamp(timestamp)}"
+                    f"at {ts} - {datetime.fromtimestamp(ts)}"
                 )
-                current_spec = obj.get("spec", {})
                 if event_type == "ADDED":
-                    condition_1 = timestamp
+                    condition_1 = ts
                     vsts_prev_spec = current_spec
                 elif event_type == "MODIFIED":
                     if vsts_prev_spec != current_spec:
-                        condition_1 = timestamp
+                        condition_1 = ts
                     vsts_prev_spec = current_spec
             elif tag == "pod":
                 event_type = event["type"]
+                pod_obj = event["object"]
                 if event_type == "MODIFIED":
-                    condition_2 = timestamp
+                    # Use Ready lastTransitionTime for condition_2 to reflect
+                    # when the pod actually became ready in the cluster.
+                    ts = timestamp
+                    for cond in pod_obj.status.conditions or []:
+                        if cond.type == "Ready" and cond.status == "True":
+                            if cond.last_transition_time is not None:
+                                ts = cond.last_transition_time.timestamp()
+                            break
+                    condition_2 = ts
                 elif event_type in ("ADDED", "DELETED"):
-                    condition_3 = timestamp
+                    # Use pod creationTimestamp for condition_3 to avoid the
+                    # subprocess race with the VStatefulSet watch.
+                    ts = timestamp
+                    if (
+                        event_type == "ADDED"
+                        and pod_obj.metadata.creation_timestamp is not None
+                    ):
+                        ts = pod_obj.metadata.creation_timestamp.timestamp()
+                    condition_3 = ts
 
         with open(
             "%s/vsts-events-%03d.json" % (self.trial_dir, generation), "w"
