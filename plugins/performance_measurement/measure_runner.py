@@ -53,7 +53,9 @@ class WatchHandle:
     processes: list
     streams: list
     timer: acto_timer.ActoTimer
-    apply_time: Optional[float] = None  # set in measure() right after kubectl apply
+    apply_time: Optional[float] = (
+        None  # set in measure() right after kubectl apply
+    )
 
 
 def check_annotations(
@@ -288,18 +290,20 @@ class MeasurementRunner(Runner):
         logging.info("Condition 1 took %f seconds" % duration_1)
 
         if condition_2 is None:
-            condition_2 = -999.
+            condition_2 = -999.0
         duration_2 = condition_2 - start_time
         logging.info("Condition 2 took %f seconds" % duration_2)
 
         if condition_3 is not None:
-            duration_3 = condition_3 - start_time
+            duration_3 = condition_3 - condition_1
             logging.info("Condition 3 took %f seconds" % duration_3)
 
         if self.crd_metainfo:
             self.collect_system_state()
 
-        return MeasurementResult(start_time, condition_1, condition_2, condition_3)
+        return MeasurementResult(
+            start_time, condition_1, condition_2, condition_3
+        )
 
     def _measure_vdeployment(
         self,
@@ -332,7 +336,10 @@ class MeasurementRunner(Runner):
                 )
                 # condition_1 is the latest timestamp any VRS was touched,
                 # regardless of event type or which VRS it was.
-                condition_1 = timestamp
+                event_type = event["type"]
+                if event_type in ("ADDED", "DELETED"):
+                    # condition_3 is the latest timestamp any pod was created or deleted
+                    condition_1 = timestamp
             elif tag == "pod":
                 event_type = event["type"]
                 if event_type == "MODIFIED":
@@ -380,7 +387,9 @@ class MeasurementRunner(Runner):
         # Condition_2 fallback: use pod Ready lastTransitionTime for the VRS's
         # own pods (identified via its selector labels).
         # Condition_3 fallback: use pod creationTimestamp.
-        if (condition_2 is None or condition_3 is None) and matching_vrs is not None:
+        if (
+            condition_2 is None or condition_3 is None
+        ) and matching_vrs is not None:
             match_labels = (
                 matching_vrs.get("spec", {})
                 .get("selector", {})
@@ -580,7 +589,9 @@ class MeasurementRunner(Runner):
 
         # Condition_2 fallback: use pod Ready lastTransitionTime.
         # Condition_3 fallback: use pod creationTimestamp.
-        if (condition_2 is None or condition_3 is None) and current_rs is not None:
+        if (
+            condition_2 is None or condition_3 is None
+        ) and current_rs is not None:
             rs_hash = (current_rs.metadata.labels or {}).get(
                 "pod-template-hash"
             )
@@ -661,9 +672,7 @@ class MeasurementRunner(Runner):
         # Separate workload events from pod events
         workload_tag = "sts" if sts_name_f else "ds"
         workload_events = [
-            (event, ts)
-            for tag, event, ts in event_list
-            if tag == workload_tag
+            (event, ts) for tag, event, ts in event_list if tag == workload_tag
         ]
         for tag, event, timestamp in event_list:
             if tag == "pod":
@@ -1178,9 +1187,7 @@ class MeasurementRunner(Runner):
             namespace=namespace,
         )
 
-        timer_hard_timeout = acto_timer.ActoTimer(
-            900, updates_queue, "timeout"
-        )
+        timer_hard_timeout = acto_timer.ActoTimer(900, updates_queue, "timeout")
         workload_watch_process = Process(
             target=MeasurementRunner.watch_system_events_tagged,
             args=(workload_stream, updates_queue, workload_tag),
@@ -1244,7 +1251,9 @@ class MeasurementRunner(Runner):
         except SSLError:
             logging.info(f"[{tag}] watch subprocess exiting due to SSLError")
         except Exception as e:
-            logging.error(f"[{tag}] watch subprocess exiting due to unexpected error: {e}")
+            logging.error(
+                f"[{tag}] watch subprocess exiting due to unexpected error: {e}"
+            )
 
     @staticmethod
     def start_vdeployment_watch(
@@ -1289,8 +1298,11 @@ class MeasurementRunner(Runner):
         timer_hard_timeout.start()
         vrs_watch_process.start()
         pod_watch_process.start()
-        logging.info("VDeployment watch started (vrs pid=%d, pod pid=%d)",
-                     vrs_watch_process.pid, pod_watch_process.pid)
+        logging.info(
+            "VDeployment watch started (vrs pid=%d, pod pid=%d)",
+            vrs_watch_process.pid,
+            pod_watch_process.pid,
+        )
 
         return WatchHandle(
             queue=updates_queue,
@@ -1337,7 +1349,9 @@ class MeasurementRunner(Runner):
             try:
                 item = updates_queue.get(timeout=120)
                 if isinstance(item, str) and item == "timeout":
-                    logging.warning("wait_for_vdeployment_converge: hard timeout reached")
+                    logging.warning(
+                        "wait_for_vdeployment_converge: hard timeout reached"
+                    )
                     break
                 tag, event, ts = item
                 # Discard initial-list-sync events that arrived before the CR
@@ -1346,7 +1360,9 @@ class MeasurementRunner(Runner):
                     discarded_pre_apply += 1
                     logging.debug(
                         "discarding pre-apply %s event (ts=%.6f < apply_time=%.6f)",
-                        tag, ts, apply_time,
+                        tag,
+                        ts,
+                        apply_time,
                     )
                     continue
                 if tag == "vrs":
@@ -1366,7 +1382,8 @@ class MeasurementRunner(Runner):
                         logging.debug(
                             "discarding VRS event: ownerReferences do not match "
                             "VDeployment %s (refs=%s)",
-                            vdeployment_name, owner_refs,
+                            vdeployment_name,
+                            owner_refs,
                         )
                 else:
                     updates.append((tag, event, ts))
@@ -1375,7 +1392,8 @@ class MeasurementRunner(Runner):
                     logging.info(
                         "wait_for_vdeployment_converge: pods ready; "
                         "collected %d events, discarded %d pre-apply events",
-                        len(updates), discarded_pre_apply,
+                        len(updates),
+                        discarded_pre_apply,
                     )
                     break
                 else:
@@ -1433,8 +1451,11 @@ class MeasurementRunner(Runner):
         timer_hard_timeout.start()
         vsts_watch_process.start()
         pod_watch_process.start()
-        logging.info("VStatefulSet watch started (vsts pid=%d, pod pid=%d)",
-                     vsts_watch_process.pid, pod_watch_process.pid)
+        logging.info(
+            "VStatefulSet watch started (vsts pid=%d, pod pid=%d)",
+            vsts_watch_process.pid,
+            pod_watch_process.pid,
+        )
 
         return WatchHandle(
             queue=updates_queue,
@@ -1480,7 +1501,9 @@ class MeasurementRunner(Runner):
             try:
                 item = updates_queue.get(timeout=120)
                 if isinstance(item, str) and item == "timeout":
-                    logging.warning("wait_for_vstatefulset_converge: hard timeout reached")
+                    logging.warning(
+                        "wait_for_vstatefulset_converge: hard timeout reached"
+                    )
                     break
                 tag, event, ts = item
                 # Discard initial-list-sync events that arrived before the CR
@@ -1489,7 +1512,9 @@ class MeasurementRunner(Runner):
                     discarded_pre_apply += 1
                     logging.debug(
                         "discarding pre-apply %s event (ts=%.6f < apply_time=%.6f)",
-                        tag, ts, apply_time,
+                        tag,
+                        ts,
+                        apply_time,
                     )
                     continue
                 updates.append((tag, event, ts))
@@ -1498,7 +1523,8 @@ class MeasurementRunner(Runner):
                     logging.info(
                         "wait_for_vstatefulset_converge: pods ready; "
                         "collected %d events, discarded %d pre-apply events",
-                        len(updates), discarded_pre_apply,
+                        len(updates),
+                        discarded_pre_apply,
                     )
                     break
                 else:
