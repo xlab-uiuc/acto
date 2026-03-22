@@ -32,31 +32,48 @@ def geometric_mean(series: pd.Series) -> float:
 
 def process_ts(files: List[str]) -> pd.DataFrame:
     condition_durations = []
+    has_condition_3 = False
     for ts_datafile in sorted(files):
         with open(ts_datafile, "r") as f:
             data = json.load(f)
 
+            if data["condition_2_ts"] < 0:
+                continue
             condition_2_duration = (
                 data["condition_2_ts"] - data["condition_1_ts"]
             )
+            if condition_2_duration < 5:
+                continue
             if condition_2_duration < data["condition_1_ts"] - data["start_ts"]:
                 # print(os.path.basename(ts_datafile))
                 continue
             # if data['condition_1_ts'] - data['start_ts'] > 1:
             #     print(os.path.basename(ts_datafile))
             #     continue
-            condition_durations.append(
-                {
-                    "name": os.path.basename(ts_datafile),
-                    "condition_1_duration": data["condition_1_ts"]
-                    - data["start_ts"],
-                    "condition_2_duration": condition_2_duration,
-                }
-            )
+            row = {
+                "name": os.path.basename(ts_datafile),
+                "condition_1_duration": data["condition_1_ts"]
+                - data["start_ts"],
+                "condition_2_duration": condition_2_duration,
+            }
+            condition_3_ts = data.get("condition_3_ts")
+            if condition_3_ts is not None:
+                has_condition_3 = True
+                row["intermediate_duration_a"] = (
+                    condition_3_ts - data["condition_1_ts"]
+                )
+                row["intermediate_duration_b"] = (
+                    data["condition_2_ts"] - condition_3_ts
+                )
+            condition_durations.append(row)
+
+    columns = ["name", "condition_1_duration", "condition_2_duration"]
+    if has_condition_3:
+        columns += ["intermediate_duration_a", "intermediate_duration_b"]
 
     return pd.DataFrame(
         condition_durations,
-        columns=["name", "condition_1_duration", "condition_2_duration"],
+        columns=columns,
         index=[x["name"] for x in condition_durations],
     )
 
@@ -1065,6 +1082,14 @@ def process_latency(
         how="inner",
     )
 
+    has_intermediate = (
+        "anvil_intermediate_duration_a" in merged_normal_df.columns
+        or "anvil_intermediate_duration_a" in merged_single_operation_df.columns
+    ) and (
+        "reference_intermediate_duration_a" in merged_normal_df.columns
+        or "reference_intermediate_duration_a" in merged_single_operation_df.columns
+    )
+
     print(
         merged_single_operation_df[
             merged_single_operation_df.anvil_condition_2_duration > 44
@@ -1258,6 +1283,144 @@ def process_latency(
         output_dir,
     )
 
+    if has_intermediate:
+        inter_header = [
+            "name",
+            "anvil_intermediate_duration_a",
+            "reference_intermediate_duration_a",
+            "anvil_intermediate_duration_b",
+            "reference_intermediate_duration_b",
+        ]
+
+        def _concat_inter(col: str) -> pd.Series:
+            parts = []
+            for df in (merged_normal_df, merged_single_operation_df):
+                if col in df.columns and len(df) > 0:
+                    parts.append(df[col])
+            return pd.concat(parts, ignore_index=True)
+
+        anvil_inter_a_merged = _concat_inter("anvil_intermediate_duration_a")
+        anvil_inter_b_merged = _concat_inter("anvil_intermediate_duration_b")
+        reference_inter_a_merged = _concat_inter("reference_intermediate_duration_a")
+        reference_inter_b_merged = _concat_inter("reference_intermediate_duration_b")
+
+        def _inter_table_rows(df: pd.DataFrame, header: list) -> list:
+            if (
+                "anvil_intermediate_duration_a" not in df.columns
+                or len(df) == 0
+            ):
+                return [header]
+            rows = [header]
+            for stat, a_anvil, b_anvil, a_ref, b_ref in zip(
+                ["mean", "geomean", "min", "max"],
+                [
+                    df["anvil_intermediate_duration_a"].mean(),
+                    geometric_mean(df["anvil_intermediate_duration_a"]),
+                    df["anvil_intermediate_duration_a"].min(),
+                    df["anvil_intermediate_duration_a"].max(),
+                ],
+                [
+                    df["anvil_intermediate_duration_b"].mean(),
+                    geometric_mean(df["anvil_intermediate_duration_b"]),
+                    df["anvil_intermediate_duration_b"].min(),
+                    df["anvil_intermediate_duration_b"].max(),
+                ],
+                [
+                    df["reference_intermediate_duration_a"].mean(),
+                    geometric_mean(df["reference_intermediate_duration_a"]),
+                    df["reference_intermediate_duration_a"].min(),
+                    df["reference_intermediate_duration_a"].max(),
+                ],
+                [
+                    df["reference_intermediate_duration_b"].mean(),
+                    geometric_mean(df["reference_intermediate_duration_b"]),
+                    df["reference_intermediate_duration_b"].min(),
+                    df["reference_intermediate_duration_b"].max(),
+                ],
+            ):
+                rows.append(
+                    [
+                        stat,
+                        f"{a_anvil:05.3f}",
+                        f"{a_ref:05.3f}",
+                        f"{b_anvil:05.3f}",
+                        f"{b_ref:05.3f}",
+                    ]
+                )
+            return rows
+
+        inter_normal_rows = _inter_table_rows(merged_normal_df, inter_header)
+        inter_single_rows = _inter_table_rows(
+            merged_single_operation_df, inter_header
+        )
+
+        inter_merged_rows = [inter_header]
+        for stat, a_anvil, b_anvil, a_ref, b_ref in zip(
+            ["mean", "min", "max"],
+            [
+                anvil_inter_a_merged.mean(),
+                anvil_inter_a_merged.min(),
+                anvil_inter_a_merged.max(),
+            ],
+            [
+                anvil_inter_b_merged.mean(),
+                anvil_inter_b_merged.min(),
+                anvil_inter_b_merged.max(),
+            ],
+            [
+                reference_inter_a_merged.mean(),
+                reference_inter_a_merged.min(),
+                reference_inter_a_merged.max(),
+            ],
+            [
+                reference_inter_b_merged.mean(),
+                reference_inter_b_merged.min(),
+                reference_inter_b_merged.max(),
+            ],
+        ):
+            inter_merged_rows.append(
+                [
+                    stat,
+                    f"{a_anvil:05.3f}",
+                    f"{a_ref:05.3f}",
+                    f"{b_anvil:05.3f}",
+                    f"{b_ref:05.3f}",
+                ]
+            )
+
+        with open(f"{output_dir}/intermediate_latency_table.txt", "w") as f:
+            f.write(
+                f"Number of operations in operation sequence: {len(merged_normal_df)}\n"
+            )
+            f.write(tabulate.tabulate(inter_normal_rows, headers="firstrow"))
+            f.write("\n\n")
+            f.write(
+                f"Number of operations in single operation: {len(merged_single_operation_df)}\n"
+            )
+            f.write(tabulate.tabulate(inter_single_rows, headers="firstrow"))
+            f.write("\n\n")
+            f.write(
+                f"Number of operations in merged: {len(anvil_inter_a_merged)}\n"
+            )
+            f.write(tabulate.tabulate(inter_merged_rows, headers="firstrow"))
+
+        with open(f"{output_dir}/intermediate_latency_table.csv", "w") as f:
+            writer = csv.writer(f, delimiter="\t")
+            for row in inter_normal_rows:
+                writer.writerow(row)
+            for row in inter_single_rows:
+                writer.writerow(row)
+            for row in inter_merged_rows:
+                writer.writerow(row)
+
+        plot_intermediate_latency(
+            anvil_inter_a_merged,
+            anvil_inter_b_merged,
+            reference_inter_a_merged,
+            reference_inter_b_merged,
+            output_dir,
+        )
+
     ##############################
     # Print the Anvil paper table
     ##############################
@@ -1313,6 +1476,43 @@ def plot_latency(
     ax.set_ylim(bottom=0)
     fig.legend()
     fig.savefig(f"{output_dir}/latency-2.png")
+    plt.close(fig)
+
+
+def plot_intermediate_latency(
+    anvil_inter_a_merged,
+    anvil_inter_b_merged,
+    reference_inter_a_merged,
+    reference_inter_b_merged,
+    output_dir: str,
+):
+    x = anvil_inter_a_merged.sort_values()
+    x2 = reference_inter_a_merged.sort_values()
+    y = np.arange(1, len(x) + 1) / len(x)
+    fig, ax = plt.subplots()
+    ax.plot(x, y, marker=".", label="anvil")
+    ax.plot(x2, y, marker=".", label="reference")
+    ax.set_xlabel("Time (s)")
+    ax.set_ylabel("CDF")
+    ax.set_title("CDF of intermediate duration a (condition_3 - condition_1)")
+    ax.set_ylim(bottom=0)
+    fig.legend()
+    fig.savefig(f"{output_dir}/intermediate-latency-a.png")
+    plt.close(fig)
+
+    x = anvil_inter_b_merged.sort_values()
+    x2 = reference_inter_b_merged.sort_values()
+    y = np.arange(1, len(x) + 1) / len(x)
+    fig, ax = plt.subplots()
+    ax.plot(x, y, marker=".", label="anvil")
+    ax.plot(x2, y, marker=".", label="reference")
+    ax.set_xlabel("Time (s)")
+    ax.set_ylabel("CDF")
+    ax.set_title("CDF of intermediate duration b (condition_2 - condition_3)")
+    ax.set_ylim(bottom=0)
+    fig.legend()
+    fig.savefig(f"{output_dir}/intermediate-latency-b.png")
+    plt.close(fig)
 
 
 def process_testrun(testrun_dir: str):
@@ -1394,9 +1594,10 @@ def process_testrun(testrun_dir: str):
     anvil_normal_df = process_ts(anvil_normal_measturement_result_files)
     anvil_normal_df.rename(
         columns={
-            "name": "name",
             "condition_1_duration": "anvil_condition_1_duration",
             "condition_2_duration": "anvil_condition_2_duration",
+            "intermediate_duration_a": "anvil_intermediate_duration_a",
+            "intermediate_duration_b": "anvil_intermediate_duration_b",
         },
         inplace=True,
     )
@@ -1405,18 +1606,20 @@ def process_testrun(testrun_dir: str):
     )
     anvil_single_operation_df.rename(
         columns={
-            "name": "name",
             "condition_1_duration": "anvil_condition_1_duration",
             "condition_2_duration": "anvil_condition_2_duration",
+            "intermediate_duration_a": "anvil_intermediate_duration_a",
+            "intermediate_duration_b": "anvil_intermediate_duration_b",
         },
         inplace=True,
     )
     reference_normal_df = process_ts(reference_normal_measturement_result_files)
     reference_normal_df.rename(
         columns={
-            "name": "name",
             "condition_1_duration": "reference_condition_1_duration",
             "condition_2_duration": "reference_condition_2_duration",
+            "intermediate_duration_a": "reference_intermediate_duration_a",
+            "intermediate_duration_b": "reference_intermediate_duration_b",
         },
         inplace=True,
     )
@@ -1425,9 +1628,10 @@ def process_testrun(testrun_dir: str):
     )
     reference_single_operation_df.rename(
         columns={
-            "name": "name",
             "condition_1_duration": "reference_condition_1_duration",
             "condition_2_duration": "reference_condition_2_duration",
+            "intermediate_duration_a": "reference_intermediate_duration_a",
+            "intermediate_duration_b": "reference_intermediate_duration_b",
         },
         inplace=True,
     )
@@ -1442,12 +1646,12 @@ def process_testrun(testrun_dir: str):
 
 
 def main():
-    if os.path.exists("testrun-vdeployment-performance-second"):
-        process_testrun("testrun-vdeployment-performance-second")
+    if os.path.exists("testrun-vdeployment-performance"):
+        process_testrun("testrun-vdeployment-performance")
         print()
         print()
     else:
-        print("testrun-vdeployment-performance-second does not exist")
+        print("testrun-vdeployment-performance does not exist")
 
     if os.path.exists("testrun-anvil-zk-performance"):
         process_testrun("testrun-anvil-zk-performance")
@@ -1456,12 +1660,12 @@ def main():
     else:
         print("testrun-anvil-zk-performance does not exist")
 
-    if os.path.exists("testrun-anvil-rabbitmq-performance"):
-        process_testrun("testrun-anvil-rabbitmq-performance")
+    if os.path.exists("testrun-rabbitmq-performance"):
+        process_testrun("testrun-rabbitmq-performance")
         print()
         print()
     else:
-        print("testrun-anvil-rabbitmq-performance does not exist")
+        print("testrun-rabbitmq-performance does not exist")
 
     if os.path.exists("testrun-anvil-fluent-performance"):
         process_testrun("testrun-anvil-fluent-performance")

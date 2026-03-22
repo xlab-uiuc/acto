@@ -45,6 +45,16 @@ class MeasurementResult:
     condition_3_ts: Optional[float] = None
 
 
+@dataclass
+class WatchHandle:
+    """Holds a running watch (processes + streams + queue) started before a CR change."""
+
+    queue: Queue
+    processes: list
+    streams: list
+    timer: acto_timer.ActoTimer
+
+
 def check_annotations(
     desired_annotations: dict, sts_object: k8s_models.V1StatefulSet
 ) -> bool:
@@ -214,6 +224,19 @@ class MeasurementRunner(Runner):
             generation,
         )
 
+        # Start watches BEFORE applying the CR so all events arrive as live
+        # watch events (not initial-list replays).  This lets us use
+        # time.time() at delivery as a microsecond-accurate timestamp.
+        watch_handle: Optional[WatchHandle] = None
+        if vstatefulset_name_f:
+            watch_handle = MeasurementRunner.start_vstatefulset_watch(
+                self.apiclient, self.namespace
+            )
+        elif vdeployment_name_f:
+            watch_handle = MeasurementRunner.start_vdeployment_watch(
+                self.apiclient, self.namespace
+            )
+
         cmd = ["apply", "-f", mutated_filename, "-n", self.namespace]
 
         cli_result = self.kubectl_client.kubectl(
@@ -227,6 +250,12 @@ class MeasurementRunner(Runner):
             )
             logger.error("STDOUT: " + cli_result.stdout)
             logger.error("STDERR: " + cli_result.stderr)
+            if watch_handle is not None:
+                for s in watch_handle.streams:
+                    s.close()
+                for p in watch_handle.processes:
+                    p.terminate()
+                watch_handle.timer.cancel()
             return None
 
         start_time = time.time()
@@ -234,11 +263,11 @@ class MeasurementRunner(Runner):
         condition_3 = None
         if vstatefulset_name_f:
             condition_1, condition_2, condition_3 = self._measure_vstatefulset(
-                input, generation, vstatefulset_name_f(input)
+                input, generation, watch_handle
             )
         elif vdeployment_name_f:
             condition_1, condition_2, condition_3 = self._measure_vdeployment(
-                input, generation, vdeployment_name_f(input)
+                input, generation, vdeployment_name_f(input), watch_handle
             )
         elif deployment_name_f:
             condition_1, condition_2, condition_3 = self._measure_deployment(
@@ -270,7 +299,11 @@ class MeasurementRunner(Runner):
         return MeasurementResult(start_time, condition_1, condition_2, condition_3)
 
     def _measure_vdeployment(
-        self, input: dict, generation: int, vdeployment_name: str
+        self,
+        input: dict,
+        generation: int,
+        vdeployment_name: str,
+        watch_handle: Optional[WatchHandle] = None,
     ) -> tuple[Optional[float], Optional[float], Optional[float]]:
         logger = get_thread_logger(with_prefix=True)
         custom_api = kubernetes.client.CustomObjectsApi(self.apiclient)
@@ -280,6 +313,7 @@ class MeasurementRunner(Runner):
             apiclient=self.apiclient,
             namespace=self.namespace,
             vdeployment_name=vdeployment_name,
+            watch_handle=watch_handle,
         )
 
         desired_template = input["spec"].get("template", {})
@@ -289,48 +323,21 @@ class MeasurementRunner(Runner):
         condition_3 = None
         for tag, event, timestamp in event_list:
             if tag == "vrs":
-                event_type = event["type"]
-                vrs_obj = event["object"]
-                # Use creationTimestamp from the object for ADDED events to avoid
-                # races between the VRS and pod watch subprocesses (both use
-                # time.time() which can be ordered arbitrarily at queue delivery).
-                ts = timestamp
-                if event_type == "ADDED":
-                    creation_ts_str = vrs_obj.get("metadata", {}).get(
-                        "creationTimestamp"
-                    )
-                    if creation_ts_str:
-                        ts = datetime.fromisoformat(creation_ts_str).timestamp()
                 logger.info(
-                    f"{event_type} VReplicaSet at {ts} - "
-                    f"{datetime.fromtimestamp(ts)}"
+                    f"{event['type']} VReplicaSet at {timestamp} - "
+                    f"{datetime.fromtimestamp(timestamp)}"
                 )
                 # condition_1 is the latest timestamp any VRS was touched,
                 # regardless of event type or which VRS it was.
-                condition_1 = ts
+                condition_1 = timestamp
             elif tag == "pod":
                 event_type = event["type"]
-                pod_obj = event["object"]
                 if event_type == "MODIFIED":
-                    # Use Ready lastTransitionTime for condition_2 to reflect
-                    # when the pod actually became ready in the cluster.
-                    ts = timestamp
-                    for cond in pod_obj.status.conditions or []:
-                        if cond.type == "Ready" and cond.status == "True":
-                            if cond.last_transition_time is not None:
-                                ts = cond.last_transition_time.timestamp()
-                            break
-                    condition_2 = ts
+                    # condition_2 is the latest timestamp any pod was updated
+                    condition_2 = timestamp
                 elif event_type in ("ADDED", "DELETED"):
-                    # Use pod creationTimestamp for condition_3 to avoid the
-                    # subprocess race with the VRS watch.
-                    ts = timestamp
-                    if (
-                        event_type == "ADDED"
-                        and pod_obj.metadata.creation_timestamp is not None
-                    ):
-                        ts = pod_obj.metadata.creation_timestamp.timestamp()
-                    condition_3 = ts
+                    # condition_3 is the latest timestamp any pod was created or deleted
+                    condition_3 = timestamp
 
         # Race condition fallback: the matching VRS may have been created before
         # the watch started.  Find it by comparing the pod template directly and
@@ -428,7 +435,10 @@ class MeasurementRunner(Runner):
         return condition_1, condition_2, condition_3
 
     def _measure_vstatefulset(
-        self, input: dict, generation: int, vstatefulset_name: str
+        self,
+        input: dict,
+        generation: int,
+        watch_handle: Optional[WatchHandle] = None,
     ) -> tuple[Optional[float], Optional[float], Optional[float]]:
         logger = get_thread_logger(with_prefix=True)
 
@@ -436,7 +446,7 @@ class MeasurementRunner(Runner):
             input=input,
             apiclient=self.apiclient,
             namespace=self.namespace,
-            vstatefulset_name=vstatefulset_name,
+            watch_handle=watch_handle,
         )
 
         condition_1 = None
@@ -447,50 +457,24 @@ class MeasurementRunner(Runner):
             if tag == "vsts":
                 event_type = event["type"]
                 obj = event["object"]
-                current_spec = obj.get("spec", {})
-                # Use creationTimestamp from the object for ADDED events to avoid
-                # races between the VStatefulSet and pod watch subprocesses.
-                ts = timestamp
-                if event_type == "ADDED":
-                    creation_ts_str = obj.get("metadata", {}).get(
-                        "creationTimestamp"
-                    )
-                    if creation_ts_str:
-                        ts = datetime.fromisoformat(creation_ts_str).timestamp()
                 logger.info(
                     f"{event_type} VStatefulSet {obj.get('metadata', {}).get('name')} "
-                    f"at {ts} - {datetime.fromtimestamp(ts)}"
+                    f"at {timestamp} - {datetime.fromtimestamp(timestamp)}"
                 )
+                current_spec = obj.get("spec", {})
                 if event_type == "ADDED":
-                    condition_1 = ts
+                    condition_1 = timestamp
                     vsts_prev_spec = current_spec
                 elif event_type == "MODIFIED":
                     if vsts_prev_spec != current_spec:
-                        condition_1 = ts
+                        condition_1 = timestamp
                     vsts_prev_spec = current_spec
             elif tag == "pod":
                 event_type = event["type"]
-                pod_obj = event["object"]
                 if event_type == "MODIFIED":
-                    # Use Ready lastTransitionTime for condition_2 to reflect
-                    # when the pod actually became ready in the cluster.
-                    ts = timestamp
-                    for cond in pod_obj.status.conditions or []:
-                        if cond.type == "Ready" and cond.status == "True":
-                            if cond.last_transition_time is not None:
-                                ts = cond.last_transition_time.timestamp()
-                            break
-                    condition_2 = ts
+                    condition_2 = timestamp
                 elif event_type in ("ADDED", "DELETED"):
-                    # Use pod creationTimestamp for condition_3 to avoid the
-                    # subprocess race with the VStatefulSet watch.
-                    ts = timestamp
-                    if (
-                        event_type == "ADDED"
-                        and pod_obj.metadata.creation_timestamp is not None
-                    ):
-                        ts = pod_obj.metadata.creation_timestamp.timestamp()
-                    condition_3 = ts
+                    condition_3 = timestamp
 
         with open(
             "%s/vsts-events-%03d.json" % (self.trial_dir, generation), "w"
@@ -1257,24 +1241,36 @@ class MeasurementRunner(Runner):
             pass
 
     @staticmethod
-    def wait_for_vdeployment_converge(
-        input: dict,
+    def start_vdeployment_watch(
         apiclient: kubernetes.client.ApiClient,
         namespace: str,
-        vdeployment_name: str,
-    ) -> list:
-        """Watch VReplicaSet and pod events for a VDeployment until pods are ready.
+    ) -> WatchHandle:
+        """Start VReplicaSet and pod watches from the current resourceVersion.
 
-        Returns a list of (tag, event, timestamp) tuples where tag is "vrs" for
-        VReplicaSet events and "pod" for pod events.  VReplicaSet events are
-        filtered to only those owned by the given VDeployment.
+        Must be called BEFORE the CR change is applied so that all subsequent
+        events are live (not initial-list replays), making time.time() at
+        delivery a reliable microsecond-accurate timestamp.
         """
         custom_api = kubernetes.client.CustomObjectsApi(apiclient)
         core_v1_api = kubernetes.client.CoreV1Api(apiclient)
+
+        vrs_rv = (
+            custom_api.list_namespaced_custom_object(
+                group="anvil.dev",
+                version="v1",
+                namespace=namespace,
+                plural="vreplicasets",
+            )
+            .get("metadata", {})
+            .get("resourceVersion", "0")
+        )
+        pod_rv = (
+            core_v1_api.list_namespaced_pod(namespace=namespace)
+            .metadata.resource_version
+        )
+
         watch_vrs = kubernetes.watch.Watch()
         watch_pods = kubernetes.watch.Watch()
-
-        updates: list = []
         updates_queue: Queue = Queue(maxsize=0)
 
         vrs_stream = watch_vrs.stream(
@@ -1283,10 +1279,12 @@ class MeasurementRunner(Runner):
             version="v1",
             namespace=namespace,
             plural="vreplicasets",
+            resource_version=vrs_rv,
         )
         pod_stream = watch_pods.stream(
             func=core_v1_api.list_namespaced_pod,
             namespace=namespace,
+            resource_version=pod_rv,
         )
 
         timer_hard_timeout = acto_timer.ActoTimer(900, updates_queue, "timeout")
@@ -1302,6 +1300,38 @@ class MeasurementRunner(Runner):
         timer_hard_timeout.start()
         vrs_watch_process.start()
         pod_watch_process.start()
+
+        return WatchHandle(
+            queue=updates_queue,
+            processes=[vrs_watch_process, pod_watch_process],
+            streams=[vrs_stream, pod_stream],
+            timer=timer_hard_timeout,
+        )
+
+    @staticmethod
+    def wait_for_vdeployment_converge(
+        input: dict,
+        apiclient: kubernetes.client.ApiClient,
+        namespace: str,
+        vdeployment_name: str,
+        watch_handle: Optional[WatchHandle] = None,
+    ) -> list:
+        """Watch VReplicaSet and pod events for a VDeployment until pods are ready.
+
+        Returns a list of (tag, event, timestamp) tuples where tag is "vrs" for
+        VReplicaSet events and "pod" for pod events.  VReplicaSet events are
+        filtered to only those owned by the given VDeployment.
+
+        If watch_handle is provided (started before the CR change), its queue
+        and processes are used directly.  Otherwise a new watch is started here.
+        """
+        if watch_handle is None:
+            watch_handle = MeasurementRunner.start_vdeployment_watch(
+                apiclient, namespace
+            )
+
+        updates_queue = watch_handle.queue
+        updates: list = []
 
         while True:
             try:
@@ -1331,33 +1361,45 @@ class MeasurementRunner(Runner):
                     logging.info("pods not ready")
                     continue
 
-        vrs_stream.close()
-        pod_stream.close()
-        timer_hard_timeout.cancel()
-        vrs_watch_process.terminate()
-        pod_watch_process.terminate()
+        for s in watch_handle.streams:
+            s.close()
+        watch_handle.timer.cancel()
+        for p in watch_handle.processes:
+            p.terminate()
 
         return updates
 
     @staticmethod
-    def wait_for_vstatefulset_converge(
-        input: dict,
+    def start_vstatefulset_watch(
         apiclient: kubernetes.client.ApiClient,
         namespace: str,
-        vstatefulset_name: str,
-    ) -> list:
-        """Watch VStatefulSet and pod events until pods are ready.
+    ) -> WatchHandle:
+        """Start VStatefulSet and pod watches from the current resourceVersion.
 
-        Returns a list of (tag, event, timestamp) tuples where tag is "vsts"
-        for VStatefulSet events and "pod" for pod events.  Only the VStatefulSet
-        with the given name is included.
+        Must be called BEFORE the CR change is applied so that all subsequent
+        events are live (not initial-list replays), making time.time() at
+        delivery a reliable microsecond-accurate timestamp.
         """
         custom_api = kubernetes.client.CustomObjectsApi(apiclient)
         core_v1_api = kubernetes.client.CoreV1Api(apiclient)
+
+        vsts_rv = (
+            custom_api.list_namespaced_custom_object(
+                group="anvil.dev",
+                version="v1",
+                namespace=namespace,
+                plural="vstatefulsets",
+            )
+            .get("metadata", {})
+            .get("resourceVersion", "0")
+        )
+        pod_rv = (
+            core_v1_api.list_namespaced_pod(namespace=namespace)
+            .metadata.resource_version
+        )
+
         watch_vsts = kubernetes.watch.Watch()
         watch_pods = kubernetes.watch.Watch()
-
-        updates: list = []
         updates_queue: Queue = Queue(maxsize=0)
 
         vsts_stream = watch_vsts.stream(
@@ -1366,10 +1408,12 @@ class MeasurementRunner(Runner):
             version="v1",
             namespace=namespace,
             plural="vstatefulsets",
+            resource_version=vsts_rv,
         )
         pod_stream = watch_pods.stream(
             func=core_v1_api.list_namespaced_pod,
             namespace=namespace,
+            resource_version=pod_rv,
         )
 
         timer_hard_timeout = acto_timer.ActoTimer(900, updates_queue, "timeout")
@@ -1386,6 +1430,37 @@ class MeasurementRunner(Runner):
         vsts_watch_process.start()
         pod_watch_process.start()
 
+        return WatchHandle(
+            queue=updates_queue,
+            processes=[vsts_watch_process, pod_watch_process],
+            streams=[vsts_stream, pod_stream],
+            timer=timer_hard_timeout,
+        )
+
+    @staticmethod
+    def wait_for_vstatefulset_converge(
+        input: dict,
+        apiclient: kubernetes.client.ApiClient,
+        namespace: str,
+        watch_handle: Optional[WatchHandle] = None,
+    ) -> list:
+        """Watch VStatefulSet and pod events until pods are ready.
+
+        Returns a list of (tag, event, timestamp) tuples where tag is "vsts"
+        for VStatefulSet events and "pod" for pod events.  Only the VStatefulSet
+        with the given name is included.
+
+        If watch_handle is provided (started before the CR change), its queue
+        and processes are used directly.  Otherwise a new watch is started here.
+        """
+        if watch_handle is None:
+            watch_handle = MeasurementRunner.start_vstatefulset_watch(
+                apiclient, namespace
+            )
+
+        updates_queue = watch_handle.queue
+        updates: list = []
+
         while True:
             try:
                 item = updates_queue.get(timeout=120)
@@ -1399,11 +1474,11 @@ class MeasurementRunner(Runner):
                     logging.info("pods not ready")
                     continue
 
-        vsts_stream.close()
-        pod_stream.close()
-        timer_hard_timeout.cancel()
-        vsts_watch_process.terminate()
-        pod_watch_process.terminate()
+        for s in watch_handle.streams:
+            s.close()
+        watch_handle.timer.cancel()
+        for p in watch_handle.processes:
+            p.terminate()
 
         return updates
 
