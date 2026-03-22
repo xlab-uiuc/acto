@@ -2,8 +2,35 @@
     "deploy": {
         "steps": [
             {
-                "wait": {
-                    "duration": 1
+                "apply": {
+                    "file": "data/vreplicaset-controller/v0/crd.yaml"
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/vdeployment-controller/v0/crd.yaml"
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/vdeployment-controller/v0/deploy_remote.yaml",
+                    "namespace": null
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/anvil-rabbitmq-controller/crd.yaml"
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/anvil-rabbitmq-controller/vstatefulset_crd.yaml"
+                }
+            },
+            {
+                "apply": {
+                    "file": "data/anvil-rabbitmq-controller/deploy_remote.yaml",
+                    "namespace": null
                 }
             }
         ]
