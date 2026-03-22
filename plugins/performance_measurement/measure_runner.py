@@ -53,6 +53,7 @@ class WatchHandle:
     processes: list
     streams: list
     timer: acto_timer.ActoTimer
+    apply_time: Optional[float] = None  # set in measure() right after kubectl apply
 
 
 def check_annotations(
@@ -259,6 +260,8 @@ class MeasurementRunner(Runner):
             return None
 
         start_time = time.time()
+        if watch_handle is not None:
+            watch_handle.apply_time = start_time
 
         condition_3 = None
         if vstatefulset_name_f:
@@ -1229,6 +1232,7 @@ class MeasurementRunner(Runner):
     @staticmethod
     def watch_system_events_tagged(event_stream, queue: Queue, tag: str):
         """A process that watches namespaced events and tags each entry."""
+        logging.info(f"[{tag}] watch subprocess started")
         try:
             for object in event_stream:
                 try:
@@ -1238,36 +1242,23 @@ class MeasurementRunner(Runner):
                 except (ValueError, AssertionError) as e:
                     logging.info("failed to process event due to %s", str(e))
         except SSLError:
-            pass
+            logging.info(f"[{tag}] watch subprocess exiting due to SSLError")
+        except Exception as e:
+            logging.error(f"[{tag}] watch subprocess exiting due to unexpected error: {e}")
 
     @staticmethod
     def start_vdeployment_watch(
         apiclient: kubernetes.client.ApiClient,
         namespace: str,
     ) -> WatchHandle:
-        """Start VReplicaSet and pod watches from the current resourceVersion.
+        """Start VReplicaSet and pod watches.
 
-        Must be called BEFORE the CR change is applied so that all subsequent
-        events are live (not initial-list replays), making time.time() at
-        delivery a reliable microsecond-accurate timestamp.
+        Must be called BEFORE the CR change is applied.  The watch receives
+        the full initial-list sync; pre-apply events are filtered out in
+        wait_for_vdeployment_converge using apply_time set on the handle.
         """
         custom_api = kubernetes.client.CustomObjectsApi(apiclient)
         core_v1_api = kubernetes.client.CoreV1Api(apiclient)
-
-        vrs_rv = (
-            custom_api.list_namespaced_custom_object(
-                group="anvil.dev",
-                version="v1",
-                namespace=namespace,
-                plural="vreplicasets",
-            )
-            .get("metadata", {})
-            .get("resourceVersion", "0")
-        )
-        pod_rv = (
-            core_v1_api.list_namespaced_pod(namespace=namespace)
-            .metadata.resource_version
-        )
 
         watch_vrs = kubernetes.watch.Watch()
         watch_pods = kubernetes.watch.Watch()
@@ -1279,12 +1270,10 @@ class MeasurementRunner(Runner):
             version="v1",
             namespace=namespace,
             plural="vreplicasets",
-            resource_version=vrs_rv,
         )
         pod_stream = watch_pods.stream(
             func=core_v1_api.list_namespaced_pod,
             namespace=namespace,
-            resource_version=pod_rv,
         )
 
         timer_hard_timeout = acto_timer.ActoTimer(900, updates_queue, "timeout")
@@ -1300,6 +1289,8 @@ class MeasurementRunner(Runner):
         timer_hard_timeout.start()
         vrs_watch_process.start()
         pod_watch_process.start()
+        logging.info("VDeployment watch started (vrs pid=%d, pod pid=%d)",
+                     vrs_watch_process.pid, pod_watch_process.pid)
 
         return WatchHandle(
             queue=updates_queue,
@@ -1323,7 +1314,8 @@ class MeasurementRunner(Runner):
         filtered to only those owned by the given VDeployment.
 
         If watch_handle is provided (started before the CR change), its queue
-        and processes are used directly.  Otherwise a new watch is started here.
+        and processes are used directly and events before apply_time are
+        discarded.  Otherwise a new watch is started here.
         """
         if watch_handle is None:
             watch_handle = MeasurementRunner.start_vdeployment_watch(
@@ -1331,14 +1323,32 @@ class MeasurementRunner(Runner):
             )
 
         updates_queue = watch_handle.queue
+        apply_time = watch_handle.apply_time
         updates: list = []
+        discarded_pre_apply = 0
+
+        logging.info(
+            "wait_for_vdeployment_converge: apply_time=%.6f (%s)",
+            apply_time or 0,
+            datetime.fromtimestamp(apply_time) if apply_time else "N/A",
+        )
 
         while True:
             try:
                 item = updates_queue.get(timeout=120)
                 if isinstance(item, str) and item == "timeout":
+                    logging.warning("wait_for_vdeployment_converge: hard timeout reached")
                     break
                 tag, event, ts = item
+                # Discard initial-list-sync events that arrived before the CR
+                # change was applied; they represent pre-existing cluster state.
+                if apply_time is not None and ts < apply_time:
+                    discarded_pre_apply += 1
+                    logging.debug(
+                        "discarding pre-apply %s event (ts=%.6f < apply_time=%.6f)",
+                        tag, ts, apply_time,
+                    )
+                    continue
                 if tag == "vrs":
                     owner_refs = (
                         event["object"]
@@ -1352,10 +1362,21 @@ class MeasurementRunner(Runner):
                         for ref in owner_refs
                     ):
                         updates.append((tag, event, ts))
+                    else:
+                        logging.debug(
+                            "discarding VRS event: ownerReferences do not match "
+                            "VDeployment %s (refs=%s)",
+                            vdeployment_name, owner_refs,
+                        )
                 else:
                     updates.append((tag, event, ts))
             except queue.Empty:
                 if check_pods_ready(input, apiclient, namespace):
+                    logging.info(
+                        "wait_for_vdeployment_converge: pods ready; "
+                        "collected %d events, discarded %d pre-apply events",
+                        len(updates), discarded_pre_apply,
+                    )
                     break
                 else:
                     logging.info("pods not ready")
@@ -1374,29 +1395,14 @@ class MeasurementRunner(Runner):
         apiclient: kubernetes.client.ApiClient,
         namespace: str,
     ) -> WatchHandle:
-        """Start VStatefulSet and pod watches from the current resourceVersion.
+        """Start VStatefulSet and pod watches.
 
-        Must be called BEFORE the CR change is applied so that all subsequent
-        events are live (not initial-list replays), making time.time() at
-        delivery a reliable microsecond-accurate timestamp.
+        Must be called BEFORE the CR change is applied.  The watch receives
+        the full initial-list sync; pre-apply events are filtered out in
+        wait_for_vstatefulset_converge using apply_time set on the handle.
         """
         custom_api = kubernetes.client.CustomObjectsApi(apiclient)
         core_v1_api = kubernetes.client.CoreV1Api(apiclient)
-
-        vsts_rv = (
-            custom_api.list_namespaced_custom_object(
-                group="anvil.dev",
-                version="v1",
-                namespace=namespace,
-                plural="vstatefulsets",
-            )
-            .get("metadata", {})
-            .get("resourceVersion", "0")
-        )
-        pod_rv = (
-            core_v1_api.list_namespaced_pod(namespace=namespace)
-            .metadata.resource_version
-        )
 
         watch_vsts = kubernetes.watch.Watch()
         watch_pods = kubernetes.watch.Watch()
@@ -1408,12 +1414,10 @@ class MeasurementRunner(Runner):
             version="v1",
             namespace=namespace,
             plural="vstatefulsets",
-            resource_version=vsts_rv,
         )
         pod_stream = watch_pods.stream(
             func=core_v1_api.list_namespaced_pod,
             namespace=namespace,
-            resource_version=pod_rv,
         )
 
         timer_hard_timeout = acto_timer.ActoTimer(900, updates_queue, "timeout")
@@ -1429,6 +1433,8 @@ class MeasurementRunner(Runner):
         timer_hard_timeout.start()
         vsts_watch_process.start()
         pod_watch_process.start()
+        logging.info("VStatefulSet watch started (vsts pid=%d, pod pid=%d)",
+                     vsts_watch_process.pid, pod_watch_process.pid)
 
         return WatchHandle(
             queue=updates_queue,
@@ -1451,7 +1457,8 @@ class MeasurementRunner(Runner):
         with the given name is included.
 
         If watch_handle is provided (started before the CR change), its queue
-        and processes are used directly.  Otherwise a new watch is started here.
+        and processes are used directly and events before apply_time are
+        discarded.  Otherwise a new watch is started here.
         """
         if watch_handle is None:
             watch_handle = MeasurementRunner.start_vstatefulset_watch(
@@ -1459,16 +1466,40 @@ class MeasurementRunner(Runner):
             )
 
         updates_queue = watch_handle.queue
+        apply_time = watch_handle.apply_time
         updates: list = []
+        discarded_pre_apply = 0
+
+        logging.info(
+            "wait_for_vstatefulset_converge: apply_time=%.6f (%s)",
+            apply_time or 0,
+            datetime.fromtimestamp(apply_time) if apply_time else "N/A",
+        )
 
         while True:
             try:
                 item = updates_queue.get(timeout=120)
                 if isinstance(item, str) and item == "timeout":
+                    logging.warning("wait_for_vstatefulset_converge: hard timeout reached")
                     break
-                updates.append(item)
+                tag, event, ts = item
+                # Discard initial-list-sync events that arrived before the CR
+                # change was applied; they represent pre-existing cluster state.
+                if apply_time is not None and ts < apply_time:
+                    discarded_pre_apply += 1
+                    logging.debug(
+                        "discarding pre-apply %s event (ts=%.6f < apply_time=%.6f)",
+                        tag, ts, apply_time,
+                    )
+                    continue
+                updates.append((tag, event, ts))
             except queue.Empty:
                 if check_pods_ready(input, apiclient, namespace):
+                    logging.info(
+                        "wait_for_vstatefulset_converge: pods ready; "
+                        "collected %d events, discarded %d pre-apply events",
+                        len(updates), discarded_pre_apply,
+                    )
                     break
                 else:
                     logging.info("pods not ready")
