@@ -39,9 +39,7 @@ def process_ts(files: List[str]) -> pd.DataFrame:
 
             if data["condition_2_ts"] < 0:
                 continue
-            condition_2_duration = (
-                data["condition_2_ts"] - data["condition_1_ts"]
-            )
+            condition_2_duration = data["condition_2_ts"] - data["start_ts"]
             if condition_2_duration < 5:
                 continue
             if condition_2_duration < data["condition_1_ts"] - data["start_ts"]:
@@ -63,7 +61,7 @@ def process_ts(files: List[str]) -> pd.DataFrame:
                     condition_3_ts - data["condition_1_ts"]
                 )
                 row["intermediate_duration_b"] = (
-                    data["condition_2_ts"] - condition_3_ts
+                    data["condition_2_ts"] - data["condition_1_ts"]
                 )
             condition_durations.append(row)
 
@@ -103,95 +101,128 @@ def process_cadvisor(
                             start_time = container_stat[
                                 "container_cpu_usage_seconds_total"
                             ]["timestamp"]
-                        etcd_cpu_usages.append(
-                            {
-                                "timestamp": container_stat[
-                                    "container_cpu_usage_seconds_total"
-                                ]["timestamp"]
-                                - start_time,
-                                "cpu_usage": container_stat[
-                                    "container_cpu_usage_seconds_total"
-                                ]["value"],
-                            }
+                        ts = (
+                            container_stat["container_cpu_usage_seconds_total"][
+                                "timestamp"
+                            ]
+                            - start_time
                         )
-                        etcd_memory_usages.append(
-                            {
-                                "timestamp": container_stat[
-                                    "container_memory_usage_bytes"
-                                ]["timestamp"]
-                                - start_time,
-                                "memory_usage": container_stat[
-                                    "container_memory_usage_bytes"
-                                ]["value"],
-                            }
+                        if ts >= 0:
+                            etcd_cpu_usages.append(
+                                {
+                                    "timestamp": ts,
+                                    "cpu_usage": container_stat[
+                                        "container_cpu_usage_seconds_total"
+                                    ]["value"],
+                                }
+                            )
+                        ts = (
+                            container_stat["container_memory_usage_bytes"][
+                                "timestamp"
+                            ]
+                            - start_time
                         )
-                        etcd_blkio_usages.append(
-                            {
-                                "timestamp": container_stat[
-                                    "container_fs_writes_bytes_total"
-                                ]["timestamp"]
-                                - start_time,
-                                "blkio_write": container_stat[
-                                    "container_fs_writes_bytes_total"
-                                ]["value"],
-                            }
+                        if ts >= 0:
+                            etcd_memory_usages.append(
+                                {
+                                    "timestamp": ts,
+                                    "memory_usage": container_stat[
+                                        "container_memory_usage_bytes"
+                                    ]["value"],
+                                }
+                            )
+                        ts = (
+                            container_stat["container_fs_writes_bytes_total"][
+                                "timestamp"
+                            ]
+                            - start_time
                         )
-                        etcd_blkio_read_usages.append(
-                            {
-                                "timestamp": container_stat[
-                                    "container_fs_reads_bytes_total"
-                                ]["timestamp"]
-                                - start_time,
-                                "blkio_read": container_stat[
-                                    "container_fs_reads_bytes_total"
-                                ]["value"],
-                            }
+                        if ts >= 0:
+                            etcd_blkio_usages.append(
+                                {
+                                    "timestamp": ts,
+                                    "blkio_write": container_stat[
+                                        "container_fs_writes_bytes_total"
+                                    ]["value"],
+                                }
+                            )
+                        ts = (
+                            container_stat["container_fs_reads_bytes_total"][
+                                "timestamp"
+                            ]
+                            - start_time
                         )
-                        etcd_network_read_usages.append(
-                            {
-                                "timestamp": container_stat[
-                                    "container_network_receive_bytes_total"
-                                ]["timestamp"]
-                                - start_time,
-                                "network_read": container_stat[
-                                    "container_network_receive_bytes_total"
-                                ]["value"],
-                            }
+                        if ts >= 0:
+                            etcd_blkio_read_usages.append(
+                                {
+                                    "timestamp": ts,
+                                    "blkio_read": container_stat[
+                                        "container_fs_reads_bytes_total"
+                                    ]["value"],
+                                }
+                            )
+                        ts = (
+                            container_stat[
+                                "container_network_receive_bytes_total"
+                            ]["timestamp"]
+                            - start_time
                         )
-                        etcd_network_write_usages.append(
-                            {
-                                "timestamp": container_stat[
-                                    "container_network_transmit_bytes_total"
-                                ]["timestamp"]
-                                - start_time,
-                                "network_write": container_stat[
-                                    "container_network_transmit_bytes_total"
-                                ]["value"],
-                            }
+                        if ts >= 0:
+                            etcd_network_read_usages.append(
+                                {
+                                    "timestamp": ts,
+                                    "network_read": container_stat[
+                                        "container_network_receive_bytes_total"
+                                    ]["value"],
+                                }
+                            )
+                        ts = (
+                            container_stat[
+                                "container_network_transmit_bytes_total"
+                            ]["timestamp"]
+                            - start_time
                         )
+                        if ts >= 0:
+                            etcd_network_write_usages.append(
+                                {
+                                    "timestamp": ts,
+                                    "network_write": container_stat[
+                                        "container_network_transmit_bytes_total"
+                                    ]["value"],
+                                }
+                            )
                     elif container_name == "kube-apiserver":
-                        apiserver_cpu_usages.append(
-                            {
-                                "timestamp": container_stat[
+                        if start_time is not None:
+                            ts = (
+                                container_stat[
                                     "container_cpu_usage_seconds_total"
                                 ]["timestamp"]
-                                - start_time,
-                                "cpu_usage": container_stat[
-                                    "container_cpu_usage_seconds_total"
-                                ]["value"],
-                            }
-                        )
-                        apiserver_memory_usages.append(
-                            {
-                                "timestamp": container_stat[
-                                    "container_memory_usage_bytes"
-                                ]["timestamp"]
-                                - start_time,
-                                "memory_usage": container_stat[
-                                    "container_memory_usage_bytes"
-                                ]["value"],
-                            }
-                        )
+                                - start_time
+                            )
+                            if ts >= 0:
+                                apiserver_cpu_usages.append(
+                                    {
+                                        "timestamp": ts,
+                                        "cpu_usage": container_stat[
+                                            "container_cpu_usage_seconds_total"
+                                        ]["value"],
+                                    }
+                                )
+                            ts = (
+                                container_stat["container_memory_usage_bytes"][
+                                    "timestamp"
+                                ]
+                                - start_time
+                            )
+                            if ts >= 0:
+                                apiserver_memory_usages.append(
+                                    {
+                                        "timestamp": ts,
+                                        "memory_usage": container_stat[
+                                            "container_memory_usage_bytes"
+                                        ]["value"],
+                                    }
+                                )
 
     return (
         pd.DataFrame(etcd_cpu_usages, columns=["timestamp", "cpu_usage"]),
@@ -1087,7 +1118,8 @@ def process_latency(
         or "anvil_intermediate_duration_a" in merged_single_operation_df.columns
     ) and (
         "reference_intermediate_duration_a" in merged_normal_df.columns
-        or "reference_intermediate_duration_a" in merged_single_operation_df.columns
+        or "reference_intermediate_duration_a"
+        in merged_single_operation_df.columns
     )
 
     print(
@@ -1301,8 +1333,12 @@ def process_latency(
 
         anvil_inter_a_merged = _concat_inter("anvil_intermediate_duration_a")
         anvil_inter_b_merged = _concat_inter("anvil_intermediate_duration_b")
-        reference_inter_a_merged = _concat_inter("reference_intermediate_duration_a")
-        reference_inter_b_merged = _concat_inter("reference_intermediate_duration_b")
+        reference_inter_a_merged = _concat_inter(
+            "reference_intermediate_duration_a"
+        )
+        reference_inter_b_merged = _concat_inter(
+            "reference_intermediate_duration_b"
+        )
 
         def _inter_table_rows(df: pd.DataFrame, header: list) -> list:
             if (
@@ -1660,12 +1696,12 @@ def main():
     else:
         print("testrun-anvil-zk-performance does not exist")
 
-    if os.path.exists("testrun-rabbitmq-performance"):
-        process_testrun("testrun-rabbitmq-performance")
+    if os.path.exists("testrun-rabbitmq-performance-2"):
+        process_testrun("testrun-rabbitmq-performance-2")
         print()
         print()
     else:
-        print("testrun-rabbitmq-performance does not exist")
+        print("testrun-rabbitmq-performance-2 does not exist")
 
     if os.path.exists("testrun-anvil-fluent-performance"):
         process_testrun("testrun-anvil-fluent-performance")
