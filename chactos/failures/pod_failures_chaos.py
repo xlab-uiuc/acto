@@ -1,5 +1,6 @@
 import json
 import math
+import random
 from typing import Optional
 
 import kubernetes
@@ -92,7 +93,10 @@ class PodFailure(Failure):
         for pod in normal_pods:
             normal_pod_names.add(pod.metadata.name)
         num_total_pods = len(priority_pod_names | normal_pod_names)
-        num_pods_to_fail = math.ceil(num_total_pods * failure_ratio)
+        if failure_ratio == -1:
+            num_pods_to_fail = random.randint(1, max(1, num_total_pods))
+        else:
+            num_pods_to_fail = math.ceil(num_total_pods * failure_ratio)
         selected_pods = select_pods(
             priority_pod_names,
             normal_pod_names,

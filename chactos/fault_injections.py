@@ -1,6 +1,7 @@
 import multiprocessing
 import os
 import queue
+import random
 import subprocess
 import threading
 import time
@@ -120,6 +121,7 @@ class ChactosDriver(PostProcessor):
                 operator_selector=operator_selector,
                 priority_pod_selector=self._fault_injection_config.priority_application_selector,
                 pod_selector=pod_selector,
+                skip_fault_probability=self._fault_injection_config.skip_fault_probability,
             )
             workers.append(worker)
 
@@ -331,6 +333,7 @@ class ChactosTrialWorker:
         pod_selector: dict,
         priority_pod_selector: Optional[dict] = None,
         diff_exclude_paths: Optional[list[str]] = None,
+        skip_fault_probability: float = 0.0,
     ):
         self._worker_id = worker_id
         self._workqueue = workqueue
@@ -343,6 +346,7 @@ class ChactosTrialWorker:
         self._operator_selector = operator_selector
         self._priority_pod_selector = priority_pod_selector
         self._pod_selector = pod_selector
+        self._skip_fault_probability = skip_fault_probability
 
     def fault_injection_trial_dir(self, trial_name: str, sequence: int):
         """Return the fault injection trial directory"""
@@ -430,6 +434,7 @@ class ChactosTrialWorker:
         runner.wait_for_system_converge()
         fi_generation += 1
 
+        faults_injected = 0
         logger.debug("Starting fault injection on the rest steps")
         while steps:
             step_key = steps[0]
@@ -466,23 +471,34 @@ class ChactosTrialWorker:
 
             steady_system_state = runner.collect_system_state()
 
-            try:
+            skip_steady_fault = (
+                random.random() < self._skip_fault_probability
+            )
+            if skip_steady_fault:
                 logger.debug(
-                    "Injecting %s failure before any CR (policy 1)",
+                    "Skipping %s failure before any CR (policy 1) due to skip_fault_probability",
                     failure_type,
                 )
-                pod_failure.apply(kubectl_client)
-            except subprocess.TimeoutExpired:
-                logger.warning("Timeout in applying failure.")
-                logger.warning(
-                    "Current steps: [%s]", sorted(trial.steps.keys())
-                )
+            else:
+                try:
+                    logger.debug(
+                        "Injecting %s failure before any CR (policy 1)",
+                        failure_type,
+                    )
+                    pod_failure.apply(kubectl_client)
+                    faults_injected += 1
+                except subprocess.TimeoutExpired:
+                    logger.warning("Timeout in applying failure.")
+                    logger.warning(
+                        "Current steps: [%s]", sorted(trial.steps.keys())
+                    )
 
             logger.debug("Waiting for system to converge for the first failure")
             runner.wait_for_system_converge(hard_timeout=180)
 
-            logger.debug("System converged, now lifting failure")
-            pod_failure.cleanup(kubectl_client)
+            if not skip_steady_fault:
+                logger.debug("System converged, now lifting failure")
+                pod_failure.cleanup(kubectl_client)
 
             logger.debug("Waiting for cleanup to converge")
             runner.wait_for_system_converge()
@@ -548,12 +564,22 @@ class ChactosTrialWorker:
                 "Fault injection on steady state completed, now onto normal fault injection"
             )
 
-            try:
-                logger.debug("Injecting %s failure", failure_type)
-                pod_failure.apply(kubectl_client)
-            except subprocess.TimeoutExpired:
-                logger.error("Timeout in applying failure.")
-                logger.error("Current steps: [%s]", sorted(trial.steps.keys()))
+            skip_fault = random.random() < self._skip_fault_probability
+            if skip_fault:
+                logger.debug(
+                    "Skipping %s failure due to skip_fault_probability",
+                    failure_type,
+                )
+            else:
+                try:
+                    logger.debug("Injecting %s failure", failure_type)
+                    pod_failure.apply(kubectl_client)
+                    faults_injected += 1
+                except subprocess.TimeoutExpired:
+                    logger.error("Timeout in applying failure.")
+                    logger.error(
+                        "Current steps: [%s]", sorted(trial.steps.keys())
+                    )
 
             logger.debug("Applying next CR")
             chactos_snapshot, err = runner.run(
@@ -566,9 +592,10 @@ class ChactosTrialWorker:
             logger.debug("Waiting for CR to converge")
             runner.wait_for_system_converge(hard_timeout=180)
 
-            for f in failures_to_clean_up:
-                logger.debug("Cleaning up failure %s", f.name())
-                f.cleanup(kubectl_client)
+            if not skip_fault:
+                for f in failures_to_clean_up:
+                    logger.debug("Cleaning up failure %s", f.name())
+                    f.cleanup(kubectl_client)
 
             logger.debug("Waiting for cleanup to converge")
             runner.wait_for_system_converge(hard_timeout=180)
@@ -633,6 +660,10 @@ class ChactosTrialWorker:
 
             fi_generation += 1
             steps.pop(0)
+
+        summary_path = os.path.join(fault_injection_trial_dir, "fault_injection_summary.txt")
+        with open(summary_path, "w", encoding="utf-8") as f:
+            f.write(f"faults_injected: {faults_injected}\n")
 
     def __run_trial(
         self, trial_name: str, trial: Trial, failure: Tuple[FaultType, float]

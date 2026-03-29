@@ -20,3 +20,4 @@ class FaultInjectionConfig(pydantic.BaseModel, extra="forbid"):
     application_data_dir: str
     pod_failure_ratio: float = 1.0
     fault_type: FaultType
+    skip_fault_probability: float = 0.0
