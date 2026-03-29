@@ -95,6 +95,16 @@ class ChactosDriver(PostProcessor):
         workqueue: queue.Queue = queue.Queue()
         for failure in failures:
             for trial_name, trial in self.trial_to_steps.items():
+                if all(
+                    step.run_result.is_invalid_input()
+                    or step.run_result.oracle_result.is_error()
+                    for step in trial.steps.values()
+                ):
+                    logger.debug(
+                        "Skipping trial [%s]: all steps are invalid or error",
+                        trial_name,
+                    )
+                    continue
                 workqueue.put((trial_name, trial, failure))
 
         for worker_id in range(self._num_workers):
