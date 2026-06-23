@@ -43,6 +43,7 @@ class MeasurementResult:
     condition_1_ts: float
     condition_2_ts: float
     condition_3_ts: Optional[float] = None
+    condition_4_ts: Optional[float] = None
 
 
 @dataclass
@@ -266,24 +267,31 @@ class MeasurementRunner(Runner):
             watch_handle.apply_time = start_time
 
         condition_3 = None
+        condition_4 = None
         if vstatefulset_name_f:
-            condition_1, condition_2, condition_3 = self._measure_vstatefulset(
-                input, generation, watch_handle
+            condition_1, condition_2, condition_3, condition_4 = (
+                self._measure_vstatefulset(input, generation, watch_handle)
             )
         elif vdeployment_name_f:
-            condition_1, condition_2, condition_3 = self._measure_vdeployment(
-                input, generation, vdeployment_name_f(input), watch_handle
+            condition_1, condition_2, condition_3, condition_4 = (
+                self._measure_vdeployment(
+                    input, generation, vdeployment_name_f(input), watch_handle
+                )
             )
         elif deployment_name_f:
-            condition_1, condition_2, condition_3 = self._measure_deployment(
-                input, generation, deployment_name_f(input)
+            condition_1, condition_2, condition_3, condition_4 = (
+                self._measure_deployment(
+                    input, generation, deployment_name_f(input)
+                )
             )
         else:
-            condition_1, condition_2, condition_3 = self._measure_sts_or_ds(
-                input,
-                generation,
-                sts_name_f,
-                daemon_set_name_f,
+            condition_1, condition_2, condition_3, condition_4 = (
+                self._measure_sts_or_ds(
+                    input,
+                    generation,
+                    sts_name_f,
+                    daemon_set_name_f,
+                )
             )
 
         duration_1 = condition_1 - start_time
@@ -298,11 +306,15 @@ class MeasurementRunner(Runner):
             duration_3 = condition_3 - condition_1
             logging.info("Condition 3 took %f seconds" % duration_3)
 
+        if condition_4 is not None:
+            duration_4 = condition_4 - condition_1
+            logging.info("Condition 4 took %f seconds" % duration_4)
+
         if self.crd_metainfo:
             self.collect_system_state()
 
         return MeasurementResult(
-            start_time, condition_1, condition_2, condition_3
+            start_time, condition_1, condition_2, condition_3, condition_4
         )
 
     def _measure_vdeployment(
@@ -311,7 +323,9 @@ class MeasurementRunner(Runner):
         generation: int,
         vdeployment_name: str,
         watch_handle: Optional[WatchHandle] = None,
-    ) -> tuple[Optional[float], Optional[float], Optional[float]]:
+    ) -> tuple[
+        Optional[float], Optional[float], Optional[float], Optional[float]
+    ]:
         logger = get_thread_logger(with_prefix=True)
         custom_api = kubernetes.client.CustomObjectsApi(self.apiclient)
 
@@ -328,6 +342,7 @@ class MeasurementRunner(Runner):
         condition_1 = None
         condition_2 = None
         condition_3 = None
+        condition_4 = None
         for tag, event, timestamp in event_list:
             if tag == "vrs":
                 logger.info(
@@ -348,6 +363,9 @@ class MeasurementRunner(Runner):
                 elif event_type in ("ADDED", "DELETED"):
                     # condition_3 is the latest timestamp any pod was created or deleted
                     condition_3 = timestamp
+                    # condition_4 is the timestamp of the first pod write
+                    if condition_4 is None:
+                        condition_4 = timestamp
 
         # Race condition fallback: the matching VRS may have been created before
         # the watch started.  Find it by comparing the pod template directly and
@@ -444,14 +462,16 @@ class MeasurementRunner(Runner):
                 cls=ActoEncoder,
                 indent=4,
             )
-        return condition_1, condition_2, condition_3
+        return condition_1, condition_2, condition_3, condition_4
 
     def _measure_vstatefulset(
         self,
         input: dict,
         generation: int,
         watch_handle: Optional[WatchHandle] = None,
-    ) -> tuple[Optional[float], Optional[float], Optional[float]]:
+    ) -> tuple[
+        Optional[float], Optional[float], Optional[float], Optional[float]
+    ]:
         logger = get_thread_logger(with_prefix=True)
 
         event_list = MeasurementRunner.wait_for_vstatefulset_converge(
@@ -464,6 +484,7 @@ class MeasurementRunner(Runner):
         condition_1 = None
         condition_2 = None
         condition_3 = None
+        condition_4 = None
         vsts_prev_spec: Optional[dict] = None
         for tag, event, timestamp in event_list:
             if tag == "vsts":
@@ -487,6 +508,9 @@ class MeasurementRunner(Runner):
                     condition_2 = timestamp
                 elif event_type in ("ADDED", "DELETED"):
                     condition_3 = timestamp
+                    # condition_4 is the timestamp of the first pod write
+                    if condition_4 is None:
+                        condition_4 = timestamp
 
         with open(
             "%s/vsts-events-%03d.json" % (self.trial_dir, generation), "w"
@@ -501,11 +525,13 @@ class MeasurementRunner(Runner):
                 cls=ActoEncoder,
                 indent=4,
             )
-        return condition_1, condition_2, condition_3
+        return condition_1, condition_2, condition_3, condition_4
 
     def _measure_deployment(
         self, input: dict, generation: int, deployment_name: str
-    ) -> tuple[Optional[float], Optional[float], Optional[float]]:
+    ) -> tuple[
+        Optional[float], Optional[float], Optional[float], Optional[float]
+    ]:
         logger = get_thread_logger(with_prefix=True)
 
         event_list = MeasurementRunner.wait_for_deployment_converge(
@@ -527,6 +553,7 @@ class MeasurementRunner(Runner):
         condition_1 = None
         condition_2 = None
         condition_3 = None
+        condition_4 = None
         rs_prev_specs: dict[str, dict] = {}
         for tag, event, timestamp in event_list:
             if tag == "rs":
@@ -557,6 +584,9 @@ class MeasurementRunner(Runner):
                 elif event_type in ("ADDED", "DELETED"):
                     # condition_3 is the latest timestamp any pod was created or deleted
                     condition_3 = timestamp
+                    # condition_4 is the timestamp of the first pod write
+                    if condition_4 is None:
+                        condition_4 = timestamp
 
         # Race condition fallback: the RS may have been created before the
         # watch started.  Look it up directly and use its creationTimestamp.
@@ -642,7 +672,7 @@ class MeasurementRunner(Runner):
                 cls=ActoEncoder,
                 indent=4,
             )
-        return condition_1, condition_2, condition_3
+        return condition_1, condition_2, condition_3, condition_4
 
     def _measure_sts_or_ds(
         self,
@@ -650,7 +680,9 @@ class MeasurementRunner(Runner):
         generation: int,
         sts_name_f: Optional[Callable[[dict], str]],
         daemon_set_name_f: Optional[Callable[[dict], str]],
-    ) -> tuple[Optional[float], Optional[float], Optional[float]]:
+    ) -> tuple[
+        Optional[float], Optional[float], Optional[float], Optional[float]
+    ]:
         logger = get_thread_logger(with_prefix=True)
         acto_dumps = partial(json.dumps, cls=ActoEncoder)
         sts_name = sts_name_f(input) if sts_name_f else None
@@ -668,6 +700,7 @@ class MeasurementRunner(Runner):
         condition_1 = None
         condition_2 = None
         condition_3 = None
+        condition_4 = None
 
         # Separate workload events from pod events
         workload_tag = "sts" if sts_name_f else "ds"
@@ -789,7 +822,7 @@ class MeasurementRunner(Runner):
                 cls=ActoEncoder,
                 indent=4,
             )
-        return condition_1, condition_2, condition_3
+        return condition_1, condition_2, condition_3, condition_4
 
     @staticmethod
     def wait_for_reference_rabbitmq_spec(

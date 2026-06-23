@@ -33,6 +33,7 @@ def geometric_mean(series: pd.Series) -> float:
 def process_ts(files: List[str]) -> pd.DataFrame:
     condition_durations = []
     has_condition_3 = False
+    has_condition_4 = False
     for ts_datafile in sorted(files):
         with open(ts_datafile, "r") as f:
             data = json.load(f)
@@ -63,11 +64,19 @@ def process_ts(files: List[str]) -> pd.DataFrame:
                 row["intermediate_duration_b"] = (
                     data["condition_2_ts"] - data["condition_1_ts"]
                 )
+            condition_4_ts = data.get("condition_4_ts")
+            if condition_4_ts is not None:
+                has_condition_4 = True
+                row["intermediate_duration_c"] = (
+                    condition_4_ts - data["condition_1_ts"]
+                )
             condition_durations.append(row)
 
     columns = ["name", "condition_1_duration", "condition_2_duration"]
     if has_condition_3:
         columns += ["intermediate_duration_a", "intermediate_duration_b"]
+    if has_condition_4:
+        columns += ["intermediate_duration_c"]
 
     return pd.DataFrame(
         condition_durations,
@@ -748,8 +757,10 @@ def plot_cadvisor_cpu_stats(
     anvil_cadvisor_df["cpu_time_per_second"] = (
         anvil_cadvisor_df["cpu_diff"] / anvil_cadvisor_df["time_diff"]
     )
+    anvil_cpu_mean = anvil_cadvisor_df["cpu_time_per_second"].mean()
+    anvil_cpu_std = anvil_cadvisor_df["cpu_time_per_second"].std()
     print(
-        f"anvil {container_name} cpu usage (CPU time): {anvil_cadvisor_df['cpu_time_per_second'].mean():.5f}"
+        f"anvil {container_name} cpu usage (CPU time): {anvil_cpu_mean:.5f} ± {anvil_cpu_std:.5f}"
     )
 
     reference_cadvisor_df.drop_duplicates(
@@ -768,8 +779,15 @@ def plot_cadvisor_cpu_stats(
     reference_cadvisor_df["cpu_time_per_second"] = (
         reference_cadvisor_df["cpu_diff"] / reference_cadvisor_df["time_diff"]
     )
+    reference_cpu_mean = reference_cadvisor_df["cpu_time_per_second"].mean()
+    reference_cpu_std = reference_cadvisor_df["cpu_time_per_second"].std()
     print(
-        f"reference {container_name} cpu usage (CPU time): {reference_cadvisor_df['cpu_time_per_second'].mean():.5f}"
+        f"reference {container_name} cpu usage (CPU time): {reference_cpu_mean:.5f} ± {reference_cpu_std:.5f}"
+    )
+    cpu_diff = abs(anvil_cpu_mean - reference_cpu_mean)
+    within_std = cpu_diff <= max(anvil_cpu_std, reference_cpu_std)
+    print(
+        f"  difference: {cpu_diff:.5f} {'(within std)' if within_std else '(outside std)'}"
     )
 
     fig, ax = plt.subplots()
@@ -800,11 +818,24 @@ def plot_cadvisor_memory_stats(
     output_dir: str,
     container_name: str,
 ):
-    print(
-        f"anvil {container_name} memory usage (MB): {anvil_cadvisor_df['memory_usage'].mean()/1024/1024:.5f}"
+    anvil_mem_mean = anvil_cadvisor_df["memory_usage"].mean() / 1024 / 1024
+    anvil_mem_std = anvil_cadvisor_df["memory_usage"].std() / 1024 / 1024
+    reference_mem_mean = (
+        reference_cadvisor_df["memory_usage"].mean() / 1024 / 1024
+    )
+    reference_mem_std = (
+        reference_cadvisor_df["memory_usage"].std() / 1024 / 1024
     )
     print(
-        f"reference {container_name} memory usage (MB): {reference_cadvisor_df['memory_usage'].mean()/1024/1024:.5f}"
+        f"anvil {container_name} memory usage (MB): {anvil_mem_mean:.5f} ± {anvil_mem_std:.5f}"
+    )
+    print(
+        f"reference {container_name} memory usage (MB): {reference_mem_mean:.5f} ± {reference_mem_std:.5f}"
+    )
+    mem_diff = abs(anvil_mem_mean - reference_mem_mean)
+    within_std = mem_diff <= max(anvil_mem_std, reference_mem_std)
+    print(
+        f"  difference: {mem_diff:.5f} MB {'(within std)' if within_std else '(outside std)'}"
     )
     fig, ax = plt.subplots()
     ax.plot(
@@ -848,8 +879,14 @@ def plot_cadvisor_disk_write_stats(
     anvil_cadvisor_df["container_fs_writes_bytes_per_second"] = (
         anvil_cadvisor_df["blkio_write_diff"] / anvil_cadvisor_df["time_diff"]
     )
+    anvil_disk_write_mean = anvil_cadvisor_df[
+        "container_fs_writes_bytes_per_second"
+    ].mean()
+    anvil_disk_write_std = anvil_cadvisor_df[
+        "container_fs_writes_bytes_per_second"
+    ].std()
     print(
-        f"anvil {container_name} disk write (bytes per second): {anvil_cadvisor_df['container_fs_writes_bytes_per_second'].mean():.5f}"
+        f"anvil {container_name} disk write (bytes per second): {anvil_disk_write_mean:.5f} ± {anvil_disk_write_std:.5f}"
     )
 
     reference_cadvisor_df.drop_duplicates(
@@ -869,8 +906,21 @@ def plot_cadvisor_disk_write_stats(
         reference_cadvisor_df["blkio_write_diff"]
         / reference_cadvisor_df["time_diff"]
     )
+    reference_disk_write_mean = reference_cadvisor_df[
+        "container_fs_writes_bytes_per_second"
+    ].mean()
+    reference_disk_write_std = reference_cadvisor_df[
+        "container_fs_writes_bytes_per_second"
+    ].std()
     print(
-        f"reference {container_name} disk write (bytes per second): {reference_cadvisor_df['container_fs_writes_bytes_per_second'].mean():.5f}"
+        f"reference {container_name} disk write (bytes per second): {reference_disk_write_mean:.5f} ± {reference_disk_write_std:.5f}"
+    )
+    disk_write_diff = abs(anvil_disk_write_mean - reference_disk_write_mean)
+    within_std = disk_write_diff <= max(
+        anvil_disk_write_std, reference_disk_write_std
+    )
+    print(
+        f"  difference: {disk_write_diff:.5f} {'(within std)' if within_std else '(outside std)'}"
     )
 
     fig, ax = plt.subplots()
@@ -1166,6 +1216,15 @@ def process_latency(
             f"{merged_normal_df['reference_condition_2_duration'].max():05.3f}",
         ]
     )
+    operation_sequence_table.append(
+        [
+            "std(diff)",
+            f"{(merged_normal_df['anvil_condition_1_duration'] - merged_normal_df['reference_condition_1_duration']).std():05.3f}",
+            "",
+            f"{(merged_normal_df['anvil_condition_2_duration'] - merged_normal_df['reference_condition_2_duration']).std():05.3f}",
+            "",
+        ]
+    )
     operation_sequence_table_str = tabulate.tabulate(
         operation_sequence_table, headers="firstrow"
     )
@@ -1205,6 +1264,15 @@ def process_latency(
             f"{merged_single_operation_df['reference_condition_1_duration'].max():05.3f}",
             f"{merged_single_operation_df['anvil_condition_2_duration'].max():05.3f}",
             f"{merged_single_operation_df['reference_condition_2_duration'].max():05.3f}",
+        ]
+    )
+    single_operation_table.append(
+        [
+            "std(diff)",
+            f"{(merged_single_operation_df['anvil_condition_1_duration'] - merged_single_operation_df['reference_condition_1_duration']).std():05.3f}",
+            "",
+            f"{(merged_single_operation_df['anvil_condition_2_duration'] - merged_single_operation_df['reference_condition_2_duration']).std():05.3f}",
+            "",
         ]
     )
     single_operation_table_str = tabulate.tabulate(
@@ -1276,6 +1344,33 @@ def process_latency(
             f"{reference_condition_1_merged.max():05.3f}",
             f"{anvil_condition_2_merged.max():05.3f}",
             f"{reference_condition_2_merged.max():05.3f}",
+        ]
+    )
+    condition_1_diff_merged = pd.concat(
+        [
+            merged_normal_df["anvil_condition_1_duration"]
+            - merged_normal_df["reference_condition_1_duration"],
+            merged_single_operation_df["anvil_condition_1_duration"]
+            - merged_single_operation_df["reference_condition_1_duration"],
+        ],
+        ignore_index=True,
+    )
+    condition_2_diff_merged = pd.concat(
+        [
+            merged_normal_df["anvil_condition_2_duration"]
+            - merged_normal_df["reference_condition_2_duration"],
+            merged_single_operation_df["anvil_condition_2_duration"]
+            - merged_single_operation_df["reference_condition_2_duration"],
+        ],
+        ignore_index=True,
+    )
+    merged_table.append(
+        [
+            "std(diff)",
+            f"{condition_1_diff_merged.std():05.3f}",
+            "",
+            f"{condition_2_diff_merged.std():05.3f}",
+            "",
         ]
     )
     merged_table_str = tabulate.tabulate(merged_table, headers="firstrow")
@@ -1383,6 +1478,15 @@ def process_latency(
                         f"{b_ref:05.3f}",
                     ]
                 )
+            rows.append(
+                [
+                    "std(diff)",
+                    f"{(df['anvil_intermediate_duration_a'] - df['reference_intermediate_duration_a']).std():05.3f}",
+                    "",
+                    f"{(df['anvil_intermediate_duration_b'] - df['reference_intermediate_duration_b']).std():05.3f}",
+                    "",
+                ]
+            )
             return rows
 
         inter_normal_rows = _inter_table_rows(merged_normal_df, inter_header)
@@ -1423,6 +1527,61 @@ def process_latency(
                     f"{b_ref:05.3f}",
                 ]
             )
+        inter_a_diff_merged = pd.concat(
+            [
+                (
+                    merged_normal_df["anvil_intermediate_duration_a"]
+                    - merged_normal_df["reference_intermediate_duration_a"]
+                    if "anvil_intermediate_duration_a"
+                    in merged_normal_df.columns
+                    and len(merged_normal_df) > 0
+                    else pd.Series(dtype=float)
+                ),
+                (
+                    merged_single_operation_df["anvil_intermediate_duration_a"]
+                    - merged_single_operation_df[
+                        "reference_intermediate_duration_a"
+                    ]
+                    if "anvil_intermediate_duration_a"
+                    in merged_single_operation_df.columns
+                    and len(merged_single_operation_df) > 0
+                    else pd.Series(dtype=float)
+                ),
+            ],
+            ignore_index=True,
+        )
+        inter_b_diff_merged = pd.concat(
+            [
+                (
+                    merged_normal_df["anvil_intermediate_duration_b"]
+                    - merged_normal_df["reference_intermediate_duration_b"]
+                    if "anvil_intermediate_duration_b"
+                    in merged_normal_df.columns
+                    and len(merged_normal_df) > 0
+                    else pd.Series(dtype=float)
+                ),
+                (
+                    merged_single_operation_df["anvil_intermediate_duration_b"]
+                    - merged_single_operation_df[
+                        "reference_intermediate_duration_b"
+                    ]
+                    if "anvil_intermediate_duration_b"
+                    in merged_single_operation_df.columns
+                    and len(merged_single_operation_df) > 0
+                    else pd.Series(dtype=float)
+                ),
+            ],
+            ignore_index=True,
+        )
+        inter_merged_rows.append(
+            [
+                "std(diff)",
+                f"{inter_a_diff_merged.std():05.3f}",
+                "",
+                f"{inter_b_diff_merged.std():05.3f}",
+                "",
+            ]
+        )
 
         with open(f"{output_dir}/intermediate_latency_table.txt", "w") as f:
             f.write(
@@ -1689,26 +1848,12 @@ def main():
     else:
         print("testrun-vdeployment-performance does not exist")
 
-    if os.path.exists("testrun-anvil-zk-performance"):
-        process_testrun("testrun-anvil-zk-performance")
+    if os.path.exists("testrun-rabbitmq-performance-5"):
+        process_testrun("testrun-rabbitmq-performance-5")
         print()
         print()
     else:
-        print("testrun-anvil-zk-performance does not exist")
-
-    if os.path.exists("testrun-rabbitmq-performance-2"):
-        process_testrun("testrun-rabbitmq-performance-2")
-        print()
-        print()
-    else:
-        print("testrun-rabbitmq-performance-2 does not exist")
-
-    if os.path.exists("testrun-anvil-fluent-performance"):
-        process_testrun("testrun-anvil-fluent-performance")
-        print()
-        print()
-    else:
-        print("testrun-anvil-fluent-performance does not exist")
+        print("testrun-rabbitmq-performance-5 does not exist")
 
     print(tabulate.tabulate(anvil_table, headers="firstrow", tablefmt="github"))
     with open("anvil-table-3.txt", "w", encoding="utf-8") as f:
