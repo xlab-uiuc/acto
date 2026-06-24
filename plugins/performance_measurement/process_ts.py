@@ -34,6 +34,7 @@ def process_ts(files: List[str]) -> pd.DataFrame:
     condition_durations = []
     has_condition_3 = False
     has_condition_4 = False
+    has_condition_5 = False
     for ts_datafile in sorted(files):
         with open(ts_datafile, "r") as f:
             data = json.load(f)
@@ -70,6 +71,12 @@ def process_ts(files: List[str]) -> pd.DataFrame:
                 row["intermediate_duration_c"] = (
                     condition_4_ts - data["condition_1_ts"]
                 )
+            condition_5_ts = data.get("condition_5_ts")
+            if condition_5_ts is not None:
+                has_condition_5 = True
+                row["intermediate_duration_e"] = (
+                    condition_5_ts - data["start_ts"]
+                )
             condition_durations.append(row)
 
     columns = ["name", "condition_1_duration", "condition_2_duration"]
@@ -77,6 +84,8 @@ def process_ts(files: List[str]) -> pd.DataFrame:
         columns += ["intermediate_duration_a", "intermediate_duration_b"]
     if has_condition_4:
         columns += ["intermediate_duration_c"]
+    if has_condition_5:
+        columns += ["intermediate_duration_e"]
 
     return pd.DataFrame(
         condition_durations,
@@ -329,210 +338,116 @@ def process_control_plane_stats(files: List[str]) -> pd.DataFrame:
     )
 
 
-def process_pod_stats(files: List[str]) -> pd.DataFrame:
-    etcd_cpu_usages = []
-    etcd_memory_usages = []
-    operator_cpu_usages = []
-    operator_memory_usages = []
+def _pod_label(pod_name: str) -> str:
+    """Return a stable Deployment name from a pod name by stripping RS and pod hash suffixes."""
+    if pod_name == "etcd-anvil-control-plane":
+        return "etcd"
+    parts = pod_name.rsplit("-", 2)
+    return parts[0] if len(parts) == 3 else pod_name
+
+
+def process_pod_stats(
+    files: List[str],
+) -> dict:
+    """Parse pods_stats JSON files.
+
+    Returns a dict mapping stable pod label → (cpu_df, memory_df).
+    The "etcd" key always uses the label "etcd".  All other pods are keyed by
+    the Deployment name (pod name with the RS-hash and pod-hash stripped).
+    """
+    cpu_usages: dict = {}
+    memory_usages: dict = {}
     start_time = None
     for pod_stat_file in sorted(files):
         with open(pod_stat_file, "r") as f:
             stats = json.load(f)
 
-            for stat in stats:
-                for pod, pod_stat in stat.items():
-                    if pod == "etcd-anvil-control-plane":
-                        if start_time is None:
-                            start_time = datetime.datetime.strptime(
-                                pod_stat["timestamp"], "%Y-%m-%dT%H:%M:%SZ"
-                            ).timestamp()
+        for stat in stats:
+            for pod_name, pod_stat in stat.items():
+                ts_raw = datetime.datetime.strptime(
+                    pod_stat["timestamp"], "%Y-%m-%dT%H:%M:%SZ"
+                ).timestamp()
+                if start_time is None:
+                    start_time = ts_raw
+                timestamp = ts_raw - start_time
+                cpu_usage = kubernetes.utils.parse_quantity(
+                    pod_stat["containers"][0]["usage"]["cpu"]
+                )
+                memory_usage = kubernetes.utils.parse_quantity(
+                    pod_stat["containers"][0]["usage"]["memory"]
+                )
+                label = _pod_label(pod_name)
+                if label not in cpu_usages:
+                    cpu_usages[label] = []
+                    memory_usages[label] = []
+                cpu_usages[label].append({"timestamp": timestamp, "cpu_usage": cpu_usage})
+                memory_usages[label].append({"timestamp": timestamp, "memory_usage": memory_usage})
 
-                        timestamp = (
-                            datetime.datetime.strptime(
-                                pod_stat["timestamp"], "%Y-%m-%dT%H:%M:%SZ"
-                            ).timestamp()
-                            - start_time
-                        )
-                        cpu_usage = kubernetes.utils.parse_quantity(
-                            pod_stat["containers"][0]["usage"]["cpu"]
-                        )
-                        memory_usage = kubernetes.utils.parse_quantity(
-                            pod_stat["containers"][0]["usage"]["memory"]
-                        )
+    return {
+        label: (
+            pd.DataFrame(cpu_usages[label], columns=["timestamp", "cpu_usage"]),
+            pd.DataFrame(memory_usages[label], columns=["timestamp", "memory_usage"]),
+        )
+        for label in cpu_usages
+    }
 
-                        etcd_cpu_usages.append(
-                            {
-                                "timestamp": timestamp,
-                                "cpu_usage": cpu_usage,
-                            }
-                        )
-                        etcd_memory_usages.append(
-                            {
-                                "timestamp": timestamp,
-                                "memory_usage": memory_usage,
-                            }
-                        )
-                    else:
-                        # assume the other pod is the operator
-                        if start_time is None:
-                            start_time = datetime.datetime.strptime(
-                                pod_stat["timestamp"], "%Y-%m-%dT%H:%M:%SZ"
-                            ).timestamp()
-                        timestamp = (
-                            datetime.datetime.strptime(
-                                pod_stat["timestamp"], "%Y-%m-%dT%H:%M:%SZ"
-                            ).timestamp()
-                            - start_time
-                        )
-                        cpu_usage = kubernetes.utils.parse_quantity(
-                            pod_stat["containers"][0]["usage"]["cpu"]
-                        )
-                        memory_usage = kubernetes.utils.parse_quantity(
-                            pod_stat["containers"][0]["usage"]["memory"]
-                        )
 
-                        operator_cpu_usages.append(
-                            {
-                                "timestamp": timestamp,
-                                "cpu_usage": cpu_usage,
-                            }
-                        )
-                        operator_memory_usages.append(
-                            {
-                                "timestamp": timestamp,
-                                "memory_usage": memory_usage,
-                            }
-                        )
+def _plot_cpu_memory(
+    anvil_cpu_df: pd.DataFrame,
+    anvil_mem_df: pd.DataFrame,
+    reference_cpu_df: pd.DataFrame,
+    reference_mem_df: pd.DataFrame,
+    label: str,
+    output_dir: str,
+):
+    fig, ax = plt.subplots()
+    ax.plot(anvil_cpu_df["timestamp"], anvil_cpu_df["cpu_usage"], label=f"anvil_{label}_cpu")
+    if reference_cpu_df is not None and len(reference_cpu_df) > 0:
+        ax.plot(reference_cpu_df["timestamp"], reference_cpu_df["cpu_usage"], label=f"reference_{label}_cpu")
+    ax.legend()
+    ax.set_xlabel("time")
+    ax.set_ylabel("CPU usage (cores)")
+    ax.set_title(f"{label} CPU usage")
+    ax.set_ylim(bottom=0)
+    fig.savefig(os.path.join(output_dir, f"{label}_cpu_usage.png"))
+    plt.close(fig)
+    print(f"Metrics Server Anvil {label} CPU usage (cores): {anvil_cpu_df['cpu_usage'].mean():.5f}")
+    if reference_cpu_df is not None and len(reference_cpu_df) > 0:
+        print(f"Metrics Server Reference {label} CPU usage (cores): {reference_cpu_df['cpu_usage'].mean():.5f}")
 
-    return (
-        pd.DataFrame(etcd_cpu_usages, columns=["timestamp", "cpu_usage"]),
-        pd.DataFrame(etcd_memory_usages, columns=["timestamp", "memory_usage"]),
-        pd.DataFrame(operator_cpu_usages, columns=["timestamp", "cpu_usage"]),
-        pd.DataFrame(
-            operator_memory_usages, columns=["timestamp", "memory_usage"]
-        ),
-    )
+    fig, ax = plt.subplots()
+    ax.plot(anvil_mem_df["timestamp"], anvil_mem_df["memory_usage"], label=f"anvil_{label}_memory")
+    if reference_mem_df is not None and len(reference_mem_df) > 0:
+        ax.plot(reference_mem_df["timestamp"], reference_mem_df["memory_usage"], label=f"reference_{label}_memory")
+    ax.legend()
+    ax.set_xlabel("time")
+    ax.set_ylabel("memory usage (bytes)")
+    ax.set_title(f"{label} memory usage")
+    ax.set_ylim(bottom=0)
+    fig.savefig(os.path.join(output_dir, f"{label}_memory_usage.png"))
+    plt.close(fig)
+    print(f"Metrics Server Anvil {label} memory usage (MB): {anvil_mem_df['memory_usage'].mean()/1024/1024:.5f}")
+    if reference_mem_df is not None and len(reference_mem_df) > 0:
+        print(f"Metrics Server Reference {label} memory usage (MB): {reference_mem_df['memory_usage'].mean()/1024/1024:.5f}")
 
 
 def plot_metrics_server_data(
-    anvil_resource_util_dfs: pd.DataFrame,
-    reference_resource_util_dfs: pd.DataFrame,
+    anvil_resource_util_dfs: dict,
+    reference_resource_util_dfs: dict,
     output_dir: str,
 ):
-    (
-        etcd_cpu_usage_df,
-        etcd_memory_usage_df,
-        operator_cpu_usage_df,
-        operator_memory_usage_df,
-    ) = anvil_resource_util_dfs
-    (
-        reference_etcd_cpu_usage_df,
-        reference_etcd_memory_usage_df,
-        reference_operator_cpu_usage_df,
-        reference_operator_memory_usage_df,
-    ) = reference_resource_util_dfs
+    """Plot CPU/memory for each controller found in anvil stats.
 
-    fig, ax = plt.subplots()
-    ax.plot(
-        etcd_cpu_usage_df["timestamp"],
-        etcd_cpu_usage_df["cpu_usage"],
-        label="etcd_cpu_usage",
-    )
-    ax.plot(
-        reference_etcd_cpu_usage_df["timestamp"],
-        reference_etcd_cpu_usage_df["cpu_usage"],
-        label="reference_etcd_cpu_usage",
-    )
-    ax.legend()
-    ax.set_xlabel("time")
-    ax.set_ylabel("CPU usage (cores)")
-    ax.set_title("Etcd CPU usage")
-    ax.set_ylim(bottom=0)
-    fig.savefig(os.path.join(output_dir, "metrics_server_etcd_cpu_usage.png"))
-    plt.close(fig)
-    print(
-        f"Metrics Server Anvil Etcd CPU usage (CPU time): {etcd_cpu_usage_df['cpu_usage'].mean():.5f}"
-    )
-    print(
-        f"Metrics Server Reference Etcd CPU usage (CPU time): {reference_etcd_cpu_usage_df['cpu_usage'].mean():.5f}"
-    )
-
-    fig, ax = plt.subplots()
-    ax.plot(
-        etcd_memory_usage_df["timestamp"],
-        etcd_memory_usage_df["memory_usage"],
-        label="etcd_memory_usage",
-    )
-    ax.plot(
-        reference_etcd_memory_usage_df["timestamp"],
-        reference_etcd_memory_usage_df["memory_usage"],
-        label="reference_etcd_memory_usage",
-    )
-    ax.legend()
-    ax.set_xlabel("time")
-    ax.set_ylabel("memory usage (bytes)")
-    ax.set_title("Etcd memory usage")
-    ax.set_ylim(bottom=0)
-    fig.savefig(
-        os.path.join(output_dir, "metrics_server_etcd_memory_usage.png")
-    )
-    plt.close(fig)
-    print(
-        f"Metrics Server Anvil Etcd memory usage (bytes): {etcd_memory_usage_df['memory_usage'].mean():.5f}"
-    )
-    print(
-        f"Metrics Server Reference Etcd memory usage (bytes): {reference_etcd_memory_usage_df['memory_usage'].mean():.5f}"
-    )
-
-    fig, ax = plt.subplots()
-    ax.plot(
-        operator_cpu_usage_df["timestamp"],
-        operator_cpu_usage_df["cpu_usage"],
-        label="operator_cpu_usage",
-    )
-    ax.plot(
-        reference_operator_cpu_usage_df["timestamp"],
-        reference_operator_cpu_usage_df["cpu_usage"],
-        label="reference_operator_cpu_usage",
-    )
-    ax.legend()
-    ax.set_xlabel("time")
-    ax.set_ylabel("CPU usage (cores)")
-    ax.set_title("Operator CPU usage")
-    ax.set_ylim(bottom=0)
-    fig.savefig(os.path.join(output_dir, "operator_cpu_usage.png"))
-    plt.close(fig)
-    print(
-        f"Metrics Server Operator CPU usage (CPU time): {operator_cpu_usage_df['cpu_usage'].mean():.5f}"
-    )
-    print(
-        f"Metrics Server Reference Operator CPU usage (CPU time): {reference_operator_cpu_usage_df['cpu_usage'].mean():.5f}"
-    )
-
-    fig, ax = plt.subplots()
-    ax.plot(
-        operator_memory_usage_df["timestamp"],
-        operator_memory_usage_df["memory_usage"],
-        label="operator_memory_usage",
-    )
-    ax.plot(
-        reference_operator_memory_usage_df["timestamp"],
-        reference_operator_memory_usage_df["memory_usage"],
-        label="reference_operator_memory_usage",
-    )
-    ax.legend()
-    ax.set_xlabel("time")
-    ax.set_ylabel("memory usage (bytes)")
-    ax.set_title("Operator memory usage")
-    ax.set_ylim(bottom=0)
-    fig.savefig(os.path.join(output_dir, "operator_memory_usage.png"))
-    plt.close(fig)
-    print(
-        f"Metrics Server Operator memory usage (MB): {operator_memory_usage_df['memory_usage'].mean()/1024/1024:.5f}"
-    )
-    print(
-        f"Metrics Server Reference Operator memory usage (MB): {reference_operator_memory_usage_df['memory_usage'].mean()/1024/1024:.5f}"
-    )
+    Both arguments are dicts: label → (cpu_df, memory_df).
+    """
+    all_labels = list(anvil_resource_util_dfs.keys())
+    for label in all_labels:
+        anvil_cpu_df, anvil_mem_df = anvil_resource_util_dfs[label]
+        if label in reference_resource_util_dfs:
+            ref_cpu_df, ref_mem_df = reference_resource_util_dfs[label]
+        else:
+            ref_cpu_df, ref_mem_df = None, None
+        _plot_cpu_memory(anvil_cpu_df, anvil_mem_df, ref_cpu_df, ref_mem_df, label, output_dir)
 
 
 def plot_etcd_resource_utilization(etcd_df: pd.DataFrame, output_dir: str):
@@ -1411,8 +1326,37 @@ def process_latency(
     )
 
     if has_intermediate:
-        inter_header = [
-            "name",
+        has_c = (
+            "anvil_intermediate_duration_c" in merged_normal_df.columns
+            or "anvil_intermediate_duration_c"
+            in merged_single_operation_df.columns
+        ) and (
+            "reference_intermediate_duration_c" in merged_normal_df.columns
+            or "reference_intermediate_duration_c"
+            in merged_single_operation_df.columns
+        )
+        has_e = (
+            "anvil_intermediate_duration_e" in merged_normal_df.columns
+            or "anvil_intermediate_duration_e"
+            in merged_single_operation_df.columns
+        ) and (
+            "reference_intermediate_duration_e" in merged_normal_df.columns
+            or "reference_intermediate_duration_e"
+            in merged_single_operation_df.columns
+        )
+
+        inter_header = ["name"]
+        if has_e:
+            inter_header += [
+                "anvil_intermediate_duration_e",
+                "reference_intermediate_duration_e",
+            ]
+        if has_c:
+            inter_header += [
+                "anvil_intermediate_duration_c",
+                "reference_intermediate_duration_c",
+            ]
+        inter_header += [
             "anvil_intermediate_duration_a",
             "reference_intermediate_duration_a",
             "anvil_intermediate_duration_b",
@@ -1434,6 +1378,28 @@ def process_latency(
         reference_inter_b_merged = _concat_inter(
             "reference_intermediate_duration_b"
         )
+        if has_c:
+            anvil_inter_c_merged = _concat_inter(
+                "anvil_intermediate_duration_c"
+            )
+            reference_inter_c_merged = _concat_inter(
+                "reference_intermediate_duration_c"
+            )
+        if has_e:
+            anvil_inter_e_merged = _concat_inter(
+                "anvil_intermediate_duration_e"
+            )
+            reference_inter_e_merged = _concat_inter(
+                "reference_intermediate_duration_e"
+            )
+
+        def _col_stats(df: pd.DataFrame, col: str) -> list:
+            return [
+                df[col].mean(),
+                geometric_mean(df[col]),
+                df[col].min(),
+                df[col].max(),
+            ]
 
         def _inter_table_rows(df: pd.DataFrame, header: list) -> list:
             if (
@@ -1441,52 +1407,51 @@ def process_latency(
                 or len(df) == 0
             ):
                 return [header]
+            df_has_c = (
+                "anvil_intermediate_duration_c" in df.columns
+                and "reference_intermediate_duration_c" in df.columns
+            )
+            df_has_e = (
+                "anvil_intermediate_duration_e" in df.columns
+                and "reference_intermediate_duration_e" in df.columns
+            )
             rows = [header]
-            for stat, a_anvil, b_anvil, a_ref, b_ref in zip(
-                ["mean", "geomean", "min", "max"],
-                [
-                    df["anvil_intermediate_duration_a"].mean(),
-                    geometric_mean(df["anvil_intermediate_duration_a"]),
-                    df["anvil_intermediate_duration_a"].min(),
-                    df["anvil_intermediate_duration_a"].max(),
-                ],
-                [
-                    df["anvil_intermediate_duration_b"].mean(),
-                    geometric_mean(df["anvil_intermediate_duration_b"]),
-                    df["anvil_intermediate_duration_b"].min(),
-                    df["anvil_intermediate_duration_b"].max(),
-                ],
-                [
-                    df["reference_intermediate_duration_a"].mean(),
-                    geometric_mean(df["reference_intermediate_duration_a"]),
-                    df["reference_intermediate_duration_a"].min(),
-                    df["reference_intermediate_duration_a"].max(),
-                ],
-                [
-                    df["reference_intermediate_duration_b"].mean(),
-                    geometric_mean(df["reference_intermediate_duration_b"]),
-                    df["reference_intermediate_duration_b"].min(),
-                    df["reference_intermediate_duration_b"].max(),
-                ],
-            ):
-                rows.append(
-                    [
-                        stat,
-                        f"{a_anvil:05.3f}",
-                        f"{a_ref:05.3f}",
-                        f"{b_anvil:05.3f}",
-                        f"{b_ref:05.3f}",
-                    ]
-                )
-            rows.append(
-                [
-                    "std(diff)",
-                    f"{(df['anvil_intermediate_duration_a'] - df['reference_intermediate_duration_a']).std():05.3f}",
-                    "",
-                    f"{(df['anvil_intermediate_duration_b'] - df['reference_intermediate_duration_b']).std():05.3f}",
+            stats = ["mean", "geomean", "min", "max"]
+            a_a = _col_stats(df, "anvil_intermediate_duration_a")
+            a_r = _col_stats(df, "reference_intermediate_duration_a")
+            b_a = _col_stats(df, "anvil_intermediate_duration_b")
+            b_r = _col_stats(df, "reference_intermediate_duration_b")
+            c_a = _col_stats(df, "anvil_intermediate_duration_c") if df_has_c else None
+            c_r = _col_stats(df, "reference_intermediate_duration_c") if df_has_c else None
+            e_a = _col_stats(df, "anvil_intermediate_duration_e") if df_has_e else None
+            e_r = _col_stats(df, "reference_intermediate_duration_e") if df_has_e else None
+            for i, stat in enumerate(stats):
+                row = [stat]
+                if df_has_e:
+                    row += [f"{e_a[i]:05.3f}", f"{e_r[i]:05.3f}"]
+                if df_has_c:
+                    row += [f"{c_a[i]:05.3f}", f"{c_r[i]:05.3f}"]
+                row += [f"{a_a[i]:05.3f}", f"{a_r[i]:05.3f}",
+                        f"{b_a[i]:05.3f}", f"{b_r[i]:05.3f}"]
+                rows.append(row)
+            std_row = ["std(diff)"]
+            if df_has_e:
+                std_row += [
+                    f"{(df['anvil_intermediate_duration_e'] - df['reference_intermediate_duration_e']).std():05.3f}",
                     "",
                 ]
-            )
+            if df_has_c:
+                std_row += [
+                    f"{(df['anvil_intermediate_duration_c'] - df['reference_intermediate_duration_c']).std():05.3f}",
+                    "",
+                ]
+            std_row += [
+                f"{(df['anvil_intermediate_duration_a'] - df['reference_intermediate_duration_a']).std():05.3f}",
+                "",
+                f"{(df['anvil_intermediate_duration_b'] - df['reference_intermediate_duration_b']).std():05.3f}",
+                "",
+            ]
+            rows.append(std_row)
             return rows
 
         inter_normal_rows = _inter_table_rows(merged_normal_df, inter_header)
@@ -1494,94 +1459,56 @@ def process_latency(
             merged_single_operation_df, inter_header
         )
 
+        def _diff_series(col_a: str, col_b: str) -> pd.Series:
+            parts = []
+            for df in (merged_normal_df, merged_single_operation_df):
+                if col_a in df.columns and len(df) > 0:
+                    parts.append(df[col_a] - df[col_b])
+            return pd.concat(parts, ignore_index=True) if parts else pd.Series(dtype=float)
+
+        inter_a_diff_merged = _diff_series(
+            "anvil_intermediate_duration_a", "reference_intermediate_duration_a"
+        )
+        inter_b_diff_merged = _diff_series(
+            "anvil_intermediate_duration_b", "reference_intermediate_duration_b"
+        )
+        inter_c_diff_merged = _diff_series(
+            "anvil_intermediate_duration_c", "reference_intermediate_duration_c"
+        ) if has_c else None
+        inter_e_diff_merged = _diff_series(
+            "anvil_intermediate_duration_e", "reference_intermediate_duration_e"
+        ) if has_e else None
+
         inter_merged_rows = [inter_header]
-        for stat, a_anvil, b_anvil, a_ref, b_ref in zip(
-            ["mean", "min", "max"],
-            [
-                anvil_inter_a_merged.mean(),
-                anvil_inter_a_merged.min(),
-                anvil_inter_a_merged.max(),
-            ],
-            [
-                anvil_inter_b_merged.mean(),
-                anvil_inter_b_merged.min(),
-                anvil_inter_b_merged.max(),
-            ],
-            [
-                reference_inter_a_merged.mean(),
-                reference_inter_a_merged.min(),
-                reference_inter_a_merged.max(),
-            ],
-            [
-                reference_inter_b_merged.mean(),
-                reference_inter_b_merged.min(),
-                reference_inter_b_merged.max(),
-            ],
-        ):
-            inter_merged_rows.append(
-                [
-                    stat,
-                    f"{a_anvil:05.3f}",
-                    f"{a_ref:05.3f}",
-                    f"{b_anvil:05.3f}",
-                    f"{b_ref:05.3f}",
+        for i, stat in enumerate(["mean", "min", "max"]):
+            row = [stat]
+            if has_e:
+                row += [
+                    f"{[anvil_inter_e_merged.mean(), anvil_inter_e_merged.min(), anvil_inter_e_merged.max()][i]:05.3f}",
+                    f"{[reference_inter_e_merged.mean(), reference_inter_e_merged.min(), reference_inter_e_merged.max()][i]:05.3f}",
                 ]
-            )
-        inter_a_diff_merged = pd.concat(
-            [
-                (
-                    merged_normal_df["anvil_intermediate_duration_a"]
-                    - merged_normal_df["reference_intermediate_duration_a"]
-                    if "anvil_intermediate_duration_a"
-                    in merged_normal_df.columns
-                    and len(merged_normal_df) > 0
-                    else pd.Series(dtype=float)
-                ),
-                (
-                    merged_single_operation_df["anvil_intermediate_duration_a"]
-                    - merged_single_operation_df[
-                        "reference_intermediate_duration_a"
-                    ]
-                    if "anvil_intermediate_duration_a"
-                    in merged_single_operation_df.columns
-                    and len(merged_single_operation_df) > 0
-                    else pd.Series(dtype=float)
-                ),
-            ],
-            ignore_index=True,
-        )
-        inter_b_diff_merged = pd.concat(
-            [
-                (
-                    merged_normal_df["anvil_intermediate_duration_b"]
-                    - merged_normal_df["reference_intermediate_duration_b"]
-                    if "anvil_intermediate_duration_b"
-                    in merged_normal_df.columns
-                    and len(merged_normal_df) > 0
-                    else pd.Series(dtype=float)
-                ),
-                (
-                    merged_single_operation_df["anvil_intermediate_duration_b"]
-                    - merged_single_operation_df[
-                        "reference_intermediate_duration_b"
-                    ]
-                    if "anvil_intermediate_duration_b"
-                    in merged_single_operation_df.columns
-                    and len(merged_single_operation_df) > 0
-                    else pd.Series(dtype=float)
-                ),
-            ],
-            ignore_index=True,
-        )
-        inter_merged_rows.append(
-            [
-                "std(diff)",
-                f"{inter_a_diff_merged.std():05.3f}",
-                "",
-                f"{inter_b_diff_merged.std():05.3f}",
-                "",
+            if has_c:
+                row += [
+                    f"{[anvil_inter_c_merged.mean(), anvil_inter_c_merged.min(), anvil_inter_c_merged.max()][i]:05.3f}",
+                    f"{[reference_inter_c_merged.mean(), reference_inter_c_merged.min(), reference_inter_c_merged.max()][i]:05.3f}",
+                ]
+            row += [
+                f"{[anvil_inter_a_merged.mean(), anvil_inter_a_merged.min(), anvil_inter_a_merged.max()][i]:05.3f}",
+                f"{[reference_inter_a_merged.mean(), reference_inter_a_merged.min(), reference_inter_a_merged.max()][i]:05.3f}",
+                f"{[anvil_inter_b_merged.mean(), anvil_inter_b_merged.min(), anvil_inter_b_merged.max()][i]:05.3f}",
+                f"{[reference_inter_b_merged.mean(), reference_inter_b_merged.min(), reference_inter_b_merged.max()][i]:05.3f}",
             ]
-        )
+            inter_merged_rows.append(row)
+        std_row = ["std(diff)"]
+        if has_e:
+            std_row += [f"{inter_e_diff_merged.std():05.3f}", ""]
+        if has_c:
+            std_row += [f"{inter_c_diff_merged.std():05.3f}", ""]
+        std_row += [
+            f"{inter_a_diff_merged.std():05.3f}", "",
+            f"{inter_b_diff_merged.std():05.3f}", "",
+        ]
+        inter_merged_rows.append(std_row)
 
         with open(f"{output_dir}/intermediate_latency_table.txt", "w") as f:
             f.write(
@@ -1614,6 +1541,10 @@ def process_latency(
             reference_inter_a_merged,
             reference_inter_b_merged,
             output_dir,
+            anvil_inter_c_merged if has_c else None,
+            reference_inter_c_merged if has_c else None,
+            anvil_inter_e_merged if has_e else None,
+            reference_inter_e_merged if has_e else None,
         )
 
     ##############################
@@ -1680,7 +1611,41 @@ def plot_intermediate_latency(
     reference_inter_a_merged,
     reference_inter_b_merged,
     output_dir: str,
+    anvil_inter_c_merged=None,
+    reference_inter_c_merged=None,
+    anvil_inter_e_merged=None,
+    reference_inter_e_merged=None,
 ):
+    if anvil_inter_e_merged is not None and reference_inter_e_merged is not None:
+        x = anvil_inter_e_merged.sort_values()
+        x2 = reference_inter_e_merged.sort_values()
+        y = np.arange(1, len(x) + 1) / len(x)
+        fig, ax = plt.subplots()
+        ax.plot(x, y, marker=".", label="anvil")
+        ax.plot(x2, y, marker=".", label="reference")
+        ax.set_xlabel("Time (s)")
+        ax.set_ylabel("CDF")
+        ax.set_title("CDF of intermediate duration e (condition_5 - start_ts)")
+        ax.set_ylim(bottom=0)
+        fig.legend()
+        fig.savefig(f"{output_dir}/intermediate-latency-e.png")
+        plt.close(fig)
+
+    if anvil_inter_c_merged is not None and reference_inter_c_merged is not None:
+        x = anvil_inter_c_merged.sort_values()
+        x2 = reference_inter_c_merged.sort_values()
+        y = np.arange(1, len(x) + 1) / len(x)
+        fig, ax = plt.subplots()
+        ax.plot(x, y, marker=".", label="anvil")
+        ax.plot(x2, y, marker=".", label="reference")
+        ax.set_xlabel("Time (s)")
+        ax.set_ylabel("CDF")
+        ax.set_title("CDF of intermediate duration c (condition_4 - condition_1)")
+        ax.set_ylim(bottom=0)
+        fig.legend()
+        fig.savefig(f"{output_dir}/intermediate-latency-c.png")
+        plt.close(fig)
+
     x = anvil_inter_a_merged.sort_values()
     x2 = reference_inter_a_merged.sort_values()
     y = np.arange(1, len(x) + 1) / len(x)
@@ -1703,7 +1668,7 @@ def plot_intermediate_latency(
     ax.plot(x2, y, marker=".", label="reference")
     ax.set_xlabel("Time (s)")
     ax.set_ylabel("CDF")
-    ax.set_title("CDF of intermediate duration b (condition_2 - condition_3)")
+    ax.set_title("CDF of intermediate duration b (condition_2 - condition_1)")
     ax.set_ylim(bottom=0)
     fig.legend()
     fig.savefig(f"{output_dir}/intermediate-latency-b.png")
@@ -1793,6 +1758,8 @@ def process_testrun(testrun_dir: str):
             "condition_2_duration": "anvil_condition_2_duration",
             "intermediate_duration_a": "anvil_intermediate_duration_a",
             "intermediate_duration_b": "anvil_intermediate_duration_b",
+            "intermediate_duration_c": "anvil_intermediate_duration_c",
+            "intermediate_duration_e": "anvil_intermediate_duration_e",
         },
         inplace=True,
     )
@@ -1805,6 +1772,8 @@ def process_testrun(testrun_dir: str):
             "condition_2_duration": "anvil_condition_2_duration",
             "intermediate_duration_a": "anvil_intermediate_duration_a",
             "intermediate_duration_b": "anvil_intermediate_duration_b",
+            "intermediate_duration_c": "anvil_intermediate_duration_c",
+            "intermediate_duration_e": "anvil_intermediate_duration_e",
         },
         inplace=True,
     )
@@ -1815,6 +1784,8 @@ def process_testrun(testrun_dir: str):
             "condition_2_duration": "reference_condition_2_duration",
             "intermediate_duration_a": "reference_intermediate_duration_a",
             "intermediate_duration_b": "reference_intermediate_duration_b",
+            "intermediate_duration_c": "reference_intermediate_duration_c",
+            "intermediate_duration_e": "reference_intermediate_duration_e",
         },
         inplace=True,
     )
@@ -1827,6 +1798,8 @@ def process_testrun(testrun_dir: str):
             "condition_2_duration": "reference_condition_2_duration",
             "intermediate_duration_a": "reference_intermediate_duration_a",
             "intermediate_duration_b": "reference_intermediate_duration_b",
+            "intermediate_duration_c": "reference_intermediate_duration_c",
+            "intermediate_duration_e": "reference_intermediate_duration_e",
         },
         inplace=True,
     )
@@ -1841,19 +1814,19 @@ def process_testrun(testrun_dir: str):
 
 
 def main():
-    if os.path.exists("testrun-vdeployment-performance"):
-        process_testrun("testrun-vdeployment-performance")
+    if os.path.exists("testrun-vdeployment-performance-first-write"):
+        process_testrun("testrun-vdeployment-performance-first-write")
         print()
         print()
     else:
-        print("testrun-vdeployment-performance does not exist")
+        print("testrun-vdeployment-performance-first-write does not exist")
 
-    if os.path.exists("testrun-rabbitmq-performance-5"):
-        process_testrun("testrun-rabbitmq-performance-5")
+    if os.path.exists("testrun-rabbitmq-performance-first-write"):
+        process_testrun("testrun-rabbitmq-performance-first-write")
         print()
         print()
     else:
-        print("testrun-rabbitmq-performance-5 does not exist")
+        print("testrun-rabbitmq-performance-first-write does not exist")
 
     print(tabulate.tabulate(anvil_table, headers="firstrow", tablefmt="github"))
     with open("anvil-table-3.txt", "w", encoding="utf-8") as f:

@@ -14,13 +14,6 @@ class MetricsApiWatcher:
     """This class is used to watch the metrics api of the control plane pod."""
 
     def __init__(self, output_dir: str) -> None:
-        """Initialize the WatchPodStats class
-
-        Args:
-            apiclient: kubernetes client
-            operator_name: name of the operator
-            output_dir: output directory
-        """
         self._output_dir = output_dir
         self._sequence = 0
         self._stop = False
@@ -33,13 +26,17 @@ class MetricsApiWatcher:
         ) as f:
             json.dump(stats_buf, f, indent=4)
 
-    def start(self, apiclient: ApiClient, operator_name: str):
-        """Start watching the metrics api of the control plane pod"""
+    def start(self, apiclient: ApiClient, controller_names: List[str]):
+        """Start watching the metrics API for etcd and the given controller pods.
+
+        controller_names: list of pod name substrings to match (e.g.
+            ["vdeployment-controller", "vreplicaset-controller"])
+        """
         stats_buf: List[dict] = []
         custom_api = kubernetes.client.CustomObjectsApi(apiclient)
 
-        if operator_name is None:
-            operator_name = "kube-controller-manager-anvil-control-plane"
+        if not controller_names:
+            controller_names = ["kube-controller-manager-anvil-control-plane"]
 
         while True:
             if self._stop:
@@ -57,7 +54,7 @@ class MetricsApiWatcher:
                 pod_name = pod["metadata"]["name"]
                 if pod_name == "etcd-anvil-control-plane":
                     pod_metrics[pod_name] = pod
-                elif operator_name in pod_name:
+                elif any(name in pod_name for name in controller_names):
                     pod_metrics[pod_name] = pod
 
             if pod_metrics:

@@ -68,6 +68,7 @@ def test_normal(
     vdeployment_name_f: Optional[Callable[[dict], str]] = None,
     deployment_name_f: Optional[Callable[[dict], str]] = None,
     vstatefulset_name_f: Optional[Callable[[dict], str]] = None,
+    extra_controller_names: Optional[list] = None,
 ):
     """Run the normal test"""
 
@@ -117,6 +118,10 @@ def test_normal(
     else:
         crd = {}
 
+    _controller_names = [n for n in [deploy.operator_name()] if n]
+    if extra_controller_names:
+        _controller_names += extra_controller_names
+
     if "normal" in modes:
         # operation sequence
         trial_dir = f"{workdir}/trial-normal"
@@ -137,10 +142,7 @@ def test_normal(
         )
         pods_watcher_thread = threading.Thread(
             target=pods_watcher.start,
-            args=(
-                kubernetes_client(kubeconfig, context_name),
-                deploy.operator_name(),
-            ),
+            args=(kubernetes_client(kubeconfig, context_name), _controller_names),
         )
         watcher_thread.start()
         pods_watcher_thread.start()
@@ -209,10 +211,7 @@ def test_normal(
             )
             pods_watcher_thread = threading.Thread(
                 target=pods_watcher.start,
-                args=(
-                    kubernetes_client(kubeconfig, context_name),
-                    deploy.operator_name(),
-                ),
+                args=(kubernetes_client(kubeconfig, context_name), _controller_names),
             )
             watcher_thread.start()
             pods_watcher_thread.start()
@@ -256,14 +255,17 @@ def main(args):
     anvil_vdeployment_name_f = None
     reference_deployment_name_f = None
     anvil_vstatefulset_name_f = None
+    anvil_extra_controller_names: list = []
     if args.project == "rabbitmq-operator":
         input_generator = RabbitMQInputGenerator
         sts_name_f = MeasurementRunner.rabbitmq_sts_name
         anvil_vstatefulset_name_f = MeasurementRunner.rabbitmq_vsts_name
+        anvil_extra_controller_names = ["vstatefulset-controller"]
     elif args.project in ("vdeployment-controller", "deployment-controller"):
         input_generator = VDeploymentInputGenerator
         anvil_vdeployment_name_f = MeasurementRunner.vdeployment_name
         reference_deployment_name_f = MeasurementRunner.deployment_name
+        anvil_extra_controller_names = ["vreplicaset-controller"]
 
     # parse the inputs
     with open(args.anvil_config, "r", encoding="UTF-8") as config_file:
@@ -290,6 +292,7 @@ def main(args):
             sample_rate=args.sample,
             vdeployment_name_f=anvil_vdeployment_name_f,
             vstatefulset_name_f=anvil_vstatefulset_name_f,
+            extra_controller_names=anvil_extra_controller_names,
         )
 
     # Run the reference performance test
