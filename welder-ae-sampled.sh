@@ -4,7 +4,7 @@ python3 -m plugins.performance_measurement.measure_performance \
     --project vdeployment-controller \
     --anvil-config data/vdeployment-controller/v0/config.json \
     --reference-config data/deployment-controller/v0/config.json \
-    --input-dir testrun-vdeployment \
+    --input-dir welder-ae-data/testrun-vdeployment \
     --workdir testrun-vdeployment-performance \
     --modes single-operation \
     --sample $1
