@@ -5,7 +5,7 @@ import datetime
 import glob
 import json
 import os
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import kubernetes
 import numpy as np
@@ -15,19 +15,29 @@ from matplotlib import pyplot as plt
 
 ineffective_files = set()
 
-anvil_table = [
-    [
-        "Controller",
-        "Verified (Anvil) Mean",
-        "Verified (Anvil) Max",
-        "Reference (unverified) Mean",
-        "Reference (unverified) Max",
-    ],
-]
+# Rows for the reconcile/end-to-end LaTeX table (welder-table-2.txt). Each
+# entry is {"name": controller_name, "reconcile": (verified, ref, diff_mean,
+# diff_std), "e2e": (verified, ref, diff_mean, diff_std)}.
+controller_table_rows = []
 
 
 def geometric_mean(series: pd.Series) -> float:
     return np.exp(np.log(series).mean())
+
+
+def _paired_stats(
+    df: pd.DataFrame, verified_col: str, ref_col: str
+) -> Tuple[float, float, float, float]:
+    """Return (verified_mean, ref_mean, diff_mean, diff_std) for a pair of
+    per-trial duration columns, restricted to trials where both are present."""
+    valid = df[[verified_col, ref_col]].dropna()
+    diff = valid[verified_col] - valid[ref_col]
+    return (
+        valid[verified_col].mean(),
+        valid[ref_col].mean(),
+        diff.mean(),
+        diff.std(),
+    )
 
 
 def process_ts(files: List[str]) -> pd.DataFrame:
@@ -380,13 +390,19 @@ def process_pod_stats(
                 if label not in cpu_usages:
                     cpu_usages[label] = []
                     memory_usages[label] = []
-                cpu_usages[label].append({"timestamp": timestamp, "cpu_usage": cpu_usage})
-                memory_usages[label].append({"timestamp": timestamp, "memory_usage": memory_usage})
+                cpu_usages[label].append(
+                    {"timestamp": timestamp, "cpu_usage": cpu_usage}
+                )
+                memory_usages[label].append(
+                    {"timestamp": timestamp, "memory_usage": memory_usage}
+                )
 
     return {
         label: (
             pd.DataFrame(cpu_usages[label], columns=["timestamp", "cpu_usage"]),
-            pd.DataFrame(memory_usages[label], columns=["timestamp", "memory_usage"]),
+            pd.DataFrame(
+                memory_usages[label], columns=["timestamp", "memory_usage"]
+            ),
         )
         for label in cpu_usages
     }
@@ -401,9 +417,17 @@ def _plot_cpu_memory(
     output_dir: str,
 ):
     fig, ax = plt.subplots()
-    ax.plot(anvil_cpu_df["timestamp"], anvil_cpu_df["cpu_usage"], label=f"anvil_{label}_cpu")
+    ax.plot(
+        anvil_cpu_df["timestamp"],
+        anvil_cpu_df["cpu_usage"],
+        label=f"anvil_{label}_cpu",
+    )
     if reference_cpu_df is not None and len(reference_cpu_df) > 0:
-        ax.plot(reference_cpu_df["timestamp"], reference_cpu_df["cpu_usage"], label=f"reference_{label}_cpu")
+        ax.plot(
+            reference_cpu_df["timestamp"],
+            reference_cpu_df["cpu_usage"],
+            label=f"reference_{label}_cpu",
+        )
     ax.legend()
     ax.set_xlabel("time")
     ax.set_ylabel("CPU usage (cores)")
@@ -411,14 +435,26 @@ def _plot_cpu_memory(
     ax.set_ylim(bottom=0)
     fig.savefig(os.path.join(output_dir, f"{label}_cpu_usage.png"))
     plt.close(fig)
-    print(f"Metrics Server Anvil {label} CPU usage (cores): {anvil_cpu_df['cpu_usage'].mean():.5f}")
+    print(
+        f"Metrics Server Anvil {label} CPU usage (cores): {anvil_cpu_df['cpu_usage'].mean():.5f}"
+    )
     if reference_cpu_df is not None and len(reference_cpu_df) > 0:
-        print(f"Metrics Server Reference {label} CPU usage (cores): {reference_cpu_df['cpu_usage'].mean():.5f}")
+        print(
+            f"Metrics Server Reference {label} CPU usage (cores): {reference_cpu_df['cpu_usage'].mean():.5f}"
+        )
 
     fig, ax = plt.subplots()
-    ax.plot(anvil_mem_df["timestamp"], anvil_mem_df["memory_usage"], label=f"anvil_{label}_memory")
+    ax.plot(
+        anvil_mem_df["timestamp"],
+        anvil_mem_df["memory_usage"],
+        label=f"anvil_{label}_memory",
+    )
     if reference_mem_df is not None and len(reference_mem_df) > 0:
-        ax.plot(reference_mem_df["timestamp"], reference_mem_df["memory_usage"], label=f"reference_{label}_memory")
+        ax.plot(
+            reference_mem_df["timestamp"],
+            reference_mem_df["memory_usage"],
+            label=f"reference_{label}_memory",
+        )
     ax.legend()
     ax.set_xlabel("time")
     ax.set_ylabel("memory usage (bytes)")
@@ -426,9 +462,13 @@ def _plot_cpu_memory(
     ax.set_ylim(bottom=0)
     fig.savefig(os.path.join(output_dir, f"{label}_memory_usage.png"))
     plt.close(fig)
-    print(f"Metrics Server Anvil {label} memory usage (MB): {anvil_mem_df['memory_usage'].mean()/1024/1024:.5f}")
+    print(
+        f"Metrics Server Anvil {label} memory usage (MB): {anvil_mem_df['memory_usage'].mean()/1024/1024:.5f}"
+    )
     if reference_mem_df is not None and len(reference_mem_df) > 0:
-        print(f"Metrics Server Reference {label} memory usage (MB): {reference_mem_df['memory_usage'].mean()/1024/1024:.5f}")
+        print(
+            f"Metrics Server Reference {label} memory usage (MB): {reference_mem_df['memory_usage'].mean()/1024/1024:.5f}"
+        )
 
 
 def plot_metrics_server_data(
@@ -447,7 +487,14 @@ def plot_metrics_server_data(
             ref_cpu_df, ref_mem_df = reference_resource_util_dfs[label]
         else:
             ref_cpu_df, ref_mem_df = None, None
-        _plot_cpu_memory(anvil_cpu_df, anvil_mem_df, ref_cpu_df, ref_mem_df, label, output_dir)
+        _plot_cpu_memory(
+            anvil_cpu_df,
+            anvil_mem_df,
+            ref_cpu_df,
+            ref_mem_df,
+            label,
+            output_dir,
+        )
 
 
 def plot_etcd_resource_utilization(etcd_df: pd.DataFrame, output_dir: str):
@@ -1059,6 +1106,8 @@ def process_latency(
     reference_normal_df: pd.DataFrame,
     reference_single_operation_df: pd.DataFrame,
     output_dir: str,
+    outer_controller_name: str,
+    inner_controller_name: Optional[str] = None,
 ):
     header = [
         "name",
@@ -1421,18 +1470,38 @@ def process_latency(
             a_r = _col_stats(df, "reference_intermediate_duration_a")
             b_a = _col_stats(df, "anvil_intermediate_duration_b")
             b_r = _col_stats(df, "reference_intermediate_duration_b")
-            c_a = _col_stats(df, "anvil_intermediate_duration_c") if df_has_c else None
-            c_r = _col_stats(df, "reference_intermediate_duration_c") if df_has_c else None
-            e_a = _col_stats(df, "anvil_intermediate_duration_e") if df_has_e else None
-            e_r = _col_stats(df, "reference_intermediate_duration_e") if df_has_e else None
+            c_a = (
+                _col_stats(df, "anvil_intermediate_duration_c")
+                if df_has_c
+                else None
+            )
+            c_r = (
+                _col_stats(df, "reference_intermediate_duration_c")
+                if df_has_c
+                else None
+            )
+            e_a = (
+                _col_stats(df, "anvil_intermediate_duration_e")
+                if df_has_e
+                else None
+            )
+            e_r = (
+                _col_stats(df, "reference_intermediate_duration_e")
+                if df_has_e
+                else None
+            )
             for i, stat in enumerate(stats):
                 row = [stat]
                 if df_has_e:
                     row += [f"{e_a[i]:05.3f}", f"{e_r[i]:05.3f}"]
                 if df_has_c:
                     row += [f"{c_a[i]:05.3f}", f"{c_r[i]:05.3f}"]
-                row += [f"{a_a[i]:05.3f}", f"{a_r[i]:05.3f}",
-                        f"{b_a[i]:05.3f}", f"{b_r[i]:05.3f}"]
+                row += [
+                    f"{a_a[i]:05.3f}",
+                    f"{a_r[i]:05.3f}",
+                    f"{b_a[i]:05.3f}",
+                    f"{b_r[i]:05.3f}",
+                ]
                 rows.append(row)
             std_row = ["std(diff)"]
             if df_has_e:
@@ -1464,7 +1533,11 @@ def process_latency(
             for df in (merged_normal_df, merged_single_operation_df):
                 if col_a in df.columns and len(df) > 0:
                     parts.append(df[col_a] - df[col_b])
-            return pd.concat(parts, ignore_index=True) if parts else pd.Series(dtype=float)
+            return (
+                pd.concat(parts, ignore_index=True)
+                if parts
+                else pd.Series(dtype=float)
+            )
 
         inter_a_diff_merged = _diff_series(
             "anvil_intermediate_duration_a", "reference_intermediate_duration_a"
@@ -1472,12 +1545,22 @@ def process_latency(
         inter_b_diff_merged = _diff_series(
             "anvil_intermediate_duration_b", "reference_intermediate_duration_b"
         )
-        inter_c_diff_merged = _diff_series(
-            "anvil_intermediate_duration_c", "reference_intermediate_duration_c"
-        ) if has_c else None
-        inter_e_diff_merged = _diff_series(
-            "anvil_intermediate_duration_e", "reference_intermediate_duration_e"
-        ) if has_e else None
+        inter_c_diff_merged = (
+            _diff_series(
+                "anvil_intermediate_duration_c",
+                "reference_intermediate_duration_c",
+            )
+            if has_c
+            else None
+        )
+        inter_e_diff_merged = (
+            _diff_series(
+                "anvil_intermediate_duration_e",
+                "reference_intermediate_duration_e",
+            )
+            if has_e
+            else None
+        )
 
         inter_merged_rows = [inter_header]
         for i, stat in enumerate(["mean", "min", "max"]):
@@ -1505,8 +1588,10 @@ def process_latency(
         if has_c:
             std_row += [f"{inter_c_diff_merged.std():05.3f}", ""]
         std_row += [
-            f"{inter_a_diff_merged.std():05.3f}", "",
-            f"{inter_b_diff_merged.std():05.3f}", "",
+            f"{inter_a_diff_merged.std():05.3f}",
+            "",
+            f"{inter_b_diff_merged.std():05.3f}",
+            "",
         ]
         inter_merged_rows.append(std_row)
 
@@ -1547,27 +1632,66 @@ def process_latency(
             reference_inter_e_merged if has_e else None,
         )
 
-    ##############################
-    # Print the Anvil paper table
-    ##############################
+    ###########################################################
+    # Reconcile / end-to-end table (welder-table-2.txt)
+    ###########################################################
 
-    controller_name = ""
-    if output_dir == "testrun-anvil-zk-performance":
-        controller_name = "Zookeeper"
-    elif output_dir == "testrun-anvil-rabbitmq-performance":
-        controller_name = "RabbitMQ"
-    elif output_dir == "testrun-anvil-fluent-performance":
-        controller_name = "FluentBit"
-
-    anvil_table.append(
-        [
-            controller_name,
-            f"{anvil_condition_2_merged.mean():05.3f}",
-            f"{anvil_condition_2_merged.max():05.3f}",
-            f"{reference_condition_2_merged.mean():05.3f}",
-            f"{reference_condition_2_merged.max():05.3f}",
-        ]
+    merged_all_df = pd.concat(
+        [merged_normal_df, merged_single_operation_df], ignore_index=True
     )
+
+    outer_reconcile = _paired_stats(
+        merged_all_df,
+        "anvil_condition_1_duration",
+        "reference_condition_1_duration",
+    )
+    outer_e2e = _paired_stats(
+        merged_all_df,
+        "anvil_condition_2_duration",
+        "reference_condition_2_duration",
+    )
+
+    new_rows = []
+    if (
+        inner_controller_name is not None
+        and "anvil_intermediate_duration_a" in merged_all_df.columns
+        and "reference_intermediate_duration_a" in merged_all_df.columns
+    ):
+        inner_reconcile = _paired_stats(
+            merged_all_df,
+            "anvil_intermediate_duration_a",
+            "reference_intermediate_duration_a",
+        )
+        # The child controller (RS/STS) only has a reconcile time for the
+        # trials where it actually observed pod creation; restrict the
+        # end-to-end stats to that same set of trials so the paired diff is
+        # meaningful.
+        inner_trials_df = merged_all_df.dropna(
+            subset=[
+                "anvil_intermediate_duration_a",
+                "reference_intermediate_duration_a",
+            ]
+        )
+        inner_e2e = _paired_stats(
+            inner_trials_df,
+            "anvil_condition_2_duration",
+            "reference_condition_2_duration",
+        )
+        new_rows.append(
+            {
+                "name": inner_controller_name,
+                "reconcile": inner_reconcile,
+                "e2e": inner_e2e,
+            }
+        )
+    new_rows.append(
+        {
+            "name": outer_controller_name,
+            "reconcile": outer_reconcile,
+            "e2e": outer_e2e,
+        }
+    )
+    controller_table_rows.extend(new_rows)
 
 
 def plot_latency(
@@ -1616,7 +1740,10 @@ def plot_intermediate_latency(
     anvil_inter_e_merged=None,
     reference_inter_e_merged=None,
 ):
-    if anvil_inter_e_merged is not None and reference_inter_e_merged is not None:
+    if (
+        anvil_inter_e_merged is not None
+        and reference_inter_e_merged is not None
+    ):
         x = anvil_inter_e_merged.sort_values()
         x2 = reference_inter_e_merged.sort_values()
         y = np.arange(1, len(x) + 1) / len(x)
@@ -1631,7 +1758,10 @@ def plot_intermediate_latency(
         fig.savefig(f"{output_dir}/intermediate-latency-e.png")
         plt.close(fig)
 
-    if anvil_inter_c_merged is not None and reference_inter_c_merged is not None:
+    if (
+        anvil_inter_c_merged is not None
+        and reference_inter_c_merged is not None
+    ):
         x = anvil_inter_c_merged.sort_values()
         x2 = reference_inter_c_merged.sort_values()
         y = np.arange(1, len(x) + 1) / len(x)
@@ -1640,7 +1770,9 @@ def plot_intermediate_latency(
         ax.plot(x2, y, marker=".", label="reference")
         ax.set_xlabel("Time (s)")
         ax.set_ylabel("CDF")
-        ax.set_title("CDF of intermediate duration c (condition_4 - condition_1)")
+        ax.set_title(
+            "CDF of intermediate duration c (condition_4 - condition_1)"
+        )
         ax.set_ylim(bottom=0)
         fig.legend()
         fig.savefig(f"{output_dir}/intermediate-latency-c.png")
@@ -1675,7 +1807,11 @@ def plot_intermediate_latency(
     plt.close(fig)
 
 
-def process_testrun(testrun_dir: str):
+def process_testrun(
+    testrun_dir: str,
+    outer_controller_name: str,
+    inner_controller_name: Optional[str] = None,
+):
     anvil_normal_measturement_result_files = glob.glob(
         f"{testrun_dir}/anvil/trial-normal/measurement_result_*.json"
     )
@@ -1810,31 +1946,68 @@ def process_testrun(testrun_dir: str):
         reference_normal_df,
         reference_single_operation_df,
         testrun_dir,
+        outer_controller_name,
+        inner_controller_name,
     )
 
 
-def main():
-    if os.path.exists("testrun-vdeployment-performance-first-write"):
-        process_testrun("testrun-vdeployment-performance-first-write")
-        print()
-        print()
-    else:
-        print("testrun-vdeployment-performance-first-write does not exist")
+def _fmt_diff(mean: float, std: float) -> str:
+    return f"{mean:.2f}±{std:.2f}"
 
-    if os.path.exists("testrun-rabbitmq-performance-first-write"):
-        process_testrun("testrun-rabbitmq-performance-first-write")
-        print()
-        print()
-    else:
-        print("testrun-rabbitmq-performance-first-write does not exist")
 
-    print(tabulate.tabulate(anvil_table, headers="firstrow", tablefmt="github"))
-    with open("anvil-table-3.txt", "w", encoding="utf-8") as f:
-        f.write(
-            tabulate.tabulate(
-                anvil_table, headers="firstrow", tablefmt="github"
-            )
+def format_controller_table(rows: list) -> str:
+    header = [
+        "Controller",
+        "reconcile Verified",
+        "reconcile Ref.",
+        "reconcile Diff",
+        "End-to-end Verified",
+        "End-to-end Ref.",
+        "End-to-end Diff",
+    ]
+    table = [header]
+    for row in rows:
+        r_verified, r_ref, r_diff_mean, r_diff_std = row["reconcile"]
+        e_verified, e_ref, e_diff_mean, e_diff_std = row["e2e"]
+        table.append(
+            [
+                row["name"],
+                f"{r_verified:.2f}",
+                f"{r_ref:.2f}",
+                _fmt_diff(r_diff_mean, r_diff_std),
+                f"{e_verified:.2f}",
+                f"{e_ref:.2f}",
+                _fmt_diff(e_diff_mean, e_diff_std),
+            ]
         )
+    return tabulate.tabulate(table, headers="firstrow", tablefmt="github")
+
+
+def main():
+    if os.path.exists("testrun-vdeployment-performance"):
+        process_testrun(
+            "testrun-vdeployment-performance",
+            "Deployment",
+            "ReplicaSet",
+        )
+        print()
+        print()
+    else:
+        print("testrun-vdeployment-performance does not exist")
+
+    if os.path.exists("testrun-rabbitmq-performance"):
+        process_testrun(
+            "testrun-rabbitmq-performance", "RabbitMQ", "StatefulSet"
+        )
+        print()
+        print()
+    else:
+        print("testrun-rabbitmq-performance does not exist")
+
+    table_str = format_controller_table(controller_table_rows)
+    print(table_str)
+    with open("welder-table-2.txt", "w", encoding="utf-8") as f:
+        f.write(table_str)
 
 
 main()

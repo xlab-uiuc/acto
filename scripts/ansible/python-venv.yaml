@@ -17,7 +17,7 @@
 
     - name: Install python3
       apt:
-        name: python3.10
+        name: python3.12
         state: present
         update_cache: yes
 
@@ -29,7 +29,7 @@
 
     - name: Install python3 venv
       apt:
-        name: python3.10-venv
+        name: python3.12-venv
         state: present
         update_cache: yes
 
@@ -44,5 +44,5 @@
         requirements: "{{ home.stdout }}/workdir/acto/requirements-dev.txt"
         state: present
         virtualenv: "{{ home.stdout }}/workdir/acto/venv"
-        virtualenv_command: python3.10 -m venv
+        virtualenv_command: python3.12 -m venv
       become: false
