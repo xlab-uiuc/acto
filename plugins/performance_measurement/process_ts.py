@@ -52,7 +52,7 @@ def process_ts(files: List[str]) -> pd.DataFrame:
             if data["condition_2_ts"] < 0:
                 continue
             condition_2_duration = data["condition_2_ts"] - data["start_ts"]
-            if condition_2_duration < 5:
+            if condition_2_duration < 1:
                 continue
             if condition_2_duration < data["condition_1_ts"] - data["start_ts"]:
                 # print(os.path.basename(ts_datafile))
