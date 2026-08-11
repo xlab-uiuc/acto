@@ -9,20 +9,30 @@
 # produces exactly one test per CR-mutation trial in that dir (see
 # acto/post_process/post_process.py). Fault injection is randomized, so the
 # original campaign was run multiple times to accumulate its reported
-# counts; this script mirrors that with a configurable round count per
-# category. Defaults (4 rounds individual/correlated, 6 rounds pod-crash)
-# are the closest integer match to the paper's counts given the fixed
-# 102-trial (vdeployment) / 17-trial (rabbitmq) corpora in welder-ae-data:
-#   individual:  4 * (102+102+17+17) =  952  (paper: 868)
-#   correlated:  4 * (102+17)        =  476  (paper: 434)
-#   pod-crash:   6 * (102+17)        =  714  (paper: 677)
-# These are approximations, not exact reproductions -- say so when reporting.
+# counts; this script mirrors that with per-corpus round counts.
+#
+# welder-ae-data has two fixed trial corpora: testrun-vdeployment (102
+# trials) and testrun-rabbitmq (17 trials). Since 102 = 6*17, any integer
+# combination of rounds against them is a multiple of 17, so exact target
+# reproduction isn't possible -- these round counts are the closest integer
+# fit, biased toward fewer rounds against the 6x-larger vdeployment corpus:
+#   individual:  1*(102+102) + 20*(17+17) =  884  (paper: 868, +1.8%)
+#   correlated:  1*102       + 20*17      =  442  (paper: 434, +1.8%)
+#   pod-crash:   1*102       + 34*17      =  680  (paper: 677, +0.4%)
+# Approximations, not exact reproductions -- say so when reporting.
 
 set -euo pipefail
 cd "$(dirname "$0")"
 
-INDIVIDUAL_CORRELATED_ROUNDS="${1:-4}"
-POD_CRASH_ROUNDS="${2:-6}"
+# Rounds against the 102-trial vdeployment corpus (vdeployment.json,
+# vreplicaset.json, vdeployment-correlated.json, vdeployment-pod-crash-rand.json)
+VDEPLOYMENT_ROUNDS="${1:-1}"
+# Rounds against the 17-trial rabbitmq corpus for individual/correlated configs
+# (rabbitmq-controller.json, vstatefulset.json, rabbitmq-controller-correlated.json)
+RABBITMQ_ROUNDS="${2:-20}"
+# Rounds against the 17-trial rabbitmq corpus for the pod-crash config
+# (rabbitmq-controller-pod-crash-rand.json)
+RABBITMQ_POD_CRASH_ROUNDS="${3:-34}"
 
 echo "=== Phase 1: functional testing (629 tests) ==="
 
@@ -54,14 +64,22 @@ run_fi() {
 
 ALL_WORKDIRS=()
 
-for i in $(seq 1 "$INDIVIDUAL_CORRELATED_ROUNDS"); do
-    echo "--- individual/correlated crash round $i/$INDIVIDUAL_CORRELATED_ROUNDS ---"
+echo "--- vdeployment-corpus individual/correlated crashes ($VDEPLOYMENT_ROUNDS round(s)) ---"
+for i in $(seq 1 "$VDEPLOYMENT_ROUNDS"); do
     run_fi data/vdeployment-controller/v0/config.json chactos/vdeployment.json \
         testrun-vdeployment "testrun-vdeployment-fi-r$i"
     run_fi data/vdeployment-controller/v0/config.json chactos/vreplicaset.json \
         testrun-vdeployment "testrun-vdeployment-replicaset-fi-r$i"
     run_fi data/vdeployment-controller/v0/config.json chactos/vdeployment-correlated.json \
         testrun-vdeployment "testrun-vdeployment-correlated-fi-r$i"
+    ALL_WORKDIRS+=(
+        "testrun-vdeployment-fi-r$i" "testrun-vdeployment-replicaset-fi-r$i"
+        "testrun-vdeployment-correlated-fi-r$i"
+    )
+done
+
+echo "--- rabbitmq-corpus individual/correlated crashes ($RABBITMQ_ROUNDS round(s)) ---"
+for i in $(seq 1 "$RABBITMQ_ROUNDS"); do
     run_fi data/anvil-rabbitmq-controller/config.json chactos/rabbitmq-controller.json \
         testrun-rabbitmq "testrun-rabbitmq-fi-r$i"
     run_fi data/anvil-rabbitmq-controller/config.json chactos/vstatefulset.json \
@@ -69,21 +87,23 @@ for i in $(seq 1 "$INDIVIDUAL_CORRELATED_ROUNDS"); do
     run_fi data/anvil-rabbitmq-controller/config.json chactos/rabbitmq-controller-correlated.json \
         testrun-rabbitmq "testrun-rabbitmq-correlated-fi-r$i"
     ALL_WORKDIRS+=(
-        "testrun-vdeployment-fi-r$i" "testrun-vdeployment-replicaset-fi-r$i"
-        "testrun-vdeployment-correlated-fi-r$i" "testrun-rabbitmq-fi-r$i"
-        "testrun-rabbitmq-vstatefulset-fi-r$i" "testrun-rabbitmq-correlated-fi-r$i"
+        "testrun-rabbitmq-fi-r$i" "testrun-rabbitmq-vstatefulset-fi-r$i"
+        "testrun-rabbitmq-correlated-fi-r$i"
     )
 done
 
-for i in $(seq 1 "$POD_CRASH_ROUNDS"); do
-    echo "--- pod-crash round $i/$POD_CRASH_ROUNDS ---"
+echo "--- vdeployment-corpus pod-crash ($VDEPLOYMENT_ROUNDS round(s)) ---"
+for i in $(seq 1 "$VDEPLOYMENT_ROUNDS"); do
     run_fi data/vdeployment-controller/v0/config.json chactos/vdeployment-pod-crash-rand.json \
         testrun-vdeployment "testrun-vdeployment-pod-crash-rand-fi-r$i"
+    ALL_WORKDIRS+=("testrun-vdeployment-pod-crash-rand-fi-r$i")
+done
+
+echo "--- rabbitmq-corpus pod-crash ($RABBITMQ_POD_CRASH_ROUNDS round(s)) ---"
+for i in $(seq 1 "$RABBITMQ_POD_CRASH_ROUNDS"); do
     run_fi data/anvil-rabbitmq-controller/config.json chactos/rabbitmq-controller-pod-crash-rand.json \
         testrun-rabbitmq "testrun-rabbitmq-pod-crash-rand-fi-r$i"
-    ALL_WORKDIRS+=(
-        "testrun-vdeployment-pod-crash-rand-fi-r$i" "testrun-rabbitmq-pod-crash-rand-fi-r$i"
-    )
+    ALL_WORKDIRS+=("testrun-rabbitmq-pod-crash-rand-fi-r$i")
 done
 
 echo "=== Phase 3: summarizing results ==="
