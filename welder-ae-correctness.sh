@@ -16,9 +16,9 @@
 # combination of rounds against them is a multiple of 17, so exact target
 # reproduction isn't possible -- these round counts are the closest integer
 # fit, biased toward fewer rounds against the 6x-larger vdeployment corpus:
-#   individual:  1*(102+102) + 20*(17+17) =  884  (paper: 868, +1.8%)
-#   correlated:  1*102       + 20*17      =  442  (paper: 434, +1.8%)
-#   pod-crash:   1*102       + 34*17      =  680  (paper: 677, +0.4%)
+#   individual:  2*(102+102) + 14*(17+17) =  884  (paper: 868, +1.8%)
+#   correlated:  2*102       + 14*17      =  442  (paper: 434, +1.8%)
+#   pod-crash:   2*102       + 28*17      =  680  (paper: 677, +0.4%)
 # Approximations, not exact reproductions -- say so when reporting.
 
 set -euo pipefail
@@ -26,13 +26,13 @@ cd "$(dirname "$0")"
 
 # Rounds against the 102-trial vdeployment corpus (vdeployment.json,
 # vreplicaset.json, vdeployment-correlated.json, vdeployment-pod-crash-rand.json)
-VDEPLOYMENT_ROUNDS="${1:-1}"
+VDEPLOYMENT_ROUNDS="${1:-2}"
 # Rounds against the 17-trial rabbitmq corpus for individual/correlated configs
 # (rabbitmq-controller.json, vstatefulset.json, rabbitmq-controller-correlated.json)
-RABBITMQ_ROUNDS="${2:-20}"
+RABBITMQ_ROUNDS="${2:-14}"
 # Rounds against the 17-trial rabbitmq corpus for the pod-crash config
 # (rabbitmq-controller-pod-crash-rand.json)
-RABBITMQ_POD_CRASH_ROUNDS="${3:-34}"
+RABBITMQ_POD_CRASH_ROUNDS="${3:-28}"
 
 echo "=== Phase 1: functional testing (629 tests) ==="
 
