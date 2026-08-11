@@ -24,6 +24,16 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
+# chactos installs Chaos Mesh via `helm install` for every trial. Without
+# helm on PATH, each trial does a full (expensive) cluster create + operator
+# deploy, then crashes instantly on the missing binary -- easy to mistake
+# for a resource/hardware problem since the wasted setup work still looks
+# like real load. Fail fast here instead.
+if ! command -v helm >/dev/null 2>&1; then
+    echo "error: helm not found on PATH -- chactos requires it to install Chaos Mesh." >&2
+    exit 1
+fi
+
 # Rounds against the 102-trial vdeployment corpus (vdeployment.json,
 # vreplicaset.json, vdeployment-correlated.json, vdeployment-pod-crash-rand.json)
 VDEPLOYMENT_ROUNDS="${1:-2}"
@@ -54,12 +64,23 @@ echo "=== Phase 2: fault injection testing ==="
 
 run_fi() {
     local config="$1" fi_config="$2" testrun_dir="$3" workdir="$4"
+    local expected actual
+    # -L: testrun_dir is a symlink to welder-ae-data's checked-in corpus
+    expected=$(find -L "$testrun_dir" -mindepth 1 -maxdepth 1 -type d | wc -l)
+    actual=0
     if [ -d "$workdir" ]; then
-        echo "$workdir already exists, skipping"
+        actual=$(find "$workdir" -mindepth 1 -maxdepth 1 -type d | wc -l)
+    fi
+    if [ "$actual" -ge "$expected" ]; then
+        echo "$workdir already has $actual/$expected trials, skipping"
         return
     fi
+    if [ -d "$workdir" ]; then
+        echo "$workdir has only $actual/$expected trials (partial from an earlier interrupted run) -- wiping and redoing"
+        rm -rf "$workdir"
+    fi
     python3 -m chactos --config "$config" --fi-config "$fi_config" \
-        --testrun-dir "$testrun_dir" --workdir "$workdir" --num-workers 6
+        --testrun-dir "$testrun_dir" --workdir "$workdir" --num-workers 1
 }
 
 ALL_WORKDIRS=()
