@@ -1,10 +1,4 @@
-"""Summarize chactos fault-injection results.
-
-Scans every generation-*-runtime.json under the given workdirs and reports
-any oracle violations, matching the paper's Controller Correctness claim
-(Section 5.2): the verified controllers should reach 0 violations across
-all functional, controller-crash, and Pod-crash tests.
-"""
+"""Scan chactos workdirs for oracle violations."""
 
 import glob
 import json
