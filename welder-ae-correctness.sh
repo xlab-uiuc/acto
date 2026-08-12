@@ -16,6 +16,9 @@ fi
 VDEPLOYMENT_ROUNDS="${1:-2}"
 RABBITMQ_ROUNDS="${2:-14}"
 RABBITMQ_POD_CRASH_ROUNDS="${3:-28}"
+# chactos does a full cluster teardown/recreate per trial; on spinning disks
+# this saturates fast, so keep this low on non-SSD hardware.
+CHACTOS_WORKERS="${CHACTOS_WORKERS:-6}"
 
 echo "=== Phase 1: functional testing (629 tests) ==="
 
@@ -52,7 +55,7 @@ run_fi() {
         rm -rf "$workdir"
     fi
     python3 -m chactos --config "$config" --fi-config "$fi_config" \
-        --testrun-dir "$testrun_dir" --workdir "$workdir" --num-workers 1
+        --testrun-dir "$testrun_dir" --workdir "$workdir" --num-workers "$CHACTOS_WORKERS"
 }
 
 ALL_WORKDIRS=()
