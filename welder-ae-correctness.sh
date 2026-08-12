@@ -22,19 +22,20 @@ CHACTOS_WORKERS="${CHACTOS_WORKERS:-6}"
 
 echo "=== Phase 1: functional testing (629 tests) ==="
 
-if [ ! -d testrun-vdeployment ]; then
-    python3 -m acto --config data/vdeployment-controller/v0/config.json \
-        --workdir testrun-vdeployment --num-workers 4
-else
-    echo "testrun-vdeployment already exists, skipping generation"
-fi
+get_corpus() {
+    local dir="$1" config="$2"
+    if [ -d "$dir" ]; then
+        echo "$dir already exists, skipping generation"
+    elif [ -d "welder-ae-data/$dir" ]; then
+        ln -sfn "welder-ae-data/$dir" "$dir"
+        echo "$dir: reusing welder-ae-data's checked-in corpus"
+    else
+        python3 -m acto --config "$config" --workdir "$dir" --num-workers 4
+    fi
+}
 
-if [ ! -d testrun-rabbitmq ]; then
-    python3 -m acto --config data/anvil-rabbitmq-controller/config.json \
-        --workdir testrun-rabbitmq --num-workers 4
-else
-    echo "testrun-rabbitmq already exists, skipping generation"
-fi
+get_corpus testrun-vdeployment data/vdeployment-controller/v0/config.json
+get_corpus testrun-rabbitmq data/anvil-rabbitmq-controller/config.json
 
 echo "=== Phase 2: fault injection testing ==="
 
