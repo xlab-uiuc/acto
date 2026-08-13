@@ -22,6 +22,20 @@ sample_corpus() {
     echo "$dest: $(find -L "$dest" -mindepth 1 -maxdepth 1 -type d | wc -l) randomly-sampled trials"
 }
 
+get_corpus() {
+    local dir="$1" config="$2"
+    if [ -d "$dir" ]; then
+        return
+    elif [ -d "welder-ae-data/$dir" ]; then
+        ln -sfn "welder-ae-data/$dir" "$dir"
+    else
+        python3 -m acto --config "$config" --workdir "$dir" --num-workers 4
+    fi
+}
+
+get_corpus testrun-vdeployment data/vdeployment-controller/v0/config.json
+get_corpus testrun-rabbitmq data/anvil-rabbitmq-controller/config.json
+
 echo "=== Sampling trials ==="
 sample_corpus testrun-vdeployment testrun-vdeployment-sample "$VDEPLOYMENT_SAMPLE_SIZE"
 sample_corpus testrun-rabbitmq testrun-rabbitmq-sample "$RABBITMQ_SAMPLE_SIZE"
