@@ -63,8 +63,13 @@ class K3D(base.KubernetesEngine):
         cmd.extend(['--config', self.config_path])
 
         p = subprocess.run(cmd)
+        i = 0
         while p.returncode != 0:
+            if i == 2:
+                logger.error('Failed to create k3d cluster, aborting')
+                raise RuntimeError('Failed to create k3d cluster')
             logger.error('Failed to create k3d cluster, retrying')
+            i += 1
             self.delete_cluster(name)
             time.sleep(5)
             p = subprocess.run(cmd)
