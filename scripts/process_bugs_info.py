@@ -1,9 +1,19 @@
-from github import Github
-from jira import JIRA
-
-import csv
 import argparse
+import csv
+import os
 import re
+
+
+def resolve_jira_token(cli_token, environ=None):
+    if cli_token:
+        return cli_token
+    env = os.environ if environ is None else environ
+    token = env.get("JIRA_TOKEN")
+    if token:
+        return token
+    raise SystemExit(
+        "Jira token required: pass --jira-token or set JIRA_TOKEN"
+    )
 
 github_regex = r'^\[.*\]\(https://github.com/'
 github_regex += r'(\S+)/' # owner
@@ -16,13 +26,25 @@ jira_regex = r'^\[.*\]\(https://jira.percona.com/browse/'
 jira_regex += r'(\S+)\)$' # issue ID
 
 if __name__ == '__main__':
+    from github import Github
+    from jira import JIRA
+
     parser = argparse.ArgumentParser(description='Process bugs info')
     parser.add_argument('--bugs-csv', dest='bugs_csv', help='Bugs info file', required=True)
     parser.add_argument("--token", help="access token for github")
+    parser.add_argument(
+        "--jira-token",
+        dest="jira_token",
+        default=None,
+        help="Jira API token (or set JIRA_TOKEN)",
+    )
     args = parser.parse_args()
 
     g = Github(args.token)
-    auth_jira = JIRA(server='https://jira.percona.com/', token_auth='MjY3MjI0OTkyNTc3OoKNTUoqJZrWZ7MdEZd9fZ+SxLWI')
+    auth_jira = JIRA(
+        server='https://jira.percona.com/',
+        token_auth=resolve_jira_token(args.jira_token),
+    )
     with open(args.bugs_csv, 'r') as bugs_csv, open('bugs_info.csv', 'w') as bugs_info_csv:
         reader = csv.reader(bugs_csv)
         writer = csv.writer(bugs_info_csv)
