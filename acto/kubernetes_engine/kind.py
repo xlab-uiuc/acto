@@ -172,8 +172,7 @@ class Kind(base.KubernetesEngine):
         else:
             raise RuntimeError("Missing kubeconfig for kind create")
 
-        while subprocess.run(cmd, check=False).returncode != 0:
-            continue
+        base.run_delete_command(cmd, name or CONST.CLUSTER_NAME)
 
     def get_node_list(self, name: str):
         """Get agent containers list of a K3S cluster

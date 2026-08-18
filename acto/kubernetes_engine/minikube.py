@@ -257,10 +257,10 @@ class Minikube(base.KubernetesEngine):
         else:
             raise RuntimeError("Missing kubeconfig for minikube create")
 
-        while subprocess.run(cmd, check=False).returncode != 0:
-            continue
-
-        os.environ.pop("KUBECONFIG", None)
+        try:
+            base.run_delete_command(cmd, name or CONST.CLUSTER_NAME)
+        finally:
+            os.environ.pop("KUBECONFIG", None)
 
     def get_node_list(self, name: str):
         """Get agent containers list of a K3S cluster

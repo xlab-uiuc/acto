@@ -301,6 +301,7 @@ class Runner:
             )
         else:
             logger.error("Failed to find operator pod")
+            return []
 
         if self.operator_container_name is not None:
             log = self.core_v1_api.read_namespaced_pod_log(
@@ -339,6 +340,8 @@ class Runner:
             self.core_v1_api.list_namespaced_pod(self.namespace)
         ).items
         for pod in pods:
+            if pod.status is None or pod.status.conditions is None:
+                continue
 
             # Check if the pod is ready, if not, get the logs
             for condition in pod.status.conditions:
