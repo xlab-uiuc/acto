@@ -10,6 +10,50 @@ from acto.utils import get_thread_logger
 
 KubernetesEnginePostHookType = Callable[[kubernetes.client.ApiClient], None]
 
+DELETE_ATTEMPTS = 3
+DELETE_RETRY_SLEEP_S = 5
+DELETE_TIMEOUT_S = 120
+
+
+def run_delete_command(
+    cmd: list,
+    name: str,
+    attempts: int = DELETE_ATTEMPTS,
+    sleep_s: float = DELETE_RETRY_SLEEP_S,
+    timeout_s: int = DELETE_TIMEOUT_S,
+) -> None:
+    """Run a cluster-delete command with a retry cap.
+
+    create_cluster already stops after a few tries. delete_cluster used
+    to loop forever when kind/k3d/minikube kept failing.
+    """
+    logger = get_thread_logger(with_prefix=False)
+    last_error: Optional[BaseException] = None
+    for attempt in range(1, attempts + 1):
+        try:
+            completed = subprocess.run(cmd, check=False, timeout=timeout_s)
+        except subprocess.TimeoutExpired as exc:
+            last_error = exc
+            logger.error(
+                "Delete cluster %s timed out (attempt %s/%s)",
+                name,
+                attempt,
+                attempts,
+            )
+        else:
+            if completed.returncode == 0:
+                return
+            last_error = None
+            logger.error(
+                "Failed to delete cluster %s (attempt %s/%s)",
+                name,
+                attempt,
+                attempts,
+            )
+        if attempt < attempts:
+            time.sleep(sleep_s)
+    raise RuntimeError(f"Failed to delete cluster {name}") from last_error
+
 
 class KubernetesEngine(ABC):
     """Interface for KubernetesEngine"""

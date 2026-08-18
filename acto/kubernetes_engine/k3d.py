@@ -106,8 +106,7 @@ class K3D(base.KubernetesEngine):
         else:
             logger.error('Missing cluster name for k3d delete')
 
-        while subprocess.run(cmd).returncode != 0:
-            continue
+        base.run_delete_command(cmd, name or CONST.CLUSTER_NAME)
 
     def get_node_list(self, name: str):
         '''Get container list of a K3S cluster
