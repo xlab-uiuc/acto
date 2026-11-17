@@ -272,19 +272,32 @@ def postprocess_deepdiff(diff: TreeResult):
             diff["dictionary_item_added"] = new_removed_items
 
 
+GENERATED_NAME_PATTERN = re.compile(r"^(.+)-[A-Za-z0-9]{5}$")
+
+
+def same_generated_name(x_name: str, y_name: str) -> bool:
+    """Whether two names are equal once the generated suffix is ignored
+
+    Kubernetes appends a random suffix to generated names, e.g.
+    `kube-api-access-7lxg6`.
+    The suffix differs between runs, but the part before it must not.
+    """
+    x_match = GENERATED_NAME_PATTERN.match(x_name)
+    y_match = GENERATED_NAME_PATTERN.match(y_name)
+    if x_match is None or y_match is None:
+        return x_name == y_name
+    return x_match.group(1) == y_match.group(1)
+
+
 def compare_func(x, y, _: DiffLevel = None):
     """Compare function for deepdiff taking key and operator into account"""
     try:
         if "name" in x and "name" in y:
             # Take name into account, e.g., PVCs, volumes
-            x_name = x["name"]
-            y_name = y["name"]
-            if len(x_name) < 5 or len(y_name) < 5:
-                return x_name == y_name
-            return x_name[:5] == y_name[:5]
-        if "key" in (x, y) and "operator" in (x, y):
+            return same_generated_name(x["name"], y["name"])
+        if "key" in x and "key" in y and "operator" in x and "operator" in y:
             return x["key"] == y["key"] and x["operator"] == y["operator"]
-        if "type" in (x, y):
+        if "type" in x and "type" in y:
             # Compare the Pod conditions
             return x["type"] == y["type"]
     except:
@@ -301,10 +314,10 @@ class NameOperator(BaseOperator):
         y_name = level.t2
         if x_name is None or y_name is None:
             return False
-        if re.search(r"^.+-([A-Za-z0-9]{5})$", x_name) and re.search(
-            r"^.+-([A-Za-z0-9]{5})$", y_name
-        ):
-            return x_name[:5] == y_name[:5]
+        if GENERATED_NAME_PATTERN.match(
+            x_name
+        ) and GENERATED_NAME_PATTERN.match(y_name):
+            return same_generated_name(x_name, y_name)
         return False
 
 
