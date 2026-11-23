@@ -263,6 +263,9 @@ def check_state_equality(
     return None
 
 
+MAX_CONSECUTIVE_DEPLOY_FAILURES = 3
+
+
 class TrialRunner:
     """Test driver of Acto. One TrialRunner is one worker for Acto, and each
     TrialRunner is independant.
@@ -354,6 +357,7 @@ class TrialRunner:
             self.workdir = os.path.join(self.workdir, mode)
             os.makedirs(self.base_workdir, exist_ok=True)
 
+        deploy_failures = 0
         while True:
             if self.input_model.is_empty():
                 logger.info("Test finished")
@@ -372,8 +376,15 @@ class TrialRunner:
                 namespace=self.context["namespace"],
             )
             if not deployed:
+                deploy_failures += 1
+                if deploy_failures >= MAX_CONSECUTIVE_DEPLOY_FAILURES:
+                    raise RuntimeError(
+                        "Failed to deploy operator after "
+                        f"{deploy_failures} cluster restarts"
+                    )
                 logger.info("Not deployed. Try again!")
                 continue
+            deploy_failures = 0
             operator_deploy_time = time.time()
             trial_dir = os.path.join(
                 self.workdir,
